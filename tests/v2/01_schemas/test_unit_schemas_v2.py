@@ -89,5 +89,7 @@ def test_task_collect_pip():
     with pytest.raises(ValidationError):
         TaskCollectPipV2(package="tmp/x.wh")
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValueError) as e:
         TaskCollectPipV2(package="/tmp/x.whl", package_version="1")
+    msg = "Cannot provide package version when package is a wheel file"
+    assert msg in str(e.value)

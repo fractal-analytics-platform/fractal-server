@@ -324,7 +324,10 @@ class Settings(BaseSettings):
         return FRACTAL_RUNNER_WORKING_BASE_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal[
-        "local", "local_experimental", "slurm"
+        "local",
+        "local_experimental",
+        "slurm",
+        "slurm_ssh",
     ] = "local"
     """
     Select which runner backend to use.
@@ -465,7 +468,7 @@ class Settings(BaseSettings):
             values[
                 "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
             ] = current_version_dot
-            logging.warning(
+            logging.info(
                 "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
                 f"{current_version_dot}"
             )
@@ -475,11 +478,11 @@ class Settings(BaseSettings):
                 key = f"FRACTAL_TASKS_PYTHON_{_version}"
                 if _version == current_version:
                     values[key] = sys.executable
-                    logging.warning(f"Setting {key} to {sys.executable}.")
+                    logging.info(f"Setting {key} to {sys.executable}.")
                 else:
                     value = values.get(key)
                     if value is not None:
-                        logging.warning(
+                        logging.info(
                             f"Setting {key} to None (given: {value}), "
                             "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
                             "not set."
@@ -507,6 +510,25 @@ class Settings(BaseSettings):
     job was cancelled or failed, or writing the file is taking long). If the
     file is still missing after this time interval, this leads to a
     `JobExecutionError`.
+    """
+
+    FRACTAL_SLURM_SSH_HOST: Optional[str] = None
+    """
+    SSH-reachable host where a SLURM client is available.
+    """
+    FRACTAL_SLURM_SSH_USER: Optional[str] = None
+    """
+    User on `FRACTAL_SLURM_SSH_HOST`.
+    """
+    FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH: Optional[str] = None
+    """
+    Private key for connecting to `FRACTAL_SLURM_SSH_HOST` as
+    `FRACTAL_SLURM_SSH_USER`.
+    """
+    # FIXME SSH: Split this into two folders (for tasks and for jobs)
+    FRACTAL_SLURM_SSH_WORKING_BASE_DIR: Optional[str] = None
+    """
+    Remote folder on `FRACTAL_SLURM_SSH_HOST`.
     """
 
     FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
@@ -596,6 +618,48 @@ class Settings(BaseSettings):
                 if not shutil.which("squeue"):
                     raise FractalConfigurationError(
                         f"{info} but `squeue` command not found."
+                    )
+        elif self.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            if self.FRACTAL_SLURM_WORKER_PYTHON is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_USER is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_USER when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_HOST is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_HOST when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_WORKING_BASE_DIR is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_WORKING_BASE_DIR when {info}"
+                )
+
+            from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+                load_slurm_config_file,
+            )
+
+            if not self.FRACTAL_SLURM_CONFIG_FILE:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_CONFIG_FILE when {info}"
+                )
+            else:
+                if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
+                    raise FractalConfigurationError(
+                        f"{info} but FRACTAL_SLURM_CONFIG_FILE="
+                        f"{self.FRACTAL_SLURM_CONFIG_FILE} not found."
+                    )
+
+                load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE)
+                if not shutil.which("ssh"):
+                    raise FractalConfigurationError(
+                        f"{info} but `ssh` command not found."
                     )
         else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
             if self.FRACTAL_LOCAL_CONFIG_FILE:

@@ -95,6 +95,7 @@ async def test_mkdir_error(
 
         assert job.status == "failed"
         assert job.log == (
-            "An error occurred while creating job folder and subfolders.\n"
+            "RuntimeError error occurred while creating job folder and "
+            "subfolders.\n"
             "Original error: user=None not allowed in _mkdir_as_user"
         )

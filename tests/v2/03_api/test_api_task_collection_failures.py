@@ -5,6 +5,7 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -31,10 +32,12 @@ async def test_failed_API_calls(
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(package=str(tmp_path / "missing_file.whl")),
+            json=dict(
+                package=str(tmp_path / "missing-1.2.3-py3-none-any.whl")
+            ),
         )
         assert res.status_code == 422
-        assert "does not exist" in str(res.json())
+        assert "No such file or directory" in str(res.json())
 
     # Invalid wheel file
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
@@ -153,7 +156,7 @@ async def test_missing_task_executable(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
         assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
+        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
         # Inspect collection outcome
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=True")
@@ -195,18 +198,36 @@ async def test_collection_validation_error(
 
     # Write an invalid collection.json file
     file_path = file_dir / "collection.json"
+    # case 1
     with open(file_path, "w") as f:
-        json.dump(dict(foo="bar"), f)
-
-    # Folder exists and includes a collection.json file, but the file is
-    # invalid
+        json.dump([1, 2, 3], f)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
         assert res.status_code == 422
-        assert "ValidationError" in res.json()["detail"]
+        assert "it's not a Python dictionary" in res.json()["detail"]
+    # case 2
+    with open(file_path, "w") as f:
+        json.dump(dict(foo="bar"), f)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "it has no key 'task_list'" in res.json()["detail"]
+    # case 3
+    with open(file_path, "w") as f:
+        json.dump(dict(task_list="foo"), f)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "'task_list' is not a Python list" in res.json()["detail"]
 
 
 async def test_remove_directory(

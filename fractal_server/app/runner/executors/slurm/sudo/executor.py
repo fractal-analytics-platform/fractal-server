@@ -29,18 +29,18 @@ import cloudpickle
 from cfut import SlurmExecutor
 from cfut.util import random_string
 
-from .....config import get_settings
-from .....logger import set_logger
-from .....syringe import Inject
-from ...exceptions import JobExecutionError
-from ...exceptions import TaskExecutionError
-from ...filenames import SHUTDOWN_FILENAME
-from ...task_files import get_task_file_paths
-from ...task_files import TaskFiles
-from ._batching import heuristics
+from ......config import get_settings
+from ......logger import set_logger
+from ......syringe import Inject
+from ....exceptions import JobExecutionError
+from ....exceptions import TaskExecutionError
+from ....filenames import SHUTDOWN_FILENAME
+from ....task_files import get_task_file_paths
+from ....task_files import TaskFiles
+from ...slurm._slurm_config import get_default_slurm_config
+from ...slurm._slurm_config import SlurmConfig
+from .._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
-from ._slurm_config import get_default_slurm_config
-from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
 from ._subprocess_run_as_user import _path_exists_as_user
@@ -1180,7 +1180,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble(
-            user_cache_dir=self.user_cache_dir
+            remote_export_dir=self.user_cache_dir
         )
 
         # Extend SLURM preamble with variable which are not in SlurmConfig, and

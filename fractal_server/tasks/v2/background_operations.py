@@ -5,12 +5,12 @@ is used as a background task for the task-collection endpoint.
 import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
-from typing import Literal
 from typing import Optional
 
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
+from ..utils import get_absolute_venv_path
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
@@ -20,6 +20,7 @@ from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
@@ -41,12 +42,17 @@ def _get_task_type(task: TaskCreateV2) -> str:
 def _insert_tasks(
     task_list: list[TaskCreateV2],
     db: DBSyncSession,
+    owner: Optional[str] = None,
 ) -> list[TaskV2]:
     """
     Insert tasks into database
     """
+
+    owner_dict = dict(owner=owner) if owner is not None else dict()
+
     task_db_list = [
-        TaskV2(**t.dict(), type=_get_task_type(t)) for t in task_list
+        TaskV2(**t.dict(), **owner_dict, type=_get_task_type(t))
+        for t in task_list
     ]
     db.add_all(task_db_list)
     db.commit()
@@ -59,16 +65,14 @@ def _insert_tasks(
 def _set_collection_state_data_status(
     *,
     state_id: int,
-    new_status: Literal["installing", "collecting", "OK", "fail"],
+    new_status: CollectionStatusV2,
     logger_name: str,
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.debug(
-        f"Task collection {state_id=} - set state/data/status to {new_status}"
-    )
+    logger.debug(f"{state_id=} - set state.data['status'] to {new_status}")
     collection_state = db.get(CollectionStateV2, state_id)
-    collection_state.data["status"] = new_status
+    collection_state.data["status"] = CollectionStatusV2(new_status)
     flag_modified(collection_state, "data")
     db.commit()
 
@@ -81,7 +85,7 @@ def _set_collection_state_data_log(
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.debug(f"Task collection {state_id=} - set state/data/log")
+    logger.debug(f"{state_id=} - set state.data['log']")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["log"] = new_log
     flag_modified(collection_state, "data")
@@ -96,7 +100,7 @@ def _set_collection_state_data_info(
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.debug(f"Task collection {state_id=} - set state/data/info")
+    logger.debug(f"{state_id=} - set state.data['info']")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["info"] = new_info
     flag_modified(collection_state, "data")
@@ -105,21 +109,30 @@ def _set_collection_state_data_info(
 
 def _handle_failure(
     state_id: int,
-    venv_path: Path,
+    log_file_path: Path,
     logger_name: str,
     exception: Exception,
     db: DBSyncSession,
+    venv_path: Optional[Path] = None,
 ):
+    """
+    Note: `venv_path` is only required to trigger the folder deletion.
+    """
+
     logger = get_logger(logger_name)
-    logger.debug("Task collection - ERROR")
-    logger.info(f"Task collection failed. Original error: {exception}")
+    logger.error(f"Task collection failed. Original error: {str(exception)}")
 
     _set_collection_state_data_status(
-        state_id=state_id, new_status="fail", logger_name=logger_name, db=db
+        state_id=state_id,
+        new_status=CollectionStatusV2.FAIL,
+        logger_name=logger_name,
+        db=db,
     )
+
+    new_log = log_file_path.open().read()
     _set_collection_state_data_log(
         state_id=state_id,
-        new_log=get_collection_log(venv_path),
+        new_log=new_log,
         logger_name=logger_name,
         db=db,
     )
@@ -131,9 +144,11 @@ def _handle_failure(
         db=db,
     )
     # Delete corrupted package dir
-    logger.info(f"Now delete temporary folder {venv_path}")
-    shell_rmtree(venv_path)
-    logger.info("Temporary folder deleted")
+    if venv_path is not None:
+        logger.info(f"Now delete temporary folder {venv_path}")
+        shell_rmtree(venv_path)
+        logger.info("Temporary folder deleted")
+
     reset_logger_handlers(logger)
     return
 
@@ -160,7 +175,8 @@ def _prepare_tasks_metadata(
     for _task in package_manifest.task_list:
         # Set non-command attributes
         task_attributes = {}
-        task_attributes["version"] = package_version
+        if package_version is not None:
+            task_attributes["version"] = package_version
         task_name_slug = slugify_task_name(_task.name)
         task_attributes["source"] = f"{package_source}:{task_name_slug}"
         if package_manifest.has_args_schemas:
@@ -239,7 +255,7 @@ async def background_collect_pip(
     )
 
     # Start
-    logger.debug("Task collection - START")
+    logger.debug("START")
     for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
         logger.debug(f"task_pkg.{key}: {value}")
 
@@ -253,10 +269,10 @@ async def background_collect_pip(
 
             # Block 2: create venv and run pip install
             # Required: state_id, venv_path, task_pkg
-            logger.debug("Task collection - installing - START")
+            logger.debug("installing - START")
             _set_collection_state_data_status(
                 state_id=state_id,
-                new_status="installing",
+                new_status=CollectionStatusV2.INSTALLING,
                 logger_name=logger_name,
                 db=db,
             )
@@ -265,21 +281,18 @@ async def background_collect_pip(
                 task_pkg=task_pkg,
                 logger_name=logger_name,
             )
-            logger.debug("Task collection - installing - END")
+            logger.debug("installing - END")
 
             # Block 3: create task metadata and create database entries
             # Required: state_id, python_bin, package_root, task_pkg
-            logger.debug("Task collection - collecting - START")
+            logger.debug("collecting - START")
             _set_collection_state_data_status(
                 state_id=state_id,
-                new_status="collecting",
+                new_status=CollectionStatusV2.COLLECTING,
                 logger_name=logger_name,
                 db=db,
             )
-            logger.debug(
-                "Task collection - collecting - prepare tasks and update db "
-                "- START"
-            )
+            logger.debug("collecting - prepare tasks and update db " "- START")
             task_list = _prepare_tasks_metadata(
                 package_manifest=task_pkg.package_manifest,
                 package_version=task_pkg.package_version,
@@ -289,14 +302,11 @@ async def background_collect_pip(
             )
             _check_task_files_exist(task_list=task_list)
             tasks = _insert_tasks(task_list=task_list, db=db)
-            logger.debug(
-                "Task collection - collecting -  prepare tasks and update db "
-                "- END"
-            )
-            logger.debug("Task collection - collecting - END")
+            logger.debug("collecting -  prepare tasks and update db " "- END")
+            logger.debug("collecting - END")
 
             # Block 4: finalize (write collection files, write metadata to DB)
-            logger.debug("Task collection - finalising - START")
+            logger.debug("finalising - START")
             collection_path = get_collection_path(venv_path)
             collection_state = db.get(CollectionStateV2, state_id)
             task_read_list = [
@@ -310,21 +320,26 @@ async def background_collect_pip(
 
             flag_modified(collection_state, "data")
             db.commit()
-            logger.debug("Task collection - finalising - END")
+            logger.debug("finalising - END")
 
         except Exception as e:
+            logfile_path = get_log_path(get_absolute_venv_path(venv_path))
             _handle_failure(
                 state_id=state_id,
-                venv_path=venv_path,
+                log_file_path=logfile_path,
                 logger_name=logger_name,
                 exception=e,
                 db=db,
+                venv_path=venv_path,
             )
             return
 
         logger.debug("Task-collection status: OK")
         logger.info("Background task collection completed successfully")
         _set_collection_state_data_status(
-            state_id=state_id, new_status="OK", logger_name=logger_name, db=db
+            state_id=state_id,
+            new_status=CollectionStatusV2.OK,
+            logger_name=logger_name,
+            db=db,
         )
         reset_logger_handlers(logger)

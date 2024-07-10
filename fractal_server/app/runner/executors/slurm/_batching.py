@@ -33,7 +33,6 @@ def _estimate_parallel_tasks_per_job(
     """
     Compute how many parallel tasks can fit in a given SLURM job
 
-
     Note: If more resources than available are requested, return 1. This
     assumes that further checks will be performed on the output of the current
     function, as is the case in the `heuristics` function below.

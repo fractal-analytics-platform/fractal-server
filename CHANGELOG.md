@@ -1,8 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.1 (unreleased)
+
+* Testing:
+    * Stop testing SQLite database for V1 in CI (\#1630).
+
 # 2.3.0
 
-This release includes a major update to task-collection configuration variables and logic. We now support two main use cases:
+This release includes two important updates:
+1. An Update update to task-collection configuration variables and logic.
+2. The first released version of the **experimental** SSH features.
+
+Re: task-collection configuration, we now support two main use cases:
 
 1. When running a production instance (including on a SLURM cluster), you
    should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure
@@ -18,16 +27,31 @@ This release includes a major update to task-collection configuration variables 
 > will only have a single Python interpreter available for tasks (namely the
 > one running `fractal-server`).
 
+* API:
+    * Introduce `api/v2/task/collect/custom/` endpoint (\#1607, \#1613, \#1617, \#1629).
 * Task collection:
     * Introduce task-collection Python-related configuration variables (\#1587).
-    * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587)
-    * Refactor internal task-collection functions and models (\#1587).
+    * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587).
+    * Refactor task-collection functions and schemas (\#1587, \#1617).
+    * Remove `TaskCollectStatusV2` and `get_collection_data` internal schema/function (\#1598).
+    * Introduce `CollectionStatusV2` enum for task-collection status (\#1598).
+    * Reject task-collection request if it includes a wheel file and a version (\#1608).
+SSH features:
+    * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599, \#1611).
+    * Introduce SSH executor and runner (\#1545).
+    * Introduce SSH task collection (\#1545, \#1599, \#1626).
+    * Introduce SSH-related configuration variables (\#1545).
+    * Modify app lifespan to handle SSH connection (\#1545).
+    * Split `app/runner/executor/slurm` into `sudo` and `ssh` subfolders (\#1545).
+    * Introduce FractalSSH object which is a wrapper class around fabric.Connection object.
+It provides a `lock` to avoid loss of ssh instructions and a custom timeout (\#1618)
 * Dependencies:
     * Update `sqlmodel` to `^0.0.19` (\#1584).
     * Update `pytest-asyncio` to `^0.23` (\#1558).
 * Testing:
     * Test the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
     * Remove `event_loop` fixture: every test will run on its own event loop (\#1558).
+    * Test task collection with non-canonical package name (\#1602).
 
 # 2.2.0
 

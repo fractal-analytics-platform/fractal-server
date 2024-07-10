@@ -5,6 +5,7 @@ This module is the single entry point to the runner backend subsystem V2.
 Other subystems should only import this module and not its submodules or
 the individual backends.
 """
+import logging
 import os
 import traceback
 from pathlib import Path
@@ -17,6 +18,7 @@ from ....config import get_settings
 from ....logger import get_logger
 from ....logger import reset_logger_handlers
 from ....logger import set_logger
+from ....ssh._fabric import FractalSSH
 from ....syringe import Inject
 from ....utils import get_timestamp
 from ...db import DB
@@ -27,14 +29,15 @@ from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
+from ..executors.slurm.sudo._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._local_experimental import (
     process_workflow as local_experimental_process_workflow,
 )
-from ._slurm import process_workflow as slurm_process_workflow
+from ._slurm import process_workflow as slurm_sudo_process_workflow
+from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_images_failed_job
@@ -42,8 +45,9 @@ from fractal_server import __VERSION__
 
 _backends = {}
 _backends["local"] = local_process_workflow
+_backends["slurm"] = slurm_sudo_process_workflow
+_backends["slurm_ssh"] = slurm_ssh_process_workflow
 _backends["local_experimental"] = local_experimental_process_workflow
-_backends["slurm"] = slurm_process_workflow
 
 
 def fail_job(
@@ -75,6 +79,7 @@ async def submit_workflow(
     worker_init: Optional[str] = None,
     slurm_user: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
+    fractal_ssh: Optional[FractalSSH] = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -101,6 +106,9 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
+    # Declare runner backend and set `process_workflow` function
+    settings = Inject(get_settings)
+    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(logger_name=logger_name)
 
@@ -114,17 +122,16 @@ async def submit_workflow(
         # Declare runner backend and set `process_workflow` function
         settings = Inject(get_settings)
         FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-        if FRACTAL_RUNNER_BACKEND == "local":
-            process_workflow = local_process_workflow
-        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
-            process_workflow = local_experimental_process_workflow
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
-            process_workflow = slurm_process_workflow
-        else:
+        try:
+            process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
+        except KeyError as e:
             fail_job(
                 db=db_sync,
                 job=job,
-                log_msg=f"Invalid {FRACTAL_RUNNER_BACKEND=}",
+                log_msg=(
+                    f"Invalid {FRACTAL_RUNNER_BACKEND=}.\n"
+                    f"Original KeyError: {str(e)}"
+                ),
                 logger_name=logger_name,
                 emit_log=True,
             )
@@ -159,10 +166,9 @@ async def submit_workflow(
 
         try:
 
-            # Create WORKFLOW_DIR
+            # Create WORKFLOW_DIR_LOCAL
             original_umask = os.umask(0)
             WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-
             os.umask(original_umask)
 
             # Define and create WORKFLOW_DIR_REMOTE
@@ -176,6 +182,24 @@ async def submit_workflow(
                 )
                 _mkdir_as_user(
                     folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
+                )
+            elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+                WORKFLOW_DIR_REMOTE = (
+                    Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+                    / WORKFLOW_DIR_LOCAL.name
+                )
+                # FIXME SSH: move mkdir to executor, likely within handshake
+
+                from ....ssh._fabric import _mkdir_over_ssh
+
+                _mkdir_over_ssh(
+                    folder=str(WORKFLOW_DIR_REMOTE), fractal_ssh=fractal_ssh
+                )
+                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
+            else:
+                logging.error(
+                    "Invalid FRACTAL_RUNNER_BACKEND="
+                    f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
 
             # Create all tasks subfolders
@@ -197,13 +221,16 @@ async def submit_workflow(
                         folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
                         user=slurm_user,
                     )
+                else:
+                    logging.info("Skip remote-subfolder creation")
         except Exception as e:
+            error_type = type(e).__name__
             fail_job(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    "An error occurred while creating job folder and "
-                    f"subfolders.\nOriginal error: {str(e)}"
+                    f"{error_type} error occurred while creating job folder "
+                    f"and subfolders.\nOriginal error: {str(e)}"
                 ),
                 logger_name=logger_name,
                 emit_log=True,
@@ -238,9 +265,17 @@ async def submit_workflow(
         )
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
-        logger.debug(f"slurm_user: {slurm_user}")
-        logger.debug(f"slurm_account: {job.slurm_account}")
-        logger.debug(f"worker_init: {worker_init}")
+        if FRACTAL_RUNNER_BACKEND == "slurm":
+            logger.debug(f"slurm_user: {slurm_user}")
+            logger.debug(f"slurm_account: {job.slurm_account}")
+            logger.debug(f"worker_init: {worker_init}")
+        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            logger.debug(f"ssh_host: {settings.FRACTAL_SLURM_SSH_HOST}")
+            logger.debug(f"ssh_user: {settings.FRACTAL_SLURM_SSH_USER}")
+            logger.debug(
+                f"base dir: {settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR}"
+            )
+            logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")
@@ -249,6 +284,27 @@ async def submit_workflow(
         logger.debug(f'START workflow "{workflow.name}"')
 
     try:
+        if FRACTAL_RUNNER_BACKEND == "local":
+            process_workflow = local_process_workflow
+            backend_specific_kwargs = {}
+        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+            process_workflow = local_experimental_process_workflow
+            backend_specific_kwargs = {}
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            process_workflow = slurm_sudo_process_workflow
+            backend_specific_kwargs = dict(
+                slurm_user=slurm_user,
+                slurm_account=job.slurm_account,
+                user_cache_dir=user_cache_dir,
+            )
+        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            process_workflow = slurm_ssh_process_workflow
+            backend_specific_kwargs = dict(fractal_ssh=fractal_ssh)
+        else:
+            raise RuntimeError(
+                f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"
+            )
+
         # "The Session.close() method does not prevent the Session from being
         # used again. The Session itself does not actually have a distinct
         # “closed” state; it merely means the Session will release all database
@@ -265,15 +321,13 @@ async def submit_workflow(
         new_dataset_attributes = await process_workflow(
             workflow=workflow,
             dataset=dataset,
-            slurm_user=slurm_user,
-            slurm_account=job.slurm_account,
-            user_cache_dir=user_cache_dir,
             workflow_dir_local=WORKFLOW_DIR_LOCAL,
             workflow_dir_remote=WORKFLOW_DIR_REMOTE,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
+            **backend_specific_kwargs,
         )
 
         logger.info(

@@ -1,4 +1,5 @@
 import os
+import shutil
 from glob import glob
 from pathlib import Path
 from typing import Any
@@ -508,7 +509,7 @@ async def failing_workflow_UnknownError(
         assert statuses == EXPECTED_STATUSES
 
 
-async def non_python_task_local(
+async def workflow_with_non_python_task(
     *,
     MockCurrentUser,
     client,
@@ -517,9 +518,15 @@ async def non_python_task_local(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    tmp777_path: Path,
+    additional_user_kwargs=None,
 ):
+    user_kwargs = {"is_verified": True}
+    if additional_user_kwargs is not None:
+        user_kwargs.update(additional_user_kwargs)
+    debug(user_kwargs)
 
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project
         project = await project_factory_v2(user)
         project_id = project.id
@@ -529,14 +536,20 @@ async def non_python_task_local(
             name="test_wf", project_id=project_id
         )
 
+        # Copy script somewhere accessible
+        script_name = "non_python_task_issue1377.sh"
+        script_path = tmp777_path / script_name
+        shutil.copy(
+            testdata_path / script_name,
+            script_path,
+        )
+
         # Create task
         task = await task_factory_v2(
             name="non-python",
             source="custom-task",
             type="non_parallel",
-            command_non_parallel=(
-                f"bash {str(testdata_path)}/non_python_task_issue1377.sh"
-            ),
+            command_non_parallel=(f"bash {script_path.as_posix()}"),
         )
 
         # Add task to workflow
@@ -569,6 +582,7 @@ async def non_python_task_local(
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
+
         assert job_status_data["status"] == "done"
         debug(job_status_data["end_timestamp"])
         assert job_status_data["end_timestamp"]
@@ -589,7 +603,8 @@ async def non_python_task_local(
         ]
 
         for f in must_exist:
-            assert f in glob_list
+            if f not in glob_list:
+                raise ValueError(f"{f} must exist, but {glob_list=}")
 
         # Check that stderr and stdout are as expected
         with open(f"{working_dir}/0_non-python/0.log", "r") as f:

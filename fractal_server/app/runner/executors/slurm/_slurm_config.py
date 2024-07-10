@@ -312,7 +312,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     def to_sbatch_preamble(
         self,
-        user_cache_dir: Optional[str] = None,
+        remote_export_dir: Optional[str] = None,
     ) -> list[str]:
         """
         Compile `SlurmConfig` object into the preamble of a SLURM submission
@@ -345,14 +345,14 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             if value is not None:
                 # Handle the `time` parameter
                 if key == "time" and self.parallel_tasks_per_job > 1:
+                    # FIXME SSH: time setting must be handled better. Right now
+                    # we simply propagate `time`, but this is not enough when
+                    # several `srun` are combined in a single script.
                     logger.warning(
-                        "Ignore `#SBATCH --time=...` line (given: "
-                        f"{self.time=}) for parallel_tasks_per_job>1"
-                        f" (given: {self.parallel_tasks_per_job}), "
-                        "since scaling of time with number of tasks is "
-                        "not implemented."
+                        f"`time` SLURM parameter is set to {self.time}, "
+                        "but this does not take into account the number of "
+                        f"SLURM tasks ({self.parallel_tasks_per_job})."
                     )
-                    continue
                 option = key.replace("_", "-")
                 lines.append(f"{self.prefix} --{option}={value}")
 
@@ -361,12 +361,12 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
                 lines.append(line)
 
         if self.user_local_exports:
-            if user_cache_dir is None:
+            if remote_export_dir is None:
                 raise ValueError(
                     f"user_cache_dir=None but {self.user_local_exports=}"
                 )
             for key, value in self.user_local_exports.items():
-                tmp_value = str(Path(user_cache_dir) / value)
+                tmp_value = str(Path(remote_export_dir) / value)
                 lines.append(f"export {key}={tmp_value}")
 
         """

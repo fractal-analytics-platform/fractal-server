@@ -36,7 +36,7 @@ from ...schemas.v1 import WorkflowReadV1
 from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
 from ..aux._job import _zip_folder_to_byte_stream
-from ..aux._runner import _is_shutdown_available
+from ..aux._runner import _check_shutdown_is_supported
 
 router_admin_v1 = APIRouter()
 
@@ -359,7 +359,7 @@ async def stop_job(
     Stop execution of a workflow job.
     """
 
-    _is_shutdown_available()
+    _check_shutdown_is_supported()
 
     job = await db.get(ApplyWorkflow, job_id)
     if job is None:

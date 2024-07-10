@@ -642,7 +642,7 @@ async def test_stop_job(
         res = await client.get(
             f"{PREFIX}/project/{project.id}/job/{job.id}/stop/"
         )
-        if backend in ["slurm", "local_experimental"]:
+        if backend in ["slurm", "local_experimental", "slurm_ssh"]:
             assert res.status_code == 202
 
             shutdown_file = tmp_path / SHUTDOWN_FILENAME

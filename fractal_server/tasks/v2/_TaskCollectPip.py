@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -66,10 +67,8 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
             if not package_path.is_absolute():
                 raise ValueError("Package path must be absolute")
             if not package_path.exists():
-                raise ValueError(f"Package {package_path} does not exist.")
-            if values.get("package_version") is not None:
-                raise ValueError(
-                    "Cannot provide version when package is a wheel file."
+                logging.warning(
+                    f"Package {package_path} does not exist locally."
                 )
             values["package_path"] = package_path
             wheel_metadata = _parse_wheel_filename(package_path.name)

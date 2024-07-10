@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fractal_tasks_mock.input_models import InitArgsCellVoyager
@@ -19,8 +20,8 @@ def fill_cellvoyager_ome_zarr(
         init_args: description
     """
 
-    print("[fill_cellvoyager_ome_zarr] START")
-    print(f"[fill_cellvoyager_ome_zarr] {zarr_url=}")
+    logging.info("[fill_cellvoyager_ome_zarr] START")
+    logging.info(f"[fill_cellvoyager_ome_zarr] {zarr_url=}")
 
     raw_zarr_url = init_args.raw_zarr_url
 
@@ -31,12 +32,12 @@ def fill_cellvoyager_ome_zarr(
     # Read 3D from data
     is_3D = True  # Mock
 
-    print(f"[fill_cellvoyager_ome_zarr] {raw_zarr_url=}")
+    logging.info(f"[fill_cellvoyager_ome_zarr] {raw_zarr_url=}")
     # Write fake image data into image Zarr group
     _check_zarr_url_is_absolute(zarr_url)
     with (Path(zarr_url) / "data").open("w") as f:
         f.write(f"Source data: {raw_zarr_url}\n")
-    print("[fill_cellvoyager_ome_zarr] END")
+    logging.info("[fill_cellvoyager_ome_zarr] END")
     attributes = dict(well=well, plate=plate)
     if init_args.acquisition is not None:
         attributes["acquisition"] = init_args.acquisition

@@ -1,6 +1,6 @@
 # SLURM backend
 
-Refer to the [slurm](../../../reference/fractal_server/app/runner/_slurm)
+Refer to the [slurm](../../../reference/fractal_server/app/runner/executors/slurm)
 module for more details.
 
 **NOTE**: `SlurmConfig` objects are created internally in `fractal-server`, and
@@ -8,13 +8,13 @@ they are not meant to be initialized by the user; the same holds for
 `SlurmConfig` attributes (e.g. `mem_per_task_MB`) which are not meant to be
 part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file (details on the expected file
 content are defined in
-[`SlurmConfigFile`](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
+[`SlurmConfigFile`](../../../reference/fractal_server/app/runner/executors/slurm/_slurm_config/#fractal_server.app.runner.executors.slurm._slurm_config.SlurmConfigFile)).
 
 ## SLURM configuration
 
 The logic for setting up the SLURM configuration of a given `WorkflowTask` is
 implemented in the
-[slurm.\_slurm_config](../../../reference/fractal_server/app/runner/_slurm/_slurm_config)
+[slurm.\_slurm_config](../../../reference/fractal_server/app/runner/executors/slurm/_slurm_config)
 submodule.
 
 The different sources for SLURM configuration options (like `partition`, `cpus_per_task`, ...) are:
@@ -25,11 +25,11 @@ The different sources for SLURM configuration options (like `partition`, `cpus_p
    `WorkflowTask.task.meta` dictionary attribute;
 3. Lowest-priority (that is default) values come from the configuration in
    `FRACTAL_SLURM_CONFIG_FILE`. This JSON file follows [these
-specifications](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile).
+specifications](../../../reference/fractal_server/app/runner/executors/slurm/_slurm_config/#fractal_server.app.runner.executors.slurm._slurm_config.SlurmConfigFile).
 
 ### Example
 
-The configuration file could be the one defined [here](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile), while a certain `WorkflowTask` could have
+The configuration file could be the one defined [here](../../../reference/fractal_server/app/runner/executors/slurm/_slurm_config/#fractal_server.app.runner.executors.slurm._slurm_config.SlurmConfigFile), while a certain `WorkflowTask` could have
 ```python
 workflow_task.meta = {"cpus_per_task": 3}
 workflow_task.task.meta = {"cpus_per_task": 2, "mem": "10G"}
@@ -63,7 +63,7 @@ who runs a certain task. A relevant example is that user A (who will run the
 task via SLURM) needs to define the cache-directory paths for some libraries
 they use (and those must be paths where user A can write).  This use case is
 also supported in the specs of `fractal-server` [SLURM configuration
-file](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile):
+file](../../../reference/fractal_server/app/runner/executors.slurm/_slurm_config/#fractal_server.app.runner.executors.slurm.executors.slurm_config.SlurmConfigFile):
 If this file includes a block like
 ```JSON
 {
@@ -98,9 +98,9 @@ on the number of jobs that a user is allowed to submit over a certain timespan.
 The logic for handling the batching parameters (that is, how many tasks can be
 combined in the same SLURM job, and how many of them can run in parallel) is
 implemented in the
-[slurm.\_batching](../../../reference/fractal_server/app/runner/_slurm/_batching)
+[slurm.\_batching](../../../reference/fractal_server/app/runner/executors/slurm/_batching)
 submodule, and especially in its
-[`heuristics`](../../../reference/fractal_server/app/runner/_slurm/_batching/#fractal_server.app.runner._slurm._batching.heuristics)
+[`heuristics`](../../../reference/fractal_server/app/runner/executors/slurm/_batching/#fractal_server.app.runner.executors.slurm._batching.heuristics)
 function.
 
 

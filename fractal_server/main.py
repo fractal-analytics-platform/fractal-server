@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .app.routes.aux._runner import _backend_supports_shutdown  # FIXME: change
 from .app.runner.shutdown import cleanup_after_shutdown
 from .app.security import _create_first_user
 from .config import get_settings
@@ -97,17 +98,40 @@ async def lifespan(app: FastAPI):
         is_superuser=True,
         is_verified=True,
     )
+
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        from fractal_server.ssh._fabric import get_ssh_connection
+        from fractal_server.ssh._fabric import FractalSSH
+
+        connection = get_ssh_connection()
+        app.state.fractal_ssh = FractalSSH(connection=connection)
+        logger.info(
+            f"Created SSH connection "
+            f"({app.state.fractal_ssh.is_connected=})."
+        )
+    else:
+        app.state.fractal_ssh = None
+
     config_uvicorn_loggers()
     logger.info("End application startup")
     reset_logger_handlers(logger)
     yield
     logger = get_logger("fractal_server.lifespan")
     logger.info("Start application shutdown")
+
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        logger.info(
+            f"Closing SSH connection "
+            f"(current: {app.state.fractal_ssh.is_connected=})."
+        )
+
+        app.state.fractal_ssh.close()
+
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
         f"Current jobs: {app.state.jobsV1=}, {app.state.jobsV2=}"
     )
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm":
+    if _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND):
         try:
             await cleanup_after_shutdown(
                 jobsV1=app.state.jobsV1,
@@ -120,6 +144,8 @@ async def lifespan(app: FastAPI):
                 "some of running jobs are not shutdown properly. "
                 f"Original error: {e}"
             )
+    else:
+        logger.info("Shutdown not available for this backend runner.")
 
     logger.info("End application shutdown")
     reset_logger_handlers(logger)

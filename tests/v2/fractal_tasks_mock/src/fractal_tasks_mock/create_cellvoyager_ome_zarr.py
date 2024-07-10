@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from pydantic.decorator import validate_arguments
@@ -35,10 +36,10 @@ def create_cellvoyager_ome_zarr(
     plate_zarr_name = "my_plate.zarr"
     zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
 
-    print("[create_cellvoyager_ome_zarr] START")
-    print(f"[create_cellvoyager_ome_zarr] {image_dir=}")
-    print(f"[create_cellvoyager_ome_zarr] {zarr_dir=}")
-    print(f"[create_cellvoyager_ome_zarr] {zarr_path=}")
+    logging.info("[create_cellvoyager_ome_zarr] START")
+    logging.info(f"[create_cellvoyager_ome_zarr] {image_dir=}")
+    logging.info(f"[create_cellvoyager_ome_zarr] {zarr_dir=}")
+    logging.info(f"[create_cellvoyager_ome_zarr] {zarr_path=}")
 
     # Create (fake) OME-Zarr folder on disk
     Path(zarr_path).mkdir()
@@ -63,7 +64,7 @@ def create_cellvoyager_ome_zarr(
                 init_args=dict(raw_zarr_url=raw_zarr_url),
             )
         )
-    print("[create_cellvoyager_ome_zarr] END")
+    logging.info("[create_cellvoyager_ome_zarr] END")
     return dict(parallelization_list=parallelization_list)
 
 
