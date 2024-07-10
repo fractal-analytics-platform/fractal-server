@@ -28,7 +28,7 @@ def fractal_ssh(
         yield fractal_conn
 
 
-def test_unit_fabric_connection_failures():
+def test_unit_remove_folder_over_ssh_failures():
     # Folders which are just invalid
     invalid_folders = [
         None,
@@ -59,7 +59,7 @@ def test_unit_fabric_connection_failures():
     print(e.value)
 
 
-def test_unit_fabric_connection(tmp777_path, fractal_ssh):
+def test_unit_remove_folder_over_ssh(tmp777_path, fractal_ssh):
 
     assert fractal_ssh.is_connected
 
