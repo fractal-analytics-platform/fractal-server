@@ -96,7 +96,7 @@ class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
 
         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
         mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
-        res = self.connection.run(mkdir_command, hide=True)
+        res = self.fractal_ssh.run(mkdir_command, hide=True)
         assert res.exited == 0
         logging.info(f"Now done creating {remote_subfolder.as_posix()}")
 
@@ -130,7 +130,7 @@ def test_slurm_ssh_executor_submit(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
-            connection=fractal_conn,
+            fractal_ssh=fractal_conn,
         ) as executor:
             fut = executor.submit(lambda: 1)
             debug(fut)
@@ -161,7 +161,7 @@ def test_slurm_ssh_executor_map(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
-            connection=fractal_conn,
+            fractal_ssh=fractal_conn,
         ) as executor:
             res = executor.map(lambda x: x * 2, [1, 2, 3])
             results = list(res)
