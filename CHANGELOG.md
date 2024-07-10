@@ -4,6 +4,8 @@
 
 * SSH features:
     * Remove remote venv folder upon failed task collection in SSH mode (\#1634).
+* Testing:
+    * Stop testing SQLite database for V1 in CI (\#1630).
 
 # 2.3.0
 
