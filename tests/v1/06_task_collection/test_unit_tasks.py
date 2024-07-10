@@ -1,12 +1,8 @@
-from pathlib import Path
-
 import pytest
 from devtools import debug
 from pydantic.error_wrappers import ValidationError
 
 from fractal_server.app.schemas.v1 import ManifestV1
-from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.utils import get_python_interpreter_v1
 
@@ -20,38 +16,9 @@ def test_unit_TaskCollectPip(tmp_path):
         _TaskCollectPip(package="somedirectory/my-package")
 
 
-def test_get_absolute_venv_path(tmp_path, override_settings_factory):
-    FRACTAL_TASKS_DIR = tmp_path / "TASKS"
-    override_settings_factory(FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR)
-    absolute_path = tmp_path
-    relative_path = Path("somewhere/else/")
-    assert get_absolute_venv_path(absolute_path) == absolute_path
-    assert get_absolute_venv_path(relative_path) == (
-        FRACTAL_TASKS_DIR / relative_path
-    )
-
-
 def test_get_python_interpreter():
     with pytest.raises(ValueError):
         get_python_interpreter_v1(version="1.1")
-
-
-def test_normalize_package_name():
-    """
-    Test based on the example in
-    https://packaging.python.org/en/latest/specifications/name-normalization.
-    """
-    inputs = (
-        "friendly-bard",
-        "Friendly-Bard",
-        "FRIENDLY-BARD",
-        "friendly.bard",
-        "friendly_bard",
-        "friendly--bard",
-        "FrIeNdLy-._.-bArD",
-    )
-    outputs = list(map(_normalize_package_name, inputs))
-    assert len(set(outputs)) == 1
 
 
 @pytest.mark.parametrize(
