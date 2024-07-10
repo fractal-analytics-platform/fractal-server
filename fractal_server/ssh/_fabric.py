@@ -1,9 +1,13 @@
 import time
 from contextlib import contextmanager
+from pathlib import Path
 from threading import Lock
 from typing import Any
 from typing import Optional
 
+import paramiko.sftp
+import paramiko.sftp_attr
+import paramiko.sftp_client
 from fabric import Connection
 from fabric import Result
 from invoke import UnexpectedExit
@@ -69,10 +73,10 @@ class FractalSSH(object):
         with acquire_timeout(self.lock, timeout=self.default_timeout):
             return self.conn.run(*args, **kwargs)
 
-    def close(self):
+    def close(self) -> None:
         return self.conn.close()
 
-    def sftp(self):
+    def sftp(self) -> paramiko.sftp_client.SFTPClient:
         return self.conn.sftp()
 
     def check_connection(self) -> None:
@@ -243,3 +247,40 @@ def _mkdir_over_ssh(
     else:
         cmd = f"mkdir {folder}"
     run_command_over_ssh(cmd=cmd, fractal_ssh=fractal_ssh)
+
+
+def remove_folder_over_ssh(
+    *,
+    folder: str,
+    safe_root: str,
+    fractal_ssh: FractalSSH,
+) -> None:
+    """
+    Removes a folder remotely via SSH.
+
+    This functions calls `rm -r`, after a few checks on `folder`.
+
+    Args:
+        folder: Absolute path to a folder that should be removed.
+        safe_root: If `folder` is not a subfolder of the absolute
+            `safe_root` path, raise an error.
+        fractal_ssh:
+    """
+    error_msg = (
+        f"{folder=} argument is invalid or it is not "
+        f"relative to {safe_root=}."
+    )
+    invalid_characters = {" ", "\n", ";", "$", "`"}
+
+    if (
+        not isinstance(folder, str)
+        or len(invalid_characters.intersection(folder)) > 0
+        or not Path(folder).is_absolute()
+        or not Path(safe_root).is_absolute()
+        or not Path(folder).resolve().is_relative_to(safe_root)
+    ):
+        raise ValueError(error_msg)
+    else:
+
+        cmd = f"rm -r {folder}"
+        run_command_over_ssh(cmd=cmd, fractal_ssh=fractal_ssh)
