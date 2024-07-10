@@ -23,7 +23,7 @@ Re: task-collection configuration, we now support two main use cases:
 > one running `fractal-server`).
 
 * API:
-    * Introduce `api/v2/task/collect/custom/` endpoint (\#1607, \#1613, \#1617).
+    * Introduce `api/v2/task/collect/custom/` endpoint (\#1607, \#1613, \#1617, \#1629).
 * Task collection:
     * Introduce task-collection Python-related configuration variables (\#1587).
     * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587).
