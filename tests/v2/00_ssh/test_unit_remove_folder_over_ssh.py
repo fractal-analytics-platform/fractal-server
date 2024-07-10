@@ -1,7 +1,6 @@
 import io
 
 import pytest
-from devtools import debug
 from fabric.connection import Connection
 
 from fractal_server.ssh._fabric import FractalSSH
@@ -43,7 +42,7 @@ def test_unit_remove_folder_over_ssh_failures():
             remove_folder_over_ssh(
                 folder=folder, safe_root="/", fractal_ssh=None
             )
-        debug(e.value)
+        print(e.value)
 
     # Folders which are not relative to the accepted root
     with pytest.raises(ValueError) as e:
