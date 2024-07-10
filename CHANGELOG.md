@@ -38,6 +38,8 @@ SSH features:
     * Introduce SSH-related configuration variables (\#1545).
     * Modify app lifespan to handle SSH connection (\#1545).
     * Split `app/runner/executor/slurm` into `sudo` and `ssh` subfolders (\#1545).
+    * Introduce FractalSSH object which is a wrapper class around fabric.Connection object.
+It provides a `lock` to avoid loss of ssh instructions and a custom timeout (\#1618)
 * Dependencies:
     * Update `sqlmodel` to `^0.0.19` (\#1584).
     * Update `pytest-asyncio` to `^0.23` (\#1558).

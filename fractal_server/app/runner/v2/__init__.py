@@ -11,7 +11,6 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-from fabric import Connection  # FIXME SSH: try/except import
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -19,6 +18,7 @@ from ....config import get_settings
 from ....logger import get_logger
 from ....logger import reset_logger_handlers
 from ....logger import set_logger
+from ....ssh._fabric import FractalSSH
 from ....syringe import Inject
 from ....utils import get_timestamp
 from ...db import DB
@@ -79,7 +79,7 @@ async def submit_workflow(
     worker_init: Optional[str] = None,
     slurm_user: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
-    connection: Optional[Connection] = None,
+    fractal_ssh: Optional[FractalSSH] = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -193,7 +193,7 @@ async def submit_workflow(
                 from ....ssh._fabric import _mkdir_over_ssh
 
                 _mkdir_over_ssh(
-                    folder=str(WORKFLOW_DIR_REMOTE), connection=connection
+                    folder=str(WORKFLOW_DIR_REMOTE), fractal_ssh=fractal_ssh
                 )
                 logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
@@ -299,7 +299,7 @@ async def submit_workflow(
             )
         elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
             process_workflow = slurm_ssh_process_workflow
-            backend_specific_kwargs = dict(connection=connection)
+            backend_specific_kwargs = dict(fractal_ssh=fractal_ssh)
         else:
             raise RuntimeError(
                 f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"

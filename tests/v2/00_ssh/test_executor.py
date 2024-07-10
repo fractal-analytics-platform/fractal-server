@@ -12,6 +12,7 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
+from fractal_server.ssh._fabric import FractalSSH
 
 
 def test_versions(
@@ -34,9 +35,10 @@ def test_versions(
         user="fractal",
         connect_kwargs={"password": "fractal"},
     ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
         command = "/usr/bin/python3.9 --version"
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -44,7 +46,7 @@ def test_versions(
         command = f"/usr/bin/python3.9 -c '{python_command}'"
 
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -58,9 +60,10 @@ def test_versions(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
         command = "/usr/bin/python3.9 --version"
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -68,14 +71,14 @@ def test_versions(
         command = f"/usr/bin/python3.9 -c '{python_command}'"
 
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
     # -o "StrictHostKeyChecking no"
 
 
-class TestingFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
+class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
     """
     When running from outside Fractal runner, task-specific subfolders
     must be created by hand.
@@ -93,7 +96,7 @@ class TestingFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
 
         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
         mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
-        res = self.connection.run(mkdir_command, hide=True)
+        res = self.fractal_ssh.run(mkdir_command, hide=True)
         assert res.exited == 0
         logging.info(f"Now done creating {remote_subfolder.as_posix()}")
 
@@ -122,11 +125,12 @@ def test_slurm_ssh_executor_submit(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
-        with TestingFractalSSHSlurmExecutor(
+        fractal_conn = FractalSSH(connection=connection)
+        with MockFractalSSHSlurmExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
-            connection=connection,
+            fractal_ssh=fractal_conn,
         ) as executor:
             fut = executor.submit(lambda: 1)
             debug(fut)
@@ -152,11 +156,12 @@ def test_slurm_ssh_executor_map(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
-        with TestingFractalSSHSlurmExecutor(
+        fractal_conn = FractalSSH(connection=connection)
+        with MockFractalSSHSlurmExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
-            connection=connection,
+            fractal_ssh=fractal_conn,
         ) as executor:
             res = executor.map(lambda x: x * 2, [1, 2, 3])
             results = list(res)
@@ -220,7 +225,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # submit method
     label = f"{random_id}_0_submit"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -233,7 +238,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # map method (few values)
     label = f"{random_id}_1_map_few"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -245,7 +250,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # map method (few values)
     label = f"{random_id}_2_map_many"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -257,7 +262,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # submit method (fail)
     label = f"{random_id}_3_submit_fail"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -269,7 +274,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # map method (fail)
     label = f"{random_id}_4_map_fail"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,

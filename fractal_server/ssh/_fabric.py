@@ -1,7 +1,11 @@
 import time
+from contextlib import contextmanager
+from threading import Lock
+from typing import Any
 from typing import Optional
 
 from fabric import Connection
+from fabric import Result
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -13,6 +17,79 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 MAX_ATTEMPTS = 5
+
+
+class TimeoutException(Exception):
+    pass
+
+
+@contextmanager
+def acquire_timeout(lock: Lock, timeout: int) -> Any:
+    logger.debug(f"Trying to acquire lock, with {timeout=}")
+    result = lock.acquire(timeout=timeout)
+    try:
+        if not result:
+            raise TimeoutException(
+                f"Failed to acquire lock within {timeout} seconds"
+            )
+        logger.debug("Lock was acquired.")
+        yield result
+    finally:
+        if result:
+            lock.release()
+            logger.debug("Lock was released")
+
+
+class FractalSSH(object):
+    lock: Lock
+    connection: Connection
+    default_timeout: int
+
+    # FIXME SSH: maybe extend the actual_timeout logic to other methods
+
+    def __init__(self, connection: Connection, default_timeout: int = 250):
+        self.lock = Lock()
+        self.conn = connection
+        self.default_timeout = default_timeout
+
+    @property
+    def is_connected(self) -> bool:
+        return self.conn.is_connected
+
+    def put(self, *args, timeout: Optional[int] = None, **kwargs) -> Result:
+        actual_timeout = timeout or self.default_timeout
+        with acquire_timeout(self.lock, timeout=actual_timeout):
+            return self.conn.put(*args, **kwargs)
+
+    def get(self, *args, **kwargs) -> Result:
+        with acquire_timeout(self.lock, timeout=self.default_timeout):
+            return self.conn.get(*args, **kwargs)
+
+    def run(self, *args, **kwargs) -> Any:
+        with acquire_timeout(self.lock, timeout=self.default_timeout):
+            return self.conn.run(*args, **kwargs)
+
+    def close(self):
+        return self.conn.close()
+
+    def sftp(self):
+        return self.conn.sftp()
+
+    def check_connection(self) -> None:
+        """
+        Open the SSH connection and handle exceptions.
+
+        This function can be called from within other functions that use
+        `connection`, so that we can provide a meaningful error in case the
+        SSH connection cannot be opened.
+        """
+        if not self.conn.is_connected:
+            try:
+                self.conn.open()
+            except Exception as e:
+                raise RuntimeError(
+                    f"Cannot open SSH connection (original error: '{str(e)}')."
+                )
 
 
 def get_ssh_connection(
@@ -50,30 +127,10 @@ def get_ssh_connection(
     return connection
 
 
-def check_connection(connection: Connection) -> None:
-    """
-    Open the SSH connection and handle exceptions.
-
-    This function can be called from within other functions that use
-    `connection`, so that we can provide a meaningful error in case the
-    SSH connection cannot be opened.
-
-    Args:
-        connection: Fabric connection object
-    """
-    if not connection.is_connected:
-        try:
-            connection.open()
-        except Exception as e:
-            raise RuntimeError(
-                f"Cannot open SSH connection (original error: '{str(e)}')."
-            )
-
-
 def run_command_over_ssh(
     *,
     cmd: str,
-    connection: Connection,
+    fractal_ssh: FractalSSH,
     max_attempts: int = MAX_ATTEMPTS,
     base_interval: float = 3.0,
 ) -> str:
@@ -82,7 +139,7 @@ def run_command_over_ssh(
 
     Args:
         cmd: Command to be run
-        connection: Fabric connection object
+        fractal_ssh: FractalSSH connection object with custom lock
 
     Returns:
         Standard output of the command, if successful.
@@ -95,7 +152,7 @@ def run_command_over_ssh(
         logger.info(f"{prefix} START running '{cmd}' over SSH.")
         try:
             # Case 1: Command runs successfully
-            res = connection.run(cmd, hide=True)
+            res = fractal_ssh.run(cmd, hide=True)
             t_1 = time.perf_counter()
             logger.info(
                 f"{prefix} END   running '{cmd}' over SSH, "
@@ -112,9 +169,7 @@ def run_command_over_ssh(
                 f"{e.errors=}\n"
             )
             if ind_attempt < max_attempts:
-                sleeptime = (
-                    base_interval**ind_attempt
-                )  # FIXME SSH: add jitter?
+                sleeptime = base_interval**ind_attempt
                 logger.warning(
                     f"{prefix} Now sleep {sleeptime:.3f} seconds and continue."
                 )
@@ -147,7 +202,7 @@ def put_over_ssh(
     *,
     local: str,
     remote: str,
-    connection: Connection,
+    fractal_ssh: FractalSSH,
     logger_name: Optional[str] = None,
 ) -> None:
     """
@@ -156,12 +211,12 @@ def put_over_ssh(
     Args:
         local: Local path to file
         remote: Target path on remote host
-        connection: Fabric connection object
+        fractal_ssh: FractalSSH connection object with custom lock
         logger_name: Name of the logger
 
     """
     try:
-        connection.put(local=local, remote=remote)
+        fractal_ssh.put(local=local, remote=remote)
     except Exception as e:
         logger = get_logger(logger_name=logger_name)
         logger.error(
@@ -172,14 +227,14 @@ def put_over_ssh(
 
 
 def _mkdir_over_ssh(
-    *, folder: str, connection: Connection, parents: bool = True
+    *, folder: str, fractal_ssh: FractalSSH, parents: bool = True
 ) -> None:
     """
     Create a folder remotely via SSH.
 
     Args:
         folder:
-        connection:
+        fractal_ssh:
         parents:
     """
     # FIXME SSH: try using `mkdir` method of `paramiko.SFTPClient`
@@ -187,4 +242,4 @@ def _mkdir_over_ssh(
         cmd = f"mkdir -p {folder}"
     else:
         cmd = f"mkdir {folder}"
-    run_command_over_ssh(cmd=cmd, connection=connection)
+    run_command_over_ssh(cmd=cmd, fractal_ssh=fractal_ssh)
