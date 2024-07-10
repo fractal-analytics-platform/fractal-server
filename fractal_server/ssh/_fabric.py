@@ -5,8 +5,6 @@ from threading import Lock
 from typing import Any
 from typing import Optional
 
-import paramiko.sftp
-import paramiko.sftp_attr
 import paramiko.sftp_client
 from fabric import Connection
 from fabric import Result
