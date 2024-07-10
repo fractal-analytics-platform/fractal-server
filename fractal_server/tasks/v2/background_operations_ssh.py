@@ -31,7 +31,7 @@ def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
         ("Python interpreter:", "python_bin"),
         ("Package name:", "package_name"),
         ("Package version:", "package_version"),
-        ("Package parent folder:", "package_root_remote"),
+        ("Package parent folder:", "package_root_parent_remote"),
         ("Manifest absolute path:", "manifest_path_remote"),
     ]
     stdout_lines = stdout.splitlines()
@@ -252,10 +252,20 @@ def background_collect_pip_ssh(
                     logger.error(error_msg)
                     raise ValueError(error_msg)
                 # Extract/drop parsed attributes
-                pkg_attrs.pop("package_name")
+                package_name = pkg_attrs.pop("package_name")
                 python_bin = pkg_attrs.pop("python_bin")
-                package_root_remote = pkg_attrs.pop("package_root_remote")
+                package_root_parent_remote = pkg_attrs.pop(
+                    "package_root_parent_remote"
+                )
                 manifest_path_remote = pkg_attrs.pop("manifest_path_remote")
+
+                # FIXME SSH: Use more robust logic to determine `package_root`,
+                # e.g. as in the custom task-collection endpoint (where we use
+                # `importlib.util.find_spec`)
+                package_name_underscore = package_name.replace("-", "_")
+                package_root_remote = (
+                    Path(package_root_parent_remote) / package_name_underscore
+                ).as_posix()
 
                 # Read and validate remote manifest file
                 with fractal_ssh.sftp().open(manifest_path_remote, "r") as f:
