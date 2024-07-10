@@ -25,18 +25,19 @@ class TimeoutException(Exception):
 
 @contextmanager
 def acquire_timeout(lock: Lock, timeout: int) -> Any:
+    logger.debug(f"Trying to acquire lock, with {timeout=}")
     result = lock.acquire(timeout=timeout)
     try:
-        logger.info("Trying to acquire lock")
         if not result:
             raise TimeoutException(
                 f"Failed to acquire lock within {timeout} seconds"
             )
+        logger.debug("Lock was acquired.")
         yield result
     finally:
         if result:
             lock.release()
-            logger.info("Lock was acquired, and now released")
+            logger.debug("Lock was released")
 
 
 class FractalSSH(object):
