@@ -15,6 +15,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.main import lifespan
+from fractal_server.ssh._fabric import FractalSSH
 from tests.fixtures_slurm import SLURM_USER
 
 
@@ -180,9 +181,6 @@ async def test_lifespan_slurm_ssh(
     db,
 ):
 
-    # monkeypatch.setattr(
-    #     "fractal_server.config.Settings.check_runner", lambda x: x
-    # )
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
@@ -206,5 +204,5 @@ async def test_lifespan_slurm_ssh(
         # verify shutdown
         assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
-        assert app.state.connection.is_connected
-        assert app.state.fractal_ssh.is_connected()
+        assert isinstance(app.state.fractal_ssh, FractalSSH)
+        app.state.fractal_ssh.check_connection()

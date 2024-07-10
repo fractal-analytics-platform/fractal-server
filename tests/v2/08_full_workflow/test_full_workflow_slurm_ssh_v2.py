@@ -38,8 +38,8 @@ async def test_workflow_with_non_python_task_slurm_ssh(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
-    app.state.connection = get_ssh_connection()
-    app.state.fractal_ssh = FractalSSH(connection=app.state.connection)
+    connection = get_ssh_connection()
+    app.state.fractal_ssh = FractalSSH(connection=connection)
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 

@@ -43,7 +43,7 @@ async def test_task_collection_ssh(
     debug(remote_basedir)
 
     _mkdir_over_ssh(
-        folder=remote_basedir, connection=ssh_connection, parents=True
+        folder=remote_basedir, fractal_ssh=ssh_connection, parents=True
     )
 
     override_settings_factory(
@@ -66,7 +66,7 @@ async def test_task_collection_ssh(
     background_collect_pip_ssh(
         state_id=state.id,
         task_pkg=task_pkg,
-        connection=ssh_connection,
+        fractal_ssh=ssh_connection,
     )
 
     await db.refresh(state)

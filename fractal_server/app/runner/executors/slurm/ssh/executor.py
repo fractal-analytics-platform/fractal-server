@@ -57,7 +57,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     FIXME: docstring
 
     Attributes:
-        connection: SSH connection
+        fractal_ssh: FractalSSH connection with custom lock
         shutdown_file:
         python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
         wait_thread_cls: Class for waiting thread
@@ -75,7 +75,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             Dictionary with paths of slurm-related files for active jobs
     """
 
-    connection: FractalSSH
+    fractal_ssh: FractalSSH
 
     workflow_dir_local: Path
     workflow_dir_remote: Path
@@ -94,8 +94,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     def __init__(
         self,
         *,
-        # SSH connection
-        connection: FractalSSH,
+        # FractalSSH connection
+        fractal_ssh: FractalSSH,
         # Folders and files
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
@@ -116,7 +116,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         relevant bits of `cfut.ClusterExecutor.__init__`.
 
         Args:
-            connection:
+            fractal_ssh:
             workflow_dir_local:
             workflow_dir_remote:
             keep_pickle_files:
@@ -166,8 +166,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             raise ValueError("FRACTAL_SLURM_WORKER_PYTHON is not set. Exit.")
 
         # Initialize connection and perform handshake
-        self.connection = connection
-        logger.warning(self.connection)
+        self.fractal_ssh = fractal_ssh
+        logger.warning(self.fractal_ssh)
         self.handshake()
 
         # Set/validate parameters for SLURM submission scripts
@@ -837,7 +837,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Transfer archive
         t_0_put = time.perf_counter()
-        self.connection.put(
+        self.fractal_ssh.put(
             local=tarfile_path_local,
             remote=tarfile_path_remote,
         )
@@ -852,7 +852,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "fractal_server.app.runner.extract_archive "
             f"{tarfile_path_remote}"
         )
-        run_command_over_ssh(cmd=tar_command, connection=self.connection)
+        run_command_over_ssh(cmd=tar_command, fractal_ssh=self.fractal_ssh)
 
         # Remove local version
         t_0_rm = time.perf_counter()
@@ -876,7 +876,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
         sbatch_stdout = run_command_over_ssh(
             cmd=sbatch_command,
-            connection=self.connection,
+            fractal_ssh=self.fractal_ssh,
         )
 
         # Extract SLURM job ID from stdout
@@ -1215,9 +1215,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Remove remote tarfile - FIXME SSH: is this needed?
         # rm_command = f"rm {tarfile_path_remote}"
-        # _run_command_over_ssh(cmd=rm_command, connection=self.connection)
+        # _run_command_over_ssh(cmd=rm_command, fractal_ssh=self.fractal_ssh)
         logger.warning(f"Unlink {tarfile_path_remote=} - START")
-        self.connection.sftp().unlink(tarfile_path_remote)
+        self.fractal_ssh.sftp().unlink(tarfile_path_remote)
         logger.warning(f"Unlink {tarfile_path_remote=} - STOP")
 
         # Create remote tarfile
@@ -1227,13 +1227,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
         )
         stdout = run_command_over_ssh(
-            cmd=tar_command, connection=self.connection
+            cmd=tar_command, fractal_ssh=self.fractal_ssh
         )
         print(stdout)
 
         # Fetch tarfile
         t_0_get = time.perf_counter()
-        self.connection.get(
+        self.fractal_ssh.get(
             remote=tarfile_path_remote,
             local=tarfile_path_local,
         )
@@ -1330,7 +1330,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
 
         logger.debug("Executor shutdown: start")
-        # self.connection.close()
 
         # Handle all job futures
         slurm_jobs_to_scancel = []
@@ -1354,7 +1353,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             scancel_command = f"scancel {scancel_string}"
             run_command_over_ssh(
-                cmd=scancel_command, connection=self.connection
+                cmd=scancel_command, fractal_ssh=self.fractal_ssh
             )
         logger.debug("Executor shutdown: end")
 
@@ -1382,7 +1381,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         squeue_command = squeue_command.replace("__JOBS__", job_ids)
         stdout = run_command_over_ssh(
             cmd=squeue_command,
-            connection=self.connection,
+            fractal_ssh=self.fractal_ssh,
         )
         return stdout
 
@@ -1457,13 +1456,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         FIXME SSH: We could include further checks on version matches
         """
 
-        self.connection.check_connection()
+        self.fractal_ssh.check_connection()
 
         t_start_handshake = time.perf_counter()
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
         cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
-        stdout = run_command_over_ssh(cmd=cmd, connection=self.connection)
+        stdout = run_command_over_ssh(cmd=cmd, fractal_ssh=self.fractal_ssh)
         remote_versions = json.loads(stdout.strip("\n"))
 
         # Check compatibility with local versions

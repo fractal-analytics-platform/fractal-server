@@ -58,7 +58,7 @@ def _customize_and_run_template(
     replacements: list[tuple[str, str]],
     tmpdir: str,
     logger_name: str,
-    connection: FractalSSH,
+    fractal_ssh: FractalSSH,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -70,7 +70,7 @@ def _customize_and_run_template(
         replacements:
         tmpdir:
         logger_name:
-        connection:
+        fractal_ssh:
     """
     logger = get_logger(logger_name)
     logger.debug(f"_customize_and_run_template {script_filename} - START")
@@ -97,14 +97,14 @@ def _customize_and_run_template(
     put_over_ssh(
         local=script_path_local,
         remote=script_path_remote,
-        connection=connection,
+        fractal_ssh=fractal_ssh,
         logger_name=logger_name,
     )
 
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
-    stdout = run_command_over_ssh(cmd=cmd, connection=connection)
+    stdout = run_command_over_ssh(cmd=cmd, fractal_ssh=fractal_ssh)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
     logger.debug(f"_customize_and_run_template {script_filename} - END")
@@ -114,7 +114,7 @@ def _customize_and_run_template(
 def background_collect_pip_ssh(
     state_id: int,
     task_pkg: _TaskCollectPip,
-    connection: FractalSSH,
+    fractal_ssh: FractalSSH,
 ) -> None:
     """
     Collect a task package over SSH
@@ -184,10 +184,10 @@ def background_collect_pip_ssh(
                     replacements=replacements,
                     tmpdir=tmpdir,
                     logger_name=LOGGER_NAME,
-                    connection=connection,
+                    fractal_ssh=fractal_ssh,
                 )
 
-                connection.check_connection()
+                fractal_ssh.check_connection()
 
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
@@ -258,7 +258,7 @@ def background_collect_pip_ssh(
                 manifest_path_remote = pkg_attrs.pop("manifest_path_remote")
 
                 # Read and validate remote manifest file
-                with connection.sftp().open(manifest_path_remote, "r") as f:
+                with fractal_ssh.sftp().open(manifest_path_remote, "r") as f:
                     manifest = json.load(f)
                 logger.info(f"collecting - loaded {manifest_path_remote=}")
                 ManifestV2(**manifest)
