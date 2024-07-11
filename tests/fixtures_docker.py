@@ -1,3 +1,4 @@
+import io
 import logging
 import shlex
 import shutil
@@ -5,10 +6,15 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
+from typing import Generator
 
 import pytest
+from fabric.connection import Connection
 from pytest import TempPathFactory
 from pytest_docker.plugin import containers_scope
+
+from fractal_server.ssh._fabric import FractalSSH
 
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
@@ -185,3 +191,22 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
             return
         time.sleep(interval)
     raise RuntimeError(f"[ssh_alive] SSH not active on {slurmlogin_container}")
+
+
+@pytest.fixture
+def fractal_ssh(
+    slurmlogin_ip,
+    ssh_alive,
+    ssh_keys,
+    monkeypatch,
+) -> Generator[FractalSSH, Any, None]:
+    ssh_private_key = ssh_keys["private"]
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+    with Connection(
+        host=slurmlogin_ip,
+        user="fractal",
+        connect_kwargs={"key_filename": ssh_private_key},
+    ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
+        fractal_conn.check_connection()
+        yield fractal_conn
