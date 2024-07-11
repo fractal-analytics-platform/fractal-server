@@ -20,7 +20,7 @@ from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
 
-class TimeoutError(RuntimeError):
+class FractalSSHTimeoutError(RuntimeError):
     pass
 
 
@@ -71,7 +71,7 @@ class FractalSSH(object):
         try:
             if not result:
                 self.logger.error("Lock was *NOT* acquired.")
-                raise TimeoutError(
+                raise FractalSSHTimeoutError(
                     f"Failed to acquire lock within {timeout} seconds"
                 )
             self.logger.debug("Lock was acquired.")
