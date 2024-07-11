@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pytest
 
@@ -11,7 +12,7 @@ logger = set_logger(__file__)
 
 
 def test_unit_concurrent_run(fractal_ssh: FractalSSH):
-    def _run_sleep(label, lock_timeout):
+    def _run_sleep(label: str, lock_timeout: float):
         logger.info(f"Start running with {label=}")
         fractal_ssh.run_command_over_ssh(
             cmd="sleep 1", lock_timeout=lock_timeout
@@ -28,7 +29,7 @@ def test_unit_concurrent_run(fractal_ssh: FractalSSH):
         assert "Failed to acquire lock" in str(e.value)
 
 
-def test_unit_concurrent_put(fractal_ssh: FractalSSH, tmp_path):
+def test_unit_concurrent_put(fractal_ssh: FractalSSH, tmp_path: Path):
     local_file = (tmp_path / "local").as_posix()
     with open(local_file, "w") as f:
         f.write("x" * 10_000)

@@ -6,7 +6,6 @@ from devtools import debug  # noqa: F401
 from fabric.connection import Connection
 
 from fractal_server.app.models.v2.collection_state import CollectionStateV2
-from fractal_server.ssh._fabric import _mkdir_over_ssh
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations_ssh import (
@@ -34,7 +33,7 @@ def fractal_ssh(
 
 
 async def test_task_collection_ssh(
-    fractal_ssh,
+    fractal_ssh: FractalSSH,
     db,
     override_settings_factory,
     tmp777_path: Path,
@@ -43,8 +42,9 @@ async def test_task_collection_ssh(
     remote_basedir = (tmp777_path / "WORKING_BASE_DIR").as_posix()
     debug(remote_basedir)
 
-    _mkdir_over_ssh(
-        folder=remote_basedir, fractal_ssh=fractal_ssh, parents=True
+    fractal_ssh.mkdir(
+        folder=remote_basedir,
+        parents=True,
     )
 
     override_settings_factory(
@@ -82,7 +82,7 @@ async def test_task_collection_ssh(
 
 
 async def test_task_collection_ssh_failure(
-    fractal_ssh,
+    fractal_ssh: FractalSSH,
     db,
     override_settings_factory,
     tmp777_path: Path,
@@ -91,9 +91,7 @@ async def test_task_collection_ssh_failure(
     remote_basedir = (tmp777_path / "WORKING_BASE_DIR").as_posix()
     debug(remote_basedir)
 
-    _mkdir_over_ssh(
-        folder=remote_basedir, fractal_ssh=fractal_ssh, parents=True
-    )
+    fractal_ssh.mkdir(folder=remote_basedir, parents=True)
 
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
