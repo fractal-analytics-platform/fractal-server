@@ -204,7 +204,6 @@ class FractalSSH(object):
                         "seconds and continue."
                     )
                     time.sleep(sleeptime)
-                    continue
                 else:
                     self.logger.error(f"{prefix} Reached last attempt")
                     break
@@ -215,7 +214,7 @@ class FractalSSH(object):
                     f"Original error:\n{str(e)}."
                 )
                 self.logger.error(error_msg)
-                raise ValueError(error_msg)
+                raise RuntimeError(error_msg)
             except Exception as e:
                 self.logger.error(
                     f"Running command `{cmd}` over SSH failed.\n"
@@ -223,7 +222,7 @@ class FractalSSH(object):
                 )
                 raise e
 
-        raise ValueError(
+        raise RuntimeError(
             f"Reached last attempt ({max_attempts=}) for running "
             f"'{cmd}' over SSH"
         )
