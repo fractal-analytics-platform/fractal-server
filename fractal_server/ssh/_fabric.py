@@ -24,9 +24,13 @@ class TimeoutError(RuntimeError):
     pass
 
 
+logger = set_logger(__name__)
+
+
 class FractalSSH(object):
+
     """
-    FIXME SSH
+    FIXME SSH: Fix docstring
 
     Attributes:
         _lock:
@@ -58,14 +62,6 @@ class FractalSSH(object):
         self.logger_name = logger_name
         set_logger(self.logger_name)
 
-    @property
-    def is_connected(self) -> bool:
-        return self._connection.is_connected
-
-    @property
-    def logger(self) -> logging.Logger:
-        return get_logger(self.logger_name)
-
     @contextmanager
     def acquire_timeout(
         self, timeout: float
@@ -74,6 +70,7 @@ class FractalSSH(object):
         result = self._lock.acquire(timeout=timeout)
         try:
             if not result:
+                self.logger.error("Lock was *NOT* acquired.")
                 raise TimeoutError(
                     f"Failed to acquire lock within {timeout} seconds"
                 )
@@ -83,6 +80,14 @@ class FractalSSH(object):
             if result:
                 self._lock.release()
                 self.logger.debug("Lock was released")
+
+    @property
+    def is_connected(self) -> bool:
+        return self._connection.is_connected
+
+    @property
+    def logger(self) -> logging.Logger:
+        return get_logger(self.logger_name)
 
     def put(
         self, *args, lock_timeout: Optional[float] = None, **kwargs
@@ -105,6 +110,7 @@ class FractalSSH(object):
     def run(
         self, *args, lock_timeout: Optional[float] = None, **kwargs
     ) -> Any:
+
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
@@ -161,7 +167,7 @@ class FractalSSH(object):
         if base_interval is not None:
             actual_base_interval = base_interval
 
-        lock_timeout = self.default_lock_timeout
+        actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
 
