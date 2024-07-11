@@ -189,11 +189,8 @@ async def submit_workflow(
                     / WORKFLOW_DIR_LOCAL.name
                 )
                 # FIXME SSH: move mkdir to executor, likely within handshake
-
-                from ....ssh._fabric import _mkdir_over_ssh
-
-                _mkdir_over_ssh(
-                    folder=str(WORKFLOW_DIR_REMOTE), fractal_ssh=fractal_ssh
+                fractal_ssh.mkdir(
+                    folder=str(WORKFLOW_DIR_REMOTE),
                 )
                 logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
