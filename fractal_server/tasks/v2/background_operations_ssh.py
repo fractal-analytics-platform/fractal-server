@@ -18,9 +18,6 @@ from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import put_over_ssh
-from fractal_server.ssh._fabric import remove_folder_over_ssh
-from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
@@ -95,17 +92,15 @@ def _customize_and_run_template(
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
-    put_over_ssh(
+    fractal_ssh.put_over_ssh(
         local=script_path_local,
         remote=script_path_remote,
-        fractal_ssh=fractal_ssh,
-        logger_name=logger_name,
     )
 
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
-    stdout = run_command_over_ssh(cmd=cmd, fractal_ssh=fractal_ssh)
+    stdout = fractal_ssh.run_command_over_ssh(cmd=cmd)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
     logger.debug(f"_customize_and_run_template {script_filename} - END")
@@ -318,10 +313,9 @@ def background_collect_pip_ssh(
                 )
                 logger.info(f"Now delete remote folder {package_env_dir}")
                 try:
-                    remove_folder_over_ssh(
+                    fractal_ssh.remove_folder(
                         remote_dir=package_env_dir,
                         safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
-                        fractal_ssh=fractal_ssh,
                     )
                     logger.info(f"Deleted remoted folder {package_env_dir}")
                 except Exception as e:
