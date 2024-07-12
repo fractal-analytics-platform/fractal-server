@@ -3,13 +3,11 @@ from pathlib import Path
 
 import pytest
 from fabric import Connection
+from paramiko.ssh_exception import NoValidConnectionsError
 
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
-
-# from typing import Any
-# from typing import Optional
 
 
 logger = set_logger(__file__)
@@ -172,28 +170,36 @@ def test_run_command_fails(fractal_ssh: FractalSSH):
     print(e.value)
 
 
-# def test_run_command_second_attempt(fractal_ssh: FractalSSH, monkeypatch):
-#     iteration = 0
+def test_run_command_over_ssh_retries(fractal_ssh: FractalSSH):
+    class MockFractalSSH(FractalSSH):
+        """
+        Mock FractalSSH object, such that the first call to `run` always fails.
+        """
 
-#     def run(
-#             self, *args, lock_timeout: Optional[float] = None, **kwargs
-#         ) -> Any:
+        run_iteration: int
 
-#             actual_lock_timeout = self.default_lock_timeout
-#             if lock_timeout is not None:
-#                 actual_lock_timeout = lock_timeout
-#             with self.acquire_timeout(timeout=actual_lock_timeout):
-#                 return self._connection.run(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.run_iteration = 0
 
+        def run(self, *args, **kwargs):
+            self.run_iteration += 1
+            if self.run_iteration == 1:
+                # Construct a NoValidConnectionsError. Note that we prepare an
+                # `errors` attribute with the appropriate type, but with no
+                # meaningful content
+                errors = {("str", 1): ("str", 1, 1, 1)}
+                raise NoValidConnectionsError(errors=errors)
+            return super().run(*args, **kwargs)
 
-#     def _run_mock(*args, **kwargs):
-#         if iteration == 0:
-#             raise ValueError
-#         else:
-#             FractalSSH().run(*args, **kwargs)
+    mocked_fractal_ssh = MockFractalSSH(connection=fractal_ssh._connection)
 
-#     monkeypatch.set
+    # Call with max_attempts=1 fails
+    with pytest.raises(RuntimeError, match="Reached last attempt"):
+        mocked_fractal_ssh.run_command_over_ssh(cmd="whoami", max_attempts=1)
 
-# fractal_ssh.run_command_over_ssh(
-#     cmd="whoami", max_attempts=2, base_interval=0.1
-#     )
+    # Call with max_attempts=2 goes through
+    stdout = mocked_fractal_ssh.run_command_over_ssh(
+        cmd="whoami", max_attempts=2, base_interval=0.1
+    )
+    assert stdout.strip() == "fractal"
