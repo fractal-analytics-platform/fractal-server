@@ -153,3 +153,33 @@ def test_remove_folder_over_ssh(tmp777_path, fractal_ssh: FractalSSH):
             safe_root="/invalid",
         )
     print(e.value)
+
+
+def test_run_command_fails(fractal_ssh: FractalSSH):
+    """
+    When the remotely-executed command fails, a RuntimeError is raised.
+    """
+    with pytest.raises(RuntimeError) as e:
+        fractal_ssh.run_command_over_ssh(
+            cmd="ls --invalid-option",
+            max_attempts=1,
+            base_interval=1.0,
+            lock_timeout=1.0,
+        )
+    print(e.value)
+
+
+# def test_run_command_second_attempt(fractal_ssh: FractalSSH, monkeypatch):
+#     iteration = 0
+
+#     def _run_mock(*args, **kwargs):
+#         if iteration == 0:
+#             raise ValueError
+#         else:
+#             FractalSSH().run(*args, **kwargs)
+
+#     monkeypatch.set
+
+# fractal_ssh.run_command_over_ssh(
+#     cmd="whoami", max_attempts=2, base_interval=0.1
+#     )
