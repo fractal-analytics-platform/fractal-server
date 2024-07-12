@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
@@ -38,6 +39,7 @@ from fractal_server.tasks.v2.background_operations import (
 from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
 router = APIRouter()
@@ -66,6 +68,7 @@ async def collect_tasks_pip(
     task_collect: TaskCollectPipV2,
     background_tasks: BackgroundTasks,
     response: Response,
+    request: Request,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
@@ -76,17 +79,26 @@ async def collect_tasks_pip(
     of a package and the collection of tasks as advertised in the manifest.
     """
 
-    logger = set_logger(logger_name="collect_tasks_pip")
+    # Get settings
+    settings = Inject(get_settings)
 
-    # Set default python version
+    # Set/check python version
     if task_collect.python_version is None:
-        settings = Inject(get_settings)
         task_collect.python_version = (
             settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
         )
+    try:
+        get_python_interpreter_v2(python_version=task_collect.python_version)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Python version {task_collect.python_version} is "
+                "not available for Fractal task collection."
+            ),
+        )
 
-    # Validate payload as _TaskCollectPip, which has more strict checks than
-    # TaskCollectPip
+    # Validate payload
     try:
         task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
     except ValidationError as e:
@@ -94,6 +106,37 @@ async def collect_tasks_pip(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid task-collection object. Original error: {e}",
         )
+
+    # END of SSH/non-SSH common part
+
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+
+        from fractal_server.tasks.v2.background_operations_ssh import (
+            background_collect_pip_ssh,
+        )
+
+        # Construct and return state
+        state = CollectionStateV2(
+            data=dict(
+                status=CollectionStatusV2.PENDING, package=task_collect.package
+            )
+        )
+        db.add(state)
+        await db.commit()
+
+        background_tasks.add_task(
+            background_collect_pip_ssh,
+            state.id,
+            task_pkg,
+            request.app.state.fractal_ssh,
+        )
+
+        response.status_code = status.HTTP_201_CREATED
+        return state
+
+    # Actual non-SSH endpoint
+
+    logger = set_logger(logger_name="collect_tasks_pip")
 
     with TemporaryDirectory() as tmpdir:
         try:
@@ -253,6 +296,7 @@ async def check_collection_status(
     """
     Check status of background task collection
     """
+
     logger = set_logger(logger_name="check_collection_status")
     logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(CollectionStateV2, state_id)
@@ -263,17 +307,28 @@ async def check_collection_status(
             detail=f"No task collection info with id={state_id}",
         )
 
-    # In some cases (i.e. a successful or ongoing task collection),
-    # state.data.log is not set; if so, we collect the current logs.
-    if verbose and not state.data.get("log"):
-        if "venv_path" not in state.data.keys():
-            await db.close()
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"No 'venv_path' in CollectionStateV2[{state_id}].data",
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # FIXME SSH: add logic for when data.state["log"] is empty
+        pass
+    else:
+        # Non-SSH mode
+        # In some cases (i.e. a successful or ongoing task collection),
+        # state.data.log is not set; if so, we collect the current logs.
+        if verbose and not state.data.get("log"):
+            if "venv_path" not in state.data.keys():
+                await db.close()
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"No 'venv_path' in CollectionStateV2[{state_id}].data"
+                    ),
+                )
+            state.data["log"] = get_collection_log(
+                Path(state.data["venv_path"])
             )
-        state.data["log"] = get_collection_log(Path(state.data["venv_path"]))
-        state.data["venv_path"] = str(state.data["venv_path"])
+            state.data["venv_path"] = str(state.data["venv_path"])
+
     reset_logger_handlers(logger)
     await db.close()
     return state

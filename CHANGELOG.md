@@ -2,11 +2,15 @@
 
 # 2.3.1 (unreleased)
 
+* API:
+    * Improve error message when task-collection Python is not defined (\#1640).
+    * Use a single endpoint for standard and SSH task collection (\#1640).
 * SSH features:
-    * Remove remote venv folder upon failed task collection in SSH mode (\#1634).
+    * Remove remote venv folder upon failed task collection in SSH mode (\#1634, \#1640).
     * Refactor `FractalSSH` (\#1635).
     * Set `fabric.Connection.forward_agent=False` (\#1639).
 * Testing:
+    * Improved testing of SSH task-collection API (\#1640).
     * Improved testing of `FractalSSH` methods (\#1635).
     * Stop testing SQLite database for V1 in CI (\#1630).
 

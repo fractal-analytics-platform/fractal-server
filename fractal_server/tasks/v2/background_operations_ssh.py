@@ -122,6 +122,7 @@ def background_collect_pip_ssh(
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
     """
+
     # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
         LOGGER_NAME = "task_collection_ssh"
@@ -311,16 +312,16 @@ def background_collect_pip_ssh(
                     exception=e,
                     db=db,
                 )
-                logger.info(f"Now delete remote folder {package_env_dir}")
                 try:
+                    logger.info(f"Now delete remote folder {package_env_dir}")
                     fractal_ssh.remove_folder(
-                        remote_dir=package_env_dir,
+                        folder=package_env_dir,
                         safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
                     )
                     logger.info(f"Deleted remoted folder {package_env_dir}")
                 except Exception as e:
                     logger.error(
-                        f"Deleting remote folder {package_env_dir} failed.\n"
+                        f"Deleting remote folder failed.\n"
                         f"Original error:\n{str(e)}"
                     )
                 return
