@@ -36,6 +36,10 @@ async def test_task_collection_ssh_from_pypi(
     )
     settings = Inject(get_settings)
 
+    fractal_ssh.mkdir(
+        folder=settings.FRACTAL_RUNNER_WORKING_BASE_DIR.as_posix()
+    )
+
     app.state.fractal_ssh = fractal_ssh
 
     # Prepare and validate payload
