@@ -5,77 +5,13 @@ import random
 from pathlib import Path
 
 import pytest
-from devtools import debug  # noqa: F401
-from fabric.connection import Connection
+from devtools import debug
 
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
 from fractal_server.ssh._fabric import FractalSSH
-
-
-def test_versions(
-    slurmlogin_ip,
-    ssh_alive,
-    slurmlogin_container,
-    monkeypatch,
-    ssh_keys: dict[str, str],
-):
-    """
-    Check the Python and fractal-server versions available on the cluster.
-    NOTE: This will later become a preliminary-check as part of the app
-    startup phase: check that Python has the same Major.Minor versions
-    and fractal-server has the same Major.Minor.Patch.
-    """
-    monkeypatch.setattr("sys.stdin", io.StringIO(""))
-
-    with Connection(
-        host=slurmlogin_ip,
-        user="fractal",
-        connect_kwargs={"password": "fractal"},
-    ) as connection:
-        fractal_conn = FractalSSH(connection=connection)
-        command = "/usr/bin/python3.9 --version"
-        print(f"COMMAND:\n{command}")
-        res = fractal_conn.run(command, hide=True)
-        print(f"STDOUT:\n{res.stdout}")
-        print(f"STDERR:\n{res.stderr}")
-
-        python_command = "import fractal_server as fs; print(fs.__VERSION__);"
-        command = f"/usr/bin/python3.9 -c '{python_command}'"
-
-        print(f"COMMAND:\n{command}")
-        res = fractal_conn.run(command, hide=True)
-        print(f"STDOUT:\n{res.stdout}")
-        print(f"STDERR:\n{res.stderr}")
-
-    print("NOW AGAIN BUT USING KEY")
-    ssh_private_key = ssh_keys["private"]
-    debug(ssh_private_key)
-    debug(slurmlogin_ip)
-
-    with Connection(
-        host=slurmlogin_ip,
-        user="fractal",
-        connect_kwargs={"key_filename": ssh_private_key},
-    ) as connection:
-        fractal_conn = FractalSSH(connection=connection)
-        command = "/usr/bin/python3.9 --version"
-        print(f"COMMAND:\n{command}")
-        res = fractal_conn.run(command, hide=True)
-        print(f"STDOUT:\n{res.stdout}")
-        print(f"STDERR:\n{res.stderr}")
-
-        python_command = "import fractal_server as fs; print(fs.__VERSION__);"
-        command = f"/usr/bin/python3.9 -c '{python_command}'"
-
-        print(f"COMMAND:\n{command}")
-        res = fractal_conn.run(command, hide=True)
-        print(f"STDOUT:\n{res.stdout}")
-        print(f"STDERR:\n{res.stderr}")
-
-    # -o "StrictHostKeyChecking no"
 
 
 class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
@@ -107,65 +43,41 @@ class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
 
 
 def test_slurm_ssh_executor_submit(
-    slurmlogin_ip,
-    ssh_alive,
-    monkeypatch,
+    fractal_ssh,
     tmp_path: Path,
     tmp777_path: Path,
-    ssh_keys: dict[str, str],
     override_settings_factory,
 ):
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
 
-    monkeypatch.setattr("sys.stdin", io.StringIO(""))
-
-    ssh_private_key = ssh_keys["private"]
-    with Connection(
-        host=slurmlogin_ip,
-        user="fractal",
-        connect_kwargs={"key_filename": ssh_private_key},
-    ) as connection:
-        fractal_conn = FractalSSH(connection=connection)
-        with MockFractalSSHSlurmExecutor(
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
-            slurm_poll_interval=1,
-            fractal_ssh=fractal_conn,
-        ) as executor:
-            fut = executor.submit(lambda: 1)
-            debug(fut)
-            debug(fut.result())
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        fut = executor.submit(lambda: 1)
+        debug(fut)
+        debug(fut.result())
 
 
 def test_slurm_ssh_executor_map(
-    slurmlogin_ip,
-    ssh_alive,
-    monkeypatch,
+    fractal_ssh: FractalSSH,
     tmp_path: Path,
     tmp777_path: Path,
-    ssh_keys: dict[str, str],
     override_settings_factory,
 ):
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
 
-    monkeypatch.setattr("sys.stdin", io.StringIO(""))
-
-    ssh_private_key = ssh_keys["private"]
-    with Connection(
-        host=slurmlogin_ip,
-        user="fractal",
-        connect_kwargs={"key_filename": ssh_private_key},
-    ) as connection:
-        fractal_conn = FractalSSH(connection=connection)
-        with MockFractalSSHSlurmExecutor(
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
-            slurm_poll_interval=1,
-            fractal_ssh=fractal_conn,
-        ) as executor:
-            res = executor.map(lambda x: x * 2, [1, 2, 3])
-            results = list(res)
-            assert results == [2, 4, 6]
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        res = executor.map(lambda x: x * 2, [1, 2, 3])
+        results = list(res)
+        assert results == [2, 4, 6]
 
 
 @pytest.mark.skip(
