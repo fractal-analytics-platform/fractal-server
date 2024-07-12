@@ -100,7 +100,7 @@ def _customize_and_run_template(
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
-    stdout = fractal_ssh.run_command_over_ssh(cmd=cmd)
+    stdout = fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
     logger.debug(f"_customize_and_run_template {script_filename} - END")

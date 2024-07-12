@@ -139,7 +139,7 @@ class FractalSSH(object):
     def close(self) -> None:
         return self._connection.close()
 
-    def run_command_over_ssh(
+    def run_command(
         self,
         *,
         cmd: str,
@@ -269,7 +269,7 @@ class FractalSSH(object):
             cmd = f"mkdir -p {folder}"
         else:
             cmd = f"mkdir {folder}"
-        self.run_command_over_ssh(cmd=cmd)
+        self.run_command(cmd=cmd)
 
     def remove_folder(
         self,
@@ -305,7 +305,7 @@ class FractalSSH(object):
             )
         else:
             cmd = f"rm -r {folder}"
-            self.run_command_over_ssh(cmd=cmd)
+            self.run_command(cmd=cmd)
 
 
 def get_ssh_connection(

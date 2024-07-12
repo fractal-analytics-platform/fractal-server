@@ -851,7 +851,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "fractal_server.app.runner.extract_archive "
             f"{tarfile_path_remote}"
         )
-        self.fractal_ssh.run_command_over_ssh(cmd=tar_command)
+        self.fractal_ssh.run_command(cmd=tar_command)
 
         # Remove local version
         t_0_rm = time.perf_counter()
@@ -873,7 +873,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-        sbatch_stdout = self.fractal_ssh.run_command_over_ssh(
+        sbatch_stdout = self.fractal_ssh.run_command(
             cmd=sbatch_command,
         )
 
@@ -1224,7 +1224,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "-m fractal_server.app.runner.compress_folder "
             f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
         )
-        stdout = self.fractal_ssh.run_command_over_ssh(cmd=tar_command)
+        stdout = self.fractal_ssh.run_command(cmd=tar_command)
         print(stdout)
 
         # Fetch tarfile
@@ -1348,7 +1348,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             scancel_string = " ".join(slurm_jobs_to_scancel)
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             scancel_command = f"scancel {scancel_string}"
-            self.fractal_ssh.run_command_over_ssh(cmd=scancel_command)
+            self.fractal_ssh.run_command(cmd=scancel_command)
         logger.debug("Executor shutdown: end")
 
     def __exit__(self, *args, **kwargs):
@@ -1373,7 +1373,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
         job_ids = ",".join([str(j) for j in job_ids])
         squeue_command = squeue_command.replace("__JOBS__", job_ids)
-        stdout = self.fractal_ssh.run_command_over_ssh(cmd=squeue_command)
+        stdout = self.fractal_ssh.run_command(cmd=squeue_command)
         return stdout
 
     def _jobs_finished(self, job_ids: list[str]) -> set[str]:
@@ -1453,7 +1453,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
         cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
-        stdout = self.fractal_ssh.run_command_over_ssh(cmd=cmd)
+        stdout = self.fractal_ssh.run_command(cmd=cmd)
         remote_versions = json.loads(stdout.strip("\n"))
 
         # Check compatibility with local versions
