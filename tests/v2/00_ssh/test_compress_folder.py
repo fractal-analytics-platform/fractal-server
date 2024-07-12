@@ -27,7 +27,7 @@ def test_compress_folder_success(tmp_path):
     extracted_path = Path(f"{tmp_path}/extracted")
     extracted_path.mkdir()
 
-    subprocess.run(["tar", "xzf", tarfile_path, "-C", extracted_path])  # noqa
+    subprocess.run(["tar", "xzf", tarfile_path, "-C", extracted_path])
     assert (extracted_path / "file1.txt").exists()
     assert (extracted_path / "file2.txt").exists()
     assert not (extracted_path / "job.sbatch").exists()
