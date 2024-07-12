@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
@@ -66,6 +67,7 @@ async def collect_tasks_pip(
     task_collect: TaskCollectPipV2,
     background_tasks: BackgroundTasks,
     response: Response,
+    request: Request,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
@@ -76,6 +78,43 @@ async def collect_tasks_pip(
     of a package and the collection of tasks as advertised in the manifest.
     """
 
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+
+        from fractal_server.tasks.v2.background_operations_ssh import (
+            background_collect_pip_ssh,
+        )
+
+        # Preliminary check
+        try:
+            task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid task-collection object. Original error: {e}",
+            )
+
+        # Construct and return state
+        state = CollectionStateV2(
+            data=dict(
+                status=CollectionStatusV2.PENDING, package=task_collect.package
+            )
+        )
+        db.add(state)
+        await db.commit()
+
+        background_tasks.add_task(
+            background_collect_pip_ssh,
+            state.id,
+            task_pkg,
+            request.app.state.fractal_ssh,
+        )
+
+        response.status_code = status.HTTP_201_CREATED
+        return state
+
+    # Actual non-SSH endpoint
+
     logger = set_logger(logger_name="collect_tasks_pip")
 
     # Set default python version
@@ -85,8 +124,7 @@ async def collect_tasks_pip(
             settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
         )
 
-    # Validate payload as _TaskCollectPip, which has more strict checks than
-    # TaskCollectPip
+    # Validate payload
     try:
         task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
     except ValidationError as e:
@@ -253,6 +291,7 @@ async def check_collection_status(
     """
     Check status of background task collection
     """
+
     logger = set_logger(logger_name="check_collection_status")
     logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(CollectionStateV2, state_id)
@@ -262,6 +301,17 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
+
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+
+        # FIXME SSH: add logic for when data.state["log"] is empty
+
+        reset_logger_handlers(logger)
+        await db.close()
+        return state
+
+    # Non-SSH mode
 
     # In some cases (i.e. a successful or ongoing task collection),
     # state.data.log is not set; if so, we collect the current logs.
