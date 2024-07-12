@@ -92,7 +92,7 @@ def _customize_and_run_template(
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
-    fractal_ssh.put_over_ssh(
+    fractal_ssh.send_file(
         local=script_path_local,
         remote=script_path_remote,
     )

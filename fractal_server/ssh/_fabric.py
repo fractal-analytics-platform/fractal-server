@@ -227,7 +227,7 @@ class FractalSSH(object):
             f"'{cmd}' over SSH"
         )
 
-    def put_over_ssh(
+    def send_file(
         self,
         *,
         local: str,
