@@ -103,4 +103,4 @@ async def test_task_collection_ssh_failure(
     # host machine, because /tmp is shared with the container)
     venv_dir = Path(remote_basedir) / ".fractal/fractal-tasks-core99.99.99"
     debug(venv_dir)
-    assert venv_dir.is_dir()
+    assert not venv_dir.is_dir()
