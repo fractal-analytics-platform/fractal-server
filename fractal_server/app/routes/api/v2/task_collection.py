@@ -78,21 +78,31 @@ async def collect_tasks_pip(
     of a package and the collection of tasks as advertised in the manifest.
     """
 
+    # Get settings
     settings = Inject(get_settings)
+
+    # Set default python version
+    if task_collect.python_version is None:
+        task_collect.python_version = (
+            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        )
+
+    # Validate payload
+    try:
+        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid task-collection object. Original error: {e}",
+        )
+
+    # END of SSH/non-SSH common part
+
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
 
         from fractal_server.tasks.v2.background_operations_ssh import (
             background_collect_pip_ssh,
         )
-
-        # Preliminary check
-        try:
-            task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
-        except ValidationError as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid task-collection object. Original error: {e}",
-            )
 
         # Construct and return state
         state = CollectionStateV2(
@@ -116,22 +126,6 @@ async def collect_tasks_pip(
     # Actual non-SSH endpoint
 
     logger = set_logger(logger_name="collect_tasks_pip")
-
-    # Set default python version
-    if task_collect.python_version is None:
-        settings = Inject(get_settings)
-        task_collect.python_version = (
-            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-        )
-
-    # Validate payload
-    try:
-        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid task-collection object. Original error: {e}",
-        )
 
     with TemporaryDirectory() as tmpdir:
         try:
