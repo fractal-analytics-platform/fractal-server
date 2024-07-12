@@ -25,6 +25,7 @@ def test_unit_fabric_connection(
     with Connection(
         host=slurmlogin_ip,
         user="fractal",
+        forward_agent=False,
         connect_kwargs={"password": "fractal"},
     ) as connection:
 
