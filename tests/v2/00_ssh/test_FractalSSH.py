@@ -85,15 +85,16 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
         Mock FractalSSH object, such that the first call to `run` always fails.
         """
 
-        run_iteration: int
+        please_raise: bool
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.run_iteration = 0
+            self.please_raise = True
 
         def run(self, *args, **kwargs):
-            self.run_iteration += 1
-            if self.run_iteration == 1:
+            if self.please_raise:
+                # Set `please_raise=False`, so that next call will go through
+                self.please_raise = False
                 # Construct a NoValidConnectionsError. Note that we prepare an
                 # `errors` attribute with the appropriate type, but with no
                 # meaningful content
@@ -107,7 +108,9 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
     with pytest.raises(RuntimeError, match="Reached last attempt"):
         mocked_fractal_ssh.run_command(cmd="whoami", max_attempts=1)
 
-    # Call with max_attempts=2 goes through
+    # Call with max_attempts=2 goes through (note that we have to reset
+    # `please_raise`)
+    mocked_fractal_ssh.please_raise = True
     stdout = mocked_fractal_ssh.run_command(
         cmd="whoami", max_attempts=2, base_interval=0.1
     )
