@@ -8,6 +8,9 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 
+# from typing import Any
+# from typing import Optional
+
 
 logger = set_logger(__file__)
 
@@ -121,12 +124,12 @@ def test_remove_folder_over_ssh(tmp777_path, fractal_ssh: FractalSSH):
     folder = (tmp777_path / "nested/folder").as_posix()
 
     # Check that folder does not exist
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(RuntimeError) as e:
         fractal_ssh.run_command_over_ssh(cmd=f"ls {folder}")
     print(e.value)
 
     # Try to create folder, without parents options
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(RuntimeError) as e:
         fractal_ssh.mkdir(folder=folder, parents=False)
     print(e.value)
 
@@ -142,12 +145,12 @@ def test_remove_folder_over_ssh(tmp777_path, fractal_ssh: FractalSSH):
     fractal_ssh.remove_folder(folder=folder, safe_root="/tmp")
 
     # Check that folder does not exist
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(RuntimeError) as e:
         fractal_ssh.run_command_over_ssh(cmd=f"ls {folder}")
     print(e.value)
 
     # Check that removing a missing folder fails
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(RuntimeError) as e:
         fractal_ssh.remove_folder(
             folder="/invalid/something",
             safe_root="/invalid",
@@ -171,6 +174,17 @@ def test_run_command_fails(fractal_ssh: FractalSSH):
 
 # def test_run_command_second_attempt(fractal_ssh: FractalSSH, monkeypatch):
 #     iteration = 0
+
+#     def run(
+#             self, *args, lock_timeout: Optional[float] = None, **kwargs
+#         ) -> Any:
+
+#             actual_lock_timeout = self.default_lock_timeout
+#             if lock_timeout is not None:
+#                 actual_lock_timeout = lock_timeout
+#             with self.acquire_timeout(timeout=actual_lock_timeout):
+#                 return self._connection.run(*args, **kwargs)
+
 
 #     def _run_mock(*args, **kwargs):
 #         if iteration == 0:
