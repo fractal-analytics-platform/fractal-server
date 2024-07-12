@@ -39,6 +39,7 @@ from fractal_server.tasks.v2.background_operations import (
 from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
 router = APIRouter()
@@ -81,10 +82,20 @@ async def collect_tasks_pip(
     # Get settings
     settings = Inject(get_settings)
 
-    # Set default python version
+    # Set/check python version
     if task_collect.python_version is None:
         task_collect.python_version = (
             settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        )
+    try:
+        get_python_interpreter_v2(python_version=task_collect.python_version)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Python version {task_collect.python_version} is "
+                "not available for Fractal task collection."
+            ),
         )
 
     # Validate payload
