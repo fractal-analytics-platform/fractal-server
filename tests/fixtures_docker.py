@@ -201,10 +201,15 @@ def fractal_ssh(
     monkeypatch,
 ) -> Generator[FractalSSH, Any, None]:
     ssh_private_key = ssh_keys["private"]
+
+    # https://github.com/fabric/fabric/issues/1979
+    # https://github.com/fabric/fabric/issues/2005#issuecomment-525664468
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
+
     with Connection(
         host=slurmlogin_ip,
         user="fractal",
+        forward_agent=False,
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
         fractal_conn = FractalSSH(connection=connection)

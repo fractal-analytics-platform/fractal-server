@@ -337,6 +337,7 @@ def get_ssh_connection(
     connection = Connection(
         host=host,
         user=user,
+        forward_agent=False,
         connect_kwargs={"key_filename": key_filename},
     )
     return connection
