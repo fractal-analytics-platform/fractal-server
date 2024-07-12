@@ -11,7 +11,7 @@ def create_test_files(path: Path):
     Path(path / "file1.txt").write_text("File 1")
     Path(path / "file2.txt").write_text("File 2")
     Path(path / "job.sbatch").write_text("Exclude this file")
-    Path(path / "file.pickle").write_text("Exclude this pickle")
+    Path(path / "file_in_name.pickle").write_text("Exclude this pickle")
 
 
 def test_compress_folder_success(tmp_path):
