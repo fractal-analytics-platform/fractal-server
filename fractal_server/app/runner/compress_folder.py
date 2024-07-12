@@ -6,12 +6,29 @@ import time
 from pathlib import Path
 
 
+def run_subprocess(cmd):
+    try:
+        res = subprocess.run(  # nosec
+            shlex.split(cmd), check=True, capture_output=True, encoding="utf-8"
+        )
+        return res
+    except subprocess.CalledProcessError as e:
+        print(
+            f"Command '{e.cmd}' returned non-zero exit status {e.returncode}."
+        )
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+        raise e
+    except Exception as e:
+        print(f"An error occurred while running command: {cmd}")
+        print(str(e))
+        raise e
+
+
 def copy_subfolder(src: Path, dest: Path):
     t0 = time.perf_counter()
     cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
-    res = subprocess.run(  # nosec
-        shlex.split(cmd_cp), check=True, capture_output=True, encoding="utf-8"
-    )
+    res = run_subprocess(cmd_cp)
     t1 = time.perf_counter()
     print(f"[compress_folder.py] `cp -r` END - elapsed: {t1-t0:.3f} s")
     return res
@@ -26,9 +43,7 @@ def create_tar_archive(tarfile_path: Path, subfolder_path_tmp_copy: Path):
     )
     print(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
     t0 = time.perf_counter()
-    res = subprocess.run(  # nosec
-        shlex.split(cmd_tar), capture_output=True, encoding="utf-8"
-    )
+    res = run_subprocess(cmd_tar)
     t1 = time.perf_counter()
     print(f"[compress_folder.py] tar END - elapsed: {t1-t0:.3f} s")
     return res
@@ -36,7 +51,10 @@ def create_tar_archive(tarfile_path: Path, subfolder_path_tmp_copy: Path):
 
 def remove_temp_subfolder(subfolder_path_tmp_copy: Path):
     t0 = time.perf_counter()
-    shutil.rmtree(subfolder_path_tmp_copy)
+    try:
+        shutil.rmtree(subfolder_path_tmp_copy)
+    except Exception as e:
+        print(f"[compress_folder.py] ERROR during shutil.rmtree: {e}")
     t1 = time.perf_counter()
     print(f"[compress_folder.py] shutil.rmtree END - elapsed: {t1-t0:.3f} s")
 
