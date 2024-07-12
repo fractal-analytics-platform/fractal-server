@@ -293,9 +293,7 @@ async def test_invalid_python_version(
     override_settings_factory,
 ):
     override_settings_factory(
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.10",
         FRACTAL_TASKS_PYTHON_3_9=None,
-        FRACTAL_TASKS_PYTHON_3_10="/some/python3.10",
     )
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
