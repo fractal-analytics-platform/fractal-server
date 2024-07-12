@@ -5,7 +5,9 @@ import sys
 from pathlib import Path
 
 import pytest
+from sqlalchemy.orm import Session as DBSyncSession
 
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.tasks.v2.background_operations import _insert_tasks
@@ -28,7 +30,7 @@ def run_cmd(cmd: str):
 
 
 @pytest.fixture(scope="session")
-def fractal_tasks_mock_venv_new(tmpdir_factory, testdata_path):
+def fractal_tasks_mock_venv_new(tmpdir_factory, testdata_path) -> Path:
 
     VENV_NAME = "venv"
     base_dir = Path(tmpdir_factory.getbasetemp())
@@ -48,7 +50,9 @@ def fractal_tasks_mock_venv_new(tmpdir_factory, testdata_path):
 
 
 @pytest.fixture
-def fractal_tasks_mock_collection_new(fractal_tasks_mock_venv_new, db_sync):
+def fractal_tasks_mock_collection_new(
+    fractal_tasks_mock_venv_new: Path, db_sync: DBSyncSession
+) -> list[TaskV2]:
 
     package_name = "fractal_tasks_mock"
 
@@ -74,6 +78,6 @@ def fractal_tasks_mock_collection_new(fractal_tasks_mock_venv_new, db_sync):
         package_root=package_root,
     )
 
-    task_db_list = _insert_tasks(task_list, db_sync)
+    task_list_db: list[TaskV2] = _insert_tasks(task_list, db_sync)
 
-    return task_db_list
+    return task_list_db
