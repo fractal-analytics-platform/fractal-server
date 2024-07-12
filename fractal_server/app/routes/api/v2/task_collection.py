@@ -304,26 +304,26 @@ async def check_collection_status(
 
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         # FIXME SSH: add logic for when data.state["log"] is empty
-
-        reset_logger_handlers(logger)
-        await db.close()
-        return state
-
-    # Non-SSH mode
-
-    # In some cases (i.e. a successful or ongoing task collection),
-    # state.data.log is not set; if so, we collect the current logs.
-    if verbose and not state.data.get("log"):
-        if "venv_path" not in state.data.keys():
-            await db.close()
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"No 'venv_path' in CollectionStateV2[{state_id}].data",
+        pass
+    else:
+        # Non-SSH mode
+        # In some cases (i.e. a successful or ongoing task collection),
+        # state.data.log is not set; if so, we collect the current logs.
+        if verbose and not state.data.get("log"):
+            if "venv_path" not in state.data.keys():
+                await db.close()
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"No 'venv_path' in CollectionStateV2[{state_id}].data"
+                    ),
+                )
+            state.data["log"] = get_collection_log(
+                Path(state.data["venv_path"])
             )
-        state.data["log"] = get_collection_log(Path(state.data["venv_path"]))
-        state.data["venv_path"] = str(state.data["venv_path"])
+            state.data["venv_path"] = str(state.data["venv_path"])
+
     reset_logger_handlers(logger)
     await db.close()
     return state
