@@ -285,3 +285,24 @@ async def test_remove_directory(
         )
         assert res.status_code == 201
         assert os.path.isdir(DIRECTORY) is True
+
+
+async def test_invalid_python_version(
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+):
+    override_settings_factory(
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.10",
+        FRACTAL_TASKS_PYTHON_3_9=None,
+        FRACTAL_TASKS_PYTHON_3_10="/some/python3.10",
+    )
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="invalid-task-package", python_version="3.9"),
+        )
+        assert res.status_code == 422
+        assert "Python version 3.9 is not available" in res.json()["detail"]
+        debug(res.json()["detail"])
