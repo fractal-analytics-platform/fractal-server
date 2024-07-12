@@ -4,7 +4,9 @@
 
 * SSH features:
     * Remove remote venv folder upon failed task collection in SSH mode (\#1634).
+    * Refactor `FractalSSH` (\#1635).
 * Testing:
+    * Improved testing of `FractalSSH` methods (\#1635).
     * Stop testing SQLite database for V1 in CI (\#1630).
 
 # 2.3.0
