@@ -31,17 +31,35 @@ async def test_task_collection_ssh(
         FRACTAL_SLURM_SSH_WORKING_BASE_DIR=remote_basedir,
     )
 
+    # CASE 1: successful collection
     state = CollectionStateV2()
     db.add(state)
     await db.commit()
     await db.refresh(state)
-
     task_pkg = _TaskCollectPip(
         package="fractal_tasks_core",
         package_version="1.0.2",
         python_version="3.9",
     )
+    background_collect_pip_ssh(
+        state_id=state.id,
+        task_pkg=task_pkg,
+        fractal_ssh=fractal_ssh,
+    )
+    await db.refresh(state)
+    debug(state)
+    assert state.data["status"] == "OK"
+    # Check that the remote folder exists (note: we can do it on the host
+    # machine, because /tmp is shared with the container)
+    venv_dir = Path(remote_basedir) / ".fractal/fractal-tasks-core1.0.2"
+    debug(venv_dir)
+    assert venv_dir.is_dir()
 
+    # CASE 2: Try collecting the same package again
+    state = CollectionStateV2()
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
     background_collect_pip_ssh(
         state_id=state.id,
         task_pkg=task_pkg,
@@ -50,10 +68,11 @@ async def test_task_collection_ssh(
 
     await db.refresh(state)
     debug(state)
-    assert state.data["status"] == "OK"
-
-    # Check that the remote folder exists (note: we can do it on the host
-    # machine, because /tmp is shared with the container)
+    # Check that the second collection failed, since folder already exists
+    assert state.data["status"] == "fail"
+    assert "already exists" in state.data["log"]
+    # Check that the remote folder was not removed (note: we can do it on the
+    # host machine, because /tmp is shared with the container)
     venv_dir = Path(remote_basedir) / ".fractal/fractal-tasks-core1.0.2"
     debug(venv_dir)
     assert venv_dir.is_dir()
