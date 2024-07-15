@@ -31,7 +31,7 @@ from ....security import User
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import get_collection_path
-from fractal_server.tasks.utils import slugify_task_name
+from fractal_server.tasks.utils import slugify_task_name_for_source
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
@@ -240,7 +240,7 @@ async def collect_tasks_pip(
 
     # Check that tasks are not already in the DB
     for new_task in task_pkg.package_manifest.task_list:
-        new_task_name_slug = slugify_task_name(new_task.name)
+        new_task_name_slug = slugify_task_name_for_source(new_task.name)
         new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
         stm = select(TaskV2).where(TaskV2.source == new_task_source)
         res = await db.execute(stm)

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from fractal_server.tasks.utils import slugify_task_name
+from fractal_server.tasks.utils import slugify_task_name_for_source
 
 
 def sanitize_component(value: str) -> str:
@@ -24,7 +24,7 @@ def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
         order:
         task_name:
     """
-    task_name_slug = slugify_task_name(task_name)
+    task_name_slug = slugify_task_name_for_source(task_name)
     return f"{order}_{task_name_slug}"
 
 

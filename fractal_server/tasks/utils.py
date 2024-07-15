@@ -9,7 +9,14 @@ COLLECTION_LOG_FILENAME = "collection.log"
 COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 
 
-def slugify_task_name(task_name: str) -> str:
+def slugify_task_name_for_source(task_name: str) -> str:
+    """
+    NOTE: this function is used upon creation of tasks' sources, therefore
+    for the moment we cannot replace it with its more comprehensive version
+    from `fractal_server.string_tools.sanitize_string`, nor we can remove it.
+    As 2.3.1, we are renaming it to `slugify_task_name_for_source`, to make
+    it clear that it should not be used for other purposes.
+    """
     return task_name.replace(" ", "_").lower()
 
 
