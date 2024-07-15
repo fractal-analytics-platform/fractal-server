@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_195021e61b3d1144_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.0">coverage.py v7.6.0</a>,
-            created at 2024-07-15 08:50 +0000
+            created at 2024-07-15 10:15 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -471,14 +471,12 @@
     <p class="pln"><span class="n"><a id="t387" href="#t387">387</a></span><span class="t">    <span class="com"># Create and return byte stream for zipped log folder</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t388" href="#t388">388</a></span><span class="t">    <span class="nam">PREFIX_ZIP</span> <span class="op">=</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">job</span><span class="op">.</span><span class="nam">working_dir</span><span class="op">)</span><span class="op">.</span><span class="nam">name</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t389" href="#t389">389</a></span><span class="t">    <span class="nam">zip_filename</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">PREFIX_ZIP</span><span class="op">}</span><span class="fst">_archive.zip</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t390" href="#t390">390</a></span><span class="t">    <span class="nam">byte_stream</span> <span class="op">=</span> <span class="nam">_zip_folder_to_byte_stream</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t391" href="#t391">391</a></span><span class="t">        <span class="nam">folder</span><span class="op">=</span><span class="nam">job</span><span class="op">.</span><span class="nam">working_dir</span><span class="op">,</span> <span class="nam">zip_filename</span><span class="op">=</span><span class="nam">zip_filename</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t392" href="#t392">392</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t393" href="#t393">393</a></span><span class="t">    <span class="key">return</span> <span class="nam">StreamingResponse</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t394" href="#t394">394</a></span><span class="t">        <span class="nam">iter</span><span class="op">(</span><span class="op">[</span><span class="nam">byte_stream</span><span class="op">.</span><span class="nam">getvalue</span><span class="op">(</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t">        <span class="nam">media_type</span><span class="op">=</span><span class="str">"application/x-zip-compressed"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t">        <span class="nam">headers</span><span class="op">=</span><span class="op">{</span><span class="str">"Content-Disposition"</span><span class="op">:</span> <span class="fst">f"</span><span class="fst">attachment;filename=</span><span class="op">{</span><span class="nam">zip_filename</span><span class="op">}</span><span class="fst">"</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t390" href="#t390">390</a></span><span class="t">    <span class="nam">byte_stream</span> <span class="op">=</span> <span class="nam">_zip_folder_to_byte_stream</span><span class="op">(</span><span class="nam">folder</span><span class="op">=</span><span class="nam">job</span><span class="op">.</span><span class="nam">working_dir</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t391" href="#t391">391</a></span><span class="t">    <span class="key">return</span> <span class="nam">StreamingResponse</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t392" href="#t392">392</a></span><span class="t">        <span class="nam">iter</span><span class="op">(</span><span class="op">[</span><span class="nam">byte_stream</span><span class="op">.</span><span class="nam">getvalue</span><span class="op">(</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t393" href="#t393">393</a></span><span class="t">        <span class="nam">media_type</span><span class="op">=</span><span class="str">"application/x-zip-compressed"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t394" href="#t394">394</a></span><span class="t">        <span class="nam">headers</span><span class="op">=</span><span class="op">{</span><span class="str">"Content-Disposition"</span><span class="op">:</span> <span class="fst">f"</span><span class="fst">attachment;filename=</span><span class="op">{</span><span class="nam">zip_filename</span><span class="op">}</span><span class="fst">"</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -488,7 +486,7 @@
             <a class="nav" href="z_195021e61b3d1144_v2_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.0">coverage.py v7.6.0</a>,
-            created at 2024-07-15 08:50 +0000
+            created at 2024-07-15 10:15 +0000
         </p>
     </div>
 </footer>
