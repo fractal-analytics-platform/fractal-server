@@ -274,9 +274,7 @@ async def download_job_logs(
     # Create and return byte stream for zipped log folder
     PREFIX_ZIP = Path(job.working_dir).name
     zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = _zip_folder_to_byte_stream(
-        folder=job.working_dir, zip_filename=zip_filename
-    )
+    byte_stream = _zip_folder_to_byte_stream(folder=job.working_dir)
     return StreamingResponse(
         iter([byte_stream.getvalue()]),
         media_type="application/x-zip-compressed",
