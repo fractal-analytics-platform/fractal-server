@@ -9,12 +9,12 @@ def sanitize_string(value: str) -> str:
 
     Make the string lower-case, and replace any special character with an
     underscore, where special characters are:
-    ```python repl
-    >>> string.punctuation
-    '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-    >>> string.whitespace
-    ' \t\n\r\x0b\x0c'
-    ```
+
+
+        >>> string.punctuation
+        '!"#$%&\'()*+,-./:;<=>?@[\\\\]^_`{|}~'
+        >>> string.whitespace
+        ' \\t\\n\\r\\x0b\\x0c'
 
     Args:
         value: Input string
@@ -35,5 +35,11 @@ def slugify_task_name_for_source(task_name: str) -> str:
     from `fractal_server.string_tools.sanitize_string`, nor we can remove it.
     As 2.3.1, we are renaming it to `slugify_task_name_for_source`, to make
     it clear that it should not be used for other purposes.
+
+    Args:
+        task_name:
+
+    Return:
+        Slug-ified task name.
     """
     return task_name.replace(" ", "_").lower()
