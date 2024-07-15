@@ -1,7 +1,6 @@
 import json
 import shlex
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -43,7 +42,7 @@ def fractal_tasks_mock_venv(tmpdir_factory, testdata_path) -> Path:
     ).as_posix()
 
     if not venv_dir.exists():
-        run_cmd(f"{sys.executable} -m venv {venv_dir}")
+        run_cmd(f"python3.9 -m venv {venv_dir}")
         run_cmd(f"{venv_python} -m pip install {whl}")
 
     return venv_python
