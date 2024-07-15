@@ -32,7 +32,7 @@ def test_zip_folder_to_byte_stream(tmp_path: Path):
         zipfile.extractall(path=unzipped_archived_path.as_posix())
 
     # Verify that all expected items are present
-    glob_list = list(unzipped_archived_path.rglob("*"))
+    glob_list = [file.name for file in unzipped_archived_path.rglob("*")]
     debug(glob_list)
     assert "file1" in glob_list
     assert "file2" in glob_list

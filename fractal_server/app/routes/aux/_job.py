@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from pathlib import Path
 from typing import Union
@@ -31,13 +32,15 @@ def _zip_folder_to_byte_stream(*, folder: str, zip_filename: str) -> BytesIO:
 
     Args:
         folder: the folder to zip
-        zip_filename: name of the zipped archive
     """
-    working_dir_path = Path(folder)
+    # working_dir_path = Path(folder)
 
     byte_stream = BytesIO()
     with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
-        for fpath in working_dir_path.glob("*"):
-            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                file_path = os.path.join(root, file)
+                archive_path = os.path.relpath(file_path, folder)
+                zipfile.write(file_path, archive_path)
 
     return byte_stream
