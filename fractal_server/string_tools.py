@@ -7,8 +7,8 @@ def sanitize_string(value: str) -> str:
     """
     Make string safe to be used in file/folder names and subprocess commands.
 
-    Replace any special character by an underscore, where special characters
-    include:
+    Make the string lower-case, and replace any special character with an
+    underscore, where special characters are:
     ```python repl
     >>> string.punctuation
     '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
@@ -22,7 +22,7 @@ def sanitize_string(value: str) -> str:
     Returns:
         Sanitized value
     """
-    new_value = value
+    new_value = value.lower()
     for character in __SPECIAL_CHARACTERS__:
         new_value = new_value.replace(character, "_")
     return new_value
