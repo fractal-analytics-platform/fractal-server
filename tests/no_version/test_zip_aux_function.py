@@ -16,9 +16,7 @@ def test_zip_folder_to_byte_stream(tmp_path: Path):
     (tmp_path / "folder/file3").touch()
     (tmp_path / "folder/file4").touch()
 
-    output = _zip_folder_to_byte_stream(
-        folder=tmp_path.as_posix(), zip_filename="USELESS"
-    )
+    output = _zip_folder_to_byte_stream(folder=tmp_path.as_posix())
 
     # Write BytesIO to file
     archive_path = tmp_path / "zipped_folder.zip"

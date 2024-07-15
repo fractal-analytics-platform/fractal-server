@@ -26,7 +26,7 @@ def _write_shutdown_file(*, job: Union[ApplyWorkflow, JobV2]):
         f.write(f"Trigger executor shutdown for {job.id=}.")
 
 
-def _zip_folder_to_byte_stream(*, folder: str, zip_filename: str) -> BytesIO:
+def _zip_folder_to_byte_stream(*, folder: str) -> BytesIO:
     """
     Get byte stream with the zipped log folder of a job.
 
