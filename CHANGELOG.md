@@ -1,10 +1,30 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.1 (unreleased)
+# 2.3.2
 
+> **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.
+
+* API:
+    * Fix incorrect zipping of structured job-log folders (\#1648).
+
+# 2.3.1
+
+This release includes a bugfix for task names with special characters.
+
+> **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.
+
+* Runner:
+    * Improve sanitization of subfolder names (commits from 3d89d6ba104d1c6f11812bc9de5cbdff25f81aa2 to 426fa3522cf2eef90d8bd2da3b2b8a5b646b9bf4).
+* API:
+    * Improve error message when task-collection Python is not defined (\#1640).
+    * Use a single endpoint for standard and SSH task collection (\#1640).
 * SSH features:
-    * Remove remote venv folder upon failed task collection in SSH mode (\#1634).
+    * Remove remote venv folder upon failed task collection in SSH mode (\#1634, \#1640).
+    * Refactor `FractalSSH` (\#1635).
+    * Set `fabric.Connection.forward_agent=False` (\#1639).
 * Testing:
+    * Improved testing of SSH task-collection API (\#1640).
+    * Improved testing of `FractalSSH` methods (\#1635).
     * Stop testing SQLite database for V1 in CI (\#1630).
 
 # 2.3.0

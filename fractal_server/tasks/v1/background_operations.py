@@ -6,11 +6,11 @@ import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
 
+from ...string_tools import slugify_task_name_for_source
 from ..utils import _normalize_package_name
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
 from .utils import _init_venv_v1
 from fractal_server.app.db import DBSyncSession
@@ -215,7 +215,7 @@ async def create_package_environment_pip(
             # Fill in attributes for TaskCreate
             task_executable = package_root / t.executable
             cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
-            task_name_slug = slugify_task_name(t.name)
+            task_name_slug = slugify_task_name_for_source(t.name)
             task_source = f"{task_pkg.package_source}:{task_name_slug}"
             if not task_executable.exists():
                 raise FileNotFoundError(
