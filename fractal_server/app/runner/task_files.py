@@ -2,18 +2,7 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from fractal_server.string_tools import slugify_task_name_for_source
-
-
-def sanitize_component(value: str) -> str:
-    """
-    Remove {" ", "/", "."} form a string, e.g. going from
-    'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
-
-    Args:
-        value: Input strig
-    """
-    return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+from fractal_server.string_tools import sanitize_string
 
 
 def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
@@ -24,7 +13,7 @@ def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
         order:
         task_name:
     """
-    task_name_slug = slugify_task_name_for_source(task_name)
+    task_name_slug = sanitize_string(task_name)
     return f"{order}_{task_name_slug}"
 
 
@@ -93,7 +82,7 @@ class TaskFiles:
         self.component = component
 
         if self.component is not None:
-            component_safe = sanitize_component(str(self.component))
+            component_safe = sanitize_string(str(self.component))
             component_safe = f"_par_{component_safe}"
         else:
             component_safe = ""
