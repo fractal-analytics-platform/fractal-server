@@ -35,7 +35,7 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
 
 
 def test_dummy_insert_single_image(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock
 ):
     # Preliminary setup
     execute_tasks_v2_args = dict(
@@ -49,7 +49,7 @@ def test_dummy_insert_single_image(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                task=fractal_tasks_mock["dummy_insert_single_image"],
                 id=0,
                 order=0,
             )
@@ -63,7 +63,7 @@ def test_dummy_insert_single_image(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                task=fractal_tasks_mock["dummy_insert_single_image"],
                 id=1,
                 order=1,
             )
@@ -79,7 +79,7 @@ def test_dummy_insert_single_image(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                    task=fractal_tasks_mock["dummy_insert_single_image"],
                     args_non_parallel={
                         "full_new_image": dict(
                             zarr_url=IMAGES[0]["zarr_url"], origin="/somewhere"
@@ -106,9 +106,7 @@ def test_dummy_insert_single_image(
         workflow_dir_local=tmp_path / "job_dir_2",
         workflow_dir_remote=tmp_path / "job_dir_2",
     )
-    PATCHED_TASK = deepcopy(
-        fractal_tasks_mock_venv["dummy_insert_single_image"]
-    )
+    PATCHED_TASK = deepcopy(fractal_tasks_mock["dummy_insert_single_image"])
     KEY = "something"
     PATCHED_TASK.output_types = {KEY: True}
     with pytest.raises(JobExecutionError) as e:
@@ -139,7 +137,7 @@ def test_dummy_insert_single_image(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                    task=fractal_tasks_mock["dummy_insert_single_image"],
                     args_non_parallel={"fail": True},
                     id=2,
                     order=2,
@@ -157,7 +155,7 @@ def test_dummy_insert_single_image(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                    task=fractal_tasks_mock["dummy_insert_single_image"],
                     args_non_parallel={"fail_2": True},
                     id=3,
                     order=3,
@@ -171,7 +169,7 @@ def test_dummy_insert_single_image(
 
 
 def test_dummy_remove_images(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock
 ):
     # Preliminary setup
     execute_tasks_v2_args = dict(
@@ -193,7 +191,7 @@ def test_dummy_remove_images(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_remove_images"],
+                task=fractal_tasks_mock["dummy_remove_images"],
                 id=0,
                 order=0,
             )
@@ -212,7 +210,7 @@ def test_dummy_remove_images(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_venv["dummy_remove_images"],
+                    task=fractal_tasks_mock["dummy_remove_images"],
                     id=1,
                     order=1,
                     args_non_parallel=dict(
@@ -230,7 +228,7 @@ def test_dummy_remove_images(
 
 
 def test_dummy_unset_attribute(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock
 ):
     # Preliminary setup
     execute_tasks_v2_args = dict(
@@ -256,7 +254,7 @@ def test_dummy_unset_attribute(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_unset_attribute"],
+                task=fractal_tasks_mock["dummy_unset_attribute"],
                 args_non_parallel=dict(attribute="key2"),
                 id=0,
                 order=0,
@@ -272,7 +270,7 @@ def test_dummy_unset_attribute(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_unset_attribute"],
+                task=fractal_tasks_mock["dummy_unset_attribute"],
                 args_non_parallel=dict(attribute="missing-attribute"),
                 id=1,
                 order=1,
@@ -289,7 +287,7 @@ def test_dummy_unset_attribute(
 
 
 def test_dummy_insert_single_image_none_attribute(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock
 ):
     # Preliminary setup
     execute_tasks_v2_args = dict(
@@ -303,7 +301,7 @@ def test_dummy_insert_single_image_none_attribute(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                task=fractal_tasks_mock["dummy_insert_single_image"],
                 args_non_parallel=dict(attributes={"attribute-name": None}),
                 id=0,
                 order=0,
@@ -319,7 +317,7 @@ def test_dummy_insert_single_image_none_attribute(
 
 
 def test_dummy_insert_single_image_normalization(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock
 ):
     # Preliminary setup
     execute_tasks_v2_args = dict(
@@ -333,7 +331,7 @@ def test_dummy_insert_single_image_normalization(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                task=fractal_tasks_mock["dummy_insert_single_image"],
                 id=0,
                 order=0,
                 args_non_parallel={"trailing_slash": True},
@@ -348,7 +346,7 @@ def test_dummy_insert_single_image_normalization(
 
 
 def test_default_inclusion_of_images(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock
 ):
     """
     Ref
@@ -371,7 +369,7 @@ def test_default_inclusion_of_images(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["generic_task_parallel"],
+                task=fractal_tasks_mock["generic_task_parallel"],
                 id=0,
                 order=0,
             )

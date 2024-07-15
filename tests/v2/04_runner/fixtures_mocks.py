@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from v2_mock_models import TaskV2Mock
 
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.runner.v2._local import FractalThreadPoolExecutor
 
 
@@ -35,14 +36,14 @@ def _run_cmd(*, cmd: str, label: str) -> str:
 
 
 @pytest.fixture
-def fractal_tasks_mock_venv(
-    fractal_tasks_mock_collection: dict[str, dict],
+def fractal_tasks_mock(
+    fractal_tasks_mock_db: dict[str, TaskV2],
 ) -> dict[str, TaskV2Mock]:
 
-    for k, v in fractal_tasks_mock_collection.items():
-        fractal_tasks_mock_collection[k] = TaskV2Mock(**v)
-
-    return fractal_tasks_mock_collection
+    return {
+        name: TaskV2Mock(**task.model_dump())
+        for name, task in fractal_tasks_mock_db.items()
+    }
 
 
 @pytest.fixture
