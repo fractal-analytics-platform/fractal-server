@@ -77,7 +77,7 @@
 | fractal\_server/app/runner/filenames.py                                        |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/set\_start\_and\_last\_task\_index.py               |       15 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/runner/shutdown.py                                         |       46 |        0 |       14 |        0 |    100% |           |
-| fractal\_server/app/runner/task\_files.py                                      |       47 |        0 |        4 |        0 |    100% |           |
+| fractal\_server/app/runner/task\_files.py                                      |       45 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v1/\_\_init\_\_.py                                  |      169 |        0 |       37 |        1 |     99% |  209->216 |
 | fractal\_server/app/runner/v1/\_common.py                                      |      166 |        8 |       48 |        4 |     94% |96-97, 100->exit, 107, 296, 298, 431-433 |
 | fractal\_server/app/runner/v1/\_local/\_\_init\_\_.py                          |       22 |        1 |        4 |        1 |     92% |       162 |
@@ -146,9 +146,10 @@
 | fractal\_server/main.py                                                        |       76 |        1 |       15 |        3 |     96% |52->57, 87->86, 148 |
 | fractal\_server/ssh/\_\_init\_\_.py                                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/ssh/\_fabric.py                                                |      150 |        0 |       48 |        7 |     96% |66->65, 85->84, 89->88, 176->225, 330->332, 332->334, 334->337 |
+| fractal\_server/string\_tools.py                                               |        9 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/syringe.py                                                     |       28 |        2 |        8 |        3 |     86% |66->65, 83->82, 93-94, 97->96 |
 | fractal\_server/tasks/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/utils.py                                                 |       33 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/tasks/utils.py                                                 |       31 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/tasks/v1/\_TaskCollectPip.py                                   |       43 |        0 |       24 |        3 |     96% |29->28, 33->32, 57->56 |
 | fractal\_server/tasks/v1/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v1/background\_operations.py                             |      145 |        1 |       28 |        3 |     98% |90->exit, 121->exit, 143 |
@@ -164,7 +165,7 @@
 | fractal\_server/tasks/v2/utils.py                                              |       19 |        2 |        4 |        0 |     91% |     51-52 |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
-|                                                                      **TOTAL** | **9561** |  **407** | **2830** |  **412** | **93%** |           |
+|                                                                      **TOTAL** | **9566** |  **407** | **2832** |  **412** | **93%** |           |
 
 
 ## Setup coverage badge
