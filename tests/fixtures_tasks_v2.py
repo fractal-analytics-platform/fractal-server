@@ -162,7 +162,7 @@ def relink_python_interpreter_v2(fractal_tasks_mock_collection):
         # NOTE that the slurm-node container also installs a version of
         # fractal-tasks-core
         task_python.unlink()
-        new_actual_task_python = "/usr/bin/python3.9"
+        new_actual_task_python = "/usr/bin/python3"
         task_python.symlink_to(new_actual_task_python)
         logger.warning(f"New tasks Python: {new_actual_task_python}")
 
