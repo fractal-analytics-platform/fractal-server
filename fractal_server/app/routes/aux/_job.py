@@ -33,7 +33,6 @@ def _zip_folder_to_byte_stream(*, folder: str, zip_filename: str) -> BytesIO:
     Args:
         folder: the folder to zip
     """
-    # working_dir_path = Path(folder)
 
     byte_stream = BytesIO()
     with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
