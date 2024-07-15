@@ -8,28 +8,34 @@ write_log(){
 
 # Variables to be filled within fractal-server
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
+PACKAGE_ENV_DIR_TMP=__PACKAGE_ENV_DIR_TMP__
 PYTHON=__PYTHON__
 
 TIME_START=$(date +%s)
 
-
-# Create main folder
+# Check that non-temporary folder does not exist
 if [ -d "$PACKAGE_ENV_DIR" ]; then
     write_log "ERROR: Folder $PACKAGE_ENV_DIR already exists. Exit."
     exit 1
 fi
-write_log "START mkdir -p $PACKAGE_ENV_DIR"
-mkdir -p $PACKAGE_ENV_DIR
-write_log "END   mkdir -p $PACKAGE_ENV_DIR"
+
+# Create temporary folder
+if [ -d "$PACKAGE_ENV_DIR_TMP" ]; then
+    write_log "ERROR: Folder $PACKAGE_ENV_DIR_TMP already exists. Exit."
+    exit 1
+fi
+write_log "START mkdir -p $PACKAGE_ENV_DIR_TMP"
+mkdir -p $PACKAGE_ENV_DIR_TMP
+write_log "END   mkdir -p $PACKAGE_ENV_DIR_TMP"
 echo
 
 
 # Create venv
-write_log "START create venv in ${PACKAGE_ENV_DIR}"
-"$PYTHON" -m venv "$PACKAGE_ENV_DIR" --copies
-write_log "END   create venv in ${PACKAGE_ENV_DIR}"
+write_log "START create venv in ${PACKAGE_ENV_DIR_TMP}"
+"$PYTHON" -m venv "$PACKAGE_ENV_DIR_TMP" --copies
+write_log "END   create venv in ${PACKAGE_ENV_DIR_TMP}"
 echo
-VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
+VENVPYTHON=${PACKAGE_ENV_DIR_TMP}/bin/python
 if [ -f "$VENVPYTHON" ]; then
     write_log "OK: $VENVPYTHON exists."
     echo

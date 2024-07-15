@@ -6,15 +6,11 @@ write_log(){
 }
 
 # Variables to be filled within fractal-server
-PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
-PACKAGE_NAME=__PACKAGE_NAME__
-PACKAGE=__PACKAGE__
-PYTHON=__PYTHON__
-INSTALL_STRING=__INSTALL_STRING__
+PACKAGE_ENV_DIR_TMP=__PACKAGE_ENV_DIR_TMP__
 
 TIME_START=$(date +%s)
 
-VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
+VENVPYTHON=${PACKAGE_ENV_DIR_TMP}/bin/python
 
 # Upgrade pip
 write_log "START upgrade pip"

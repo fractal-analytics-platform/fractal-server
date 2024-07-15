@@ -162,15 +162,28 @@ def background_collect_pip_ssh(
                     install_string = (
                         f"{install_string}=={task_pkg.package_version}"
                     )
-                package_env_dir = (
+
+                # NOTE: `package_env_dir_tmp` should be used for all on-disk
+                # operations, while `package_env_dir` should be used when
+                # setting metadata (and for a preliminary check that it does
+                # not already exists)
+                basedir = (
                     Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
                     / ".fractal"
-                    / f"{task_pkg.package_name}{package_version}"
+                )
+                package_env_dir = (
+                    basedir / f"{task_pkg.package_name}{package_version}"
                 ).as_posix()
+                package_env_dir_tmp = (
+                    basedir / f"{task_pkg.package_name}{package_version}_tmp"
+                ).as_posix()
+                logger.debug(f"{package_env_dir_tmp=}")
+                logger.debug(f"{package_env_dir=}")
 
                 replacements = [
                     ("__PACKAGE_NAME__", task_pkg.package_name),
                     ("__PACKAGE_ENV_DIR__", package_env_dir),
+                    ("__PACKAGE_ENV_DIR_TMP__", package_env_dir_tmp),
                     ("__PACKAGE__", task_pkg.package),
                     ("__PYTHON__", python_bin),
                     ("__INSTALL_STRING__", install_string),
@@ -292,8 +305,19 @@ def background_collect_pip_ssh(
                 _insert_tasks(task_list=task_list, db=db)
                 logger.debug("collecting - END")
 
-                # Finalize (write metadata to DB)
+                # Finalize (move folder, write metadata to DB)
                 logger.debug("finalising - START")
+
+                logger.info(
+                    f"Move remote folder {package_env_dir_tmp=} "
+                    f"to {package_env_dir=}"
+                )
+                fractal_ssh.rename_folder(
+                    source=package_env_dir_tmp,
+                    target=package_env_dir,
+                )
+                logger.info(f"Moved temporary folder into {package_env_dir=}")
+
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
@@ -313,15 +337,19 @@ def background_collect_pip_ssh(
                     db=db,
                 )
                 try:
-                    logger.info(f"Now delete remote folder {package_env_dir}")
+                    logger.info(
+                        f"Now delete remote folder {package_env_dir_tmp}"
+                    )
                     fractal_ssh.remove_folder(
-                        folder=package_env_dir,
+                        folder=package_env_dir_tmp,
                         safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
                     )
-                    logger.info(f"Deleted remoted folder {package_env_dir}")
+                    logger.info(
+                        f"Deleted remoted folder {package_env_dir_tmp}"
+                    )
                 except Exception as e:
                     logger.error(
-                        f"Deleting remote folder failed.\n"
+                        f"Removing remote folder failed.\n"
                         f"Original error:\n{str(e)}"
                     )
                 return

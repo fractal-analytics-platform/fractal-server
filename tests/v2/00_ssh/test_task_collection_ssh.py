@@ -49,6 +49,7 @@ async def test_task_collection_ssh(
     await db.refresh(state)
     debug(state)
     assert state.data["status"] == "OK"
+
     # Check that the remote folder exists (note: we can do it on the host
     # machine, because /tmp is shared with the container)
     venv_dir = Path(remote_basedir) / ".fractal/fractal-tasks-core1.0.2"
@@ -66,9 +67,9 @@ async def test_task_collection_ssh(
         fractal_ssh=fractal_ssh,
     )
 
+    # Check that the second collection failed, since folder already exists
     await db.refresh(state)
     debug(state)
-    # Check that the second collection failed, since folder already exists
     assert state.data["status"] == "fail"
     assert "already exists" in state.data["log"]
     # Check that the remote folder was not removed (note: we can do it on the
