@@ -133,37 +133,22 @@ def fractal_tasks_mock_collection(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(
-    tmp_path_factory, fractal_tasks_mock_collection, fractal_tasks_mock_venv
-):
+def relink_python_interpreter_v2(fractal_tasks_mock_collection):
     """
     Rewire python executable in tasks
     """
     import os
-    import json
     from pathlib import Path
 
     import logging
-    from fractal_server.tasks.utils import COLLECTION_FILENAME
     from .fixtures_slurm import HAS_LOCAL_SBATCH
 
     if not HAS_LOCAL_SBATCH:
 
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
-
-        # Identify task Python
-        basetemp = tmp_path_factory.getbasetemp()
-        FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
-        FRACTAL_TASKS_MOCK_DIR = (
-            FRACTAL_TASKS_DIR / ".fractal/fractal-tasks-mock0.0.1"
-        )
-        collection_json = FRACTAL_TASKS_MOCK_DIR / COLLECTION_FILENAME
-        with collection_json.open("r") as f:
-            collection_data = json.load(f)
-        task_python = Path(
-            collection_data["task_list"][0]["command_non_parallel"].split()[0]
-        )
+        first_task = next(iter(fractal_tasks_mock_collection.values()))
+        task_python = Path(first_task["command_non_parallel"].split()[0])
         logger.warning(f"Original tasks Python: {task_python.as_posix()}")
 
         actual_task_python = os.readlink(task_python)
