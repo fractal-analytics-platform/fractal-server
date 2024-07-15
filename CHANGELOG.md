@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.2 (unreleased)
+
+* API:
+    * Fix incorrect zipping of structured job-log folders (\#1648).
+
 # 2.3.1
 
 This release includes a bugfix for task names with special characters.
