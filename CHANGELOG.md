@@ -1,6 +1,8 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.2 (unreleased)
+# 2.3.2
+
+> **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.
 
 * API:
     * Fix incorrect zipping of structured job-log folders (\#1648).
