@@ -728,10 +728,10 @@ async def test_non_python_task(
             assert f in glob_list
 
         # Check that stderr and stdout are as expected
-        with open(f"{working_dir}/0_non-python/0.out", "r") as f:
+        with open(f"{working_dir}/0_non_python/0.out", "r") as f:
             out = f.read()
         assert "This goes to standard output" in out
-        with open(f"{working_dir}/0_non-python/0.err", "r") as f:
+        with open(f"{working_dir}/0_non_python/0.err", "r") as f:
             err = f.read()
         assert "This goes to standard error" in err
 

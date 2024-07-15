@@ -607,7 +607,7 @@ async def workflow_with_non_python_task(
                 raise ValueError(f"{f} must exist, but {glob_list=}")
 
         # Check that stderr and stdout are as expected
-        with open(f"{working_dir}/0_non-python/0.log", "r") as f:
+        with open(f"{working_dir}/0_non_python/0.log", "r") as f:
             log = f.read()
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
