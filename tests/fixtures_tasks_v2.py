@@ -51,7 +51,7 @@ def fractal_tasks_mock_venv(tmpdir_factory, testdata_path) -> Path:
 
 @pytest.fixture
 def fractal_tasks_mock_collection(
-    fractal_tasks_mock_venv_new: Path, db_sync: DBSyncSession
+    fractal_tasks_mock_venv: Path, db_sync: DBSyncSession
 ) -> dict[str, dict]:
 
     package_name = "fractal_tasks_mock"
@@ -64,7 +64,7 @@ def fractal_tasks_mock_collection(
         "print(Path(init_path).parent.as_posix())"
     )
 
-    res = run_cmd(f"{fractal_tasks_mock_venv_new} -c '{python_command}'")
+    res = run_cmd(f"{fractal_tasks_mock_venv} -c '{python_command}'")
     package_root = Path(res.strip("\n"))
 
     with open(package_root / "__FRACTAL_MANIFEST__.json", "r") as f:
@@ -74,7 +74,7 @@ def fractal_tasks_mock_collection(
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=manifest,
         package_source="pytest",
-        python_bin=fractal_tasks_mock_venv_new,
+        python_bin=fractal_tasks_mock_venv,
         package_root=package_root,
     )
 
@@ -122,7 +122,7 @@ def fractal_tasks_mock_collection(
             key = f"command_{step}"
             if task.model_dump().get(key) is not None:
                 task_attributes[f"command_{step}"] = (
-                    fractal_tasks_mock_venv_new.parent
+                    fractal_tasks_mock_venv.parent
                     / "lib/python3.10/site-packages/fractal_tasks_mock"
                     / task.model_dump()[key]
                 ).as_posix()
@@ -134,7 +134,7 @@ def fractal_tasks_mock_collection(
 
 @pytest.fixture(scope="function")
 def relink_python_interpreter_v2(
-    tmp_path_factory, fractal_tasks_mock, testdata_path
+    tmp_path_factory, fractal_tasks_mock_collection, fractal_tasks_mock_venv
 ):
     """
     Rewire python executable in tasks
