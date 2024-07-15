@@ -72,7 +72,7 @@ def fractal_tasks_mock_db(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(fractal_tasks_mock_collection):
+def relink_python_interpreter_v2(fractal_tasks_mock_db):
     """
     Rewire python executable in tasks
     """
@@ -86,8 +86,8 @@ def relink_python_interpreter_v2(fractal_tasks_mock_collection):
 
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
-        first_task = next(iter(fractal_tasks_mock_collection.values()))
-        task_python = Path(first_task["command_non_parallel"].split()[0])
+        first_task = next(iter(fractal_tasks_mock_db.values()))
+        task_python = Path(first_task.command_non_parallel.split()[0])
         logger.warning(f"Original tasks Python: {task_python.as_posix()}")
 
         actual_task_python = os.readlink(task_python)
