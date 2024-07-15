@@ -25,8 +25,8 @@ from ....schemas.v1 import TaskCollectStatusV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import get_collection_log
-from fractal_server.tasks.utils import slugify_task_name_for_source
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import (
     background_collect_pip,

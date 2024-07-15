@@ -28,10 +28,10 @@ from ....schemas.v2 import TaskReadV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import get_collection_path
-from fractal_server.tasks.utils import slugify_task_name_for_source
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,

@@ -6,11 +6,11 @@ import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
 
+from ...string_tools import slugify_task_name_for_source
 from ..utils import _normalize_package_name
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ..utils import slugify_task_name_for_source
 from ._TaskCollectPip import _TaskCollectPip
 from .utils import _init_venv_v1
 from fractal_server.app.db import DBSyncSession

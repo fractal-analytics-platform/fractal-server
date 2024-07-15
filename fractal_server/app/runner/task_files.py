@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from fractal_server.tasks.utils import slugify_task_name_for_source
+from fractal_server.string_tools import slugify_task_name_for_source
 
 
 def sanitize_component(value: str) -> str:
