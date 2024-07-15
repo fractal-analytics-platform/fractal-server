@@ -31,37 +31,25 @@ def run_cmd(cmd: str):
 @pytest.fixture(scope="session")
 def fractal_tasks_mock_collection(tmpdir_factory, testdata_path) -> Path:
 
-    VENV_NAME = "venv"
     base_dir = Path(tmpdir_factory.getbasetemp())
-    venv_dir = base_dir / VENV_NAME
+    venv_dir = base_dir / "venv"
     venv_python = venv_dir / "bin/python"
-    whl = (
-        testdata_path.parent
-        / "v2/fractal_tasks_mock/dist"
-        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    ).as_posix()
 
     if not venv_dir.exists():
+        whl = (
+            testdata_path.parent
+            / "v2/fractal_tasks_mock/dist"
+            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        ).as_posix()
         run_cmd(f"python3.9 -m venv {venv_dir}")
         run_cmd(f"{venv_python} -m pip install {whl}")
 
-    package_name = "fractal_tasks_mock"
-
-    python_command = (
-        "import importlib.util; "
-        "from pathlib import Path; "
-        "init_path=importlib.util.find_spec"
-        f'("{package_name}").origin; '
-        "print(Path(init_path).parent.as_posix())"
-    )
-
-    res = run_cmd(f"{venv_python} -c '{python_command}'")
-    package_root = Path(res.strip("\n"))
+    package_root = venv_dir / "lib/python3.9/site-packages/fractal_tasks_mock"
 
     with open(package_root / "__FRACTAL_MANIFEST__.json", "r") as f:
         manifest_dict = json.load(f)
-    manifest = ManifestV2(**manifest_dict)
 
+    manifest = ManifestV2(**manifest_dict)
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=manifest,
         package_source="pytest",
