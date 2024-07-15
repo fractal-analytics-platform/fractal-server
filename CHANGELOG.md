@@ -7,7 +7,7 @@ This release includes a bugfix for task names with special characters.
 > **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.
 
 * Runner:
-    * Improve sanitization of subfolder names (commits from 3d89d6ba104d1c6f11812bc9de5cbdff25f81aa2 to cd2dbdce1a927f3bfb5dbd7f433b8ffe7f889563).
+    * Improve sanitization of subfolder names (commits from 3d89d6ba104d1c6f11812bc9de5cbdff25f81aa2 to 426fa3522cf2eef90d8bd2da3b2b8a5b646b9bf4).
 * API:
     * Improve error message when task-collection Python is not defined (\#1640).
     * Use a single endpoint for standard and SSH task collection (\#1640).
