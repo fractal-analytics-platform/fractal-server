@@ -59,4 +59,3 @@ from .fixtures_tasks_v2 import *  # noqa F403
 from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
 from .fixtures_commands import *  # noqa F403
-from .fixtures_tasks_v2_new import *  # noqa F403

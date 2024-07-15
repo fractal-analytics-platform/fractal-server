@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 import pytest
+from v2_mock_models import TaskV2Mock
 
-from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.runner.v2._local import FractalThreadPoolExecutor
 
 
@@ -36,62 +36,13 @@ def _run_cmd(*, cmd: str, label: str) -> str:
 
 @pytest.fixture
 def fractal_tasks_mock_venv(
-    fractal_tasks_mock_venv_new: Path,
-    fractal_tasks_mock_collection_new: list[TaskV2],
-) -> dict:
-    from v2_mock_models import TaskV2Mock
+    fractal_tasks_mock_collection: dict[str, dict],
+) -> dict[str, TaskV2Mock]:
 
-    task_dict = {}
-    for ind, task in enumerate(fractal_tasks_mock_collection_new):
-        task_attributes = dict(
-            id=ind,
-            name=task.name,
-            source=task.name.replace(" ", "_"),
-        )
-        if task.name == "MIP_compound":
-            task_attributes.update(
-                dict(
-                    input_types={"3D": True},
-                    output_types={"3D": False},
-                )
-            )
-        elif task.name in [
-            "illumination_correction",
-            "illumination_correction_compound",
-        ]:
-            task_attributes.update(
-                dict(
-                    input_types={"illumination_correction": False},
-                    output_types={"illumination_correction": True},
-                )
-            )
-        elif task.name == "apply_registration_to_image":
-            task_attributes.update(
-                dict(
-                    input_types={"registration": False},
-                    output_types={"registration": True},
-                )
-            )
-        elif task.name == "generic_task_parallel":
-            task_attributes.update(
-                dict(
-                    input_types={"my_type": False},
-                    output_types={"my_type": True},
-                )
-            )
-        for step in ["non_parallel", "parallel"]:
-            key = f"command_{step}"
-            if task.model_dump().get(key) is not None:
-                task_attributes[f"command_{step}"] = (
-                    fractal_tasks_mock_venv_new.parent
-                    / "lib/python3.10/site-packages/fractal_tasks_mock"
-                    / task.model_dump()[key]
-                ).as_posix()
+    for k, v in fractal_tasks_mock_collection.items():
+        fractal_tasks_mock_collection[k] = TaskV2Mock(**v)
 
-        t = TaskV2Mock(**task_attributes)
-        task_dict[t.name] = t
-
-    return task_dict
+    return fractal_tasks_mock_collection
 
 
 @pytest.fixture

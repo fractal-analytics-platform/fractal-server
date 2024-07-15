@@ -1,108 +1,135 @@
-import shutil
+import json
+import shlex
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
-from devtools import debug
-from pydantic import ValidationError
+from sqlalchemy.orm import Session as DBSyncSession
 
-from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v2 import ManifestV2
+from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.tasks.v2.background_operations import _insert_tasks
+from fractal_server.tasks.v2.background_operations import (
+    _prepare_tasks_metadata,
+)
 
-PREFIX = "/api/v2"
+
+def run_cmd(cmd: str):
+    res = subprocess.run(  # nosec
+        shlex.split(cmd),
+        capture_output=True,
+        encoding="utf8",
+    )
+    if res.returncode != 0:
+        raise subprocess.CalledProcessError(
+            res.returncode, cmd=cmd, output=res.stdout, stderr=res.stderr
+        )
+    return res.stdout
+
+
+@pytest.fixture(scope="session")
+def fractal_tasks_mock_venv(tmpdir_factory, testdata_path) -> Path:
+
+    VENV_NAME = "venv"
+    base_dir = Path(tmpdir_factory.getbasetemp())
+    venv_dir = base_dir / VENV_NAME
+    venv_python = venv_dir / "bin/python"
+    whl = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    ).as_posix()
+
+    if not venv_dir.exists():
+        run_cmd(f"{sys.executable} -m venv {venv_dir}")
+        run_cmd(f"{venv_python} -m pip install {whl}")
+
+    return venv_python
 
 
 @pytest.fixture
-async def fractal_tasks_mock(
-    db_sync,
-    client,
-    MockCurrentUser,
-    testdata_path,
-    override_settings_factory,
-    tmp_path_factory,
-) -> dict:
-    """
-    Set a session-scoped FRACTAL_TASKS_DIR folder, and then:
-    1. If the fractal-tasks-mock folder exists, re-use existing venv and
-       manually add tasks to the DB.
-    2. Else, perform task collection through the API.
-    """
+def fractal_tasks_mock_collection(
+    fractal_tasks_mock_venv_new: Path, db_sync: DBSyncSession
+) -> dict[str, dict]:
 
-    import logging
-    import json
-    from fractal_server.app.schemas.v2.task import TaskCreateV2
-    from fractal_server.tasks.v2.background_operations import _insert_tasks
-    from fractal_server.tasks.utils import COLLECTION_FILENAME
+    package_name = "fractal_tasks_mock"
 
-    # Create a session-scoped FRACTAL_TASKS_DIR folder
-    basetemp = tmp_path_factory.getbasetemp()
-    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
-    FRACTAL_TASKS_DIR.mkdir(exist_ok=True)
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
-        FRACTAL_TASKS_PYTHON_3_9=shutil.which("python3.9"),
-    )
-    FRACTAL_TASKS_MOCK_DIR = (
-        FRACTAL_TASKS_DIR / ".fractal/fractal-tasks-mock0.0.1"
+    python_command = (
+        "import importlib.util; "
+        "from pathlib import Path; "
+        "init_path=importlib.util.find_spec"
+        f'("{package_name}").origin; '
+        "print(Path(init_path).parent.as_posix())"
     )
 
-    if FRACTAL_TASKS_MOCK_DIR.exists():
-        # If tasks were already collected within this session, re-use
-        # collection data
-        logging.warning("Manual task collection")
-        collection_json = FRACTAL_TASKS_MOCK_DIR / COLLECTION_FILENAME
-        with collection_json.open("r") as f:
-            collection_data = json.load(f)
+    res = run_cmd(f"{fractal_tasks_mock_venv_new} -c '{python_command}'")
+    package_root = Path(res.strip("\n"))
 
-        if not isinstance(collection_data, dict):
-            raise ValidationError
-        if "task_list" not in collection_data:
-            raise ValidationError
-        if not isinstance(collection_data["task_list"], list):
-            raise ValidationError
+    with open(package_root / "__FRACTAL_MANIFEST__.json", "r") as f:
+        manifest_dict = json.load(f)
+    manifest = ManifestV2(**manifest_dict)
 
-        collection_data["task_list"] = [
-            TaskReadV2(**task) for task in collection_data["task_list"]
-        ]
-        _insert_tasks(
-            task_list=[
-                TaskCreateV2(
-                    **task.dict(
-                        exclude={"id", "owner", "type"},
-                        exclude_none=True,
-                        exclude_unset=True,
-                    )
-                )
-                for task in collection_data["task_list"]
-            ],
-            db=db_sync,
+    task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
+        package_manifest=manifest,
+        package_source="pytest",
+        python_bin=fractal_tasks_mock_venv_new,
+        package_root=package_root,
+    )
+
+    task_list_db: list[TaskV2] = _insert_tasks(task_list, db_sync)
+
+    task_dict = {}
+    for ind, task in enumerate(task_list_db):
+        task_attributes = dict(
+            id=ind,
+            name=task.name,
+            source=task.name.replace(" ", "_"),
         )
-        return "manual_collection"
-
-    else:
-        # If tasks were never collected within this session, perform
-        # a full API-based task collection
-        logging.warning("Actual task collection")
-
-        async with MockCurrentUser(user_kwargs={"is_verified": True}):
-            res = await client.post(
-                f"{PREFIX}/task/collect/pip/",
-                json=dict(
-                    package=(
-                        testdata_path.parent
-                        / "v2/fractal_tasks_mock/dist"
-                        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-                    ).as_posix(),
-                    python_version="3.9",
-                ),
-            )
-            state_id = res.json()["id"]
-            res = await client.get(f"{PREFIX}/task/collect/{state_id}/")
-            assert res.status_code == 200
-            data = res.json()["data"]
-            if data["status"] != "OK":
-                debug(data)
-                raise ValueError(
-                    "Task collection failed in fractal_tasks_mock."
+        if task.name == "MIP_compound":
+            task_attributes.update(
+                dict(
+                    input_types={"3D": True},
+                    output_types={"3D": False},
                 )
-        return "API_collection"
+            )
+        elif task.name in [
+            "illumination_correction",
+            "illumination_correction_compound",
+        ]:
+            task_attributes.update(
+                dict(
+                    input_types={"illumination_correction": False},
+                    output_types={"illumination_correction": True},
+                )
+            )
+        elif task.name == "apply_registration_to_image":
+            task_attributes.update(
+                dict(
+                    input_types={"registration": False},
+                    output_types={"registration": True},
+                )
+            )
+        elif task.name == "generic_task_parallel":
+            task_attributes.update(
+                dict(
+                    input_types={"my_type": False},
+                    output_types={"my_type": True},
+                )
+            )
+        for step in ["non_parallel", "parallel"]:
+            key = f"command_{step}"
+            if task.model_dump().get(key) is not None:
+                task_attributes[f"command_{step}"] = (
+                    fractal_tasks_mock_venv_new.parent
+                    / "lib/python3.10/site-packages/fractal_tasks_mock"
+                    / task.model_dump()[key]
+                ).as_posix()
+
+        task_dict[task_attributes["name"]] = task_attributes
+
+    return task_dict
 
 
 @pytest.fixture(scope="function")
