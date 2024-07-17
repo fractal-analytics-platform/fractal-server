@@ -1,3 +1,16 @@
+"""
+Wrap `tar` extraction command.
+
+This module is used both locally (in the environment where `fractal-server`
+is running) and remotely (as a standalon Python module, executed over SSH).
+
+This is a twin-module of `compress_folder.py`.
+
+The reason for using the `tar` command via `subprocess` rather than Python
+built-in `tarfile` library has to do with performance issues we observed
+when handling files which were just created within a SLURM job, and in the
+context of a CephFS filesystem.
+"""
 import sys
 from pathlib import Path
 
