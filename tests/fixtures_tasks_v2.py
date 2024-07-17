@@ -117,7 +117,7 @@ def relink_python_interpreter_v2(fractal_tasks_mock_db):
         task_python.symlink_to(new_actual_task_python)
         logger.warning(f"New tasks Python: {new_actual_task_python}")
 
-        yield
+        yield fractal_tasks_mock_db
 
         task_python.unlink()
         task_python.symlink_to(actual_task_python)
@@ -126,4 +126,4 @@ def relink_python_interpreter_v2(fractal_tasks_mock_db):
             f"{task_python.as_posix()} to {os.readlink(task_python)}"
         )
     else:
-        yield
+        yield fractal_tasks_mock_db

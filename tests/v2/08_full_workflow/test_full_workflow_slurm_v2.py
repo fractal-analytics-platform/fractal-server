@@ -43,6 +43,7 @@ async def test_full_workflow_slurm(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+        tasks=relink_python_interpreter_v2,
     )
 
 
@@ -77,6 +78,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+        tasks=relink_python_interpreter_v2,
     )
 
 
