@@ -55,7 +55,7 @@ def test_run_subprocess_other_exception(caplog):
     )
 
 
-def test_compress_folder_tar_failure(tmp_path, caplog):
+def test_compress_folder_tar_failure(tmp_path):
 
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
@@ -72,27 +72,22 @@ def test_compress_folder_tar_failure(tmp_path, caplog):
             returncode=1, stderr="Mocked error"
         )
         mock_remove_temp_subfolder.side_effect = remove_temp_subfolder
-        caplog.set_level(logging.DEBUG)
+        # caplog.set_level(logging.DEBUG)
 
-        # with pytest.raises(SystemExit):
-        if True:
+        with pytest.raises(SystemExit):
             compress_folder(subfolder_path)
-            from devtools import debug
 
-            debug(caplog.records)
-            return
-
-            assert "START" in caplog.text
-            assert f"{subfolder_path=}" in caplog.text
-            assert "tarfile_path=" in caplog.text
-            assert "Copying from" in caplog.text
-            assert "Creating tar archive at" in caplog.text
-            assert "ERROR: Error in tar command: Mocked error" in caplog.text
-            assert "Removing temporary subfolder" in caplog.text
-            assert "shutil.rmtree END" in caplog.text
-            assert any(
-                record.levelname == "ERROR" for record in caplog.records
-            )
+            # assert "START" in caplog.text
+            # assert f"{subfolder_path=}" in caplog.text
+            # assert "tarfile_path=" in caplog.text
+            # assert "Copying from" in caplog.text
+            # assert "Creating tar archive at" in caplog.text
+            # assert "ERROR: Error in tar command: Mocked error" in caplog.text
+            # assert "Removing temporary subfolder" in caplog.text
+            # assert "shutil.rmtree END" in caplog.text
+            # assert any(
+            #     record.levelname == "ERROR" for record in caplog.records
+            # )
 
     invalid_subfolder_path = Path(f"{tmp_path} / non_existent_subfolder")
 
