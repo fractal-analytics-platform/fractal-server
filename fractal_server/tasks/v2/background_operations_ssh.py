@@ -320,7 +320,7 @@ def background_collect_pip_ssh(
                     )
                     logger.info(f"Deleted remoted folder {package_env_dir}")
                 except Exception as e:
-                    logger.info(
+                    logger.error(
                         f"Deleting remote folder failed.\n"
                         f"Original error:\n{str(e)}"
                     )
