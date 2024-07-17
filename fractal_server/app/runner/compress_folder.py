@@ -39,7 +39,7 @@ def create_tar_archive(
 ):
     logger = get_logger(logger_name)
     cmd_tar = (
-        f"tar czf {tarfile_path} "
+        f"tar czf {tarfile_path} --overwrite-dir "
         "--exclude *sbatch --exclude *_in_*.pickle "
         f"--directory={subfolder_path_tmp_copy.as_posix()} "
         "."
@@ -97,13 +97,13 @@ def main(sys_argv: list[str]):
         "python -m fractal_server.app.runner.compress_folder "
         "path/to/folder"
     )
-    if len(sys_argv) != 1:
+    if len(sys_argv) != 2:
         print("Invalid argument(s).")
         print(f"{help_msg}")
         print(f"Provided: {sys_argv=}")
         sys.exit(1)
 
-    subfolder_path = Path(sys_argv[0])
+    subfolder_path = Path(sys_argv[1])
     compress_folder(
         subfolder_path=subfolder_path,
     )
