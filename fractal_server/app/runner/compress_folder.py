@@ -58,20 +58,26 @@ def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
 
 
 def compress_folder(
-    subfolder_path: Path, tarfile_path: Path, logger_name: str
+    subfolder_path: Path,
 ):
+    logger = set_logger(__name__)
 
-    logger = get_logger(logger_name)
+    logger.debug("[compress_folder.py] START")
+    logger.debug(f"[compress_folder.py] {subfolder_path=}")
+    job_folder = subfolder_path.parent
+    subfolder_name = subfolder_path.name
+    tarfile_path = (job_folder / f"{subfolder_name}.tar.gz").as_posix()
+    logger.debug(f"[compress_folder.py] {tarfile_path=}")
 
     subfolder_path_tmp_copy = (
         subfolder_path.parent / f"{subfolder_path.name}_copy"
     )
     try:
         copy_subfolder(
-            subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
+            subfolder_path, subfolder_path_tmp_copy, logger_name=logger.name
         )
         res = create_tar_archive(
-            tarfile_path, subfolder_path_tmp_copy, logger_name=logger_name
+            tarfile_path, subfolder_path_tmp_copy, logger_name=logger.name
         )
         if res.returncode != 0:
             raise Exception(f"Error in tar command: {res.stderr}")
@@ -82,12 +88,11 @@ def compress_folder(
         sys.exit(1)
 
     finally:
-        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger_name)
+        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger.name)
 
 
 if __name__ == "__main__":
 
-    logger = set_logger(__name__)
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.compress_folder "
@@ -98,17 +103,8 @@ if __name__ == "__main__":
         raise ValueError(
             "Invalid argument(s).\n" f"{help_msg}\n" f"Provided: {sys.argv=}"
         )
-
     subfolder_path = Path(sys.argv[1])
-    logger.debug("[compress_folder.py] START")
-    logger.debug(f"[compress_folder.py] {subfolder_path=}")
 
-    job_folder = subfolder_path.parent
-    subfolder_name = subfolder_path.name
-    tarfile_path = (job_folder / f"{subfolder_name}.tar.gz").as_posix()
-    logger.debug(f"[compress_folder.py] {tarfile_path=}")
     compress_folder(
         subfolder_path=subfolder_path,
-        tarfile_path=tarfile_path,
-        logger_name=logger.name,
     )
