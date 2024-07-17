@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from devtools import debug
 
 from fractal_server.config import get_settings
@@ -12,3 +14,32 @@ async def test_alive(client, override_settings):
     data = res.json()
     assert res.status_code == 200
     assert data["alive"] is True
+
+
+async def test_settings_endpoint(client, MockCurrentUser):
+
+    settings = Inject(get_settings).dict()
+    for k, v in settings.items():
+        if isinstance(v, Path):
+            settings[k] = v.as_posix()  # the client returns strings, not Paths
+
+    res = await client.get("/api/settings/")
+    assert res.status_code == 401
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
+        res = await client.get("/api/settings/")
+        assert res.status_code == 401
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        res = await client.get("/api/settings/")
+        assert res.status_code == 200
+
+    endpoint_settings = res.json()
+
+    # assert they are equal except for PASSWORDs and SECRETs
+    assert settings.keys() == endpoint_settings.keys()
+    for k in endpoint_settings.keys():
+        if ("PASSWORD" not in k) and ("SECRET" not in k):
+            assert endpoint_settings[k] == settings[k]
+        else:
+            assert endpoint_settings[k] == "***"
