@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import shlex
 import subprocess
 from pathlib import Path
@@ -84,22 +86,17 @@ def fractal_tasks_mock_db(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(fractal_tasks_mock_db):
+def relink_python_interpreter_v2(fractal_tasks_mock_collection):
     """
     Rewire python executable in tasks
     """
-    import os
-    from pathlib import Path
-
-    import logging
     from .fixtures_slurm import HAS_LOCAL_SBATCH
 
     if not HAS_LOCAL_SBATCH:
 
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
-        first_task = next(iter(fractal_tasks_mock_db.values()))
-        task_python = Path(first_task.command_non_parallel.split()[0])
+        task_python = fractal_tasks_mock_collection["python_bin"]
         logger.warning(f"Original tasks Python: {task_python.as_posix()}")
 
         actual_task_python = os.readlink(task_python)
@@ -117,7 +114,7 @@ def relink_python_interpreter_v2(fractal_tasks_mock_db):
         task_python.symlink_to(new_actual_task_python)
         logger.warning(f"New tasks Python: {new_actual_task_python}")
 
-        yield fractal_tasks_mock_db
+        yield
 
         task_python.unlink()
         task_python.symlink_to(actual_task_python)
@@ -126,4 +123,4 @@ def relink_python_interpreter_v2(fractal_tasks_mock_db):
             f"{task_python.as_posix()} to {os.readlink(task_python)}"
         )
     else:
-        yield fractal_tasks_mock_db
+        yield

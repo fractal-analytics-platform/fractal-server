@@ -25,6 +25,7 @@ async def test_full_workflow_slurm(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
+    fractal_tasks_mock_db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
 ):
@@ -43,7 +44,7 @@ async def test_full_workflow_slurm(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
-        tasks=relink_python_interpreter_v2,
+        tasks=fractal_tasks_mock_db,
     )
 
 
@@ -57,6 +58,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
+    fractal_tasks_mock_db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
 ):
@@ -78,7 +80,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
-        tasks=relink_python_interpreter_v2,
+        tasks=fractal_tasks_mock_db,
     )
 
 
@@ -93,6 +95,7 @@ async def test_failing_workflow_JobExecutionError(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
+    fractal_tasks_mock_db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
     tmp_path,
@@ -123,12 +126,7 @@ async def test_failing_workflow_JobExecutionError(
         workflow_id = workflow.id
 
         # Retrieve relevant task ID
-        res = await client.get(f"{PREFIX}/task/")
-        assert res.status_code == 200
-        task_list = res.json()
-        task_id = next(
-            task["id"] for task in task_list if task["name"] == "generic_task"
-        )
+        task_id = fractal_tasks_mock_db["generic_task"].id
 
         # Add a short task, which will be run successfully
         res = await client.post(
