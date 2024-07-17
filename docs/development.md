@@ -88,9 +88,12 @@ $ poetry run alembic revision --autogenerate -m "Some migration message"
 2. Check that the current HEAD of the `main` branch passes all the tests (note: make sure that you are using the poetry-installed local package).
 3. Update the `CHANGELOG.md` file (e.g. remove `(unreleased)` from the upcoming version).
 4. If you have modified the models, then you must also [create](./#update-database-schema) a new migration script (note: in principle the CI will fail if you forget this step).
-5. Use:
+5. Use one of the following
 ```
-poetry run bumpver update --[tag-num|minor|patch|set-version] --tag-commit --commit --dry
+poetry run bumpver update --tag-num --tag-commit --commit --dry
+poetry run bumpver update --patch --tag-commit --commit --dry
+poetry run bumpver update --minor --tag-commit --commit --dry
+poetry run bumpver update --set-version X.Y.Z --tag-commit --commit --dry
 ```
 to test updating the version bump.
 
