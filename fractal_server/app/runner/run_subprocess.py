@@ -1,10 +1,13 @@
 import shlex
 import subprocess  # nosec
+from typing import Optional
 
 from fractal_server.logger import get_logger
 
 
-def run_subprocess(cmd: str, logger_name: str) -> subprocess.CompletedProcess:
+def run_subprocess(
+    cmd: str, logger_name: Optional[str] = None
+) -> subprocess.CompletedProcess:
     logger = get_logger(logger_name)
     try:
         res = subprocess.run(  # nosec

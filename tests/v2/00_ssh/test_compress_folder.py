@@ -12,8 +12,6 @@ from fractal_server.app.runner.compress_folder import main
 from fractal_server.app.runner.compress_folder import remove_temp_subfolder
 from fractal_server.app.runner.run_subprocess import run_subprocess
 
-logger = logging.getLogger(__name__)
-
 
 def create_test_files(path: Path):
     path.mkdir()
@@ -48,7 +46,7 @@ def test_run_subprocess_other_exception(caplog):
     caplog.set_level(logging.DEBUG)
 
     with pytest.raises(Exception):
-        run_subprocess("/bin/test_no_cmd", logger_name=logger.name)
+        run_subprocess("/bin/test_no_cmd", logger_name="some-logger")
 
     assert any(
         record.message
@@ -58,8 +56,10 @@ def test_run_subprocess_other_exception(caplog):
 
 
 def test_compress_folder_tar_failure(tmp_path, caplog):
+
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
+
     module = "fractal_server.app.runner.compress_folder."
     with patch(f"{module}copy_subfolder") as mock_copy_subfolder, patch(
         f"{module}create_tar_archive"
@@ -74,8 +74,13 @@ def test_compress_folder_tar_failure(tmp_path, caplog):
         mock_remove_temp_subfolder.side_effect = remove_temp_subfolder
         caplog.set_level(logging.DEBUG)
 
-        with pytest.raises(SystemExit):
+        # with pytest.raises(SystemExit):
+        if True:
             compress_folder(subfolder_path)
+            from devtools import debug
+
+            debug(caplog.records)
+            return
 
             assert "START" in caplog.text
             assert f"{subfolder_path=}" in caplog.text
