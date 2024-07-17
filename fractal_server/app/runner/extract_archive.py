@@ -76,9 +76,9 @@ def main(sys_argv: list[str]):
 
     if len(sys_argv[1:]) != 1 or not sys_argv[1].endswith(".tar.gz"):
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
-
-    tarfile_path = Path(sys.argv[1])
-    extract_archive(tarfile_path)
+    else:
+        tarfile_path = Path(sys_argv[1])
+        extract_archive(tarfile_path)
 
 
 if __name__ == "__main__":

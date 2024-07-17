@@ -8,6 +8,23 @@ from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.app.runner.extract_archive import main
 
 
+def create_test_files(path: Path):
+    path.mkdir()
+    (path / "file1.txt").write_text("File 1")
+    (path / "file2.txt").write_text("File 2")
+    (path / "job.sbatch").write_text("Exclude this file")
+    (path / "file_in_name.pickle").write_text("Exclude this pickle")
+
+
+def test_main_success(tmp_path):
+    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
+    subfolder_path = tmp_path / "subfolder"
+    create_test_files(subfolder_path)
+    compress_folder(subfolder_path)
+    test_argv = ["extract_archive", str(tarfile_path)]
+    main(test_argv)
+
+
 def test_main_failures():
     """
     Test failures in `extract_archive.main` function.
