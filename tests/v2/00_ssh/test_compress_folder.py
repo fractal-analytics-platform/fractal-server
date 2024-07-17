@@ -106,6 +106,12 @@ def test_main_success(tmp_path):
 def test_main_invalid_arguments():
 
     with pytest.raises(SystemExit):
+        main([])
+
+    with pytest.raises(SystemExit):
+        main(["missing_command"])
+
+    with pytest.raises(SystemExit):
         main(["compress_folder"])
 
     with pytest.raises(SystemExit):
