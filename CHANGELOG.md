@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.4
+
+* SSH SLURM runner:
+    * Refactor `compress_folder` and `extract_archive` modules, and stop using `tarfile` library (\#1641).
+
 # 2.3.3
 
 This release fixes a SSH-task-collection bug introduced in version 2.3.1.
