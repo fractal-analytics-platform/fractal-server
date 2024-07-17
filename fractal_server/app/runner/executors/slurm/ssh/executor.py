@@ -13,7 +13,6 @@
 import json
 import math
 import sys
-import tarfile
 import threading
 import time
 from concurrent.futures import Future
@@ -38,13 +37,14 @@ from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm.ssh._slurm_job import SlurmJob
+from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
@@ -823,6 +823,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Create compressed subfolder archive (locally)
         local_subfolder = self.workflow_dir_local / subfolder_name
+        compress_folder(local_subfolder)
         tarfile_name = f"{subfolder_name}.tar.gz"
         tarfile_path_local = (
             self.workflow_dir_local / tarfile_name
@@ -830,9 +831,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         tarfile_path_remote = (
             self.workflow_dir_remote / tarfile_name
         ).as_posix()
-        with tarfile.open(tarfile_path_local, "w:gz") as tar:
-            for this_file in local_subfolder.glob("*"):
-                tar.add(this_file, arcname=this_file.name)
         logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
         # Transfer archive
@@ -852,7 +850,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "fractal_server.app.runner.extract_archive "
             f"{tarfile_path_remote}"
         )
-        run_command_over_ssh(cmd=tar_command, fractal_ssh=self.fractal_ssh)
+        self.fractal_ssh.run_command(cmd=tar_command)
 
         # Remove local version
         t_0_rm = time.perf_counter()
@@ -874,9 +872,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-        sbatch_stdout = run_command_over_ssh(
+        sbatch_stdout = self.fractal_ssh.run_command(
             cmd=sbatch_command,
-            fractal_ssh=self.fractal_ssh,
         )
 
         # Extract SLURM job ID from stdout
@@ -1226,9 +1223,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "-m fractal_server.app.runner.compress_folder "
             f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
         )
-        stdout = run_command_over_ssh(
-            cmd=tar_command, fractal_ssh=self.fractal_ssh
-        )
+        stdout = self.fractal_ssh.run_command(cmd=tar_command)
         print(stdout)
 
         # Fetch tarfile
@@ -1244,8 +1239,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
 
         # Extract tarfile locally
-        with tarfile.open(tarfile_path_local) as tar:
-            tar.extractall(path=(self.workflow_dir_local / subfolder_name))
+        extract_archive(Path(tarfile_path_local))
 
         t_1 = time.perf_counter()
         logger.info("[_get_subfolder_sftp] End - " f"elapsed: {t_1-t_0:.3f} s")
@@ -1352,9 +1346,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             scancel_string = " ".join(slurm_jobs_to_scancel)
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             scancel_command = f"scancel {scancel_string}"
-            run_command_over_ssh(
-                cmd=scancel_command, fractal_ssh=self.fractal_ssh
-            )
+            self.fractal_ssh.run_command(cmd=scancel_command)
         logger.debug("Executor shutdown: end")
 
     def __exit__(self, *args, **kwargs):
@@ -1379,10 +1371,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
         job_ids = ",".join([str(j) for j in job_ids])
         squeue_command = squeue_command.replace("__JOBS__", job_ids)
-        stdout = run_command_over_ssh(
-            cmd=squeue_command,
-            fractal_ssh=self.fractal_ssh,
-        )
+        stdout = self.fractal_ssh.run_command(cmd=squeue_command)
         return stdout
 
     def _jobs_finished(self, job_ids: list[str]) -> set[str]:
@@ -1462,7 +1451,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
         cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
-        stdout = run_command_over_ssh(cmd=cmd, fractal_ssh=self.fractal_ssh)
+        stdout = self.fractal_ssh.run_command(cmd=cmd)
         remote_versions = json.loads(stdout.strip("\n"))
 
         # Check compatibility with local versions

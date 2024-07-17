@@ -1,7 +1,5 @@
 import json
 import logging
-import shlex
-import subprocess  # nosec
 import sys
 from pathlib import Path
 from typing import Optional
@@ -380,20 +378,11 @@ async def test_task_collection_custom(
     tmp_path: Path,
     testdata_path,
     task_factory,
+    fractal_tasks_mock_collection,
 ):
     package_name = "fractal_tasks_mock"
-    venv_name = f"venv_{package_name}"
-    venv_path = (tmp_path / venv_name).as_posix()
-    subprocess.run(shlex.split(f"{sys.executable} -m venv {venv_path}"))
-    python_bin = (tmp_path / venv_name / "bin/python").as_posix()
-
-    manifest_file = (
-        testdata_path.parent
-        / f"v2/{package_name}/src/{package_name}/__FRACTAL_MANIFEST__.json"
-    ).as_posix()
-    with open(manifest_file, "r") as f:
-        manifest_dict = json.load(f)
-    manifest = ManifestV2(**manifest_dict)
+    python_bin = fractal_tasks_mock_collection["python_bin"].as_posix()
+    manifest = fractal_tasks_mock_collection["manifest"]
 
     # ---
 
@@ -408,23 +397,16 @@ async def test_task_collection_custom(
             version=None,
         )
 
-        # Fail because no package is installed
+        # Fail because no package is installed in sys.executable
 
         res = await client.post(
             f"{PREFIX}/collect/custom/",
-            json=payload_name.dict(),
+            json=(
+                payload_name.dict() | dict(python_interpreter=sys.executable)
+            ),
         )
         assert res.status_code == 422
         assert "Cannot determine 'package_root'" in res.json()["detail"]
-
-        # Install
-        wheel_file = (
-            testdata_path.parent
-            / f"v2/{package_name}/dist/{package_name}-0.0.1-py3-none-any.whl"
-        ).as_posix()
-        subprocess.run(
-            shlex.split(f"{python_bin} -m pip install {wheel_file}")
-        )
 
         # Success with 'package_name'
         res = await client.post(
@@ -433,28 +415,20 @@ async def test_task_collection_custom(
         assert res.status_code == 201
 
         # Success with package_name with hypens instead of underscore
-        payload_name.package_name = "fractal-tasks-mock"
-        payload_name.source = "source2"
         res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_name.dict()
+            f"{PREFIX}/collect/custom/",
+            json=(
+                payload_name.dict()
+                | dict(
+                    package_name=package_name.replace("_", "-"),
+                    source="source2",
+                )
+            ),
         )
         assert res.status_code == 201
 
         # Success with package_root
-        package_name_underscore = package_name.replace("-", "_")
-        python_command = (
-            "import importlib.util; "
-            "from pathlib import Path; "
-            "init_path=importlib.util.find_spec"
-            f'("{package_name_underscore}").origin; '
-            "print(Path(init_path).parent.as_posix())"
-        )
-        res = subprocess.run(  # nosec
-            shlex.split(f"{python_bin} -c '{python_command}'"),
-            capture_output=True,
-            encoding="utf8",
-        )
-        package_root = Path(res.stdout.strip("\n")).as_posix()
+        package_root = fractal_tasks_mock_collection["package_root"].as_posix()
 
         payload_root = TaskCollectCustomV2(
             manifest=manifest,

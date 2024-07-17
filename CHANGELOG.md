@@ -1,10 +1,47 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.1 (unreleased)
+# 2.3.4
 
+* SSH SLURM runner:
+    * Refactor `compress_folder` and `extract_archive` modules, and stop using `tarfile` library (\#1641).
+
+# 2.3.3
+
+This release fixes a SSH-task-collection bug introduced in version 2.3.1.
+
+* SLURM runner:
+    * Make `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable `float` (\#1658).
 * SSH features:
-    * Remove remote venv folder upon failed task collection in SSH mode (\#1634).
+    * Fix wrong removal of task-package folder upon task-collection failure (\#1649).
+    * Remove `FractalSSH.rename_folder` method (\#1654).
 * Testing:
+    * Refactor task-collection fixtures (\#1637).
+
+# 2.3.2
+
+> **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.
+
+* API:
+    * Fix incorrect zipping of structured job-log folders (\#1648).
+
+# 2.3.1
+
+This release includes a bugfix for task names with special characters.
+
+> **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.
+
+* Runner:
+    * Improve sanitization of subfolder names (commits from 3d89d6ba104d1c6f11812bc9de5cbdff25f81aa2 to 426fa3522cf2eef90d8bd2da3b2b8a5b646b9bf4).
+* API:
+    * Improve error message when task-collection Python is not defined (\#1640).
+    * Use a single endpoint for standard and SSH task collection (\#1640).
+* SSH features:
+    * Remove remote venv folder upon failed task collection in SSH mode (\#1634, \#1640).
+    * Refactor `FractalSSH` (\#1635).
+    * Set `fabric.Connection.forward_agent=False` (\#1639).
+* Testing:
+    * Improved testing of SSH task-collection API (\#1640).
+    * Improved testing of `FractalSSH` methods (\#1635).
     * Stop testing SQLite database for V1 in CI (\#1630).
 
 # 2.3.0

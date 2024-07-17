@@ -1,31 +1,23 @@
-import shlex
+"""
+Wrap `tar` compression command.
+
+This module is used both locally (in the environment where `fractal-server`
+is running) and remotely (as a standalon Python module, executed over SSH).
+
+This is a twin-module of `extract_archive.py`.
+
+The reason for using the `tar` command via `subprocess` rather than Python
+built-in `tarfile` library has to do with performance issues we observed
+when handling files which were just created within a SLURM job, and in the
+context of a CephFS filesystem.
+"""
 import shutil
-import subprocess  # nosec
 import sys
 from pathlib import Path
 
+from fractal_server.app.runner.run_subprocess import run_subprocess
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-
-
-def run_subprocess(cmd: str, logger_name: str):
-    logger = get_logger(logger_name)
-    try:
-        res = subprocess.run(  # nosec
-            shlex.split(cmd), check=True, capture_output=True, encoding="utf-8"
-        )
-        return res
-    except subprocess.CalledProcessError as e:
-        logger.debug(
-            f"Command '{e.cmd}' returned non-zero exit status {e.returncode}."
-        )
-        logger.debug(f"stdout: {e.stdout}")
-        logger.debug(f"stderr: {e.stderr}")
-        raise e
-    except Exception as e:
-        logger.debug(f"An error occurred while running command: {cmd}")
-        logger.debug(str(e))
-        raise e
 
 
 def copy_subfolder(src: Path, dest: Path, logger_name: str):
@@ -44,9 +36,8 @@ def create_tar_archive(
         f"--directory={subfolder_path_tmp_copy.as_posix()} "
         "."
     )
-    logger.debug(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
-    res = run_subprocess(cmd=cmd_tar, logger_name=logger_name)
-    return res
+    logger.debug(f"cmd tar:\n{cmd_tar}")
+    run_subprocess(cmd=cmd_tar, logger_name=logger_name)
 
 
 def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
@@ -54,40 +45,41 @@ def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     try:
         shutil.rmtree(subfolder_path_tmp_copy)
     except Exception as e:
-        logger.debug(f"[compress_folder.py] ERROR during shutil.rmtree: {e}")
+        logger.debug(f"ERROR during shutil.rmtree: {e}")
 
 
-def compress_folder(
-    subfolder_path: Path,
-):
-    logger = set_logger(__name__)
+def compress_folder(subfolder_path: Path):
+    """
+    FIXME
+    """
 
-    logger.debug("[compress_folder.py] START")
-    logger.debug(f"[compress_folder.py] {subfolder_path=}")
-    job_folder = subfolder_path.parent
+    logger_name = "compress_folder"
+    logger = set_logger(logger_name)
+
+    logger.debug("START")
+    logger.debug(f"{subfolder_path=}")
+    parent_dir = subfolder_path.parent
     subfolder_name = subfolder_path.name
-    tarfile_path = (job_folder / f"{subfolder_name}.tar.gz").as_posix()
-    logger.debug(f"[compress_folder.py] {tarfile_path=}")
+    tarfile_path = (parent_dir / f"{subfolder_name}.tar.gz").as_posix()
+    logger.debug(f"{tarfile_path=}")
 
     subfolder_path_tmp_copy = (
         subfolder_path.parent / f"{subfolder_path.name}_copy"
     )
     try:
         copy_subfolder(
-            subfolder_path, subfolder_path_tmp_copy, logger_name=logger.name
+            subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
         )
-        res = create_tar_archive(
-            tarfile_path, subfolder_path_tmp_copy, logger_name=logger.name
+        create_tar_archive(
+            tarfile_path, subfolder_path_tmp_copy, logger_name=logger_name
         )
-        if res.returncode != 0:
-            raise Exception(f"Error in tar command: {res.stderr}")
 
     except Exception as e:
-        logger.debug(f"[compress_folder.py] ERROR: {e}")
+        logger.debug(f"ERROR: {e}")
         sys.exit(1)
 
     finally:
-        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger.name)
+        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger_name)
 
 
 def main(sys_argv: list[str]):

@@ -1,18 +1,10 @@
-import logging
-import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
 
 import pytest
 
 from fractal_server.app.runner.compress_folder import compress_folder
-from fractal_server.app.runner.compress_folder import copy_subfolder
 from fractal_server.app.runner.compress_folder import main
-from fractal_server.app.runner.compress_folder import remove_temp_subfolder
-from fractal_server.app.runner.compress_folder import run_subprocess
-
-logger = logging.getLogger(__name__)
+from fractal_server.app.runner.run_subprocess import run_subprocess
 
 
 def create_test_files(path: Path):
@@ -36,7 +28,7 @@ def test_compress_folder_success(tmp_path):
     extracted_path = Path(f"{tmp_path}/extracted")
     extracted_path.mkdir()
 
-    subprocess.run(["tar", "xzf", tarfile_path, "-C", extracted_path])
+    run_subprocess(f"tar xzf {tarfile_path} -C {extracted_path}")
     assert (extracted_path / "file1.txt").exists()
     assert (extracted_path / "file2.txt").exists()
     assert not (extracted_path / "job.sbatch").exists()
@@ -67,51 +59,10 @@ def test_compress_folder_success_with_overwrite(tmp_path):
     assert (extracted_path_new / "file3.txt").exists()
 
 
-def test_run_subprocess_other_exception(caplog):
+def test_compress_folder_tar_failure(tmp_path):
 
-    caplog.set_level(logging.DEBUG)
-
-    with pytest.raises(Exception):
-        run_subprocess("/bin/test_no_cmd", logger_name=logger.name)
-
-    assert any(
-        record.message
-        == ("An error occurred while running command: " "/bin/test_no_cmd")
-        for record in caplog.records
-    )
-
-
-def test_compress_folder_tar_failure(tmp_path, caplog):
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
-    module = "fractal_server.app.runner.compress_folder."
-    with patch(f"{module}copy_subfolder") as mock_copy_subfolder, patch(
-        f"{module}create_tar_archive"
-    ) as mock_create_tar_archive, patch(
-        f"{module}remove_temp_subfolder"
-    ) as mock_remove_temp_subfolder:
-
-        mock_copy_subfolder.side_effect = copy_subfolder
-        mock_create_tar_archive.return_value = MagicMock(
-            returncode=1, stderr="Mocked error"
-        )
-        mock_remove_temp_subfolder.side_effect = remove_temp_subfolder
-        caplog.set_level(logging.DEBUG)
-
-        with pytest.raises(SystemExit):
-            compress_folder(subfolder_path)
-
-            assert "START" in caplog.text
-            assert f"{subfolder_path=}" in caplog.text
-            assert "tarfile_path=" in caplog.text
-            assert "Copying from" in caplog.text
-            assert "Creating tar archive at" in caplog.text
-            assert "ERROR: Error in tar command: Mocked error" in caplog.text
-            assert "Removing temporary subfolder" in caplog.text
-            assert "shutil.rmtree END" in caplog.text
-            assert any(
-                record.levelname == "ERROR" for record in caplog.records
-            )
 
     invalid_subfolder_path = Path(f"{tmp_path} / non_existent_subfolder")
 
