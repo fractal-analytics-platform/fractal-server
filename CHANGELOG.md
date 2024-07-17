@@ -4,6 +4,8 @@
 
 This release fixes a SSH-task-collection bug introduced in version 2.3.1.
 
+* API:
+    * Expose new superuser-restricted endpoint `GET /api/settings/` (\#1662).
 * SLURM runner:
     * Make `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable `float` (\#1658).
 * SSH features:
