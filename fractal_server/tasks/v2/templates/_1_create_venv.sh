@@ -12,12 +12,12 @@ PYTHON=__PYTHON__
 
 TIME_START=$(date +%s)
 
-
-# Create main folder
+# Check that package folder does not exist
 if [ -d "$PACKAGE_ENV_DIR" ]; then
     write_log "ERROR: Folder $PACKAGE_ENV_DIR already exists. Exit."
     exit 1
 fi
+
 write_log "START mkdir -p $PACKAGE_ENV_DIR"
 mkdir -p $PACKAGE_ENV_DIR
 write_log "END   mkdir -p $PACKAGE_ENV_DIR"

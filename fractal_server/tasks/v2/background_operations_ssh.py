@@ -167,7 +167,7 @@ def background_collect_pip_ssh(
                     / ".fractal"
                     / f"{task_pkg.package_name}{package_version}"
                 ).as_posix()
-
+                logger.debug(f"{package_env_dir=}")
                 replacements = [
                     ("__PACKAGE_NAME__", task_pkg.package_name),
                     ("__PACKAGE_ENV_DIR__", package_env_dir),
@@ -197,10 +197,18 @@ def background_collect_pip_ssh(
                 # long operations that do not use the db
                 db.close()
 
+                # `remove_venv_folder_upon_failure` is set to True only if
+                # script 1 goes through, which means that the remote folder
+                # `package_env_dir` did not already exist. If this remote
+                # folder already existed, then script 1 fails and the boolean
+                # flag `remove_venv_folder_upon_failure` remains false.
+                remove_venv_folder_upon_failure = False
                 stdout = _customize_and_run_template(
                     script_filename="_1_create_venv.sh",
                     **common_args,
                 )
+                remove_venv_folder_upon_failure = True
+
                 stdout = _customize_and_run_template(
                     script_filename="_2_upgrade_pip.sh",
                     **common_args,
@@ -294,6 +302,7 @@ def background_collect_pip_ssh(
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
+
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
@@ -312,16 +321,26 @@ def background_collect_pip_ssh(
                     exception=e,
                     db=db,
                 )
-                try:
-                    logger.info(f"Now delete remote folder {package_env_dir}")
-                    fractal_ssh.remove_folder(
-                        folder=package_env_dir,
-                        safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
-                    )
-                    logger.info(f"Deleted remoted folder {package_env_dir}")
-                except Exception as e:
-                    logger.error(
-                        f"Deleting remote folder failed.\n"
-                        f"Original error:\n{str(e)}"
-                    )
+                if remove_venv_folder_upon_failure:
+                    try:
+                        logger.info(
+                            f"Now delete remote folder {package_env_dir}"
+                        )
+                        fractal_ssh.remove_folder(
+                            folder=package_env_dir,
+                            safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,  # noqa: E501
+                        )
+                        logger.info(
+                            f"Deleted remoted folder {package_env_dir}"
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Removing remote folder failed.\n"
+                            f"Original error:\n{str(e)}"
+                        )
+                    else:
+                        logger.info(
+                            "Not trying to remove remote folder "
+                            f"{package_env_dir}."
+                        )
                 return

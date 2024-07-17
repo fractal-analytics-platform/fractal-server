@@ -169,7 +169,7 @@ def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
 
 def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     """
-    Test basic working of `mkdir` and `remove_folder` methods.
+    Test basic working of `mkdir` and `rename_folder` methods.
     """
 
     # Define folder
@@ -193,8 +193,9 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     print(stdout)
     print()
 
-    # Remove folder
-    fractal_ssh.remove_folder(folder=folder, safe_root="/tmp")
+    # Rename folder
+    new_folder = (tmp777_path / "nested/new_folder").as_posix()
+    fractal_ssh.rename_folder(source=folder, target=new_folder)
 
     # Check that folder does not exist
     with pytest.raises(RuntimeError) as e:
@@ -256,5 +257,43 @@ def test_remove_folder_input_validation():
         fake_fractal_ssh.remove_folder(
             folder="/actual_root/../something",
             safe_root="/actual_root",
+        )
+    print(e.value)
+
+
+def test_rename_folder_input_validation():
+    """
+    Test input validation of `remove_folder` method.
+    """
+    fake_fractal_ssh = FractalSSH(connection=Connection(host="localhost"))
+
+    # Folders which are just invalid
+    invalid_folders = [
+        None,
+        "   /somewhere",
+        "/ somewhere",
+        "somewhere",
+        "$(pwd)",
+        "`pwd`",
+    ]
+    for folder in invalid_folders:
+        with pytest.raises(ValueError) as e:
+            fake_fractal_ssh.rename_folder(source=folder, target="/something")
+        print(e.value)
+        with pytest.raises(ValueError) as e:
+            fake_fractal_ssh.rename_folder(source="/something", target=folder)
+        print(e.value)
+
+    # Folders which are not in the same parent directory
+    with pytest.raises(ValueError) as e:
+        fake_fractal_ssh.rename_folder(
+            source="/something/a", target="/something/else/b"
+        )
+    print(e.value)
+
+    with pytest.raises(ValueError) as e:
+        fake_fractal_ssh.rename_folder(
+            source="/actual_root/../something",
+            target="/actual_root",
         )
     print(e.value)
