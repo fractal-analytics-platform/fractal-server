@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from .compress_folder import run_subprocess
+from .run_subprocess import run_subprocess
 from fractal_server.logger import set_logger
 
 

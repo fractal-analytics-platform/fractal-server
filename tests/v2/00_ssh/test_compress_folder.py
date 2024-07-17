@@ -10,7 +10,7 @@ from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.compress_folder import copy_subfolder
 from fractal_server.app.runner.compress_folder import main
 from fractal_server.app.runner.compress_folder import remove_temp_subfolder
-from fractal_server.app.runner.compress_folder import run_subprocess
+from fractal_server.app.runner.run_subprocess import run_subprocess
 
 logger = logging.getLogger(__name__)
 

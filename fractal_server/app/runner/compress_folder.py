@@ -1,31 +1,10 @@
-import shlex
 import shutil
-import subprocess  # nosec
 import sys
 from pathlib import Path
 
+from fractal_server.app.runner.run_subprocess import run_subprocess
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-
-
-def run_subprocess(cmd: str, logger_name: str):
-    logger = get_logger(logger_name)
-    try:
-        res = subprocess.run(  # nosec
-            shlex.split(cmd), check=True, capture_output=True, encoding="utf-8"
-        )
-        return res
-    except subprocess.CalledProcessError as e:
-        logger.debug(
-            f"Command '{e.cmd}' returned non-zero exit status {e.returncode}."
-        )
-        logger.debug(f"stdout: {e.stdout}")
-        logger.debug(f"stderr: {e.stderr}")
-        raise e
-    except Exception as e:
-        logger.debug(f"An error occurred while running command: {cmd}")
-        logger.debug(str(e))
-        raise e
 
 
 def copy_subfolder(src: Path, dest: Path, logger_name: str):
