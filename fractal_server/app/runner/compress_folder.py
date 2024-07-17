@@ -113,13 +113,13 @@ def main(sys_argv: list[str]):
         "python -m fractal_server.app.runner.compress_folder "
         "path/to/folder [--remote-to-local]\n"
     )
-    num_args = len(sys.argv[1:])
+    num_args = len(sys_argv[1:])
     if num_args == 0:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
     elif num_args == 1:
-        compress_folder(subfolder_path=Path(sys.argv[1]))
-    elif num_args == 2 and sys.argv[2] == "--remote-to-local":
-        compress_folder(subfolder_path=Path(sys.argv[1]), remote_to_local=True)
+        compress_folder(subfolder_path=Path(sys_argv[1]))
+    elif num_args == 2 and sys_argv[2] == "--remote-to-local":
+        compress_folder(subfolder_path=Path(sys_argv[1]), remote_to_local=True)
     else:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
 
