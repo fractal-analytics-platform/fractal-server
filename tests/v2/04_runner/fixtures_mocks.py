@@ -41,7 +41,7 @@ def fractal_tasks_mock_no_db(
 ) -> dict[str, TaskV2Mock]:
     """
     We use this fixture in tests that operate on Mock models,
-    and therefore do not need the object to be in the database.
+    and therefore do not need the tasks to be in the database.
     """
     return {
         task.name: TaskV2Mock(id=_id, **task.dict())
