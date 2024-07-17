@@ -44,7 +44,7 @@ def test_compress_folder_success_with_overwrite(tmp_path):
 
     extracted_path = Path(f"{tmp_path}/extracted")
     extracted_path.mkdir()
-    subprocess.run(["tar", "xzf", tarfile_path, "-C", extracted_path])
+    run_subprocess(f"tar xzf {tarfile_path} -C {extracted_path}")
     assert (extracted_path / "file1.txt").exists()
     assert (extracted_path / "file2.txt").exists()
     assert not (extracted_path / "file3.txt").exists()
@@ -53,7 +53,7 @@ def test_compress_folder_success_with_overwrite(tmp_path):
     compress_folder(subfolder_path)
     extracted_path_new = Path(f"{tmp_path}/extracted_new")
     extracted_path_new.mkdir()
-    subprocess.run(["tar", "xzf", tarfile_path, "-C", extracted_path_new])
+    run_subprocess(f"tar xzf {tarfile_path} -C {extracted_path_new}")
     assert (extracted_path_new / "file1.txt").exists()
     assert (extracted_path_new / "file2.txt").exists()
     assert (extracted_path_new / "file3.txt").exists()
