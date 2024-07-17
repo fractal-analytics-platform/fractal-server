@@ -31,6 +31,7 @@ async def test_full_workflow_local(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+        tasks=fractal_tasks_mock_db,
     )
 
 
@@ -62,6 +63,7 @@ async def test_full_workflow_TaskExecutionError(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+        tasks=fractal_tasks_mock_db,
     )
 
 
