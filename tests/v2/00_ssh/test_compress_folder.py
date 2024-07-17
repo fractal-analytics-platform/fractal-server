@@ -1,9 +1,13 @@
+import logging
 import subprocess
 from pathlib import Path
 
 import pytest
 
 from fractal_server.app.runner.compress_folder import compress_folder
+from fractal_server.app.runner.compress_folder import run_subprocess
+
+logger = logging.getLogger(__name__)
 
 
 def create_test_files(path: Path):
@@ -18,7 +22,7 @@ def test_compress_folder_success(tmp_path):
     subfolder_path = Path(f"{tmp_path}/subfolder")
     tarfile_path = Path(f"{tmp_path}/archive.tar.gz")
     create_test_files(subfolder_path)
-    compress_folder(subfolder_path, tarfile_path)
+    compress_folder(subfolder_path, tarfile_path, logger_name=logger.name)
 
     assert tarfile_path.exists()
     assert not Path(f"{subfolder_path.name}_copy").exists()
@@ -40,6 +44,22 @@ def test_compress_folder_tar_failure(tmp_path):
     invalid_subfolder_path = Path(f"{tmp_path} / non_existent_subfolder")
 
     with pytest.raises(FileNotFoundError):
-        compress_folder(invalid_subfolder_path, tarfile_path)
+        compress_folder(
+            invalid_subfolder_path, tarfile_path, logger_name=logger.name
+        )
 
     assert not tarfile_path.exists()
+
+
+def test_run_subprocess_other_exception(caplog):
+
+    caplog.set_level(logging.DEBUG)
+
+    with pytest.raises(Exception):
+        run_subprocess("/bin/test_no_cmd", logger_name=logger.name)
+
+    assert any(
+        record.message
+        == ("An error occurred while running command: " "/bin/test_no_cmd")
+        for record in caplog.records
+    )
