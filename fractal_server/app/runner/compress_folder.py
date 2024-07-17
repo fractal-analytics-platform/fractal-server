@@ -64,10 +64,14 @@ def compress_folder(
     subfolder_path: Path, remote_to_local: bool = False
 ) -> str:
     """
-    FIXME
+    Compress e.g. `/path/archive` into `/path/archive.tar.gz`
+
+    Note that `/path/archive.tar.gz` may already exist. In this case, it will
+    be overwritten.
 
     Args:
-        subfolder_path:
+        subfolder_path: Absolute path to the folder to compress.
+        remote_to_local: If `True`, exclude some files from the tar.gz archive.
 
     Returns:
         Absolute path to the tar.gz archive.
