@@ -17,7 +17,7 @@ async def test_full_workflow_local(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
-    fractal_tasks_mock,  # needed
+    fractal_tasks_mock_db,
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
@@ -31,6 +31,7 @@ async def test_full_workflow_local(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+        tasks=fractal_tasks_mock_db,
     )
 
 
@@ -43,7 +44,7 @@ async def test_full_workflow_TaskExecutionError(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
-    fractal_tasks_mock,  # needed
+    fractal_tasks_mock_db,
 ):
     """ "
     Run a workflow made of three tasks, two successful tasks and one
@@ -62,6 +63,7 @@ async def test_full_workflow_TaskExecutionError(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+        tasks=fractal_tasks_mock_db,
     )
 
 

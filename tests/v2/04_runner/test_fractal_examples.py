@@ -68,7 +68,7 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
 
 
 def test_fractal_demos_01(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_no_db
 ):
     """
     Mock of fractal-demos/examples/01.
@@ -84,7 +84,7 @@ def test_fractal_demos_01(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
+                task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 args_parallel={},
                 id=0,
@@ -106,7 +106,7 @@ def test_fractal_demos_01(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["illumination_correction"],
+                task=fractal_tasks_mock_no_db["illumination_correction"],
                 args_parallel=dict(overwrite_input=True),
                 id=1,
                 order=1,
@@ -151,7 +151,7 @@ def test_fractal_demos_01(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["MIP_compound"],
+                task=fractal_tasks_mock_no_db["MIP_compound"],
                 args_non_parallel=dict(suffix="mip"),
                 args_parallel={},
                 id=2,
@@ -195,7 +195,7 @@ def test_fractal_demos_01(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["cellpose_segmentation"],
+                task=fractal_tasks_mock_no_db["cellpose_segmentation"],
                 args_parallel={},
                 id=3,
                 order=3,
@@ -215,7 +215,7 @@ def test_fractal_demos_01(
 
 
 def test_fractal_demos_01_no_overwrite(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_no_db
 ):
     """
     Similar to fractal-demos/examples/01, but illumination
@@ -233,7 +233,7 @@ def test_fractal_demos_01_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
+                task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,
@@ -252,7 +252,7 @@ def test_fractal_demos_01_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["illumination_correction"],
+                task=fractal_tasks_mock_no_db["illumination_correction"],
                 args_parallel=dict(overwrite_input=False),
                 id=1,
                 order=1,
@@ -328,7 +328,7 @@ def test_fractal_demos_01_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["MIP_compound"],
+                task=fractal_tasks_mock_no_db["MIP_compound"],
                 args_non_parallel=dict(suffix="mip"),
                 id=2,
                 order=2,
@@ -393,7 +393,7 @@ def test_fractal_demos_01_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["cellpose_segmentation"],
+                task=fractal_tasks_mock_no_db["cellpose_segmentation"],
                 id=3,
                 order=3,
             )
@@ -410,7 +410,7 @@ def test_fractal_demos_01_no_overwrite(
 
 
 def test_registration_no_overwrite(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_no_db
 ):
     """
     Test registration workflow, based on four tasks.
@@ -425,7 +425,7 @@ def test_registration_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv[
+                task=fractal_tasks_mock_no_db[
                     "create_ome_zarr_multiplex_compound"
                 ],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -441,7 +441,7 @@ def test_registration_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv[
+                task=fractal_tasks_mock_no_db[
                     "calculate_registration_compound"
                 ],
                 args_non_parallel={"ref_acquisition": 0},
@@ -468,7 +468,7 @@ def test_registration_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["find_registration_consensus"],
+                task=fractal_tasks_mock_no_db["find_registration_consensus"],
                 id=2,
                 order=2,
             )
@@ -490,7 +490,7 @@ def test_registration_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["apply_registration_to_image"],
+                task=fractal_tasks_mock_no_db["apply_registration_to_image"],
                 args_parallel={"overwrite_input": False},
                 id=3,
                 order=3,
@@ -507,7 +507,7 @@ def test_registration_no_overwrite(
 
 
 def test_registration_overwrite(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_no_db
 ):
     """
     Test registration workflow, based on four tasks.
@@ -523,7 +523,7 @@ def test_registration_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv[
+                task=fractal_tasks_mock_no_db[
                     "create_ome_zarr_multiplex_compound"
                 ],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -539,7 +539,7 @@ def test_registration_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv[
+                task=fractal_tasks_mock_no_db[
                     "calculate_registration_compound"
                 ],
                 args_non_parallel={"ref_acquisition": 0},
@@ -566,7 +566,7 @@ def test_registration_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["find_registration_consensus"],
+                task=fractal_tasks_mock_no_db["find_registration_consensus"],
                 id=2,
                 order=2,
             )
@@ -588,7 +588,7 @@ def test_registration_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["apply_registration_to_image"],
+                task=fractal_tasks_mock_no_db["apply_registration_to_image"],
                 args_parallel={"overwrite_input": True},
                 id=3,
                 order=3,
@@ -607,7 +607,7 @@ def test_registration_overwrite(
 
 
 def test_channel_parallelization_with_overwrite(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_no_db
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -620,7 +620,7 @@ def test_channel_parallelization_with_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
+                task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,
@@ -634,7 +634,7 @@ def test_channel_parallelization_with_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv[
+                task=fractal_tasks_mock_no_db[
                     "illumination_correction_compound"
                 ],
                 args_non_parallel=dict(overwrite_input=True),
@@ -654,7 +654,7 @@ def test_channel_parallelization_with_overwrite(
 
 
 def test_channel_parallelization_no_overwrite(
-    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_no_db
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -667,7 +667,7 @@ def test_channel_parallelization_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
+                task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,
@@ -681,7 +681,7 @@ def test_channel_parallelization_no_overwrite(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv[
+                task=fractal_tasks_mock_no_db[
                     "illumination_correction_compound"
                 ],
                 args_non_parallel=dict(overwrite_input=False),
@@ -745,7 +745,7 @@ def test_invalid_filtered_image_list(
 def test_legacy_task(
     tmp_path: Path,
     executor: Executor,
-    fractal_tasks_mock_venv,
+    fractal_tasks_mock_no_db,
     fractal_tasks_mock_venv_legacy,
     override_settings_factory,
 ):
@@ -773,7 +773,7 @@ def test_legacy_task(
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
+                task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,

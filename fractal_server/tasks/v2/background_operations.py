@@ -10,12 +10,12 @@ from typing import Optional
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
+from ...string_tools import slugify_task_name_for_source
 from ..utils import get_absolute_venv_path
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
@@ -177,7 +177,7 @@ def _prepare_tasks_metadata(
         task_attributes = {}
         if package_version is not None:
             task_attributes["version"] = package_version
-        task_name_slug = slugify_task_name(_task.name)
+        task_name_slug = slugify_task_name_for_source(_task.name)
         task_attributes["source"] = f"{package_source}:{task_name_slug}"
         if package_manifest.has_args_schemas:
             task_attributes[

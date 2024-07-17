@@ -18,9 +18,6 @@ from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import put_over_ssh
-from fractal_server.ssh._fabric import remove_folder_over_ssh
-from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
@@ -95,17 +92,15 @@ def _customize_and_run_template(
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
-    put_over_ssh(
+    fractal_ssh.send_file(
         local=script_path_local,
         remote=script_path_remote,
-        fractal_ssh=fractal_ssh,
-        logger_name=logger_name,
     )
 
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
-    stdout = run_command_over_ssh(cmd=cmd, fractal_ssh=fractal_ssh)
+    stdout = fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
     logger.debug(f"_customize_and_run_template {script_filename} - END")
@@ -127,6 +122,7 @@ def background_collect_pip_ssh(
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
     """
+
     # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
         LOGGER_NAME = "task_collection_ssh"
@@ -171,7 +167,7 @@ def background_collect_pip_ssh(
                     / ".fractal"
                     / f"{task_pkg.package_name}{package_version}"
                 ).as_posix()
-
+                logger.debug(f"{package_env_dir=}")
                 replacements = [
                     ("__PACKAGE_NAME__", task_pkg.package_name),
                     ("__PACKAGE_ENV_DIR__", package_env_dir),
@@ -201,10 +197,18 @@ def background_collect_pip_ssh(
                 # long operations that do not use the db
                 db.close()
 
+                # `remove_venv_folder_upon_failure` is set to True only if
+                # script 1 goes through, which means that the remote folder
+                # `package_env_dir` did not already exist. If this remote
+                # folder already existed, then script 1 fails and the boolean
+                # flag `remove_venv_folder_upon_failure` remains false.
+                remove_venv_folder_upon_failure = False
                 stdout = _customize_and_run_template(
                     script_filename="_1_create_venv.sh",
                     **common_args,
                 )
+                remove_venv_folder_upon_failure = True
+
                 stdout = _customize_and_run_template(
                     script_filename="_2_upgrade_pip.sh",
                     **common_args,
@@ -298,6 +302,7 @@ def background_collect_pip_ssh(
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
+
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
@@ -316,17 +321,26 @@ def background_collect_pip_ssh(
                     exception=e,
                     db=db,
                 )
-                logger.info(f"Now delete remote folder {package_env_dir}")
-                try:
-                    remove_folder_over_ssh(
-                        remote_dir=package_env_dir,
-                        safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
-                        fractal_ssh=fractal_ssh,
-                    )
-                    logger.info(f"Deleted remoted folder {package_env_dir}")
-                except Exception as e:
-                    logger.error(
-                        f"Deleting remote folder {package_env_dir} failed.\n"
-                        f"Original error:\n{str(e)}"
-                    )
+                if remove_venv_folder_upon_failure:
+                    try:
+                        logger.info(
+                            f"Now delete remote folder {package_env_dir}"
+                        )
+                        fractal_ssh.remove_folder(
+                            folder=package_env_dir,
+                            safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,  # noqa: E501
+                        )
+                        logger.info(
+                            f"Deleted remoted folder {package_env_dir}"
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Removing remote folder failed.\n"
+                            f"Original error:\n{str(e)}"
+                        )
+                    else:
+                        logger.info(
+                            "Not trying to remove remote folder "
+                            f"{package_env_dir}."
+                        )
                 return

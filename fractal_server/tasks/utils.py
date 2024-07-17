@@ -9,10 +9,6 @@ COLLECTION_LOG_FILENAME = "collection.log"
 COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 
 
-def slugify_task_name(task_name: str) -> str:
-    return task_name.replace(" ", "_").lower()
-
-
 def get_absolute_venv_path(venv_path: Path) -> Path:
     """
     If a path is not absolute, make it a relative path of FRACTAL_TASKS_DIR.
