@@ -1,4 +1,3 @@
-import logging
 import shlex
 import shutil
 import subprocess  # nosec
@@ -6,6 +5,7 @@ import sys
 from pathlib import Path
 
 from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 
 
 def run_subprocess(cmd: str, logger_name: str):
@@ -87,7 +87,7 @@ def compress_folder(
 
 if __name__ == "__main__":
 
-    logger = logging.getLogger(__name__)
+    logger = set_logger(__name__)
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.compress_folder "
