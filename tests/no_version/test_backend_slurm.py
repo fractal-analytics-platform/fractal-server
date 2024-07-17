@@ -72,10 +72,16 @@ def test_slurm_executor_submit_missing_subfolder(
             executor.submit(lambda: 42)
 
 
+def test_monkey_slurm(monkey_slurm):
+    print("READY TO SLEEP")
+    time.sleep(10000)
+
+
 def test_slurm_executor_submit(
     monkey_slurm,
     tmp777_path,
 ):
+
     with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,

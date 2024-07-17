@@ -9,7 +9,6 @@ services:
           context: ./head
           dockerfile: Dockerfile
         hostname: slurmhead
-        user: admin
         volumes:
           - /private:/private:rw
 
@@ -18,19 +17,3 @@ services:
         ports:
                 - 6817:6817
                 - 6818:6818
-
-  slurmnode1:
-        depends_on:
-          - "slurmhead"
-        build:
-          context: ./node
-          dockerfile: Dockerfile
-        hostname: slurmnode1
-        user: admin
-        volumes:
-          - /private:/private:rw
-        environment:
-                - SLURM_NODENAME=slurmnode1
-                - SLURM_CPUS_ON_NODE=1
-        links:
-                - slurmhead
