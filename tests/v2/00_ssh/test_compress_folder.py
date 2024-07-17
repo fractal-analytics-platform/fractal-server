@@ -15,10 +15,32 @@ def create_test_files(path: Path):
     (path / "file_in_name.pickle").write_text("Exclude this pickle")
 
 
-def test_compress_folder_success(tmp_path):
+def test_compress_folder_success_local_to_remote(tmp_path):
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
-    compress_folder(subfolder_path)
+
+    compress_folder(subfolder_path, remote_to_local=False)
+
+    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
+    assert tarfile_path.exists()
+    assert not Path(f"{subfolder_path.name}_copy").exists()
+    assert tarfile_path.exists()
+
+    extracted_path = Path(f"{tmp_path}/extracted")
+    extracted_path.mkdir()
+
+    run_subprocess(f"tar xzf {tarfile_path} -C {extracted_path}")
+    assert (extracted_path / "file1.txt").exists()
+    assert (extracted_path / "file2.txt").exists()
+    assert (extracted_path / "job.sbatch").exists()
+    assert (extracted_path / "file_in_name.pickle").exists()
+
+
+def test_compress_folder_success_remote_to_local(tmp_path):
+    subfolder_path = Path(f"{tmp_path}/subfolder")
+    create_test_files(subfolder_path)
+
+    compress_folder(subfolder_path, remote_to_local=True)
 
     tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
     assert tarfile_path.exists()
@@ -82,14 +104,12 @@ def test_main_success(tmp_path):
 
 
 def test_main_invalid_arguments():
-    test_argv = ["compress_folder", "arg1", "arg2"]
 
     with pytest.raises(SystemExit):
-        main(test_argv)
-
-
-def test_main_no_arguments():
-    test_argv = []
+        main(["compress_folder"])
 
     with pytest.raises(SystemExit):
-        main(test_argv)
+        main(["compress_folder", "arg1", "arg2"])
+
+    with pytest.raises(SystemExit):
+        main(["compress_folder", "arg1", "arg2", "arg3"])
