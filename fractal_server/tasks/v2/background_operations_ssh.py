@@ -300,7 +300,7 @@ def background_collect_pip_ssh(
                 _insert_tasks(task_list=task_list, db=db)
                 logger.debug("collecting - END")
 
-                # Finalize (move folder, write metadata to DB)
+                # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
 
                 collection_state = db.get(CollectionStateV2, state_id)
