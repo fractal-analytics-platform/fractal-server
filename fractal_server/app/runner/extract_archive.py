@@ -26,8 +26,8 @@ def extract_archive(archive_path: Path):
     logger_name = "extract_archive"
     logger = set_logger(logger_name)
 
-    logger.info("START")
-    logger.info(f"{archive_path.as_posix()=}")
+    logger.debug("START")
+    logger.debug(f"{archive_path.as_posix()=}")
 
     # Check archive_path is valid
     if not archive_path.exists():
@@ -37,7 +37,7 @@ def extract_archive(archive_path: Path):
     parent_dir = archive_path.parent
     subfolder_name = _remove_suffix(string=archive_path.name, suffix=".tar.gz")
     subfolder_path = parent_dir / subfolder_name
-    logger.info(f"{subfolder_path.as_posix()=}")
+    logger.debug(f"{subfolder_path.as_posix()=}")
 
     # Create subfolder
     subfolder_path.mkdir(exist_ok=True)
@@ -48,10 +48,10 @@ def extract_archive(archive_path: Path):
         f"--directory={subfolder_path.as_posix()} "
         "."
     )
-    logger.info(f"{cmd_tar=}")
+    logger.debug(f"{cmd_tar=}")
     run_subprocess(cmd=cmd_tar, logger_name=logger_name)
 
-    logger.info("END")
+    logger.debug("END")
 
 
 def main(sys_argv: list[str]):
