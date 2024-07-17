@@ -41,8 +41,8 @@ def fractal_tasks_mock_no_db(
 ) -> dict[str, TaskV2Mock]:
 
     return {
-        task.name: TaskV2Mock(**task.dict())
-        for task in fractal_tasks_mock_collection["task_list"]
+        task.name: TaskV2Mock(id=_id, **task.dict())
+        for _id, task in enumerate(fractal_tasks_mock_collection["task_list"])
     }
 
 

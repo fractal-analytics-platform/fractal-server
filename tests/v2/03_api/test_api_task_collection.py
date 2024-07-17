@@ -428,7 +428,7 @@ async def test_task_collection_custom(
         assert res.status_code == 201
 
         # Success with package_root
-        package_root = fractal_tasks_mock_collection["package_root"]
+        package_root = fractal_tasks_mock_collection["package_root"].as_posix()
 
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
