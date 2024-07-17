@@ -84,7 +84,7 @@ def fractal_tasks_mock_db(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(fractal_tasks_mock_db):
+def relink_python_interpreter_v2(fractal_tasks_mock_db) -> dict[str, TaskV2]:
     """
     Rewire python executable in tasks
     """
