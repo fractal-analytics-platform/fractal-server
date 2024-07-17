@@ -1,5 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.3
+
+This release fixes a SSH-task-collection bug introduced in version 2.3.1.
+
+* SSH features:
+    * Fix wrong removal of task-package folder upon task-collection failure (\#1649).
+    * Remove `FractalSSH.rename_folder` method (\#1654).
+
 # 2.3.2
 
 > **WARNING**: The remove-remote-venv-folder in the SSH task collection is broken (see issue 1633). Do not deploy this version in an SSH-based `fractal-server` instance.

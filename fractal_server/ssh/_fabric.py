@@ -286,7 +286,6 @@ class FractalSSH(object):
             folder: Absolute path to a folder that should be removed.
             safe_root: If `folder` is not a subfolder of the absolute
                 `safe_root` path, raise an error.
-            fractal_ssh:
         """
         invalid_characters = {" ", "\n", ";", "$", "`"}
 
