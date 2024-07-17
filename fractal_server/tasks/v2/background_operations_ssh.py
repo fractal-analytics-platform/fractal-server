@@ -339,7 +339,7 @@ def background_collect_pip_ssh(
                             f"Original error:\n{str(e)}"
                         )
                     else:
-                        logger.error(
+                        logger.info(
                             "Not trying to remove remote folder "
                             f"{package_env_dir}."
                         )
