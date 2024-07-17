@@ -22,6 +22,8 @@ from fractal_server.logger import set_logger
 
 def copy_subfolder(src: Path, dest: Path, logger_name: str):
     cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
+    logger = get_logger(logger_name=logger_name)
+    logger.debug(f"{cmd_cp=}")
     res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
     return res
 
@@ -43,14 +45,21 @@ def create_tar_archive(
 def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     logger = get_logger(logger_name)
     try:
+        logger.debug(f"Now remove {subfolder_path_tmp_copy}")
         shutil.rmtree(subfolder_path_tmp_copy)
     except Exception as e:
         logger.debug(f"ERROR during shutil.rmtree: {e}")
 
 
-def compress_folder(subfolder_path: Path):
+def compress_folder(subfolder_path: Path) -> str:
     """
     FIXME
+
+    Args:
+        subfolder_path:
+
+    Returns:
+        Absolute path to the tar.gz archive.
     """
 
     logger_name = "compress_folder"
@@ -73,6 +82,7 @@ def compress_folder(subfolder_path: Path):
         create_tar_archive(
             tarfile_path, subfolder_path_tmp_copy, logger_name=logger_name
         )
+        return tarfile_path
 
     except Exception as e:
         logger.debug(f"ERROR: {e}")
