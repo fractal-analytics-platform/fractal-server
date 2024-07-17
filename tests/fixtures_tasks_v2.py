@@ -2,8 +2,10 @@ import json
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
+from pytest import TempdirFactory
 from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models.v2 import TaskV2
@@ -29,10 +31,15 @@ def run_cmd(cmd: str):
 
 
 @pytest.fixture(scope="session")
-def fractal_tasks_mock_collection(tmpdir_factory, testdata_path) -> Path:
-
+def fractal_tasks_mock_collection(
+    tmpdir_factory: TempdirFactory, testdata_path: Path
+) -> dict[str, Any]:
+    """
+    Session scoped fixture that builds a Python venv and use it to collect the
+    Fractal Tasks of the 'fractal_tasks_mock-0.0.1-py3-none-any.whl' package.
+    """
     base_dir = Path(tmpdir_factory.getbasetemp())
-    venv_dir = base_dir / "venv"
+    venv_dir = base_dir / "task_venv"
     venv_python = venv_dir / "bin/python"
 
     if not venv_dir.exists():
@@ -57,10 +64,15 @@ def fractal_tasks_mock_collection(tmpdir_factory, testdata_path) -> Path:
         package_root=package_root,
     )
 
-    return dict(python_bin=venv_python, task_list=task_list)
+    return dict(
+        python_bin=venv_python,
+        package_root=package_root,
+        manifest=manifest,
+        task_list=task_list,
+    )
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def fractal_tasks_mock_db(
     fractal_tasks_mock_collection, db_sync: DBSyncSession
 ) -> dict[str, TaskV2]:

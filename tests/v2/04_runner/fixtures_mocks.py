@@ -36,13 +36,13 @@ def _run_cmd(*, cmd: str, label: str) -> str:
 
 
 @pytest.fixture
-def fractal_tasks_mock(
-    fractal_tasks_mock_db: dict[str, TaskV2],
+def fractal_tasks_mock_no_db(
+    fractal_tasks_mock_collection: dict[str, TaskV2],
 ) -> dict[str, TaskV2Mock]:
 
     return {
-        name: TaskV2Mock(**task.model_dump())
-        for name, task in fractal_tasks_mock_db.items()
+        task.name: TaskV2Mock(**task.dict())
+        for task in fractal_tasks_mock_collection["task_list"]
     }
 
 

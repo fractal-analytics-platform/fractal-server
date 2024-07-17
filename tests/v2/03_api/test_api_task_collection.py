@@ -382,13 +382,7 @@ async def test_task_collection_custom(
 ):
     package_name = "fractal_tasks_mock"
     python_bin = fractal_tasks_mock_collection["python_bin"].as_posix()
-    manifest_file = (
-        testdata_path.parent
-        / f"v2/{package_name}/src/{package_name}/__FRACTAL_MANIFEST__.json"
-    ).as_posix()
-    with open(manifest_file, "r") as f:
-        manifest_dict = json.load(f)
-    manifest = ManifestV2(**manifest_dict)
+    manifest = fractal_tasks_mock_collection["manifest"]
 
     # ---
 
@@ -434,10 +428,7 @@ async def test_task_collection_custom(
         assert res.status_code == 201
 
         # Success with package_root
-        package_root = (
-            Path(python_bin).parent.parent
-            / "lib/python3.9/site-packages/fractal_tasks_mock"
-        ).as_posix()
+        package_root = fractal_tasks_mock_collection["package_root"]
 
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
