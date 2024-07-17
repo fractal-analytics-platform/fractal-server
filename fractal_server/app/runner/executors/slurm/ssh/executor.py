@@ -823,15 +823,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Create compressed subfolder archive (locally)
         local_subfolder = self.workflow_dir_local / subfolder_name
-        compress_folder(local_subfolder)
-        tarfile_name = f"{subfolder_name}.tar.gz"
-        tarfile_path_local = (
-            self.workflow_dir_local / tarfile_name
-        ).as_posix()
+        tarfile_path_local = compress_folder(local_subfolder)
+        logger.info(f"Subfolder archive created at {tarfile_path_local}")
+        tarfile_name = Path(tarfile_path_local).name
         tarfile_path_remote = (
             self.workflow_dir_remote / tarfile_name
         ).as_posix()
-        logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
         # Transfer archive
         t_0_put = time.perf_counter()
