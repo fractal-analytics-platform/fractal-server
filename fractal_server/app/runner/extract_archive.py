@@ -1,7 +1,7 @@
 import sys
-import tarfile
 from pathlib import Path
 
+from .compress_folder import run_subprocess
 from fractal_server.logger import set_logger
 
 
@@ -14,32 +14,42 @@ def _remove_suffix(*, string: str, suffix: str) -> str:
 
 def extract_archive(archive_path: Path):
     """
-    Extract a `/path/archive.tar.gz` archive into `/path/archive` folder
+    Extract e.g. `/path/archive.tar.gz` archive into `/path/archive` folder
 
-    Given archive_path="/tmp/asd/asd.tar.gz
-    HANDLE invalid paths
-    Extract it to /tmp/asd/asd + HANDLE /tmp/asd/asd already present
-
-    if folder exists, do not remove it and just add new files
-
+    Note that `/path/archive` may already exist. In this case, files with
+    the same name are overwritten and new files are added.
 
     Arguments:
         archive_path: Absolute path to the archive file.
     """
 
-    logger = set_logger("extract_archive")
+    logger_name = "extract_archive"
+    logger = set_logger(logger_name)
 
     logger.info("START")
-    logger.info(f"{archive_path=}")
+    logger.info(f"{archive_path.as_posix()=}")
 
+    # Check archive_path is valid
+    if not archive_path.exists():
+        sys.exit(f"Missing file {archive_path.as_posix()}.")
+
+    # Prepare subfolder path
     parent_dir = archive_path.parent
-    logger.info(f"{parent_dir=}")
-
     subfolder_name = _remove_suffix(string=archive_path.name, suffix=".tar.gz")
-    logger.info(f"{subfolder_name=}")
+    subfolder_path = parent_dir / subfolder_name
+    logger.info(f"{subfolder_path.as_posix()=}")
 
-    with tarfile.open(archive_path) as tar:
-        tar.extractall(path=Path(parent_dir, subfolder_name).as_posix())
+    # Create subfolder
+    subfolder_path.mkdir(exist_ok=True)
+
+    # Run tar command
+    cmd_tar = (
+        f"tar -xzvf {archive_path} "
+        f"--directory={subfolder_path.as_posix()} "
+        "."
+    )
+    logger.info(f"{cmd_tar=}")
+    run_subprocess(cmd=cmd_tar, logger_name=logger_name)
 
     logger.info("END")
 
