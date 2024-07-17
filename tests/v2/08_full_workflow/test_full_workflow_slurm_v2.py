@@ -2,7 +2,6 @@ import shlex
 import subprocess
 
 import pytest
-from common_functions import _task_name_to_id
 from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
@@ -125,8 +124,8 @@ async def test_failing_workflow_JobExecutionError(
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 200
         task_list = res.json()
-        task_id = _task_name_to_id(
-            task_name="generic_task", task_list=task_list
+        task_id = next(
+            task["id"] for task in task_list if task["name"] == "generic_task"
         )
 
         # Add a short task, which will be run successfully

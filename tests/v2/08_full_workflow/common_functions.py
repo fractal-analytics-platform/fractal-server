@@ -56,7 +56,7 @@ async def full_workflow(
         assert len(res.json()) == 0
 
         # Add "create_ome_zarr_compound" task
-        task_id_A = tasks["create_ome_zarr_compound"]
+        task_id_A = tasks["create_ome_zarr_compound"]["id"]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_A}",
@@ -68,7 +68,7 @@ async def full_workflow(
         )
         assert res.status_code == 201
         # Add "MIP_compound" task
-        task_id_B = tasks["MIP_compound"]
+        task_id_B = tasks["MIP_compound"]["id"]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_B}",
@@ -215,7 +215,7 @@ async def full_workflow_TaskExecutionError(
         workflow_id = workflow.id
 
         # Add "create_ome_zarr_compound" and "MIP_compound" tasks
-        task_id = tasks["create_ome_zarr_compound"]
+        task_id = tasks["create_ome_zarr_compound"]["id"]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
@@ -228,7 +228,7 @@ async def full_workflow_TaskExecutionError(
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "done"
-        task_id = tasks["MIP_compound"]
+        task_id = tasks["MIP_compound"]["id"]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
@@ -238,7 +238,7 @@ async def full_workflow_TaskExecutionError(
         workflow_task_id = res.json()["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "done"
         # Add "generic_task" task
-        task_id = tasks["generic_task"]
+        task_id = tasks["generic_task"]["id"]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
