@@ -23,40 +23,48 @@ def test_main_failures():
         main(["dummy", "/tmp"])
 
 
-def test_extract_archive(tmp_path: Path):
+def test_extract_archive_failure(tmp_path: Path):
+    with pytest.raises(SystemExit, match="Missing file"):
+        extract_archive(tmp_path / "missing.tar.gz")
 
-    folder1 = tmp_path / "folder1"
-    folder1.mkdir()
-    with (folder1 / "file1").open("w") as f:
-        f.write("First version\n")
-    compress_folder(folder1)
+
+def test_extract_archive(tmp_path: Path):
+    # Create two archives
+    folder_A = tmp_path / "folder_A"
+    folder_B = tmp_path / "folder_B"
+    folder_A.mkdir()
+    folder_B.mkdir()
+    with (folder_A / "file1").open("w") as f:
+        f.write("Version A of file1\n")
+    with (folder_B / "file1").open("w") as f:
+        f.write("Version B of file1\n")
+    (folder_B / "file2").touch()
+    compress_folder(folder_A)
+    compress_folder(folder_B)
 
     archive_path = tmp_path / "archive.tar.gz"
-    Path(tmp_path / "folder1.tar.gz").rename(archive_path)
+
+    # Extract archive of folder_A into `archive` folder
+    Path(tmp_path / "folder_A.tar.gz").rename(archive_path)
     extract_archive(archive_path)
     debug(list((tmp_path / "archive").glob("*")))
 
+    # Verify output of first archive extraction
     assert (tmp_path / "archive").is_dir()
     assert (tmp_path / "archive/file1").exists()
-    assert (tmp_path / "archive/file1").is_file()
+    file1_content = (tmp_path / "archive/file1").open("r").read()
+    assert file1_content == "Version A of file1\n"
 
     archive_path.unlink()
 
-    folder2 = tmp_path / "folder2"
-    folder2.mkdir()
-    with (folder2 / "file1").open("w") as f:
-        f.write("Second version\n")
-    (folder2 / "file2").touch()
-    compress_folder(folder2)
-
-    archive_path = tmp_path / "archive.tar.gz"
-    Path(tmp_path / "folder2.tar.gz").rename(archive_path)
+    # Extract archive of folder_B into existing `archive` folder
+    Path(tmp_path / "folder_B.tar.gz").rename(archive_path)
     extract_archive(archive_path)
     debug(list((tmp_path / "archive").glob("*")))
 
+    # Verify output of secomd archive extraction
     assert (tmp_path / "archive").is_dir()
-    assert (tmp_path / "archive/file1").is_file()
-    assert (tmp_path / "archive/file2").is_file()
-    with (tmp_path / "archive/file1").open("r") as f:
-        content = f.read()
-    assert content == "Second version\n"
+    assert (tmp_path / "archive/file1").exists()
+    assert (tmp_path / "archive/file2").exists()
+    file1_content = (tmp_path / "archive/file1").open("r").read()
+    assert file1_content == "Version B of file1\n"
