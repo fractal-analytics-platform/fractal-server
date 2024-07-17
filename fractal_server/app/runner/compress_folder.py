@@ -23,7 +23,7 @@ def create_tar_archive(
         f"--directory={subfolder_path_tmp_copy.as_posix()} "
         "."
     )
-    logger.debug(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
+    logger.debug(f"cmd tar:\n{cmd_tar}")
     res = run_subprocess(cmd=cmd_tar, logger_name=logger_name)
     return res
 
@@ -33,40 +33,41 @@ def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     try:
         shutil.rmtree(subfolder_path_tmp_copy)
     except Exception as e:
-        logger.debug(f"[compress_folder.py] ERROR during shutil.rmtree: {e}")
+        logger.debug(f"ERROR during shutil.rmtree: {e}")
 
 
-def compress_folder(
-    subfolder_path: Path,
-):
-    logger = set_logger(__name__)
+def compress_folder(subfolder_path: Path):
+    """
+    FIXME
+    """
 
-    logger.debug("[compress_folder.py] START")
-    logger.debug(f"[compress_folder.py] {subfolder_path=}")
-    job_folder = subfolder_path.parent
+    logger_name = "compress_folder"
+    logger = set_logger(logger_name)
+
+    logger.debug("START")
+    logger.debug(f"{subfolder_path=}")
+    parent_dir = subfolder_path.parent
     subfolder_name = subfolder_path.name
-    tarfile_path = (job_folder / f"{subfolder_name}.tar.gz").as_posix()
-    logger.debug(f"[compress_folder.py] {tarfile_path=}")
+    tarfile_path = (parent_dir / f"{subfolder_name}.tar.gz").as_posix()
+    logger.debug(f"{tarfile_path=}")
 
     subfolder_path_tmp_copy = (
         subfolder_path.parent / f"{subfolder_path.name}_copy"
     )
     try:
         copy_subfolder(
-            subfolder_path, subfolder_path_tmp_copy, logger_name=logger.name
+            subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
         )
-        res = create_tar_archive(
-            tarfile_path, subfolder_path_tmp_copy, logger_name=logger.name
+        create_tar_archive(
+            tarfile_path, subfolder_path_tmp_copy, logger_name=logger_name
         )
-        if res.returncode != 0:
-            raise Exception(f"Error in tar command: {res.stderr}")
 
     except Exception as e:
-        logger.debug(f"[compress_folder.py] ERROR: {e}")
+        logger.debug(f"ERROR: {e}")
         sys.exit(1)
 
     finally:
-        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger.name)
+        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger_name)
 
 
 def main(sys_argv: list[str]):
