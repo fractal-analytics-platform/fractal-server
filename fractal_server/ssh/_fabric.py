@@ -306,41 +306,6 @@ class FractalSSH(object):
             cmd = f"rm -r {folder}"
             self.run_command(cmd=cmd)
 
-    def rename_folder(
-        self,
-        *,
-        source: str,
-        target: str,
-    ) -> None:
-        """
-        Rename a folder remotely via SSH.
-
-        This functions calls `mv`, after a few checks on `source` and
-        `target`. Note that `source` and `target` must be subfolders
-        of the same parent folder.
-
-        Args:
-            source:
-            target:
-        """
-        invalid_characters = {" ", "\n", ";", "$", "`"}
-
-        if (
-            not isinstance(source, str)
-            or not isinstance(target, str)
-            or len(invalid_characters.intersection(source)) > 0
-            or len(invalid_characters.intersection(target)) > 0
-            or not Path(source).is_absolute()
-            or not Path(target).is_absolute()
-            or Path(source).parent != Path(target).parent
-        ):
-            raise ValueError(
-                f"Invalid `rename_folder` arguments {source=} and {target=}."
-            )
-        else:
-            cmd = f"mv {source} {target}"
-            self.run_command(cmd=cmd)
-
 
 def get_ssh_connection(
     *,
