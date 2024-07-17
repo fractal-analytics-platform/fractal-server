@@ -39,7 +39,10 @@ def _run_cmd(*, cmd: str, label: str) -> str:
 def fractal_tasks_mock_no_db(
     fractal_tasks_mock_collection: dict[str, TaskV2],
 ) -> dict[str, TaskV2Mock]:
-
+    """
+    We use this fixture in tests that operate on Mock models,
+    and therefore do not need the object to be in the database.
+    """
     return {
         task.name: TaskV2Mock(id=_id, **task.dict())
         for _id, task in enumerate(fractal_tasks_mock_collection["task_list"])
