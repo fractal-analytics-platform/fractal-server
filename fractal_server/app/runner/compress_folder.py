@@ -33,7 +33,7 @@ def create_tar_archive(
 ):
     logger = get_logger(logger_name)
     cmd_tar = (
-        f"tar czf {tarfile_path} --overwrite-dir "
+        f"tar czf {tarfile_path} "
         "--exclude *sbatch --exclude *_in_*.pickle "
         f"--directory={subfolder_path_tmp_copy.as_posix()} "
         "."
