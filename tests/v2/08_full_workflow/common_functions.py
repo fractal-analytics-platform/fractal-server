@@ -2,11 +2,11 @@ import os
 import shutil
 from glob import glob
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 from devtools import debug
 
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.runner.filenames import FILTERS_FILENAME
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 from fractal_server.app.runner.filenames import IMAGES_FILENAME
@@ -16,13 +16,6 @@ PREFIX = "/api/v2"
 NUM_IMAGES = 4
 
 
-def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
-    task_id = next(
-        task["id"] for task in task_list if task["name"] == task_name
-    )
-    return task_id
-
-
 async def full_workflow(
     *,
     MockCurrentUser,
@@ -30,6 +23,7 @@ async def full_workflow(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
+    tasks: dict[str, TaskV2],
     user_kwargs: Optional[dict] = None,
 ):
     if user_kwargs is None:
@@ -61,15 +55,8 @@ async def full_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 0
 
-        # Retrieve task list
-        res = await client.get(f"{PREFIX}/task/")
-        assert res.status_code == 200
-        task_list = res.json()
-
         # Add "create_ome_zarr_compound" task
-        task_id_A = _task_name_to_id(
-            task_name="create_ome_zarr_compound", task_list=task_list
-        )
+        task_id_A = tasks["create_ome_zarr_compound"].id
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_A}",
@@ -81,9 +68,7 @@ async def full_workflow(
         )
         assert res.status_code == 201
         # Add "MIP_compound" task
-        task_id_B = _task_name_to_id(
-            task_name="MIP_compound", task_list=task_list
-        )
+        task_id_B = tasks["MIP_compound"].id
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_B}",
@@ -206,6 +191,7 @@ async def full_workflow_TaskExecutionError(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
+    tasks: dict[str, TaskV2],
     user_kwargs: Optional[dict] = None,
 ):
 
@@ -228,13 +214,8 @@ async def full_workflow_TaskExecutionError(
         )
         workflow_id = workflow.id
 
-        # Retrieve task list
-        res = await client.get(f"{PREFIX}/task/")
-        assert res.status_code == 200
-        task_list = res.json()
-
         # Add "create_ome_zarr_compound" and "MIP_compound" tasks
-        task_id = _task_name_to_id("create_ome_zarr_compound", task_list)
+        task_id = tasks["create_ome_zarr_compound"].id
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
@@ -247,7 +228,7 @@ async def full_workflow_TaskExecutionError(
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "done"
-        task_id = _task_name_to_id("MIP_compound", task_list)
+        task_id = tasks["MIP_compound"].id
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
@@ -257,7 +238,7 @@ async def full_workflow_TaskExecutionError(
         workflow_task_id = res.json()["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "done"
         # Add "generic_task" task
-        task_id = _task_name_to_id("generic_task", task_list)
+        task_id = tasks["generic_task"].id
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
