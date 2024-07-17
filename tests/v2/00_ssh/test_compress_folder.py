@@ -8,6 +8,7 @@ import pytest
 
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.compress_folder import copy_subfolder
+from fractal_server.app.runner.compress_folder import main
 from fractal_server.app.runner.compress_folder import remove_temp_subfolder
 from fractal_server.app.runner.compress_folder import run_subprocess
 
@@ -90,9 +91,30 @@ def test_compress_folder_tar_failure(tmp_path, caplog):
 
     invalid_subfolder_path = Path(f"{tmp_path} / non_existent_subfolder")
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(SystemExit):
         compress_folder(invalid_subfolder_path)
     tarfile_path = Path(
         f"{invalid_subfolder_path} / non_existent_subfolder.tar.gz"
     )
     assert not tarfile_path.exists()
+
+
+def test_main_success(tmp_path):
+    subfolder_path = tmp_path / "subfolder"
+    create_test_files(subfolder_path)
+    test_argv = [str(subfolder_path)]
+    main(test_argv)
+
+
+def test_main_invalid_arguments():
+    test_argv = ["arg1", "arg2"]
+
+    with pytest.raises(SystemExit):
+        main(test_argv)
+
+
+def test_main_no_arguments():
+    test_argv = []
+
+    with pytest.raises(SystemExit):
+        main(test_argv)

@@ -84,27 +84,30 @@ def compress_folder(
 
     except Exception as e:
         logger.debug(f"[compress_folder.py] ERROR: {e}")
-        shutil.rmtree(subfolder_path_tmp_copy)
         sys.exit(1)
 
     finally:
         remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger.name)
 
 
-if __name__ == "__main__":
+def main(sys_argv: list[str]):
 
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.compress_folder "
         "path/to/folder"
     )
+    if len(sys_argv) != 1:
+        print("Invalid argument(s).")
+        print(f"{help_msg}")
+        print(f"Provided: {sys_argv=}")
+        sys.exit(1)
 
-    if len(sys.argv[1:]) != 1:
-        raise ValueError(
-            "Invalid argument(s).\n" f"{help_msg}\n" f"Provided: {sys.argv=}"
-        )
-    subfolder_path = Path(sys.argv[1])
-
+    subfolder_path = Path(sys_argv[0])
     compress_folder(
         subfolder_path=subfolder_path,
     )
+
+
+if __name__ == "__main__":
+    main(sys.argv)
