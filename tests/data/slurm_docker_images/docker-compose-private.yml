@@ -4,6 +4,8 @@
 
 services:
   slurm:
+    cpus: 4.0
+    mem_limit: 4g
     build:
       context: ./slurm
       dockerfile: Dockerfile
