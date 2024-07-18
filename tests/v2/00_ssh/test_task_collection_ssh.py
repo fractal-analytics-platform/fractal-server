@@ -15,6 +15,7 @@ async def test_task_collection_ssh(
     db,
     override_settings_factory,
     tmp777_path: Path,
+    current_py_version: str,
 ):
 
     remote_basedir = (tmp777_path / "WORKING_BASE_DIR").as_posix()
@@ -25,11 +26,14 @@ async def test_task_collection_ssh(
         parents=True,
     )
 
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
-        FRACTAL_TASKS_PYTHON_3_9="/usr/bin/python3.9",
-        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=remote_basedir,
-    )
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    setting_overrides = {
+        "FRACTAL_SLURM_WORKER_PYTHON": f"/usr/bin/python{current_py_version}",
+        PY_KEY: f"/usr/bin/python{current_py_version}",
+        "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": remote_basedir,
+    }
+    override_settings_factory(**setting_overrides)
 
     # CASE 1: successful collection
     state = CollectionStateV2()
@@ -39,7 +43,7 @@ async def test_task_collection_ssh(
     task_pkg = _TaskCollectPip(
         package="fractal_tasks_core",
         package_version="1.0.2",
-        python_version="3.9",
+        python_version=current_py_version,
     )
     background_collect_pip_ssh(
         state_id=state.id,
@@ -84,6 +88,7 @@ async def test_task_collection_ssh_failure(
     db,
     override_settings_factory,
     tmp777_path: Path,
+    current_py_version: str,
 ):
 
     remote_basedir = (tmp777_path / "WORKING_BASE_DIR").as_posix()
@@ -91,11 +96,14 @@ async def test_task_collection_ssh_failure(
 
     fractal_ssh.mkdir(folder=remote_basedir, parents=True)
 
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
-        FRACTAL_TASKS_PYTHON_3_9="/usr/bin/python3.9",
-        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=remote_basedir,
-    )
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    setting_overrides = {
+        "FRACTAL_SLURM_WORKER_PYTHON": f"/usr/bin/python{current_py_version}",
+        PY_KEY: f"/usr/bin/python{current_py_version}",
+        "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": remote_basedir,
+    }
+    override_settings_factory(**setting_overrides)
 
     state = CollectionStateV2()
     db.add(state)
@@ -105,7 +113,7 @@ async def test_task_collection_ssh_failure(
     task_pkg = _TaskCollectPip(
         package="fractal_tasks_core",
         package_version="99.99.99",
-        python_version="3.9",
+        python_version=current_py_version,
     )
 
     background_collect_pip_ssh(
