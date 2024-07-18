@@ -15,6 +15,9 @@ RUN chmod 600 /home/fractal/.ssh/authorized_keys
 
 # FIXME: Python operations below should be repeated for all python versions?
 
+RUN apt-get install python3.9-venv
+RUN apt-get install python3.11-venv
+
 # Update pip and install devtools
 RUN python3.9 -m pip install --upgrade pip devtools
 RUN python3.10 -m pip install --upgrade pip devtools
