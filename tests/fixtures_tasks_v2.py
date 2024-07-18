@@ -34,7 +34,9 @@ def run_cmd(cmd: str):
 
 @pytest.fixture(scope="session")
 def fractal_tasks_mock_collection(
-    tmpdir_factory: TempdirFactory, testdata_path: Path
+    tmpdir_factory: TempdirFactory,
+    testdata_path: Path,
+    current_py_version: str,
 ) -> dict[str, Any]:
     """
     Session scoped fixture that builds a Python venv and use it to collect the
@@ -50,10 +52,13 @@ def fractal_tasks_mock_collection(
             / "v2/fractal_tasks_mock/dist"
             / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
         ).as_posix()
-        run_cmd(f"python3.9 -m venv {venv_dir}")
+        run_cmd(f"python{current_py_version} -m venv {venv_dir}")
         run_cmd(f"{venv_python} -m pip install {whl}")
 
-    package_root = venv_dir / "lib/python3.9/site-packages/fractal_tasks_mock"
+    package_root = (
+        venv_dir
+        / f"lib/python{current_py_version}/site-packages/fractal_tasks_mock"
+    )
 
     with open(package_root / "__FRACTAL_MANIFEST__.json", "r") as f:
         manifest_dict = json.load(f)
@@ -86,7 +91,9 @@ def fractal_tasks_mock_db(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(fractal_tasks_mock_collection):
+def relink_python_interpreter_v2(
+    fractal_tasks_mock_collection, current_py_version: str
+):
     """
     Rewire python executable in tasks
     """
@@ -104,13 +111,8 @@ def relink_python_interpreter_v2(fractal_tasks_mock_collection):
             f"Actual tasks Python (after readlink): {actual_task_python}"
         )
 
-        # NOTE that the docker container in the CI only has python3.9
-        # installed, therefore we explicitly hardcode this version here, to
-        # make debugging easier
-        # NOTE that the slurm-node container also installs a version of
-        # fractal-tasks-core
         task_python.unlink()
-        new_actual_task_python = "/usr/bin/python3.9"
+        new_actual_task_python = "/usr/bin/python{current_py_version}"
         task_python.symlink_to(new_actual_task_python)
         logger.warning(f"New tasks Python: {new_actual_task_python}")
 
