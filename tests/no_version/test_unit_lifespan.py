@@ -183,7 +183,7 @@ async def test_lifespan_slurm_ssh(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
+        FRACTAL_SLURM_WORKER_PYTHON="/not/relevant",
         FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
         FRACTAL_SLURM_SSH_USER=SLURM_USER,
         FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH=ssh_keys["private"],
