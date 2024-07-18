@@ -25,7 +25,4 @@ async def alive():
 @router_api.get("/settings/")
 async def view_settings(user: UserOAuth = Depends(current_active_superuser)):
     settings = Inject(get_settings)
-    for k in settings.dict():
-        if ("PASSWORD" in k) or ("SECRET" in k):
-            setattr(settings, k, "***")
-    return settings
+    return settings.get_sanitized()
