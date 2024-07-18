@@ -76,7 +76,6 @@ def test_slurm_executor_submit(
     monkey_slurm,
     tmp777_path,
 ):
-
     with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
