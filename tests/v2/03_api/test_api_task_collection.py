@@ -2,7 +2,6 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from devtools import debug  # noqa
@@ -25,7 +24,7 @@ INFO = sys.version_info
 CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
 
 
-@pytest.mark.parametrize("payload_python_version", [CURRENT_PYTHON, None])
+@pytest.mark.parametrize("use_current_python", [True, False])
 async def test_task_collection_from_wheel(
     db,
     client,
@@ -33,7 +32,8 @@ async def test_task_collection_from_wheel(
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
-    payload_python_version: Optional[str],
+    use_current_python: bool,
+    current_python: str,
 ):
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
@@ -41,7 +41,7 @@ async def test_task_collection_from_wheel(
     override_settings_factory(
         FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=CURRENT_PYTHON,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_python,
     )
     settings = Inject(get_settings)
 
@@ -55,9 +55,9 @@ async def test_task_collection_from_wheel(
 
     # Prepare and validate payload
     payload = dict(package=payload_package, package_extras="my_extra")
-    if payload_python_version is not None:
-        payload["python_version"] = payload_python_version
-        expected_python_version = payload_python_version
+    if use_current_python:
+        payload["python_version"] = current_python
+        expected_python_version = current_python
     else:
         expected_python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     debug(payload)
@@ -163,6 +163,7 @@ async def test_task_collection_from_wheel_non_canonical(
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
+    current_python: str,
 ):
     """
     Same as test_task_collection_from_wheel, but package has a
@@ -175,7 +176,7 @@ async def test_task_collection_from_wheel_non_canonical(
     override_settings_factory(
         FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=CURRENT_PYTHON,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_python,
     )
     # settings = Inject(get_settings)
 
@@ -189,7 +190,7 @@ async def test_task_collection_from_wheel_non_canonical(
 
     # Prepare and validate payload
     payload = dict(package=payload_package, package_extras="my_extra")
-    payload["python_version"] = CURRENT_PYTHON
+    payload["python_version"] = current_python
     debug(payload)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
@@ -239,6 +240,7 @@ async def test_task_collection_from_pypi(
     MockCurrentUser,
     override_settings_factory,
     tmp_path: Path,
+    current_python,
 ):
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
@@ -246,7 +248,7 @@ async def test_task_collection_from_pypi(
     override_settings_factory(
         FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=CURRENT_PYTHON,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_python,
     )
     settings = Inject(get_settings)
 
