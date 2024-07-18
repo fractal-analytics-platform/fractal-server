@@ -6,6 +6,8 @@
     * Refactor `compress_folder` and `extract_archive` modules, and stop using `tarfile` library (\#1641).
 * API:
     * Introduce `FRACTAL_API_V1_MODE=include_without_submission` to include V1 API but forbid job submission (\#1664).
+* Testing:
+    * Do not test V1 API with `DB_ENGINE="postgres-psycopg"` (\#1667).
 
 # 2.3.3
 
