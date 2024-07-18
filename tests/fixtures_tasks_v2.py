@@ -112,7 +112,7 @@ def relink_python_interpreter_v2(
         )
 
         task_python.unlink()
-        new_actual_task_python = "/usr/bin/python{current_py_version}"
+        new_actual_task_python = f"/usr/bin/python{current_py_version}"
         task_python.symlink_to(new_actual_task_python)
         logger.warning(f"New tasks Python: {new_actual_task_python}")
 
