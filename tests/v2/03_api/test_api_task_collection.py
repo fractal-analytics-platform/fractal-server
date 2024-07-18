@@ -20,8 +20,6 @@ from tests.execute_command import execute_command
 
 
 PREFIX = "api/v2/task"
-INFO = sys.version_info
-CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
 
 
 @pytest.mark.parametrize("use_current_python", [True, False])
