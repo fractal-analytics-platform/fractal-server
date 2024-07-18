@@ -18,18 +18,19 @@ def test_check_connection_failure():
             this_fractal_ssh.check_connection()
 
 
-def test_versions(fractal_ssh: FractalSSH):
+def test_versions(fractal_ssh: FractalSSH, current_python_version: str):
     """
     Check the Python and fractal-server versions available on the cluster.
     """
 
-    command = "/usr/bin/python3.9 --version"
+    python_bin = f"/usr/bin/python{current_python_version}"
+    command = f"{python_bin} --version"
     print(f"COMMAND:\n{command}")
     stdout = fractal_ssh.run_command(cmd=command)
     print(f"STDOUT:\n{stdout}")
 
     python_command = "import fractal_server as fs; print(fs.__VERSION__);"
-    command = f"/usr/bin/python3.9 -c '{python_command}'"
+    command = f"{python_bin} -c '{python_command}'"
 
     print(f"COMMAND:\n{command}")
     stdout = fractal_ssh.run_command(cmd=command)
