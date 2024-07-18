@@ -120,14 +120,16 @@ def docker_compose_file(
     dest = testdata_path / "slurm_docker_images" / "slurm" / "public_ssh_key"
     shutil.copy(ssh_keys["public"], dest)
 
+    current_python_version_underscore = current_py_version.replace(".", "_")
     if sys.platform == "darwin":
         # in macOS '/tmp' is a symlink to '/private/tmp'
         # if we don't mount '/private', 'mkdir -p /private/...' fails with
         # PermissionDenied
         return str(
-            testdata_path / "slurm_docker_images/docker-compose-private.yml"
+            testdata_path
+            / "slurm_docker_images"
+            / f"docker-compose_{current_python_version_underscore}-private.yml"
         )
-    current_python_version_underscore = current_py_version.replace(".", "_")
     return str(
         testdata_path
         / "slurm_docker_images"
