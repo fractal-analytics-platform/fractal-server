@@ -1,9 +1,20 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.4
+
+* SSH SLURM runner:
+    * Refactor `compress_folder` and `extract_archive` modules, and stop using `tarfile` library (\#1641).
+* API:
+    * Introduce `FRACTAL_API_V1_MODE=include_without_submission` to include V1 API but forbid job submission (\#1664).
+* Testing:
+    * Do not test V1 API with `DB_ENGINE="postgres-psycopg"` (\#1667).
+
 # 2.3.3
 
 This release fixes a SSH-task-collection bug introduced in version 2.3.1.
 
+* API:
+    * Expose new superuser-restricted endpoint `GET /api/settings/` (\#1662).
 * SLURM runner:
     * Make `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable `float` (\#1658).
 * SSH features:

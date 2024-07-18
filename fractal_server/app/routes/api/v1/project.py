@@ -250,9 +250,18 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
 
+    settings = Inject(get_settings)
+    if settings.FRACTAL_API_V1_MODE == "include_without_submission":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Legacy API is still accessible, "
+                "but the submission of legacy jobs is not available."
+            ),
+        )
+
     # Remove non-submitted V1 jobs from the app state when the list grows
     # beyond a threshold
-    settings = Inject(get_settings)
     if (
         len(request.app.state.jobsV1)
         > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH

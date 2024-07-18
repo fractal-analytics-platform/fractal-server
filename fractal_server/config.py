@@ -546,7 +546,9 @@ class Settings(BaseSettings):
     attribute in their input-arguments JSON file.
     """
 
-    FRACTAL_API_V1_MODE: Literal["include", "exclude"] = "include"
+    FRACTAL_API_V1_MODE: Literal[
+        "include", "include_without_submission", "exclude"
+    ] = "include"
     """
     Whether to include the v1 API.
     """
@@ -684,6 +686,25 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
+
+    def get_sanitized(self) -> dict:
+        def _must_be_sanitized(string) -> bool:
+            if not string.upper().startswith("FRACTAL") or any(
+                s in string.upper()
+                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
+            ):
+                return True
+            else:
+                return False
+
+        sanitized_settings = {}
+        for k, v in self.dict().items():
+            if _must_be_sanitized(k):
+                sanitized_settings[k] = "***"
+            else:
+                sanitized_settings[k] = v
+
+        return sanitized_settings
 
 
 def get_settings(settings=Settings()) -> Settings:

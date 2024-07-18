@@ -1,120 +1,132 @@
-import shlex
-import subprocess  # nosec
+"""
+Wrap `tar` compression command.
+
+This module is used both locally (in the environment where `fractal-server`
+is running) and remotely (as a standalon Python module, executed over SSH).
+
+This is a twin-module of `extract_archive.py`.
+
+The reason for using the `tar` command via `subprocess` rather than Python
+built-in `tarfile` library has to do with performance issues we observed
+when handling files which were just created within a SLURM job, and in the
+context of a CephFS filesystem.
+"""
+import shutil
 import sys
-import tarfile
-import time
 from pathlib import Path
-from typing import Optional
+
+from fractal_server.app.runner.run_subprocess import run_subprocess
+from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 
 
-# COMPRESS_FOLDER_MODALITY = "python"
-COMPRESS_FOLDER_MODALITY = "cp-tar-rmtree"
+def copy_subfolder(src: Path, dest: Path, logger_name: str):
+    cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
+    logger = get_logger(logger_name=logger_name)
+    logger.debug(f"{cmd_cp=}")
+    res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
+    return res
 
 
-def _filter(info: tarfile.TarInfo) -> Optional[tarfile.TarInfo]:
-    if info.name.endswith(".pickle"):
-        filename = info.name.split("/")[-1]
-        parts = filename.split("_")
-        if len(parts) == 3 and parts[1] == "in":
-            return None
-        elif len(parts) == 5 and parts[3] == "in":
-            return None
-    elif info.name.endswith("slurm_submit.sbatch"):
-        return None
-    return info
+def create_tar_archive(
+    tarfile_path: Path,
+    subfolder_path_tmp_copy: Path,
+    logger_name: str,
+    remote_to_local: bool,
+):
+    logger = get_logger(logger_name)
+
+    if remote_to_local:
+        exclude_options = "--exclude *sbatch --exclude *_in_*.pickle "
+    else:
+        exclude_options = ""
+
+    cmd_tar = (
+        f"tar czf {tarfile_path} "
+        f"{exclude_options} "
+        f"--directory={subfolder_path_tmp_copy.as_posix()} "
+        "."
+    )
+    logger.debug(f"cmd tar:\n{cmd_tar}")
+    run_subprocess(cmd=cmd_tar, logger_name=logger_name)
 
 
-if __name__ == "__main__":
+def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
+    logger = get_logger(logger_name)
+    try:
+        logger.debug(f"Now remove {subfolder_path_tmp_copy}")
+        shutil.rmtree(subfolder_path_tmp_copy)
+    except Exception as e:
+        logger.debug(f"ERROR during shutil.rmtree: {e}")
+
+
+def compress_folder(
+    subfolder_path: Path, remote_to_local: bool = False
+) -> str:
+    """
+    Compress e.g. `/path/archive` into `/path/archive.tar.gz`
+
+    Note that `/path/archive.tar.gz` may already exist. In this case, it will
+    be overwritten.
+
+    Args:
+        subfolder_path: Absolute path to the folder to compress.
+        remote_to_local: If `True`, exclude some files from the tar.gz archive.
+
+    Returns:
+        Absolute path to the tar.gz archive.
+    """
+
+    logger_name = "compress_folder"
+    logger = set_logger(logger_name)
+
+    logger.debug("START")
+    logger.debug(f"{subfolder_path=}")
+    parent_dir = subfolder_path.parent
+    subfolder_name = subfolder_path.name
+    tarfile_path = (parent_dir / f"{subfolder_name}.tar.gz").as_posix()
+    logger.debug(f"{tarfile_path=}")
+
+    subfolder_path_tmp_copy = (
+        subfolder_path.parent / f"{subfolder_path.name}_copy"
+    )
+    try:
+        copy_subfolder(
+            subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
+        )
+        create_tar_archive(
+            tarfile_path,
+            subfolder_path_tmp_copy,
+            logger_name=logger_name,
+            remote_to_local=remote_to_local,
+        )
+        return tarfile_path
+
+    except Exception as e:
+        logger.debug(f"ERROR: {e}")
+        sys.exit(1)
+
+    finally:
+        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger_name)
+
+
+def main(sys_argv: list[str]):
+
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.compress_folder "
-        "path/to/folder"
+        "path/to/folder [--remote-to-local]\n"
     )
+    num_args = len(sys_argv[1:])
+    if num_args == 0:
+        sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
+    elif num_args == 1:
+        compress_folder(subfolder_path=Path(sys_argv[1]))
+    elif num_args == 2 and sys_argv[2] == "--remote-to-local":
+        compress_folder(subfolder_path=Path(sys_argv[1]), remote_to_local=True)
+    else:
+        sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
 
-    if len(sys.argv[1:]) != 1:
-        raise ValueError(
-            "Invalid argument(s).\n" f"{help_msg}\n" f"Provided: {sys.argv=}"
-        )
 
-    subfolder_path = Path(sys.argv[1])
-    t_0 = time.perf_counter()
-    print("[compress_folder.py] START")
-    print(f"[compress_folder.py] {COMPRESS_FOLDER_MODALITY=}")
-    print(f"[compress_folder.py] {subfolder_path=}")
-
-    job_folder = subfolder_path.parent
-    subfolder_name = subfolder_path.name
-    tarfile_path = (job_folder / f"{subfolder_name}.tar.gz").as_posix()
-    print(f"[compress_folder.py] {tarfile_path=}")
-
-    if COMPRESS_FOLDER_MODALITY == "python":
-        raise NotImplementedError()
-        with tarfile.open(tarfile_path, "w:gz") as tar:
-            tar.add(
-                subfolder_path,
-                arcname=".",  # ????
-                recursive=True,
-                filter=_filter,
-            )
-    elif COMPRESS_FOLDER_MODALITY == "cp-tar-rmtree":
-        import shutil
-        import time
-
-        subfolder_path_tmp_copy = (
-            subfolder_path.parent / f"{subfolder_path.name}_copy"
-        )
-
-        t0 = time.perf_counter()
-        # shutil.copytree(subfolder_path, subfolder_path_tmp_copy)
-        cmd_cp = (
-            "cp -r "
-            f"{subfolder_path.as_posix()} "
-            f"{subfolder_path_tmp_copy.as_posix()}"
-        )
-        res = subprocess.run(  # nosec
-            shlex.split(cmd_cp),
-            check=True,
-            capture_output=True,
-            encoding="utf-8",
-        )
-        t1 = time.perf_counter()
-        print("[compress_folder.py] `cp -r` END - " f"elapsed: {t1-t0:.3f} s")
-
-        cmd_tar = (
-            "tar czf "
-            f"{tarfile_path} "
-            "--exclude *sbatch --exclude *_in_*.pickle "
-            f"--directory={subfolder_path_tmp_copy.as_posix()} "
-            "."
-        )
-
-        print(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
-        t0 = time.perf_counter()
-        res = subprocess.run(  # nosec
-            shlex.split(cmd_tar),
-            capture_output=True,
-            encoding="utf-8",
-        )
-        t1 = time.perf_counter()
-        t_1 = time.perf_counter()
-        print(f"[compress_folder.py] tar END - elapsed: {t1-t0:.3f} s")
-
-        print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
-
-        if res.returncode != 0:
-            print("[compress_folder.py] ERROR in tar")
-            print(f"[compress_folder.py] tar stdout:\n{res.stdout}")
-            print(f"[compress_folder.py] tar stderr:\n{res.stderr}")
-
-            shutil.rmtree(subfolder_path_tmp_copy)
-            sys.exit(1)
-
-        t0 = time.perf_counter()
-        shutil.rmtree(subfolder_path_tmp_copy)
-        t1 = time.perf_counter()
-        print(
-            f"[compress_folder.py] shutil.rmtree END - elapsed: {t1-t0:.3f} s"
-        )
-
-    t_1 = time.perf_counter()
-    print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
+if __name__ == "__main__":
+    main(sys.argv)
