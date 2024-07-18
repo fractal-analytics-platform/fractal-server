@@ -16,6 +16,19 @@ async def test_alive(client, override_settings):
     assert data["alive"] is True
 
 
+async def test_unit_get_sanitized_settings():
+    settings = Inject(get_settings)
+    sanitized_settings = settings.get_sanitized()
+    assert settings.dict().keys() == sanitized_settings.keys()
+    for k in sanitized_settings.keys():
+        if not k.upper().startswith("FRACTAL") or any(
+            s in k.upper() for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
+        ):
+            assert sanitized_settings[k] == "***"
+        else:
+            assert sanitized_settings[k] == settings.dict()[k]
+
+
 async def test_settings_endpoint(client, MockCurrentUser):
 
     settings = Inject(get_settings).dict()
@@ -38,8 +51,6 @@ async def test_settings_endpoint(client, MockCurrentUser):
 
     # assert they are equal except for PASSWORDs and SECRETs
     assert settings.keys() == endpoint_settings.keys()
-    for k in endpoint_settings.keys():
-        if ("PASSWORD" not in k) and ("SECRET" not in k):
-            assert endpoint_settings[k] == settings[k]
-        else:
-            assert endpoint_settings[k] == "***"
+    for k, v in endpoint_settings.items():
+        if v != "***":
+            assert v == settings[k]
