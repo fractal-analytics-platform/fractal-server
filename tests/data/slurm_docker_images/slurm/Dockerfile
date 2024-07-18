@@ -13,28 +13,22 @@ RUN chown fractal:fractal /home/fractal/.ssh/authorized_keys
 RUN chmod 600 /home/test01/.ssh/authorized_keys
 RUN chmod 600 /home/fractal/.ssh/authorized_keys
 
-# FIXME: Python operations below should be repeated for all python versions?
+ARG PYTHON_NAME
 
-RUN apt-get install python3.9-venv
-RUN apt-get install python3.11-venv
+# FIXME: move this to base image
+RUN apt-get install ${PYTHON_NAME}-venv
 
 # Update pip and install devtools
-RUN python3.9 -m pip install --upgrade pip devtools
-RUN python3.10 -m pip install --upgrade pip devtools
-RUN python3.11 -m pip install --upgrade pip devtools
+RUN $PYTHON_NAME -m pip install --upgrade pip devtools
 
 # Install requirements (useful for caching some layers when running locally)
 COPY tmp_requirements.txt ./
 ADD fractal_server_local.tar.gz .
-RUN python3.9 -m pip install -r tmp_requirements.txt
-RUN python3.10 -m pip install -r tmp_requirements.txt
-RUN python3.11 -m pip install -r tmp_requirements.txt
+RUN $PYTHON_NAME -m pip install -r tmp_requirements.txt
 
 # Install fractal-server
 WORKDIR ./fractal-server
-RUN python3.9 -m pip install -e .
-RUN python3.10 -m pip install -e .
-RUN python3.11 -m pip install -e .
+RUN $PYTHON_NAME -m pip install -e .
 
 EXPOSE 22 6817 6818
 
