@@ -19,12 +19,20 @@ COPY tmp_requirements.txt ./
 ADD fractal_server_local.tar.gz .
 
 # Update pip
-RUN python3 -m pip install --upgrade pip setuptools wheel devtools
-RUN python3 -m pip install -r tmp_requirements.txt
+RUN python3.9 -m pip install --upgrade pip setuptools wheel devtools
+RUN python3.9 -m pip install -r tmp_requirements.txt
+
+RUN python3.10 -m pip install --upgrade pip setuptools wheel devtools
+RUN python3.10 -m pip install -r tmp_requirements.txt
+
+RUN python3.11 -m pip install --upgrade pip setuptools wheel devtools
+RUN python3.11 -m pip install -r tmp_requirements.txt
 
 # Install fractal-server
 WORKDIR ./fractal-server
-RUN python3 -m pip install -e .
+RUN python3.9 -m pip install -e .
+RUN python3.10 -m pip install -e .
+RUN python3.11 -m pip install -e .
 
 EXPOSE 22 6817 6818
 
