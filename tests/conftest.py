@@ -53,10 +53,9 @@ def tmp777_path(tmp_path):
 
 
 @pytest.fixture(scope="session")
-def current_python() -> str:
+def current_python_version() -> str:
     INFO = sys.version_info
-    CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
-    return CURRENT_PYTHON
+    return f"{INFO.major}.{INFO.minor}"
 
 
 from .fixtures_server import *  # noqa F403
