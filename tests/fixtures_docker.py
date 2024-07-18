@@ -41,30 +41,6 @@ def is_responsive(container_name):
         return False
 
 
-def _write_requirements_file(path: Path):
-    """
-    This function creates a temporary requirements file, which is copied
-    into the node container and pip-installed from a separate statement.
-    For local tests, this improves performance because this layer can be
-    cached by Docker. The cache is invalidated whenever some version change.
-    """
-
-    import pydantic
-    import sqlalchemy
-    import fastapi
-    import cfut
-    import alembic
-    import fastapi_users
-
-    with path.open("w") as f:
-        f.write(f"pydantic=={pydantic.__version__}\n")
-        f.write(f"sqlalchemy=={sqlalchemy.__version__}\n")
-        f.write(f"alembic=={alembic.__version__}\n")
-        f.write(f"fastapi=={fastapi.__version__}\n")
-        f.write(f"fastapi-users=={fastapi_users.__version__}\n")
-        f.write(f"clusterfutures=={cfut.__version__}\n")
-
-
 @pytest.fixture(scope="session")
 def ssh_keys(tmp_path_factory: TempPathFactory) -> dict[str, str]:
 
@@ -93,12 +69,6 @@ def docker_compose_file(
 
     import fractal_server
     import tarfile
-
-    # Write requirements file
-    requirements_file_path = (
-        testdata_path / "slurm_docker_images/slurm/tmp_requirements.txt"
-    )
-    _write_requirements_file(requirements_file_path)
 
     # Provide a tar.gz archive with fractal-server package
     CODE_ROOT = Path(fractal_server.__file__).parent.parent

@@ -21,12 +21,8 @@ RUN apt-get install ${PYTHON_NAME}-venv
 # Update pip and install devtools
 RUN $PYTHON_NAME -m pip install --upgrade pip devtools
 
-# Install requirements (useful for caching some layers when running locally)
-COPY tmp_requirements.txt ./
-ADD fractal_server_local.tar.gz .
-RUN $PYTHON_NAME -m pip install -r tmp_requirements.txt
-
 # Install fractal-server
+ADD fractal_server_local.tar.gz .
 WORKDIR ./fractal-server
 RUN $PYTHON_NAME -m pip install -e .
 
