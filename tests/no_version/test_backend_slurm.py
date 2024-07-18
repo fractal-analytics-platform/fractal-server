@@ -72,11 +72,6 @@ def test_slurm_executor_submit_missing_subfolder(
             executor.submit(lambda: 42)
 
 
-def test_monkey_slurm(monkey_slurm):
-    print("READY TO SLEEP")
-    time.sleep(10000)
-
-
 def test_slurm_executor_submit(
     monkey_slurm,
     tmp777_path,
