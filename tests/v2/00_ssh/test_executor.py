@@ -42,8 +42,11 @@ def test_slurm_ssh_executor_submit(
     tmp_path: Path,
     tmp777_path: Path,
     override_settings_factory,
+    current_python_version: str,
 ):
-    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_python_version}"
+    )
 
     with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / "job_dir",
@@ -61,8 +64,11 @@ def test_slurm_ssh_executor_map(
     tmp_path: Path,
     tmp777_path: Path,
     override_settings_factory,
+    current_python_version: str,
 ):
-    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_python_version}"
+    )
 
     with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / "job_dir",
