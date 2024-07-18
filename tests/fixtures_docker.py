@@ -88,7 +88,7 @@ def docker_compose_file(
     pytestconfig,
     testdata_path: Path,
     ssh_keys: dict[str, str],
-    current_python_version: str,
+    current_py_version: str,
 ):
 
     import fractal_server
@@ -127,9 +127,7 @@ def docker_compose_file(
         return str(
             testdata_path / "slurm_docker_images/docker-compose-private.yml"
         )
-    current_python_version_underscore = current_python_version.replace(
-        ".", "_"
-    )
+    current_python_version_underscore = current_py_version.replace(".", "_")
     return str(
         testdata_path
         / "slurm_docker_images"

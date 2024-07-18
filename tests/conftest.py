@@ -53,7 +53,7 @@ def tmp777_path(tmp_path):
 
 
 @pytest.fixture(scope="session")
-def current_python_version() -> str:
+def current_py_version() -> str:
     INFO = sys.version_info
     return f"{INFO.major}.{INFO.minor}"
 

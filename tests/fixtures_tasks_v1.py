@@ -152,7 +152,7 @@ async def dummy_task_package_missing_manifest(
 
 @pytest.fixture(scope="session")
 async def install_dummy_packages(
-    tmp777_session_path, dummy_task_package, current_python_version: str
+    tmp777_session_path, dummy_task_package, current_py_version: str
 ):
 
     from fractal_server.tasks.v1.background_operations import (
@@ -162,7 +162,7 @@ async def install_dummy_packages(
 
     task_pkg = _TaskCollectPip(
         package=dummy_task_package.as_posix(),
-        python_version=current_python_version,
+        python_version=current_py_version,
     )
 
     pkg_info = inspect_package(dummy_task_package)
@@ -190,9 +190,7 @@ async def collect_packages(db_sync, install_dummy_packages):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v1(
-    collect_packages, current_python_version: str
-):
+def relink_python_interpreter_v1(collect_packages, current_py_version: str):
     """
     Rewire python executable in tasks
 
@@ -212,7 +210,7 @@ def relink_python_interpreter_v1(
             f"RELINK: Original status: {task_python=} -> {orig_python}"
         )
         task_python.unlink()
-        task_python.symlink_to(f"/usr/bin/python{current_python_version}")
+        task_python.symlink_to(f"/usr/bin/python{current_py_version}")
         logger.warning(
             f"RELINK: Updated status: {task_python=} -> "
             f"{os.readlink(task_python.as_posix())}"
