@@ -25,10 +25,11 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     monkeypatch,
     ssh_keys: dict[str, str],
     override_settings_factory,
+    current_py_version: str,
 ):
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}",
         FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
         FRACTAL_SLURM_SSH_USER=SLURM_USER,
         FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH=ssh_keys["private"],
