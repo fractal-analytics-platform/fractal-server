@@ -92,17 +92,15 @@ def docker_compose_file(
     import tarfile
 
     # Write requirements file
-    container = "head"  # FIXME
     requirements_file_path = (
-        testdata_path / f"slurm_docker_images/{container}/tmp_requirements.txt"
+        testdata_path / "slurm_docker_images/slurm/tmp_requirements.txt"
     )
     _write_requirements_file(requirements_file_path)
 
     # Provide a tar.gz archive with fractal-server package
     CODE_ROOT = Path(fractal_server.__file__).parent.parent
     TAR_FILE = (
-        testdata_path
-        / f"slurm_docker_images/{container}/fractal_server_local.tar.gz"
+        testdata_path / "slurm_docker_images/slurm/fractal_server_local.tar.gz"
     )
     TAR_ROOT = CODE_ROOT.name
     with tarfile.open(TAR_FILE, "w:gz") as tar:
@@ -116,7 +114,7 @@ def docker_compose_file(
             tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
 
     # Provide a public SSH key
-    dest = testdata_path / "slurm_docker_images" / "head" / "public_ssh_key"
+    dest = testdata_path / "slurm_docker_images" / "slurm" / "public_ssh_key"
     shutil.copy(ssh_keys["public"], dest)
 
     if sys.platform == "darwin":
@@ -133,7 +131,7 @@ def docker_compose_file(
 @pytest.fixture
 def slurmlogin_container(docker_compose_project_name, docker_services) -> str:
     logging.warning(f"{docker_compose_project_name=}")
-    slurm_container = docker_compose_project_name + "-slurmhead-1"
+    slurm_container = docker_compose_project_name + "-slurm-1"
     logging.warning(f"{slurm_container=}")
     docker_services.wait_until_responsive(
         timeout=15.0,

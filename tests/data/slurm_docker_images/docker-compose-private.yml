@@ -3,17 +3,15 @@
 # See https://github.com/fractal-analytics-platform/fractal-server/issues/1475
 
 services:
-
-  slurmhead:
-        build:
-          context: ./head
-          dockerfile: Dockerfile
-        hostname: slurmhead
-        volumes:
-          - /private:/private:rw
-
-        environment:
-                - SLURM_CPUS_ON_NODE=1
-        ports:
-                - 6817:6817
-                - 6818:6818
+  slurm:
+    build:
+      context: ./slurm
+      dockerfile: Dockerfile
+    hostname: slurm
+    volumes:
+      - /private:/private:rw
+    environment:
+      - SLURM_CPUS_ON_NODE=1
+    ports:
+      - '6817:6817'
+      - '6818:6818'
