@@ -49,7 +49,6 @@ async def test_settings_endpoint(client, MockCurrentUser):
 
     endpoint_settings = res.json()
 
-    # assert they are equal except for PASSWORDs and SECRETs
     assert settings.keys() == endpoint_settings.keys()
     for k, v in endpoint_settings.items():
         if v != "***":
