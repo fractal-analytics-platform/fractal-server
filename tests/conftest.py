@@ -1,3 +1,4 @@
+import sys
 from os import environ
 from pathlib import Path
 
@@ -49,6 +50,13 @@ def tmp777_path(tmp_path):
         if "pytest" in parent.as_posix():
             parent.chmod(0o777)
     yield tmp_path
+
+
+@pytest.fixture(scope="session")
+def current_python() -> str:
+    INFO = sys.version_info
+    CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
+    return CURRENT_PYTHON
 
 
 from .fixtures_server import *  # noqa F403
