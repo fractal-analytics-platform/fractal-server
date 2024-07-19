@@ -23,8 +23,12 @@ from fractal_server.tasks.v1.utils import _init_venv_v1
 from tests.execute_command import execute_command
 
 
-@pytest.mark.parametrize("python_version", [None, "3.10"])
-async def test_init_venv(tmp_path, python_version):
+@pytest.mark.parametrize("use_current_python", [True, False])
+async def test_init_venv(
+    tmp_path,
+    use_current_python: bool,
+    current_py_version: str,
+):
     """
     GIVEN a path and a python version
     WHEN _init_venv() is called
@@ -33,6 +37,11 @@ async def test_init_venv(tmp_path, python_version):
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
+
+    if use_current_python:
+        python_version = current_py_version
+    else:
+        python_version = None
 
     try:
         python_bin = await _init_venv_v1(

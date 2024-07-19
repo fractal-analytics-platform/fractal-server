@@ -39,7 +39,7 @@ ssh_config.json
 *.db-shm
 *.db-wal
 
-tests/data/slurm_docker_images/head/fractal_server_local.tar.gz
-tests/data/slurm_docker_images/head/public_ssh_key
+tests/data/slurm_docker_images/*/fractal_server_local.tar.gz
+tests/data/slurm_docker_images/*/public_ssh_key
 tests/data/ssh_config.json
 *.egg-info

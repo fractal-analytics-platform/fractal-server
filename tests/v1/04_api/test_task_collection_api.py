@@ -3,7 +3,6 @@ import os
 import shutil
 import time
 from pathlib import Path
-from shutil import which as shutil_which
 
 import pytest
 from devtools import debug
@@ -67,25 +66,15 @@ async def test_collection_non_verified_user(client, MockCurrentUser):
         assert res.status_code == 401
 
 
-@pytest.mark.parametrize(
-    "python_version",
-    [
-        None,
-        pytest.param(
-            "3.10",
-            marks=pytest.mark.skipif(
-                not shutil_which("python3.10"), reason="No python3.10 on host"
-            ),
-        ),
-    ],
-)
+@pytest.mark.parametrize("use_current_python", [True, False])
 async def test_collection(
     db,
     client,
     dummy_task_package,
     MockCurrentUser,
     override_settings_factory,
-    python_version,
+    use_current_python,
+    current_py_version: str,
     tmp_path: Path,
 ):
     """
@@ -108,10 +97,10 @@ async def test_collection(
     _TaskCollectPip(**task_pkg_dict)
 
     # Prepare expected source
-    if python_version:
-        task_pkg_dict["python_version"] = python_version
+    if use_current_python:
+        task_pkg_dict["python_version"] = current_py_version
         EXPECTED_SOURCE = (
-            f"pip_local:fractal_tasks_dummy:0.1.0::py{python_version}"
+            f"pip_local:fractal_tasks_dummy:0.1.0::py{current_py_version}"
         )
     else:
         EXPECTED_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
@@ -151,10 +140,10 @@ async def test_collection(
         assert get_log_path(full_path).exists()
 
         # Check source
-        if python_version:
+        if use_current_python:
             python_bin = data["task_list"][0]["command"].split()[0]
             version = await execute_command(f"{python_bin} --version")
-            assert python_version in version
+            assert current_py_version in version
 
         # Collect again (already installed)
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_pkg_dict)

@@ -151,17 +151,9 @@ async def dummy_task_package_missing_manifest(
 
 
 @pytest.fixture(scope="session")
-async def install_dummy_packages(tmp777_session_path, dummy_task_package):
-    """
-    NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
-    is 3.9, and relink_python_interpreter will map to it. Therefore this
-    fixture must always install dummy_task_package with this version.
-
-    FIXME: for how this is written, it requires that python3.9 and its venv
-    module are available on the machine that is running pytest (and then
-    fractal-server), see
-    https://github.com/fractal-analytics-platform/fractal-server/issues/498
-    """
+async def install_dummy_packages(
+    tmp777_session_path, dummy_task_package, current_py_version: str
+):
 
     from fractal_server.tasks.v1.background_operations import (
         create_package_environment_pip,
@@ -170,7 +162,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
     task_pkg = _TaskCollectPip(
         package=dummy_task_package.as_posix(),
-        python_version="3.9",
+        python_version=current_py_version,
     )
 
     pkg_info = inspect_package(dummy_task_package)
@@ -198,7 +190,7 @@ async def collect_packages(db_sync, install_dummy_packages):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v1(collect_packages):
+def relink_python_interpreter_v1(collect_packages, current_py_version: str):
     """
     Rewire python executable in tasks
 
@@ -218,10 +210,7 @@ def relink_python_interpreter_v1(collect_packages):
             f"RELINK: Original status: {task_python=} -> {orig_python}"
         )
         task_python.unlink()
-        # NOTE that the docker container in the CI only has python3.9
-        # installed, therefore we explicitly hardcode this version here, to
-        # make debugging easier
-        task_python.symlink_to("/usr/bin/python3.9")
+        task_python.symlink_to(f"/usr/bin/python{current_py_version}")
         logger.warning(
             f"RELINK: Updated status: {task_python=} -> "
             f"{os.readlink(task_python.as_posix())}"
