@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for fractal_server/app/routes/admin/v2.py: 97%</title>
+    <title>Coverage for fractal_server/app/routes/admin/v2.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>fractal_server/app/routes/admin/v2.py</b>:
-            <span class="pc_cov">97%</span>
+            <span class="pc_cov">100%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -59,7 +59,7 @@
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">193<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
-            <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">8<span class="text"> partial</span></button>
+            <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
         </h2>
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_195021e61b3d1144_v1_py.html">&#xab; prev</a> &nbsp; &nbsp;
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_0ba7ce89b7f22ac4___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.0">coverage.py v7.6.0</a>,
-            created at 2024-07-19 06:29 +0000
+            created at 2024-07-19 07:51 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -145,7 +145,7 @@
     <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t"><span class="op">@</span><span class="nam">router_admin_v2</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/project/"</span><span class="op">,</span> <span class="nam">response_model</span><span class="op">=</span><span class="nam">list</span><span class="op">[</span><span class="nam">ProjectReadV2</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">view_project</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">64&#x202F;&#x219B;&#x202F;63</span><span class="annotate long">line 64 didn't jump to line 63</span></span></p>
+    <p class="run"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">view_project</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="nam">id</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="nam">user_id</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_superuser</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -174,7 +174,7 @@
     <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t"><span class="op">@</span><span class="nam">router_admin_v2</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/job/"</span><span class="op">,</span> <span class="nam">response_model</span><span class="op">=</span><span class="nam">list</span><span class="op">[</span><span class="nam">JobReadV2</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">view_job</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">93&#x202F;&#x219B;&#x202F;92</span><span class="annotate long">line 93 didn't jump to line 92</span></span></p>
+    <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">view_job</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">    <span class="nam">id</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">    <span class="nam">user_id</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="nam">project_id</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -250,7 +250,7 @@
     <p class="pln"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t"><span class="op">@</span><span class="nam">router_admin_v2</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/job/{job_id}/"</span><span class="op">,</span> <span class="nam">response_model</span><span class="op">=</span><span class="nam">JobReadV2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">view_single_job</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">169&#x202F;&#x219B;&#x202F;168</span><span class="annotate long">line 169 didn't jump to line 168</span></span></p>
+    <p class="run"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">view_single_job</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">    <span class="nam">show_tmp_logs</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_superuser</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -279,7 +279,7 @@
     <p class="pln"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">    <span class="str">"/job/{job_id}/"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">    <span class="nam">response_model</span><span class="op">=</span><span class="nam">JobReadV2</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">update_job</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">198&#x202F;&#x219B;&#x202F;194</span><span class="annotate long">line 198 didn't jump to line 194</span></span></p>
+    <p class="run"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">update_job</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">    <span class="nam">job_update</span><span class="op">:</span> <span class="nam">JobUpdateV2</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_superuser</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -313,7 +313,7 @@
     <p class="pln"><span class="n"><a id="t229" href="#t229">229</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t231" href="#t231">231</a></span><span class="t"><span class="op">@</span><span class="nam">router_admin_v2</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/job/{job_id}/stop/"</span><span class="op">,</span> <span class="nam">status_code</span><span class="op">=</span><span class="num">202</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t232" href="#t232">232</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">stop_job</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">232&#x202F;&#x219B;&#x202F;231</span><span class="annotate long">line 232 didn't jump to line 231</span></span></p>
+    <p class="run"><span class="n"><a id="t232" href="#t232">232</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">stop_job</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_superuser</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -340,7 +340,7 @@
     <p class="pln"><span class="n"><a id="t256" href="#t256">256</a></span><span class="t">    <span class="str">"/job/{job_id}/download/"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t257" href="#t257">257</a></span><span class="t">    <span class="nam">response_class</span><span class="op">=</span><span class="nam">StreamingResponse</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t258" href="#t258">258</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">download_job_logs</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">259&#x202F;&#x219B;&#x202F;255</span><span class="annotate long">line 259 didn't jump to line 255</span></span></p>
+    <p class="run"><span class="n"><a id="t259" href="#t259">259</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">download_job_logs</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t260" href="#t260">260</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t261" href="#t261">261</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_superuser</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t262" href="#t262">262</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -374,7 +374,7 @@
     <p class="pln"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">    <span class="str">"/task-v1/{task_id}/"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t291" href="#t291">291</a></span><span class="t">    <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_200_OK</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t292" href="#t292">292</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t293" href="#t293">293</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">flag_task_v1_as_v2_compatible</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">293&#x202F;&#x219B;&#x202F;289</span><span class="annotate long">line 293 didn't jump to line 289</span></span></p>
+    <p class="run"><span class="n"><a id="t293" href="#t293">293</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">flag_task_v1_as_v2_compatible</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t">    <span class="nam">task_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">    <span class="nam">compatibility</span><span class="op">:</span> <span class="nam">TaskCompatibility</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_superuser</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -429,7 +429,7 @@
     <p class="pln"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t"><span class="op">@</span><span class="nam">router_admin_v2</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/task/"</span><span class="op">,</span> <span class="nam">response_model</span><span class="op">=</span><span class="nam">list</span><span class="op">[</span><span class="nam">TaskV2Info</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">query_tasks</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">348&#x202F;&#x219B;&#x202F;347</span><span class="annotate long">line 348 didn't jump to line 347</span></span></p>
+    <p class="run"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">query_tasks</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t349" href="#t349">349</a></span><span class="t">    <span class="nam">id</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t350" href="#t350">350</a></span><span class="t">    <span class="nam">source</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t351" href="#t351">351</a></span><span class="t">    <span class="nam">version</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -527,7 +527,7 @@
             <a class="nav" href="z_0ba7ce89b7f22ac4___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.0">coverage.py v7.6.0</a>,
-            created at 2024-07-19 06:29 +0000
+            created at 2024-07-19 07:51 +0000
         </p>
     </div>
 </footer>
