@@ -13,9 +13,6 @@ RUN chmod 600 /home/fractal/.ssh/authorized_keys
 
 ARG PYTHON_NAME
 
-# FIXME: move this to base image
-RUN apt-get install ${PYTHON_NAME}-venv
-
 # Update pip and install devtools
 RUN $PYTHON_NAME -m pip install --upgrade pip devtools
 
