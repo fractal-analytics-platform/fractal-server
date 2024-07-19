@@ -12,6 +12,7 @@
     * Adapt tests so that they always refer to the current Python version (the one running `pytest`), when needed; this means that we don't require the presence of any additional Python version in the development environment, apart from the current one (\#1633).
     * Include Python3.11 in some tests (\#1669).
     * Simplify CI SLURM Dockerfile after base-image updates (\#1670).
+    * Cache `ubuntu22-slurm-multipy` Docker image in CI (\#1671).
 
 # 2.3.3
 
