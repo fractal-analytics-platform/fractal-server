@@ -44,7 +44,7 @@ def collect_routers(app: FastAPI) -> None:
     from .app.routes.api.v2 import router_api_v2
     from .app.routes.admin.v1 import router_admin_v1
     from .app.routes.admin.v2 import router_admin_v2
-    from .app.routes.auth import router_auth
+    from .app.routes.auth import get_router_auth
 
     settings = Inject(get_settings)
 
@@ -58,7 +58,9 @@ def collect_routers(app: FastAPI) -> None:
     app.include_router(
         router_admin_v2, prefix="/admin/v2", tags=["V2 Admin area"]
     )
-    app.include_router(router_auth, prefix="/auth", tags=["Authentication"])
+    app.include_router(
+        get_router_auth(), prefix="/auth", tags=["Authentication"]
+    )
 
 
 def check_settings() -> None:
