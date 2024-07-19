@@ -1,5 +1,4 @@
 import logging
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -18,7 +17,6 @@ from fractal_server.tasks.v2._venv_pip import _pip_install
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
-CURRENT_PYTHON = f"{sys.version_info.major}.{sys.version_info.minor}"
 LOGGER_NAME = "__logger__"
 
 
@@ -175,8 +173,12 @@ async def test_pip_install_pinned(tmp_path, caplog):
     caplog.clear()
 
 
-@pytest.mark.parametrize("python_version", [None, CURRENT_PYTHON])
-async def test_init_venv(tmp_path, python_version):
+@pytest.mark.parametrize("use_current_python", [True, False])
+async def test_init_venv(
+    tmp_path,
+    use_current_python,
+    current_py_version: str,
+):
     """
     GIVEN a path and a python version
     WHEN _init_venv_v2() is called
@@ -185,6 +187,8 @@ async def test_init_venv(tmp_path, python_version):
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
+
+    python_version = current_py_version if use_current_python else None
 
     try:
         python_bin = await _init_venv_v2(

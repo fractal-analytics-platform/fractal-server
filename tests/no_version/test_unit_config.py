@@ -10,9 +10,6 @@ from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 from tests.fixtures_server import DB_ENGINE
 
-INFO = sys.version_info
-CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
-
 
 def test_settings_injection(override_settings):
     """

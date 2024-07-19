@@ -41,30 +41,6 @@ def is_responsive(container_name):
         return False
 
 
-def _write_requirements_file(path: Path):
-    """
-    This function creates a temporary requirements file, which is copied
-    into the node container and pip-installed from a separate statement.
-    For local tests, this improves performance because this layer can be
-    cached by Docker. The cache is invalidated whenever some version change.
-    """
-
-    import pydantic
-    import sqlalchemy
-    import fastapi
-    import cfut
-    import alembic
-    import fastapi_users
-
-    with path.open("w") as f:
-        f.write(f"pydantic=={pydantic.__version__}\n")
-        f.write(f"sqlalchemy=={sqlalchemy.__version__}\n")
-        f.write(f"alembic=={alembic.__version__}\n")
-        f.write(f"fastapi=={fastapi.__version__}\n")
-        f.write(f"fastapi-users=={fastapi_users.__version__}\n")
-        f.write(f"clusterfutures=={cfut.__version__}\n")
-
-
 @pytest.fixture(scope="session")
 def ssh_keys(tmp_path_factory: TempPathFactory) -> dict[str, str]:
 
@@ -85,57 +61,56 @@ def ssh_keys(tmp_path_factory: TempPathFactory) -> dict[str, str]:
 
 @pytest.fixture(scope="session")
 def docker_compose_file(
-    pytestconfig, testdata_path: Path, ssh_keys: dict[str, str]
+    pytestconfig,
+    testdata_path: Path,
+    ssh_keys: dict[str, str],
+    current_py_version: str,
 ):
 
     import fractal_server
     import tarfile
 
-    for container in ["head", "node"]:
-        # Write requirements file
-        requirements_file_path = (
-            testdata_path
-            / f"slurm_docker_images/{container}/tmp_requirements.txt"
-        )
-        _write_requirements_file(requirements_file_path)
-
-        # Provide a tar.gz archive with fractal-server package
-        CODE_ROOT = Path(fractal_server.__file__).parent.parent
-        TAR_FILE = (
-            testdata_path
-            / f"slurm_docker_images/{container}/fractal_server_local.tar.gz"
-        )
-        TAR_ROOT = CODE_ROOT.name
-        with tarfile.open(TAR_FILE, "w:gz") as tar:
-            tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
-            for name in [
-                "pyproject.toml",
-                "README.md",
-                "fractal_server",
-            ]:
-                f = CODE_ROOT / name
-                tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+    # Provide a tar.gz archive with fractal-server package
+    CODE_ROOT = Path(fractal_server.__file__).parent.parent
+    TAR_FILE = (
+        testdata_path / "slurm_docker_images/slurm/fractal_server_local.tar.gz"
+    )
+    TAR_ROOT = CODE_ROOT.name
+    with tarfile.open(TAR_FILE, "w:gz") as tar:
+        tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
+        for name in [
+            "pyproject.toml",
+            "README.md",
+            "fractal_server",
+        ]:
+            f = CODE_ROOT / name
+            tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
 
     # Provide a public SSH key
-    dest = testdata_path / "slurm_docker_images" / "head" / "public_ssh_key"
+    dest = testdata_path / "slurm_docker_images" / "slurm" / "public_ssh_key"
     shutil.copy(ssh_keys["public"], dest)
 
+    current_python_version_underscore = current_py_version.replace(".", "_")
     if sys.platform == "darwin":
         # in macOS '/tmp' is a symlink to '/private/tmp'
         # if we don't mount '/private', 'mkdir -p /private/...' fails with
         # PermissionDenied
         return str(
-            testdata_path / "slurm_docker_images/docker-compose-private.yml"
+            testdata_path
+            / "slurm_docker_images"
+            / f"docker-compose_{current_python_version_underscore}-private.yml"
         )
-
-    return str(testdata_path / "slurm_docker_images/docker-compose.yml")
+    return str(
+        testdata_path
+        / "slurm_docker_images"
+        / f"docker-compose_{current_python_version_underscore}.yml"
+    )
 
 
 @pytest.fixture
 def slurmlogin_container(docker_compose_project_name, docker_services) -> str:
     logging.warning(f"{docker_compose_project_name=}")
-
-    slurm_container = docker_compose_project_name + "-slurmhead-1"
+    slurm_container = docker_compose_project_name + "-slurm-1"
     logging.warning(f"{slurm_container=}")
     docker_services.wait_until_responsive(
         timeout=15.0,

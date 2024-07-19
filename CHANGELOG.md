@@ -8,6 +8,8 @@
     * Introduce `FRACTAL_API_V1_MODE=include_without_submission` to include V1 API but forbid job submission (\#1664).
 * Testing:
     * Do not test V1 API with `DB_ENGINE="postgres-psycopg"` (\#1667).
+    * Use new Fractal SLURM containers in CI (\#1663).
+    * Adapt tests so that they always refer to the current Python version (the one running `pytest`), when needed; this means that we don't require the presence of any additional Python version in the development environment, apart from the current one (\#1633).
 
 # 2.3.3
 

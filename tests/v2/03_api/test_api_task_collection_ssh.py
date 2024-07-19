@@ -18,6 +18,7 @@ async def test_task_collection_ssh_from_pypi(
     tmp_path: Path,
     tmp777_path: Path,
     fractal_ssh: FractalSSH,
+    current_py_version: str,
 ):
 
     # Define and create remote working directory
@@ -28,12 +29,15 @@ async def test_task_collection_ssh_from_pypi(
     app.state.fractal_ssh = fractal_ssh
 
     # Override settins with Python/SSH configurations
-    override_settings_factory(
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.9",
-        FRACTAL_TASKS_PYTHON_3_9="/usr/bin/python3.9",
-        FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=WORKING_BASE_DIR,
-    )
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    settings_overrides = {
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        PY_KEY: f"/usr/bin/python{current_py_version}",
+        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
+        "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": WORKING_BASE_DIR,
+    }
+    override_settings_factory(**settings_overrides)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
 
@@ -46,7 +50,7 @@ async def test_task_collection_ssh_from_pypi(
             json=dict(
                 package="fractal-tasks-core",
                 package_version=PACKAGE_VERSION,
-                python_version="3.9",
+                python_version=current_py_version,
             ),
         )
         assert res.status_code == 201
@@ -75,7 +79,7 @@ async def test_task_collection_ssh_from_pypi(
             json=dict(
                 package="fractal-tasks-core",
                 package_version=PACKAGE_VERSION,
-                python_version="3.9",
+                python_version=current_py_version,
             ),
         )
         assert res.status_code == 201
