@@ -1,5 +1,6 @@
 import logging
 import random
+import sys
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -9,7 +10,6 @@ from typing import Optional
 
 import pytest
 from asgi_lifespan import LifespanManager
-from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
@@ -35,41 +35,6 @@ except ModuleNotFoundError:
         DB_ENGINE = "postgres"
     except ModuleNotFoundError:
         DB_ENGINE = "sqlite"
-
-
-def check_python_has_venv(python_path: str, temp_path: Path):
-    """
-    This function checks that we can safely use a certain python interpreter,
-    namely
-    1. It exists;
-    2. It has the venv module installed.
-    """
-
-    import subprocess
-    import shlex
-
-    temp_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path.parent.chmod(0o755)
-    temp_path.mkdir(parents=True, exist_ok=True)
-    temp_path.chmod(0o755)
-
-    cmd = f"{python_path} -m venv {temp_path.as_posix()}"
-    p = subprocess.run(
-        shlex.split(cmd),
-        capture_output=True,
-    )
-    if p.returncode != 0:
-        debug(cmd)
-        debug(p.stdout.decode("UTF-8"))
-        debug(p.stderr.decode("UTF-8"))
-        logging.warning(
-            "check_python_has_venv({python_path=}, {temp_path=}) failed."
-        )
-        raise RuntimeError(
-            p.stderr.decode("UTF-8"),
-            f"Hint: is the venv module installed for {python_path}? "
-            f'Try running "{cmd}".',
-        )
 
 
 def get_patched_settings(temp_path: Path):
@@ -102,10 +67,10 @@ def get_patched_settings(temp_path: Path):
     # This variable is set to work with the system interpreter within a docker
     # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
-        settings.FRACTAL_SLURM_WORKER_PYTHON = "/usr/bin/python3"
-        check_python_has_venv(
-            "/usr/bin/python3", temp_path / "check_python_has_venv"
-        )
+        INFO = sys.version_info
+        CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
+        PYTHON_BIN = f"/usr/bin/python{CURRENT_PY_VERSION}"
+        settings.FRACTAL_SLURM_WORKER_PYTHON = PYTHON_BIN
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 

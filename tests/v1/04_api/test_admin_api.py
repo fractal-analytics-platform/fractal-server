@@ -462,14 +462,10 @@ async def test_view_job(
         assert len(res.json()) == 0
 
         # get jobs by status
-        res = await client.get(
-            f"{PREFIX}/job/?status={JobStatusTypeV1.FAILED}"
-        )
+        res = await client.get(f"{PREFIX}/job/?status=failed")
         assert res.status_code == 200
         assert len(res.json()) == 0
-        res = await client.get(
-            f"{PREFIX}/job/?status={JobStatusTypeV1.SUBMITTED}"
-        )
+        res = await client.get(f"{PREFIX}/job/?status=submitted")
         assert res.status_code == 200
         assert len(res.json()) == 2
 
