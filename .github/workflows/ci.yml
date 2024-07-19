@@ -42,7 +42,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ci/cache/docker/slurm-multipy
-          key: cache-docker-slurm-multipy  # FIXME use hash
+          key: cache-docker-slurm-multipy
 
       - name: Use SLURM Docker Image Cache if cache hit
         if: steps.cache-docker-slurm-multipy.outputs.cache-hit == 'true'
@@ -119,7 +119,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ci/cache/docker/slurm-multipy
-          key: cache-docker-slurm-multipy  # FIXME use hash
+          key: cache-docker-slurm-multipy
 
       - name: Use SLURM Docker Image Cache if cache hit
         if: steps.cache-docker-slurm-multipy.outputs.cache-hit == 'true'
