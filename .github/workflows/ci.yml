@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.9", "3.10"]
         db: ["postgres"]
 
     services:
@@ -72,8 +72,13 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
         db: ["sqlite", "postgres", "postgres-psycopg"]
+        exclude:
+          - python_version: 3.11
+            db: sqlite
+          - python_version: 3.11
+            db: postgres
 
     services:
       postgres:
