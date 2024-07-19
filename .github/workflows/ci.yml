@@ -37,6 +37,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache SLURM Docker images
+        id: cache-docker-slurm-multipy
+        uses: actions/cache@v4
+        with:
+          path: ci/cache/docker/slurm-multipy
+          key: cache-docker-slurm-multipy  # FIXME use hash
+
+      - name: Use SLURM Docker Image Cache if cache hit
+        if: steps.cache-docker-slurm-multipy.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
+
+      - name: Update SLURM Docker Image Cache if cache miss
+        if: steps.cache-docker-slurm-multipy.outputs.cache-hit != 'true'
+        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
+
       - name: Install poetry
         run: pipx install poetry==1.8.2
 
