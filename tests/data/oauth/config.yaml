@@ -1,4 +1,4 @@
-# Docs: https://dexidp.io/docs
+# Documentation: https://dexidp.io/docs
 
 issuer: http://127.0.0.1:5556/dex
 
@@ -19,6 +19,7 @@ staticClients:
       - http://localhost:8000/auth/test/callback/
 
 connectors:
+# mockCallback connector always returns the user 'kilgore@kilgore.trout'.
 - type: mockCallback
   id: mock
   name: Mock
