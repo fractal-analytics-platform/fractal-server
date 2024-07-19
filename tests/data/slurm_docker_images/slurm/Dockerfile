@@ -1,7 +1,5 @@
 FROM ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1
 
-COPY slurm.conf /etc/slurm/
-
 # Copy public SSH keys to container
 COPY public_ssh_key ./
 RUN mkdir /home/test01/.ssh
