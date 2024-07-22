@@ -61,4 +61,4 @@ jobs:
         - name: OAuth authentication
           run: |
             cd tests/oauth/
-            poetry run sh oauth.sh
+            sh oauth.sh
