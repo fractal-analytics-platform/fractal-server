@@ -21,8 +21,6 @@ jobs:
     steps:
 
         - uses: actions/checkout@v4
-          with:
-            fetch-depth: 1
 
         - name: Set up Python 3.10
           uses: actions/setup-python@v5
@@ -46,11 +44,10 @@ jobs:
             export OAUTH_DEXIDP_CLIENT_SECRET=client_test_secret
             export OAUTH_DEXIDP_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
             export OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
-            cd tests/oauth/
             fractalctl set-db
-            bash serve.sh && sleep 2
+            fractalctl start --port 8001 &
+            sleep 2
 
         - name: OAuth authentication
           run: |
-            cd tests/oauth/
-            bash -x oauth.sh
+            bash -x scripts/oauth/oauth.sh
