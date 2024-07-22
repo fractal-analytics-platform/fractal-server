@@ -16,7 +16,7 @@ jobs:
       dexidp:
         image: ychiucco/dex-fractal:latest
         options: >-
-          --health-cmd pg_isready
+          --health-cmd curl --silent http://127.0.0.1:5556/dex/.well-known/openid-configuration > /dev/null
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -26,7 +26,7 @@ jobs:
     steps:
 
         - name: Install 'curl' and 'jq'
-          run: apk update; apk add --no-cache curl jq
+          run: apt-get install -y curl jq
 
         - uses: actions/checkout@v4
           with:
