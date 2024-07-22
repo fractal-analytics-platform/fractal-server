@@ -56,9 +56,9 @@ jobs:
             export OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
             cd tests/oauth/
             fractalctl set-db
-            sh serve.sh && sleep 2
+            bash serve.sh && sleep 2
 
         - name: OAuth authentication
           run: |
             cd tests/oauth/
-            sh oauth.sh
+            bash -x oauth.sh
