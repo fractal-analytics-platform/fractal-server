@@ -15,11 +15,11 @@ jobs:
     services:
       dexidp:
         image: ychiucco/dex-fractal:latest
-        options: >-
-          --health-cmd "curl http://127.0.0.1:5556/dex/.well-known/openid-configuration"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        # options: >-
+        #   --health-cmd "curl http://127.0.0.1:5556/dex/.well-known/openid-configuration"
+        #   --health-interval 10s
+        #   --health-timeout 5s
+        #   --health-retries 5
         ports:
           - 5556:5556
 
