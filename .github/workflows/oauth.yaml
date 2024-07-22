@@ -10,7 +10,7 @@ jobs:
 
   test_oauth2_oidc:
     name: OAuth2-OIDC
-    runs-on: alpine:latest
+    runs-on: ubuntu:latest
 
     services:
       dexidp:
