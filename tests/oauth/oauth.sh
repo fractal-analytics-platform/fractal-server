@@ -1,6 +1,6 @@
 #!/bin/bash
 
-AUTHORIZATION_URL=$(curl \
+AUTHORIZATION_URL=$(curl --silent \
     http://127.0.0.1:8001/auth/dexidp/authorize/ \
     | jq -r ".authorization_url"
 )
@@ -9,7 +9,7 @@ TOKEN=$(
     | grep "fastapiusersauth" | awk '{print $NF}'
 )
 WHOAMI=$(
-    curl -H "Authorization: Bearer $TOKEN" \
+    curl --silent -H "Authorization: Bearer $TOKEN" \
     http://127.0.0.1:8001/auth/current-user/
 )
 
