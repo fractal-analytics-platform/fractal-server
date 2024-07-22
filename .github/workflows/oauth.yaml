@@ -26,7 +26,7 @@ jobs:
     steps:
 
         - name: Install 'curl' and 'jq'
-          run: apt-get install -y curl jq
+          run: sudo apt-get install -y curl jq
 
         - uses: actions/checkout@v4
           with:
