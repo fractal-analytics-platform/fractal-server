@@ -1,6 +1,6 @@
 Terminal 1
 ```
-docker run ghcr.io/fractal-analytics-platform/oauth:0.1
+docker run  -p 5556:5556 ghcr.io/fractal-analytics-platform/oauth:0.1
 ```
 
 Terminal 2
