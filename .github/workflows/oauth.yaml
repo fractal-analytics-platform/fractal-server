@@ -1,0 +1,53 @@
+name: OAuth2-OIDC
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+
+  test_oauth2_oidc:
+    name: OAuth2-OIDC
+    runs-on: ubuntu-22.04
+
+    services:
+      dexidp:
+        image: ghcr.io/fractal-analytics-platform/oauth:0.1
+        ports:
+          - 5556:5556
+
+    steps:
+
+        - uses: actions/checkout@v4
+
+        - name: Set up Python 3.10
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.10"
+            cache: "pip"
+
+        - name: Install dependencies
+          run: pip install -e .
+
+        - name: Run Fractal
+          run: |
+            export FRACTAL_TASKS_DIR=/dev/fractal/task
+            export FRACTAL_RUNNER_WORKING_BASE_DIR=/dev/fractal/base_dir
+            export FRACTAL_RUNNER_BACKEND=local
+            export JWT_SECRET_KEY=jwt_secret_key
+            export JWT_EXPIRE_SECONDS=1000
+            export DB_ENGINE=sqlite
+            export SQLITE_PATH=fractal.sqlite
+            export OAUTH_DEXIDP_CLIENT_ID=client_test_id
+            export OAUTH_DEXIDP_CLIENT_SECRET=client_test_secret
+            export OAUTH_DEXIDP_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
+            export OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
+            fractalctl set-db
+            fractalctl start --port 8001 &
+            sleep 2
+
+        - name: OAuth authentication
+          run: |
+            bash -x scripts/oauth/oauth.sh

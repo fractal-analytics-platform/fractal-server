@@ -13,6 +13,7 @@
     * Include Python3.11 in some tests (\#1669).
     * Simplify CI SLURM Dockerfile after base-image updates (\#1670).
     * Cache `ubuntu22-slurm-multipy` Docker image in CI (\#1671).
+    * Add `oauth.yaml` GitHub action to test OIDC authentication (\#1665).
 
 # 2.3.3
 
