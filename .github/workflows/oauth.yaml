@@ -1,0 +1,71 @@
+name: OAuth2-OIDC
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+
+  test_oauth2_oidc:
+    name: OAuth2-OIDC
+    runs-on: alpine:latest
+
+    services:
+      dexidp:
+        image: docker pull ychiucco/dex-fractal:latest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5556:5556
+
+    steps:
+
+        - name: Install 'curl' and 'jq'
+          run: apk update; apk add --no-cache curl jq
+
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 1
+
+        - name: Set up Python 3.10
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.10"
+            cache: "poetry"
+
+        - name: Install poetry
+          run: |
+            python3 -m venv venv
+            venv/bin/pip install -U pip setuptools
+            venv/bin/pip install poetry==1.8.2
+
+        - name: Install dependencies
+          run: poetry install --no-interaction -E gunicorn
+
+        - name: Run Fractal with Gunicorn
+          run: |
+            export FRACTAL_TASKS_DIR=/dev/fractal/task
+            export FRACTAL_RUNNER_WORKING_BASE_DIR=/dev/fractal/base_dir
+            export FRACTAL_RUNNER_BACKEND=local
+            export JWT_SECRET_KEY=jwt_secret_key
+            export JWT_EXPIRE_SECONDS=1000
+            export DB_ENGINE=sqlite
+            export SQLITE_PATH=/dev/dev.sql
+            export OAUTH_DEXIDP_CLIENT_ID=client_test_id
+            export OAUTH_DEXIDP_CLIENT_SECRET=client_test_secret
+            export OAUTH_DEXIDP_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
+            export OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
+            cd tests/oauth/
+            poetry run fractalctl set-db
+            poetry run python populate_db/populate_db_script.py
+            poetry run sh serve.sh
+
+        - name: OAuth authentication
+          run: |
+            cd tests/oauth/
+            poetry run sh oauth.sh

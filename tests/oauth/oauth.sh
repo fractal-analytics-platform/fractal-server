@@ -1,38 +1,7 @@
-#!/bin/bash
-export FRACTAL_TASKS_DIR=/tmp/fractal/task
-export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/fractal/wbd
-export FRACTAL_RUNNER_BACKEND=local
-
-export JWT_SECRET_KEY=xxx
-export JWT_EXPIRE_SECONDS=600000
-
-export DB_ENGINE=sqlite
-export SQLITE_PATH=test_oauth.sql
-
-export OAUTH_TEST_CLIENT_ID=client_test_id
-export OAUTH_TEST_CLIENT_SECRET=client_test_secret
-export OAUTH_TEST_REDIRECT_URL=http://localhost:8001/auth/test/callback/
-export OAUTH_TEST_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
-
-
-cleanup() {
-    kill $(jobs -p)
-    docker compose down
-    rm ${SQLITE_PATH}
-}
-trap cleanup EXIT
-
-docker compose up -d
-sleep 2
-
-poetry run fractalctl set-db
-poetry run fractalctl start -p 8001 &
-sleep 5
-
-# ----
+#!/bin/sh
 
 AUTHORIZATION_URL=$(curl \
-    http://127.0.0.1:8001/auth/test/authorize/ \
+    http://127.0.0.1:8001/auth/dexidp/authorize/ \
     | jq -r ".authorization_url"
 )
 TOKEN=$(
