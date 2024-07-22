@@ -1,2 +1,2 @@
 #!/bin/sh
-fractalctl start &
+fractalctl start --port 8001 &
