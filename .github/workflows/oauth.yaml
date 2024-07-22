@@ -32,17 +32,14 @@ jobs:
           with:
             fetch-depth: 1
 
-        - name: Install poetry
-          run: pipx install poetry==1.8.2
-
         - name: Set up Python 3.10
           uses: actions/setup-python@v5
           with:
             python-version: "3.10"
-            cache: "poetry"
+            cache: "pip"
 
         - name: Install dependencies
-          run: poetry install --no-interaction -E gunicorn
+          run: pip install -e .[gunicorn]
 
         - name: Run Fractal with Gunicorn
           run: |
@@ -58,8 +55,8 @@ jobs:
             export OAUTH_DEXIDP_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
             export OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
             cd tests/oauth/
-            poetry run fractalctl set-db
-            poetry run sh serve.sh
+            fractalctl set-db
+            sh serve.sh
 
         - name: OAuth authentication
           run: |
