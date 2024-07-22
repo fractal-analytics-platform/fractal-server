@@ -14,7 +14,7 @@ jobs:
 
     services:
       dexidp:
-        image: docker pull ychiucco/dex-fractal:latest
+        image: ychiucco/dex-fractal:latest
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
