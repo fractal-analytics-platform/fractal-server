@@ -64,8 +64,6 @@ def _slurm_submit_setup(
     # Get SlurmConfig object
     slurm_config = get_slurm_config(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
         which_type=which_type,
     )
 
