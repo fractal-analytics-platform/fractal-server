@@ -553,7 +553,7 @@ class Settings(BaseSettings):
     Whether to include the v1 API.
     """
 
-    FRACTAL_MAX_PIP_VERSION: float = 24.0
+    FRACTAL_MAX_PIP_VERSION: str = "24.0"
     """
     Maximum value at which to update `pip` before performing task collection.
     """
