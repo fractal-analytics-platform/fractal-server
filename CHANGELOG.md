@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.5 (Unreleased)
+
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.21` (\#1674).
+
 # 2.3.4
 
 * SSH SLURM runner:
