@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.5 (Unreleased)
+
+* Task collection:
+    * Introduce a new configuration variable `FRACTAL_MAX_PIP_VERSION` to pin task-collection pip (\#1675).
+
 # 2.3.4
 
 * SSH SLURM runner:
