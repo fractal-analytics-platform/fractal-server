@@ -38,8 +38,8 @@ class TaskV2Mock(BaseModel):
 
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
-    meta_non_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
-    meta_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
+    meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
+    meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
     type: Optional[str]
 
     @root_validator(pre=False)
