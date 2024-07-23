@@ -105,13 +105,19 @@ def get_slurm_config(
     else:
         needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
-    if needs_gpu and slurm_env.gpu_slurm_config is not None:  # FIXME
-        for key, value in slurm_env.gpu_slurm_config.dict(
-            exclude_unset=True, exclude={"mem"}
-        ).items():
-            slurm_dict[key] = value
-        if slurm_env.gpu_slurm_config.mem:
-            slurm_dict["mem_per_task_MB"] = slurm_env.gpu_slurm_config.mem
+    if needs_gpu:
+        if slurm_env.gpu_slurm_config is None:
+            logger.debug(
+                f"[get_slurm_config] {needs_gpu=} but "
+                f"{slurm_env.gpu_slurm_config=}"
+            )
+        else:
+            for key, value in slurm_env.gpu_slurm_config.dict(
+                exclude_unset=True, exclude={"mem"}
+            ).items():
+                slurm_dict[key] = value
+            if slurm_env.gpu_slurm_config.mem:
+                slurm_dict["mem_per_task_MB"] = slurm_env.gpu_slurm_config.mem
 
     # Number of CPUs per task, for multithreading
     if wftask_meta is not None and "cpus_per_task" in wftask_meta:
