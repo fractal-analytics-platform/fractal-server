@@ -869,15 +869,30 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-        sbatch_stdout = self.fractal_ssh.run_command(
-            cmd=sbatch_command,
-        )
+        pre_submission_cmds = job.slurm_config.pre_submission_cmds
+        if len(pre_submission_cmds) == 0:
+            sbatch_stdout = self.fractal_ssh.run_command(cmd=sbatch_command)
+        else:
+            logger.warning(f"Now using {pre_submission_cmds=}")
+            script_lines = pre_submission_cmds + [sbatch_command]
+            script_content = "\n".join(script_lines)
+            script_path_remote = (
+                f"{job.slurm_script_remote.as_posix()}_wrapper.sh"
+            )
+            with self.fractal_ssh.sftp().open(
+                filename=script_path_remote, mode="w"
+            ) as f:
+                f.write(script_content)
+            cmd = f"bash {script_path_remote}"
+            sbatch_stdout = self.fractal_ssh.run_command(cmd=cmd)
 
         # Extract SLURM job ID from stdout
         try:
             stdout = sbatch_stdout.strip("\n")
             jobid = int(stdout)
         except ValueError as e:
+            if len(pre_submission_cmds) > 0:
+                logger.warning(f"I used {pre_submission_cmds=}")
             error_msg = (
                 f"Submit command `{sbatch_command}` returned "
                 f"`{stdout=}` which cannot be cast to an integer "
