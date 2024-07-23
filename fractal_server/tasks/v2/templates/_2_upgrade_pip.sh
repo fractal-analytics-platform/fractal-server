@@ -14,7 +14,7 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Upgrade pip
 write_log "START upgrade pip"
-"$VENVPYTHON" -m pip install pip --upgrade
+"$VENVPYTHON" -m pip install "pip<24.1" --upgrade
 write_log "END   upgrade pip"
 echo
 
