@@ -62,6 +62,7 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
     time: Optional[str]
     account: Optional[str]
     extra_lines: Optional[list[str]]
+    pre_submission_commands: Optional[list[str]]
 
 
 class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
@@ -240,6 +241,8 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             Key-value pairs to be included as `export`-ed variables in SLURM
             submission script, after prepending values with the user's cache
             directory.
+        pre_submission_commands: List of commands to be prepended to the sbatch
+            command.
     """
 
     # Required SLURM parameters (note that the integer attributes are those
@@ -273,6 +276,9 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     max_mem_per_job: int
     target_num_jobs: int
     max_num_jobs: int
+
+    # FIXME
+    pre_submission_cmds: list[str] = Field(default_factory=list)
 
     def _sorted_extra_lines(self) -> list[str]:
         """
