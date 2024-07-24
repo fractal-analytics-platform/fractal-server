@@ -6,9 +6,9 @@ from typing import Optional
 import pytest
 from devtools import debug
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import root_validator
+from pydantic import model_validator
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
@@ -21,7 +21,8 @@ from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
 )
 
 
-class TaskV1Mock(BaseModel, extra=Extra.forbid):
+class TaskV1Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = 1
     name: str = "name_t1"
     command: str = "cmd_t1"
@@ -31,7 +32,8 @@ class TaskV1Mock(BaseModel, extra=Extra.forbid):
     meta: Optional[dict[str, Any]] = Field(default_factory=dict)
 
 
-class TaskV2Mock(BaseModel, extra=Extra.forbid):
+class TaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = 1
     name: str = "name_t2"
     source: str = "source_t2"
@@ -45,7 +47,8 @@ class TaskV2Mock(BaseModel, extra=Extra.forbid):
     type: Optional[str]
 
 
-class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
+class WorkflowTaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     args_non_parallel: dict[str, Any] = Field(default_factory=dict)
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
@@ -63,7 +66,7 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     task_legacy_id: Optional[int]
     task_id: Optional[int]
 
-    @root_validator(pre=False)
+    @model_validator(mode="after")
     def _legacy_or_not(cls, values):
         is_legacy_task = values["is_legacy_task"]
         task = values.get("task")
@@ -78,7 +81,7 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
             values["task_id"] = task.id
         return values
 
-    @root_validator(pre=False)
+    @model_validator(mode="after")
     def merge_meta(cls, values):
         if values["is_legacy_task"]:
             task_meta = values["task"].meta
