@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic.types import StrictStr
@@ -36,7 +36,9 @@ class JobStatusTypeV2(str, Enum):
     FAILED = "failed"
 
 
-class JobCreateV2(BaseModel, extra=Extra.forbid):
+class JobCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     first_task_index: Optional[int] = Field(
         default=None, validate_default=True

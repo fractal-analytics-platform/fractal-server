@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -15,7 +15,7 @@ from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.v2.utils import _parse_wheel_filename
 
 
-class _TaskCollectPip(BaseModel, extra=Extra.forbid):
+class _TaskCollectPip(BaseModel):
     """
     Internal task-collection model.
 
@@ -31,6 +31,8 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
         package_version: Package version. For local packages, it is set
             internally through a field_validator.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     package: str
     package_name: str

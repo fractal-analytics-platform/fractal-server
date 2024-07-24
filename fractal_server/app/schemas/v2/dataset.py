@@ -3,7 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Extra
 from pydantic import Field
 from pydantic import field_validator
 
@@ -30,7 +29,9 @@ class _DatasetHistoryItemV2(BaseModel):
 # CRUD
 
 
-class DatasetCreateV2(BaseModel, extra=Extra.forbid):
+class DatasetCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 

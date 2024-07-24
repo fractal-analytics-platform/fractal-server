@@ -3,10 +3,9 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
-from pydantic import HttpUrl
 from pydantic import model_validator
 
 from .._validators import valdictkeys
@@ -14,7 +13,9 @@ from .._validators import valstr
 from ..v1.task import TaskReadV1
 
 
-class TaskCreateV2(BaseModel, extra=Extra.forbid):
+class TaskCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
@@ -29,7 +30,7 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
@@ -94,7 +95,7 @@ class TaskReadV2(BaseModel):
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 

@@ -11,14 +11,16 @@ These models are used in at least two situations:
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import model_validator
 
 from fractal_server.app.schemas.v1.dumps import TaskDumpV1
 from fractal_server.images import Filters
 
 
-class ProjectDumpV2(BaseModel, extra=Extra.forbid):
+class ProjectDumpV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     name: str
@@ -70,14 +72,20 @@ class WorkflowTaskDumpV2(BaseModel):
         return values
 
 
-class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
+class WorkflowDumpV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel, extra=Extra.forbid):
+class DatasetDumpV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+
     id: int
     name: str
     project_id: int

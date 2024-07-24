@@ -2,8 +2,7 @@ from typing import Optional
 
 from fastapi_users import schemas
 from pydantic import BaseModel
-from pydantic import EmailStr
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic.types import StrictStr
@@ -48,17 +47,10 @@ class UserUpdate(schemas.BaseUserUpdate):
         slurm_accounts:
     """
 
-    slurm_user: Optional[str]
-    cache_dir: Optional[str]
-    username: Optional[str]
-    slurm_accounts: Optional[list[StrictStr]]
-
-    # !
-    is_active: bool
-    is_verified: bool
-    is_superuser: bool
-    email: EmailStr
-    password: str
+    slurm_user: Optional[str] = None
+    cache_dir: Optional[str] = None
+    username: Optional[str] = None
+    slurm_accounts: Optional[list[StrictStr]] = None
 
     # Validators
     _slurm_user = field_validator("slurm_user")(valstr("slurm_user"))
@@ -70,7 +62,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     )
 
 
-class UserUpdateStrict(BaseModel, extra=Extra.forbid):
+class UserUpdateStrict(BaseModel):
     """
     Schema for `User` self-editing.
 
@@ -78,6 +70,8 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
         cache_dir:
         slurm_accounts:
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     cache_dir: Optional[str] = None
     slurm_accounts: Optional[list[StrictStr]] = None
@@ -100,9 +94,9 @@ class UserCreate(schemas.BaseUserCreate):
         slurm_accounts:
     """
 
-    slurm_user: Optional[str]
-    cache_dir: Optional[str]
-    username: Optional[str]
+    slurm_user: Optional[str] = None
+    cache_dir: Optional[str] = None
+    username: Optional[str] = None
     slurm_accounts: list[StrictStr] = Field(default_factory=list)
 
     # Validators

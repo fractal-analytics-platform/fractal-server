@@ -2,14 +2,16 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import field_validator
 
 from .._validators import valstr
 from .._validators import valutc
 
 
-class ProjectCreateV2(BaseModel, extra=Extra.forbid):
+class ProjectCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     # Validators

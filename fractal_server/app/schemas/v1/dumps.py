@@ -11,10 +11,12 @@ These models are used in at least two situations:
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 
 
-class ProjectDumpV1(BaseModel, extra=Extra.forbid):
+class ProjectDumpV1(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     name: str

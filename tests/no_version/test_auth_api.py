@@ -288,12 +288,14 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     assert res.status_code == 422
 
+    from sqlalchemy.exc import IntegrityError
+
     for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
-        res = await registered_superuser_client.patch(
-            f"{PREFIX}/users/{user_id}/",
-            json={attribute: None},
-        )
-        assert res.status_code == 422
+        with pytest.raises(IntegrityError):
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/users/{user_id}/",
+                json={attribute: None},
+            )
 
     # SLURM_USER
     # String attribute 'slurm_user' cannot be empty

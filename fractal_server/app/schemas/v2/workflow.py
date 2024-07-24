@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import field_validator
 
 from .._validators import valstr
@@ -13,7 +13,9 @@ from .workflowtask import WorkflowTaskImportV2
 from .workflowtask import WorkflowTaskReadV2
 
 
-class WorkflowCreateV2(BaseModel, extra=Extra.forbid):
+class WorkflowCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 

@@ -5,7 +5,6 @@ from typing import TypeVar
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
-from pydantic import HttpUrl
 from pydantic import model_validator
 
 
@@ -51,7 +50,7 @@ class _TaskManifestBaseV1(BaseModel):
     meta: Optional[dict[str, Any]] = Field(default_factory=dict)
     args_schema: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
 
 TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBaseV1)
