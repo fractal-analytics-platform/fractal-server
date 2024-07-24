@@ -23,8 +23,8 @@ class TaskCreateV2(BaseModel):
     command_parallel: Optional[str] = None
     source: str
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] = Field(default_factory=dict)
     version: Optional[str] = None
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
@@ -89,8 +89,8 @@ class TaskReadV2(BaseModel):
 
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
-    meta_parallel: dict[str, Any]
-    meta_non_parallel: dict[str, Any]
+    meta_parallel: dict[str, Any] = None
+    meta_non_parallel: dict[str, Any] = None
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None

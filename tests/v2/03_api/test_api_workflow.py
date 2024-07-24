@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime
-from datetime import timezone
 from typing import Literal
 
 import pytest
@@ -239,9 +238,8 @@ async def test_get_workflow(client, MockCurrentUser, project_factory_v2):
 
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        assert datetime.strptime(
+            res.json()["timestamp_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
 
         # Get list of project workflows
@@ -640,7 +638,7 @@ async def test_patch_workflow_task(
             f"wftask/{workflow['task_list'][0]['id']}/",
             json=dict(
                 args_non_parallel={},
-                input_filters=Filters().dict(),
+                input_filters=Filters().model_dump(),
             ),
         )
         patched_workflow_task = res.json()
@@ -1170,7 +1168,9 @@ async def test_import_export_workflow(
         prj = await project_factory_v2(user)
 
     # Import workflow into project
-    payload = WorkflowImportV2(**workflow_from_file).dict(exclude_none=True)
+    payload = WorkflowImportV2(**workflow_from_file).model_dump(
+        exclude_none=True
+    )
 
     res = await client.post(
         f"{PREFIX}/project/{prj.id}/workflow/import/", json=payload
@@ -1207,8 +1207,8 @@ async def test_import_export_workflow(
     # Check that the exported workflow is an extension of the one in the
     # original JSON file
 
-    wf_old = WorkflowExportV2(**workflow_from_file).dict()
-    wf_new = WorkflowExportV2(**workflow_exported).dict()
+    wf_old = WorkflowExportV2(**workflow_from_file).model_dump()
+    wf_new = WorkflowExportV2(**workflow_exported).model_dump()
     assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()

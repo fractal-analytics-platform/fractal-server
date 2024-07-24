@@ -28,7 +28,7 @@
         "manifest_version",
         "task_list"
     ],
-    "definitions": {
+    "$defs": {
         "TaskManifestV1": {
             "title": "TaskManifestV1",
             "description": "Task manifest schema version 1.",

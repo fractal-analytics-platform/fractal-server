@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 
 from devtools import debug
 
@@ -132,9 +131,8 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         res = await client.get(f"{PREFIX}/project/{p_id}/dataset/{ds_id}/")
         debug(res.json())
         assert res.status_code == 200
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        assert datetime.strptime(
+            res.json()["timestamp_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert res.json()["name"] == DATASET_NAME
         assert res.json()["project"] == EXPECTED_PROJECT

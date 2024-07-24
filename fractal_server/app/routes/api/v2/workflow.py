@@ -349,11 +349,13 @@ async def import_workflow(
             task_id = source_to_id[source]
 
         new_wf_task = WorkflowTaskCreateV2(
-            **wf_task.dict(exclude_none=True, exclude={"task", "task_legacy"})
+            **wf_task.model_dump(
+                exclude_none=True, exclude={"task", "task_legacy"}
+            )
         )
         # Insert task
         await _workflow_insert_task(
-            **new_wf_task.dict(),
+            **new_wf_task.model_dump(),
             workflow_id=db_workflow.id,
             task_id=task_id,
             db=db,

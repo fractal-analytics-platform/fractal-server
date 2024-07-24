@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import HttpUrl
 
 from .._validators import valstr
 
@@ -143,7 +144,7 @@ class TaskCreateV1(_TaskBaseV1):
     args_schema: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     # Validators
     _name = field_validator("name")(valstr("name"))

@@ -5,6 +5,7 @@ from typing import TypeVar
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import HttpUrl
 from pydantic import model_validator
 
 
@@ -50,7 +51,7 @@ class _TaskManifestBaseV1(BaseModel):
     meta: Optional[dict[str, Any]] = Field(default_factory=dict)
     args_schema: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
 
 TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBaseV1)
@@ -87,11 +88,11 @@ class _ManifestBaseV1(BaseModel):
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
 
-    @model_validator(mode="before")
+    @model_validator(mode="after")
     @classmethod
-    def _check_args_schemas_are_present(cls, values):
-        has_args_schemas = values["has_args_schemas"]
-        task_list = values["task_list"]
+    def _check_args_schemas_are_present(cls, obj):
+        has_args_schemas = obj.has_args_schemas
+        task_list = obj.task_list
         if has_args_schemas:
             for task in task_list:
                 if task.args_schema is None:
@@ -99,7 +100,7 @@ class _ManifestBaseV1(BaseModel):
                         f'has_args_schemas={has_args_schemas} but task "'
                         f'{task.name}" has args_schema={task.args_schema}.'
                     )
-        return values
+        return obj
 
 
 class TaskManifestV1(_TaskManifestBaseV1):

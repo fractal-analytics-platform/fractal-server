@@ -72,7 +72,7 @@ async def test_post_task(client, MockCurrentUser):
             command_non_parallel="task_command_non_parallel",
         )
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
         )
         assert res.status_code == 201
         assert res.json()["name"] == task.name

@@ -2,10 +2,10 @@ import logging
 import shutil
 
 from fractal_tasks_mock.input_models import InitArgsMIP
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def maximum_intensity_projection(
     *,
     zarr_url: str,

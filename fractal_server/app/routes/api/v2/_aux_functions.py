@@ -395,7 +395,7 @@ async def _workflow_insert_task(
     meta_non_parallel: Optional[dict[str, Any]] = None,
     args_non_parallel: Optional[dict[str, Any]] = None,
     args_parallel: Optional[dict[str, Any]] = None,
-    input_filters: Optional[Filters] = None,
+    input_filters: Optional[Union[Filters, dict]] = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -475,8 +475,10 @@ async def _workflow_insert_task(
     # Prepare input_filters attribute
     if input_filters is None:
         input_filters_kwarg = {}
-    else:
+    elif isinstance(input_filters, dict):
         input_filters_kwarg = dict(input_filters=input_filters)
+    else:
+        input_filters_kwarg = dict(input_filters=input_filters.model_dump())
 
     # Create DB entry
     wf_task = WorkflowTaskV2(

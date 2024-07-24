@@ -43,7 +43,7 @@ async def create_dataset(
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+    db_dataset = DatasetV2(project_id=project_id, **dataset.model_dump())
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
@@ -104,6 +104,7 @@ async def read_dataset(
     )
     dataset = output["dataset"]
     await db.close()
+
     return dataset
 
 

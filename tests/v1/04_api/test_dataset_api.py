@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 
 from devtools import debug
 from sqlmodel import select
@@ -30,10 +29,10 @@ HISTORY = [
                 command="echo",
                 input_type="zarr",
                 output_type="zarr",
-            ).dict(),
-        ).dict(),
+            ).model_dump(),
+        ).model_dump(),
         status=WorkflowTaskStatusTypeV1.DONE,
-    ).dict()
+    ).model_dump()
 ]
 
 
@@ -58,9 +57,8 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         res = await client.get(f"/api/v1/project/{p_id}/dataset/{ds_id}/")
         debug(res.json())
         assert res.status_code == 200
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        assert datetime.strptime(
+            res.json()["timestamp_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert res.json()["name"] == DATASET_NAME
         assert res.json()["project"] == EXPECTED_PROJECT

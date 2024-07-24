@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_arguments
 
 
 @validate_arguments

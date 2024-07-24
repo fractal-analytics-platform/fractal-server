@@ -482,6 +482,14 @@ async def get_workflowtask_status(
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
     history = dataset.history
+    if not isinstance(history, list) and not all(
+        isinstance(x, dict) for x in history
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="History is not a valid JSON.",
+        )
+
     for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]

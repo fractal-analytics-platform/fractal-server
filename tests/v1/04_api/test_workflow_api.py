@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime
-from datetime import timezone
 
 import pytest
 from devtools import debug  # noqa
@@ -233,9 +232,8 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
         debug(res.json())
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        assert datetime.strptime(
+            res.json()["timestamp_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
 
         # Get list of project workflows

@@ -19,9 +19,6 @@ class MockTask(BaseModel):
     command: str
     meta: Optional[dict] = {}
 
-    def model_dump(self, *args, **kwargs):
-        return self.dict(*args, **kwargs)
-
     @property
     def parallelization_level(self) -> Optional[str]:
         try:
@@ -41,9 +38,6 @@ class MockWorkflowTask(BaseModel):
     args: dict = {}
     meta: dict = {}
     executor: Optional[str] = "default"
-
-    def model_dump(self, *args, **kwargs):
-        return self.dict(*args, **kwargs)
 
     # !
     @field_validator("meta")

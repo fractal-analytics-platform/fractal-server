@@ -209,7 +209,7 @@ async def job_factory(db: AsyncSession):
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
-            working_dir=working_dir,
+            working_dir=Path(working_dir).as_posix(),
             worker_init="WORKER_INIT string",
             user_email="user@example.org",
         )

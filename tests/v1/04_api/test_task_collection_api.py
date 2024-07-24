@@ -258,12 +258,13 @@ async def test_collection_with_json_schemas(
     db.add(state)
     await db.commit()
     await db.refresh(state)
-    debug(state)
+
     await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
     )
+
     async with MockCurrentUser():
         status = "pending"
         while status == "pending":
@@ -290,7 +291,7 @@ async def test_collection_with_json_schemas(
         assert os.path.isfile(task_file)
         # Check that docs_info and docs_link are correct
         assert task.docs_info in ["", "This is a parallel task"]
-        assert task.docs_link in [None, "http://www.example.org"]
+        assert task.docs_link in [None, "http://www.example.org/"]
 
 
 async def test_failed_collection_missing_wheel_file(
@@ -532,6 +533,6 @@ async def test_collect_validation_error(
         )
         assert res.status_code == 422
         assert (
-            "Manifest version manifest_version='2' not supported"
-            in res.json()["detail"]
+            "Manifest version manifest_dict['manifest_version']='2' "
+            "not supported" in res.json()["detail"]
         )

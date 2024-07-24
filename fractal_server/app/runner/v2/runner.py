@@ -159,7 +159,7 @@ def execute_tasks_v2(
         # Update image list
         current_task_output.check_zarr_urls_are_unique()
         for image_obj in current_task_output.image_list_updates:
-            image = image_obj.dict()
+            image = image_obj.model_dump()
             # Edit existing image
             tmp_image_paths = [img["zarr_url"] for img in tmp_images]
             if image["zarr_url"] in tmp_image_paths:
@@ -312,7 +312,7 @@ def execute_tasks_v2(
 
         # Update history (based on _DatasetHistoryItemV2)
         history_item = _DatasetHistoryItemV2(
-            workflowtask=wftask,
+            workflowtask=wftask.model_dump(),
             status=WorkflowTaskStatusTypeV2.DONE,
             parallelization=dict(
                 # task_type=wftask.task.type,  # FIXME: breaks for V1 tasks

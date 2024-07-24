@@ -1,10 +1,10 @@
 import logging
 from typing import Optional
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def dummy_remove_images(
     *,
     zarr_urls: list[str],
