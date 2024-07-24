@@ -96,7 +96,7 @@ def get_slurm_config(
     else:
         needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
-    if needs_gpu is not None:
+    if needs_gpu:
         for key, value in slurm_env.gpu_slurm_config.dict(
             exclude_unset=True, exclude={"mem"}
         ).items():
