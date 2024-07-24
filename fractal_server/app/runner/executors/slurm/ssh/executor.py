@@ -869,9 +869,22 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-        sbatch_stdout = self.fractal_ssh.run_command(
-            cmd=sbatch_command,
-        )
+        pre_submission_cmds = job.slurm_config.pre_submission_commands
+        if len(pre_submission_cmds) == 0:
+            sbatch_stdout = self.fractal_ssh.run_command(cmd=sbatch_command)
+        else:
+            logger.debug(f"Now using {pre_submission_cmds=}")
+            script_lines = pre_submission_cmds + [sbatch_command]
+            script_content = "\n".join(script_lines)
+            script_content = f"{script_content}\n"
+            script_path_remote = (
+                f"{job.slurm_script_remote.as_posix()}_wrapper.sh"
+            )
+            self.fractal_ssh.write_remote_file(
+                path=script_path_remote, content=script_content
+            )
+            cmd = f"bash {script_path_remote}"
+            sbatch_stdout = self.fractal_ssh.run_command(cmd=cmd)
 
         # Extract SLURM job ID from stdout
         try:
@@ -881,7 +894,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             error_msg = (
                 f"Submit command `{sbatch_command}` returned "
                 f"`{stdout=}` which cannot be cast to an integer "
-                f"SLURM-job ID. Original error:\n{str(e)}"
+                f"SLURM-job ID.\n"
+                f"Note that {pre_submission_cmds=}.\n"
+                f"Original error:\n{str(e)}"
             )
             logger.error(error_msg)
             raise JobExecutionError(info=error_msg)
