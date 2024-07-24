@@ -134,9 +134,9 @@ def get_slurm_config(
             )
             logger.error(error_msg)
             raise SlurmConfigError(error_msg)
-        for key in ["time", "gres", "constraint"]:
+        for key in ["time", "gres", "gpus", "constraint"]:
             value = wftask_meta.get(key, None)
-            if value:
+            if value is not None:
                 slurm_dict[key] = value
     if wftask_meta is not None:
         extra_lines = wftask_meta.get("extra_lines", [])

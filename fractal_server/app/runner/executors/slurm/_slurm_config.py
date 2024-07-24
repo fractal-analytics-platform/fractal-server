@@ -63,6 +63,7 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
     account: Optional[str]
     extra_lines: Optional[list[str]]
     pre_submission_commands: Optional[list[str]]
+    gpus: Optional[str]
 
 
 class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
@@ -220,6 +221,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         constraint: Corresponds to SLURM option.
         gres: Corresponds to SLURM option.
         account: Corresponds to SLURM option.
+        gpus: Corresponds to SLURM option.
         time: Corresponds to SLURM option (WARNING: not fully supported).
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
@@ -257,6 +259,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     job_name: Optional[str] = None
     constraint: Optional[str] = None
     gres: Optional[str] = None
+    gpus: Optional[str] = None
     time: Optional[str] = None
     account: Optional[str] = None
 
@@ -346,7 +349,14 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             f"{self.prefix} --cpus-per-task={self.cpus_per_task}",
             f"{self.prefix} --mem={mem_per_job_MB}M",
         ]
-        for key in ["job_name", "constraint", "gres", "time", "account"]:
+        for key in [
+            "job_name",
+            "constraint",
+            "gres",
+            "gpus",
+            "time",
+            "account",
+        ]:
             value = getattr(self, key)
             if value is not None:
                 # Handle the `time` parameter
