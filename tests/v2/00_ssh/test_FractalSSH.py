@@ -260,6 +260,15 @@ def test_remove_folder_input_validation():
     print(e.value)
 
 
+def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
+    path = tmp777_path / "file"
+    content = "this is what goes into the file"
+    fractal_ssh.write_remote_file(path=path.as_posix(), content=content)
+    assert path.exists()
+    with path.open("r") as f:
+        assert f.read() == content
+
+
 def test_run_command_session_persistence(
     fractal_ssh: FractalSSH, tmp777_path: Path
 ):
@@ -274,7 +283,7 @@ def test_run_command_session_persistence(
     with script2.open("w") as f:
         f.write("echo $MYVAR")
 
-    stdout = fractal_ssh.run_command(cmd=f"bash {script1.as_posix()}")
+    stdout = fractal_ssh.run_command(cmd=f". {script1.as_posix()}")
     assert stdout.strip("\n") == "123"
-    stdout = fractal_ssh.run_command(cmd=f"bash {script2.as_posix()}")
+    stdout = fractal_ssh.run_command(cmd=f". {script2.as_posix()}")
     assert stdout.strip("\n") == ""
