@@ -80,7 +80,6 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
 
     @root_validator(pre=False)
     def merge_meta(cls, values):
-        debug(values)
         if values["is_legacy_task"]:
             task_meta = values["task"].meta
             if task_meta:
@@ -387,3 +386,65 @@ def test_slurm_submit_setup(
         )
     debug(e.value)
     assert "SLURM account" in str(e.value)
+
+
+def test_get_slurm_config_gpu_options(tmp_path: Path):
+    """
+    Test that GPU-related options are only read when `needs_gpu=True`.
+    """
+    STANDARD_PARTITION = "main"
+    GPU_PARTITION = "gpupartition"
+    GPU_MEM = "20G"
+    GPU_MEM_PER_TASK_MB = 20000
+    GPUS = "1"
+    PRE_SUBMISSION_COMMANDS = ["module load gpu"]
+
+    slurm_config_dict = {
+        "default_slurm_config": {
+            "partition": STANDARD_PARTITION,
+            "mem": "1G",
+            "cpus_per_task": 1,
+        },
+        "gpu_slurm_config": {
+            "partition": GPU_PARTITION,
+            "mem": GPU_MEM,
+            "gpus": GPUS,
+            "pre_submission_commands": PRE_SUBMISSION_COMMANDS,
+        },
+        "batching_config": {
+            "target_cpus_per_job": 10,
+            "max_cpus_per_job": 12,
+            "target_mem_per_job": 10,
+            "max_mem_per_job": 12,
+            "target_num_jobs": 5,
+            "max_num_jobs": 10,
+        },
+    }
+    config_path = tmp_path / "slurm_config.json"
+    with config_path.open("w") as f:
+        json.dump(slurm_config_dict, f)
+
+    # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
+    mywftask = WorkflowTaskV2Mock(task=TaskV2Mock())
+    slurm_config = get_slurm_config(
+        wftask=mywftask,
+        config_path=config_path,
+        which_type="non_parallel",
+    )
+    assert slurm_config.partition == STANDARD_PARTITION
+    assert slurm_config.gpus is None
+    assert slurm_config.pre_submission_commands == []
+
+    # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
+    mywftask = WorkflowTaskV2Mock(
+        meta_non_parallel=dict(needs_gpu=True), task=TaskV2Mock()
+    )
+    slurm_config = get_slurm_config(
+        wftask=mywftask,
+        config_path=config_path,
+        which_type="non_parallel",
+    )
+    assert slurm_config.partition == GPU_PARTITION
+    assert slurm_config.gpus == GPUS
+    assert slurm_config.mem_per_task_MB == GPU_MEM_PER_TASK_MB
+    assert slurm_config.pre_submission_commands == PRE_SUBMISSION_COMMANDS
