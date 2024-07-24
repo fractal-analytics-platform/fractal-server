@@ -54,7 +54,6 @@ class _SlurmConfigSet(BaseModel):
         extra_lines:
     """
 
-
     model_config = ConfigDict(extra="forbid")
 
     partition: Optional[str] = None
@@ -142,7 +141,6 @@ class SlurmConfigFile(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-
     default_slurm_config: _SlurmConfigSet
     gpu_slurm_config: Optional[_SlurmConfigSet] = None
     batching_config: _BatchingConfigSet
