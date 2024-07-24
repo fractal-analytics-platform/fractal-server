@@ -16,7 +16,7 @@ def deduplicate_list(
     new_list_dict = []
     new_list_objs = []
     for this_obj in this_list:
-        this_dict = this_obj.dict()
+        this_dict = this_obj.model_dump()
         if this_dict not in new_list_dict:
             new_list_dict.append(this_dict)
             new_list_objs.append(this_obj)

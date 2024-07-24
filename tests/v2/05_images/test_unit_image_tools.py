@@ -16,7 +16,7 @@ images = [
             a=(i <= N // 2),
             b=(i >= N // 3),
         ),
-    ).dict()
+    ).model_dump()
     for i in range(N)
 ]
 
@@ -46,7 +46,7 @@ def test_match_filter():
             a=True,
             b=False,
         ),
-    ).dict()
+    ).model_dump()
 
     # Empty
     assert match_filter(image, Filters()) is True

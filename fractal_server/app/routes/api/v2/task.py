@@ -83,7 +83,7 @@ async def patch_task(
 
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
-    update = task_update.dict(exclude_unset=True)
+    update = task_update.model_dump(exclude_unset=True)
 
     # Forbid changes that set a previously unset command
     if db_task.type == "non_parallel" and "command_parallel" in update:

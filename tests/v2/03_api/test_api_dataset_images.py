@@ -21,7 +21,7 @@ def n_images(n: int) -> list[dict]:
                 str(i): bool(i % 2),
                 "flag": bool(i % 2 + 1),
             },
-        ).dict()
+        ).model_dump()
         for i in range(n)
     ]
 
@@ -252,10 +252,12 @@ async def test_post_new_image(
         zarr_url=f"{ZARR_DIR}/new_zarr_url",
         attributes={"new_attribute": "xyz"},
         types={"new_type": True},
-    ).dict()
-    invalid_new_image_1 = SingleImage(zarr_url=images[-1]["zarr_url"]).dict()
-    invalid_new_image_2 = SingleImage(zarr_url="/foo/bar").dict()
-    invalid_new_image_3 = SingleImage(zarr_url=dataset.zarr_dir).dict()
+    ).model_dump()
+    invalid_new_image_1 = SingleImage(
+        zarr_url=images[-1]["zarr_url"]
+    ).model_dump()
+    invalid_new_image_2 = SingleImage(zarr_url="/foo/bar").model_dump()
+    invalid_new_image_3 = SingleImage(zarr_url=dataset.zarr_dir).model_dump()
 
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"

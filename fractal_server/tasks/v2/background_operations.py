@@ -51,7 +51,7 @@ def _insert_tasks(
     owner_dict = dict(owner=owner) if owner is not None else dict()
 
     task_db_list = [
-        TaskV2(**t.dict(), **owner_dict, type=_get_task_type(t))
+        TaskV2(**t.model_dump(), **owner_dict, type=_get_task_type(t))
         for t in task_list
     ]
     db.add_all(task_db_list)
@@ -196,7 +196,7 @@ def _prepare_tasks_metadata(
             ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
         # Create object
         task_obj = TaskCreateV2(
-            **_task.dict(
+            **_task.model_dump(
                 exclude={
                     "executable_non_parallel",
                     "executable_parallel",
@@ -256,7 +256,9 @@ async def background_collect_pip(
 
     # Start
     logger.debug("START")
-    for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
+    for key, value in task_pkg.model_dump(
+        exclude={"package_manifest"}
+    ).items():
         logger.debug(f"task_pkg.{key}: {value}")
 
     with next(get_sync_db()) as db:
@@ -310,7 +312,7 @@ async def background_collect_pip(
             collection_path = get_collection_path(venv_path)
             collection_state = db.get(CollectionStateV2, state_id)
             task_read_list = [
-                TaskReadV2(**task.model_dump()).dict() for task in tasks
+                TaskReadV2(**task.model_dump()).model_dump() for task in tasks
             ]
             collection_state.data["task_list"] = task_read_list
             collection_state.data["log"] = get_collection_log(venv_path)

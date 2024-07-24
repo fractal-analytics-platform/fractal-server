@@ -55,7 +55,7 @@ async def create_dataset(
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    db_dataset = Dataset(project_id=project_id, **dataset.dict())
+    db_dataset = Dataset(project_id=project_id, **dataset.model_dump())
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
@@ -148,7 +148,7 @@ async def update_dataset(
     )
     db_dataset = output["dataset"]
 
-    for key, value in dataset_update.dict(exclude_unset=True).items():
+    for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)
 
     await db.commit()
@@ -250,7 +250,7 @@ async def create_resource(
         db=db,
     )
     dataset = output["dataset"]
-    db_resource = Resource(dataset_id=dataset.id, **resource.dict())
+    db_resource = Resource(dataset_id=dataset.id, **resource.model_dump())
     db.add(db_resource)
     await db.commit()
     await db.refresh(db_resource)
@@ -317,7 +317,7 @@ async def update_resource(
             ),
         )
 
-    for key, value in resource_update.dict(exclude_unset=True).items():
+    for key, value in resource_update.model_dump(exclude_unset=True).items():
         setattr(orig_resource, key, value)
     await db.commit()
     await db.refresh(orig_resource)

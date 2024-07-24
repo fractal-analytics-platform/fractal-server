@@ -133,7 +133,9 @@ def background_collect_pip_ssh(
         )
 
         logger.debug("START")
-        for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
+        for key, value in task_pkg.model_dump(
+            exclude={"package_manifest"}
+        ).items():
             logger.debug(f"task_pkg.{key}: {value}")
 
         # Open a DB session soon, since it is needed for updating `state`
@@ -281,7 +283,7 @@ def background_collect_pip_ssh(
 
                 # Create new _TaskCollectPip object
                 new_pkg = _TaskCollectPip(
-                    **task_pkg.dict(
+                    **task_pkg.model_dump(
                         exclude={"package_version", "package_name"},
                         exclude_unset=True,
                         exclude_none=True,

@@ -140,7 +140,7 @@ async def update_dataset(
             ),
         )
 
-    for key, value in dataset_update.dict(exclude_unset=True).items():
+    for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)
 
     await db.commit()
@@ -284,7 +284,7 @@ async def import_dataset(
     # Create new Dataset
     db_dataset = DatasetV2(
         project_id=project_id,
-        **dataset.dict(exclude_none=True),
+        **dataset.model_dump(exclude_none=True),
     )
     db.add(db_dataset)
     await db.commit()

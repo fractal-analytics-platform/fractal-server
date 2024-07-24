@@ -84,7 +84,7 @@ async def post_new_image(
             ),
         )
 
-    dataset.images.append(new_image.dict())
+    dataset.images.append(new_image.model_dump())
     flag_modified(dataset, "images")
 
     await db.commit()
@@ -160,7 +160,7 @@ async def query_dataset_images(
                 for image in images
                 if match_filter(
                     image,
-                    Filters(**query.filters.dict()),
+                    Filters(**query.filters.model_dump()),
                 )
             ]
 
@@ -267,7 +267,7 @@ async def patch_dataset_image(
         )
     index = ret["index"]
 
-    for key, value in image_update.dict(
+    for key, value in image_update.model_dump(
         exclude_none=True, exclude={"zarr_url"}
     ).items():
         db_dataset.images[index][key] = value

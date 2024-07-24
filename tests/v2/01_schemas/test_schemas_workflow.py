@@ -39,7 +39,7 @@ async def test_schemas_workflow_v2():
 
     workflow_update = WorkflowUpdateV2(name="new name")
 
-    for key, value in workflow_update.dict(exclude_unset=True).items():
+    for key, value in workflow_update.model_dump(exclude_unset=True).items():
         setattr(workflow, key, value)
 
     assert workflow.name == "new name"

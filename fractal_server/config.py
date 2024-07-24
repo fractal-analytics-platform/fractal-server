@@ -701,7 +701,7 @@ class Settings(BaseSettings):
                 return False
 
         sanitized_settings = {}
-        for k, v in self.dict().items():
+        for k, v in self.model_dump().items():
             if _must_be_sanitized(k):
                 sanitized_settings[k] = "***"
             else:

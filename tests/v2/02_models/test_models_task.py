@@ -15,10 +15,10 @@ async def test_default_args_properties(task_factory_v2, caplog):
         args_schema_non_parallel=Foo.schema(),
         args_schema_parallel=Foo.schema(),
     )
-    assert task.default_args_non_parallel_from_args_schema == Foo().dict(
+    assert task.default_args_non_parallel_from_args_schema == Foo().model_dump(
         exclude_none=True
     )
-    assert task.default_args_parallel_from_args_schema == Foo().dict(
+    assert task.default_args_parallel_from_args_schema == Foo().model_dump(
         exclude_none=True
     )
 

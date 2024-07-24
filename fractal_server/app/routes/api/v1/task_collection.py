@@ -77,7 +77,9 @@ async def collect_tasks_pip(
     # Validate payload as _TaskCollectPip, which has more strict checks than
     # TaskCollectPip
     try:
-        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
+        task_pkg = _TaskCollectPip(
+            **task_collect.model_dump(exclude_unset=True)
+        )
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -179,7 +181,7 @@ async def collect_tasks_pip(
     )
 
     # Create State object (after casting venv_path to string)
-    collection_status_dict = collection_status.dict()
+    collection_status_dict = collection_status.model_dump()
     collection_status_dict["venv_path"] = str(collection_status.venv_path)
     state = State(data=collection_status_dict)
     db.add(state)

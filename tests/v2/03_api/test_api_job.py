@@ -340,17 +340,17 @@ async def test_project_apply_workflow_subset(
         expected_project_dump = ProjectDumpV2(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(project.timestamp_created),
-        ).dict()
+        ).model_dump()
         expected_workflow_dump = WorkflowDumpV2(
             **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(workflow.timestamp_created),
-        ).dict()
+        ).model_dump()
         expected_dataset_dump = DatasetDumpV2(
             **dataset1.model_dump(
                 exclude={"timestamp_created", "history", "images"}
             ),
             timestamp_created=_encode_as_utc(dataset1.timestamp_created),
-        ).dict()
+        ).model_dump()
         assert res.json()["project_dump"] == expected_project_dump
         assert res.json()["workflow_dump"] == expected_workflow_dump
         assert res.json()["dataset_dump"] == expected_dataset_dump

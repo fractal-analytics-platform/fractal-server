@@ -99,7 +99,7 @@ async def test_post_task(client, MockCurrentUser):
             command_parallel="task_command_parallel",
         )
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
         )
         assert res.status_code == 201
         assert res.json()["type"] == "parallel"
@@ -110,7 +110,7 @@ async def test_post_task(client, MockCurrentUser):
             command_non_parallel="task_command_non_parallel",
         )
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
         )
         debug(res.json())
         assert res.status_code == 201
@@ -123,7 +123,7 @@ async def test_post_task(client, MockCurrentUser):
             command_parallel="new_task_command",
         )
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
         )
         assert res.status_code == 422
 
@@ -244,7 +244,7 @@ async def test_patch_task_auth(
             command_parallel="task_command",
         )
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
         )
         assert res.status_code == 201
         assert res.json()["owner"] == USER_1
@@ -254,7 +254,7 @@ async def test_patch_task_auth(
         # Test success: owner == user
         update = TaskUpdateV2(name="new_name_1")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.model_dump(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_1"
@@ -266,7 +266,7 @@ async def test_patch_task_auth(
 
         # Test fail: (not user.is_superuser) and (owner != user)
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.model_dump(exclude_unset=True)
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
@@ -277,7 +277,7 @@ async def test_patch_task_auth(
         # Test fail: (not user.is_superuser) and (owner == None)
         res = await client.patch(
             f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
+            json=update.model_dump(exclude_unset=True),
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
@@ -293,7 +293,7 @@ async def test_patch_task_auth(
         # Test success: (owner != user) but (user.is_superuser)
         update = TaskUpdateV2(name="new_name_3")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.model_dump(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_3"
@@ -302,7 +302,7 @@ async def test_patch_task_auth(
         update = TaskUpdateV2(name="new_name_4")
         res = await client.patch(
             f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
+            json=update.model_dump(exclude_unset=True),
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_4"
@@ -330,7 +330,7 @@ async def test_patch_task(
             command_parallel="new_cmd_parallel",
             command_non_parallel="new_cmd_non_parallel",
         )
-        payload = update.dict(exclude_unset=True)
+        payload = update.model_dump(exclude_unset=True)
         res = await client.patch(
             f"{PREFIX}/{task_compound.id}/",
             json=payload,
@@ -351,15 +351,15 @@ async def test_patch_task(
         update_non_parallel = TaskUpdateV2(command_non_parallel="xxx")
         res_compound = await client.patch(
             f"{PREFIX}/{task_compound.id}/",
-            json=update_non_parallel.dict(exclude_unset=True),
+            json=update_non_parallel.model_dump(exclude_unset=True),
         )
         res_non_parallel = await client.patch(
             f"{PREFIX}/{task_non_parallel.id}/",
-            json=update_non_parallel.dict(exclude_unset=True),
+            json=update_non_parallel.model_dump(exclude_unset=True),
         )
         res_parallel = await client.patch(
             f"{PREFIX}/{task_parallel.id}/",
-            json=update_non_parallel.dict(exclude_unset=True),
+            json=update_non_parallel.model_dump(exclude_unset=True),
         )
         assert res_compound.status_code == 200
         assert res_non_parallel.status_code == 200
@@ -368,15 +368,15 @@ async def test_patch_task(
         update_parallel = TaskUpdateV2(command_parallel="yyy")
         res_compound = await client.patch(
             f"{PREFIX}/{task_compound.id}/",
-            json=update_non_parallel.dict(exclude_unset=True),
+            json=update_non_parallel.model_dump(exclude_unset=True),
         )
         res_non_parallel = await client.patch(
             f"{PREFIX}/{task_non_parallel.id}/",
-            json=update_parallel.dict(exclude_unset=True),
+            json=update_parallel.model_dump(exclude_unset=True),
         )
         res_parallel = await client.patch(
             f"{PREFIX}/{task_parallel.id}/",
-            json=update_parallel.dict(exclude_unset=True),
+            json=update_parallel.model_dump(exclude_unset=True),
         )
         assert res_compound.status_code == 200
         assert res_non_parallel.status_code == 422
@@ -412,7 +412,7 @@ async def test_patch_task_different_users(
 
     # Patch task
     NEW_NAME = "new name"
-    payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
+    payload = TaskUpdateV2(name=NEW_NAME).model_dump(exclude_unset=True)
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
     ):
@@ -520,23 +520,33 @@ async def test_post_same_source(client, MockCurrentUser):
         task_v2_b = TaskCreateV2(**args_v2, source="b")
 
         # POST v1_a OK
-        res = await client.post(V1, json=task_v1_a.dict(exclude_unset=True))
+        res = await client.post(
+            V1, json=task_v1_a.model_dump(exclude_unset=True)
+        )
         assert res.status_code == 201
 
         # POST v2_a FAIL
-        res = await client.post(V2, json=task_v2_a.dict(exclude_unset=True))
+        res = await client.post(
+            V2, json=task_v2_a.model_dump(exclude_unset=True)
+        )
         assert res.status_code == 422
 
         # POST v2_b OK
-        res = await client.post(V2, json=task_v2_b.dict(exclude_unset=True))
+        res = await client.post(
+            V2, json=task_v2_b.model_dump(exclude_unset=True)
+        )
         assert res.status_code == 201
 
         # POST v1_b FAIL
-        res = await client.post(V1, json=task_v1_b.dict(exclude_unset=True))
+        res = await client.post(
+            V1, json=task_v1_b.model_dump(exclude_unset=True)
+        )
         assert res.status_code == 422
 
         # POST v1_c OK
-        res = await client.post(V1, json=task_v1_c.dict(exclude_unset=True))
+        res = await client.post(
+            V1, json=task_v1_c.model_dump(exclude_unset=True)
+        )
         assert res.status_code == 201
 
 

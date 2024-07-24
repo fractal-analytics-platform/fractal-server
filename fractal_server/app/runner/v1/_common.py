@@ -307,7 +307,7 @@ def call_single_parallel_task(
 
     # write args file (by assembling task_pars, wftask.args and component)
     write_args_file(
-        task_pars.dict(exclude={"history"}),
+        task_pars.model_dump(exclude={"history"}),
         wftask.args or {},
         dict(component=component),
         path=task_files.args,

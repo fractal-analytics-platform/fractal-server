@@ -59,7 +59,7 @@ async def test_post_task(client, MockCurrentUser):
             output_type="task_output_type",
             version=VERSION,
         )
-        payload = task.dict(exclude_unset=True)
+        payload = task.model_dump(exclude_unset=True)
         res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 201
@@ -75,7 +75,7 @@ async def test_post_task(client, MockCurrentUser):
             input_type="new_task_input_type",
             output_type="new_task_output_type",
         )
-        payload = new_task.dict(exclude_unset=True)
+        payload = new_task.model_dump(exclude_unset=True)
         res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 422
@@ -151,7 +151,7 @@ async def test_patch_task_auth(
             output_type="task_output_type",
         )
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
         )
         assert res.status_code == 201
         assert res.json()["owner"] == USER_1
@@ -161,7 +161,7 @@ async def test_patch_task_auth(
         # Test success: owner == user
         update = TaskUpdateV1(name="new_name_1")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.model_dump(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_1"
@@ -173,7 +173,7 @@ async def test_patch_task_auth(
 
         # Test fail: (not user.is_superuser) and (owner != user)
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.model_dump(exclude_unset=True)
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
@@ -184,7 +184,7 @@ async def test_patch_task_auth(
         # Test fail: (not user.is_superuser) and (owner == None)
         res = await client.patch(
             f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
+            json=update.model_dump(exclude_unset=True),
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
@@ -200,7 +200,7 @@ async def test_patch_task_auth(
         # Test success: (owner != user) but (user.is_superuser)
         update = TaskUpdateV1(name="new_name_3")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.model_dump(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_3"
@@ -209,7 +209,7 @@ async def test_patch_task_auth(
         update = TaskUpdateV1(name="new_name_4")
         res = await client.patch(
             f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
+            json=update.model_dump(exclude_unset=True),
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_4"
@@ -248,7 +248,7 @@ async def test_patch_task(
     ) as user:
         debug(user)
         res = await client.patch(
-            f"{PREFIX}/{task.id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task.id}/", json=update.model_dump(exclude_unset=True)
         )
         debug(res, res.json())
         assert res.status_code == 422
@@ -259,7 +259,7 @@ async def test_patch_task(
         # Test successuful without `source`
         res = await client.patch(
             f"{PREFIX}/{task.id}/",
-            json=update.dict(exclude_unset=True, exclude={"source"}),
+            json=update.model_dump(exclude_unset=True, exclude={"source"}),
         )
         assert res.status_code == 200
         assert res.json()["name"] == NEW_NAME
@@ -276,7 +276,7 @@ async def test_patch_task(
         second_update = TaskUpdateV1(meta=OTHER_META, version=None)
         res = await client.patch(
             f"{PREFIX}/{task.id}/",
-            json=second_update.dict(exclude_unset=True),
+            json=second_update.model_dump(exclude_unset=True),
         )
         debug(res, res.json())
         assert res.status_code == 200
@@ -319,7 +319,7 @@ async def test_patch_task_different_users(
 
     # Patch task
     NEW_NAME = "new name"
-    payload = TaskUpdateV1(name=NEW_NAME).dict(exclude_unset=True)
+    payload = TaskUpdateV1(name=NEW_NAME).model_dump(exclude_unset=True)
     debug(payload)
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
@@ -395,7 +395,7 @@ async def test_patch_args_schema(MockCurrentUser, client):
             args_schema=dict(key1=1, key2=2),
             args_schema_version="1.2.3",
         )
-        payload = task.dict(exclude_unset=True)
+        payload = task.model_dump(exclude_unset=True)
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
 

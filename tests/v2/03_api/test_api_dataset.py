@@ -27,7 +27,7 @@ def n_images(n: int) -> list[dict]:
                 str(i): bool(i % 2),
                 "flag": bool(i % 2 + 1),
             },
-        ).dict()
+        ).model_dump()
         for i in range(n)
     ]
 

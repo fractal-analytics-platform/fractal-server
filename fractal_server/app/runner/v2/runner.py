@@ -150,7 +150,9 @@ def execute_tasks_v2(
             and current_task_output.image_list_removals == []
         ):
             current_task_output = TaskOutput(
-                **current_task_output.dict(exclude={"image_list_updates"}),
+                **current_task_output.model_dump(
+                    exclude={"image_list_updates"}
+                ),
                 image_list_updates=[
                     dict(zarr_url=img["zarr_url"]) for img in filtered_images
                 ],
@@ -318,7 +320,7 @@ def execute_tasks_v2(
                 # task_type=wftask.task.type,  # FIXME: breaks for V1 tasks
                 # component_list=fil, #FIXME
             ),
-        ).dict()
+        ).model_dump()
         tmp_history.append(history_item)
 
         # Write current dataset attributes (history, images, filters) into
