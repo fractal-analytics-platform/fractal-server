@@ -1121,7 +1121,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_err_path=str(job.slurm_stderr),
         )
 
-        # Print warning for ignore parameter
+        # Print warning for ignored parameter
         if len(job.slurm_config.pre_submission_commands) > 0:
             logger.warning(
                 f"Ignoring {job.slurm_config.pre_submission_commands=}."
