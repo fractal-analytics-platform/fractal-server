@@ -47,12 +47,12 @@ async def test_schemas_dataset_v2():
     )
 
     dataset = DatasetV2(
-        **dataset_create.dict(), id=1, project_id=project.id, history=[]
+        **dataset_create.model_dump(), id=1, project_id=project.id, history=[]
     )
 
     # Read
 
-    DatasetReadV2(**dataset.model_dump(), project=project)
+    DatasetReadV2(**dataset.model_dump(), project=project.model_dump())
 
     # Update
 

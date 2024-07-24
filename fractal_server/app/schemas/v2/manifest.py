@@ -49,11 +49,11 @@ class TaskManifestV2(BaseModel):
     docs_info: Optional[str] = None
     docs_link: Optional[str] = None
 
-    @model_validator(mode="before")
-    def validate_executable_args_meta(cls, values):
+    @model_validator(mode="after")
+    def validate_executable_args_meta(cls, obj):
 
-        executable_non_parallel = values.get("executable_non_parallel")
-        executable_parallel = values.get("executable_parallel")
+        executable_non_parallel = obj.executable_non_parallel
+        executable_parallel = obj.executable_parallel
         if (executable_non_parallel is None) and (executable_parallel is None):
 
             raise ValueError(
@@ -63,7 +63,7 @@ class TaskManifestV2(BaseModel):
 
         elif executable_non_parallel is None:
 
-            meta_non_parallel = values.get("meta_non_parallel")
+            meta_non_parallel = obj.meta_non_parallel
             if meta_non_parallel != {}:
                 raise ValueError(
                     "`TaskManifestV2.meta_non_parallel` must be an empty dict "
@@ -71,7 +71,7 @@ class TaskManifestV2(BaseModel):
                     f"Given: {meta_non_parallel}."
                 )
 
-            args_schema_non_parallel = values.get("args_schema_non_parallel")
+            args_schema_non_parallel = obj.args_schema_non_parallel
             if args_schema_non_parallel is not None:
                 raise ValueError(
                     "`TaskManifestV2.args_schema_non_parallel` must be None "
@@ -81,7 +81,7 @@ class TaskManifestV2(BaseModel):
 
         elif executable_parallel is None:
 
-            meta_parallel = values.get("meta_parallel")
+            meta_parallel = obj.meta_parallel
             if meta_parallel != {}:
                 raise ValueError(
                     "`TaskManifestV2.meta_parallel` must be an empty dict if "
@@ -89,7 +89,7 @@ class TaskManifestV2(BaseModel):
                     f"Given: {meta_parallel}."
                 )
 
-            args_schema_parallel = values.get("args_schema_parallel")
+            args_schema_parallel = obj.args_schema_parallel
             if args_schema_parallel is not None:
                 raise ValueError(
                     "`TaskManifestV2.args_schema_parallel` must be None if "
@@ -97,7 +97,7 @@ class TaskManifestV2(BaseModel):
                     f"Given: {args_schema_parallel}."
                 )
 
-        return values
+        return obj
 
 
 class ManifestV2(BaseModel):
@@ -129,11 +129,11 @@ class ManifestV2(BaseModel):
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
 
-    @model_validator(mode="before")
+    @model_validator(mode="after")
     @classmethod
-    def _check_args_schemas_are_present(cls, values):
-        has_args_schemas = values["has_args_schemas"]
-        task_list = values["task_list"]
+    def _check_args_schemas_are_present(cls, obj):
+        has_args_schemas = obj.has_args_schemas
+        task_list = obj.task_list
         if has_args_schemas is True:
             for task in task_list:
                 if task.executable_parallel is not None:
@@ -150,7 +150,7 @@ class ManifestV2(BaseModel):
                             f"task '{task.name}' has "
                             f"{task.args_schema_non_parallel=}."
                         )
-        return values
+        return obj
 
     @field_validator("manifest_version")
     @classmethod

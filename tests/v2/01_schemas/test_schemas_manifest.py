@@ -59,7 +59,8 @@ def test_TaskManifestV2():
 
 
 def test_ManifestV2():
-    assert ManifestV2(manifest_version=2, task_list=[])
+    with pytest.raises(ValidationError):
+        assert ManifestV2(manifest_version=2, task_list=[])
     assert ManifestV2(manifest_version="2", task_list=[])
 
     compound_both_schemas = TaskManifestV2(
@@ -116,7 +117,7 @@ def test_ManifestV2():
     # 1: invalid manifest_version
     with pytest.raises(ValidationError) as e:
         ManifestV2(manifest_version=1, task_list=[])
-    assert "Wrong manifest version" in msg(e)
+    assert "Input should be a valid string" in msg(e)
 
     # 2: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:

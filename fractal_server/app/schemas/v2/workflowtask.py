@@ -92,17 +92,17 @@ class WorkflowTaskCreateV2(BaseModel):
             )
         return value
 
-    @model_validator(mode="before")
-    def validate_legacy_task(cls, values):
-        if values["is_legacy_task"] and (
-            values.get("meta_non_parallel") is not None
-            or values.get("args_non_parallel") is not None
+    @model_validator(mode="after")
+    def validate_legacy_task(cls, obj):
+        if obj.is_legacy_task and (
+            obj.meta_non_parallel is not None
+            or obj.args_non_parallel is not None
         ):
             raise ValueError(
                 "If Task is legacy, 'args_non_parallel' and 'meta_non_parallel"
                 "must be None"
             )
-        return values
+        return obj
 
 
 class WorkflowTaskReadV2(BaseModel):

@@ -70,9 +70,8 @@ def test_dictionary_keys_validation():
     assert TaskCreateV2(**args, input_types={"    a": True}).input_types == {
         "a": True
     }
-    assert TaskCreateV2(**args, input_types={1: True}).input_types == {
-        "1": True
-    }
+    with pytest.raises(ValidationError):
+        TaskCreateV2(**args, input_types={1: True})
 
     with pytest.raises(ValidationError):
         TaskCreateV2(**args, input_types={"a": True, "  a   ": False})

@@ -72,9 +72,9 @@ class DatasetReadV2(BaseModel):
 class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[str]
-    zarr_dir: Optional[str]
-    filters: Optional[Filters]
+    name: Optional[str] = None
+    zarr_dir: Optional[str] = None
+    filters: Optional[Filters] = None
 
     # Validators
     @field_validator("zarr_dir")
