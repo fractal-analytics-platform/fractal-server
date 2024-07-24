@@ -25,8 +25,13 @@ from sys import stdout
 from typing import Any
 from typing import Optional
 
-from pydantic import validate_call
+import pydantic
 
+PYDANTIC_VERSION = pydantic.__version__.split(".")[0]
+if PYDANTIC_VERSION == "2":
+    from pydantic import validate_call as validate
+else:
+    from pydantic.decorator import validate_arguments as validate
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s; %(levelname)s; %(message)s"
@@ -36,7 +41,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-@validate_call
+@validate
 def dummy(
     *,
     input_paths: list[str],
