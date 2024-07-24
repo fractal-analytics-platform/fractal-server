@@ -278,7 +278,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     max_num_jobs: int
 
     # FIXME
-    pre_submission_cmds: list[str] = Field(default_factory=list)
+    pre_submission_commands: list[str] = Field(default_factory=list)
 
     def _sorted_extra_lines(self) -> list[str]:
         """

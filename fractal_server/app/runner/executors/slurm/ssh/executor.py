@@ -869,7 +869,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-        pre_submission_cmds = job.slurm_config.pre_submission_cmds
+        pre_submission_cmds = job.slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
             sbatch_stdout = self.fractal_ssh.run_command(cmd=sbatch_command)
         else:
@@ -882,7 +882,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             with self.fractal_ssh.sftp().open(
                 filename=script_path_remote, mode="w"
             ) as f:
-                f.write(script_content)
+                f.write(f"{script_content}\n")
             cmd = f"bash {script_path_remote}"
             sbatch_stdout = self.fractal_ssh.run_command(cmd=cmd)
 

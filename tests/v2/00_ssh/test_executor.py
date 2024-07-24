@@ -97,7 +97,7 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
 
     auxfile = tmp777_path / "auxfile"
     slurm_config = get_default_slurm_config()
-    slurm_config.pre_submission_cmds = [f"touch {auxfile.as_posix()}"]
+    slurm_config.pre_submission_commands = [f"touch {auxfile.as_posix()}"]
     debug(slurm_config)
 
     with MockFractalSSHSlurmExecutor(
