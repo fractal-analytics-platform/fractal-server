@@ -113,21 +113,25 @@ class WorkflowTaskV2Mock(BaseModel):
     task_legacy_id: Optional[int] = None
     task_id: Optional[int] = None
 
-    @model_validator(mode="before")
+    @model_validator(mode="after")
     @classmethod
-    def _legacy_or_not(cls, values):
-        is_legacy_task = values["is_legacy_task"]
-        task = values.get("task")
-        task_legacy = values.get("task_legacy")
+    def _legacy_or_not(cls, obj):
+        is_legacy_task = obj.is_legacy_task
+        task = obj.task
+        task_legacy = obj.task_legacy
         if is_legacy_task:
             if task_legacy is None or task is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_legacy_id"] = task_legacy.id
+                raise ValueError(
+                    f"Invalid WorkflowTaskV2Mock with {obj.model_dump()=}"
+                )
+            obj.task_legacy_id = task_legacy.id
         else:
             if task is None or task_legacy is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_id"] = task.id
-        return values
+                raise ValueError(
+                    f"Invalid WorkflowTaskV2Mock with {obj.model_dump()=}"
+                )
+            obj.task_id = task.id
+        return obj
 
     @field_validator("input_filters")
     def _default_filters(cls, value):

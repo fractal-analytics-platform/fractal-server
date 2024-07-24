@@ -136,6 +136,11 @@ async def job_factory_v2(db: AsyncSession):
                 "Error from job_factory: "
                 f"ProjectV2 {project_id} does not exist."
             )
+        _working_dir = (
+            working_dir.as_posix()
+            if isinstance(working_dir, Path)
+            else working_dir
+        )
         args = dict(
             project_id=project_id,
             dataset_id=dataset_id,
@@ -158,7 +163,7 @@ async def job_factory_v2(db: AsyncSession):
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
-            working_dir=working_dir.as_posix(),
+            working_dir=_working_dir,
             worker_init="WORKER_INIT string",
             user_email="user@example.org",
         )
