@@ -306,6 +306,28 @@ class FractalSSH(object):
             cmd = f"rm -r {folder}"
             self.run_command(cmd=cmd)
 
+    def write_remote_file(
+        self,
+        *,
+        path: str,
+        content: str,
+        lock_timeout: Optional[float] = None,
+    ) -> None:
+        """
+        Open a remote file via SFTP and write it.
+
+        Args:
+            path: Absolute path
+            contents: File contents
+            lock_timeout:
+        """
+        actual_lock_timeout = self.default_lock_timeout
+        if lock_timeout is not None:
+            actual_lock_timeout = lock_timeout
+        with self.acquire_timeout(timeout=actual_lock_timeout):
+            with self.sftp().open(filename=path, mode="w") as f:
+                f.write(content)
+
 
 def get_ssh_connection(
     *,

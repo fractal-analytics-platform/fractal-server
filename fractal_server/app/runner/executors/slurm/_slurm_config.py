@@ -54,6 +54,7 @@ class _SlurmConfigSet(BaseModel):
         extra_lines:
     """
 
+
     model_config = ConfigDict(extra="forbid")
 
     partition: Optional[str] = None
@@ -64,6 +65,8 @@ class _SlurmConfigSet(BaseModel):
     time: Optional[str] = None
     account: Optional[str] = None
     extra_lines: Optional[list[str]] = None
+    pre_submission_commands: Optional[list[str]] = None
+    gpus: Optional[str] = None
 
 
 class _BatchingConfigSet(BaseModel):
@@ -225,6 +228,7 @@ class SlurmConfig(BaseModel):
         constraint: Corresponds to SLURM option.
         gres: Corresponds to SLURM option.
         account: Corresponds to SLURM option.
+        gpus: Corresponds to SLURM option.
         time: Corresponds to SLURM option (WARNING: not fully supported).
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
@@ -246,6 +250,8 @@ class SlurmConfig(BaseModel):
             Key-value pairs to be included as `export`-ed variables in SLURM
             submission script, after prepending values with the user's cache
             directory.
+        pre_submission_commands: List of commands to be prepended to the sbatch
+            command.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -262,6 +268,7 @@ class SlurmConfig(BaseModel):
     job_name: Optional[str] = None
     constraint: Optional[str] = None
     gres: Optional[str] = None
+    gpus: Optional[str] = None
     time: Optional[str] = None
     account: Optional[str] = None
 
@@ -281,6 +288,8 @@ class SlurmConfig(BaseModel):
     max_mem_per_job: int
     target_num_jobs: int
     max_num_jobs: int
+
+    pre_submission_commands: list[str] = Field(default_factory=list)
 
     def _sorted_extra_lines(self) -> list[str]:
         """
@@ -348,7 +357,14 @@ class SlurmConfig(BaseModel):
             f"{self.prefix} --cpus-per-task={self.cpus_per_task}",
             f"{self.prefix} --mem={mem_per_job_MB}M",
         ]
-        for key in ["job_name", "constraint", "gres", "time", "account"]:
+        for key in [
+            "job_name",
+            "constraint",
+            "gres",
+            "gpus",
+            "time",
+            "account",
+        ]:
             value = getattr(self, key)
             if value is not None:
                 # Handle the `time` parameter

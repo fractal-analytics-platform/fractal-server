@@ -187,6 +187,6 @@ def fractal_ssh(
         forward_agent=False,
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
-        fractal_conn = FractalSSH(connection=connection)
-        fractal_conn.check_connection()
-        yield fractal_conn
+        fractal_ssh_object = FractalSSH(connection=connection)
+        fractal_ssh_object.check_connection()
+        yield fractal_ssh_object
