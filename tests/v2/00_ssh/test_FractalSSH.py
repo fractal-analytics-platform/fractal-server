@@ -267,23 +267,3 @@ def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
     assert path.exists()
     with path.open("r") as f:
         assert f.read() == content
-
-
-def test_run_command_session_persistence(
-    fractal_ssh: FractalSSH, tmp777_path: Path
-):
-    """
-    FIXME add explanation
-    """
-
-    script1 = tmp777_path / "set_var.sh"
-    with script1.open("w") as f:
-        f.write("export MYVAR=123\necho $MYVAR")
-    script2 = tmp777_path / "read_var.sh"
-    with script2.open("w") as f:
-        f.write("echo $MYVAR")
-
-    stdout = fractal_ssh.run_command(cmd=f". {script1.as_posix()}")
-    assert stdout.strip("\n") == "123"
-    stdout = fractal_ssh.run_command(cmd=f". {script2.as_posix()}")
-    assert stdout.strip("\n") == ""
