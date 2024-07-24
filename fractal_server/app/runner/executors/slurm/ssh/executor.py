@@ -876,13 +876,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             logger.warning(f"Now using {pre_submission_cmds=}")
             script_lines = pre_submission_cmds + [sbatch_command]
             script_content = "\n".join(script_lines)
+            script_content = f"{script_content}\n"
             script_path_remote = (
                 f"{job.slurm_script_remote.as_posix()}_wrapper.sh"
             )
-            with self.fractal_ssh.sftp().open(
-                filename=script_path_remote, mode="w"
-            ) as f:
-                f.write(f"{script_content}\n")
+            self.fractal_ssh.write_remote_file(
+                path=script_path_remote, content=script_content
+            )
             cmd = f"bash {script_path_remote}"
             sbatch_stdout = self.fractal_ssh.run_command(cmd=cmd)
 
