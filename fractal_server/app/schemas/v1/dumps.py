@@ -29,13 +29,13 @@ class TaskDumpV1(BaseModel):
     command: str
     input_type: str
     output_type: str
-    owner: Optional[str]
-    version: Optional[str]
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
 
 class WorkflowTaskDumpV1(BaseModel):
     id: int
-    order: Optional[int]
+    order: Optional[int] = None
     workflow_id: int
     task_id: int
     task: TaskDumpV1
@@ -57,7 +57,7 @@ class ResourceDumpV1(BaseModel):
 class DatasetDumpV1(BaseModel):
     id: int
     name: str
-    type: Optional[str]
+    type: Optional[str] = None
     read_only: bool
     resource_list: list[ResourceDumpV1]
     project_id: int

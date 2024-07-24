@@ -4,7 +4,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
-from pydantic import validator
+from pydantic import Field
+from pydantic import field_validator
 from pydantic.types import StrictStr
 
 from .._validators import valstr
@@ -37,18 +38,18 @@ class JobStatusTypeV2(str, Enum):
 
 class JobCreateV2(BaseModel, extra=Extra.forbid):
 
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
+    first_task_index: Optional[int] = Field(
+        default=None, validate_default=True
+    )
+    last_task_index: Optional[int] = Field(default=None, validate_default=True)
     slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[str]
+    worker_init: Optional[str] = None
 
     # Validators
-    _worker_init = validator("worker_init", allow_reuse=True)(
-        valstr("worker_init")
-    )
+    _worker_init = field_validator("worker_init")(valstr("worker_init"))
 
-    @validator("first_task_index", always=True)
-    def first_task_index_non_negative(cls, v, values):
+    @field_validator("first_task_index")
+    def first_task_index_non_negative(cls, v):
         """
         Check that `first_task_index` is non-negative.
         """
@@ -58,7 +59,8 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
             )
         return v
 
-    @validator("last_task_index", always=True)
+    # !
+    @field_validator("last_task_index")
     def first_last_task_indices(cls, v, values):
         """
         Check that `last_task_index` is non-negative, and that it is not
@@ -69,7 +71,7 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
                 f"last_task_index cannot be negative (given: {v})"
             )
 
-        first_task_index = values.get("first_task_index")
+        first_task_index = values.data.get("first_task_index")
         last_task_index = v
         if first_task_index is not None and last_task_index is not None:
             if first_task_index > last_task_index:
@@ -83,30 +85,28 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
 class JobReadV2(BaseModel):
 
     id: int
-    project_id: Optional[int]
+    project_id: Optional[int] = None
     project_dump: ProjectDumpV2
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
+    slurm_account: Optional[str] = None
+    workflow_id: Optional[int] = None
     workflow_dump: WorkflowDumpV2
-    dataset_id: Optional[int]
+    dataset_id: Optional[int] = None
     dataset_dump: DatasetDumpV2
     start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    end_timestamp: Optional[datetime] = None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
-    worker_init: Optional[str]
+    log: Optional[str] = None
+    working_dir: Optional[str] = None
+    working_dir_user: Optional[str] = None
+    first_task_index: Optional[int] = None
+    last_task_index: Optional[int] = None
+    worker_init: Optional[str] = None
 
-    _start_timestamp = validator("start_timestamp", allow_reuse=True)(
+    _start_timestamp = field_validator("start_timestamp")(
         valutc("start_timestamp")
     )
-    _end_timestamp = validator("end_timestamp", allow_reuse=True)(
-        valutc("end_timestamp")
-    )
+    _end_timestamp = field_validator("end_timestamp")(valutc("end_timestamp"))
 
 
 class JobUpdateV2(BaseModel):

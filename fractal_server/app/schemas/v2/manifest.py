@@ -3,9 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import model_validator
 
 
 class TaskManifestV2(BaseModel):
@@ -50,7 +50,7 @@ class TaskManifestV2(BaseModel):
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
 
-    @root_validator
+    @model_validator(mode="before")
     def validate_executable_args_meta(cls, values):
 
         executable_non_parallel = values.get("executable_non_parallel")
@@ -128,9 +128,10 @@ class ManifestV2(BaseModel):
     manifest_version: str
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str]
+    args_schema_version: Optional[str] = None
 
-    @root_validator()
+    @model_validator(mode="before")
+    @classmethod
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]
         task_list = values["task_list"]
@@ -152,7 +153,8 @@ class ManifestV2(BaseModel):
                         )
         return values
 
-    @validator("manifest_version")
+    @field_validator("manifest_version")
+    @classmethod
     def manifest_version_2(cls, value):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")

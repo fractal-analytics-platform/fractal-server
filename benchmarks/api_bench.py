@@ -20,7 +20,7 @@ FRACTAL_SERVER_URL = "http://localhost:8000"
 class UserBench(BaseModel):
     name: str
     password: str
-    token: Optional[str]
+    token: Optional[str] = None
 
 
 USERS = [

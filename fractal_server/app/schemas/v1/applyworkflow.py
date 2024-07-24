@@ -3,7 +3,8 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import Field
+from pydantic import field_validator
 from pydantic.types import StrictStr
 
 from .._validators import valstr
@@ -49,7 +50,7 @@ class _ApplyWorkflowBaseV1(BaseModel):
         worker_init:
     """
 
-    worker_init: Optional[str]
+    worker_init: Optional[str] = None
 
 
 class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
@@ -62,16 +63,17 @@ class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
         slurm_account:
     """
 
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
+    first_task_index: Optional[int] = Field(
+        default=None, validate_default=True
+    )
+    last_task_index: Optional[int] = Field(default=None, validate_default=True)
     slurm_account: Optional[StrictStr] = None
 
     # Validators
-    _worker_init = validator("worker_init", allow_reuse=True)(
-        valstr("worker_init")
-    )
+    _worker_init = field_validator("worker_init")(valstr("worker_init"))
 
-    @validator("first_task_index", always=True)
+    # !
+    @field_validator("first_task_index")
     def first_task_index_non_negative(cls, v, values):
         """
         Check that `first_task_index` is non-negative.
@@ -82,7 +84,8 @@ class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
             )
         return v
 
-    @validator("last_task_index", always=True)
+    # !
+    @field_validator("last_task_index")
     def first_last_task_indices(cls, v, values):
         """
         Check that `last_task_index` is non-negative, and that it is not
@@ -93,7 +96,7 @@ class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
                 f"last_task_index cannot be negative (given: {v})"
             )
 
-        first_task_index = values.get("first_task_index")
+        first_task_index = values.data.get("first_task_index")
         last_task_index = v
         if first_task_index is not None and last_task_index is not None:
             if first_task_index > last_task_index:
@@ -131,31 +134,29 @@ class ApplyWorkflowReadV1(_ApplyWorkflowBaseV1):
     """
 
     id: int
-    project_id: Optional[int]
+    project_id: Optional[int] = None
     project_dump: ProjectDumpV1
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
+    slurm_account: Optional[str] = None
+    workflow_id: Optional[int] = None
     workflow_dump: WorkflowDumpV1
-    input_dataset_id: Optional[int]
+    input_dataset_id: Optional[int] = None
     input_dataset_dump: DatasetDumpV1
-    output_dataset_id: Optional[int]
+    output_dataset_id: Optional[int] = None
     output_dataset_dump: DatasetDumpV1
     start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    end_timestamp: Optional[datetime] = None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
+    log: Optional[str] = None
+    working_dir: Optional[str] = None
+    working_dir_user: Optional[str] = None
+    first_task_index: Optional[int] = None
+    last_task_index: Optional[int] = None
 
-    _start_timestamp = validator("start_timestamp", allow_reuse=True)(
+    _start_timestamp = field_validator("start_timestamp")(
         valutc("start_timestamp")
     )
-    _end_timestamp = validator("end_timestamp", allow_reuse=True)(
-        valutc("end_timestamp")
-    )
+    _end_timestamp = field_validator("end_timestamp")(valutc("end_timestamp"))
 
 
 class ApplyWorkflowUpdateV1(BaseModel):

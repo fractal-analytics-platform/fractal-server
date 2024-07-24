@@ -2,9 +2,10 @@ from typing import Optional
 
 from fastapi_users import schemas
 from pydantic import BaseModel
+from pydantic import EmailStr
 from pydantic import Extra
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 from pydantic.types import StrictStr
 
 from ._validators import val_absolute_path
@@ -52,31 +53,21 @@ class UserUpdate(schemas.BaseUserUpdate):
     username: Optional[str]
     slurm_accounts: Optional[list[StrictStr]]
 
-    # Validators
-    _slurm_user = validator("slurm_user", allow_reuse=True)(
-        valstr("slurm_user")
-    )
-    _username = validator("username", allow_reuse=True)(valstr("username"))
-    _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
-    )
+    # !
+    is_active: bool
+    is_verified: bool
+    is_superuser: bool
+    email: EmailStr
+    password: str
 
-    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+    # Validators
+    _slurm_user = field_validator("slurm_user")(valstr("slurm_user"))
+    _username = field_validator("username")(valstr("username"))
+    _cache_dir = field_validator("cache_dir")(val_absolute_path("cache_dir"))
+
+    _slurm_accounts = field_validator("slurm_accounts")(
         val_unique_list("slurm_accounts")
     )
-
-    @validator(
-        "is_active",
-        "is_verified",
-        "is_superuser",
-        "email",
-        "password",
-        always=False,
-    )
-    def cant_set_none(cls, v, field):
-        if v is None:
-            raise ValueError(f"Cannot set {field.name}=None")
-        return v
 
 
 class UserUpdateStrict(BaseModel, extra=Extra.forbid):
@@ -88,16 +79,14 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
         slurm_accounts:
     """
 
-    cache_dir: Optional[str]
-    slurm_accounts: Optional[list[StrictStr]]
+    cache_dir: Optional[str] = None
+    slurm_accounts: Optional[list[StrictStr]] = None
 
-    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+    _slurm_accounts = field_validator("slurm_accounts")(
         val_unique_list("slurm_accounts")
     )
 
-    _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
-    )
+    _cache_dir = field_validator("cache_dir")(val_absolute_path("cache_dir"))
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -118,17 +107,14 @@ class UserCreate(schemas.BaseUserCreate):
 
     # Validators
 
-    @validator("slurm_accounts")
+    @field_validator("slurm_accounts")
+    @classmethod
     def slurm_accounts_validator(cls, value):
         for i, element in enumerate(value):
             value[i] = valstr(attribute=f"slurm_accounts[{i}]")(element)
         val_unique_list("slurm_accounts")(value)
         return value
 
-    _slurm_user = validator("slurm_user", allow_reuse=True)(
-        valstr("slurm_user")
-    )
-    _username = validator("username", allow_reuse=True)(valstr("username"))
-    _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
-    )
+    _slurm_user = field_validator("slurm_user")(valstr("slurm_user"))
+    _username = field_validator("username")(valstr("username"))
+    _cache_dir = field_validator("cache_dir")(val_absolute_path("cache_dir"))

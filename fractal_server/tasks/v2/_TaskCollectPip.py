@@ -5,8 +5,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import model_validator
 
 from fractal_server.app.schemas._validators import valdictkeys
 from fractal_server.app.schemas._validators import valstr
@@ -27,9 +27,9 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
         package: Either a PyPI package name or the absolute path to a wheel
             file.
         package_name: The actual normalized name of the package, which is set
-            internally through a validator.
+            internally through a field_validator.
         package_version: Package version. For local packages, it is set
-            internally through a validator.
+            internally through a field_validator.
     """
 
     package: str
@@ -41,13 +41,13 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
     package_path: Optional[Path] = None
     package_manifest: Optional[ManifestV2] = None
 
-    _pinned_package_versions = validator(
-        "pinned_package_versions", allow_reuse=True
-    )(valdictkeys("pinned_package_versions"))
-    _package_extras = validator("package_extras", allow_reuse=True)(
+    _pinned_package_versions = field_validator("pinned_package_versions")(
+        valdictkeys("pinned_package_versions")
+    )
+    _package_extras = field_validator("package_extras")(
         valstr("package_extras")
     )
-    _python_version = validator("python_version", allow_reuse=True)(
+    _python_version = field_validator("python_version")(
         valstr("python_version")
     )
 
@@ -55,7 +55,8 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
     def is_local_package(self) -> bool:
         return bool(self.package_path)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_package_info(cls, values):
         """
         Depending on whether the package is a local wheel file or a PyPI

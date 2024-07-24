@@ -6,7 +6,7 @@ from typing import Optional
 import pytest
 from devtools import debug  # noqa
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import field_validator
 
 from .fixtures_slurm import HAS_LOCAL_SBATCH
 from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
@@ -45,13 +45,14 @@ class MockWorkflowTask(BaseModel):
     def model_dump(self, *args, **kwargs):
         return self.dict(*args, **kwargs)
 
-    @validator("meta", pre=True)
+    # !
+    @field_validator("meta")
     def merge_meta(cls, meta, values):
         """
-        This validator merges the task.meta and meta dictionaries, in the same
-        way as it takes place in Workflow.insert_task.
+        This field_validator merges the task.meta and meta dictionaries,
+        in the same way as it takes place in Workflow.insert_task.
         """
-        task_meta = values.get("task").meta
+        task_meta = values.data.get("task").meta
         if task_meta:
             meta = {**task_meta, **meta}
         return meta

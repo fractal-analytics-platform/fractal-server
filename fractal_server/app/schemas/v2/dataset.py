@@ -2,9 +2,10 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Extra
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import valstr
 from .._validators import valutc
@@ -23,7 +24,7 @@ class _DatasetHistoryItemV2(BaseModel):
 
     workflowtask: WorkflowTaskDumpV2
     status: WorkflowTaskStatusTypeV2
-    parallelization: Optional[dict]
+    parallelization: Optional[dict] = None
 
 
 # CRUD
@@ -38,11 +39,12 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: str) -> str:
         return normalize_url(v)
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class DatasetReadV2(BaseModel):
@@ -61,27 +63,27 @@ class DatasetReadV2(BaseModel):
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+    _timestamp_created = field_validator("timestamp_created")(
         valutc("timestamp_created")
     )
 
 
 class DatasetUpdateV2(BaseModel):
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
     name: Optional[str]
     zarr_dir: Optional[str]
     filters: Optional[Filters]
 
     # Validators
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
         return v
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class DatasetImportV2(BaseModel):
@@ -95,8 +97,7 @@ class DatasetImportV2(BaseModel):
         filters:
     """
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     zarr_dir: str
@@ -104,7 +105,8 @@ class DatasetImportV2(BaseModel):
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: str) -> str:
         return normalize_url(v)
 

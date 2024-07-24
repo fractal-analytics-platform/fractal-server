@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import valstr
 from .._validators import valutc
@@ -18,7 +18,7 @@ class WorkflowCreateV2(BaseModel, extra=Extra.forbid):
     name: str
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class WorkflowReadV2(BaseModel):
@@ -30,20 +30,21 @@ class WorkflowReadV2(BaseModel):
     project: ProjectReadV2
     timestamp_created: datetime
 
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+    _timestamp_created = field_validator("timestamp_created")(
         valutc("timestamp_created")
     )
 
 
 class WorkflowUpdateV2(BaseModel):
 
-    name: Optional[str]
-    reordered_workflowtask_ids: Optional[list[int]]
+    name: Optional[str] = None
+    reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
-    @validator("reordered_workflowtask_ids")
+    @field_validator("reordered_workflowtask_ids")
+    @classmethod
     def check_positive_and_unique(cls, value):
         if any(i < 0 for i in value):
             raise ValueError("Negative `id` in `reordered_workflowtask_ids`")
@@ -64,7 +65,7 @@ class WorkflowImportV2(BaseModel):
     task_list: list[WorkflowTaskImportV2]
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class WorkflowExportV2(BaseModel):

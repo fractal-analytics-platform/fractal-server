@@ -26,14 +26,14 @@ exclude = [
 [tool.poetry.dependencies]
 python = "^3.9"
 python-dotenv = "^1.0.0"
-fastapi = "^0.110.0"
-sqlmodel = "^0.0.19"
+fastapi = "^0.111.0"
+sqlmodel = "^0.0.21"
 sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
 aiosqlite = "^0.19.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
 alembic = "^1.13.1"
 uvicorn = "^0.29.0"
-pydantic = ">=1.10.8,<2"
+pydantic = ">=2.8"
 bcrypt = "4.0.1"
 packaging = "^23.2"
 clusterfutures = "^0.5"
@@ -45,6 +45,7 @@ gunicorn = { version = ">=21.2,<23.0", optional = true }
 psycopg = { version = "^3.1.0", extras=["binary"], optional=true }
 psycopg2 = { version = "^2.9.5", optional = true }
 psutil = "^5.9.8"
+pydantic-settings = "^2.3.4"
 
 [tool.poetry.extras]
 postgres = ["asyncpg", "psycopg2"]

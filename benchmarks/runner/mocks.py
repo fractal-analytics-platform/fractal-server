@@ -4,8 +4,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import model_validator
 
 
 class DatasetV2Mock(BaseModel):
@@ -14,7 +14,7 @@ class DatasetV2Mock(BaseModel):
     zarr_dir: str
     images: list[dict[str, Any]] = Field(default_factory=list)
     filters: dict[Literal["types", "attributes"], dict[str, Any]] = Field(
-        default_factory=dict
+        default_factory=dict, validate_default=True
     )
     history: list = Field(default_factory=list)
 
@@ -22,7 +22,8 @@ class DatasetV2Mock(BaseModel):
     def image_zarr_urls(self) -> list[str]:
         return [image["zarr_urls"] for image in self.images]
 
-    @validator("filters", always=True)
+    # !
+    @field_validator("filters")
     def _default_filters(cls, value):
         if value == {}:
             return {"types": {}, "attributes": {}}
@@ -40,9 +41,10 @@ class TaskV2Mock(BaseModel):
     command_parallel: Optional[str] = None
     meta_non_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
     meta_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    type: Optional[str] = Field(default=None, validate_default=True)
 
-    @root_validator(pre=False)
+    @model_validator(mode="before")
+    @classmethod
     def _not_both_commands_none(cls, values):
         print(values)
         _command_non_parallel = values.get("command_non_parallel")
@@ -53,7 +55,8 @@ class TaskV2Mock(BaseModel):
             )
         return values
 
-    @validator("type", always=True)
+    # !
+    @field_validator("type")
     def _set_type(cls, value, values):
         if values.get("command_non_parallel") is None:
             if values.get("command_parallel") is None:
@@ -95,20 +98,23 @@ class WorkflowTaskV2Mock(BaseModel):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    is_legacy_task: Optional[bool]
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    is_legacy_task: Optional[bool] = None
+    meta_parallel: Optional[dict[str, Any]] = Field(None)
+    meta_non_parallel: Optional[dict[str, Any]] = Field(None)
     task: Optional[TaskV2Mock] = None
     task_legacy: Optional[TaskV1Mock] = None
     is_legacy_task: bool = False
-    input_filters: dict[str, Any] = Field(default_factory=dict)
+    input_filters: dict[str, Any] = Field(
+        default_factory=dict, validate_default=True
+    )
     order: int
     id: int
     workflow_id: int = 0
-    task_legacy_id: Optional[int]
-    task_id: Optional[int]
+    task_legacy_id: Optional[int] = None
+    task_id: Optional[int] = None
 
-    @root_validator(pre=False)
+    @model_validator()
+    @classmethod
     def _legacy_or_not(cls, values):
         is_legacy_task = values["is_legacy_task"]
         task = values.get("task")
@@ -123,7 +129,8 @@ class WorkflowTaskV2Mock(BaseModel):
             values["task_id"] = task.id
         return values
 
-    @validator("input_filters", always=True)
+    # !
+    @field_validator("input_filters")
     def _default_filters(cls, value):
         if value == {}:
             return {"types": {}, "attributes": {}}

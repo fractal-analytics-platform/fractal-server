@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import valstr
 from .task import TaskReadV1
@@ -48,14 +48,15 @@ class TaskCollectPipV1(BaseModel):
     python_version: Optional[str] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    _package_extras = validator("package_extras", allow_reuse=True)(
+    _package_extras = field_validator("package_extras")(
         valstr("package_extras")
     )
-    _python_version = validator("python_version", allow_reuse=True)(
+    _python_version = field_validator("python_version")(
         valstr("python_version")
     )
 
-    @validator("package")
+    @field_validator("package")
+    @classmethod
     def package_validator(cls, value):
         if "/" in value:
             if not value.endswith(".whl"):
@@ -69,12 +70,13 @@ class TaskCollectPipV1(BaseModel):
                 )
         return value
 
-    @validator("package_version")
+    # !
+    @field_validator("package_version")
     def package_version_validator(cls, v, values):
 
         valstr("package_version")(v)
 
-        if values["package"].endswith(".whl"):
+        if values.data["package"].endswith(".whl"):
             raise ValueError(
                 "Cannot provide version when package is a Wheel file."
             )
@@ -98,8 +100,8 @@ class TaskCollectStatusV1(BaseModel):
     package: str
     venv_path: Path
     task_list: Optional[list[TaskReadV1]] = Field(default=[])
-    log: Optional[str]
-    info: Optional[str]
+    log: Optional[str] = None
+    info: Optional[str] = None
 
     def sanitised_dict(self):
         """

@@ -4,9 +4,9 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import model_validator
 
 
 __all__ = ("TaskManifestV1", "ManifestV1")
@@ -49,9 +49,9 @@ class _TaskManifestBaseV1(BaseModel):
     input_type: str
     output_type: str
     meta: Optional[dict[str, Any]] = Field(default_factory=dict)
-    args_schema: Optional[dict[str, Any]]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    args_schema: Optional[dict[str, Any]] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
 
 TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBaseV1)
@@ -86,9 +86,10 @@ class _ManifestBaseV1(BaseModel):
     manifest_version: str
     task_list: list[TaskManifestType]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str]
+    args_schema_version: Optional[str] = None
 
-    @root_validator()
+    @model_validator(mode="before")
+    @classmethod
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]
         task_list = values["task_list"]
@@ -120,7 +121,8 @@ class ManifestV1(_ManifestBaseV1):
 
     task_list: list[TaskManifestV1]
 
-    @validator("manifest_version")
+    @field_validator("manifest_version")
+    @classmethod
     def manifest_version_1(cls, value):
         if value != "1":
             raise ValueError(f"Wrong manifest version (given {value})")

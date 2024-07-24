@@ -34,7 +34,7 @@ class LocalBackendConfig(BaseModel, extra=Extra.forbid):
             start at the same time.
     """
 
-    parallel_tasks_per_job: Optional[int]
+    parallel_tasks_per_job: Optional[int] = None
 
 
 def get_default_local_backend_config():

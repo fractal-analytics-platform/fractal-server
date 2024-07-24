@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import valstr
 from .._validators import valutc
@@ -34,7 +34,7 @@ class ProjectCreateV1(_ProjectBaseV1):
     """
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class ProjectReadV1(_ProjectBaseV1):
@@ -50,7 +50,7 @@ class ProjectReadV1(_ProjectBaseV1):
     id: int
     timestamp_created: datetime
 
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+    _timestamp_created = field_validator("timestamp_created")(
         valutc("timestamp_created")
     )
 
@@ -64,8 +64,8 @@ class ProjectUpdateV1(_ProjectBaseV1):
         read_only:
     """
 
-    name: Optional[str]
-    read_only: Optional[bool]
+    name: Optional[str] = None
+    read_only: Optional[bool] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))

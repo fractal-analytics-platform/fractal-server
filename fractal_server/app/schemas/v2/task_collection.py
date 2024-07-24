@@ -6,8 +6,8 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import model_validator
 
 from .._validators import valdictkeys
 from .._validators import valstr
@@ -56,18 +56,19 @@ class TaskCollectPipV2(BaseModel):
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    _package = validator("package", allow_reuse=True)(valstr("package"))
-    _package_version = validator("package_version", allow_reuse=True)(
+    _package = field_validator("package")(valstr("package"))
+    _package_version = field_validator("package_version")(
         valstr("package_version")
     )
-    _pinned_package_versions = validator(
-        "pinned_package_versions", allow_reuse=True
-    )(valdictkeys("pinned_package_versions"))
-    _package_extras = validator("package_extras", allow_reuse=True)(
+    _pinned_package_versions = field_validator("pinned_package_versions")(
+        valdictkeys("pinned_package_versions")
+    )
+    _package_extras = field_validator("package_extras")(
         valstr("package_extras")
     )
 
-    @validator("package")
+    @field_validator("package")
+    @classmethod
     def package_validator(cls, value):
         if "/" in value:
             if not value.endswith(".whl"):
@@ -81,10 +82,11 @@ class TaskCollectPipV2(BaseModel):
                 )
         return value
 
-    @validator("package_version")
+    # !
+    @field_validator("package_version")
     def package_version_validator(cls, v, values):
         v = valstr("package_version")(v)
-        if values["package"].endswith(".whl"):
+        if values.data["package"].endswith(".whl"):
             raise ValueError(
                 "Cannot provide package version when package is a wheel file."
             )
@@ -111,26 +113,25 @@ class TaskCollectCustomV2(BaseModel):
     manifest: ManifestV2
     python_interpreter: str
     source: str
-    package_root: Optional[str]
-    package_name: Optional[str]
-    version: Optional[str]
+    package_root: Optional[str] = None
+    package_name: Optional[str] = None
+    version: Optional[str] = None
 
     # Valstr
-    _python_interpreter = validator("python_interpreter", allow_reuse=True)(
+    _python_interpreter = field_validator("python_interpreter")(
         valstr("python_interpreter")
     )
-    _source = validator("source", allow_reuse=True)(valstr("source"))
-    _package_root = validator("package_root", allow_reuse=True)(
+    _source = field_validator("source")(valstr("source"))
+    _package_root = field_validator("package_root")(
         valstr("package_root", accept_none=True)
     )
-    _package_name = validator("package_name", allow_reuse=True)(
+    _package_name = field_validator("package_name")(
         valstr("package_name", accept_none=True)
     )
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
-    )
+    _version = field_validator("version")(valstr("version", accept_none=True))
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def one_of_package_root_or_name(cls, values):
         package_root = values.get("package_root")
         package_name = values.get("package_name")
@@ -143,7 +144,8 @@ class TaskCollectCustomV2(BaseModel):
             )
         return values
 
-    @validator("package_name")
+    @field_validator("package_name")
+    @classmethod
     def package_name_prevent_injection(cls, value: str):
         """
         Remove all whitespace characters, and reject values containing `;`.
@@ -154,7 +156,8 @@ class TaskCollectCustomV2(BaseModel):
             value = value.replace(" ", "")
         return value
 
-    @validator("package_root")
+    @field_validator("package_root")
+    @classmethod
     def package_root_validator(cls, value):
         if (value is not None) and (not Path(value).is_absolute()):
             raise ValueError(
@@ -162,7 +165,8 @@ class TaskCollectCustomV2(BaseModel):
             )
         return value
 
-    @validator("python_interpreter")
+    @field_validator("python_interpreter")
+    @classmethod
     def python_interpreter_validator(cls, value):
         if not Path(value).is_absolute():
             raise ValueError(
@@ -173,8 +177,8 @@ class TaskCollectCustomV2(BaseModel):
 
 class CollectionStateReadV2(BaseModel):
 
-    id: Optional[int]
+    id: Optional[int] = None
     data: dict[str, Any]
     timestamp: datetime
 
-    _timestamp = validator("timestamp", allow_reuse=True)(valutc("timestamp"))
+    _timestamp = field_validator("timestamp")(valutc("timestamp"))

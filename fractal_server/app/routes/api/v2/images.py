@@ -37,7 +37,7 @@ class ImagePage(BaseModel):
 
 
 class ImageQuery(BaseModel):
-    zarr_url: Optional[str]
+    zarr_url: Optional[str] = None
     filters: Filters = Field(default_factory=Filters)
 
 

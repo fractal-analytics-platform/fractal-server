@@ -43,7 +43,7 @@ def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
     ).
 
     Note that we transform exceptions in `ValueError`s, since this function is
-    also used within Pydantic validators.
+    also used within Pydantic field_validators.
     """
     try:
         parts = wheel_filename.split("-")
