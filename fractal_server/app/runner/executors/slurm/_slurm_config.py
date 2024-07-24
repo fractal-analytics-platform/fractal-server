@@ -280,7 +280,6 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     target_num_jobs: int
     max_num_jobs: int
 
-    # FIXME
     pre_submission_commands: list[str] = Field(default_factory=list)
 
     def _sorted_extra_lines(self) -> list[str]:
