@@ -9,6 +9,7 @@
 * SLURM runners
     * Expose `gpus` SLURM parameter (\#1678).
     * For SSH executor, add `pre_submission_commands` (\#1678).
+    * Removed obsolete arguments from `get_slurm_config` function (\#1678).
 * SSH features:
     * Add `FractalSSH.write_remote_file` method (\#1678).
 
