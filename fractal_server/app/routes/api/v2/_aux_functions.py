@@ -422,6 +422,8 @@ async def _workflow_insert_task(
 
     # Get task from db, and extract default arguments via a Task property
     # method
+    # NOTE: this logic remains there for V1 tasks only. When we deprecate V1
+    # tasks, we can simplify this block
     if is_legacy_task is True:
         db_task = await db.get(Task, task_id)
         if db_task is None:
@@ -439,12 +441,8 @@ async def _workflow_insert_task(
             raise ValueError(f"TaskV2 {task_id} not found.")
         task_type = db_task.type
 
-        final_args_non_parallel = (
-            db_task.default_args_non_parallel_from_args_schema.copy()
-        )
-        final_args_parallel = (
-            db_task.default_args_parallel_from_args_schema.copy()
-        )
+        final_args_non_parallel = {}
+        final_args_parallel = {}
         final_meta_parallel = (db_task.meta_parallel or {}).copy()
         final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
 
