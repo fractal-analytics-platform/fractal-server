@@ -1,9 +1,26 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.5 (Unreleased)
+
+# 2.3.6 (Unreleased)
 
 * Task collection:
     * Introduce a new configuration variable `FRACTAL_MAX_PIP_VERSION` to pin task-collection pip (\#1675).
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.21` (\#1674).
+
+# 2.3.5
+
+> WARNING: The `pre_submission_commands` SLURM configuration is included as an
+> experimental feature, since it is still not useful for its main intended
+> goal (calling `module load` before running `sbatch`).
+
+* SLURM runners
+    * Expose `gpus` SLURM parameter (\#1678).
+    * For SSH executor, add `pre_submission_commands` (\#1678).
+    * Removed obsolete arguments from `get_slurm_config` function (\#1678).
+* SSH features:
+    * Add `FractalSSH.write_remote_file` method (\#1678).
+
 
 # 2.3.4
 

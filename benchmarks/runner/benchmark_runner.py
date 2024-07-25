@@ -59,12 +59,12 @@ def mock_venv(tmp_path: str) -> dict:
             args[
                 "command_non_parallel"
             ] = f"{python} {src_dir / task['executable_non_parallel']}"
-            args["meta_non_paralell"] = task.get("meta_non_paralell")
+            args["meta_non_parallel"] = task.get("meta_non_parallel")
         if task.get("executable_parallel"):
             args[
                 "command_parallel"
             ] = f"{python} {src_dir / task['executable_parallel']}"
-            args["meta_paralell"] = task.get("meta_paralell")
+            args["meta_parallel"] = task.get("meta_parallel")
 
         t = TaskV2Mock(
             id=ind,

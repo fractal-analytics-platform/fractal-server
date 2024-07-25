@@ -79,3 +79,35 @@ def test_slurm_ssh_executor_map(
         res = executor.map(lambda x: x * 2, [1, 2, 3])
         results = list(res)
         assert results == [2, 4, 6]
+
+
+def test_slurm_ssh_executor_submit_with_pre_sbatch(
+    fractal_ssh,
+    tmp_path: Path,
+    tmp777_path: Path,
+    override_settings_factory,
+    current_py_version: str,
+):
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+    )
+    from fractal_server.app.runner.executors.slurm._slurm_config import (
+        get_default_slurm_config,
+    )
+
+    auxfile = tmp777_path / "auxfile"
+    slurm_config = get_default_slurm_config()
+    slurm_config.pre_submission_commands = [f"touch {auxfile.as_posix()}"]
+    debug(slurm_config)
+
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        fut = executor.submit(lambda: 1, slurm_config=slurm_config)
+        debug(fut)
+        debug(fut.result())
+
+    assert auxfile.exists()
