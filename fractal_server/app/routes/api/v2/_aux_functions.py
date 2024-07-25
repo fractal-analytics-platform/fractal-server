@@ -434,17 +434,11 @@ async def _workflow_insert_task(
         final_meta_non_parallel = {}
 
     else:
-        db_task = await db.get(TaskV2, task_id)
+        db_task: TaskV2 = await db.get(TaskV2, task_id)
         if db_task is None:
             raise ValueError(f"TaskV2 {task_id} not found.")
         task_type = db_task.type
 
-        final_args_non_parallel = (
-            db_task.default_args_non_parallel_from_args_schema.copy()
-        )
-        final_args_parallel = (
-            db_task.default_args_parallel_from_args_schema.copy()
-        )
         final_meta_parallel = (db_task.meta_parallel or {}).copy()
         final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
 
@@ -454,6 +448,7 @@ async def _workflow_insert_task(
             final_args_parallel[k] = v
     if final_args_parallel == {}:
         final_args_parallel = None
+
     # Combine arg_non_parallel
     if args_non_parallel is not None:
         for k, v in args_non_parallel.items():
