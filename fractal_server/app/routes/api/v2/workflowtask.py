@@ -191,12 +191,12 @@ async def update_workflowtask(
                     for k, v in value.items():
                         actual_args[k] = v
             else:
-                actual_args = value
+                actual_args = deepcopy(value)
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
         elif key == "args_non_parallel":
-            actual_args = value
+            actual_args = deepcopy(value)
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
