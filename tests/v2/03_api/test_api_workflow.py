@@ -826,7 +826,7 @@ async def test_patch_workflow_task_with_args_schema(
         patched_workflow_task = res.json()
         debug(patched_workflow_task["args_non_parallel"])
         assert patched_workflow_task["args_non_parallel"] == dict(
-            a=123, b="two", d=[1, 2, 3], e="something"
+            a=123, b="two", e="something"
         )
         assert res.status_code == 200
 
@@ -838,10 +838,7 @@ async def test_patch_workflow_task_with_args_schema(
         )
         patched_workflow_task = res.json()
         debug(patched_workflow_task["args_non_parallel"])
-        assert (
-            patched_workflow_task["args_non_parallel"]
-            == task.default_args_non_parallel_from_args_schema
-        )
+        assert patched_workflow_task["args_non_parallel"] is None
         assert res.status_code == 200
 
 
