@@ -82,7 +82,7 @@ async def test_task_collection_ssh(
     await db.refresh(state)
     pip_version = next(
         line
-        for line in state["data"]["freeze"].split("\n")
+        for line in state.data["freeze"].split("\n")
         if line.startswith("pip")
     ).split("==")[1]
     assert Version(pip_version) <= Version(settings.FRACTAL_MAX_PIP_VERSION)
