@@ -45,6 +45,7 @@ gunicorn = { version = ">=21.2,<23.0", optional = true }
 psycopg = { version = "^3.1.0", extras=["binary"], optional=true }
 psycopg2 = { version = "^2.9.5", optional = true }
 psutil = "^5.9.8"
+uvicorn-worker = "^0.2.0"
 
 [tool.poetry.extras]
 postgres = ["asyncpg", "psycopg2"]
