@@ -421,7 +421,7 @@ async def _workflow_insert_task(
         order = len(db_workflow.task_list)
 
     # Get task from db, and extract default arguments via a Task property
-    # method
+    # method (for v1 tasks only)
     if is_legacy_task is True:
         db_task = await db.get(Task, task_id)
         if db_task is None:
