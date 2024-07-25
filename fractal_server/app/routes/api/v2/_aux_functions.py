@@ -452,7 +452,6 @@ async def _workflow_insert_task(
             final_args_parallel[k] = v
     if final_args_parallel == {}:
         final_args_parallel = None
-
     # Combine arg_non_parallel
     if args_non_parallel is not None:
         for k, v in args_non_parallel.items():
