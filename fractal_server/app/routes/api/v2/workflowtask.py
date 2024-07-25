@@ -190,13 +190,15 @@ async def update_workflowtask(
                 if value is not None:
                     for k, v in value.items():
                         actual_args[k] = v
-                if not actual_args:
-                    actual_args = None
             else:
                 actual_args = value
+            if not actual_args:
+                actual_args = None
             setattr(db_wf_task, key, actual_args)
         elif key == "args_non_parallel":
             actual_args = value
+            if not actual_args:
+                actual_args = None
             setattr(db_wf_task, key, actual_args)
         elif key in ["meta_parallel", "meta_non_parallel", "input_filters"]:
             setattr(db_wf_task, key, value)
