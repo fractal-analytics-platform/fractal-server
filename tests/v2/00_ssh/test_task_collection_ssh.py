@@ -1,9 +1,12 @@
 from pathlib import Path
 
 from devtools import debug
+from packaging.version import Version
 
 from fractal_server.app.models.v2.collection_state import CollectionStateV2
+from fractal_server.config import get_settings
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.syringe import Inject
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations_ssh import (
     background_collect_pip_ssh,
@@ -33,7 +36,11 @@ async def test_task_collection_ssh(
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": remote_basedir,
     }
-    override_settings_factory(**setting_overrides)
+    override_settings_factory(
+        **setting_overrides, FRACTAL_MAX_PIP_VERSION="22.2"
+    )
+
+    settings = Inject(get_settings)
 
     # CASE 1: successful collection
     state = CollectionStateV2()
@@ -73,7 +80,12 @@ async def test_task_collection_ssh(
 
     # Check that the second collection failed, since folder already exists
     await db.refresh(state)
-    debug(state)
+    pip_version = next(
+        line
+        for line in state["data"]["freeze"].split("\n")
+        if line.startswith("pip")
+    ).split("==")[1]
+    assert Version(pip_version) <= Version(settings.FRACTAL_MAX_PIP_VERSION)
     assert state.data["status"] == "fail"
     assert "already exists" in state.data["log"]
     # Check that the remote folder was not removed (note: we can do it on the
