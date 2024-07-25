@@ -33,9 +33,7 @@ async def test_task_collection_ssh(
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": remote_basedir,
     }
-    override_settings_factory(
-        **setting_overrides, FRACTAL_MAX_PIP_VERSION="22.2"
-    )
+    override_settings_factory(**setting_overrides)
 
     # CASE 1: successful collection
     state = CollectionStateV2()
@@ -75,6 +73,7 @@ async def test_task_collection_ssh(
 
     # Check that the second collection failed, since folder already exists
     await db.refresh(state)
+    debug(state)
     assert state.data["status"] == "fail"
     assert "already exists" in state.data["log"]
     # Check that the remote folder was not removed (note: we can do it on the
