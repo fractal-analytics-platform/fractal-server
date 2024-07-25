@@ -3,8 +3,11 @@
 
 # 2.3.6 (Unreleased)
 
+* App:
+    * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Dependencies:
     * Update `sqlmodel` to `^0.0.21` (\#1674).
+    * Add `uvicorn-worker` (\#1690).
 
 # 2.3.5
 
@@ -12,7 +15,7 @@
 > experimental feature, since it is still not useful for its main intended
 > goal (calling `module load` before running `sbatch`).
 
-* SLURM runners
+* SLURM runners:
     * Expose `gpus` SLURM parameter (\#1678).
     * For SSH executor, add `pre_submission_commands` (\#1678).
     * Removed obsolete arguments from `get_slurm_config` function (\#1678).
