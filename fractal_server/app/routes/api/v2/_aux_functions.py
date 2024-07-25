@@ -434,7 +434,7 @@ async def _workflow_insert_task(
         final_meta_non_parallel = {}
 
     else:
-        db_task: TaskV2 = await db.get(TaskV2, task_id)
+        db_task = await db.get(TaskV2, task_id)
         if db_task is None:
             raise ValueError(f"TaskV2 {task_id} not found.")
         task_type = db_task.type
