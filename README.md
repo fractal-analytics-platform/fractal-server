@@ -141,7 +141,7 @@
 | fractal\_server/app/schemas/v2/workflow.py                                     |       40 |        1 |        7 |        1 |     96% |        49 |
 | fractal\_server/app/schemas/v2/workflowtask.py                                 |      123 |        0 |       28 |        0 |    100% |           |
 | fractal\_server/app/security/\_\_init\_\_.py                                   |      142 |       28 |       32 |        3 |     76% |113-126, 145-146, 151-160, 165-173, 187, 191, 315 |
-| fractal\_server/config.py                                                      |      275 |       12 |      113 |       12 |     93% |226, 246, 620-621, 626, 630, 634, 638, 642, 651, 656, 663, 668->exit |
+| fractal\_server/config.py                                                      |      277 |       12 |      113 |       12 |     93% |226, 246, 625-626, 631, 635, 639, 643, 647, 656, 661, 668, 673->exit |
 | fractal\_server/images/\_\_init\_\_.py                                         |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                               |       65 |        1 |       34 |        1 |     98% |        57 |
 | fractal\_server/images/tools.py                                                |       29 |        0 |       12 |        0 |    100% |           |
@@ -161,14 +161,14 @@
 | fractal\_server/tasks/v1/utils.py                                              |       22 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/tasks/v2/\_TaskCollectPip.py                                   |       61 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/tasks/v2/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/v2/\_venv\_pip.py                                        |       50 |        0 |       14 |        2 |     97% |71->exit, 104->exit |
+| fractal\_server/tasks/v2/\_venv\_pip.py                                        |       53 |        0 |       14 |        2 |     97% |77->exit, 110->exit |
 | fractal\_server/tasks/v2/background\_operations.py                             |      143 |        0 |       34 |        0 |    100% |           |
-| fractal\_server/tasks/v2/background\_operations\_ssh.py                        |      137 |        8 |       30 |        5 |     92% |40, 42, 155, 158->165, 252-258, 336-337 |
+| fractal\_server/tasks/v2/background\_operations\_ssh.py                        |      137 |        8 |       30 |        5 |     92% |40, 42, 155, 158->165, 256-262, 340-341 |
 | fractal\_server/tasks/v2/endpoint\_operations.py                               |       65 |        0 |       18 |        1 |     99% |  41->exit |
 | fractal\_server/tasks/v2/utils.py                                              |       19 |        2 |        4 |        0 |     91% |     51-52 |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
-|                                                                      **TOTAL** | **9611** |  **379** | **2813** |  **207** | **95%** |           |
+|                                                                      **TOTAL** | **9616** |  **379** | **2813** |  **207** | **95%** |           |
 
 
 ## Setup coverage badge
