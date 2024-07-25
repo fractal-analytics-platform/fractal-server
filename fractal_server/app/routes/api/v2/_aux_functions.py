@@ -441,6 +441,8 @@ async def _workflow_insert_task(
 
         final_meta_parallel = (db_task.meta_parallel or {}).copy()
         final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
+        final_args_parallel = {}
+        final_args_non_parallel = {}
 
     # Combine arg_parallel
     if args_parallel is not None:
