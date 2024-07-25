@@ -1,10 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-
-# 2.3.6
+# 2.3.7 (Unreleased)
 
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
+
+# 2.3.6
+
 * API:
     * When creating a WorkflowTask, do not pre-populate its top-level arguments based on JSON Schema default values (\#1688).
 * Dependencies:
