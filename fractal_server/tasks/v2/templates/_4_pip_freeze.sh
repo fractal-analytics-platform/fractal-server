@@ -12,4 +12,4 @@ PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 
 VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
-"$VENVPYTHON" -m pip freeze
+"$VENVPYTHON" -m pip freeze --all
