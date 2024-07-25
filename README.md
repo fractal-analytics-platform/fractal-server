@@ -22,7 +22,7 @@
 | fractal\_server/app/models/v2/dataset.py                                       |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/models/v2/job.py                                           |       31 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/project.py                                       |       15 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/v2/task.py                                          |       57 |        0 |       16 |        0 |    100% |           |
+| fractal\_server/app/models/v2/task.py                                          |       25 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/workflow.py                                      |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/workflowtask.py                                  |       28 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
@@ -40,7 +40,7 @@
 | fractal\_server/app/routes/api/v1/workflow.py                                  |      130 |        0 |       44 |        1 |     99% |  295->293 |
 | fractal\_server/app/routes/api/v1/workflowtask.py                              |       64 |        1 |       24 |        2 |     97% |133->136, 144 |
 | fractal\_server/app/routes/api/v2/\_\_init\_\_.py                              |       29 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/\_aux\_functions.py                          |      140 |        3 |       60 |        3 |     97% |418, 428, 439 |
+| fractal\_server/app/routes/api/v2/\_aux\_functions.py                          |      140 |        3 |       60 |        3 |     97% |418, 430, 441 |
 | fractal\_server/app/routes/api/v2/dataset.py                                   |      108 |        0 |       36 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/images.py                                    |      107 |        3 |       52 |        5 |     95% |124, 144->exit, 153, 216->exit, 221 |
 | fractal\_server/app/routes/api/v2/job.py                                       |       79 |        0 |       24 |        0 |    100% |           |
@@ -52,7 +52,7 @@
 | fractal\_server/app/routes/api/v2/task\_collection\_custom.py                  |       64 |        1 |       20 |        2 |     96% |46->72, 116 |
 | fractal\_server/app/routes/api/v2/task\_legacy.py                              |       33 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/workflow.py                                  |      142 |        2 |       54 |        4 |     97% |247, 305->301, 309, 319->301 |
-| fractal\_server/app/routes/api/v2/workflowtask.py                              |       91 |        2 |       52 |        3 |     97% |195->198, 199, 223 |
+| fractal\_server/app/routes/api/v2/workflowtask.py                              |       85 |        2 |       46 |        3 |     96% |190->195, 196, 206 |
 | fractal\_server/app/routes/auth.py                                             |       64 |       12 |       16 |        1 |     79% |78-79, 126-149 |
 | fractal\_server/app/routes/aux/\_\_init\_\_.py                                 |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_job.py                                        |       22 |        0 |        8 |        0 |    100% |           |
@@ -74,7 +74,7 @@
 | fractal\_server/app/runner/executors/slurm/sudo/\_check\_jobs\_status.py       |       24 |        1 |       10 |        2 |     91% |25->31, 62 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_executor\_wait\_thread.py    |       47 |        3 |       16 |        1 |     94% |93->exit, 124-127 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_subprocess\_run\_as\_user.py |       44 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      443 |       41 |      147 |       14 |     90% |166, 178, 527, 625, 634, 643, 675-686, 822->exit, 825-826, 901-910, 926-930, 958->961, 974-979, 1056, 1074-1080, 1126, 1145-1152, 1213->1212, 1277-1283 |
+| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      443 |       48 |      147 |       13 |     89% |166, 178, 527, 625, 634, 643, 675-686, 822->exit, 825-826, 901-910, 926-930, 952-962, 974-979, 1056, 1074-1080, 1126, 1145-1152, 1213->1212, 1277-1283 |
 | fractal\_server/app/runner/extract\_archive.py                                 |       32 |        2 |        8 |        2 |     90% |    25, 85 |
 | fractal\_server/app/runner/filenames.py                                        |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/run\_subprocess.py                                  |       18 |        0 |        2 |        0 |    100% |           |
@@ -168,7 +168,7 @@
 | fractal\_server/tasks/v2/utils.py                                              |       19 |        2 |        4 |        0 |     91% |     51-52 |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
-|                                                                      **TOTAL** | **9649** |  **379** | **2835** |  **207** | **95%** |           |
+|                                                                      **TOTAL** | **9611** |  **386** | **2813** |  **206** | **95%** |           |
 
 
 ## Setup coverage badge
