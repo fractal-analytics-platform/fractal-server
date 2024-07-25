@@ -18,8 +18,6 @@ from fractal_server.app.runner.executors.slurm._slurm_config import (
 
 def get_slurm_config(
     wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
     which_type: Literal["non_parallel", "parallel"],
     config_path: Optional[Path] = None,
 ) -> SlurmConfig:
@@ -43,13 +41,6 @@ def get_slurm_config(
         wftask:
             WorkflowTask for which the SLURM configuration is is to be
             prepared.
-        workflow_dir_local:
-            Server-owned directory to store all task-execution-related relevant
-            files (inputs, outputs, errors, and all meta files related to the
-            job execution). Note: users cannot write directly to this folder.
-        workflow_dir_remote:
-            User-side directory with the same scope as `workflow_dir_local`,
-            and where a user can write.
         config_path:
             Path of a Fractal SLURM configuration file; if `None`, use
             `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
@@ -71,7 +62,7 @@ def get_slurm_config(
         )
 
     logger.debug(
-        "[get_slurm_config] WorkflowTask meta attribute: {wftask_meta=}"
+        f"[get_slurm_config] WorkflowTask meta attribute: {wftask_meta=}"
     )
 
     # Incorporate slurm_env.default_slurm_config
@@ -99,7 +90,7 @@ def get_slurm_config(
     # 1. This block of definitions takes priority over other definitions from
     #    slurm_env which are not under the `needs_gpu` subgroup
     # 2. This block of definitions has lower priority than whatever comes next
-    #    (i.e. from WorkflowTask.meta).
+    #    (i.e. from WorkflowTask.meta_parallel).
     if wftask_meta is not None:
         needs_gpu = wftask_meta.get("needs_gpu", False)
     else:
@@ -143,9 +134,9 @@ def get_slurm_config(
             )
             logger.error(error_msg)
             raise SlurmConfigError(error_msg)
-        for key in ["time", "gres", "constraint"]:
+        for key in ["time", "gres", "gpus", "constraint"]:
             value = wftask_meta.get(key, None)
-            if value:
+            if value is not None:
                 slurm_dict[key] = value
     if wftask_meta is not None:
         extra_lines = wftask_meta.get("extra_lines", [])

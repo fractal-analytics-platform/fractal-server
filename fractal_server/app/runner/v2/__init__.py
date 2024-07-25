@@ -36,8 +36,8 @@ from ._local import process_workflow as local_process_workflow
 from ._local_experimental import (
     process_workflow as local_experimental_process_workflow,
 )
-from ._slurm import process_workflow as slurm_sudo_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
+from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_images_failed_job

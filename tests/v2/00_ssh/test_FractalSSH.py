@@ -258,3 +258,14 @@ def test_remove_folder_input_validation():
             safe_root="/actual_root",
         )
     print(e.value)
+
+
+def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
+    path = tmp777_path / "file"
+    content = "this is what goes into the file"
+    fractal_ssh.write_remote_file(
+        path=path.as_posix(), content=content, lock_timeout=100
+    )
+    assert path.exists()
+    with path.open("r") as f:
+        assert f.read() == content
