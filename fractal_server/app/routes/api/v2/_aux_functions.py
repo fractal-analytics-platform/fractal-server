@@ -441,8 +441,8 @@ async def _workflow_insert_task(
             raise ValueError(f"TaskV2 {task_id} not found.")
         task_type = db_task.type
 
-        final_args_parallel = {}
         final_args_non_parallel = {}
+        final_args_parallel = {}
         final_meta_parallel = (db_task.meta_parallel or {}).copy()
         final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
 
