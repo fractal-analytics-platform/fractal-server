@@ -162,7 +162,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
     ) as executor:
         executor.shutdown()
         with pytest.raises(JobExecutionError) as exc_info:
-            executor.wait_thread.wait(None)
+            executor.wait_thread.wait(job_id=1)
         debug(exc_info.value)
 
     with MockFractalSSHSlurmExecutor(
