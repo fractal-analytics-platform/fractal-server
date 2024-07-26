@@ -131,8 +131,8 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
     )
 
     with MockFractalSSHSlurmExecutor(
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+        workflow_dir_local=tmp_path / "job_dir1",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir1"),
         slurm_poll_interval=1,
         fractal_ssh=fractal_ssh,
     ) as executor:
@@ -140,4 +140,38 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
         with pytest.raises(JobExecutionError) as exc_info:
             fut = executor.submit(lambda: 1)
             fut.result()
+        debug(exc_info.value)
+
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir2",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir2"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        executor.shutdown()
+        with pytest.raises(JobExecutionError) as exc_info:
+            fut = executor.map(lambda x: 1, [1, 2, 3])
+            fut.result()
+        debug(exc_info.value)
+
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir3",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir3"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        executor.shutdown()
+        with pytest.raises(JobExecutionError) as exc_info:
+            executor.wait_thread.wait(None)
+        debug(exc_info.value)
+
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir4",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir4"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        executor.shutdown()
+        with pytest.raises(JobExecutionError) as exc_info:
+            executor._submit_job(None)
         debug(exc_info.value)
