@@ -107,7 +107,6 @@ class FractalSlurmWaitThread(FileWaitThread):
                     self.shutdown_callback()
                 except Exception:  # nosec
                     pass
-                self.raise_job_execution_error_callback()
                 return
             if ind % skip == 0:
                 with self.lock:
