@@ -2,6 +2,8 @@
 
 # 2.3.7
 
+* SSH SLURM executor:
+    * Handle early shutdown in SSH executor (\#1696).
 * Task collection:
     * Introduce a new configuration variable `FRACTAL_MAX_PIP_VERSION` to pin task-collection pip (\#1675).
 
