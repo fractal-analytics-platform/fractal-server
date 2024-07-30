@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.8 (Unreleased)
+
+* Testing:
+    * Remove `HAS_LOCAL_SBATCH` variable and related if-branches (\#1699).
+
 # 2.3.7
 
 * SSH SLURM executor:
