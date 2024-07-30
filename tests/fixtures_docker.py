@@ -17,9 +17,6 @@ from pytest_docker.plugin import containers_scope
 from fractal_server.ssh._fabric import FractalSSH
 
 
-HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
-
-
 @pytest.fixture(scope=containers_scope)
 def docker_cleanup() -> str:
     """

@@ -97,32 +97,23 @@ def relink_python_interpreter_v2(
     """
     Rewire python executable in tasks
     """
-    from .fixtures_slurm import HAS_LOCAL_SBATCH
 
-    if not HAS_LOCAL_SBATCH:
-
-        logger = logging.getLogger("RELINK")
-        logger.setLevel(logging.INFO)
-        task_python = fractal_tasks_mock_collection["python_bin"]
-        logger.warning(f"Original tasks Python: {task_python.as_posix()}")
-
-        actual_task_python = os.readlink(task_python)
-        logger.warning(
-            f"Actual tasks Python (after readlink): {actual_task_python}"
-        )
-
-        task_python.unlink()
-        new_actual_task_python = f"/usr/bin/python{current_py_version}"
-        task_python.symlink_to(new_actual_task_python)
-        logger.warning(f"New tasks Python: {new_actual_task_python}")
-
-        yield
-
-        task_python.unlink()
-        task_python.symlink_to(actual_task_python)
-        logger.warning(
-            f"Restored link from "
-            f"{task_python.as_posix()} to {os.readlink(task_python)}"
-        )
-    else:
-        yield
+    logger = logging.getLogger("RELINK")
+    logger.setLevel(logging.INFO)
+    task_python = fractal_tasks_mock_collection["python_bin"]
+    logger.warning(f"Original tasks Python: {task_python.as_posix()}")
+    actual_task_python = os.readlink(task_python)
+    logger.warning(
+        f"Actual tasks Python (after readlink): {actual_task_python}"
+    )
+    task_python.unlink()
+    new_actual_task_python = f"/usr/bin/python{current_py_version}"
+    task_python.symlink_to(new_actual_task_python)
+    logger.warning(f"New tasks Python: {new_actual_task_python}")
+    yield
+    task_python.unlink()
+    task_python.symlink_to(actual_task_python)
+    logger.warning(
+        f"Restored link from "
+        f"{task_python.as_posix()} to {os.readlink(task_python)}"
+    )

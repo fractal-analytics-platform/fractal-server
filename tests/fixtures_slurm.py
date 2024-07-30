@@ -1,7 +1,6 @@
 import logging
 import os
 import shlex
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -15,8 +14,6 @@ from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user impo
     _run_command_as_user,
 )
 
-
-HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 SLURM_USER = "test01"
 
 

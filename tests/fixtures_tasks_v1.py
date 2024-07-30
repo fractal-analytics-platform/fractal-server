@@ -8,7 +8,6 @@ from devtools import debug  # noqa
 from pydantic import BaseModel
 from pydantic import validator
 
-from .fixtures_slurm import HAS_LOCAL_SBATCH
 from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v1.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
@@ -198,30 +197,22 @@ def relink_python_interpreter_v1(collect_packages, current_py_version: str):
     import os
     import logging
 
-    if not HAS_LOCAL_SBATCH:
-
-        logger = logging.getLogger("RELINK")
-        logger.setLevel(logging.INFO)
-
-        task = collect_packages[0]
-        task_python = Path(task.command.split()[0])
-        orig_python = os.readlink(task_python)
-        logger.warning(
-            f"RELINK: Original status: {task_python=} -> {orig_python}"
-        )
-        task_python.unlink()
-        task_python.symlink_to(f"/usr/bin/python{current_py_version}")
-        logger.warning(
-            f"RELINK: Updated status: {task_python=} -> "
-            f"{os.readlink(task_python.as_posix())}"
-        )
-
-        yield
-        task_python.unlink()
-        task_python.symlink_to(orig_python)
-        logger.warning(
-            f"RELINK: Restore original: {task_python=} -> "
-            f"{os.readlink(task_python.as_posix())}"
-        )
-    else:
-        yield
+    logger = logging.getLogger("RELINK")
+    logger.setLevel(logging.INFO)
+    task = collect_packages[0]
+    task_python = Path(task.command.split()[0])
+    orig_python = os.readlink(task_python)
+    logger.warning(f"RELINK: Original status: {task_python=} -> {orig_python}")
+    task_python.unlink()
+    task_python.symlink_to(f"/usr/bin/python{current_py_version}")
+    logger.warning(
+        f"RELINK: Updated status: {task_python=} -> "
+        f"{os.readlink(task_python.as_posix())}"
+    )
+    yield
+    task_python.unlink()
+    task_python.symlink_to(orig_python)
+    logger.warning(
+        f"RELINK: Restore original: {task_python=} -> "
+        f"{os.readlink(task_python.as_posix())}"
+    )
