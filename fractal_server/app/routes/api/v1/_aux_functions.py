@@ -25,7 +25,7 @@ from ....schemas.v1 import JobStatusTypeV1
 from ....security import User
 
 
-async def _check_if_v1_is_read_only() -> None:
+def _check_if_v1_is_read_only() -> None:
     settings = Inject(get_settings)
     if settings.FRACTAL_API_V1_MODE == "include_read_only":
         raise HTTPException(
