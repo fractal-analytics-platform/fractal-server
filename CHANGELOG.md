@@ -2,6 +2,8 @@
 
 # 2.3.8 (Unreleased)
 
+* API
+    * Support read-only mode for V1 (\#1701).
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Testing:
