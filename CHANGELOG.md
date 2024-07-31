@@ -2,6 +2,8 @@
 
 # 2.3.8 (Unreleased)
 
+* App:
+    * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Testing:
     * Remove `HAS_LOCAL_SBATCH` variable and related if-branches (\#1699).
 
@@ -18,6 +20,7 @@
     * When creating a WorkflowTask, do not pre-populate its top-level arguments based on JSON Schema default values (\#1688).
 * Dependencies:
     * Update `sqlmodel` to `^0.0.21` (\#1674).
+    * Add `uvicorn-worker` (\#1690).
 
 # 2.3.5
 
@@ -25,7 +28,7 @@
 > experimental feature, since it is still not useful for its main intended
 > goal (calling `module load` before running `sbatch`).
 
-* SLURM runners
+* SLURM runners:
     * Expose `gpus` SLURM parameter (\#1678).
     * For SSH executor, add `pre_submission_commands` (\#1678).
     * Removed obsolete arguments from `get_slurm_config` function (\#1678).
