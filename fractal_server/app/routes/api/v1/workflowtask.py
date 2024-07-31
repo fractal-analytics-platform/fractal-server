@@ -28,6 +28,7 @@ from ....schemas.v1 import WorkflowTaskReadV1
 from ....schemas.v1 import WorkflowTaskUpdateV1
 from ....security import current_active_user
 from ....security import User
+from ._aux_functions import _check_if_v1_is_read_only
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
@@ -51,7 +52,7 @@ async def create_workflowtask(
     """
     Add a WorkflowTask to a Workflow
     """
-
+    _check_if_v1_is_read_only()
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
@@ -112,7 +113,7 @@ async def update_workflowtask(
     """
     Edit a WorkflowTask of a Workflow
     """
-
+    _check_if_v1_is_read_only()
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_task_id=workflow_task_id,
@@ -167,7 +168,7 @@ async def delete_workflowtask(
     """
     Delete a WorkflowTask of a Workflow
     """
-
+    _check_if_v1_is_read_only()
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_task_id=workflow_task_id,

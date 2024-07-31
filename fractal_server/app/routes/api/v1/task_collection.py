@@ -25,6 +25,7 @@ from ....schemas.v1 import TaskCollectStatusV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from ._aux_functions import _check_if_v1_is_read_only
 from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
@@ -71,7 +72,7 @@ async def collect_tasks_pip(
     Trigger the creation of a dedicated virtual environment, the installation
     of a package and the collection of tasks as advertised in the manifest.
     """
-
+    _check_if_v1_is_read_only()
     logger = set_logger(logger_name="collect_tasks_pip")
 
     # Validate payload as _TaskCollectPip, which has more strict checks than
