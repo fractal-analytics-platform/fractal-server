@@ -20,8 +20,8 @@ from ....schemas.v1 import TaskUpdateV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
-from ._aux_functions import _check_if_v1_is_read_only
 from ._aux_functions import _get_task_check_owner
+from ._aux_functions import _raise_if_v1_is_read_only
 
 router = APIRouter()
 
@@ -76,7 +76,7 @@ async def patch_task(
     """
     Edit a specific task (restricted to superusers and task owner)
     """
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     if task_update.source:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -122,7 +122,7 @@ async def create_task(
     """
     Create a new task
     """
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     # Set task.owner attribute
     if user.username:
         owner = user.username
@@ -176,7 +176,7 @@ async def delete_task(
     """
     Delete a task
     """
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
 
     # Check that the Task is not in relationship with some WorkflowTask

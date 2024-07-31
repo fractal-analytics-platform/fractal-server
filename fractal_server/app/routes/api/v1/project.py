@@ -37,12 +37,12 @@ from ....schemas.v1 import ProjectUpdateV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
-from ._aux_functions import _check_if_v1_is_read_only
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _raise_if_v1_is_read_only
 from ._aux_functions import clean_app_job_list_v1
 
 router = APIRouter()
@@ -81,7 +81,7 @@ async def create_project(
     """
     Create new poject
     """
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     # Check that there is no project with the same user and name
     await _check_project_exists(
         project_name=project.name, user_id=user.id, db=db
@@ -121,7 +121,7 @@ async def update_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -150,7 +150,7 @@ async def delete_project(
     """
     Delete project
     """
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -252,7 +252,7 @@ async def apply_workflow(
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
-    _check_if_v1_is_read_only()
+    _raise_if_v1_is_read_only()
     settings = Inject(get_settings)
 
     # Remove non-submitted V1 jobs from the app state when the list grows
