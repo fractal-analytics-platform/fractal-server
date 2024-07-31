@@ -4,6 +4,8 @@
 
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
+* Testing:
+    * Remove `HAS_LOCAL_SBATCH` variable and related if-branches (\#1699).
 
 # 2.3.7
 
