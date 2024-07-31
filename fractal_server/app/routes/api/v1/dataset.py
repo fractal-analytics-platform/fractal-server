@@ -33,7 +33,7 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
-
+from ._aux_functions import _raise_if_v1_is_read_only
 
 router = APIRouter()
 
@@ -52,6 +52,7 @@ async def create_dataset(
     """
     Add new dataset to current project
     """
+    _raise_if_v1_is_read_only()
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -133,7 +134,7 @@ async def update_dataset(
     """
     Edit a dataset associated to the current project
     """
-
+    _raise_if_v1_is_read_only()
     if dataset_update.history is not None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -170,6 +171,7 @@ async def delete_dataset(
     """
     Delete a dataset associated to the current project
     """
+    _raise_if_v1_is_read_only()
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -243,6 +245,7 @@ async def create_resource(
     """
     Add resource to an existing dataset
     """
+    _raise_if_v1_is_read_only()
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -299,6 +302,7 @@ async def update_resource(
     """
     Edit a resource of a dataset
     """
+    _raise_if_v1_is_read_only()
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -339,6 +343,7 @@ async def delete_resource(
     """
     Delete a resource of a dataset
     """
+    _raise_if_v1_is_read_only()
     # Get the dataset DB entry
     output = await _get_dataset_check_owner(
         project_id=project_id,
