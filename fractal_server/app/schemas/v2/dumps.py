@@ -11,14 +11,16 @@ These models are used in at least two situations:
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import root_validator
+from pydantic import ConfigDict
+from pydantic import model_validator
 
 from fractal_server.app.schemas.v1.dumps import TaskDumpV1
 from fractal_server.images import Filters
 
 
-class ProjectDumpV2(BaseModel, extra=Extra.forbid):
+class ProjectDumpV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     name: str
@@ -30,11 +32,11 @@ class TaskDumpV2(BaseModel):
     name: str
     type: str
 
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     source: str
-    owner: Optional[str]
-    version: Optional[str]
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
     input_types: dict[str, bool]
     output_types: dict[str, bool]
@@ -43,22 +45,22 @@ class TaskDumpV2(BaseModel):
 class WorkflowTaskDumpV2(BaseModel):
     id: int
     workflow_id: int
-    order: Optional[int]
+    order: Optional[int] = None
 
     is_legacy_task: bool
 
     input_filters: Filters
 
-    task_id: Optional[int]
-    task: Optional[TaskDumpV2]
-    task_legacy_id: Optional[int]
-    task_legacy: Optional[TaskDumpV1]
+    task_id: Optional[int] = None
+    task: Optional[TaskDumpV2] = None
+    task_legacy_id: Optional[int] = None
+    task_legacy: Optional[TaskDumpV1] = None
 
     # Validators
-    @root_validator
-    def task_v1_or_v2(cls, values):
-        v1 = values.get("task_legacy_id")
-        v2 = values.get("task_id")
+    @model_validator(mode="after")
+    def task_v1_or_v2(cls, obj):
+        v1 = obj.task_legacy_id
+        v2 = obj.task_id
         if ((v1 is not None) and (v2 is not None)) or (
             (v1 is None) and (v2 is None)
         ):
@@ -67,17 +69,23 @@ class WorkflowTaskDumpV2(BaseModel):
                 "One and only one must be provided between "
                 f"'task_legacy_id' and 'task_id' (you provided {message})"
             )
-        return values
+        return obj
 
 
-class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
+class WorkflowDumpV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel, extra=Extra.forbid):
+class DatasetDumpV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+
     id: int
     name: str
     project_id: int

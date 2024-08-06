@@ -81,10 +81,10 @@ def test_single_image_task_output():
     base = SingleImageBase(zarr_url="/zarr/url", attributes={"x": None})
 
     # SingleImageTaskOutput accepts 'None' as value
-    SingleImageTaskOutput(**base.dict())
+    SingleImageTaskOutput(**base.model_dump())
     # SingleImage does not accept 'None' as value
     with pytest.raises(ValidationError):
-        SingleImage(**base.dict())
+        SingleImage(**base.model_dump())
 
 
 def test_filters():

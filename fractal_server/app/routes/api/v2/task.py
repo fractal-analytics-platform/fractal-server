@@ -83,7 +83,7 @@ async def patch_task(
 
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
-    update = task_update.dict(exclude_unset=True)
+    update = task_update.model_dump(exclude_unset=True)
 
     # Forbid changes that set a previously unset command
     if db_task.type == "non_parallel" and "command_parallel" in update:
@@ -127,7 +127,7 @@ async def create_task(
 
     if task_type == "parallel" and (
         task.args_schema_non_parallel is not None
-        or task.meta_non_parallel is not None
+        or task.meta_non_parallel != dict()
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -137,7 +137,7 @@ async def create_task(
             ),
         )
     elif task_type == "non_parallel" and (
-        task.args_schema_parallel is not None or task.meta_parallel is not None
+        task.args_schema_parallel is not None or task.meta_parallel != dict()
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -182,11 +182,12 @@ async def create_task(
             detail=f"Source '{task.source}' already used by some TaskV1",
         )
     # Add task
-    db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
+    db_task = TaskV2(**task.model_dump(), owner=owner, type=task_type)
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
     await db.close()
+
     return db_task
 
 

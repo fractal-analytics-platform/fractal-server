@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 
 import pytest
 from devtools import debug
@@ -43,9 +42,8 @@ async def test_get_project(client, db, project_factory, MockCurrentUser):
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
         assert res.json()["id"] == project_id
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        assert datetime.strptime(
+            res.json()["timestamp_created"], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
 
         # fail on non existent project

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 from typing import Optional
 
+from pydantic import ConfigDict
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import DateTime
@@ -62,9 +63,7 @@ class Dataset(_DatasetBaseV1, SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def paths(self) -> list[str]:

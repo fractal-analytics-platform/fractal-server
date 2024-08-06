@@ -3,6 +3,7 @@ from typing import Any
 from typing import Literal
 from typing import Optional
 
+from pydantic import ConfigDict
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -14,8 +15,7 @@ from ....utils import get_timestamp
 
 
 class DatasetV2(SQLModel, table=True):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str

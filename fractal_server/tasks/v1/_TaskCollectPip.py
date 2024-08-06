@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from pydantic import root_validator
+from pydantic import model_validator
 
 from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.app.schemas.v1 import TaskCollectPipV1
@@ -14,8 +14,8 @@ class _TaskCollectPip(TaskCollectPipV1):
     Differences with its parent class (`TaskCollectPip`):
 
         1. We check if the package corresponds to a path in the filesystem, and
-           whether it exists (via new validator `check_local_package`, new
-           method `is_local_package` and new attribute `package_path`).
+           whether it exists (via new field_validator `check_local_package`,
+           new method `is_local_package` and new attribute `package_path`).
         2. We include an additional `package_manifest` attribute.
         3. We expose an additional attribute `package_name`, which is filled
            during task collection.
@@ -29,7 +29,8 @@ class _TaskCollectPip(TaskCollectPipV1):
     def is_local_package(self) -> bool:
         return bool(self.package_path)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def check_local_package(cls, values):
         """
         Checks if package corresponds to an existing path on the filesystem

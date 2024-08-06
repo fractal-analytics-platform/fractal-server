@@ -316,11 +316,11 @@ class TaskV2Minimal(BaseModel):
     id: int
     name: str
     type: str
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     source: str
-    owner: Optional[str]
-    version: Optional[str]
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
 
 class ProjectUser(BaseModel):

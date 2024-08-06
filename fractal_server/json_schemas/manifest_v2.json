@@ -11,7 +11,7 @@
             "title": "Task List",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/TaskManifestV2"
+                "$ref": "#/$defs/TaskManifestV2"
             }
         },
         "has_args_schemas": {
@@ -20,15 +20,23 @@
             "type": "boolean"
         },
         "args_schema_version": {
-            "title": "Args Schema Version",
-            "type": "string"
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Args Schema Version"
         }
     },
     "required": [
         "manifest_version",
         "task_list"
     ],
-    "definitions": {
+    "$defs": {
         "TaskManifestV2": {
             "title": "TaskManifestV2",
             "description": "Represents a task within a V2 manifest.\n\nAttributes:\n    name:\n        The task name\n    executable:\n        Path to the executable relative to the package root\n\n        Note: by package root we mean \"as it will be installed\". If a\n        package `Pkg` installs in the folder `pkg` the executable\n        `pkg/executable.py`, this attribute must contain only\n        `executable.py`.\n    input_type:\n        The input type accepted by the task\n    output_type:\n        The output type returned by the task\n    meta:\n        Additional information about the package, such as hash of the\n        executable, specific runtime requirements (e.g., need_gpu=True),\n        etc.\n    args_schema:\n        JSON Schema for task arguments\n    docs_info:\n        Additional information about the Task, coming from the docstring.\n    docs_link:\n        Link to Task docs.",
@@ -39,12 +47,28 @@
                     "type": "string"
                 },
                 "executable_non_parallel": {
-                    "title": "Executable Non Parallel",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Executable Non Parallel"
                 },
                 "executable_parallel": {
-                    "title": "Executable Parallel",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Executable Parallel"
                 },
                 "input_types": {
                     "title": "Input Types",
@@ -69,23 +93,52 @@
                     "type": "object"
                 },
                 "args_schema_non_parallel": {
-                    "title": "Args Schema Non Parallel",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema Non Parallel"
                 },
                 "args_schema_parallel": {
-                    "title": "Args Schema Parallel",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema Parallel"
                 },
                 "docs_info": {
-                    "title": "Docs Info",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Info"
                 },
                 "docs_link": {
-                    "title": "Docs Link",
-                    "minLength": 1,
-                    "maxLength": 2083,
-                    "format": "uri",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Link"
                 }
             },
             "required": [

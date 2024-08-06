@@ -363,9 +363,10 @@ def test_call_parallel_task_max_tasks(
     # parsing and log-to-datetime conversion may easily break if we change the
     # logs format
     with (subfolder_path / "0_par_0.err").open("r") as f:
-        first_log_task_0 = f.readlines()[0]
+        first_log_task_0 = f.readlines()[2]
     with (subfolder_path / "0_par_1.err").open("r") as f:
-        first_log_task_1 = f.readlines()[0]
+        first_log_task_1 = f.readlines()[2]
+
     debug(first_log_task_0)
     debug(first_log_task_1)
     LOG_SEPARATOR = "INFO; [dummy_parallel] ENTERING"

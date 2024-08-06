@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic.error_wrappers import ValidationError
 
 from .....config import get_settings
@@ -32,7 +32,7 @@ class LocalBackendConfigError(ValueError):
     pass
 
 
-class LocalBackendConfig(BaseModel, extra=Extra.forbid):
+class LocalBackendConfig(BaseModel):
     """
     Specifications of the local-backend configuration
 
@@ -43,7 +43,9 @@ class LocalBackendConfig(BaseModel, extra=Extra.forbid):
             start at the same time.
     """
 
-    parallel_tasks_per_job: Optional[int]
+    model_config = ConfigDict(extra="forbid")
+
+    parallel_tasks_per_job: Optional[int] = None
 
 
 def get_default_local_backend_config():

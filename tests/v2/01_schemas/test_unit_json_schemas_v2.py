@@ -15,5 +15,5 @@ def test_ManifestV2_jsonschema():
     )
     with json_schema_path.open("r") as f:
         current_schema = json.load(f)
-    new_schema = ManifestV2.schema()
+    new_schema = ManifestV2.model_json_schema()
     assert new_schema == current_schema

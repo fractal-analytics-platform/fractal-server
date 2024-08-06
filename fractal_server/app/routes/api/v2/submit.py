@@ -172,7 +172,7 @@ async def apply_workflow(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(project.timestamp_created),
         ),
-        **job_create.dict(),
+        **job_create.model_dump(),
     )
 
     # Rate Limiting:

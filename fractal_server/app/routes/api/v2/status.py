@@ -154,7 +154,7 @@ async def get_workflowtask_status(
         if wf_task_status is None:
             # If a wftask ID was not found, ignore it and continue
             continue
-        clean_workflow_tasks_status_dict[wf_task.id] = wf_task_status
+        clean_workflow_tasks_status_dict[str(wf_task.id)] = wf_task_status
         if wf_task_status == WorkflowTaskStatusTypeV2.FAILED:
             # Starting from the beginning of `workflow.task_list`, stop the
             # first time that you hit a failed job

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 from ....logger import close_logger as close_job_logger  # noqa F401
 from ...models.v1 import Dataset
@@ -52,10 +53,7 @@ class TaskParameters(BaseModel):
     output_path: Path
     metadata: dict[str, Any]
     history: list[dict[str, Any]]
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 def validate_workflow_compatibility(

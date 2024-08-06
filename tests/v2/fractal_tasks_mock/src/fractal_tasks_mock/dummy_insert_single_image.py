@@ -3,10 +3,10 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def dummy_insert_single_image(
     *,
     zarr_urls: list[str],

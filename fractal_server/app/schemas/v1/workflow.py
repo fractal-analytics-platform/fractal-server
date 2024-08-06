@@ -4,7 +4,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import valint
 from .._validators import valstr
@@ -46,9 +46,9 @@ class WorkflowTaskCreateV1(_WorkflowTaskBaseV1):
         order:
     """
 
-    order: Optional[int]
+    order: Optional[int] = None
     # Validators
-    _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
+    _order = field_validator("order")(valint("order", min_val=0))
 
 
 class WorkflowTaskReadV1(_WorkflowTaskBaseV1):
@@ -64,7 +64,7 @@ class WorkflowTaskReadV1(_WorkflowTaskBaseV1):
     """
 
     id: int
-    order: Optional[int]
+    order: Optional[int] = None
     workflow_id: int
     task_id: int
     task: TaskReadV1
@@ -98,7 +98,8 @@ class WorkflowTaskUpdateV1(_WorkflowTaskBaseV1):
     """
 
     # Validators
-    @validator("meta")
+    @field_validator("meta")
+    @classmethod
     def check_no_parallelisation_level(cls, m):
         if "parallelization_level" in m:
             raise ValueError(
@@ -135,7 +136,7 @@ class WorkflowReadV1(_WorkflowBaseV1):
     project: ProjectReadV1
     timestamp_created: datetime
 
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+    _timestamp_created = field_validator("timestamp_created")(
         valutc("timestamp_created")
     )
 
@@ -146,7 +147,7 @@ class WorkflowCreateV1(_WorkflowBaseV1):
     """
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class WorkflowUpdateV1(_WorkflowBaseV1):
@@ -158,13 +159,14 @@ class WorkflowUpdateV1(_WorkflowBaseV1):
         reordered_workflowtask_ids:
     """
 
-    name: Optional[str]
-    reordered_workflowtask_ids: Optional[list[int]]
+    name: Optional[str] = None
+    reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
-    @validator("reordered_workflowtask_ids")
+    @field_validator("reordered_workflowtask_ids")
+    @classmethod
     def check_positive_and_unique(cls, value):
         if any(i < 0 for i in value):
             raise ValueError("Negative `id` in `reordered_workflowtask_ids`")
@@ -184,7 +186,7 @@ class WorkflowImportV1(_WorkflowBaseV1):
     task_list: list[WorkflowTaskImportV1]
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class WorkflowExportV1(_WorkflowBaseV1):

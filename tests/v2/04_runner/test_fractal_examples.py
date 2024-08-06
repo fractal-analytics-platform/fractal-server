@@ -716,7 +716,9 @@ def test_invalid_filtered_image_list(
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     zarr_url = Path(zarr_dir, "my_image").as_posix()
-    image = SingleImage(zarr_url=zarr_url, attributes={}, types={}).dict()
+    image = SingleImage(
+        zarr_url=zarr_url, attributes={}, types={}
+    ).model_dump()
 
     with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(

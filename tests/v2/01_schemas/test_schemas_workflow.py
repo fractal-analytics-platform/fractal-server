@@ -19,7 +19,7 @@ async def test_schemas_workflow_v2():
     workflow_create = WorkflowCreateV2(name="workflow")
 
     workflow = WorkflowV2(
-        **workflow_create.dict(),
+        **workflow_create.model_dump(),
         id=1,
         project_id=project.id,
     )
@@ -28,7 +28,7 @@ async def test_schemas_workflow_v2():
 
     WorkflowReadV2(
         **workflow.model_dump(),
-        project=project,
+        project=project.model_dump(),
         task_list=workflow.task_list,
     )
 
@@ -39,7 +39,7 @@ async def test_schemas_workflow_v2():
 
     workflow_update = WorkflowUpdateV2(name="new name")
 
-    for key, value in workflow_update.dict(exclude_unset=True).items():
+    for key, value in workflow_update.model_dump(exclude_unset=True).items():
         setattr(workflow, key, value)
 
     assert workflow.name == "new name"

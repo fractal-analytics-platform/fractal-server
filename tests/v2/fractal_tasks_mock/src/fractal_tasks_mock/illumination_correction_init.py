@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def illumination_correction_init(
     *,
     zarr_urls: list[str],

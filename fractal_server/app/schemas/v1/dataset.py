@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import val_absolute_path
 from .._validators import valstr
@@ -41,7 +41,7 @@ class ResourceCreateV1(_ResourceBaseV1):
     """
 
     # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
+    _path = field_validator("path")(val_absolute_path("path"))
 
 
 class ResourceUpdateV1(_ResourceBaseV1):
@@ -50,7 +50,7 @@ class ResourceUpdateV1(_ResourceBaseV1):
     """
 
     # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
+    _path = field_validator("path")(val_absolute_path("path"))
 
 
 class ResourceReadV1(_ResourceBaseV1):
@@ -79,7 +79,7 @@ class _DatasetHistoryItemV1(BaseModel):
 
     workflowtask: WorkflowTaskDumpV1
     status: WorkflowTaskStatusTypeV1
-    parallelization: Optional[dict]
+    parallelization: Optional[dict] = None
 
 
 class _DatasetBaseV1(BaseModel):
@@ -95,7 +95,7 @@ class _DatasetBaseV1(BaseModel):
     """
 
     name: str
-    type: Optional[str]
+    type: Optional[str] = None
     meta: dict[str, Any] = Field(default={})
     history: list[_DatasetHistoryItemV1] = Field(default=[])
     read_only: bool = False
@@ -112,14 +112,14 @@ class DatasetUpdateV1(_DatasetBaseV1):
         read_only:
     """
 
-    name: Optional[str]
+    name: Optional[str] = None
     meta: Optional[dict[str, Any]] = None
     history: Optional[list[_DatasetHistoryItemV1]] = None
-    read_only: Optional[bool]
+    read_only: Optional[bool] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
+    _name = field_validator("name")(valstr("name"))
+    _type = field_validator("type")(valstr("type"))
 
 
 class DatasetCreateV1(_DatasetBaseV1):
@@ -128,8 +128,8 @@ class DatasetCreateV1(_DatasetBaseV1):
     """
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
+    _name = field_validator("name")(valstr("name"))
+    _type = field_validator("type")(valstr("type"))
 
 
 class DatasetReadV1(_DatasetBaseV1):
@@ -151,7 +151,7 @@ class DatasetReadV1(_DatasetBaseV1):
     project: ProjectReadV1
     timestamp_created: datetime
 
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+    _timestamp_created = field_validator("timestamp_created")(
         valutc("timestamp_created")
     )
 

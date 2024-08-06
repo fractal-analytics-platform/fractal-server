@@ -43,7 +43,7 @@ async def create_dataset(
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+    db_dataset = DatasetV2(project_id=project_id, **dataset.model_dump())
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
@@ -104,6 +104,7 @@ async def read_dataset(
     )
     dataset = output["dataset"]
     await db.close()
+
     return dataset
 
 
@@ -139,7 +140,7 @@ async def update_dataset(
             ),
         )
 
-    for key, value in dataset_update.dict(exclude_unset=True).items():
+    for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)
 
     await db.commit()
@@ -283,7 +284,7 @@ async def import_dataset(
     # Create new Dataset
     db_dataset = DatasetV2(
         project_id=project_id,
-        **dataset.dict(exclude_none=True),
+        **dataset.model_dump(exclude_none=True),
     )
     db.add(db_dataset)
     await db.commit()

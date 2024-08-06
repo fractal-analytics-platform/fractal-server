@@ -241,7 +241,7 @@ def test_settings_check_wrong_python():
 
 def test_make_FRACTAL_TASKS_DIR_absolute():
     """
-    Test `Settings.make_FRACTAL_TASKS_DIR_absolute` validator.
+    Test `Settings.make_FRACTAL_TASKS_DIR_absolute` field_validator.
     """
     settings = Settings(
         JWT_SECRET_KEY="secret",

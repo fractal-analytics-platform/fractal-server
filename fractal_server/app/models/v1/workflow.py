@@ -3,7 +3,8 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
-from pydantic import validator
+from pydantic import ConfigDict
+from pydantic import field_validator
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import DateTime
@@ -45,9 +46,12 @@ class WorkflowTask(_WorkflowTaskBaseV1, SQLModel, table=True):
 
     """
 
-    class Config:
-        arbitrary_types_allowed = True
-        fields = {"parent": {"exclude": True}}
+    # TODO[pydantic]: The following keys were removed: `fields`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config
+    # for more information.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True, fields={"parent": {"exclude": True}}
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
@@ -58,7 +62,8 @@ class WorkflowTask(_WorkflowTaskBaseV1, SQLModel, table=True):
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     task: Task = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
-    @validator("args")
+    @field_validator("args")
+    @classmethod
     def validate_args(cls, value: dict = None):
         """
         Prevent fractal task reserved parameter names from entering args

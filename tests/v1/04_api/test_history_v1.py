@@ -367,6 +367,4 @@ async def test_json_decode_error(
             f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status/"
         )
         assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "History file does not include a valid JSON."
-        )
+        assert res.json()["detail"] == "History is not a valid JSON."

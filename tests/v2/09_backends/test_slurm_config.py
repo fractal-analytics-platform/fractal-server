@@ -6,9 +6,9 @@ from typing import Optional
 import pytest
 from devtools import debug
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import root_validator
+from pydantic import model_validator
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
@@ -21,7 +21,8 @@ from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
 )
 
 
-class TaskV1Mock(BaseModel, extra=Extra.forbid):
+class TaskV1Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = 1
     name: str = "name_t1"
     command: str = "cmd_t1"
@@ -31,7 +32,8 @@ class TaskV1Mock(BaseModel, extra=Extra.forbid):
     meta: Optional[dict[str, Any]] = Field(default_factory=dict)
 
 
-class TaskV2Mock(BaseModel, extra=Extra.forbid):
+class TaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = 1
     name: str = "name_t2"
     source: str = "source_t2"
@@ -42,17 +44,18 @@ class TaskV2Mock(BaseModel, extra=Extra.forbid):
     command_parallel: Optional[str] = None
     meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
     meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    type: Optional[str] = None
 
 
-class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
+class WorkflowTaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     args_non_parallel: dict[str, Any] = Field(default_factory=dict)
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
     is_legacy_task: Optional[bool]
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
+    meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
     task: Optional[TaskV2Mock] = None
     task_legacy: Optional[TaskV1Mock] = None
     is_legacy_task: bool = False
@@ -60,47 +63,51 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     order: int = 0
     id: int = 1
     workflow_id: int = 0
-    task_legacy_id: Optional[int]
-    task_id: Optional[int]
+    task_legacy_id: Optional[int] = None
+    task_id: Optional[int] = None
 
-    @root_validator(pre=False)
-    def _legacy_or_not(cls, values):
-        is_legacy_task = values["is_legacy_task"]
-        task = values.get("task")
-        task_legacy = values.get("task_legacy")
+    @model_validator(mode="after")
+    def _legacy_or_not(cls, obj):
+        is_legacy_task = obj.is_legacy_task
+        task = obj.task
+        task_legacy = obj.task_legacy
         if is_legacy_task:
             if task_legacy is None or task is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_legacy_id"] = task_legacy.id
+                raise ValueError(
+                    f"Invalid WorkflowTaskV2Mock with {obj.model_dump()=}"
+                )
+            obj.task_legacy_id = task_legacy.id
         else:
             if task is None or task_legacy is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_id"] = task.id
-        return values
+                raise ValueError(
+                    f"Invalid WorkflowTaskV2Mock with {obj.model_dump()=}"
+                )
+            obj.task_id = task.id
+        return obj
 
-    @root_validator(pre=False)
-    def merge_meta(cls, values):
-        if values["is_legacy_task"]:
-            task_meta = values["task"].meta
+    @model_validator(mode="after")
+    def merge_meta(cls, obj):
+        if obj.is_legacy_task:
+            task_meta = obj.task.meta
             if task_meta:
-                values["meta"] = {
+                obj.meta = {
                     **task_meta,
-                    **values["meta"],
+                    **obj.meta,
                 }
         else:
-            task_meta_parallel = values["task"].meta_parallel
+            task_meta_parallel = obj.task.meta_parallel
             if task_meta_parallel:
-                values["meta_parallel"] = {
+                obj.meta_parallel = {
                     **task_meta_parallel,
-                    **values["meta_parallel"],
+                    **obj.meta_parallel,
                 }
-            task_meta_non_parallel = values["task"].meta_non_parallel
+            task_meta_non_parallel = obj.task.meta_non_parallel
             if task_meta_non_parallel:
-                values["meta_non_parallel"] = {
+                obj.meta_non_parallel = {
                     **task_meta_non_parallel,
-                    **values["meta_non_parallel"],
+                    **obj.meta_non_parallel,
                 }
-        return values
+        return obj
 
 
 def test_get_slurm_config(tmp_path: Path):
@@ -253,7 +260,7 @@ def test_get_slurm_config_fail(tmp_path):
     with config_path_invalid.open("w") as f:
         json.dump(slurm_config, f)
     with pytest.raises(
-        SlurmConfigError, match="extra fields not permitted"
+        SlurmConfigError, match="Extra inputs are not permitted"
     ) as e:
         get_slurm_config(
             wftask=WorkflowTaskV2Mock(

@@ -3,7 +3,6 @@ import logging
 from typing import Any
 from typing import Optional
 
-from pydantic import HttpUrl
 from sqlalchemy import Column
 from sqlalchemy import sql
 from sqlalchemy.types import JSON
@@ -45,9 +44,9 @@ class Task(_TaskBaseV1, SQLModel, table=True):
     args_schema: Optional[dict[str, Any]] = Field(
         sa_column=Column(JSON), default=None
     )
-    args_schema_version: Optional[str]
+    args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
     is_v2_compatible: bool = Field(
         default=False, sa_column_kwargs={"server_default": sql.false()}

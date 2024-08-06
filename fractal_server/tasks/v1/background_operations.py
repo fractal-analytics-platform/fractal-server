@@ -230,7 +230,7 @@ async def create_package_environment_pip(
             else:
                 additional_attrs = {}
             this_task = TaskCreateV1(
-                **t.dict(),
+                **t.model_dump(),
                 command=cmd,
                 version=task_pkg.package_version,
                 **additional_attrs,
@@ -251,7 +251,13 @@ async def _insert_tasks(
     """
     Insert tasks into database
     """
-    task_db_list = [Task(**t.dict()) for t in task_list]
+    task_db_list = [
+        Task(
+            **t.model_dump(exclude={"docs_link"}),
+            docs_link=(str(t.docs_link) if t.docs_link is not None else None),
+        )
+        for t in task_list
+    ]
     db.add_all(task_db_list)
     db.commit()
     for t in task_db_list:
@@ -280,7 +286,9 @@ async def background_collect_pip(
         log_file_path=get_log_path(venv_path),
     )
     logger.debug("Start background task collection")
-    for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
+    for key, value in task_pkg.model_dump(
+        exclude={"package_manifest"}
+    ).items():
         logger.debug(f"{key}: {value}")
 
     with next(get_sync_db()) as db:
@@ -292,7 +300,6 @@ async def background_collect_pip(
             # install
             logger.debug("Task-collection status: installing")
             data.status = "installing"
-
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()
@@ -301,7 +308,6 @@ async def background_collect_pip(
                 task_pkg=task_pkg,
                 logger_name=logger_name,
             )
-
             # collect
             logger.debug("Task-collection status: collecting")
             data.status = "collecting"
@@ -318,7 +324,6 @@ async def background_collect_pip(
             ]
             with collection_path.open("w") as f:
                 json.dump(data.sanitised_dict(), f, indent=2)
-
             # Update DB
             data.status = "OK"
             data.log = get_collection_log(venv_path)

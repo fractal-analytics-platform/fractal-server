@@ -62,7 +62,7 @@ async def create_project(
         project_name=project.name, user_id=user.id, db=db
     )
 
-    db_project = ProjectV2(**project.dict())
+    db_project = ProjectV2(**project.model_dump())
     db_project.user_list.append(user)
 
     db.add(db_project)
@@ -106,7 +106,7 @@ async def update_project(
             project_name=project_update.name, user_id=user.id, db=db
         )
 
-    for key, value in project_update.dict(exclude_unset=True).items():
+    for key, value in project_update.model_dump(exclude_unset=True).items():
         setattr(project, key, value)
 
     await db.commit()

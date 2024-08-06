@@ -15,9 +15,15 @@ def test_dict_A():
 
     assert A().x == {}
 
-    assert A(x={"a": 2}).x == {"a": "2"}
+    with pytest.raises(ValidationError):
+        A(x={"a": 2})
+    assert A(x={"a": "2"}).x == {"a": "2"}
 
-    assert A(x={1: -3.14}).x == {"1": "-3.14"}
+    with pytest.raises(ValidationError):
+        A(x={1: -3.14})
+    with pytest.raises(ValidationError):
+        A(x={"1": -3.14})
+    assert A(x={"1": "-3.14"}).x == {"1": "-3.14"}
 
     assert A(x={"a": None}).x == {"a": None}
 
@@ -43,14 +49,22 @@ def test_dict_B():
 
     assert B().x == {}
 
-    assert B(x={"a": 2}).x == {"a": "2"}
+    with pytest.raises(ValidationError):
+        B(x={"a": 2})
+    assert B(x={"a": "2"}).x == {"a": "2"}
 
-    assert B(x={1: -3.14}).x == {"1": "-3.14"}
+    with pytest.raises(ValidationError):
+        B(x={1: -3.14})
+    with pytest.raises(ValidationError):
+        B(x={"1": -3.14})
+    with pytest.raises(ValidationError):
+        B(x={1: "-3.14"})
+    assert B(x={"1": "-3.14"}).x == {"1": "-3.14"}
 
     with pytest.raises(ValidationError):
         B(x={"a": None})
-
-    assert B(x={"a": False}).x == {"a": "False"}
+    with pytest.raises(ValidationError):
+        B(x={"a": False})
 
     FORBIDDEN = [
         {"d": "i", "c": "t"},
