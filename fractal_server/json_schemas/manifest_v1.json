@@ -11,7 +11,7 @@
             "title": "Task List",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/TaskManifestV1"
+                "$ref": "#/$defs/TaskManifestV1"
             }
         },
         "has_args_schemas": {
@@ -21,7 +21,15 @@
         },
         "args_schema_version": {
             "title": "Args Schema Version",
-            "type": "string"
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         }
     },
     "required": [
@@ -51,23 +59,54 @@
                     "type": "string"
                 },
                 "meta": {
-                    "title": "Meta",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "title": "Meta"
                 },
                 "args_schema": {
-                    "title": "Args Schema",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema"
                 },
                 "docs_info": {
-                    "title": "Docs Info",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Info"
                 },
                 "docs_link": {
-                    "title": "Docs Link",
-                    "minLength": 1,
-                    "maxLength": 2083,
-                    "format": "uri",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "format": "uri",
+                            "maxLength": 2083,
+                            "minLength": 1,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Link"
                 }
             },
             "required": [

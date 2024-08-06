@@ -11,7 +11,7 @@
             "title": "Task List",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/TaskManifestV2"
+                "$ref": "#/$defs/TaskManifestV2"
             }
         },
         "has_args_schemas": {
@@ -20,8 +20,16 @@
             "type": "boolean"
         },
         "args_schema_version": {
-            "title": "Args Schema Version",
-            "type": "string"
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Args Schema Version"
         }
     },
     "required": [
@@ -39,12 +47,28 @@
                     "type": "string"
                 },
                 "executable_non_parallel": {
-                    "title": "Executable Non Parallel",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Executable Non Parallel"
                 },
                 "executable_parallel": {
-                    "title": "Executable Parallel",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Executable Parallel"
                 },
                 "input_types": {
                     "title": "Input Types",
@@ -69,23 +93,52 @@
                     "type": "object"
                 },
                 "args_schema_non_parallel": {
-                    "title": "Args Schema Non Parallel",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema Non Parallel"
                 },
                 "args_schema_parallel": {
-                    "title": "Args Schema Parallel",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema Parallel"
                 },
                 "docs_info": {
-                    "title": "Docs Info",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Info"
                 },
                 "docs_link": {
-                    "title": "Docs Link",
-                    "minLength": 1,
-                    "maxLength": 2083,
-                    "format": "uri",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Link"
                 }
             },
             "required": [
