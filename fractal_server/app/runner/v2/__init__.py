@@ -138,8 +138,8 @@ async def submit_workflow(
             )
             return
 
-        dataset: DatasetV2 = db_sync.get(DatasetV2, dataset_id)
-        workflow: WorkflowV2 = db_sync.get(WorkflowV2, workflow_id)
+        dataset: Optional[DatasetV2] = db_sync.get(DatasetV2, dataset_id)
+        workflow: Optional[WorkflowV2] = db_sync.get(WorkflowV2, workflow_id)
         if not (dataset and workflow):
             log_msg = ""
             if not dataset:
