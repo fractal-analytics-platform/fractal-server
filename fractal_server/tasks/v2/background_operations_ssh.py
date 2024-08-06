@@ -176,6 +176,10 @@ def background_collect_pip_ssh(
                     ("__PACKAGE__", task_pkg.package),
                     ("__PYTHON__", python_bin),
                     ("__INSTALL_STRING__", install_string),
+                    (
+                        "__FRACTAL_MAX_PIP_VERSION__",
+                        settings.FRACTAL_MAX_PIP_VERSION,
+                    ),
                 ]
 
                 common_args = dict(

@@ -3,7 +3,7 @@ import os
 import signal
 
 from gunicorn.glogging import Logger as GunicornLogger
-from uvicorn.workers import UvicornWorker
+from uvicorn_worker import UvicornWorker
 
 logger = logging.getLogger("uvicorn.error")
 

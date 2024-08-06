@@ -353,6 +353,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             Future representing the execution of the current SLURM job.
         """
 
+        # Do not continue if auxiliary thread was shut down
+        if self.wait_thread.shutdown:
+            error_msg = "Cannot call `submit` method after executor shutdown"
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
+
         # Set defaults, if needed
         if slurm_config is None:
             slurm_config = get_default_slurm_config()
@@ -435,6 +441,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 `self.get_default_task_files()`.
 
         """
+
+        # Do not continue if auxiliary thread was shut down
+        if self.wait_thread.shutdown:
+            error_msg = "Cannot call `map` method after executor shutdown"
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
 
         def _result_or_cancel(fut):
             """
@@ -866,6 +878,14 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Arguments:
             job: The `SlurmJob` object to submit.
         """
+
+        # Prevent calling sbatch if auxiliary thread was shut down
+        if self.wait_thread.shutdown:
+            error_msg = (
+                "Cannot call `_submit_job` method after executor shutdown"
+            )
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
@@ -1335,6 +1355,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Clean up all executor variables. Note that this function is executed on
         the self.wait_thread thread, see _completion.
         """
+
+        # Redudantly set thread shutdown attribute to True
+        self.wait_thread.shutdown = True
 
         logger.debug("Executor shutdown: start")
 

@@ -45,6 +45,7 @@ ENDPOINTS = [
         path="/api/v2/project/$project_id$/dataset/$dataset_id$/images/query/",
         body=None,
     ),
+    dict(verb="GET", path="/auth/current-user/", body=None),
 ]
 
 

@@ -19,7 +19,6 @@ from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
-from tests.fixtures_slurm import HAS_LOCAL_SBATCH
 
 
 try:
@@ -63,14 +62,10 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_API_MAX_JOB_LIST_LENGTH = 1
     settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME = 1
 
-    # NOTE:
-    # This variable is set to work with the system interpreter within a docker
-    # container. If left unset it defaults to `sys.executable`
-    if not HAS_LOCAL_SBATCH:
-        INFO = sys.version_info
-        CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
-        PYTHON_BIN = f"/usr/bin/python{CURRENT_PY_VERSION}"
-        settings.FRACTAL_SLURM_WORKER_PYTHON = PYTHON_BIN
+    INFO = sys.version_info
+    CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
+    PYTHON_BIN = f"/usr/bin/python{CURRENT_PY_VERSION}"
+    settings.FRACTAL_SLURM_WORKER_PYTHON = PYTHON_BIN
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 

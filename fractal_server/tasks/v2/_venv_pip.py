@@ -2,7 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from ..utils import COLLECTION_FREEZE_FILENAME
+from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
+from fractal_server.syringe import Inject
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 from fractal_server.utils import execute_command
@@ -24,6 +26,7 @@ async def _pip_install(
     Returns:
         The location of the package.
     """
+    settings = Inject(get_settings)
 
     logger = get_logger(logger_name)
 
@@ -41,7 +44,10 @@ async def _pip_install(
 
     await execute_command(
         cwd=venv_path,
-        command=f"{pip} install --upgrade pip",
+        command=(
+            f"{pip} install --upgrade "
+            f"'pip<={settings.FRACTAL_MAX_PIP_VERSION}'"
+        ),
         logger_name=logger_name,
     )
     await execute_command(

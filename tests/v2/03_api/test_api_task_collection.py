@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug  # noqa
+from packaging.version import Version
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
@@ -40,6 +41,7 @@ async def test_task_collection_from_wheel(
         FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
         FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
+        FRACTAL_MAX_PIP_VERSION="20.0",
     )
     settings = Inject(get_settings)
 
@@ -78,6 +80,14 @@ async def test_task_collection_from_wheel(
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state = res.json()
+        pip_version = next(
+            line
+            for line in state["data"]["freeze"].split("\n")
+            if line.startswith("pip")
+        ).split("==")[1]
+        assert Version(pip_version) <= Version(
+            settings.FRACTAL_MAX_PIP_VERSION
+        )
         data = state["data"]
         task_list = data["task_list"]
         for i, task in enumerate(task_list):

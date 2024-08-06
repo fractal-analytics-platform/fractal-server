@@ -188,34 +188,17 @@ async def update_workflowtask(
                 default_args = (
                     db_wf_task.task_legacy.default_args_from_args_schema
                 )
+                actual_args = deepcopy(default_args)
+                if value is not None:
+                    for k, v in value.items():
+                        actual_args[k] = v
             else:
-                default_args = (
-                    db_wf_task.task.default_args_parallel_from_args_schema
-                )
-            # Override default_args with args value items
-            actual_args = deepcopy(default_args)
-            if value is not None:
-                for k, v in value.items():
-                    actual_args[k] = v
+                actual_args = deepcopy(value)
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
         elif key == "args_non_parallel":
-            # Get default arguments via a Task property method
-            if db_wf_task.is_legacy_task:
-                # This is only needed so that we don't have to modify the rest
-                # of this block, but legacy task cannot take any non-parallel
-                # args (see checks above).
-                default_args = {}
-            else:
-                default_args = deepcopy(
-                    db_wf_task.task.default_args_non_parallel_from_args_schema
-                )
-            # Override default_args with args value items
-            actual_args = default_args.copy()
-            if value is not None:
-                for k, v in value.items():
-                    actual_args[k] = v
+            actual_args = deepcopy(value)
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)

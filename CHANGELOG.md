@@ -1,17 +1,42 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.8 (Unreleased)
+
+* App:
+    * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
+* Testing:
+    * Remove `HAS_LOCAL_SBATCH` variable and related if-branches (\#1699).
+* Benchmarks:
+    * Add `GET /auth/current-user/` to tested endpoints (\#1700).
+
+# 2.3.7
+
+* SSH SLURM executor:
+    * Handle early shutdown in SSH executor (\#1696).
+* Task collection:
+    * Introduce a new configuration variable `FRACTAL_MAX_PIP_VERSION` to pin task-collection pip (\#1675).
+
+# 2.3.6
+
+* API:
+    * When creating a WorkflowTask, do not pre-populate its top-level arguments based on JSON Schema default values (\#1688).
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.21` (\#1674).
+    * Add `uvicorn-worker` (\#1690).
+
 # 2.3.5
 
 > WARNING: The `pre_submission_commands` SLURM configuration is included as an
 > experimental feature, since it is still not useful for its main intended
 > goal (calling `module load` before running `sbatch`).
 
-* SLURM runners
+* SLURM runners:
     * Expose `gpus` SLURM parameter (\#1678).
     * For SSH executor, add `pre_submission_commands` (\#1678).
     * Removed obsolete arguments from `get_slurm_config` function (\#1678).
 * SSH features:
     * Add `FractalSSH.write_remote_file` method (\#1678).
+
 
 # 2.3.4
 
