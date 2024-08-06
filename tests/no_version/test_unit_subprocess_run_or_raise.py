@@ -34,4 +34,5 @@ def test_subprocess_run_or_raise(tmp_path: pathlib.Path):
     debug(e.value)
     debug(e.value.info)
     debug(e.value.info)
-    assert "ls: unrecognized option `--invalid-option'" in e.value.info
+    assert "ls: unrecognized option" in e.value.info
+    assert "--invalid-option" in e.value.info
