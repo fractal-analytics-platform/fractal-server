@@ -156,7 +156,7 @@ async def test_submit_jobs_with_same_dataset(
         res = await client.get(
             f"{PREFIX}/project/{project.id}/job/{res.json()['id']}/download/"
         )
-        debug(res.json())
+        assert res.status_code == 200
 
         # API call fails when the other job with the same output_dataset has
         # status="done"
