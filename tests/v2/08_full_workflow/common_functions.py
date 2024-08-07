@@ -1,6 +1,6 @@
 import os
 import shutil
-from glob import glob
+import zipfile
 from pathlib import Path
 from typing import Optional
 
@@ -162,26 +162,33 @@ async def full_workflow(
         debug(statuses)
         assert set(statuses.values()) == {"done"}
 
-        # Check files in root job folder
+        # Check files in zipped root job folder
         working_dir = job_status_data["working_dir"]
+        with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
+            actual_files = zip_ref.namelist()
         expected_files = [
             HISTORY_FILENAME,
             FILTERS_FILENAME,
             IMAGES_FILENAME,
             WORKFLOW_LOG_FILENAME,
         ]
-        actual_files = os.listdir(working_dir)
         assert set(expected_files) < set(actual_files)
 
         # Check files in task-0 folder
         expected_files = ["0_par_0000000.log", "0_par_0000001.log"]
-        actual_files = os.listdir(f"{working_dir}/0_create_ome_zarr_compound")
-        assert set(expected_files) < set(actual_files)
+        assert set(expected_files) < set(
+            file.split("/")[-1]
+            for file in actual_files
+            if "0_create_ome_zarr_compound" in file
+        )
 
         # Check files in task-1 folder
         expected_files = ["1_par_0000000.log", "1_par_0000001.log"]
-        actual_files = os.listdir(f"{working_dir}/1_mip_compound")
-        assert set(expected_files) < set(actual_files)
+        assert set(expected_files) < set(
+            file.split("/")[-1]
+            for file in actual_files
+            if "1_mip_compound" in file
+        )
 
 
 async def full_workflow_TaskExecutionError(
@@ -570,9 +577,8 @@ async def workflow_with_non_python_task(
 
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
-        glob_list = [Path(x).name for x in glob(f"{working_dir}/*")] + [
-            Path(x).name for x in glob(f"{working_dir}/*/*")
-        ]
+        with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
+            glob_list = [name.split("/")[-1] for name in zip_ref.namelist()]
 
         must_exist = [
             "0.log",
@@ -588,7 +594,8 @@ async def workflow_with_non_python_task(
                 raise ValueError(f"{f} must exist, but {glob_list=}")
 
         # Check that stderr and stdout are as expected
-        with open(f"{working_dir}/0_non_python/0.log", "r") as f:
-            log = f.read()
+        with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
+            with zip_ref.open("0_non_python/0.log", "r") as file:
+                log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
