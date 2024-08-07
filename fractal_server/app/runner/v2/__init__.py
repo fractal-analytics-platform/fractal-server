@@ -7,6 +7,7 @@ the individual backends.
 """
 import logging
 import os
+import shutil
 import traceback
 from pathlib import Path
 from typing import Optional
@@ -114,7 +115,7 @@ async def submit_workflow(
 
     with next(DB.get_sync_db()) as db_sync:
 
-        job: JobV2 = db_sync.get(JobV2, job_id)
+        job: Optional[JobV2] = db_sync.get(JobV2, job_id)
         if not job:
             logger.error(f"JobV2 {job_id} does not exist")
             return
@@ -137,8 +138,8 @@ async def submit_workflow(
             )
             return
 
-        dataset: DatasetV2 = db_sync.get(DatasetV2, dataset_id)
-        workflow: WorkflowV2 = db_sync.get(WorkflowV2, workflow_id)
+        dataset: Optional[DatasetV2] = db_sync.get(DatasetV2, dataset_id)
+        workflow: Optional[WorkflowV2] = db_sync.get(WorkflowV2, workflow_id)
         if not (dataset and workflow):
             log_msg = ""
             if not dataset:
@@ -448,3 +449,9 @@ async def submit_workflow(
     finally:
         reset_logger_handlers(logger)
         db_sync.close()
+        shutil.make_archive(
+            base_name=job.working_dir,
+            format="zip",
+            root_dir=Path(job.working_dir),
+        )
+        shutil.rmtree(job.working_dir)

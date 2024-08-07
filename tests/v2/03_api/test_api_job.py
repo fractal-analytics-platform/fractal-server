@@ -129,22 +129,20 @@ async def test_submit_jobs_with_same_dataset(
         )
 
         # Existing jobs with done/running status
-        existing_job_A_done = await job_factory_v2(
+        await job_factory_v2(
             project_id=project.id,
             dataset_id=dataset1.id,
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
             status="done",
         )
-        debug(existing_job_A_done)
-        existing_job_B_done = await job_factory_v2(
+        await job_factory_v2(
             project_id=project.id,
             dataset_id=dataset2.id,
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
             status="submitted",
         )
-        debug(existing_job_B_done)
 
         # API call succeeds when the other job with the same dataset has
         # status="done"
@@ -153,8 +151,12 @@ async def test_submit_jobs_with_same_dataset(
             f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
             json={},
         )
-        debug(res.json())
         assert res.status_code == 202
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{res.json()['id']}/download/"
+        )
+        assert res.status_code == 200
 
         # API call fails when the other job with the same output_dataset has
         # status="done"
@@ -163,7 +165,6 @@ async def test_submit_jobs_with_same_dataset(
             f"?workflow_id={workflow.id}&dataset_id={dataset2.id}",
             json={},
         )
-        debug(res.json())
         assert res.status_code == 422
         assert (
             f"Dataset {dataset2.id} is already in use" in res.json()["detail"]

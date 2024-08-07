@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -5,6 +6,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi import status
+from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
@@ -109,16 +111,15 @@ async def read_job(
 
 @router.get(
     "/project/{project_id}/job/{job_id}/download/",
-    response_class=StreamingResponse,
 )
 async def download_job_logs(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> StreamingResponse:
+):
     """
-    Download job folder
+    Download zipped job folder
     """
     output = await _get_job_check_owner(
         project_id=project_id,
@@ -127,16 +128,20 @@ async def download_job_logs(
         db=db,
     )
     job = output["job"]
-
-    # Create and return byte stream for zipped log folder
-    PREFIX_ZIP = Path(job.working_dir).name
-    zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = _zip_folder_to_byte_stream(folder=job.working_dir)
-    return StreamingResponse(
-        iter([byte_stream.getvalue()]),
-        media_type="application/x-zip-compressed",
-        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
-    )
+    if not os.path.exists(f"{job.working_dir}.zip"):
+        zip_filename = f"{Path(job.working_dir).name}.zip"
+        byte_stream = _zip_folder_to_byte_stream(folder=job.working_dir)
+        return StreamingResponse(
+            iter([byte_stream.getvalue()]),
+            media_type="application/x-zip-compressed",
+            headers={
+                "Content-Disposition": f"attachment;filename={zip_filename}"
+            },
+        )
+    else:
+        return FileResponse(
+            path=f"{Path(job.working_dir)}.zip", media_type="application/zip"
+        )
 
 
 @router.get(
