@@ -119,7 +119,7 @@ async def download_job_logs(
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-    Download job folder
+    Download zipped job folder
     """
     output = await _get_job_check_owner(
         project_id=project_id,
@@ -139,10 +139,8 @@ async def download_job_logs(
             },
         )
     else:
-        FileResponse(
-            path=Path(job.working_dir).parent,
-            filename=f"{Path(job.working_dir).name}.zip",
-            media_type="application/zip",
+        return FileResponse(
+            path=f"{Path(job.working_dir)}.zip", media_type="application/zip"
         )
 
 
