@@ -18,6 +18,11 @@ def test_TaskCollectPipV2():
     assert collection.package == "package"
     assert collection.package_version == "1.2.3"
 
+    with pytest.raises(
+        ValidationError, match="Local-package path must be absolute"
+    ):
+        TaskCollectPipV2(package="not/absolute.whl")
+
 
 async def test_TaskCollectCustomV2(testdata_path):
 
