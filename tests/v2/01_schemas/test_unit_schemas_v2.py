@@ -109,3 +109,11 @@ def test_task_update():
         TaskUpdateV2(input_types=None)
     with pytest.raises(ValidationError):
         TaskUpdateV2(output_types=None)
+
+
+def test_job_create():
+    JobCreateV2()
+    JobCreateV2(last_task_index=None)
+    JobCreateV2(last_task_index=1)
+    with pytest.raises(ValidationError, match="cannot be negative"):
+        JobCreateV2(last_task_index=-1)
