@@ -4,6 +4,8 @@ from datetime import timezone
 from typing import Any
 from typing import Optional
 
+from ...string_tools import sanitize_string
+
 
 def valstr(attribute: str, accept_none: bool = False):
     """
@@ -21,7 +23,7 @@ def valstr(attribute: str, accept_none: bool = False):
                 raise ValueError(
                     f"String attribute '{attribute}' cannot be None"
                 )
-        s = string.strip()
+        s = sanitize_string(string)
         if not s:
             raise ValueError(f"String attribute '{attribute}' cannot be empty")
         return s
