@@ -22,7 +22,7 @@ def sanitize_string(value: str) -> str:
     Returns:
         Sanitized value
     """
-    new_value = value.strip().lower()
+    new_value = value.lower()
     for character in __SPECIAL_CHARACTERS__:
         new_value = new_value.replace(character, "_")
     return new_value
