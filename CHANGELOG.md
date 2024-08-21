@@ -12,6 +12,7 @@
     * Add `GET /auth/current-user/` to tested endpoints (\#1700).
 * Dependencies:
     * Update `mkdocstrings` to `^0.25.2` (\#1707).
+    * Update `fastapi` to `^0.112.0` (\#1705).
 
 # 2.3.7
 
