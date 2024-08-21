@@ -31,23 +31,6 @@ async def test_project_apply_failures_non_verified_user(
         assert res.status_code == 401
 
 
-async def test_include_without_submission(
-    client, MockCurrentUser, override_settings_factory
-):
-    override_settings_factory(FRACTAL_API_V1_MODE="include_without_submission")
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/project/1/workflow/1/apply/"
-            f"?input_dataset_id=1&output_dataset_id=1",
-            json={},
-        )
-        assert res.status_code == 422
-        assert (
-            "submission of legacy jobs is not available"
-            in res.json()["detail"]
-        )
-
-
 async def test_project_apply_failures(
     db,
     client,
