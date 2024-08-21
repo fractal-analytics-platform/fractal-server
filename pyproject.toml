@@ -32,7 +32,11 @@ sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
 aiosqlite = "^0.19.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
 alembic = "^1.13.1"
+
 uvicorn = "^0.29.0"
+uvicorn-worker = "^0.2.0"
+uvloop = "^0.20.0"
+
 pydantic = ">=1.10.8,<2"
 bcrypt = "4.0.1"
 packaging = "^23.2"
@@ -45,7 +49,6 @@ gunicorn = { version = ">=21.2,<23.0", optional = true }
 psycopg = { version = "^3.1.0", extras=["binary"], optional=true }
 psycopg2 = { version = "^2.9.5", optional = true }
 psutil = "^5.9.8"
-uvicorn-worker = "^0.2.0"
 
 [tool.poetry.extras]
 postgres = ["asyncpg", "psycopg2"]
