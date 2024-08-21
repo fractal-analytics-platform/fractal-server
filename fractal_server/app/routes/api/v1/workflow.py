@@ -39,6 +39,7 @@ from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _raise_if_v1_is_read_only
 from ._aux_functions import _workflow_insert_task
 
 
@@ -84,6 +85,7 @@ async def create_workflow(
     """
     Create a workflow, associate to a project
     """
+    _raise_if_v1_is_read_only()
     await _get_project_check_owner(
         project_id=project_id,
         user_id=user.id,
@@ -136,6 +138,7 @@ async def update_workflow(
     """
     Edit a workflow
     """
+    _raise_if_v1_is_read_only()
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
@@ -187,7 +190,7 @@ async def delete_workflow(
     """
     Delete a workflow
     """
-
+    _raise_if_v1_is_read_only()
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
@@ -275,7 +278,7 @@ async def import_workflow(
     Also create all required objects (i.e. Workflow and WorkflowTask's) along
     the way.
     """
-
+    _raise_if_v1_is_read_only()
     # Preliminary checks
     await _get_project_check_owner(
         project_id=project_id,
