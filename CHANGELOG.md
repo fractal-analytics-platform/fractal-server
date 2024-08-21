@@ -8,6 +8,8 @@
     * Remove `HAS_LOCAL_SBATCH` variable and related if-branches (\#1699).
 * Benchmarks:
     * Add `GET /auth/current-user/` to tested endpoints (\#1700).
+* Dependencies:
+    * Update `mkdocstrings` to `^0.25.2` (\#1707).
 
 # 2.3.7
 
