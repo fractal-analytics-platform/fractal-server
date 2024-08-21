@@ -37,12 +37,10 @@ async def test_schemas_workflow_v2():
     with pytest.raises(ValidationError):
         WorkflowUpdateV2(name=None)
 
-    workflow_update = WorkflowUpdateV2(name="new name")
+    with pytest.raises(ValidationError):
+        WorkflowUpdateV2(name="foo", reordered_workflowtask_ids=[1, 2, -3])
 
-    for key, value in workflow_update.dict(exclude_unset=True).items():
-        setattr(workflow, key, value)
-
-    assert workflow.name == "new name"
+    WorkflowUpdateV2(name="new name", reordered_workflowtask_ids=[1, 2, 3])
 
 
 async def test_schemas_workflow_task_v2():
