@@ -21,7 +21,8 @@ def test_zip_folder_to_byte_stream(tmp_path: Path):
     # Write BytesIO to file
     archive_path = tmp_path / "zipped_folder.zip"
     with archive_path.open("wb") as f:
-        f.write(output.getbuffer())
+        for byte in output:
+            f.write(byte)
 
     # Unzip the log archive
     unzipped_archived_path = tmp_path / "unzipped_folder"
