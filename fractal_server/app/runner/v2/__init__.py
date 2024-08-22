@@ -450,8 +450,9 @@ async def submit_workflow(
         reset_logger_handlers(logger)
         db_sync.close()
         shutil.make_archive(
-            base_name=job.working_dir,
+            base_name=f"{job.working_dir}_tmp",
             format="zip",
             root_dir=Path(job.working_dir),
         )
+        shutil.move(f"{job.working_dir}_tmp.zip", f"{job.working_dir}.zip")
         shutil.rmtree(job.working_dir)
