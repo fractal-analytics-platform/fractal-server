@@ -1,5 +1,3 @@
-import os
-from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -128,35 +126,12 @@ async def download_job_logs(
         db=db,
     )
     job = output["job"]
-
-    zip_file = Path(f"{job.working_dir}.zip")
-
-    if os.path.exists(zip_file):
-
-        def iterfile():
-            """
-            https://fastapi.tiangolo.com/advanced/
-            custom-response/#using-streamingresponse-with-file-like-objects
-            """
-            with open(zip_file, mode="rb") as file_like:
-                yield from file_like
-
-        return StreamingResponse(
-            iterfile(),
-            media_type="application/x-zip-compressed",
-            headers={
-                "Content-Disposition": f"attachment;filename={zip_file.name}"
-            },
-        )
-    else:
-        byte_stream = _zip_folder_to_byte_stream(folder=job.working_dir)
-        return StreamingResponse(
-            iter([byte_stream.getvalue()]),
-            media_type="application/x-zip-compressed",
-            headers={
-                "Content-Disposition": f"attachment;filename={zip_file.name}"
-            },
-        )
+    zip_name = f"{job.working_dir.split('/')[-1]}.zip"
+    return StreamingResponse(
+        _zip_folder_to_byte_stream(folder=job.working_dir),
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment;filename={zip_name}"},
+    )
 
 
 @router.get(

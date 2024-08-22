@@ -7,7 +7,6 @@ the individual backends.
 """
 import logging
 import os
-import shutil
 import traceback
 from pathlib import Path
 from typing import Optional
@@ -22,6 +21,7 @@ from ....logger import set_logger
 from ....ssh._fabric import FractalSSH
 from ....syringe import Inject
 from ....utils import get_timestamp
+from ....zip_tools import _zip_folder_to_file
 from ...db import DB
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
@@ -449,10 +449,4 @@ async def submit_workflow(
     finally:
         reset_logger_handlers(logger)
         db_sync.close()
-        shutil.make_archive(
-            base_name=f"{job.working_dir}_tmp",
-            format="zip",
-            root_dir=Path(job.working_dir),
-        )
-        shutil.move(f"{job.working_dir}_tmp.zip", f"{job.working_dir}.zip")
-        shutil.rmtree(job.working_dir)
+        _zip_folder_to_file(folder=job.working_dir)
