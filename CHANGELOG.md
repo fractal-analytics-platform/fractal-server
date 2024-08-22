@@ -2,6 +2,9 @@
 
 # 2.3.8 (Unreleased)
 
+> NOTE: `FRACTAL_API_V1_MODE="include_without_submission"` is now transformed
+> into `FRACTAL_API_V1_MODE="include_read_only"`.
+
 * API
     * Support read-only mode for V1 (\#1701).
 * App:
