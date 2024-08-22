@@ -8,6 +8,7 @@ from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
+from .....zip_tools import _zip_folder_to_byte_stream
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import ApplyWorkflow
@@ -18,7 +19,6 @@ from ....schemas.v1 import ApplyWorkflowReadV1
 from ....security import current_active_user
 from ....security import User
 from ...aux._job import _write_shutdown_file
-from ...aux._job import _zip_folder_to_byte_stream
 from ...aux._runner import _check_shutdown_is_supported
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner

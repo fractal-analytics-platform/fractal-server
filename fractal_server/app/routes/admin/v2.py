@@ -21,6 +21,7 @@ from sqlmodel import select
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import get_timestamp
+from ....zip_tools import _zip_folder_to_byte_stream
 from ...db import AsyncSession
 from ...db import get_async_db
 from ...models.security import UserOAuth as User
@@ -37,7 +38,6 @@ from ...schemas.v2 import JobUpdateV2
 from ...schemas.v2 import ProjectReadV2
 from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
-from ..aux._job import _zip_folder_to_byte_stream
 from ..aux._runner import _check_shutdown_is_supported
 
 router_admin_v2 = APIRouter()

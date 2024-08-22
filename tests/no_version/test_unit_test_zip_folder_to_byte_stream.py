@@ -3,7 +3,7 @@ from zipfile import ZipFile
 
 from devtools import debug
 
-from fractal_server.app.routes.aux._job import _zip_folder_to_byte_stream
+from fractal_server.zip_tools import _zip_folder_to_byte_stream
 
 
 def test_zip_folder_to_byte_stream(tmp_path: Path):
