@@ -2,12 +2,11 @@ import os
 import shutil
 from io import BytesIO
 from pathlib import Path
-from typing import Generator
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
 
-def _zip_folder_to_byte_stream(*, folder: str) -> Generator:
+def _zip_folder_to_byte_stream(*, folder: str):
     """
     Get byte stream with the zipped log folder of a job.
 
