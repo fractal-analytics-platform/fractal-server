@@ -41,7 +41,7 @@ def _zip_folder_to_byte_stream(*, folder: str):
         return iter([byte_stream.getvalue()])
 
 
-def _zip_folder_to_file(*, folder: str) -> None:
+def _zip_folder_to_file_and_remove(*, folder: str) -> None:
     shutil.make_archive(
         base_name=f"{folder}_tmp", format="zip", root_dir=Path(folder)
     )
