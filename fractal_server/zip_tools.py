@@ -41,9 +41,46 @@ def _zip_folder_to_byte_stream(*, folder: str):
         return iter([byte_stream.getvalue()])
 
 
+def _zipping_worked(*, folder: str) -> bool:
+
+    zip_file = f"{folder}_tmp.zip"
+
+    # CHECK 1: zip file exists
+    if not os.path.exists(zip_file):
+        return False
+
+    folder_size = 0
+    folder_files = set()
+    for dirpath, dirnames, filenames in os.walk(folder):
+        for f in filenames:
+            folder_files.add(os.path.relpath(os.path.join(dirpath, f), folder))
+            fp = os.path.join(dirpath, f)
+            folder_size += os.path.getsize(fp)
+
+    with ZipFile(zip_file, "r") as zip_ref:
+        zip_files = set(
+            name for name in zip_ref.namelist() if not name.endswith("/")
+        )
+    zip_size = os.path.getsize(zip_file)
+
+    # CHECK 2: all files are there
+    if folder_files != zip_files:
+        return False
+
+    # CHECK 3: zip file is at least 10% of the original folder
+    if zip_size * 10 < folder_size:
+        return False
+
+    return True
+
+
 def _zip_folder_to_file_and_remove(*, folder: str) -> None:
     shutil.make_archive(
         base_name=f"{folder}_tmp", format="zip", root_dir=Path(folder)
     )
-    shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
-    shutil.rmtree(folder)
+    if _zipping_worked(folder=folder):
+        shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
+        shutil.rmtree(folder)
+    else:
+        if os.path.exists(f"{folder}_tmp.zip"):
+            os.remove(f"{folder}_tmp.zip")
