@@ -53,8 +53,8 @@ def _zipping_worked(*, folder: str) -> bool:
     folder_files = set()
     for dirpath, dirnames, filenames in os.walk(folder):
         for f in filenames:
-            folder_files.add(os.path.relpath(os.path.join(dirpath, f), folder))
             fp = os.path.join(dirpath, f)
+            folder_files.add(os.path.relpath(fp, folder))
             folder_size += os.path.getsize(fp)
 
     with ZipFile(zip_file, "r") as zip_ref:
