@@ -11,6 +11,10 @@ T = TypeVar("T", str, BytesIO)
 
 
 def _create_zip(folder: str, output: T) -> T:
+    """
+    Whether `output` is a file name string or a BytesIO, it zips `folder` into
+    `output` and returns `output`.
+    """
     if isinstance(output, str) and os.path.exists(output):
         raise FileExistsError(f"Zip file '{output}' already exists")
     with ZipFile(output, mode="w", compression=ZIP_DEFLATED) as zipfile:
@@ -50,7 +54,13 @@ def _zip_folder_to_byte_stream_iterator(*, folder: str) -> Iterator:
 
 
 def _folder_can_be_deleted(*, folder: str) -> bool:
-
+    """
+    Given the path of a folder as string, returns `False` if either:
+    - the related zip file `{folder}.zip` already exists,
+    - the folder and the zip file has a different number of internal files,
+    - the zip file has a very small size.
+    Otherwise returns `True`.
+    """
     # CHECK 1: zip file exists
     zip_file = f"{folder}.zip"
     if not os.path.exists(zip_file):
