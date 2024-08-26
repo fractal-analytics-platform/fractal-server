@@ -59,7 +59,6 @@ def _folder_can_be_deleted(*, folder: str) -> bool:
         return False
 
     folder_files = [f for f in folder.glob("**/*") if f.is_file()]
-    folder_size = sum(f.stat().st_size for f in folder_files)
 
     with ZipFile(zip_file, "r") as zip_ref:
         zip_files = set(
@@ -71,8 +70,9 @@ def _folder_can_be_deleted(*, folder: str) -> bool:
     if folder_files != zip_files:
         return False
 
-    # CHECK 3: zip file is at least 10% of the original folder
-    if zip_size * 10 < folder_size:
+    # CHECK 3: zip file is at least `n` megabytes large
+    n = 1
+    if zip_size < n * 1024 * 1024:
         return False
 
     return True
