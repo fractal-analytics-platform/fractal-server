@@ -51,27 +51,23 @@ def _zip_folder_to_byte_stream(*, folder: str) -> Iterator:
 
 def _folder_can_be_deleted(*, folder: str) -> bool:
 
-    zip_file = f"{folder}_tmp.zip"
-    folder = Path(folder)
-
     # CHECK 1: zip file exists
+    zip_file = f"{folder}.zip"
     if not os.path.exists(zip_file):
         return False
 
-    folder_files = [f for f in folder.glob("**/*") if f.is_file()]
-
+    # CHECK 2: folder and zip file have the same number of files
+    folder_files = [f.name for f in Path(folder).glob("**/*") if f.is_file()]
     with ZipFile(zip_file, "r") as zip_ref:
         zip_files = set(
             name for name in zip_ref.namelist() if not name.endswith("/")
         )
-    zip_size = os.path.getsize(zip_file)
-
-    # CHECK 2: all files are there
-    if folder_files != zip_files:
+    if len(folder_files) != len(zip_files):
         return False
 
     # CHECK 3: zip file is at least `n` megabytes large
-    n = 1
+    zip_size = os.path.getsize(zip_file)
+    n = 1 / 2048
     if zip_size < n * 1024 * 1024:
         return False
 
