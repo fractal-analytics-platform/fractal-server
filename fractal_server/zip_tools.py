@@ -2,11 +2,27 @@ import os
 import shutil
 from io import BytesIO
 from pathlib import Path
+from typing import Iterator
+from typing import TypeVar
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
+T = TypeVar("T", str, BytesIO)
 
-def _zip_folder_to_byte_stream(*, folder: str):
+
+def _create_zip(folder: str, output: T) -> T:
+    if isinstance(output, str) and os.path.exists(output):
+        raise FileExistsError
+    with ZipFile(output, mode="w", compression=ZIP_DEFLATED) as zipfile:
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                file_path = os.path.join(root, file)
+                archive_path = os.path.relpath(file_path, folder)
+                zipfile.write(file_path, archive_path)
+    return output
+
+
+def _zip_folder_to_byte_stream(*, folder: str) -> Iterator:
     """
     Get byte stream with the zipped log folder of a job.
 
@@ -29,15 +45,7 @@ def _zip_folder_to_byte_stream(*, folder: str):
 
     else:
 
-        byte_stream = BytesIO()
-        with ZipFile(
-            byte_stream, mode="w", compression=ZIP_DEFLATED
-        ) as zipfile:
-            for root, dirs, files in os.walk(folder):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    archive_path = os.path.relpath(file_path, folder)
-                    zipfile.write(file_path, archive_path)
+        byte_stream = _create_zip(folder=folder, output=BytesIO())
         return iter([byte_stream.getvalue()])
 
 
@@ -75,9 +83,7 @@ def _zipping_worked(*, folder: str) -> bool:
 
 
 def _zip_folder_to_file_and_remove(*, folder: str) -> None:
-    shutil.make_archive(
-        base_name=f"{folder}_tmp", format="zip", root_dir=Path(folder)
-    )
+    _create_zip(folder, f"{folder}_tmp.zip")
     if _zipping_worked(folder=folder):
         shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
         shutil.rmtree(folder)
