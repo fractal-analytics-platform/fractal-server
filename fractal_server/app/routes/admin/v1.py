@@ -18,7 +18,7 @@ from sqlmodel import select
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import get_timestamp
-from ....zip_tools import _zip_folder_to_byte_stream
+from ....zip_tools import _zip_folder_to_byte_stream_iterator
 from ...db import AsyncSession
 from ...db import get_async_db
 from ...models.security import UserOAuth as User
@@ -388,7 +388,7 @@ async def download_job_logs(
     PREFIX_ZIP = Path(job.working_dir).name
     zip_filename = f"{PREFIX_ZIP}_archive.zip"
     return StreamingResponse(
-        _zip_folder_to_byte_stream(folder=job.working_dir),
+        _zip_folder_to_byte_stream_iterator(folder=job.working_dir),
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )

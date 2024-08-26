@@ -22,9 +22,9 @@ def _create_zip(folder: str, output: T) -> T:
     return output
 
 
-def _zip_folder_to_byte_stream(*, folder: str) -> Iterator:
+def _zip_folder_to_byte_stream_iterator(*, folder: str) -> Iterator:
     """
-    Get byte stream with the zipped log folder of a job.
+    Returns byte stream with the zipped log folder of a job.
 
     Args:
         folder: the folder to zip

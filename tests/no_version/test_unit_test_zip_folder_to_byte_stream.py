@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
-from fractal_server.zip_tools import _zip_folder_to_byte_stream
+from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
@@ -21,7 +21,7 @@ def test_zip_folder_to_byte_stream(tmp_path: Path):
     (tmp_path / "test/subfolder1/subsubfolder2/file4").touch()
     (tmp_path / "test/subfolder2/file5").touch()
 
-    output = _zip_folder_to_byte_stream(folder=tmp_path.as_posix())
+    output = _zip_folder_to_byte_stream_iterator(folder=tmp_path.as_posix())
 
     # Write BytesIO to file
     zip_file = tmp_path / "zipped_folder.zip"

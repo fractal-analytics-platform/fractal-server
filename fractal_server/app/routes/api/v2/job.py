@@ -7,7 +7,7 @@ from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
-from .....zip_tools import _zip_folder_to_byte_stream
+from .....zip_tools import _zip_folder_to_byte_stream_iterator
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
@@ -128,7 +128,7 @@ async def download_job_logs(
     job = output["job"]
     zip_name = f"{job.working_dir.split('/')[-1]}.zip"
     return StreamingResponse(
-        _zip_folder_to_byte_stream(folder=job.working_dir),
+        _zip_folder_to_byte_stream_iterator(folder=job.working_dir),
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_name}"},
     )
