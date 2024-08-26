@@ -52,18 +52,14 @@ def _zip_folder_to_byte_stream(*, folder: str) -> Iterator:
 def _zipping_worked(*, folder: str) -> bool:
 
     zip_file = f"{folder}_tmp.zip"
+    folder = Path(folder)
 
     # CHECK 1: zip file exists
     if not os.path.exists(zip_file):
         return False
 
-    folder_size = 0
-    folder_files = set()
-    for dirpath, dirnames, filenames in os.walk(folder):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            folder_files.add(os.path.relpath(fp, folder))
-            folder_size += os.path.getsize(fp)
+    folder_files = [f for f in folder.glob("**/*") if f.is_file()]
+    folder_size = sum(f.stat().st_size for f in folder_files)
 
     with ZipFile(zip_file, "r") as zip_ref:
         zip_files = set(
