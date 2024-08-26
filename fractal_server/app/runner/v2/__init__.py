@@ -122,14 +122,10 @@ async def submit_workflow(
                 WorkflowV2, workflow_id
             )
         except Exception as e:
-            if job is not None:
-                fail_job(
-                    db=db_sync,
-                    job=job,
-                    log_msg=e.args[0],
-                    logger_name=logger_name,
-                )
-            raise e
+            raise RuntimeError(
+                "Error conneting to the database. "
+                f"Original error: {e.args[0]}"
+            )
 
         if job is None:
             logger.error(f"JobV2 {job_id} does not exist")
