@@ -49,7 +49,7 @@ def _zip_folder_to_byte_stream(*, folder: str) -> Iterator:
         return iter([byte_stream.getvalue()])
 
 
-def _zipping_worked(*, folder: str) -> bool:
+def _folder_can_be_deleted(*, folder: str) -> bool:
 
     zip_file = f"{folder}_tmp.zip"
     folder = Path(folder)
@@ -80,9 +80,6 @@ def _zipping_worked(*, folder: str) -> bool:
 
 def _zip_folder_to_file_and_remove(*, folder: str) -> None:
     _create_zip(folder, f"{folder}_tmp.zip")
-    if _zipping_worked(folder=folder):
-        shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
+    shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
+    if _folder_can_be_deleted(folder=folder):
         shutil.rmtree(folder)
-    else:
-        if os.path.exists(f"{folder}_tmp.zip"):
-            os.remove(f"{folder}_tmp.zip")
