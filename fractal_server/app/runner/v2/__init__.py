@@ -115,9 +115,36 @@ async def submit_workflow(
 
     with next(DB.get_sync_db()) as db_sync:
 
-        job: Optional[JobV2] = db_sync.get(JobV2, job_id)
-        if not job:
+        try:
+            job: Optional[JobV2] = db_sync.get(JobV2, job_id)
+            dataset: Optional[DatasetV2] = db_sync.get(DatasetV2, dataset_id)
+            workflow: Optional[WorkflowV2] = db_sync.get(
+                WorkflowV2, workflow_id
+            )
+        except Exception as e:
+            if job is not None:
+                fail_job(
+                    db=db_sync,
+                    job=job,
+                    log_msg=e.args[0],
+                    logger_name=logger_name,
+                )
+            raise e
+
+        if job is None:
             logger.error(f"JobV2 {job_id} does not exist")
+            return
+        if dataset is None or workflow is None:
+            log_msg = ""
+            if not dataset:
+                log_msg += f"Cannot fetch dataset {dataset_id} from database\n"
+            if not workflow:
+                log_msg += (
+                    f"Cannot fetch workflow {workflow_id} from database\n"
+                )
+            fail_job(
+                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+            )
             return
 
         # Declare runner backend and set `process_workflow` function
@@ -135,21 +162,6 @@ async def submit_workflow(
                 ),
                 logger_name=logger_name,
                 emit_log=True,
-            )
-            return
-
-        dataset: Optional[DatasetV2] = db_sync.get(DatasetV2, dataset_id)
-        workflow: Optional[WorkflowV2] = db_sync.get(WorkflowV2, workflow_id)
-        if not (dataset and workflow):
-            log_msg = ""
-            if not dataset:
-                log_msg += f"Cannot fetch dataset {dataset_id} from database\n"
-            if not workflow:
-                log_msg += (
-                    f"Cannot fetch workflow {workflow_id} from database\n"
-                )
-            fail_job(
-                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
             )
             return
 
