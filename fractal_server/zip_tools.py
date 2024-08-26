@@ -12,7 +12,7 @@ T = TypeVar("T", str, BytesIO)
 
 def _create_zip(folder: str, output: T) -> T:
     if isinstance(output, str) and os.path.exists(output):
-        raise FileExistsError
+        raise FileExistsError(f"Zip file '{output}' already exists")
     with ZipFile(output, mode="w", compression=ZIP_DEFLATED) as zipfile:
         for root, dirs, files in os.walk(folder):
             for file in files:
