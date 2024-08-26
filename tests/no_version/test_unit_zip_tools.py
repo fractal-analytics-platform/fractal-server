@@ -1,5 +1,4 @@
 import os
-import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -7,19 +6,20 @@ from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
-def test_zip_folder_to_byte_stream(tmp_path: Path):
+def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
 
     # Prepare file/folder structure
-    (tmp_path / "test").mkdir()
-    (tmp_path / "test/subfolder1").mkdir()
-    (tmp_path / "test/subfolder1/subsubfolder1").mkdir()
-    (tmp_path / "test/subfolder1/subsubfolder2").mkdir()
-    (tmp_path / "test/subfolder2").mkdir()
-    (tmp_path / "test/file1").touch()
-    (tmp_path / "test/subfolder1/file2").touch()
-    (tmp_path / "test/subfolder1/subsubfolder1/file3").touch()
-    (tmp_path / "test/subfolder1/subsubfolder2/file4").touch()
-    (tmp_path / "test/subfolder2/file5").touch()
+    test_folder = tmp_path / "test"
+    test_folder.mkdir()
+    (test_folder / "subfolder1").mkdir()
+    (test_folder / "subfolder1/subsubfolder1").mkdir()
+    (test_folder / "subfolder1/subsubfolder2").mkdir()
+    (test_folder / "subfolder2").mkdir()
+    (test_folder / "file1").touch()
+    (test_folder / "subfolder1/file2").touch()
+    (test_folder / "subfolder1/subsubfolder1/file3").touch()
+    (test_folder / "subfolder1/subsubfolder2/file4").touch()
+    (test_folder / "subfolder2/file5").touch()
 
     output = _zip_folder_to_byte_stream_iterator(folder=tmp_path.as_posix())
 
@@ -47,9 +47,21 @@ def test_zip_folder_to_byte_stream(tmp_path: Path):
     assert "subsubfolder1" in glob_list
     assert "subsubfolder2" in glob_list
 
-    zip_file.unlink()
-    shutil.rmtree(unzipped_archived_path)
-    assert os.listdir(tmp_path) == ["test"]
+
+def test_zip_folder_to_file_and_remove(tmp_path: Path):
+
+    # Prepare file/folder structure
+    test_folder = tmp_path / "test"
+    test_folder.mkdir()
+    (test_folder / "subfolder1").mkdir()
+    (test_folder / "subfolder1/subsubfolder1").mkdir()
+    (test_folder / "subfolder1/subsubfolder2").mkdir()
+    (test_folder / "subfolder2").mkdir()
+    (test_folder / "file1").touch()
+    (test_folder / "subfolder1/file2").touch()
+    (test_folder / "subfolder1/subsubfolder1/file3").touch()
+    (test_folder / "subfolder1/subsubfolder2/file4").touch()
+    (test_folder / "subfolder2/file5").touch()
 
     _zip_folder_to_file_and_remove(folder=tmp_path / "test")
     # assert that original `test` folder has been deleted
