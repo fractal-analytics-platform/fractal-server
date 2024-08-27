@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from zipfile import ZipFile
 
+import fractal_server.zip_tools
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
@@ -48,7 +49,11 @@ def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
     assert "subsubfolder2" in glob_list
 
 
-def test_zip_folder_to_file_and_remove(tmp_path: Path):
+def test_zip_folder_to_file_and_remove(tmp_path: Path, monkeypatch):
+
+    monkeypatch.setattr(
+        fractal_server.zip_tools, "THRESHOLD_ZIP_FILE_SIZE_MB", 0.0005
+    )
 
     # Prepare file/folder structure
     test_folder = tmp_path / "test"
