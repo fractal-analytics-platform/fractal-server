@@ -16,13 +16,17 @@ def _create_zip(folder: str, output: T) -> T:
 
     Args:
         folder: Folder to be zipped.
-        output: Either a string with the path of the zip file, or a BytesIO object.
+        output: Either a string with the path of the zip file, or a BytesIO
+            object.
 
     Returns:
         Either the zip-file path string, or the modified BytesIO object.
     """
     if isinstance(output, str) and os.path.exists(output):
         raise FileExistsError(f"Zip file '{output}' already exists")
+    if isinstance(output, BytesIO) and output.getbuffer().nbytes > 0:
+        raise ValueError("BytesIO is not empty")
+
     with ZipFile(output, mode="w", compression=ZIP_DEFLATED) as zipfile:
         for root, dirs, files in os.walk(folder):
             for file in files:
@@ -45,8 +49,7 @@ def _zip_folder_to_byte_stream_iterator(*, folder: str) -> Iterator:
 
         def iterfile():
             """
-            https://fastapi.tiangolo.com/advanced/
-            custom-response/#using-streamingresponse-with-file-like-objects
+            https://fastapi.tiangolo.com/advanced/custom-response/#using-streamingresponse-with-file-like-objects
             """
             with open(zip_file, mode="rb") as file_like:
                 yield from file_like
@@ -62,8 +65,8 @@ def _zip_folder_to_byte_stream_iterator(*, folder: str) -> Iterator:
 def _folder_can_be_deleted(*, folder: str) -> bool:
     """
     Given the path of a folder as string, returns `False` if either:
-    - the related zip file `{folder}.zip` already exists,
-    - the folder and the zip file has a different number of internal files,
+    - the related zip file `{folder}.zip` does already exists,
+    - the folder and the zip file have a different number of internal files,
     - the zip file has a very small size.
     Otherwise returns `True`.
     """
