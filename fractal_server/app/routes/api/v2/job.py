@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -126,7 +127,7 @@ async def download_job_logs(
         db=db,
     )
     job = output["job"]
-    zip_name = f"{job.working_dir.split('/')[-1]}.zip"
+    zip_name = f"{Path(job.working_dir).name}_archive.zip"
     return StreamingResponse(
         _zip_folder_to_byte_stream_iterator(folder=job.working_dir),
         media_type="application/x-zip-compressed",

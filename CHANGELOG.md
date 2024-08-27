@@ -7,6 +7,7 @@
 
 * API
     * Support read-only mode for V1 (\#1701).
+    * Zip and remove job folder after job execution (\#1702).
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Testing:
