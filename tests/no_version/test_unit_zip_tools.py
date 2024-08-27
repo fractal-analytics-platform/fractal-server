@@ -1,16 +1,18 @@
 import os
+from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
+
 import fractal_server.zip_tools
+from fractal_server.zip_tools import _create_zip
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
-def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
-
-    # Prepare file/folder structure
-    test_folder = tmp_path / "test"
+def make_folder(base: Path) -> Path:
+    test_folder = base / "test"
     test_folder.mkdir()
     (test_folder / "subfolder1").mkdir()
     (test_folder / "subfolder1/subsubfolder1").mkdir()
@@ -21,8 +23,32 @@ def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
     (test_folder / "subfolder1/subsubfolder1/file3").touch()
     (test_folder / "subfolder1/subsubfolder2/file4").touch()
     (test_folder / "subfolder2/file5").touch()
+    return test_folder
 
-    output = _zip_folder_to_byte_stream_iterator(folder=tmp_path.as_posix())
+
+def test_create_zip(tmp_path):
+    test_folder = make_folder(tmp_path)
+
+    ret = _create_zip(test_folder, f"{test_folder}.zip")
+    assert ret == f"{test_folder}.zip"
+
+    with pytest.raises(FileExistsError):
+        _create_zip(test_folder, f"{test_folder}.zip")
+    os.unlink(f"{test_folder}.zip")
+
+    with pytest.raises(ValueError):
+        _create_zip(test_folder, BytesIO(b"foo"))
+    ret = _create_zip(test_folder, BytesIO())
+    assert isinstance(ret, BytesIO)
+    assert ret.getbuffer().nbytes > 0
+
+
+def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
+
+    # Prepare file/folder structure
+    test_folder = make_folder(tmp_path)
+
+    output = _zip_folder_to_byte_stream_iterator(folder=test_folder)
 
     # Write BytesIO to file
     zip_file = tmp_path / "zipped_folder.zip"
@@ -56,19 +82,9 @@ def test_zip_folder_to_file_and_remove(tmp_path: Path, monkeypatch):
     )
 
     # Prepare file/folder structure
-    test_folder = tmp_path / "test"
-    test_folder.mkdir()
-    (test_folder / "subfolder1").mkdir()
-    (test_folder / "subfolder1/subsubfolder1").mkdir()
-    (test_folder / "subfolder1/subsubfolder2").mkdir()
-    (test_folder / "subfolder2").mkdir()
-    (test_folder / "file1").touch()
-    (test_folder / "subfolder1/file2").touch()
-    (test_folder / "subfolder1/subsubfolder1/file3").touch()
-    (test_folder / "subfolder1/subsubfolder2/file4").touch()
-    (test_folder / "subfolder2/file5").touch()
+    test_folder = make_folder(tmp_path)
 
-    _zip_folder_to_file_and_remove(folder=tmp_path / "test")
+    _zip_folder_to_file_and_remove(folder=test_folder)
     # assert that original `test` folder has been deleted
     assert os.listdir(tmp_path) == ["test.zip"]
 
