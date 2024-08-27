@@ -5,7 +5,6 @@ This module is the single entry point to the runner backend subsystem V2.
 Other subystems should only import this module and not its submodules or
 the individual backends.
 """
-import logging
 import os
 import traceback
 from pathlib import Path
@@ -122,13 +121,15 @@ async def submit_workflow(
                 WorkflowV2, workflow_id
             )
         except Exception as e:
-            raise RuntimeError(
-                "Error conneting to the database. "
-                f"Original error: {e.args[0]}"
+            logger.error(
+                f"Error conneting to the database. Original error: {e.args[0]}"
             )
+            reset_logger_handlers(logger)
+            return
 
         if job is None:
             logger.error(f"JobV2 {job_id} does not exist")
+            reset_logger_handlers(logger)
             return
         if dataset is None or workflow is None:
             log_msg = ""
@@ -201,9 +202,9 @@ async def submit_workflow(
                 fractal_ssh.mkdir(
                     folder=str(WORKFLOW_DIR_REMOTE),
                 )
-                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
+                logger.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
-                logging.error(
+                logger.error(
                     "Invalid FRACTAL_RUNNER_BACKEND="
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
@@ -228,7 +229,7 @@ async def submit_workflow(
                         user=slurm_user,
                     )
                 else:
-                    logging.info("Skip remote-subfolder creation")
+                    logger.info("Skip remote-subfolder creation")
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
