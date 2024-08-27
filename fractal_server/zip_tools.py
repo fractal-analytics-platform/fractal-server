@@ -37,7 +37,7 @@ def _create_zip(folder: str, output: T) -> T:
     return output
 
 
-def _zip_folder_to_byte_stream_iterator(*, folder: str) -> Iterator:
+def _zip_folder_to_byte_stream_iterator(folder: str) -> Iterator:
     """
     Returns byte stream with the zipped log folder of a job.
 
@@ -59,11 +59,11 @@ def _zip_folder_to_byte_stream_iterator(*, folder: str) -> Iterator:
 
     else:
 
-        byte_stream = _create_zip(folder=folder, output=BytesIO())
+        byte_stream = _create_zip(folder, output=BytesIO())
         return iter([byte_stream.getvalue()])
 
 
-def _folder_can_be_deleted(*, folder: str) -> bool:
+def _folder_can_be_deleted(folder: str) -> bool:
     """
     Given the path of a folder as string, returns `False` if either:
     - the related zip file `{folder}.zip` does already exists,
@@ -95,7 +95,7 @@ def _folder_can_be_deleted(*, folder: str) -> bool:
     return True
 
 
-def _zip_folder_to_file_and_remove(*, folder: str) -> None:
+def _zip_folder_to_file_and_remove(folder: str) -> None:
     """
     Creates a ZIP archive of the specified folder and removes the original
     folder (if it can be deleted).
@@ -110,5 +110,5 @@ def _zip_folder_to_file_and_remove(*, folder: str) -> None:
     """
     _create_zip(folder, f"{folder}_tmp.zip")
     shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
-    if _folder_can_be_deleted(folder=folder):
+    if _folder_can_be_deleted(folder):
         shutil.rmtree(folder)
