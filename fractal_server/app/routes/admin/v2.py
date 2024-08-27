@@ -21,6 +21,7 @@ from sqlmodel import select
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import get_timestamp
+from ....zip_tools import _zip_folder_to_byte_stream_iterator
 from ...db import AsyncSession
 from ...db import get_async_db
 from ...models.security import UserOAuth as User
@@ -37,7 +38,6 @@ from ...schemas.v2 import JobUpdateV2
 from ...schemas.v2 import ProjectReadV2
 from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
-from ..aux._job import _zip_folder_to_byte_stream
 from ..aux._runner import _check_shutdown_is_supported
 
 router_admin_v2 = APIRouter()
@@ -274,9 +274,8 @@ async def download_job_logs(
     # Create and return byte stream for zipped log folder
     PREFIX_ZIP = Path(job.working_dir).name
     zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = _zip_folder_to_byte_stream(folder=job.working_dir)
     return StreamingResponse(
-        iter([byte_stream.getvalue()]),
+        _zip_folder_to_byte_stream_iterator(folder=job.working_dir),
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )

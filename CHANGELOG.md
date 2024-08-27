@@ -1,12 +1,16 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.8 (Unreleased)
+# 2.3.8
 
 > NOTE: `FRACTAL_API_V1_MODE="include_without_submission"` is now transformed
 > into `FRACTAL_API_V1_MODE="include_read_only"`.
 
-* API
+* API:
     * Support read-only mode for V1 (\#1701).
+    * Improve handling of zipped job-folder in download-logs endpoints (\#1702).
+* Runner:
+    * Improve database-error handling in V2 job execution (\#1702).
+    * Zip job folder after job execution (\#1702).
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Testing:
