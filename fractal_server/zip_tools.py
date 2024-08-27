@@ -8,6 +8,7 @@ from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
 T = TypeVar("T", str, BytesIO)
+THRESHOLD_ZIP_FILE_SIZE_MB = 1.0
 
 
 def _create_zip(folder: str, output: T) -> T:
@@ -86,10 +87,9 @@ def _folder_can_be_deleted(*, folder: str) -> bool:
     if folder_files_count != zip_files_count:
         return False
 
-    # CHECK 3: zip file is at least `n` megabytes large
+    # CHECK 3: zip file size is >= than `THRESHOLD_ZIP_FILE_SIZE_MB`
     zip_size = os.path.getsize(zip_file)
-    n = 1 / 2048
-    if zip_size < n * 1024 * 1024:
+    if zip_size < THRESHOLD_ZIP_FILE_SIZE_MB * 1024 * 1024:
         return False
 
     return True
