@@ -96,6 +96,18 @@ def _folder_can_be_deleted(*, folder: str) -> bool:
 
 
 def _zip_folder_to_file_and_remove(*, folder: str) -> None:
+    """
+    Creates a ZIP archive of the specified folder and removes the original
+    folder (if it can be deleted).
+
+    This function performs the following steps:
+    1. Creates a ZIP archive of the `folder` and names it with a temporary
+       suffix `_tmp.zip`.
+    2. Renames the ZIP removing the suffix (this would possibly overwrite a
+        file with the same name already present).
+    3. Checks if the folder can be safely deleted using the
+        `_folder_can_be_deleted` function. If so, deletes the original folder.
+    """
     _create_zip(folder, f"{folder}_tmp.zip")
     shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
     if _folder_can_be_deleted(folder=folder):
