@@ -64,7 +64,7 @@ def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
     # Case 1: zip file does not exist yet
     output = _zip_folder_to_byte_stream_iterator(folder=test_folder)
 
-    zip_file_1 = Path("foo.zip")
+    zip_file_1 = Path(tmp_path / "foo.zip")
     with zip_file_1.open("wb") as f:
         for byte in output:
             f.write(byte)
@@ -88,7 +88,7 @@ def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
     _create_zip(test_folder, output=f"{test_folder}.zip")
     output = _zip_folder_to_byte_stream_iterator(folder=test_folder)
 
-    zip_file_2 = Path("bar.zip")
+    zip_file_2 = Path(tmp_path / "bar.zip")
     with zip_file_2.open("wb") as f:
         for byte in output:
             f.write(byte)

@@ -79,9 +79,7 @@ def _folder_can_be_deleted(folder: str) -> bool:
     # CHECK 2: folder and zip file have the same number of files
     folder_files_count = sum(1 for f in Path(folder).rglob("*") if f.is_file())
     with ZipFile(zip_file, "r") as zip_ref:
-        zip_files_count = sum(
-            1 for name in zip_ref.namelist() if not name.endswith("/")
-        )
+        zip_files_count = sum(1 for _ in zip_ref.namelist())
     if folder_files_count != zip_files_count:
         return False
 
