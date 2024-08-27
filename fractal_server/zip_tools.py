@@ -12,8 +12,14 @@ T = TypeVar("T", str, BytesIO)
 
 def _create_zip(folder: str, output: T) -> T:
     """
-    Whether `output` is a file name string or a BytesIO, it zips `folder` into
-    `output` and returns `output`.
+    Zip a folder into a zip-file or into a BytesIO.
+
+    Args:
+        folder: Folder to be zipped.
+        output: Either a string with the path of the zip file, or a BytesIO object.
+
+    Returns:
+        Either the zip-file path string, or the modified BytesIO object.
     """
     if isinstance(output, str) and os.path.exists(output):
         raise FileExistsError(f"Zip file '{output}' already exists")
