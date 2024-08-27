@@ -122,7 +122,7 @@ async def submit_workflow(
             )
         except Exception as e:
             logger.error(
-                f"Error conneting to the database. Original error: {e.args[0]}"
+                f"Error conneting to the database. Original error: {str(e)}"
             )
             reset_logger_handlers(logger)
             return
