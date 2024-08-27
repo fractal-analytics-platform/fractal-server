@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.8 (Unreleased)
+# 2.3.8
 
 > NOTE: `FRACTAL_API_V1_MODE="include_without_submission"` is now transformed
 > into `FRACTAL_API_V1_MODE="include_read_only"`.
