@@ -7,9 +7,9 @@ from typing import TypeVar
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
-from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 
-logger = get_logger("zip_tools")
+logger = set_logger("fractal_server.zip_tools")
 
 T = TypeVar("T", str, BytesIO)
 THRESHOLD_ZIP_FILE_SIZE_MB = 1.0
