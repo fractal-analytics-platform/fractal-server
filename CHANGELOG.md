@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.11 (Unreleased)
+
+* Dependencies:
+    * Switch from `passlib` to `pwdlib` (\#1717).
+    * Update `fastapi-users` to `^13.0.0` (\#1717).
 
 # 2.3.10
 
