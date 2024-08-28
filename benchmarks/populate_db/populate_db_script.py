@@ -1,4 +1,4 @@
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.security import UserOAuth
@@ -38,7 +38,8 @@ def create_image_list(n_images: int) -> list:
 
 
 def create_first_user() -> None:
-    context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    context = PasswordHash.recommended()
     hashed_password = context.hash(DEFAULT_CREDENTIALS["password"])
 
     user_db = UserOAuth(
