@@ -2,8 +2,7 @@
 
 # 2.3.9
 
-* Runner:
-    * Add logging for zipping-job-folder operations (\#1714).
+* Add logging for zipping-job-folder operations (\#1714).
 
 # 2.3.8
 
