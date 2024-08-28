@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
+# 2.3.10
+
+* Fix minor bug in zipping-job logging (\#1716).
+
 # 2.3.9
 
 * Add logging for zipping-job-folder operations (\#1714).
