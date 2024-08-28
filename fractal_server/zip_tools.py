@@ -7,6 +7,10 @@ from typing import TypeVar
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
+from fractal_server.logger import get_logger
+
+logger = get_logger("zip_tools")
+
 T = TypeVar("T", str, BytesIO)
 THRESHOLD_ZIP_FILE_SIZE_MB = 1.0
 
@@ -74,6 +78,10 @@ def _folder_can_be_deleted(folder: str) -> bool:
     # CHECK 1: zip file exists
     zip_file = f"{folder}.zip"
     if not os.path.exists(zip_file):
+        logger.info(
+            f"Folder '{folder}' won't be deleted because file '{zip_file}' "
+            "does not exist."
+        )
         return False
 
     # CHECK 2: folder and zip file have the same number of files
@@ -81,11 +89,21 @@ def _folder_can_be_deleted(folder: str) -> bool:
     with ZipFile(zip_file, "r") as zip_ref:
         zip_files_count = len(zip_ref.namelist())
     if folder_files_count != zip_files_count:
+        logger.info(
+            f"Folder '{folder}' won't be deleted because it contains "
+            f"{folder_files_count} files while '{zip_file}' contains "
+            f"{zip_files_count}."
+        )
         return False
 
     # CHECK 3: zip file size is >= than `THRESHOLD_ZIP_FILE_SIZE_MB`
     zip_size = os.path.getsize(zip_file)
-    if zip_size < THRESHOLD_ZIP_FILE_SIZE_MB * 1024 * 1024:
+    if zip_size < THRESHOLD_ZIP_FILE_SIZE_MB * (1024**2):
+        logger.info(
+            f"Folder '{folder}' won't be deleted because '{zip_file}' is too "
+            f"small ({zip_size / (1024**2):.5f} MB, whereas the minimum limit "
+            f"for deletion is {THRESHOLD_ZIP_FILE_SIZE_MB})."
+        )
         return False
 
     return True
@@ -107,4 +125,6 @@ def _zip_folder_to_file_and_remove(folder: str) -> None:
     _create_zip(folder, f"{folder}_tmp.zip")
     shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
     if _folder_can_be_deleted(folder):
+        logger.info(f"Deleting folder '{folder}'...")
         shutil.rmtree(folder)
+        logger.info(f"Deletion of folder '{folder}' completed.")
