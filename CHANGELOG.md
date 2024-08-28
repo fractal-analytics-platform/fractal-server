@@ -10,7 +10,7 @@
     * Improve handling of zipped job-folder in download-logs endpoints (\#1702).
 * Runner:
     * Improve database-error handling in V2 job execution (\#1702).
-    * Zip job folder after job execution (\#1702).
+    * Zip job folder after job execution (\#1702, \#1714).
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Testing:
