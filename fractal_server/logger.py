@@ -46,7 +46,7 @@ class FractalLoggingFormatter(logging.Formatter):
 LOG_FORMAT = (
     "%(asctime)s::%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
 )
-DATE_FORMAT = r"%Y-%m-%d %H:%M:%S" + f"({settings.FRACTAL_UTC_OFFSET})"
+DATE_FORMAT = r"%Y-%m-%d %H:%M:%S" + f"({settings.FRACTAL_UTC_OFFSET_STRING})"
 LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT, DATE_FORMAT)
 
 

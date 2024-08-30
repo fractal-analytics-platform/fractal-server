@@ -576,14 +576,24 @@ class Settings(BaseSettings):
         return v
 
     @property
-    def FRACTAL_UTC_OFFSET(self) -> str:
+    def FRACTAL_UTC_OFFSET_STRING(self) -> str:
         timedelta = (
             datetime.datetime.now(datetime.timezone.utc)
             .astimezone(ZoneInfo(self.FRACTAL_LOG_TIMEZONE))
             .utcoffset()
         )
-        sign = "+" if timedelta.days >= 0 else "-"
-        return f"{sign}{str(timedelta).split(' ')[-1][:-3]}"
+        if timedelta.days < 0:
+            sign = "-"
+            seconds = 24 * (60**2) - timedelta.seconds
+        else:
+            sign = "+"
+            seconds = timedelta.seconds
+
+        hours = seconds // (60**2)
+        minutes = (seconds % (60**2)) // 60
+        minutes_string = f":{minutes:02}" if minutes > 0 else ""
+
+        return f"UTC{sign}{hours}{minutes_string}"
 
     ###########################################################################
     # BUSINESS LOGIC
