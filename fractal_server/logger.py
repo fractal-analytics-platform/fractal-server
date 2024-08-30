@@ -23,9 +23,6 @@ from .config import get_settings
 from .syringe import Inject
 
 
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-
 class FractalLoggingFormatter(logging.Formatter):
     def converter(self, timestamp):
         return datetime.datetime.fromtimestamp(
@@ -33,6 +30,7 @@ class FractalLoggingFormatter(logging.Formatter):
         ).timetuple()
 
 
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT)
 
 
