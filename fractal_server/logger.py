@@ -25,7 +25,7 @@ from .syringe import Inject
 
 
 class FractalLoggingFormatter(logging.Formatter):
-    def converter(self, timestamp):
+    def converter(self, timestamp: float) -> time.struct_time:
         settings = Inject(get_settings)
         if settings.FRACTAL_LOG_TIMEZONE is not None:
             return datetime.datetime.fromtimestamp(
