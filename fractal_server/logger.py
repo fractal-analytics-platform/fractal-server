@@ -12,17 +12,26 @@
 """
 This module provides logging utilities
 """
+import datetime
 import logging
 from pathlib import Path
 from typing import Optional
 from typing import Union
+from zoneinfo import ZoneInfo
 
 from .config import get_settings
 from .syringe import Inject
 
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
+
+
+class FractalLoggingFormatter(logging.Formatter):
+    def converter(self, timestamp):
+        return datetime.datetime.fromtimestamp(timestamp, tz=ZoneInfo("CET"))
+
+
+LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT)
 
 
 def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
