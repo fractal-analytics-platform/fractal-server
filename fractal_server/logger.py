@@ -28,7 +28,9 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 class FractalLoggingFormatter(logging.Formatter):
     def converter(self, timestamp):
-        return datetime.datetime.fromtimestamp(timestamp, tz=ZoneInfo("CET"))
+        return datetime.datetime.fromtimestamp(
+            timestamp, tz=ZoneInfo("Australia/NSW")
+        )
 
 
 LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT)
