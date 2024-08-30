@@ -39,10 +39,40 @@ class FractalLoggingFormatter(logging.Formatter):
         return _converter(timestamp)
 
 
+def _utc_offset(timezone: str) -> str:
+    """
+    Input strings must come from `zoneinfo.available_timezones()`.
+
+    Examples input -> output:
+    * "Canada/Newfoundland" -> "UTC-2:30"
+    * "Europe/Rome" -> "UTC+2"
+    * "UTC" -> "UTC+0"
+    """
+    timedelta = (
+        datetime.datetime.now(datetime.timezone.utc)
+        .astimezone(ZoneInfo(timezone))
+        .utcoffset()
+    )
+    if timedelta.days < 0:
+        sign = "-"
+        seconds = 24 * (60**2) - timedelta.seconds
+    else:
+        sign = "+"
+        seconds = timedelta.seconds
+
+    hours = seconds // (60**2)
+    minutes = (seconds % (60**2)) // 60
+    minutes_string = f":{minutes:02}" if minutes > 0 else ""
+
+    return f"UTC{sign}{hours}{minutes_string}"
+
+
 LOG_FORMAT = (
     "%(asctime)s::%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
 )
-DATE_FORMAT = r"%Y-%m-%d %H:%M:%S" + f"({settings.FRACTAL_UTC_OFFSET_STRING})"
+DATE_FORMAT = (
+    f"%Y-%m-%d %H:%M:%S({_utc_offset(settings.FRACTAL_LOG_TIMEZONE)})"
+)
 LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT, DATE_FORMAT)
 
 
