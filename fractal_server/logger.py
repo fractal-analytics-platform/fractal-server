@@ -14,6 +14,7 @@ This module provides logging utilities
 """
 import datetime
 import logging
+import time
 from pathlib import Path
 from typing import Optional
 from typing import Union
@@ -25,9 +26,13 @@ from .syringe import Inject
 
 class FractalLoggingFormatter(logging.Formatter):
     def converter(self, timestamp):
-        return datetime.datetime.fromtimestamp(
-            timestamp, tz=ZoneInfo("CET")
-        ).timetuple()
+        settings = Inject(get_settings)
+        if settings.FRACTAL_LOG_TIMEZONE is not None:
+            return datetime.datetime.fromtimestamp(
+                timestamp, tz=ZoneInfo(settings.FRACTAL_LOG_TIMEZONE)
+            ).timetuple()
+        else:
+            return time.localtime(timestamp)
 
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

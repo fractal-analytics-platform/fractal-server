@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.11 (Unreleased)
+
+* App:
+    * Introduce `FRACTAL_LOG_TIMEZONE` to convert log timestamps from local to another timezone (\#1719)
 
 # 2.3.10
 

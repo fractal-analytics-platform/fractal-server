@@ -14,6 +14,7 @@
 import logging
 import shutil
 import sys
+import zoneinfo
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -557,6 +558,20 @@ class Settings(BaseSettings):
     """
     Maximum value at which to update `pip` before performing task collection.
     """
+
+    FRACTAL_LOG_TIMEZONE: Optional[str] = None
+    """
+    The timezone to which we want the log timestamps to be converted.
+    """
+
+    @validator("FRACTAL_LOG_TIMEZONE")
+    def validate_timezone(cls, v):
+        if (v is not None) and (v not in zoneinfo.available_timezones()):
+            raise FractalConfigurationError(
+                f"'{v}' is not a valid timezone. "
+                "Run `zoneinfo.available_timezones()` to get the whole list."
+            )
+        return v
 
     ###########################################################################
     # BUSINESS LOGIC
