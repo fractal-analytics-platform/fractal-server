@@ -1,36 +1,28 @@
-import datetime
 import logging
 import os
 import signal
 import time
-from zoneinfo import ZoneInfo
 
 from gunicorn.glogging import Logger as GunicornLogger
 from uvicorn_worker import UvicornWorker
 
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
+from fractal_server.logger import _converter
+from fractal_server.logger import DATE_FORMAT
 
 logger = logging.getLogger("uvicorn.error")
 
 
 class FractalGunicornLoggingFormatter(logging.Formatter):
     def converter(self, timestamp: float) -> time.struct_time:
-        settings = Inject(get_settings)
-        if settings.FRACTAL_LOG_TIMEZONE is not None:
-            return datetime.datetime.fromtimestamp(
-                timestamp, tz=ZoneInfo(settings.FRACTAL_LOG_TIMEZONE)
-            ).timetuple()
-        else:
-            return time.localtime(timestamp)
+        return _converter(timestamp)
 
 
 class FractalGunicornLogger(GunicornLogger):
     error_fmt = (
-        r"%(asctime)s   - gunicorn.error - %(levelname)s - [pid %(process)d] "
-        r"- %(message)s"
+        "%(asctime)s::%(msecs)03d - gunicorn.error - %(levelname)s - "
+        "[pid %(process)d] - %(message)s"
     )
-    datefmt = r"%Y-%m-%d %H:%M:%S,%u"
+    datefmt = DATE_FORMAT
 
     def setup(self, cfg):
         super().setup(cfg)

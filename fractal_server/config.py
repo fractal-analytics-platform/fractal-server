@@ -11,6 +11,7 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import datetime
 import logging
 import shutil
 import sys
@@ -22,6 +23,7 @@ from pathlib import Path
 from typing import Literal
 from typing import Optional
 from typing import TypeVar
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -559,20 +561,29 @@ class Settings(BaseSettings):
     Maximum value at which to update `pip` before performing task collection.
     """
 
-    FRACTAL_LOG_TIMEZONE: Optional[str] = None
+    FRACTAL_LOG_TIMEZONE: str = "UTC"
     """
     The timezone to which we want the log timestamps to be converted.
     """
 
     @validator("FRACTAL_LOG_TIMEZONE")
     def validate_timezone(cls, v):
-        if (v is not None) and (v not in zoneinfo.available_timezones()):
+        if v not in zoneinfo.available_timezones():
             raise FractalConfigurationError(
                 f"'{v}' is not a valid timezone. "
-                "Run `zoneinfo.available_timezones()` to see all available "
-                "timezones."
+                f"Available timezones:\n{zoneinfo.available_timezones()}"
             )
         return v
+
+    @property
+    def FRACTAL_UTC_OFFSET(self) -> str:
+        timedelta = (
+            datetime.datetime.now(datetime.timezone.utc)
+            .astimezone(ZoneInfo(self.FRACTAL_LOG_TIMEZONE))
+            .utcoffset()
+        )
+        sign = "+" if timedelta.days >= 0 else "-"
+        return f"{sign}{str(timedelta).split(' ')[-1][:-3]}"
 
     ###########################################################################
     # BUSINESS LOGIC

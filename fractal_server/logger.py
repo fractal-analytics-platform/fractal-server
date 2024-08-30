@@ -23,20 +23,31 @@ from zoneinfo import ZoneInfo
 from .config import get_settings
 from .syringe import Inject
 
+settings = Inject(get_settings)
+
+
+def _converter(timestamp: float) -> time.struct_time:
+    if settings.FRACTAL_LOG_TIMEZONE is not None:
+        return (
+            datetime.datetime.fromtimestamp(timestamp)
+            .astimezone(ZoneInfo(settings.FRACTAL_LOG_TIMEZONE))
+            .timetuple()
+        )
+
+    else:
+        return time.localtime(timestamp)
+
 
 class FractalLoggingFormatter(logging.Formatter):
     def converter(self, timestamp: float) -> time.struct_time:
-        settings = Inject(get_settings)
-        if settings.FRACTAL_LOG_TIMEZONE is not None:
-            return datetime.datetime.fromtimestamp(
-                timestamp, tz=ZoneInfo(settings.FRACTAL_LOG_TIMEZONE)
-            ).timetuple()
-        else:
-            return time.localtime(timestamp)
+        return _converter(timestamp)
 
 
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT)
+LOG_FORMAT = (
+    "%(asctime)s::%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
+)
+DATE_FORMAT = r"%Y-%m-%d %H:%M:%S" + f"({settings.FRACTAL_UTC_OFFSET})"
+LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT, DATE_FORMAT)
 
 
 def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
