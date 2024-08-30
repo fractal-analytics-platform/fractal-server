@@ -27,15 +27,11 @@ settings = Inject(get_settings)
 
 
 def _converter(timestamp: float) -> time.struct_time:
-    if settings.FRACTAL_LOG_TIMEZONE is not None:
-        return (
-            datetime.datetime.fromtimestamp(timestamp)
-            .astimezone(ZoneInfo(settings.FRACTAL_LOG_TIMEZONE))
-            .timetuple()
-        )
-
-    else:
-        return time.localtime(timestamp)
+    return (
+        datetime.datetime.fromtimestamp(timestamp)
+        .astimezone(ZoneInfo(settings.FRACTAL_LOG_TIMEZONE))
+        .timetuple()
+    )
 
 
 class FractalLoggingFormatter(logging.Formatter):
