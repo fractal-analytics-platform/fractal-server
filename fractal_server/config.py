@@ -569,7 +569,8 @@ class Settings(BaseSettings):
         if (v is not None) and (v not in zoneinfo.available_timezones()):
             raise FractalConfigurationError(
                 f"'{v}' is not a valid timezone. "
-                "Run `zoneinfo.available_timezones()` to get the whole list."
+                "Run `zoneinfo.available_timezones()` to see all available "
+                "timezones."
             )
         return v
 
