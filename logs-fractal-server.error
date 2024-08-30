@@ -1,0 +1,133 @@
+2024-08-30 16:48:30(UTC+2)::789 - gunicorn.error - INFO - [pid 33840] - Starting gunicorn 22.0.0
+2024-08-30 16:48:30(UTC+2)::789 - gunicorn.error - INFO - [pid 33840] - Listening at: http://0.0.0.0:8000 (33840)
+2024-08-30 16:48:30(UTC+2)::789 - gunicorn.error - INFO - [pid 33840] - Using worker: uvicorn.workers.UvicornWorker
+2024-08-30 16:48:30(UTC+2)::793 - gunicorn.error - INFO - [pid 33848] - Booting worker with pid: 33848
+2024-08-30 16:48:30(UTC+2)::797 - gunicorn.error - INFO - [pid 33849] - Booting worker with pid: 33849
+2024-08-30 16:48:30(UTC+2)::804 - gunicorn.error - INFO - [pid 33850] - Booting worker with pid: 33850
+2024-08-30 16:48:30(UTC+2)::892 - gunicorn.error - INFO - [pid 33851] - Booting worker with pid: 33851
+2024-08-30 16:48:31(UTC+2)::981 - gunicorn.error - INFO - [pid 33850] - Started server process [33850]
+2024-08-30 16:48:31(UTC+2)::981 - gunicorn.error - INFO - [pid 33848] - Started server process [33848]
+2024-08-30 16:48:31(UTC+2)::982 - gunicorn.error - INFO - [pid 33850] - Waiting for application startup.
+2024-08-30 16:48:31(UTC+2)::982 - gunicorn.error - INFO - [pid 33848] - Waiting for application startup.
+2024-08-30 16:48:31(UTC+2)::983 - gunicorn.error - INFO - [pid 33849] - Started server process [33849]
+2024-08-30 16:48:31(UTC+2)::984 - gunicorn.error - INFO - [pid 33849] - Waiting for application startup.
+2024-08-30 16:48:32(UTC+2)::062 - gunicorn.error - INFO - [pid 33851] - Started server process [33851]
+2024-08-30 16:48:32(UTC+2)::064 - gunicorn.error - INFO - [pid 33851] - Waiting for application startup.
+2024-08-30 16:48:32(UTC+2)::158 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:48:32(UTC+2)::158 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:48:32(UTC+2)::158 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:48:32(UTC+2)::222 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:48:34(UTC+2)::226 - gunicorn.error - INFO - [pid 33840] - Handling signal: int
+2024-08-30 16:48:34(UTC+2)::238 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:48:34(UTC+2)::240 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:48:34(UTC+2)::277 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:48:34(UTC+2)::277 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:48:34(UTC+2)::277 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:48:34(UTC+2)::279 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:48:34(UTC+2)::279 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:48:34(UTC+2)::279 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:48:34(UTC+2)::342 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:48:34(UTC+2)::345 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:48:34(UTC+2)::346 - uvicorn.error - INFO - Finished server process [33851]
+2024-08-30 16:48:34(UTC+2)::353 - gunicorn.error - ERROR - [pid 33840] - Worker (pid:33851) was sent SIGINT!
+2024-08-30 16:48:34(UTC+2)::382 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:48:34(UTC+2)::382 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:48:34(UTC+2)::382 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:48:34(UTC+2)::384 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:48:34(UTC+2)::384 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:48:34(UTC+2)::384 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:48:34(UTC+2)::386 - uvicorn.error - INFO - Finished server process [33849]
+2024-08-30 16:48:34(UTC+2)::386 - uvicorn.error - INFO - Finished server process [33850]
+2024-08-30 16:48:34(UTC+2)::386 - uvicorn.error - INFO - Finished server process [33848]
+2024-08-30 16:48:34(UTC+2)::394 - gunicorn.error - ERROR - [pid 33840] - Worker (pid:33850) was sent SIGINT!
+2024-08-30 16:48:34(UTC+2)::429 - gunicorn.error - INFO - [pid 33840] - Shutting down: Master
+2024-08-30 16:49:05(UTC+2)::179 - gunicorn.error - INFO - [pid 33952] - Starting gunicorn 22.0.0
+2024-08-30 16:49:05(UTC+2)::179 - gunicorn.error - INFO - [pid 33952] - Listening at: http://0.0.0.0:8000 (33952)
+2024-08-30 16:49:05(UTC+2)::179 - gunicorn.error - INFO - [pid 33952] - Using worker: uvicorn.workers.UvicornWorker
+2024-08-30 16:49:05(UTC+2)::184 - gunicorn.error - INFO - [pid 33955] - Booting worker with pid: 33955
+2024-08-30 16:49:05(UTC+2)::245 - gunicorn.error - INFO - [pid 33956] - Booting worker with pid: 33956
+2024-08-30 16:49:05(UTC+2)::339 - gunicorn.error - INFO - [pid 33957] - Booting worker with pid: 33957
+2024-08-30 16:49:05(UTC+2)::376 - gunicorn.error - INFO - [pid 33958] - Booting worker with pid: 33958
+2024-08-30 16:49:06(UTC+2)::323 - gunicorn.error - INFO - [pid 33955] - Started server process [33955]
+2024-08-30 16:49:06(UTC+2)::324 - gunicorn.error - INFO - [pid 33955] - Waiting for application startup.
+2024-08-30 16:49:06(UTC+2)::386 - gunicorn.error - INFO - [pid 33956] - Started server process [33956]
+2024-08-30 16:49:06(UTC+2)::387 - gunicorn.error - INFO - [pid 33956] - Waiting for application startup.
+2024-08-30 16:49:06(UTC+2)::482 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:49:06(UTC+2)::484 - gunicorn.error - INFO - [pid 33957] - Started server process [33957]
+2024-08-30 16:49:06(UTC+2)::484 - gunicorn.error - INFO - [pid 33957] - Waiting for application startup.
+2024-08-30 16:49:06(UTC+2)::525 - gunicorn.error - INFO - [pid 33958] - Started server process [33958]
+2024-08-30 16:49:06(UTC+2)::526 - gunicorn.error - INFO - [pid 33958] - Waiting for application startup.
+2024-08-30 16:49:06(UTC+2)::541 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:49:06(UTC+2)::630 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:49:06(UTC+2)::668 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 16:51:35(UTC+2)::181 - gunicorn.error - INFO - [pid 33952] - Handling signal: int
+2024-08-30 16:51:35(UTC+2)::225 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:51:35(UTC+2)::226 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:51:35(UTC+2)::227 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:51:35(UTC+2)::228 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:51:35(UTC+2)::254 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:51:35(UTC+2)::256 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:51:35(UTC+2)::282 - uvicorn.error - INFO - Shutting down
+2024-08-30 16:51:35(UTC+2)::284 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 16:51:35(UTC+2)::330 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:51:35(UTC+2)::330 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:51:35(UTC+2)::332 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:51:35(UTC+2)::332 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:51:35(UTC+2)::334 - uvicorn.error - INFO - Finished server process [33956]
+2024-08-30 16:51:35(UTC+2)::334 - uvicorn.error - INFO - Finished server process [33955]
+2024-08-30 16:51:35(UTC+2)::342 - gunicorn.error - ERROR - [pid 33952] - Worker (pid:33956) was sent SIGINT!
+2024-08-30 16:51:35(UTC+2)::342 - gunicorn.error - ERROR - [pid 33952] - Worker (pid:33955) was sent SIGINT!
+2024-08-30 16:51:35(UTC+2)::358 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:51:35(UTC+2)::361 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:51:35(UTC+2)::363 - uvicorn.error - INFO - Finished server process [33957]
+2024-08-30 16:51:35(UTC+2)::369 - gunicorn.error - ERROR - [pid 33952] - Worker (pid:33957) was sent SIGINT!
+2024-08-30 16:51:35(UTC+2)::386 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 16:51:35(UTC+2)::389 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 16:51:35(UTC+2)::390 - uvicorn.error - INFO - Finished server process [33958]
+2024-08-30 16:51:35(UTC+2)::397 - gunicorn.error - ERROR - [pid 33952] - Worker (pid:33958) was sent SIGINT!
+2024-08-30 16:51:35(UTC+2)::486 - gunicorn.error - INFO - [pid 33952] - Shutting down: Master
+2024-08-30 12:21:38(UTC-2:30)::765 - gunicorn.error - INFO - [pid 34420] - Starting gunicorn 22.0.0
+2024-08-30 12:21:38(UTC-2:30)::765 - gunicorn.error - INFO - [pid 34420] - Listening at: http://0.0.0.0:8000 (34420)
+2024-08-30 12:21:38(UTC-2:30)::765 - gunicorn.error - INFO - [pid 34420] - Using worker: uvicorn.workers.UvicornWorker
+2024-08-30 12:21:38(UTC-2:30)::769 - gunicorn.error - INFO - [pid 34428] - Booting worker with pid: 34428
+2024-08-30 12:21:38(UTC-2:30)::797 - gunicorn.error - INFO - [pid 34429] - Booting worker with pid: 34429
+2024-08-30 12:21:38(UTC-2:30)::875 - gunicorn.error - INFO - [pid 34430] - Booting worker with pid: 34430
+2024-08-30 12:21:38(UTC-2:30)::950 - gunicorn.error - INFO - [pid 34431] - Booting worker with pid: 34431
+2024-08-30 12:21:39(UTC-2:30)::950 - gunicorn.error - INFO - [pid 34428] - Started server process [34428]
+2024-08-30 12:21:39(UTC-2:30)::951 - gunicorn.error - INFO - [pid 34428] - Waiting for application startup.
+2024-08-30 12:21:39(UTC-2:30)::964 - gunicorn.error - INFO - [pid 34429] - Started server process [34429]
+2024-08-30 12:21:39(UTC-2:30)::965 - gunicorn.error - INFO - [pid 34429] - Waiting for application startup.
+2024-08-30 12:21:40(UTC-2:30)::052 - gunicorn.error - INFO - [pid 34430] - Started server process [34430]
+2024-08-30 12:21:40(UTC-2:30)::053 - gunicorn.error - INFO - [pid 34430] - Waiting for application startup.
+2024-08-30 12:21:40(UTC-2:30)::114 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 12:21:40(UTC-2:30)::129 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 12:21:40(UTC-2:30)::136 - gunicorn.error - INFO - [pid 34431] - Started server process [34431]
+2024-08-30 12:21:40(UTC-2:30)::137 - gunicorn.error - INFO - [pid 34431] - Waiting for application startup.
+2024-08-30 12:21:40(UTC-2:30)::208 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 12:21:40(UTC-2:30)::279 - uvicorn.error - INFO - Application startup complete.
+2024-08-30 12:24:05(UTC-2:30)::674 - gunicorn.error - INFO - [pid 34420] - Handling signal: int
+2024-08-30 12:24:05(UTC-2:30)::687 - uvicorn.error - INFO - Shutting down
+2024-08-30 12:24:05(UTC-2:30)::688 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 12:24:05(UTC-2:30)::727 - uvicorn.error - INFO - Shutting down
+2024-08-30 12:24:05(UTC-2:30)::729 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 12:24:05(UTC-2:30)::730 - uvicorn.error - INFO - Shutting down
+2024-08-30 12:24:05(UTC-2:30)::731 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 12:24:05(UTC-2:30)::764 - uvicorn.error - INFO - Shutting down
+2024-08-30 12:24:05(UTC-2:30)::766 - gunicorn.error - INFO - Error while closing socket [Errno 9] Bad file descriptor
+2024-08-30 12:24:05(UTC-2:30)::790 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 12:24:05(UTC-2:30)::792 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 12:24:05(UTC-2:30)::794 - uvicorn.error - INFO - Finished server process [34430]
+2024-08-30 12:24:05(UTC-2:30)::801 - gunicorn.error - ERROR - [pid 34420] - Worker (pid:34430) was sent SIGINT!
+2024-08-30 12:24:05(UTC-2:30)::831 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 12:24:05(UTC-2:30)::833 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 12:24:05(UTC-2:30)::833 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 12:24:05(UTC-2:30)::834 - uvicorn.error - INFO - Finished server process [34431]
+2024-08-30 12:24:05(UTC-2:30)::835 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 12:24:05(UTC-2:30)::836 - uvicorn.error - INFO - Finished server process [34429]
+2024-08-30 12:24:05(UTC-2:30)::841 - gunicorn.error - ERROR - [pid 34420] - Worker (pid:34431) was sent SIGINT!
+2024-08-30 12:24:05(UTC-2:30)::843 - gunicorn.error - ERROR - [pid 34420] - Worker (pid:34429) was sent SIGINT!
+2024-08-30 12:24:05(UTC-2:30)::868 - uvicorn.error - INFO - Waiting for application shutdown.
+2024-08-30 12:24:05(UTC-2:30)::870 - uvicorn.error - INFO - Application shutdown complete.
+2024-08-30 12:24:05(UTC-2:30)::871 - uvicorn.error - INFO - Finished server process [34428]
+2024-08-30 12:24:05(UTC-2:30)::877 - gunicorn.error - ERROR - [pid 34420] - Worker (pid:34428) was sent SIGINT!
+2024-08-30 12:24:05(UTC-2:30)::878 - gunicorn.error - INFO - [pid 34420] - Shutting down: Master

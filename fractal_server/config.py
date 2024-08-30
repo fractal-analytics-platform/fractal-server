@@ -593,7 +593,7 @@ class Settings(BaseSettings):
         minutes = (seconds % (60**2)) // 60
         minutes_string = f":{minutes:02}" if minutes > 0 else ""
 
-        return f"UTC{sign}{hours}{minutes_string}"
+        return f"GMT{sign}{hours}{minutes_string}"
 
     ###########################################################################
     # BUSINESS LOGIC
