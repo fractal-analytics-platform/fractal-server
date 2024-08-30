@@ -103,7 +103,6 @@ def set_logger(
         file_handler = logging.FileHandler(log_file_path, mode="a")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(LOG_FORMATTER)
-        file_handler.setFormatter(LOG_FORMATTER)
         logger.addHandler(file_handler)
         current_file_handlers = [
             handler
