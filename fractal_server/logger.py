@@ -30,7 +30,7 @@ class FractalLoggingFormatter(logging.Formatter):
     def converter(self, timestamp):
         return datetime.datetime.fromtimestamp(
             timestamp, tz=ZoneInfo("Australia/NSW")
-        )
+        ).timetuple()
 
 
 LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT)
