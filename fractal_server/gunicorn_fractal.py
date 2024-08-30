@@ -9,7 +9,10 @@ logger = logging.getLogger("uvicorn.error")
 
 
 class FractalGunicornLogger(GunicornLogger):
-    error_fmt = r"%(asctime)s   - gunicorn.error - %(levelname)s - [pid %(process)d] - %(message)s"  # noqa: E501
+    error_fmt = (
+        r"%(asctime)s   - gunicorn.error - %(levelname)s - [pid %(process)d] "
+        r"- %(message)s"
+    )
     datefmt = r"%Y-%m-%d %H:%M:%S,%u"
 
 
