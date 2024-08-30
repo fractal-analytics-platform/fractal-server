@@ -411,5 +411,6 @@ def test_FRACTAL_LOG_TIMEZONE():
 
     Settings(**common_attributes)
     Settings(**common_attributes, FRACTAL_LOG_TIMEZONE="Europe/Rome")
+    Settings(**common_attributes, FRACTAL_LOG_TIMEZONE="America/New_York")
     with pytest.raises(FractalConfigurationError):
         Settings(**common_attributes, FRACTAL_LOG_TIMEZONE="Trieste")
