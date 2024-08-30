@@ -26,7 +26,7 @@ from .syringe import Inject
 class FractalLoggingFormatter(logging.Formatter):
     def converter(self, timestamp):
         return datetime.datetime.fromtimestamp(
-            timestamp, tz=ZoneInfo("Australia/NSW")
+            timestamp, tz=ZoneInfo("CET")
         ).timetuple()
 
 
