@@ -29,7 +29,7 @@ settings = Inject(get_settings)
 def _converter(timestamp: float) -> time.struct_time:
     return (
         datetime.datetime.fromtimestamp(timestamp)
-        .astimezone(ZoneInfo(settings.FRACTAL_LOG_TIMEZONE))
+        .astimezone(ZoneInfo(settings.FRACTAL_LOGGING_TIMEZONE))
         .timetuple()
     )
 
@@ -41,12 +41,14 @@ class FractalLoggingFormatter(logging.Formatter):
 
 def _utc_offset(timezone: str) -> str:
     """
-    Input strings must come from `zoneinfo.available_timezones()`.
+    Input strings must come from `zoneinfo.available_timezones()`,
+    otherwise raises a `ZoneInfoNotFoundError`.
 
     Examples input -> output:
     * "Canada/Newfoundland" -> "UTC-2:30"
     * "Europe/Rome" -> "UTC+2"
     * "UTC" -> "UTC+0"
+
     """
     timedelta = (
         datetime.datetime.now(datetime.timezone.utc)
@@ -71,7 +73,7 @@ LOG_FORMAT = (
     "%(asctime)s::%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
 )
 DATE_FORMAT = (
-    f"%Y-%m-%d %H:%M:%S({_utc_offset(settings.FRACTAL_LOG_TIMEZONE)})"
+    f"%Y-%m-%d %H:%M:%S({_utc_offset(settings.FRACTAL_LOGGING_TIMEZONE)})"
 )
 LOG_FORMATTER = FractalLoggingFormatter(LOG_FORMAT, DATE_FORMAT)
 

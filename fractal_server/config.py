@@ -348,6 +348,22 @@ class Settings(BaseSettings):
     see details [here](../internals/logs/).
     """
 
+    FRACTAL_LOGGING_TIMEZONE: str = "UTC"
+    """
+    Timezone of the Fractal logger.
+
+    List of possible values at `zoneinfo.available_timezones()`.
+    """
+
+    @validator("FRACTAL_LOGGING_TIMEZONE")
+    def validate_timezone(cls, v):
+        if v not in zoneinfo.available_timezones():
+            raise FractalConfigurationError(
+                f"'{v}' is not a valid timezone. "
+                f"Available timezones:\n{zoneinfo.available_timezones()}"
+            )
+        return v
+
     FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the local backend.
@@ -558,20 +574,6 @@ class Settings(BaseSettings):
     """
     Maximum value at which to update `pip` before performing task collection.
     """
-
-    FRACTAL_LOG_TIMEZONE: str = "UTC"
-    """
-    The timezone to which we want the log timestamps to be converted.
-    """
-
-    @validator("FRACTAL_LOG_TIMEZONE")
-    def validate_timezone(cls, v):
-        if v not in zoneinfo.available_timezones():
-            raise FractalConfigurationError(
-                f"'{v}' is not a valid timezone. "
-                f"Available timezones:\n{zoneinfo.available_timezones()}"
-            )
-        return v
 
     ###########################################################################
     # BUSINESS LOGIC

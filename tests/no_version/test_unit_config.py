@@ -401,7 +401,8 @@ def test_python_interpreters():
         assert f"Non-absolute value {key}=" in str(e.value)
 
 
-def test_FRACTAL_LOG_TIMEZONE():
+def test_FRACTAL_LOGGING_TIMEZONE():
+
     common_attributes = dict(
         JWT_SECRET_KEY="something",
         SQLITE_PATH="/something",
@@ -409,8 +410,7 @@ def test_FRACTAL_LOG_TIMEZONE():
         FRACTAL_TASKS_DIR="/something",
     )
 
-    Settings(**common_attributes)
-    Settings(**common_attributes, FRACTAL_LOG_TIMEZONE="Europe/Rome")
-    Settings(**common_attributes, FRACTAL_LOG_TIMEZONE="America/New_York")
+    Settings(**common_attributes, FRACTAL_LOGGING_TIMEZONE="Asia/Tokyo")
+    Settings(**common_attributes, FRACTAL_LOGGING_TIMEZONE="America/New_York")
     with pytest.raises(FractalConfigurationError):
-        Settings(**common_attributes, FRACTAL_LOG_TIMEZONE="Trieste")
+        Settings(**common_attributes, FRACTAL_LOGGING_TIMEZONE="Trieste")
