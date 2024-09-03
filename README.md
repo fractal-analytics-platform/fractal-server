@@ -6,10 +6,9 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Benchmarks](https://img.shields.io/badge/Benchmarks-Done-blue)](https://htmlpreview.github.io/?https://github.com/fractal-analytics-platform/fractal-server/blob/benchmark-api/benchmarks/bench.html)
 
-Fractal is a framework to process high content imaging data at scale and
-prepare it for interactive visualization.
+[Fractal](https://fractal-analytics-platform.github.io/) is a framework developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) to process bioimaging data at scale in the OME-Zarr format and prepare the images for interactive visualization.
 
-![Fractal_Overview](https://fractal-analytics-platform.github.io/assets/fractal_overview.jpg)
+![Fractal_overview](https://github.com/user-attachments/assets/286122d9-08cf-48e8-996d-3cf53e0a81c6)
 
 This is the server component of the fractal analytics platform.
 Find more information about Fractal in general and the other repositories at

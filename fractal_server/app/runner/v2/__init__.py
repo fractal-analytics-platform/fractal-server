@@ -5,7 +5,6 @@ This module is the single entry point to the runner backend subsystem V2.
 Other subystems should only import this module and not its submodules or
 the individual backends.
 """
-import logging
 import os
 import traceback
 from pathlib import Path
@@ -21,6 +20,7 @@ from ....logger import set_logger
 from ....ssh._fabric import FractalSSH
 from ....syringe import Inject
 from ....utils import get_timestamp
+from ....zip_tools import _zip_folder_to_file_and_remove
 from ...db import DB
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
@@ -114,9 +114,34 @@ async def submit_workflow(
 
     with next(DB.get_sync_db()) as db_sync:
 
-        job: JobV2 = db_sync.get(JobV2, job_id)
-        if not job:
+        try:
+            job: Optional[JobV2] = db_sync.get(JobV2, job_id)
+            dataset: Optional[DatasetV2] = db_sync.get(DatasetV2, dataset_id)
+            workflow: Optional[WorkflowV2] = db_sync.get(
+                WorkflowV2, workflow_id
+            )
+        except Exception as e:
+            logger.error(
+                f"Error conneting to the database. Original error: {str(e)}"
+            )
+            reset_logger_handlers(logger)
+            return
+
+        if job is None:
             logger.error(f"JobV2 {job_id} does not exist")
+            reset_logger_handlers(logger)
+            return
+        if dataset is None or workflow is None:
+            log_msg = ""
+            if not dataset:
+                log_msg += f"Cannot fetch dataset {dataset_id} from database\n"
+            if not workflow:
+                log_msg += (
+                    f"Cannot fetch workflow {workflow_id} from database\n"
+                )
+            fail_job(
+                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+            )
             return
 
         # Declare runner backend and set `process_workflow` function
@@ -134,21 +159,6 @@ async def submit_workflow(
                 ),
                 logger_name=logger_name,
                 emit_log=True,
-            )
-            return
-
-        dataset: DatasetV2 = db_sync.get(DatasetV2, dataset_id)
-        workflow: WorkflowV2 = db_sync.get(WorkflowV2, workflow_id)
-        if not (dataset and workflow):
-            log_msg = ""
-            if not dataset:
-                log_msg += f"Cannot fetch dataset {dataset_id} from database\n"
-            if not workflow:
-                log_msg += (
-                    f"Cannot fetch workflow {workflow_id} from database\n"
-                )
-            fail_job(
-                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
             )
             return
 
@@ -192,9 +202,9 @@ async def submit_workflow(
                 fractal_ssh.mkdir(
                     folder=str(WORKFLOW_DIR_REMOTE),
                 )
-                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
+                logger.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
-                logging.error(
+                logger.error(
                     "Invalid FRACTAL_RUNNER_BACKEND="
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
@@ -219,7 +229,7 @@ async def submit_workflow(
                         user=slurm_user,
                     )
                 else:
-                    logging.info("Skip remote-subfolder creation")
+                    logger.info("Skip remote-subfolder creation")
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
@@ -448,3 +458,4 @@ async def submit_workflow(
     finally:
         reset_logger_handlers(logger)
         db_sync.close()
+        _zip_folder_to_file_and_remove(folder=job.working_dir)

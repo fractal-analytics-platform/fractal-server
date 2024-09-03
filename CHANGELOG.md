@@ -1,13 +1,34 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.8 (Unreleased)
 
+# 2.3.10
+
+* Fix minor bug in zipping-job logging (\#1716).
+
+# 2.3.9
+
+* Add logging for zipping-job-folder operations (\#1714).
+
+# 2.3.8
+
+> NOTE: `FRACTAL_API_V1_MODE="include_without_submission"` is now transformed
+> into `FRACTAL_API_V1_MODE="include_read_only"`.
+
+* API:
+    * Support read-only mode for V1 (\#1701).
+    * Improve handling of zipped job-folder in download-logs endpoints (\#1702).
+* Runner:
+    * Improve database-error handling in V2 job execution (\#1702).
+    * Zip job folder after job execution (\#1702).
 * App:
     * `UvicornWorker` is now imported from `uvicorn-worker` (\#1690).
 * Testing:
     * Remove `HAS_LOCAL_SBATCH` variable and related if-branches (\#1699).
 * Benchmarks:
     * Add `GET /auth/current-user/` to tested endpoints (\#1700).
+* Dependencies:
+    * Update `mkdocstrings` to `^0.25.2` (\#1707).
+    * Update `fastapi` to `^0.112.0` (\#1705).
 
 # 2.3.7
 
