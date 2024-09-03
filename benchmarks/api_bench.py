@@ -46,6 +46,11 @@ ENDPOINTS = [
         body=None,
     ),
     dict(verb="GET", path="/auth/current-user/", body=None),
+    dict(
+        verb="POST",
+        path="/auth/token/login/",
+        body=dict(username=USERS[0].name, password=USERS[0].password),
+    ),
 ]
 
 
