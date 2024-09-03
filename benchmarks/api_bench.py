@@ -194,17 +194,20 @@ class Benchmark:
             ]
         elif verb == "POST":
             path = self._replace_path_params(headers, path)
-            body = endpoint.get("body")
-            data = endpoint.get("data")
+            request_json = endpoint.get("json")
+            request_data = endpoint.get("data")
             metrics_list = [
                 self.get_metrics(
                     user,
                     path,
                     self.client.post(
-                        path, headers=headers, body=body, data=data
+                        path,
+                        headers=headers,
+                        json=request_json,
+                        data=request_data,
                     ),
                 )
-                for n in range(n_requests)
+                for _ in range(n_requests)
             ]
 
         # dicts with two keys -> key to sum (time, size)
