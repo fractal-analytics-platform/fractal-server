@@ -72,14 +72,14 @@ jobs:
 
       - name: Test with pytest
         env:
-          COVERAGE_FILE: "coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}"
+          COVERAGE_FILE: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/no_version --ignore tests/v2
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
-          path: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
+          path: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}*
 
   tests_v2:
 
@@ -151,14 +151,14 @@ jobs:
 
       - name: Test with pytest
         env:
-          COVERAGE_FILE: "coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}"
+          COVERAGE_FILE: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 tests/no_version --ignore tests/v1
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: "coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}"
-          path: "coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}"
+          name: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}
+          path: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}*
 
 
   coverage:
@@ -185,7 +185,8 @@ jobs:
       - name: Download data
         uses: actions/download-artifact@v4
         with:
-          pattern: coverage-data*
+          pattern: coverage-data-*
+          merge-multiple: true
 
       - name: Add coverage comment to Pull Requests
         id: coverage_comment
