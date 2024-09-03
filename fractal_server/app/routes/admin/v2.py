@@ -25,7 +25,6 @@ from ....zip_tools import _zip_folder_to_byte_stream_iterator
 from ...db import AsyncSession
 from ...db import get_async_db
 from ...models.security import UserOAuth as User
-from ...models.v1 import Task
 from ...models.v2 import JobV2
 from ...models.v2 import ProjectV2
 from ...models.v2 import TaskV2
@@ -279,35 +278,6 @@ async def download_job_logs(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )
-
-
-class TaskCompatibility(BaseModel):
-    is_v2_compatible: bool
-
-
-@router_admin_v2.patch(
-    "/task-v1/{task_id}/",
-    status_code=status.HTTP_200_OK,
-)
-async def flag_task_v1_as_v2_compatible(
-    task_id: int,
-    compatibility: TaskCompatibility,
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> Response:
-
-    task = await db.get(Task, task_id)
-    if task is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task {task_id} not found",
-        )
-
-    task.is_v2_compatible = compatibility.is_v2_compatible
-    await db.commit()
-    await db.close()
-
-    return Response(status_code=status.HTTP_200_OK)
 
 
 class TaskV2Minimal(BaseModel):
