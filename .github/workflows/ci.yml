@@ -78,6 +78,7 @@ jobs:
         with:
           name: coverage-data
           path: ".coverage*"
+          include-hidden-files: true
 
   tests_v2:
 
@@ -155,6 +156,7 @@ jobs:
         with:
           name: coverage-data
           path: ".coverage*"
+          include-hidden-files: true
 
 
   coverage:
