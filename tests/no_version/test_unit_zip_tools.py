@@ -134,7 +134,7 @@ def test_zip_folder_to_file_and_remove(tmp_path: Path, monkeypatch):
     assert os.listdir(tmp_path) == ["test"]
 
     _zip_folder_to_file_and_remove(test_folder)
-    assert os.listdir(tmp_path) == ["test", "test.zip"]
+    assert set(os.listdir(tmp_path)) == {"test", "test.zip"}
 
     with ZipFile(tmp_path / "test.zip", mode="r") as zipfile:
         assert "file1" in zipfile.namelist()
