@@ -28,7 +28,6 @@ from fractal_server.app.schemas.v2 import CollectionStateReadV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import TaskLegacyReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
@@ -133,22 +132,12 @@ with next(get_sync_db()) as db:
         # validate task_list
         task_list = []
         for wftask in workflow.task_list:
-            if wftask.is_legacy_task is True:
-                task_list.append(
-                    WorkflowTaskReadV2(
-                        **wftask.model_dump(),
-                        task_legacy=TaskLegacyReadV2(
-                            **wftask.task.model_dump()
-                        ),
-                    )
+            task_list.append(
+                WorkflowTaskReadV2(
+                    **wftask.model_dump(),
+                    task=TaskReadV2(**wftask.task.model_dump()),
                 )
-            else:
-                task_list.append(
-                    WorkflowTaskReadV2(
-                        **wftask.model_dump(),
-                        task=TaskReadV2(**wftask.task.model_dump()),
-                    )
-                )
+            )
 
         WorkflowReadV2(
             **workflow.model_dump(),
