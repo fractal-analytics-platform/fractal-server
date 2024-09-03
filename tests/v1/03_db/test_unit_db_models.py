@@ -70,7 +70,6 @@ async def test_tasks(db):
     assert db_task.args_schema_version is None
     assert db_task.docs_info is None
     assert db_task.docs_link is None
-    assert db_task.is_v2_compatible is False
 
     # `Task.source` has unique constraint
     broken_task = Task(**args)  # == task1

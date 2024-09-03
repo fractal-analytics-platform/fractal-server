@@ -395,7 +395,6 @@ async def failing_workflow_UnknownError(
     MockCurrentUser,
     client,
     monkeypatch,
-    legacy,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
@@ -423,18 +422,14 @@ async def failing_workflow_UnknownError(
         workflow_id = workflow.id
 
         # Create task
-        if legacy:
-            task = await task_factory(command="echo", is_v2_compatible=True)
-        else:
-            task = await task_factory_v2(
-                command_non_parallel="echo", type="non_parallel"
-            )
+        task = await task_factory_v2(
+            command_non_parallel="echo", type="non_parallel"
+        )
 
-        payload = dict(is_legacy_task=legacy)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task.id}",
-            json=payload,
+            json={},
         )
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
@@ -448,18 +443,11 @@ async def failing_workflow_UnknownError(
         def _raise_RuntimeError(*args, **kwargs):
             raise RuntimeError(ERROR_MSG)
 
-        if legacy:
-            monkeypatch.setattr(
-                fractal_server.app.runner.v2.runner,
-                "run_v1_task_parallel",
-                _raise_RuntimeError,
-            )
-        else:
-            monkeypatch.setattr(
-                fractal_server.app.runner.v2.runner,
-                "run_v2_task_non_parallel",
-                _raise_RuntimeError,
-            )
+        monkeypatch.setattr(
+            fractal_server.app.runner.v2.runner,
+            "run_v2_task_non_parallel",
+            _raise_RuntimeError,
+        )
 
         # EXECUTE WORKFLOW
         res = await client.post(

@@ -686,80 +686,6 @@ async def test_patch_workflow_task(
             assert "Cannot patch" in res.json()["detail"]
 
 
-async def test_patch_workflow_task_legacy(
-    MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory,
-    client,
-):
-    """
-    GIVEN a WorkflowTask pointing to a legacy task
-    WHEN the endpoint to PATCH a WorkflowTask is called
-    THEN the WorkflowTask is updated
-
-    In this test, we also include null non-parallel attributes in the PATCH
-    request body. They are not necessary or relevant, but we need to make
-    sure that the endpoint does not fail in this case.
-    """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        # Create task
-        legacy_task = await task_factory(is_v2_compatible=True)
-
-        # Create project and workflow
-        proj = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=proj.id)
-
-        # Add legacy task to workflow
-        res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/wftask/"
-            f"?task_id={legacy_task.id}",
-            json={"is_legacy_task": True},
-        )
-        assert res.status_code == 201
-        wf_task_id = res.json()["id"]
-
-        res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/wftask/"
-            "?task_id=123456789",
-            json={"is_legacy_task": True},
-        )
-        assert res.status_code == 404
-
-        workflow = await get_workflow(client, proj.id, wf.id)
-
-        assert workflow["task_list"][0]["args_parallel"] is None
-        assert workflow["task_list"][0]["args_non_parallel"] is None
-        assert workflow["task_list"][0]["meta_non_parallel"] is None
-        assert workflow["task_list"][0]["meta_parallel"] is None
-
-        ARGS = {"c": 333, "d": 444}
-        META = {"executor": "cpu-low"}
-        INPUT_FILTERS = {
-            "attributes": {"a": "b", "c": "d"},
-            "types": {"e": True, "f": False, "g": True},
-        }
-
-        patch_payload = dict(
-            args_non_parallel=None,
-            meta_non_parallel=None,
-            args_parallel=ARGS,
-            meta_parallel=META,
-            input_filters=INPUT_FILTERS,
-        )
-        res = await client.patch(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
-            f"wftask/{wf_task_id}/",
-            json=patch_payload,
-        )
-        debug(res.json())
-        assert res.status_code == 200
-
-        assert res.json()["args_parallel"] == ARGS
-        assert res.json()["meta_parallel"] == META
-        assert res.json()["input_filters"] == INPUT_FILTERS
-
-
 async def test_patch_workflow_task_with_args_schema(
     client, MockCurrentUser, project_factory_v2, task_factory_v2
 ):
@@ -1191,12 +1117,8 @@ async def test_import_export_workflow(
     for wftask in workflow_exported["task_list"]:
         assert "id" not in wftask
         assert "task_id" not in wftask
-        assert "task_legacy_id" not in wftask
         assert "workflow_id" not in wftask
-        if wftask["is_legacy_task"]:
-            assert "id" not in wftask["task_legacy"]
-        else:
-            assert "id" not in wftask["task"]
+        assert "id" not in wftask["task"]
     assert res.status_code == 200
 
     # Check that the exported workflow is an extension of the one in the
@@ -1218,56 +1140,6 @@ async def test_import_export_workflow(
                 task_new.pop(meta)
         debug(task_old, task_new)
         assert task_old == task_new
-
-
-async def test_task_legacy_is_v2_compatible(
-    MockCurrentUser,
-    client,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory,
-    task_factory_v2,
-):
-    # Create tasks
-    task_v1_compatible = await task_factory(
-        id=1, name="task_v1-c", source="source1", is_v2_compatible=True
-    )
-    task_v1_not_compatible = await task_factory(
-        id=2, name="task_v1-good", source="source2", is_v2_compatible=False
-    )
-    task_v2 = await task_factory_v2(id=3, name="task_v2", source="source3")
-    assert task_v1_compatible.is_v2_compatible is True
-    assert task_v1_not_compatible.is_v2_compatible is False
-
-    async with MockCurrentUser() as user:
-
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-
-        # Fail adding TaskV1 with is_v2_compatible==False
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task_v1_not_compatible.id}",
-            json=dict(is_legacy_task=True),
-        )
-        assert res.status_code == 422
-        assert "compatible" in res.json()["detail"]
-
-        # Succeed adding TaskV1 with is_v2_compatible==True
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task_v1_compatible.id}",
-            json=dict(is_legacy_task=True),
-        )
-        assert res.status_code == 201
-
-        # Succeed adding TaskV2
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task_v2.id}",
-            json=dict(),
-        )
-        assert res.status_code == 201
 
 
 async def test_export_workflow_log(

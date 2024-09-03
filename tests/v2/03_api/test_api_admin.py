@@ -486,42 +486,6 @@ async def test_download_job_logs(
         assert LOG_CONTENT in actual_logs
 
 
-async def test_flag_task_v2_compatible(
-    db,
-    client,
-    MockCurrentUser,
-    task_factory,
-):
-    task = await task_factory()
-    assert task.is_v2_compatible is False
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
-        for _ in range(2):
-            res = await client.patch(
-                f"{PREFIX}/task-v1/{task.id}/",
-                json=dict(is_v2_compatible=True),
-            )
-            assert res.status_code == 200
-            await db.refresh(task)
-            assert task.is_v2_compatible is True
-
-        for _ in range(2):
-            res = await client.patch(
-                f"{PREFIX}/task-v1/{task.id}/",
-                json=dict(is_v2_compatible=False),
-            )
-            assert res.status_code == 200
-            await db.refresh(task)
-            assert task.is_v2_compatible is False
-
-        res = await client.patch(
-            f"{PREFIX}/task-v1/{task.id + 100}/",
-            json=dict(is_v2_compatible=True),
-        )
-        assert res.status_code == 404
-
-
 async def test_task_query(
     db,
     client,
