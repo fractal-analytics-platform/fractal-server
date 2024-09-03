@@ -71,14 +71,15 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
+        env:
+          COVERAGE_FILE: "coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}"
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/no_version --ignore tests/v2
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
-          path: ".coverage*"
-          include-hidden-files: true
+          name: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
+          path: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
 
   tests_v2:
 
@@ -149,14 +150,15 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
+        env:
+          COVERAGE_FILE: "coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}"
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 tests/no_version --ignore tests/v1
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
-          path: ".coverage*"
-          include-hidden-files: true
+          name: "coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}"
+          path: "coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}"
 
 
   coverage:
@@ -181,9 +183,9 @@ jobs:
         run: python -m pip install --upgrade coverage[toml]
 
       - name: Download data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          pattern: coverage-data*
 
       - name: Add coverage comment to Pull Requests
         id: coverage_comment
