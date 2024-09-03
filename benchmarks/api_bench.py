@@ -200,7 +200,7 @@ class Benchmark:
                 self.get_metrics(
                     user,
                     path,
-                    self.client.post(path, headers=headers, json=body),
+                    self.client.post(path, headers=headers, data=body),
                 )
                 for n in range(n_requests)
             ]
