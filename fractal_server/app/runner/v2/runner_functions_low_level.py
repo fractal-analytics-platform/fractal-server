@@ -61,7 +61,6 @@ def run_single_task(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
-    is_task_v1: bool = False,
 ) -> dict[str, Any]:
     """
     Runs within an executor.
@@ -73,10 +72,7 @@ def run_single_task(
     if not workflow_dir_remote:
         workflow_dir_remote = workflow_dir_local
 
-    if is_task_v1:
-        task_name = wftask.task_legacy.name
-    else:
-        task_name = wftask.task.name
+    task_name = wftask.task.name
 
     component = args.pop(_COMPONENT_KEY_, None)
     task_files = get_task_file_paths(
@@ -92,18 +88,11 @@ def run_single_task(
         json.dump(args, f, indent=2)
 
     # Assemble full command
-    if is_task_v1:
-        full_command = (
-            f"{command} "
-            f"--json {task_files.args.as_posix()} "
-            f"--metadata-out {task_files.metadiff.as_posix()}"
-        )
-    else:
-        full_command = (
-            f"{command} "
-            f"--args-json {task_files.args.as_posix()} "
-            f"--out-json {task_files.metadiff.as_posix()}"
-        )
+    full_command = (
+        f"{command} "
+        f"--args-json {task_files.args.as_posix()} "
+        f"--out-json {task_files.metadiff.as_posix()}"
+    )
 
     try:
         _call_command_wrapper(
@@ -113,10 +102,7 @@ def run_single_task(
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
         e.workflow_task_id = wftask.id
-        if wftask.is_legacy_task:
-            e.task_name = wftask.task_legacy.name
-        else:
-            e.task_name = wftask.task.name
+        e.task_name = wftask.task.name
         raise e
 
     try:

@@ -11,7 +11,6 @@ from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v1 import Task as TaskV1
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
@@ -242,23 +241,13 @@ async def export_worfklow(
     # Emit a warning when exporting a workflow with custom tasks
     logger = set_logger(None)
     for wftask in workflow.task_list:
-        if wftask.is_legacy_task:
-            if wftask.task_legacy.owner is not None:
-                logger.warning(
-                    f"Custom tasks (like the one with "
-                    f"id={wftask.task_legacy_id} and "
-                    f"source='{wftask.task_legacy.source}') are not meant to "
-                    "be portable; re-importing this workflow may not work as "
-                    "expected."
-                )
-        else:
-            if wftask.task.owner is not None:
-                logger.warning(
-                    f"Custom tasks (like the one with id={wftask.task_id} and "
-                    f'source="{wftask.task.source}") are not meant to be '
-                    "portable; re-importing this workflow may not work as "
-                    "expected."
-                )
+        if wftask.task.owner is not None:
+            logger.warning(
+                f"Custom tasks (like the one with id={wftask.task_id} and "
+                f'source="{wftask.task.source}") are not meant to be '
+                "portable; re-importing this workflow may not work as "
+                "expected."
+            )
     reset_logger_handlers(logger)
 
     await db.close()
@@ -296,38 +285,22 @@ async def import_workflow(
 
     # Check that all required tasks are available
     source_to_id = {}
-    source_to_id_legacy = {}
 
     for wf_task in workflow.task_list:
 
-        if wf_task.is_legacy_task is True:
-            source = wf_task.task_legacy.source
-            if source not in source_to_id_legacy.keys():
-                stm = select(TaskV1).where(TaskV1.source == source)
-                tasks_by_source = (await db.execute(stm)).scalars().all()
-                if len(tasks_by_source) != 1:
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=(
-                            f"Found {len(tasks_by_source)} tasks legacy "
-                            f"with {source=}."
-                        ),
-                    )
-                source_to_id_legacy[source] = tasks_by_source[0].id
-        else:
-            source = wf_task.task.source
-            if source not in source_to_id.keys():
-                stm = select(TaskV2).where(TaskV2.source == source)
-                tasks_by_source = (await db.execute(stm)).scalars().all()
-                if len(tasks_by_source) != 1:
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=(
-                            f"Found {len(tasks_by_source)} tasks "
-                            f"with {source=}."
-                        ),
-                    )
-                source_to_id[source] = tasks_by_source[0].id
+        source = wf_task.task.source
+        if source not in source_to_id.keys():
+            stm = select(TaskV2).where(TaskV2.source == source)
+            tasks_by_source = (await db.execute(stm)).scalars().all()
+            if len(tasks_by_source) != 1:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Found {len(tasks_by_source)} tasks "
+                        f"with {source=}."
+                    ),
+                )
+            source_to_id[source] = tasks_by_source[0].id
 
     # Create new Workflow (with empty task_list)
     db_workflow = WorkflowV2(
@@ -341,15 +314,11 @@ async def import_workflow(
     # Insert tasks
 
     for wf_task in workflow.task_list:
-        if wf_task.is_legacy_task is True:
-            source = wf_task.task_legacy.source
-            task_id = source_to_id_legacy[source]
-        else:
-            source = wf_task.task.source
-            task_id = source_to_id[source]
+        source = wf_task.task.source
+        task_id = source_to_id[source]
 
         new_wf_task = WorkflowTaskCreateV2(
-            **wf_task.dict(exclude_none=True, exclude={"task", "task_legacy"})
+            **wf_task.dict(exclude_none=True, exclude={"task"})
         )
         # Insert task
         await _workflow_insert_task(

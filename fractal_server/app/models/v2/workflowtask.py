@@ -8,7 +8,6 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ..v1.task import Task
 from .task import TaskV2
 
 
@@ -37,13 +36,9 @@ class WorkflowTaskV2(SQLModel, table=True):
     )
 
     # Task
-    is_legacy_task: bool
     task_type: str
+    # TODO: Make task_id and task non-Optional, later
     task_id: Optional[int] = Field(foreign_key="taskv2.id")
     task: Optional[TaskV2] = Relationship(
-        sa_relationship_kwargs=dict(lazy="selectin")
-    )
-    task_legacy_id: Optional[int] = Field(foreign_key="task.id")
-    task_legacy: Optional[Task] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin")
     )
