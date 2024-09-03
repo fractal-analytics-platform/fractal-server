@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.11 (Unreleased)
+
+* Benchmarks:
+    * Add `GET /auth/token/login/` to tested endpoints (\#1720).
+* Testing:
+    * Update GitHub actions `upload-artifact` and `download-artifact` to `v4` (\#1725).
 
 # 2.3.10
 
