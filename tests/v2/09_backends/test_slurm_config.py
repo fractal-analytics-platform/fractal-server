@@ -153,6 +153,7 @@ def test_get_slurm_config(tmp_path: Path):
     )
     mywftask = WorkflowTaskV2Mock(
         task=mytask,
+        task_id=mytask.id,
         args_non_parallel=dict(message="test"),
         meta_non_parallel=meta_non_parallel,
     )
@@ -214,6 +215,7 @@ def test_get_slurm_config_fail(tmp_path):
     get_slurm_config(
         wftask=WorkflowTaskV2Mock(
             task=TaskV2Mock(),
+            task_id=TaskV2Mock().id,
             meta_non_parallel={},
         ),
         config_path=config_path_valid,
@@ -231,6 +233,7 @@ def test_get_slurm_config_fail(tmp_path):
         get_slurm_config(
             wftask=WorkflowTaskV2Mock(
                 task=TaskV2Mock(),
+                task_id=TaskV2Mock().id,
                 meta_non_parallel={},
             ),
             config_path=config_path_invalid,
@@ -294,6 +297,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     )
     mywftask = WorkflowTaskV2Mock(
         task=TaskV2Mock(meta_non_parallel=None),
+        task_id=TaskV2Mock(meta_non_parallel=None).id,
         args_non_parallel=dict(message="test"),
         meta_non_parallel=meta_non_parallel,
     )
@@ -335,7 +339,7 @@ def test_slurm_submit_setup(
     )
 
     # No account in `wftask.meta` --> OK
-    wftask = WorkflowTaskV2Mock(task=TaskV2Mock())
+    wftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
         workflow_dir_local=tmp_path,
@@ -349,6 +353,7 @@ def test_slurm_submit_setup(
     wftask = WorkflowTaskV2Mock(
         meta_non_parallel=dict(key="value", account="MyFakeAccount"),
         task=TaskV2Mock(),
+        task_id=TaskV2Mock().id,
     )
     with pytest.raises(SlurmConfigError) as e:
         _slurm_submit_setup(
@@ -398,7 +403,7 @@ def test_get_slurm_config_gpu_options(tmp_path: Path):
         json.dump(slurm_config_dict, f)
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
-    mywftask = WorkflowTaskV2Mock(task=TaskV2Mock())
+    mywftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
     slurm_config = get_slurm_config(
         wftask=mywftask,
         config_path=config_path,
@@ -410,7 +415,9 @@ def test_get_slurm_config_gpu_options(tmp_path: Path):
 
     # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
     mywftask = WorkflowTaskV2Mock(
-        meta_non_parallel=dict(needs_gpu=True), task=TaskV2Mock()
+        meta_non_parallel=dict(needs_gpu=True),
+        task=TaskV2Mock(),
+        task_id=TaskV2Mock().id,
     )
     slurm_config = get_slurm_config(
         wftask=mywftask,

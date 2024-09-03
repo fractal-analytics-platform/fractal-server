@@ -52,6 +52,7 @@ def test_parallelize_on_no_images(tmp_path: Path, executor: Executor):
                     id=0,
                     source="source",
                 ),
+                task_id=0,
                 id=0,
                 order=0,
             )
@@ -86,6 +87,7 @@ def test_parallelize_on_no_images_compound(tmp_path: Path, executor: Executor):
                     id=0,
                     source="source",
                 ),
+                task_id=0,
                 id=0,
                 order=0,
             )
