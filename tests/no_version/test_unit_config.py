@@ -193,6 +193,8 @@ def test_settings_check(
     settings_dict: dict[str, str], raises: bool, testdata_path: Path
 ):
 
+    debug(settings_dict, raises)
+
     # Workaround to set FRACTAL_SLURM_CONFIG_FILE to a valid path, which
     # requires the value of testdata_path
     if (

@@ -338,8 +338,6 @@ async def test_post_worfkflow_task(
         workflow = await get_workflow(client, project.id, wf_id)
         task_list = workflow["task_list"]
         assert len(task_list) == 4
-        for wftask in task_list:
-            assert wftask["is_legacy_task"] is False
         assert task_list[0]["task"]["name"] == "task0"
         assert task_list[1]["task"]["name"] == "task0b"
         assert task_list[2]["task"]["name"] == "task1"

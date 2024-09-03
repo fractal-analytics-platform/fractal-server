@@ -17,18 +17,6 @@
             "task": {
                 "source": "PKG_SOURCE:dummy2"
             }
-        },
-        {
-            "args_parallel": {
-                "message": "task",
-                "arg": "value"
-            },
-            "meta_parallel": {"key": "value"},
-            "order": 1,
-            "is_legacy_task": true,
-            "task_legacy": {
-                "source": "PKG_SOURCE:dummy1"
-            }
         }
     ]
 }
