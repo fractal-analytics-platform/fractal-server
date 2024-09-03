@@ -6,6 +6,7 @@ from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import TaskCollectPipV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
@@ -116,10 +117,12 @@ def test_workflow_task_dump():
         workflow_id=1,
         input_filters=Filters(),
         task_id=1,
-    )
-    with pytest.raises(ValidationError, match="none"):
-        WorkflowTaskDumpV2(
+        task=TaskDumpV2(
             id=1,
-            workflow_id=1,
-            input_filters=Filters(),
-        )
+            name="name",
+            type="type",
+            source="source",
+            input_types={},
+            output_types={},
+        ),
+    )
