@@ -189,8 +189,6 @@ jobs:
           merge-multiple: true
 
       - name: Combine coverage
-        env:
-          COVERAGE_FILE: .coverage
         run: coverage combine coverage-data-*
 
       - name: Add coverage comment to Pull Requests
