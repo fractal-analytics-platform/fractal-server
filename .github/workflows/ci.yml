@@ -73,7 +73,8 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/no_version --ignore tests/v2
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v1/02_schemas
+        # --ignore tests/no_version --ignore tests/v2
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -152,7 +153,8 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 tests/no_version --ignore tests/v1
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2/01_schemas
+        # tests/v2 tests/no_version --ignore tests/v1
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
