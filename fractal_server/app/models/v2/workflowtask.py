@@ -37,7 +37,5 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     # Task
     task_type: str
-    task_id: Optional[int] = Field(foreign_key="taskv2.id")  # FIXME 1712
-    task: Optional[TaskV2] = Relationship(  # FIXME 1712
-        sa_relationship_kwargs=dict(lazy="selectin")
-    )
+    task_id: int = Field(foreign_key="taskv2.id")
+    task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
