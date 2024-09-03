@@ -35,17 +35,21 @@ USERS = [
 N_REQUESTS = 25
 
 ENDPOINTS = [
-    dict(verb="GET", path="/api/alive/", body=None),
-    dict(verb="GET", path="/api/v2/dataset/", body=None),
-    dict(verb="GET", path="/api/v2/job/", body=None),
-    dict(verb="GET", path="/api/v2/project/", body=None),
-    dict(verb="GET", path="/api/v2/workflow/", body=None),
+    dict(verb="GET", path="/api/alive/"),
+    dict(verb="GET", path="/api/v2/dataset/"),
+    dict(verb="GET", path="/api/v2/job/"),
+    dict(verb="GET", path="/api/v2/project/"),
+    dict(verb="GET", path="/api/v2/workflow/"),
     dict(
         verb="POST",
         path="/api/v2/project/$project_id$/dataset/$dataset_id$/images/query/",
-        body=None,
     ),
-    dict(verb="GET", path="/auth/current-user/", body=None),
+    dict(verb="GET", path="/auth/current-user/"),
+    dict(
+        verb="POST",
+        path="/auth/token/login/",
+        data=dict(username=USERS[0].name, password=USERS[0].password),
+    ),
 ]
 
 
@@ -190,14 +194,20 @@ class Benchmark:
             ]
         elif verb == "POST":
             path = self._replace_path_params(headers, path)
-            body = endpoint.get("body")
+            request_json = endpoint.get("json")
+            request_data = endpoint.get("data")
             metrics_list = [
                 self.get_metrics(
                     user,
                     path,
-                    self.client.post(path, headers=headers, json=body),
+                    self.client.post(
+                        path,
+                        headers=headers,
+                        json=request_json,
+                        data=request_data,
+                    ),
                 )
-                for n in range(n_requests)
+                for _ in range(n_requests)
             ]
 
         # dicts with two keys -> key to sum (time, size)
