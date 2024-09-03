@@ -50,56 +50,29 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    is_legacy_task: Optional[bool]
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
-    task: Optional[TaskV2Mock] = None
-    task_legacy: Optional[TaskV1Mock] = None
-    is_legacy_task: bool = False
+    task: TaskV2Mock
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int = 0
     id: int = 1
     workflow_id: int = 0
-    task_legacy_id: Optional[int]
-    task_id: Optional[int]
-
-    @root_validator(pre=False)
-    def _legacy_or_not(cls, values):
-        is_legacy_task = values["is_legacy_task"]
-        task = values.get("task")
-        task_legacy = values.get("task_legacy")
-        if is_legacy_task:
-            if task_legacy is None or task is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_legacy_id"] = task_legacy.id
-        else:
-            if task is None or task_legacy is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_id"] = task.id
-        return values
+    task_id: int
 
     @root_validator(pre=False)
     def merge_meta(cls, values):
-        if values["is_legacy_task"]:
-            task_meta = values["task"].meta
-            if task_meta:
-                values["meta"] = {
-                    **task_meta,
-                    **values["meta"],
-                }
-        else:
-            task_meta_parallel = values["task"].meta_parallel
-            if task_meta_parallel:
-                values["meta_parallel"] = {
-                    **task_meta_parallel,
-                    **values["meta_parallel"],
-                }
-            task_meta_non_parallel = values["task"].meta_non_parallel
-            if task_meta_non_parallel:
-                values["meta_non_parallel"] = {
-                    **task_meta_non_parallel,
-                    **values["meta_non_parallel"],
-                }
+        task_meta_parallel = values["task"].meta_parallel
+        if task_meta_parallel:
+            values["meta_parallel"] = {
+                **task_meta_parallel,
+                **values["meta_parallel"],
+            }
+        task_meta_non_parallel = values["task"].meta_non_parallel
+        if task_meta_non_parallel:
+            values["meta_non_parallel"] = {
+                **task_meta_non_parallel,
+                **values["meta_non_parallel"],
+            }
         return values
 
 

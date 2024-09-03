@@ -14,7 +14,6 @@ from v2_mock_models import WorkflowTaskV2Mock
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
-from fractal_server.logger import set_logger
 
 
 def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
@@ -24,14 +23,9 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
     )
 
     for wftask in wf_task_list:
-        if wftask.task is not None:
-            subfolder = workflow_dir_local / task_subfolder_name(
-                order=wftask.order, task_name=wftask.task.name
-            )
-        else:
-            subfolder = workflow_dir_local / task_subfolder_name(
-                order=wftask.order, task_name=wftask.task_legacy.name
-            )
+        subfolder = workflow_dir_local / task_subfolder_name(
+            order=wftask.order, task_name=wftask.task.name
+        )
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
@@ -740,78 +734,3 @@ def test_invalid_filtered_image_list(
             **execute_tasks_v2_args,
         )
     assert "Invalid filtered image list" in str(e.value)
-
-
-def test_legacy_task(
-    tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
-    fractal_tasks_mock_venv_legacy,
-    override_settings_factory,
-):
-    """
-    Run a workflow that includes V2 and V1 tasks.
-    """
-
-    # Set up logger
-    override_settings_factory(FRACTAL_LOGGING_LEVEL=logging.INFO)
-    logger_name = "test_legacy_task"
-    log_file_path = (tmp_path / "log").as_posix()
-    set_logger(
-        logger_name=logger_name,
-        log_file_path=log_file_path,
-    )
-
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-        logger_name=logger_name,
-    )
-
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset_attrs = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTaskV2Mock(
-                task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
-                args_non_parallel=dict(image_dir="/tmp/input_images"),
-                id=0,
-                order=0,
-            )
-        ],
-        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
-        **execute_tasks_v2_args,
-    )
-
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound"
-    ]
-    assert dataset_attrs["filters"]["attributes"] == {}
-    assert dataset_attrs["filters"]["types"] == {}
-    _assert_image_data_exist(dataset_attrs["images"])
-    assert len(dataset_attrs["images"]) == 2
-
-    dataset_attrs = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTaskV2Mock(
-                task_legacy=fractal_tasks_mock_venv_legacy["dummy parallel"],
-                is_legacy_task=True,
-                id=1,
-                order=1,
-            )
-        ],
-        dataset=DatasetV2Mock(
-            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
-        ),
-        **execute_tasks_v2_args,
-    )
-
-    assert len(dataset_attrs["history"]) == 1
-    assert dataset_attrs["history"][0]["status"] == "done"
-    assert dataset_attrs["history"][0]["workflowtask"]["is_legacy_task"]
-
-    # Check logs
-    with open(log_file_path, "r") as f:
-        lines = f.read()
-    assert 'SUBMIT 1-th task (legacy, name="dummy parallel")' in lines
-    assert 'END    1-th task (name="dummy parallel")' in lines
