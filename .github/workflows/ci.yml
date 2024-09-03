@@ -153,6 +153,7 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}
+
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2/01_schemas
         # tests/v2 tests/no_version --ignore tests/v1
 
@@ -190,14 +191,14 @@ jobs:
           pattern: coverage-data-*
           merge-multiple: true
 
-      - name: L S
-        run: ls -lh
+      - name: Combine coverage
+        env:
+          COVERAGE_FILE: .coverage
+        run: coverage combine coverage-data-*
 
       - name: Add coverage comment to Pull Requests
         id: coverage_comment
         uses: py-cov-action/python-coverage-comment-action@v3
-        env:
-          COVERAGE_FILE: coverage-data-v
         with:
           GITHUB_TOKEN: ${{ github.token }}
           MERGE_COVERAGE_FILES: true
