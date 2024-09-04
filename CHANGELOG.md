@@ -2,6 +2,8 @@
 
 # 2.3.11 (Unreleased)
 
+* SSH runner:
+    * Move remote-folder creation from `submit_workflow` to more specific `_process_workflow` (\#1728).
 * Benchmarks:
     * Add `GET /auth/token/login/` to tested endpoints (\#1720).
 * Testing:
