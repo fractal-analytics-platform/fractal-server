@@ -55,6 +55,8 @@ async def test_workflow_with_non_python_task_slurm_ssh(
         tmp777_path=tmp777_path,
     )
 
+    app.state.fractal_ssh.close()
+
 
 async def test_workflow_with_non_python_task_slurm_ssh_fail(
     client,
