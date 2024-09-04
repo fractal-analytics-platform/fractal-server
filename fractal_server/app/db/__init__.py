@@ -2,6 +2,7 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
+import sqlite3
 from typing import AsyncGenerator
 from typing import Generator
 
@@ -21,7 +22,9 @@ from ...syringe import Inject
 logger = set_logger(__name__)
 
 SQLITE_WARNING_MESSAGE = (
-    "SQLite is supported (for version >=3.37) but discouraged in production. "
+    "SQLite is supported (supported version >=3.37, "
+    f"current {sqlite3.sqlite_version=}) "
+    "but discouraged in production. "
     "Given its partial support for ForeignKey constraints, "
     "database consistency cannot be guaranteed."
 )
