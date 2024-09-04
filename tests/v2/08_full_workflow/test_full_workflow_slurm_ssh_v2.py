@@ -107,3 +107,5 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     )
     assert "Could not create" in job_logs
     assert "via SSH" in job_logs
+
+    app.state.fractal_ssh.close()
