@@ -508,7 +508,15 @@ async def workflow_with_non_python_task(
     task_factory_v2,
     tmp777_path: Path,
     additional_user_kwargs=None,
-):
+    this_should_fail: bool = False,
+) -> str:
+    """
+    Run a non-python-task Fractal job.
+
+    Returns:
+        String with job logs.
+    """
+
     user_kwargs = {"is_verified": True}
     if additional_user_kwargs is not None:
         user_kwargs.update(additional_user_kwargs)
@@ -571,6 +579,10 @@ async def workflow_with_non_python_task(
         job_status_data = res.json()
         debug(job_status_data)
 
+        if this_should_fail:
+            assert job_status_data["status"] == "failed"
+            return job_status_data["log"]
+
         assert job_status_data["status"] == "done"
         debug(job_status_data["end_timestamp"])
         assert job_status_data["end_timestamp"]
@@ -599,3 +611,5 @@ async def workflow_with_non_python_task(
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
+
+        return job_status_data["log"]
