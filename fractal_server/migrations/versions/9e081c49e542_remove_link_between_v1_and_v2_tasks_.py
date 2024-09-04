@@ -42,6 +42,11 @@ def upgrade() -> None:
         batch_op.drop_column("is_v2_compatible")
 
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
+        batch_op.drop_constraint(
+            "fk_workflowtaskv2_task_legacy_id_task",
+        )
+
+    with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
         batch_op.alter_column(
             "task_id", existing_type=sa.INTEGER(), nullable=False
         )
