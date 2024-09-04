@@ -45,9 +45,6 @@ def upgrade() -> None:
         batch_op.alter_column(
             "task_id", existing_type=sa.INTEGER(), nullable=False
         )
-        batch_op.drop_constraint(
-            "fk_workflowtaskv2_task_legacy_id_task",
-        )
         batch_op.drop_column("task_legacy_id")
         batch_op.drop_column("is_legacy_task")
 
