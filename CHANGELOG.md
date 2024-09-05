@@ -1,7 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.11 (Unreleased)
+# 2.3.11
 
+* SSH runner:
+    * Move remote-folder creation from `submit_workflow` to more specific `_process_workflow` (\#1728).
 * Benchmarks:
     * Add `GET /auth/token/login/` to tested endpoints (\#1720).
 * Testing:
