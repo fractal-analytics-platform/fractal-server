@@ -95,7 +95,6 @@ def test_user_create():
 
 
 def test_user_update_strict():
-
     with pytest.raises(ValidationError):
         UserUpdateStrict(slurm_accounts=[42, "Foo"])
     with pytest.raises(ValidationError):
@@ -108,3 +107,39 @@ def test_user_update_strict():
         UserUpdateStrict(slurm_accounts=["a", "b", "a"])
     UserUpdateStrict(slurm_accounts=None)
     UserUpdateStrict(slurm_accounts=["a", "b", "c"])
+
+
+def test_user_group_create():
+    g = UserGroupCreate(name="group1")
+    assert g.user_ids == []
+
+    g = UserGroupCreate(name="group1", user_ids=[1, 2, 3])
+
+    with pytest.raises(ValidationError):
+        UserGroupCreate(user_ids=[1, 2, 3])
+    with pytest.raises(ValidationError):
+        UserGroupCreate(name="group1", user_ids=[1, 2, 3], something="else")
+
+
+def test_user_group_update():
+    # Successes
+
+    g = UserGroupUpdate()
+    assert g.new_user_ids == []
+
+    UserGroupUpdate(new_user_ids=[1])
+
+    UserGroupUpdate(new_user_ids=[1, 2, 3])
+
+    # Failures
+
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(name="new name")
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(name="new name", new_user_ids=[1, 2, 3])
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(arbitrary_key="something")
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(new_user_ids=["user@example.org"])
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(new_user_ids=[dict(email="user@example.org")])
