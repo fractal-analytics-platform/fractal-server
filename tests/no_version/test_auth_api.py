@@ -393,7 +393,6 @@ async def test_delete_user(registered_client, registered_superuser_client):
 @pytest.mark.parametrize("username", ("my_username", None))
 @pytest.mark.parametrize("slurm_user", ("test01", None))
 async def test_MockCurrentUser_fixture(
-    db,
     MockCurrentUser,
     cache_dir,
     username,
