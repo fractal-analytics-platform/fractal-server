@@ -33,6 +33,8 @@ from ..security import get_user_manager
 from ..security import token_backend
 from ..security import UserManager
 from .aux._auth import _get_single_group_with_user_ids
+from .aux._auth import _get_single_user_with_group_ids
+from .aux._auth import _get_single_user_with_group_names
 
 router_auth = APIRouter()
 
@@ -48,27 +50,52 @@ router_auth.include_router(
     dependencies=[Depends(current_active_superuser)],
 )
 
-users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+# users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+# fractal_server/app/routes/auth.py:58 <module>
+#     users_router.routes: [
+#         APIRoute(path='/me', name='users:current_user', methods=['GET']),
+#         APIRoute(path='/me', name='users:patch_current_user', methods=['PATCH']),
+#         APIRoute(path='/{id}', name='users:user', methods=['GET']),
+#         APIRoute(path='/{id}', name='users:patch_user', methods=['PATCH']),
+#         APIRoute(path='/{id}', name='users:delete_user', methods=['DELETE']),
+#     ] (list) len=5
+
 
 # We remove `/auth/users/me` endpoints to implement our own
 # at `/auth/current-user/`.
 # We also remove `DELETE /auth/users/{user_id}`
 # (ref https://github.com/fastapi-users/fastapi-users/discussions/606)
-users_router.routes = [
-    route
-    for route in users_router.routes
-    if route.name
-    not in [
-        "users:current_user",
-        "users:delete_user",
-        "users:patch_current_user",
-    ]
-]
-router_auth.include_router(
-    users_router,
-    prefix="/users",
-    dependencies=[Depends(current_active_superuser)],
-)
+# users_router.routes = [
+#     route
+#     for route in users_router.routes
+#     if route.name
+#     not in [
+#         "users:current_user",
+#         "users:delete_user",
+#         "users:patch_current_user",
+#     ]
+# ]
+# router_auth.include_router(
+#     users_router,
+#     prefix="/users",
+#     dependencies=[Depends(current_active_superuser)],
+# )
+
+
+@router_auth.get("/current-user/", response_model=UserRead)
+async def get_current_user(
+    group_names: bool = False,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Return current user
+    """
+    if group_names is True:
+        user_with_groups = await _get_single_user_with_group_names(user, db)
+        return user_with_groups
+    else:
+        return user
 
 
 @router_auth.patch("/current-user/", response_model=UserRead)
@@ -76,6 +103,7 @@ async def patch_current_user(
     user_update: UserUpdateStrict,
     current_user: User = Depends(current_active_user),
     user_manager: UserManager = Depends(get_user_manager),
+    db: AsyncSession = Depends(get_async_db),
 ):
     update = UserUpdate(**user_update.dict(exclude_unset=True))
 
@@ -89,15 +117,62 @@ async def patch_current_user(
                 "reason": e.reason,
             },
         )
-    return schemas.model_validate(User, user)
+    patched_user = schemas.model_validate(User, user)
+    patched_user_with_group_names = await _get_single_user_with_group_names(
+        patched_user, db
+    )
+
+    return patched_user_with_group_names
 
 
-@router_auth.get("/current-user/", response_model=UserRead)
-async def get_current_user(user: User = Depends(current_active_user)):
-    """
-    Return current user
-    """
+async def _user_or_404(user_id: int, db: AsyncSession) -> User:
+    stm = select(User).where(User.id == user_id)
+    res = await db.execute(stm)
+    user = res.scalars().one_or_none()
+    if user is None:
+        raise HTTPException(
+            status=status.HTTP_404_NOT_FOUND, detail="User not found."
+        )
     return user
+
+
+@router_auth.get("/users/{user_id}/", response_model=UserRead)
+async def get_user(
+    user_id: int,
+    superuser: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserRead:
+    user = _user_or_404(user_id, db)
+    user_with_group_ids = _get_single_user_with_group_ids(user)
+    return user_with_group_ids
+
+
+@router_auth.patch("/users/{user_id}/", response_model=UserRead)
+async def patch_user(
+    user_id: int,
+    user_update: UserUpdate,
+    current_user: User = Depends(current_active_user),
+    user_manager: UserManager = Depends(get_user_manager),
+    db: AsyncSession = Depends(get_async_db),
+):
+
+    user_to_patch = _user_or_404(user_id, db)
+    try:
+        user = await user_manager.update(user_update, user_to_patch, safe=True)
+    except exceptions.InvalidPasswordException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
+                "reason": e.reason,
+            },
+        )
+    patched_user = schemas.model_validate(User, user)
+    patched_user_with_group_ids = await _get_single_user_with_group_ids(
+        patched_user, db
+    )
+
+    return patched_user_with_group_ids
 
 
 @router_auth.get("/users/", response_model=list[UserRead])

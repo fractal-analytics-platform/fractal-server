@@ -5,7 +5,44 @@ from sqlmodel import select
 
 from ...models.linkusergroup import LinkUserGroup
 from ...models.security import UserGroup
+from ...models.security import UserOAuth as User
+from ...schemas.user import UserRead
 from ...schemas.user_group import UserGroupRead
+
+
+async def _get_single_user_with_group_names(
+    user: User,
+    db: AsyncSession,
+) -> UserRead:
+    """
+    FIXME GROUPS: ...
+    """
+    stm_groups = (
+        select(UserGroup)
+        .join(LinkUserGroup)
+        .where(LinkUserGroup.user_id == User.id)
+    )
+    res = await db.execute(stm_groups)
+    groups = res.scalars().all()
+    group_names = [group.name for group in groups]
+    return UserRead(**user.model_dump(), group_names=group_names)
+
+
+async def _get_single_user_with_group_ids(
+    user: User,
+    db: AsyncSession,
+) -> UserRead:
+    """
+    FIXME GROUPS: ...
+    """
+
+    # Get all user/group links
+    stm_links = select(LinkUserGroup).where(LinkUserGroup.user_id == user.id)
+    res = await db.execute(stm_links)
+    links = res.scalars().all()
+    group_ids = [link.group_id for link in links]
+
+    return UserRead(**user.model_dump(), group_ids=group_ids)
 
 
 async def _get_single_group_with_user_ids(
