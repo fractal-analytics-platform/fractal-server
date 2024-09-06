@@ -23,7 +23,7 @@ async def _get_single_user_with_group_names(
         .where(LinkUserGroup.user_id == User.id)
     )
     res = await db.execute(stm_groups)
-    groups = res.scalars().all()
+    groups = res.scalars().unique().all()
     group_names = [group.name for group in groups]
     return UserRead(**user.model_dump(), group_names=group_names)
 
@@ -39,7 +39,7 @@ async def _get_single_user_with_group_ids(
     # Get all user/group links
     stm_links = select(LinkUserGroup).where(LinkUserGroup.user_id == user.id)
     res = await db.execute(stm_links)
-    links = res.scalars().all()
+    links = res.scalars().unique().all()
     group_ids = [link.group_id for link in links]
 
     return UserRead(**user.model_dump(), group_ids=group_ids)
