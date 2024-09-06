@@ -35,6 +35,52 @@ async def test_delete_user_group_not_allowed(registered_superuser_client):
     assert res.status_code == 405
 
 
+async def test_create_group_invalid_user(registered_superuser_client):
+    """
+    Creating or modifying a group with an invalid user ID returns a 404.
+    """
+
+    # Preliminary: register one new users
+    credentials_user_A = dict(email="aaa@example.org", password="12345")
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=credentials_user_A
+    )
+    assert res.status_code == 201
+    user_A_id = res.json()["id"]
+
+    # Preliminary: get all groups (i.e. only the default one)
+    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
+    assert res.status_code == 200
+    groups_data = res.json()
+    assert len(groups_data) == 1
+    default_group_id = groups_data[0]["id"]
+
+    # Preliminary: check that default group has two users
+    group_data = groups_data[0]
+    assert len(group_data["user_ids"]) == 2  # FIXME: depends on DB structure
+
+    # Create a new group with a valid and an invalid user
+    invalid_user_id = 99999999
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/groups/",
+        json=dict(name="name", user_ids=[user_A_id, invalid_user_id]),
+    )
+    assert res.status_code == 404
+
+    # Check that group was not created
+    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
+    assert res.status_code == 200
+    groups_data = res.json()
+    assert len(groups_data) == 1
+
+    # Patch an existing group by adding an invalid user
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_group_id}",
+        json=dict(new_user_ids=[invalid_user_id]),
+    )
+    assert res.status_code == 404
+
+
 async def test_user_group_crud(registered_superuser_client):
     """
     Test basic working of POST/GET/PATCH for user groups.
@@ -69,7 +115,9 @@ async def test_user_group_crud(registered_superuser_client):
     group_2_id = res.json()["id"]
 
     # Get group 1
-    res = await res.get(f"{PREFIX}/group/{group_1_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/{group_1_id}/"
+    )
     assert res.status_code == 200
     group_data = res.json()
     assert set(group_data["user_ids"]) == {
@@ -77,7 +125,9 @@ async def test_user_group_crud(registered_superuser_client):
     }  # FIXME: this depends on DB structure
 
     # Get group 2
-    res = await res.get(f"{PREFIX}/group/{group_2_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/{group_2_id}/"
+    )
     assert res.status_code == 200
     group_data = res.json()
     assert set(group_data["user_ids"]) == {
@@ -86,18 +136,20 @@ async def test_user_group_crud(registered_superuser_client):
     }  # FIXME: this depends on DB structure
 
     # Get all groups (group 1, group 2 and the default one)
-    res = await res.get(f"{PREFIX}/groups/")
+    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
     assert res.status_code == 200
     groups_data = res.json()
     assert len(groups_data) == 3
     # FIXME: add assertions
 
     # Patch group 1, by adding new member
-    res = await res.patch(
+    res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{group_1_id}", json=dict(new_user_ids=[user_B_id])
     )
     # Get group 1
-    res = await res.get(f"{PREFIX}/group/{group_1_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/{group_1_id}/"
+    )
     assert res.status_code == 200
     group_data = res.json()
     assert set(group_data["user_ids"]) == {
@@ -106,11 +158,13 @@ async def test_user_group_crud(registered_superuser_client):
     }  # FIXME: this depends on DB structure
 
     # Patch group 1, by re-adding existing member
-    res = await res.patch(
+    res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{group_1_id}", json=dict(new_user_ids=[user_B_id])
     )
     # Get group 1
-    res = await res.get(f"{PREFIX}/group/{group_1_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/{group_1_id}/"
+    )
     assert res.status_code == 200
     group_data = res.json()
     assert len(group_data["user_ids"]) == 2
