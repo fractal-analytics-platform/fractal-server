@@ -10,21 +10,21 @@ async def test_no_access_user_group_api(client, registered_client):
     Verify that anonymous or non-superuser users have no access to user-group
     CRUD.
     """
-    for _client in [client, registered_client]:
-        res = await _client.get(f"{PREFIX}/groups/")
-        assert res.status_code == 401
+    for _client, expected_status in [(client, 401), (registered_client, 403)]:
+        res = await _client.get(f"{PREFIX}/group/")
+        assert res.status_code == expected_status
 
-        res = await _client.post(f"{PREFIX}/groups/")
-        assert res.status_code == 401
+        res = await _client.post(f"{PREFIX}/group/")
+        assert res.status_code == expected_status
 
         res = await _client.get(f"{PREFIX}/group/1/")
-        assert res.status_code == 401
+        assert res.status_code == expected_status
 
         res = await _client.patch(f"{PREFIX}/group/1/")
-        assert res.status_code == 401
+        assert res.status_code == expected_status
 
         res = await _client.delete(f"{PREFIX}/group/1/")
-        assert res.status_code == 401
+        assert res.status_code == expected_status
 
 
 async def test_delete_user_group_not_allowed(registered_superuser_client):
@@ -36,12 +36,12 @@ async def test_delete_user_group_not_allowed(registered_superuser_client):
     assert res.status_code == 405
 
 
-async def test_create_group_invalid_user(registered_superuser_client):
+async def test_update_group(registered_superuser_client):
     """
-    Creating or modifying a group with an invalid user ID returns a 404.
+    Modifying a group with an invalid user ID returns a 404.
     """
 
-    # Preliminary: register one new users
+    # Preliminary: register a new user
     credentials_user_A = dict(email="aaa@example.org", password="12345")
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=credentials_user_A
@@ -49,37 +49,37 @@ async def test_create_group_invalid_user(registered_superuser_client):
     assert res.status_code == 201
     user_A_id = res.json()["id"]
 
-    # Preliminary: get all groups (i.e. only the default one)
-    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
-    assert res.status_code == 200
-    groups_data = res.json()
-    assert len(groups_data) == 1
-    default_group_id = groups_data[0]["id"]
-
-    # Preliminary: check that default group has two users
-    group_data = groups_data[0]
-    assert len(group_data["user_ids"]) == 2  # FIXME: depends on DB structure
-
-    # Create a new group with a valid and an invalid user
-    invalid_user_id = 99999999
+    # Preliminary: create a group
     res = await registered_superuser_client.post(
-        f"{PREFIX}/groups/",
-        json=dict(name="name", user_ids=[user_A_id, invalid_user_id]),
+        f"{PREFIX}/group/", json=dict(name="group1")
     )
-    assert res.status_code == 404
+    assert res.status_code == 201
+    group_data = res.json()
+    group_id = group_data["id"]
+    assert group_data["user_ids"] == []
 
-    # Check that group was not created
-    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
-    assert res.status_code == 200
-    groups_data = res.json()
-    assert len(groups_data) == 1
-
-    # Patch an existing group by adding an invalid user
+    # Patch an existing group by adding both valid and invalid users
+    invalid_user_id = 99999
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{default_group_id}",
-        json=dict(new_user_ids=[invalid_user_id]),
+        f"{PREFIX}/group/{group_id}/",
+        json=dict(new_user_ids=[user_A_id, invalid_user_id]),
     )
     assert res.status_code == 404
+
+    # Check that group was not updated
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/{group_id}/",
+    )
+    assert res.status_code == 200
+    assert res.json()["user_ids"] == []
+
+    # Patch an existing group by adding a valid users
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_id}/",
+        json=dict(new_user_ids=[user_A_id]),
+    )
+    assert res.status_code == 200
+    assert res.json()["user_ids"] == [user_A_id]
 
 
 async def test_user_group_crud(registered_superuser_client):
@@ -96,83 +96,60 @@ async def test_user_group_crud(registered_superuser_client):
     assert res.status_code == 201
     user_A_id = res.json()["id"]
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", credentials_user_B
+        f"{PREFIX}/register/", json=credentials_user_B
     )
     assert res.status_code == 201
     user_B_id = res.json()["id"]
 
     # Create group 1 with user A
     res = await registered_superuser_client.post(
-        f"{PREFIX}/groups/", json=dict(name="group 1", user_ids=[user_A_id])
+        f"{PREFIX}/group/", json=dict(name="group 1")
     )
     assert res.status_code == 201
     group_1_id = res.json()["id"]
+
     # Create group 2 with users A and B
     res = await registered_superuser_client.post(
-        f"{PREFIX}/groups/",
-        json=dict(name="group 2", user_ids=[user_A_id, user_B_id]),
+        f"{PREFIX}/group/",
+        json=dict(name="group 2"),
     )
     assert res.status_code == 201
     group_2_id = res.json()["id"]
 
-    # Get group 1
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/group/{group_1_id}/"
+    # Add user A to group 1
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_1_id}/",
+        json=dict(new_user_ids=[user_A_id, user_B_id]),
     )
     assert res.status_code == 200
-    group_data = res.json()
-    assert set(group_data["user_ids"]) == {
-        user_A_id
-    }  # FIXME: this depends on DB structure
-
-    # Get group 2
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/group/{group_2_id}/"
+    # Add user B to group 2
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_2_id}/", json=dict(new_user_ids=[user_B_id])
     )
     assert res.status_code == 200
-    group_data = res.json()
-    assert set(group_data["user_ids"]) == {
-        user_A_id,
-        user_B_id,
-    }  # FIXME: this depends on DB structure
 
-    # Get all groups (group 1, group 2 and the default one)
-    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
+    # Get all groups (group 1, group 2)
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/?user_ids=true"
+    )
     assert res.status_code == 200
     groups_data = res.json()
-    assert len(groups_data) == 3
-    # FIXME: add assertions
+    assert len(groups_data) == 2
+    for group in groups_data:
+        if group["name"] == "group 1":
+            assert set(group["user_ids"]) == {user_A_id, user_B_id}
+        elif group["name"] == "group 2":
+            assert group["user_ids"] == [user_B_id]
+        else:
+            raise RuntimeError("Wrong branch.")
 
-    # Patch group 1, by adding new member
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_1_id}", json=dict(new_user_ids=[user_B_id])
-    )
-    # Get group 1
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/group/{group_1_id}/"
-    )
+    # Get all groups (group 1, group 2) without user_ids
+    res = await registered_superuser_client.get(f"{PREFIX}/group/")
     assert res.status_code == 200
-    group_data = res.json()
-    assert set(group_data["user_ids"]) == {
-        user_A_id,
-        user_B_id,
-    }  # FIXME: this depends on DB structure
-
-    # Patch group 1, by re-adding existing member
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_1_id}", json=dict(new_user_ids=[user_B_id])
-    )
-    # Get group 1
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/group/{group_1_id}/"
-    )
-    assert res.status_code == 200
-    group_data = res.json()
-    assert len(group_data["user_ids"]) == 2
-    assert set(group_data["user_ids"]) == {
-        user_A_id,
-        user_B_id,
-    }  # FIXME: this depends on DB structure
+    groups_data = res.json()
+    assert len(groups_data) == 2
+    for group in groups_data:
+        assert group["user_ids"] is None
 
 
 async def test_get_user_group_names(
@@ -190,6 +167,7 @@ async def test_get_user_group_names(
     assert res.status_code == 201
     debug(res.json())
     EXPECTED_GROUP_NAMES = [GROUP_NAME]
+    debug(EXPECTED_GROUP_NAMES)
 
     # Anonymous user cannot see group names
     res = await client.get(f"{PREFIX}/group-names/")

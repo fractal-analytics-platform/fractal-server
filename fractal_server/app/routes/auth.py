@@ -9,6 +9,7 @@ from fastapi_users import exceptions
 from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col
 from sqlmodel import select
 
 from ...config import get_settings
@@ -31,6 +32,7 @@ from ..security import fastapi_users
 from ..security import get_user_manager
 from ..security import token_backend
 from ..security import UserManager
+from .aux._auth import _get_single_group_with_user_ids
 
 router_auth = APIRouter()
 
@@ -166,6 +168,7 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
     "/group/", response_model=list[UserGroupRead], status_code=200
 )
 async def get_list_user_groups(
+    user_ids: bool = False,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
@@ -177,43 +180,29 @@ async def get_list_user_groups(
     stm_all_groups = select(UserGroup)
     res = await db.execute(stm_all_groups)
     groups = res.scalars().all()
-    # Get all user/group links
-    stm_all_links = select(LinkUserGroup)
-    res = await db.execute(stm_all_links)
-    links = res.scalars().all()
 
-    # FIXME GROUPS: this must be optimized
-    for ind, group in enumerate(groups):
-        groups[ind] = dict(
-            group.model_dump(),
-            user_ids=[
-                link.user_id for link in links if link.group_id == group.id
-            ],
-        )
+    if user_ids is True:
+        # Get all user/group links
+        stm_all_links = select(LinkUserGroup)
+        res = await db.execute(stm_all_links)
+        links = res.scalars().all()
+
+        # FIXME GROUPS: this must be optimized
+        for ind, group in enumerate(groups):
+            groups[ind] = dict(
+                group.model_dump(),
+                user_ids=[
+                    link.user_id for link in links if link.group_id == group.id
+                ],
+            )
 
     return groups
 
 
-async def _get_single_group_with_user_ids(
-    group_id: int, db: AsyncSession
-) -> UserGroupRead:
-    # Get single group
-    stm_group = select(UserGroup).where(UserGroup.id == group_id)
-    res = await db.execute(stm_group)
-    group = res.scalars().one()
-    # Get all user/group links
-    stm_links = select(LinkUserGroup).where(LinkUserGroup.group_id == group_id)
-    res = await db.execute(stm_links)
-    links = res.scalars().all()
-
-    # FIXME GROUPS: this must be optimized
-    user_ids = [link.user_id for link in links]
-
-    return UserGroupRead(**group.model_dump(), user_ids=user_ids)
-
-
 @router_auth.get(
-    "/group/{group_id}", response_model=UserGroupRead, status_code=200
+    "/group/{group_id}",
+    response_model=UserGroupRead,
+    status_code=status.HTTP_200_OK,
 )
 async def get_single_user_group(
     group_id: int,
@@ -223,10 +212,15 @@ async def get_single_user_group(
     """
     FIXME docstring
     """
-    return _get_single_group_with_user_ids(group_id=group_id, db=db)
+    group = await _get_single_group_with_user_ids(group_id=group_id, db=db)
+    return group
 
 
-@router_auth.post("/group/", response_model=UserGroupRead, status_code=201)
+@router_auth.post(
+    "/group/",
+    response_model=UserGroupRead,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_single_group(
     group_create: UserGroupCreate,
     user: User = Depends(current_active_superuser),
@@ -256,7 +250,9 @@ async def create_single_group(
 
 
 @router_auth.patch(
-    "/group/{group_id}", response_model=UserGroupRead, status_code=200
+    "/group/{group_id}",
+    response_model=UserGroupRead,
+    status_code=status.HTTP_200_OK,
 )
 async def update_single_group(
     group_id: int,
@@ -268,16 +264,37 @@ async def update_single_group(
     FIXME docstring
     """
 
+    # Check that all required users exist
+    # Note: The reason for introducing `col` is as in
+    # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors,
+    stm = select(User).where(col(User.id).in_(group_update.new_user_ids))
+    res = await db.execute(stm)
+    matching_users = res.scalars().unique().all()
+    if not len(matching_users) == len(group_update.new_user_ids):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                f"At least user with IDs {group_update.new_user_ids} "
+                "does not exist."
+            ),
+        )
+
     # Add new users to existing group
     for user_id in group_update.new_user_ids:
         link = LinkUserGroup(user_id=user_id, group_id=group_id)
         db.add(link)
     await db.commit()
 
-    return _get_single_group_with_user_ids(group_id=group_id, db=db)
+    updated_group = await _get_single_group_with_user_ids(
+        group_id=group_id, db=db
+    )
+
+    return updated_group
 
 
-@router_auth.delete("/group/{group_id}", status_code=405)
+@router_auth.delete(
+    "/group/{group_id}", status_code=status.HTTP_405_METHOD_NOT_ALLOWED
+)
 async def delete_single_group(
     group_id: int,
     user: User = Depends(current_active_superuser),
@@ -286,10 +303,18 @@ async def delete_single_group(
     """
     FIXME docstring
     """
-    raise HTTPException()  # 405
+    raise HTTPException(
+        status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+        detail=(
+            "Deleting a user group is not allowed, as it may restrict "
+            "previously-granted access.",
+        ),
+    )
 
 
-@router_auth.get("/group-names/", response_model=list[str], status_code=200)
+@router_auth.get(
+    "/group-names/", response_model=list[str], status_code=status.HTTP_200_OK
+)
 async def get_list_user_group_names(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -11,7 +12,7 @@ __all__ = (
 )
 
 
-class UserGroupRead(BaseModel, extra=Extra.forbid):
+class UserGroupRead(BaseModel):
     """
     FIXME GROUPS: docstring
     """
@@ -19,7 +20,7 @@ class UserGroupRead(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     timestamp_created: datetime
-    user_ids: list[int]
+    user_ids: Optional[list[int]] = None
 
 
 class UserGroupCreate(BaseModel, extra=Extra.forbid):
