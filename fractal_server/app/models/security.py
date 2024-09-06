@@ -9,14 +9,18 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+from datetime import datetime
 from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import Column
+from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
+
+from fractal_server.utils import get_timestamp
 
 
 class OAuthAccount(SQLModel, table=True):
@@ -103,3 +107,23 @@ class UserOAuth(SQLModel, table=True):
 
     class Config:
         orm_mode = True
+
+
+class UserGroup(SQLModel, table=True):
+    """
+    User-group model
+
+    Attributes:
+        name
+    """
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True)
+    timestamp_created: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+
+    # FIXME: is this needed?
+    # class Config:
+    #     orm_mode = True

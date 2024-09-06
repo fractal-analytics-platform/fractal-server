@@ -1,5 +1,6 @@
+from devtools import debug
+
 # import pytest
-# from devtools import debug
 
 PREFIX = "/auth"
 
@@ -182,24 +183,27 @@ async def test_get_user_group_names(
     """
 
     # Preliminary phase: create some group(s)
-    # ... TODO
-    # registered_superuser_client.post()
-    EXPECTED_GROUP_NAMES = ["something"]
+    GROUP_NAME = "my group"
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/", json=dict(name=GROUP_NAME)
+    )
+    assert res.status_code == 201
+    debug(res.json())
+    EXPECTED_GROUP_NAMES = [GROUP_NAME]
 
     # Anonymous user cannot see group names
-    res = await client.get(f"{PREFIX}/groups/")
+    res = await client.get(f"{PREFIX}/group-names/")
     assert res.status_code == 401
 
     # Registered users can see group names
-    res = await registered_client.get(f"{PREFIX}/groups/")
+    res = await registered_client.get(f"{PREFIX}/group-names/")
     assert res.status_code == 200
     assert res.json() == EXPECTED_GROUP_NAMES
 
     # Superusers can see group names
-    res = await registered_superuser_client.get(f"{PREFIX}/groups/")
+    res = await registered_superuser_client.get(f"{PREFIX}/group-names/")
     assert res.status_code == 200
     assert res.json() == EXPECTED_GROUP_NAMES
-
 
 
 async def test_create_user_group_same_name(registered_superuser_client):
@@ -208,12 +212,12 @@ async def test_create_user_group_same_name(registered_superuser_client):
     """
     # First group creation
     res = await registered_superuser_client.post(
-        f"{PREFIX}/groups/", json=dict(name="mygroup")
+        f"{PREFIX}/group/", json=dict(name="mygroup")
     )
     assert res.status_code == 201
     # Second group creation
     res = await registered_superuser_client.post(
-        f"{PREFIX}/groups/", json=dict(name="mygroup")
+        f"{PREFIX}/group/", json=dict(name="mygroup")
     )
     assert res.status_code == 422
     assert "A group with the same name already exists" in str(res.json())
