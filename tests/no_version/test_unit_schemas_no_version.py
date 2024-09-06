@@ -26,9 +26,7 @@ def test_user_create():
     assert u.slurm_accounts == ["a", "b"]
 
     with pytest.raises(ValidationError):
-        UserCreate(
-            email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
-        )
+        UserCreate(email="a@b.c", password="asd", slurm_accounts=[1, "a", True])
 
     with pytest.raises(ValidationError):
         UserCreate(
@@ -119,6 +117,20 @@ def test_user_group_create():
         UserGroupCreate(user_ids=[1, 2, 3])
     with pytest.raises(ValidationError):
         UserGroupCreate(name="group1", user_ids=[1, 2, 3], something="else")
+
+
+def test_user_group_read():
+    g = UserGroupRead(name="group")
+    assert g.user_ids == []
+
+    UserGroupRead(name="group", user_ids=[1, 2])
+
+    with pytest.raises(ValidationError):
+        UserGroupRead(name="group", user_ids=[1, 2], something="else")
+
+
+def test_user_group_names_read():
+    UserGroupNamesRead(names=["a", "b", "c"])
 
 
 def test_user_group_update():

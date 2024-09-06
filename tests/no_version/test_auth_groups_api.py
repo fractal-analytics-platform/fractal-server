@@ -199,3 +199,21 @@ async def test_get_user_group_names(
     res = await registered_superuser_client.get(f"{PREFIX}/groups/")
     assert res.status_code == 200
     assert res.json() == EXPECTED_GROUP_NAMES
+
+
+
+async def test_create_user_group_same_name(registered_superuser_client):
+    """
+    Test that you cannot create two groups with the same name.
+    """
+    # First group creation
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/groups/", json=dict(name="mygroup")
+    )
+    assert res.status_code == 201
+    # Second group creation
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/groups/", json=dict(name="mygroup")
+    )
+    assert res.status_code == 422
+    assert "A group with the same name already exists" in str(res.json())
