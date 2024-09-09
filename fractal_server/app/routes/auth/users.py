@@ -49,7 +49,7 @@ async def patch_user(
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-    FIXME GROUPS: docstring
+    Custom version of the PATCH-user route from `fastapi-users`.
     """
 
     user_to_patch = await _user_or_404(user_id, db)
