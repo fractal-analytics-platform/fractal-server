@@ -53,7 +53,6 @@ class UserUpdate(schemas.BaseUserUpdate):
     cache_dir: Optional[str]
     username: Optional[str]
     slurm_accounts: Optional[list[StrictStr]]
-    new_group_ids: list[int] = Field(default_factory=list)
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
