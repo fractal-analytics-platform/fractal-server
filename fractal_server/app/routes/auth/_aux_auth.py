@@ -5,13 +5,13 @@ from sqlmodel import select
 
 from ...models.linkusergroup import LinkUserGroup
 from ...models.security import UserGroup
-from ...models.security import UserOAuth as User
+from ...models.security import UserOAuth
 from ...schemas.user import UserRead
 from ...schemas.user_group import UserGroupRead
 
 
 async def _get_single_user_with_group_names(
-    user: User,
+    user: UserOAuth,
     db: AsyncSession,
 ) -> UserRead:
     """
@@ -20,7 +20,7 @@ async def _get_single_user_with_group_names(
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
-        .where(LinkUserGroup.user_id == User.id)
+        .where(LinkUserGroup.user_id == UserOAuth.id)
     )
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()
@@ -29,7 +29,7 @@ async def _get_single_user_with_group_names(
 
 
 async def _get_single_user_with_group_ids(
-    user: User,
+    user: UserOAuth,
     db: AsyncSession,
 ) -> UserRead:
     """
@@ -76,3 +76,14 @@ async def _get_single_group_with_user_ids(
     user_ids = [link.user_id for link in links]
 
     return UserGroupRead(**group.model_dump(), user_ids=user_ids)
+
+
+async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
+    stm = select(UserOAuth).where(UserOAuth.id == user_id)
+    res = await db.execute(stm)
+    user = res.scalars().unique().one_or_none()
+    if user is None:
+        raise HTTPException(
+            status=status.HTTP_404_NOT_FOUND, detail="User not found."
+        )
+    return user

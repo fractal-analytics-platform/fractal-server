@@ -43,7 +43,7 @@ def collect_routers(app: FastAPI) -> None:
     from .app.routes.api.v2 import router_api_v2
     from .app.routes.admin.v1 import router_admin_v1
     from .app.routes.admin.v2 import router_admin_v2
-    from .app.routes.auth import router_auth
+    from .app.routes.auth.router import router_auth
 
     settings = Inject(get_settings)
 

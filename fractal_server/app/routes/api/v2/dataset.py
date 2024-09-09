@@ -17,11 +17,11 @@ from ....schemas.v2 import DatasetReadV2
 from ....schemas.v2 import DatasetUpdateV2
 from ....schemas.v2.dataset import DatasetExportV2
 from ....schemas.v2.dataset import DatasetImportV2
-from ....security import current_active_user
-from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 
 router = APIRouter()
 
@@ -34,7 +34,7 @@ router = APIRouter()
 async def create_dataset(
     project_id: int,
     dataset: DatasetCreateV2,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV2]:
     """
@@ -59,7 +59,7 @@ async def create_dataset(
 async def read_dataset_list(
     project_id: int,
     history: bool = True,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetReadV2]]:
     """
@@ -90,7 +90,7 @@ async def read_dataset_list(
 async def read_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV2]:
     """
@@ -115,7 +115,7 @@ async def update_dataset(
     project_id: int,
     dataset_id: int,
     dataset_update: DatasetUpdateV2,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV2]:
     """
@@ -155,7 +155,7 @@ async def update_dataset(
 async def delete_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -202,7 +202,7 @@ async def delete_dataset(
 @router.get("/dataset/", response_model=list[DatasetReadV2])
 async def get_user_datasets(
     history: bool = True,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetReadV2]:
     """
@@ -210,7 +210,7 @@ async def get_user_datasets(
     """
     stm = select(DatasetV2)
     stm = stm.join(ProjectV2).where(
-        ProjectV2.user_list.any(User.id == user.id)
+        ProjectV2.user_list.any(UserOAuth.id == user.id)
     )
 
     res = await db.execute(stm)
@@ -229,7 +229,7 @@ async def get_user_datasets(
 async def export_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetExportV2]:
     """
@@ -256,7 +256,7 @@ async def export_dataset(
 async def import_dataset(
     project_id: int,
     dataset: DatasetImportV2,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV2]:
     """

@@ -4,13 +4,13 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import select
 
-from .....logger import set_logger
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v1 import Task as TaskV1
-from ....schemas.v2 import TaskLegacyReadV2
-from ....security import current_active_user
-from ....security import User
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v1 import Task as TaskV1
+from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.schemas.v2 import TaskLegacyReadV2
+from fractal_server.logger import set_logger
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ logger = set_logger(__name__)
 async def get_list_task_legacy(
     args_schema: bool = True,
     only_v2_compatible: bool = False,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskLegacyReadV2]:
     """
@@ -43,7 +43,7 @@ async def get_list_task_legacy(
 @router.get("/{task_id}/", response_model=TaskLegacyReadV2)
 async def get_task_legacy(
     task_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskLegacyReadV2:
     """

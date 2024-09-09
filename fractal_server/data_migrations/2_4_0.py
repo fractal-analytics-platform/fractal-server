@@ -5,9 +5,9 @@ from sqlalchemy import select
 
 import fractal_server
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.linkusergroup import LinkUserGroup
-from fractal_server.app.models.security import UserGroup
-from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 

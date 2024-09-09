@@ -80,7 +80,7 @@ def set_db():
     from fractal_server.app.security import _create_first_user
     from fractal_server.syringe import Inject
     from fractal_server.config import get_settings
-    from fractal_server.app.models.security import UserGroup
+    from fractal_server.app.models import UserGroup
     from fractal_server.app.db import get_sync_db
 
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"

@@ -8,8 +8,8 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from .. import LinkUserProjectV2
-from ....utils import get_timestamp
-from ..security import UserOAuth
+from fractal_server.app.models import UserOAuth
+from fractal_server.utils import get_timestamp
 
 
 class ProjectV2(SQLModel, table=True):
