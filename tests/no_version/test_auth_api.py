@@ -245,6 +245,12 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
+    # FIXME this won't be necessary when we tackle
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/1737,
+    # so that the register-user POST endpoint will also take care of producing
+    # the appropriate `user_ids` attribute.
+    pre_patch_user["group_ids"] = []
+    debug(pre_patch_user)
 
     update = dict(
         email="patch@fractal.xy",
@@ -262,6 +268,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     # Fail because of repeated "FOO" in update.slurm_accounts
     assert res.status_code == 422
+
     # remove one of the two "FOO" in update.slurm_accounts
     update["slurm_accounts"] = ["FOO", "BAR"]
     # succeed without the repetition
@@ -271,8 +278,11 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     assert res.status_code == 200
     user = res.json()
+    debug(user)
+
     # assert that the attributes we wanted to update have actually changed
     for key, value in user.items():
+        debug(key)
         if key not in update:
             assert value == pre_patch_user[key]
         else:

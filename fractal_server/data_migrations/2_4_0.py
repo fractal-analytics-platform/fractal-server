@@ -46,7 +46,7 @@ def fix_db():
 
         # Find
         stm = select(UserOAuth)
-        users = db.execute(stm).scalars().all()
+        users = db.execute(stm).scalars().unique().all()
         for user in sorted(users, key=lambda x: x.id):
             logger.warning(
                 f"START adding {user.id=} ({user.email=}) to default group."
