@@ -18,6 +18,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+
     with op.batch_alter_table(
         "workflowtaskv2", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
@@ -27,6 +28,9 @@ def upgrade() -> None:
         batch_op.drop_constraint(
             "fk_workflowtaskv2_task_legacy_id_task", type_="foreignkey"
         )
+        batch_op.drop_index("idx_workflowtaskv2_task_legacy_id")
+
+        batch_op.drop_column("task_legacy_id")
         batch_op.drop_column("is_legacy_task")
 
     with op.batch_alter_table("task", schema=None) as batch_op:
