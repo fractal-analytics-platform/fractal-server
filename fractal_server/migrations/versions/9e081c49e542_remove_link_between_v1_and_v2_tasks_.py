@@ -8,7 +8,6 @@ Create Date: 2024-09-04 08:44:12.471028
 import sqlalchemy as sa
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision = "9e081c49e542"
 down_revision = "5bf02391cfef"
@@ -43,7 +42,7 @@ def upgrade() -> None:
 
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
         batch_op.drop_constraint(
-            "fk_workflowtaskv2_task_legacy_id_task",
+            "fk_workflowtaskv2_task_legacy_id_task", type_="foreignkey"
         )
 
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
