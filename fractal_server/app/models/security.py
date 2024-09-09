@@ -123,7 +123,3 @@ class UserGroup(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-
-    # FIXME: is this needed?
-    # class Config:
-    #     orm_mode = True

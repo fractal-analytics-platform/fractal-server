@@ -15,7 +15,14 @@ async def _get_single_user_with_group_names(
     db: AsyncSession,
 ) -> UserRead:
     """
-    FIXME GROUPS: ...
+    Enrich a user object by filling its `group_names` attribute.
+
+    Arguments:
+        user: The current `UserOAuth` object
+        db: Async db session
+
+    Returns:
+        A `UserRead` object with `group_names` set
     """
     stm_groups = (
         select(UserGroup)
@@ -33,15 +40,19 @@ async def _get_single_user_with_group_ids(
     db: AsyncSession,
 ) -> UserRead:
     """
-    FIXME GROUPS: ...
-    """
+    Enrich a user object by filling its `group_ids` attribute.
 
-    # Get all user/group links
+    Arguments:
+        user: The current `UserOAuth` object
+        db: Async db session
+
+    Returns:
+        A `UserRead` object with `group_ids` set
+    """
     stm_links = select(LinkUserGroup).where(LinkUserGroup.user_id == user.id)
     res = await db.execute(stm_links)
     links = res.scalars().unique().all()
     group_ids = [link.group_id for link in links]
-
     return UserRead(**user.model_dump(), group_ids=group_ids)
 
 
@@ -79,6 +90,13 @@ async def _get_single_group_with_user_ids(
 
 
 async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
+    """
+    Get a user from db, or raise a 404 HTTP exception if missing.
+
+    Arguments:
+        user_id: ID of the user
+        db: Async db session
+    """
     stm = select(UserOAuth).where(UserOAuth.id == user_id)
     res = await db.execute(stm)
     user = res.scalars().unique().one_or_none()
