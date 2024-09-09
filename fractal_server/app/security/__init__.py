@@ -225,7 +225,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                     user_id=user.id, group_id=default_group.id
                 )
                 db.add(link)
-                db.commit()
+                await db.commit()
 
 
 async def get_user_manager(
@@ -321,9 +321,7 @@ async def _create_first_user(
 
             if is_superuser is True:
                 # If a superuser already exists, exit
-                stm = select(User).where(
-                    User.is_superuser == True  # noqa E712
-                )
+                stm = select(User).where(User.is_superuser == True)  # noqa
                 res = await session.execute(stm)
                 existing_superuser = res.scalars().first()
                 if existing_superuser is not None:
