@@ -35,6 +35,7 @@ from typing import Optional
 from typing import Type
 
 from fastapi import Depends
+from fastapi import Request
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
 from fastapi_users import IntegerIDMixin
@@ -57,12 +58,16 @@ from sqlmodel import select
 from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_async_db
+from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.security import OAuthAccount
+from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth as User
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.logger import get_logger
 
 logger = get_logger(__name__)
+
+FRACTAL_DEFAULT_GROUP_NAME = "All"
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -182,7 +187,8 @@ async def get_user_db(
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def validate_password(self, password: str, user: User) -> None:
         # check password length
-        min_length, max_length = 4, 100
+        min_length = 4
+        max_length = 100
         if len(password) < min_length:
             raise InvalidPasswordException(
                 f"The password is too short (minimum length: {min_length})."
@@ -191,6 +197,35 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             raise InvalidPasswordException(
                 f"The password is too long (maximum length: {min_length})."
             )
+
+    async def on_after_register(
+        self, user: User, request: Optional[Request] = None
+    ):
+        logger.info(
+            f"New-user registration completed ({user.id=}, {user.email=})."
+        )
+        async for db in get_async_db():
+            # Find default group
+            stm = select(UserGroup).where(
+                UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+            )
+            res = await db.execute(stm)
+            default_group = res.scalar_one_or_none()
+            if default_group is None:
+                logger.error(
+                    f"No group found with name {FRACTAL_DEFAULT_GROUP_NAME}"
+                )
+            else:
+                logger.error(
+                    f"Now adding {user.email} user to group "
+                    f"{default_group.id=}."
+                )
+                logger.error(f"{res.scalars().unique().all()=}")
+                link = LinkUserGroup(
+                    user_id=user.id, group_id=default_group.id
+                )
+                db.add(link)
+                db.commit()
 
 
 async def get_user_manager(
