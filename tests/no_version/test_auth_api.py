@@ -102,7 +102,9 @@ async def test_patch_current_user_cache_dir(registered_client):
     Test several scenarios for updating `slurm_accounts` and `cache_dir`
     for the current user.
     """
-    res = await registered_client.get(f"{PREFIX}/current-user/")
+    res = await registered_client.get(
+        f"{PREFIX}/current-user/?group_names=True"
+    )
     pre_patch_user = res.json()
 
     # Successful API call with empty payload
