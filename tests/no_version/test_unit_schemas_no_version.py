@@ -5,6 +5,9 @@ from pydantic import ValidationError
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateStrict
+from fractal_server.app.schemas.user_group import UserGroupCreate
+from fractal_server.app.schemas.user_group import UserGroupRead
+from fractal_server.app.schemas.user_group import UserGroupUpdate
 
 
 def test_user_create():
@@ -26,7 +29,9 @@ def test_user_create():
     assert u.slurm_accounts == ["a", "b"]
 
     with pytest.raises(ValidationError):
-        UserCreate(email="a@b.c", password="asd", slurm_accounts=[1, "a", True])
+        UserCreate(
+            email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
+        )
 
     with pytest.raises(ValidationError):
         UserCreate(
@@ -108,42 +113,20 @@ def test_user_update_strict():
 
 
 def test_user_group_create():
-    g = UserGroupCreate(name="group1")
-    assert g.user_ids == []
-
-    g = UserGroupCreate(name="group1", user_ids=[1, 2, 3])
-
+    UserGroupCreate(name="group1")
     with pytest.raises(ValidationError):
-        UserGroupCreate(user_ids=[1, 2, 3])
+        UserGroupCreate()
     with pytest.raises(ValidationError):
-        UserGroupCreate(name="group1", user_ids=[1, 2, 3], something="else")
-
-
-def test_user_group_read():
-    g = UserGroupRead(name="group")
-    assert g.user_ids == []
-
-    UserGroupRead(name="group", user_ids=[1, 2])
-
-    with pytest.raises(ValidationError):
-        UserGroupRead(name="group", user_ids=[1, 2], something="else")
-
-
-def test_user_group_names_read():
-    UserGroupNamesRead(names=["a", "b", "c"])
+        UserGroupCreate(name="group1", something="else")
 
 
 def test_user_group_update():
-    # Successes
-
-    g = UserGroupUpdate()
-    assert g.new_user_ids == []
-
-    UserGroupUpdate(new_user_ids=[1])
-
-    UserGroupUpdate(new_user_ids=[1, 2, 3])
-
-    # Failures
+    g1 = UserGroupUpdate()
+    assert g1.new_user_ids == []
+    g2 = UserGroupUpdate(new_user_ids=[1])
+    assert g2.new_user_ids == [1]
+    g3 = UserGroupUpdate(new_user_ids=[1, 2])
+    assert g3.new_user_ids == [1, 2]
 
     with pytest.raises(ValidationError):
         UserGroupUpdate(name="new name")
@@ -155,3 +138,17 @@ def test_user_group_update():
         UserGroupUpdate(new_user_ids=["user@example.org"])
     with pytest.raises(ValidationError):
         UserGroupUpdate(new_user_ids=[dict(email="user@example.org")])
+
+
+def test_user_group_read():
+    from fractal_server.utils import get_timestamp
+
+    XX = get_timestamp()
+    g = UserGroupRead(id=1, name="group", timestamp_created=XX)
+    assert g.user_ids is None
+    g = UserGroupRead(id=1, name="group", timestamp_created=XX, user_ids=[])
+    assert g.user_ids == []
+    g = UserGroupRead(
+        id=1, name="group", timestamp_created=XX, user_ids=[1, 2]
+    )
+    assert g.user_ids == [1, 2]
