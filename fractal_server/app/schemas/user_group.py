@@ -14,7 +14,16 @@ __all__ = (
 
 class UserGroupRead(BaseModel):
     """
-    FIXME GROUPS: docstring
+    Schema for `UserGroup` read
+
+    NOTE: `user_ids` does not correspond to a column of the `UserGroup` table,
+    but it is rather computed dynamically in relevant endpoints.
+
+    Attributes:
+        id: Group ID
+        name: Group name
+        timestamp_created: Creation timestamp
+        user_ids: IDs of users of this group
     """
 
     id: int
@@ -25,8 +34,10 @@ class UserGroupRead(BaseModel):
 
 class UserGroupCreate(BaseModel, extra=Extra.forbid):
     """
-    FIXME GROUPS: docstring
-    FIXME GROUPS: add validator for `name`
+    Schema for `UserGroup` creation
+
+    Attributes:
+        name: Group name
     """
 
     name: str
@@ -34,7 +45,13 @@ class UserGroupCreate(BaseModel, extra=Extra.forbid):
 
 class UserGroupUpdate(BaseModel, extra=Extra.forbid):
     """
-    FIXME GROUPS: docstring
+    Schema for `UserGroup` update
+
+    NOTE: `new_user_ids` does not correspond to a column of the `UserGroup`
+    table, but it is rather used to create new `LinkUserGroup` rows.
+
+    Attributes:
+        new_user_ids: IDs of groups to be associated to user.
     """
 
     new_user_ids: list[int] = Field(default_factory=list)
