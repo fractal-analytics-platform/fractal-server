@@ -28,7 +28,18 @@ def upgrade() -> None:
         batch_op.drop_constraint(
             "fk_workflowtaskv2_task_legacy_id_task", type_="foreignkey"
         )
-        if op.get_bind().dialect.name == "sqlite":
+
+        if (
+            op.get_bind().dialect.name == "sqlite"
+            and op.get_bind()
+            .execute(
+                sa.text(
+                    "SELECT name FROM sqlite_master WHERE type='index' "
+                    "AND name='idx_workflowtaskv2_task_legacy_id'"
+                )
+            )
+            .fetchone()
+        ):
             batch_op.drop_index("idx_workflowtaskv2_task_legacy_id")
 
         batch_op.drop_column("task_legacy_id")
