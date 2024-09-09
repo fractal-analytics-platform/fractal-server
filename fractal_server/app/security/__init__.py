@@ -208,8 +208,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                     f"No group found with name {FRACTAL_DEFAULT_GROUP_NAME}"
                 )
             else:
-                logger.error(
-                    f"Now adding {user.email} user to group "
+                logger.warning(
+                    f"START adding {user.email} user to group "
                     f"{default_group.id=}."
                 )
                 link = LinkUserGroup(
@@ -217,6 +217,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 )
                 db.add(link)
                 await db.commit()
+                logger.warning(
+                    f"END   adding {user.email} user to group "
+                    f"{default_group.id=}."
+                )
 
 
 async def get_user_manager(
