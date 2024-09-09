@@ -155,7 +155,20 @@ async def list_users(
     stm = select(User)
     res = await db.execute(stm)
     user_list = res.scalars().unique().all()
-    await db.close()
+
+    # Get all user/group links
+    stm_all_links = select(LinkUserGroup)
+    res = await db.execute(stm_all_links)
+    links = res.scalars().all()
+
+    # FIXME GROUPS: this must be optimized
+    for ind, user in enumerate(user_list):
+        user_list[ind] = dict(
+            user.model_dump(),
+            group_ids=[
+                link.group_id for link in links if link.user_id == user.id
+            ],
+        )
     return user_list
 
 
