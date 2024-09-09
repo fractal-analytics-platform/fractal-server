@@ -6,7 +6,7 @@ AUTHORIZATION_URL=$(curl --silent \
 )
 
 TOKEN=$(
-    curl -L --silent --output /dev/null --cookie-jar - $AUTHORIZATION_URL \
+    curl -L --silent --output /dev/null --cookie-jar - "$AUTHORIZATION_URL" \
     | grep "fastapiusersauth" | awk '{print $NF}'
 )
 
@@ -15,7 +15,7 @@ WHOAMI=$(
     http://127.0.0.1:8001/auth/current-user/
 )
 
-EXPECTED_USER='{"id":2,"email":"kilgore@kilgore.trout","is_active":true,"is_superuser":false,"is_verified":false,"slurm_user":null,"cache_dir":null,"username":null,"slurm_accounts":[]}'
+EXPECTED_USER='{"id":2,"email":"kilgore@kilgore.trout","is_active":true,"is_superuser":false,"is_verified":false,"slurm_user":null,"cache_dir":null,"username":null,"slurm_accounts":[],"group_ids":null,group_names:null}'
 
 # Assert that WHOAMI is equal to EXPECTED_USER
 diff <(echo $WHOAMI | jq --sort-keys .) <(echo $EXPECTED_USER | jq --sort-keys .)
