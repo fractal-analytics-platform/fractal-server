@@ -78,14 +78,21 @@ def set_db():
     from pathlib import Path
     import fractal_server
     from fractal_server.app.security import _create_first_user
-    from .syringe import Inject
-    from .config import get_settings
+    from fractal_server.syringe import Inject
+    from fractal_server.config import get_settings
+    from fractal_server.app.models.security import UserGroup
+    from fractal_server.app.db import get_sync_db
 
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
-
     print(f"Run alembic.config, with argv={alembic_args}")
     alembic.config.main(argv=alembic_args)
+    print("DONE")
+    # Insert default group "All"
+    with next(get_sync_db()) as db:
+        first_group = UserGroup(name="All")
+        db.add(first_group)
+        db.commit()
     # NOTE: It will be fixed with #1739
     settings = Inject(get_settings)
     asyncio.run(
