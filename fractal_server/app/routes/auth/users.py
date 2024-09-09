@@ -37,7 +37,7 @@ async def get_user(
         user_with_group_ids = await _get_single_user_with_group_ids(user, db)
         return user_with_group_ids
     else:
-        return
+        return user
 
 
 @router_users.patch("/users/{user_id}/", response_model=UserRead)
