@@ -102,6 +102,6 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
     user = res.scalars().unique().one_or_none()
     if user is None:
         raise HTTPException(
-            status=status.HTTP_404_NOT_FOUND, detail="User not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
         )
     return user
