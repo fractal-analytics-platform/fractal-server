@@ -7,6 +7,7 @@ from sqlmodel import SQLModel
 
 from fractal_server.app import models  # noqa
 from fractal_server.config import get_settings
+from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 from fractal_server.syringe import Inject
 
 # this is the Alembic Config object, which provides
@@ -25,13 +26,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
-target_metadata.naming_convention = {
-    "ix": "ix_%(column_0_label)s",
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_`%(constraint_name)s`",
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s",
-}
+target_metadata.naming_convention = NAMING_CONVENTION
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -7,7 +7,8 @@ Create Date: 2024-09-09 14:15:34.415926
 """
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import sqlite
+
+from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 
 # revision identifiers, used by Alembic.
 revision = "d9a140db5d42"
@@ -17,16 +18,16 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
+    with op.batch_alter_table(
+        "workflowtaskv2", schema=None, naming_convention=NAMING_CONVENTION
+    ) as batch_op:
         batch_op.alter_column(
             "task_id", existing_type=sa.INTEGER(), nullable=False
         )
-        if not isinstance(op.get_bind().dialect, sqlite.dialect):
-            batch_op.drop_constraint(
-                "fk_workflowtaskv2_task_legacy_id_task", type_="foreignkey"
-            )
+        batch_op.drop_constraint(
+            "fk_workflowtaskv2_task_legacy_id_task", type_="foreignkey"
+        )
         batch_op.drop_column("is_legacy_task")
-        batch_op.drop_column("task_legacy_id")
 
 
 def downgrade() -> None:
