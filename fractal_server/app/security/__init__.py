@@ -220,7 +220,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                     f"Now adding {user.email} user to group "
                     f"{default_group.id=}."
                 )
-                logger.error(f"{res.scalars().unique().all()=}")
                 link = LinkUserGroup(
                     user_id=user.id, group_id=default_group.id
                 )
