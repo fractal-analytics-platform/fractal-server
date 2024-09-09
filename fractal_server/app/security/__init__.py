@@ -50,6 +50,7 @@ from sqlmodel import func
 from sqlmodel import select
 
 from ..db import get_async_db
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserGroup
@@ -269,9 +270,9 @@ async def _create_first_user(
 
             if is_superuser is True:
                 # If a superuser already exists, exit
-                stm = select(UserOAuth).where(
+                stm = select(UserOAuth).where(  # noqa
                     UserOAuth.is_superuser == True  # noqa
-                )
+                )  # noqa
                 res = await session.execute(stm)
                 existing_superuser = res.scalars().first()
                 if existing_superuser is not None:
@@ -302,3 +303,17 @@ async def _create_first_user(
 
     except UserAlreadyExists:
         logger.warning(f"User {email} already exists")
+
+
+def _create_first_group():
+    with next(get_sync_db()) as db:
+        group_all = db.execute(select(UserGroup))
+        if group_all.scalars().one_or_none() is None:
+            first_group = UserGroup(name="All")
+            db.add(first_group)
+            db.commit()
+            logger.warning(f"Create group {FRACTAL_DEFAULT_GROUP_NAME}")
+        else:
+            logger.warning(
+                f"Group {FRACTAL_DEFAULT_GROUP_NAME} already exists"
+            )
