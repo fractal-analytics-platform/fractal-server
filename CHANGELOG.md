@@ -8,7 +8,8 @@
     * Create `update-db-script` for current version, that adds all users to default group (\#1738).
 * API:
     * Added `/auth/group/` and `/auth/group-names/` routers (\#1738).
-    * Implement `/auth/users/{id}/` POST/PATCH routes in `fractal-server` (\#1738).
+    * Implement `/auth/users/{id}/` POST/PATCH routes in `fractal-server` (\#1738, \#1747).
+    * Introduce `UserUpdateWithNewGroupIds` schema for `PATCH /auth/users/{id}/` (\#1747).
     * Add `UserManager.on_after_register` hook to add new users to default user group (\#1738).
 * Database:
     * Added new `usergroup` and `linkusergroup` tables (\#1738).
