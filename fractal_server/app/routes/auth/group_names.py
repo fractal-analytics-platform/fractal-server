@@ -23,9 +23,10 @@ async def get_list_user_group_names(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
-    FIXME docstring
+    Return the available group names.
+
+    This endpoint is not restricted to superusers.
     """
-    # Get all groups
     stm_all_groups = select(UserGroup)
     res = await db.execute(stm_all_groups)
     groups = res.scalars().all()
