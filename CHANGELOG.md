@@ -16,6 +16,8 @@
 * Internal
     * Refactored `fractal_server.app.auth` and `fractal_server.app.security` (\#1738)/
     * Export all relevant modules in `app.models`, since it matters e.g. for `autogenerate`-ing migration scripts (\#1738).
+* Testing
+    * Add `UserGroup` validation to `scripts/validate_db_data_with_read_schemas.py` (\#1746).
 
 
 # 2.3.11
