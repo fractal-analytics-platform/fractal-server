@@ -31,9 +31,6 @@ async def get_list_user_groups(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
-    """
-    FIXME docstring
-    """
 
     # Get all groups
     stm_all_groups = select(UserGroup)
