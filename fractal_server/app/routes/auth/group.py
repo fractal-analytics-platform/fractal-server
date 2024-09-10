@@ -135,8 +135,8 @@ async def update_single_group(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(
-                f"At least user with IDs {group_update.new_user_ids} "
-                "does not exist."
+                f"Not all requested users (IDs {group_update.new_user_ids}) "
+                "exist."
             ),
         )
 
