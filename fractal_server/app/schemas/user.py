@@ -16,7 +16,7 @@ __all__ = (
     "UserRead",
     "UserUpdate",
     "UserCreate",
-    "UserUpdateNewGroups",
+    "UserUpdateWithNewGroupIds",
 )
 
 
@@ -54,6 +54,8 @@ class UserUpdate(schemas.BaseUserUpdate):
     cache_dir: Optional[str]
     username: Optional[str]
     slurm_accounts: Optional[list[StrictStr]]
+
+    new_group_ids: Optional[list[int]] = None
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
@@ -103,6 +105,10 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     )
 
 
+class UserUpdateWithNewGroupIds(UserUpdate):
+    new_group_ids: Optional[list[int]] = None
+
+
 class UserCreate(schemas.BaseUserCreate):
     """
     Schema for `User` creation.
@@ -135,14 +141,3 @@ class UserCreate(schemas.BaseUserCreate):
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
-
-
-class UserUpdateNewGroups(BaseModel, extra=Extra.forbid):  # FIXME RENAME
-    """
-    Simple schema for `add_groups_to_user` endpoint.
-
-    Attributes:
-        new_group_ids: IDs of groups to be added to user.
-    """
-
-    new_group_ids: list[int] = Field(default_factory=list)
