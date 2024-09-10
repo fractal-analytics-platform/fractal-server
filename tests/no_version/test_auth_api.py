@@ -247,7 +247,8 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
-    # FIXME this won't be necessary when we tackle
+
+    # FIXME the following workaround won't be necessary when we tackle
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1737,
     # so that the register-user POST endpoint will also take care of producing
     # the appropriate `user_ids` attribute.
@@ -271,9 +272,18 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     # Fail because of repeated "FOO" in update.slurm_accounts
     assert res.status_code == 422
 
-    # remove one of the two "FOO" in update.slurm_accounts
-    update["slurm_accounts"] = ["FOO", "BAR"]
+    # Fail because invalid password
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(password=""),
+    )
+    assert res.status_code == 400
+    debug(res.json())
+    assert "The password is too short" in str(res.json()["detail"])
+
     # succeed without the repetition
+    # remove one of the two "FOO" in update.slurm_accounts, so that
+    update["slurm_accounts"] = ["FOO", "BAR"]
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
