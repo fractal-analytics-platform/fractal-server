@@ -1,6 +1,8 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.linkusergroup import LinkUserGroup
+from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v1 import Dataset
@@ -16,6 +18,7 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.user import UserRead
+from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import DatasetReadV1
 from fractal_server.app.schemas.v1 import ProjectReadV1
@@ -32,6 +35,7 @@ from fractal_server.app.schemas.v2 import TaskLegacyReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 with next(get_sync_db()) as db:
 
@@ -41,6 +45,29 @@ with next(get_sync_db()) as db:
     for user in sorted(users, key=lambda x: x.id):
         UserRead(**user.model_dump())
         print(f"User {user.id} validated")
+
+    # USER GROUPS
+    stm = select(UserGroup)
+    groups = db.execute(stm).scalars().unique().all()
+    for group in sorted(groups, key=lambda x: x.id):
+        UserGroupRead(**group.model_dump())
+        print(f"UserGroup {group.id} validated")
+
+    # ALL USERS IN DEFAULT GROUP
+    default_group = next(
+        group for group in groups if group.name == FRACTAL_DEFAULT_GROUP_NAME
+    )
+    stm = (
+        select(UserOAuth)
+        .join(LinkUserGroup)
+        .where(LinkUserGroup.user_id == UserOAuth.id)
+        .where(LinkUserGroup.group_id == default_group.id)
+    )
+    users_in_default_group = db.execute(stm).scalars().unique().all()
+    if set(users) == set(users_in_default_group):
+        print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}")
+    else:
+        raise ValueError
 
     # V1
 
