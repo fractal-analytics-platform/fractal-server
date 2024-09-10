@@ -270,6 +270,11 @@ async def test_get_job_check_owner(
 
         workflow = await workflow_factory_v2(project_id=project.id)
         t = await task_factory_v2()
+
+        with pytest.raises(ValueError):
+            await _workflow_insert_task(
+                workflow_id=workflow.id, task_id=9999, db=db
+            )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=t.id, db=db
         )

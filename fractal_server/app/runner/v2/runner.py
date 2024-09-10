@@ -102,7 +102,7 @@ def execute_tasks_v2(
                 logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
-        elif task.type == "compound":
+        else:  # task.type == "compound"
             current_task_output = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
@@ -114,8 +114,6 @@ def execute_tasks_v2(
                 logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
-        else:
-            raise ValueError(f"Unexpected error: Invalid {task.type=}.")
 
         # POST TASK EXECUTION
 
