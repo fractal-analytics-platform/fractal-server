@@ -69,9 +69,6 @@ async def get_single_user_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
     group = await _get_single_group_with_user_ids(group_id=group_id, db=db)
     return group
 
@@ -86,9 +83,6 @@ async def create_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
 
     # Check that name is not already in use
     existing_name_str = select(UserGroup).where(
@@ -120,9 +114,6 @@ async def update_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
 
     # Check that all required users exist
     # Note: The reason for introducing `col` is as in
@@ -162,9 +153,6 @@ async def delete_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
     raise HTTPException(
         status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
         detail=(
