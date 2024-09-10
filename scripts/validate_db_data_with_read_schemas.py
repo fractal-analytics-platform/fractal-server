@@ -55,19 +55,36 @@ with next(get_sync_db()) as db:
 
     # DEFAULT GROUP
     default_group = next(
-        group for group in groups if group.name == FRACTAL_DEFAULT_GROUP_NAME
+        (
+            group
+            for group in groups
+            if group.name == FRACTAL_DEFAULT_GROUP_NAME
+        ),
+        None,
     )
+    if default_group is None:
+        raise ValueError(
+            f"Default group '{FRACTAL_DEFAULT_GROUP_NAME}' does not exist."
+        )
+
     stm = (
         select(UserOAuth.id)
         .join(LinkUserGroup)
         .where(LinkUserGroup.user_id == UserOAuth.id)
         .where(LinkUserGroup.group_id == default_group.id)
     )
-    ids_default_group = db.execute(stm).scalars().unique().all()
-    if set(user.id for user in users) == set(ids_default_group):
+    user_ids_in_default_group = set(db.execute(stm).scalars().unique().all())
+    all_user_ids = set(user.id for user in users)
+    if user_ids_in_default_group == all_user_ids:
         print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}'")
     else:
-        raise ValueError
+        user_ids_not_in_default_group = (
+            all_user_ids - user_ids_in_default_group
+        )
+        raise ValueError(
+            "The following users are not in defualt group:\n"
+            f"{user_ids_not_in_default_group}"
+        )
 
     # V1
 
