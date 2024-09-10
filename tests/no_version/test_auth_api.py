@@ -92,7 +92,9 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 403
 
     # GET/{user_id} with superuser user
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{user_id}/?group_ids=false"
+    )
     debug(res.json())
     assert res.status_code == 200
 
