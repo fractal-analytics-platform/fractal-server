@@ -53,7 +53,7 @@ with next(get_sync_db()) as db:
         UserGroupRead(**group.model_dump())
         print(f"UserGroup {group.id} validated")
 
-    # ALL USERS IN DEFAULT GROUP
+    # DEFAULT GROUP
     default_group = next(
         group for group in groups if group.name == FRACTAL_DEFAULT_GROUP_NAME
     )
@@ -65,7 +65,7 @@ with next(get_sync_db()) as db:
     )
     ids_default_group = db.execute(stm).scalars().unique().all()
     if set(user.id for user in users) == set(ids_default_group):
-        print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}")
+        print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}'")
     else:
         raise ValueError
 
