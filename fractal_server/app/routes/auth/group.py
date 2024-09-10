@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
+from sqlmodel import func
 from sqlmodel import select
 
 from . import current_active_superuser
@@ -125,12 +126,12 @@ async def update_single_group(
     # Check that all required users exist
     # Note: The reason for introducing `col` is as in
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors,
-    stm = select(UserOAuth).where(
+    stm = select(func.count()).where(
         col(UserOAuth.id).in_(group_update.new_user_ids)
     )
     res = await db.execute(stm)
-    matching_users = res.scalars().unique().all()
-    if not len(matching_users) == len(group_update.new_user_ids):
+    number_matching_users = res.scalar()
+    if number_matching_users != len(group_update.new_user_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(

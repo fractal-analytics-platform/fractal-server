@@ -10,6 +10,7 @@ from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
+from sqlmodel import func
 from sqlmodel import select
 
 from . import current_active_superuser
@@ -89,12 +90,12 @@ async def patch_user(
         # Check that all required groups exist
         # Note: The reason for introducing `col` is as in
         # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors,
-        stm = select(UserGroup).where(
+        stm = select(func.count()).where(
             col(UserGroup.id).in_(user_update.new_group_ids)
         )
         res = await db.execute(stm)
-        matching_groups = res.scalars().unique().all()
-        if not len(matching_groups) == len(user_update.new_group_ids):
+        number_matching_groups = res.scalar()
+        if number_matching_groups != len(user_update.new_group_ids):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=(
