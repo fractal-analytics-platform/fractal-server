@@ -1,13 +1,13 @@
 from devtools import debug
 from sqlmodel import select
 
-from fractal_server.app.models.security import UserOAuth as User
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1 import LinkUserProject
 from fractal_server.app.models.v1 import Project
 
 
 async def _create_user(email, this_db):
-    user = User(email=email, hashed_password="fake_hashed_password")
+    user = UserOAuth(email=email, hashed_password="fake_hashed_password")
     this_db.add(user)
     await this_db.commit()
     await this_db.refresh(user)
@@ -15,7 +15,7 @@ async def _create_user(email, this_db):
     return user
 
 
-async def _project_list(user: User, db):
+async def _project_list(user: UserOAuth, db):
     stm = (
         select(Project)
         .join(LinkUserProject)

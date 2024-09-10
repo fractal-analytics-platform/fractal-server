@@ -14,8 +14,11 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v2,
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.security import _create_first_user
+from fractal_server.config import get_settings
 from fractal_server.main import lifespan
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.syringe import Inject
 from tests.fixtures_slurm import SLURM_USER
 
 
@@ -43,11 +46,20 @@ async def test_app_with_lifespan(
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []
 
+    # create first user
+    settings = Inject(get_settings)
+    await _create_first_user(
+        email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
+        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+        username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
+        is_superuser=True,
+        is_verified=True,
+    )
+    res = await db.execute(select(UserOAuth))
+    user = res.scalars().unique().all()
+    assert len(user) == 1
+
     async with lifespan(app):
-        # verify first user creation
-        res = await db.execute(select(UserOAuth))
-        user = res.scalars().unique().all()
-        assert len(user) == 1
         # verify shutdown
         assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
@@ -193,15 +205,7 @@ async def test_lifespan_slurm_ssh(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
     app = FastAPI()
-    res = await db.execute(select(UserOAuth))
-    assert res.unique().all() == []
-
     async with lifespan(app):
-        # verify first user creation
-        res = await db.execute(select(UserOAuth))
-        user = res.scalars().unique().all()
-        assert len(user) == 1
-        # verify shutdown
         assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
         assert isinstance(app.state.fractal_ssh, FractalSSH)

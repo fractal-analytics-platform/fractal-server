@@ -27,11 +27,11 @@ from ....runner.v2 import submit_workflow
 from ....schemas.v2 import JobCreateV2
 from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import JobStatusTypeV2
-from ....security import current_active_verified_user
-from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_verified_user
 
 
 def _encode_as_utc(dt: datetime):
@@ -54,7 +54,7 @@ async def apply_workflow(
     job_create: JobCreateV2,
     background_tasks: BackgroundTasks,
     request: Request,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[JobReadV2]:
 

@@ -22,7 +22,6 @@ from fastapi import FastAPI
 
 from .app.routes.aux._runner import _backend_supports_shutdown  # FIXME: change
 from .app.runner.shutdown import cleanup_after_shutdown
-from .app.security import _create_first_user
 from .config import get_settings
 from .logger import config_uvicorn_loggers
 from .logger import get_logger
@@ -44,7 +43,7 @@ def collect_routers(app: FastAPI) -> None:
     from .app.routes.api.v2 import router_api_v2
     from .app.routes.admin.v1 import router_admin_v1
     from .app.routes.admin.v2 import router_admin_v2
-    from .app.routes.auth import router_auth
+    from .app.routes.auth.router import router_auth
 
     settings = Inject(get_settings)
 
@@ -91,13 +90,6 @@ async def lifespan(app: FastAPI):
     logger.info("Start application startup")
     check_settings()
     settings = Inject(get_settings)
-    await _create_first_user(
-        email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
-        username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
-        is_superuser=True,
-        is_verified=True,
-    )
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         from fractal_server.ssh._fabric import get_ssh_connection

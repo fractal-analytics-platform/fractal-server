@@ -13,8 +13,8 @@ from sqlalchemy.orm.attributes import flag_modified
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.security import current_active_user
-from fractal_server.app.security import User
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
@@ -49,7 +49,7 @@ async def post_new_image(
     project_id: int,
     dataset_id: int,
     new_image: SingleImage,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
 
@@ -104,7 +104,7 @@ async def query_dataset_images(
     page: int = 1,  # query param
     page_size: Optional[int] = None,  # query param
     query: Optional[ImageQuery] = None,  # body
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:
 
@@ -204,7 +204,7 @@ async def delete_dataset_images(
     project_id: int,
     dataset_id: int,
     zarr_url: str,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
 
@@ -243,7 +243,7 @@ async def patch_dataset_image(
     project_id: int,
     dataset_id: int,
     image_update: SingleImageUpdate,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     output = await _get_dataset_check_owner(

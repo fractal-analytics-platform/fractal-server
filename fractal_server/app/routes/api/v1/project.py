@@ -34,9 +34,6 @@ from ....schemas.v1 import JobStatusTypeV1
 from ....schemas.v1 import ProjectCreateV1
 from ....schemas.v1 import ProjectReadV1
 from ....schemas.v1 import ProjectUpdateV1
-from ....security import current_active_user
-from ....security import current_active_verified_user
-from ....security import User
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
@@ -44,6 +41,9 @@ from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _raise_if_v1_is_read_only
 from ._aux_functions import clean_app_job_list_v1
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_active_verified_user
 
 router = APIRouter()
 logger = set_logger(__name__)
@@ -55,7 +55,7 @@ def _encode_as_utc(dt: datetime):
 
 @router.get("/", response_model=list[ProjectReadV1])
 async def get_list_project(
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[Project]:
     """
@@ -75,7 +75,7 @@ async def get_list_project(
 @router.post("/", response_model=ProjectReadV1, status_code=201)
 async def create_project(
     project: ProjectCreateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ProjectReadV1]:
     """
@@ -101,7 +101,7 @@ async def create_project(
 @router.get("/{project_id}/", response_model=ProjectReadV1)
 async def read_project(
     project_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ProjectReadV1]:
     """
@@ -118,7 +118,7 @@ async def read_project(
 async def update_project(
     project_id: int,
     project_update: ProjectUpdateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     _raise_if_v1_is_read_only()
@@ -144,7 +144,7 @@ async def update_project(
 @router.delete("/{project_id}/", status_code=204)
 async def delete_project(
     project_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -249,7 +249,7 @@ async def apply_workflow(
     input_dataset_id: int,
     output_dataset_id: int,
     request: Request,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
     _raise_if_v1_is_read_only()

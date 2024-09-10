@@ -27,13 +27,13 @@ from ....schemas.v1 import ResourceReadV1
 from ....schemas.v1 import ResourceUpdateV1
 from ....schemas.v1 import WorkflowExportV1
 from ....schemas.v1 import WorkflowTaskExportV1
-from ....security import current_active_user
-from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _raise_if_v1_is_read_only
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 
 router = APIRouter()
 
@@ -46,7 +46,7 @@ router = APIRouter()
 async def create_dataset(
     project_id: int,
     dataset: DatasetCreateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV1]:
     """
@@ -72,7 +72,7 @@ async def create_dataset(
 async def read_dataset_list(
     project_id: int,
     history: bool = True,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetReadV1]]:
     """
@@ -103,7 +103,7 @@ async def read_dataset_list(
 async def read_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV1]:
     """
@@ -128,7 +128,7 @@ async def update_dataset(
     project_id: int,
     dataset_id: int,
     dataset_update: DatasetUpdateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV1]:
     """
@@ -165,7 +165,7 @@ async def update_dataset(
 async def delete_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -239,7 +239,7 @@ async def create_resource(
     project_id: int,
     dataset_id: int,
     resource: ResourceCreateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ResourceReadV1]:
     """
@@ -268,7 +268,7 @@ async def create_resource(
 async def get_resource_list(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ResourceReadV1]]:
     """
@@ -296,7 +296,7 @@ async def update_resource(
     dataset_id: int,
     resource_id: int,
     resource_update: ResourceUpdateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ResourceReadV1]:
     """
@@ -337,7 +337,7 @@ async def delete_resource(
     project_id: int,
     dataset_id: int,
     resource_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -371,7 +371,7 @@ async def delete_resource(
 async def export_history_as_workflow(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowExportV1]:
     """
@@ -439,7 +439,7 @@ async def export_history_as_workflow(
 async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetStatusReadV1]:
     """
@@ -535,14 +535,16 @@ async def get_workflowtask_status(
 @router.get("/dataset/", response_model=list[DatasetReadV1])
 async def get_user_datasets(
     history: bool = True,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetReadV1]:
     """
     Returns all the datasets of the current user
     """
     stm = select(Dataset)
-    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    stm = stm.join(Project).where(
+        Project.user_list.any(UserOAuth.id == user.id)
+    )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     await db.close()

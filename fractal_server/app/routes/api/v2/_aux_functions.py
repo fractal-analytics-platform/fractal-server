@@ -22,7 +22,7 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
-from ....security import User
+from fractal_server.app.models import UserOAuth
 from fractal_server.images import Filters
 
 
@@ -323,7 +323,7 @@ async def _get_job_check_owner(
 async def _get_task_check_owner(
     *,
     task_id: int,
-    user: User,
+    user: UserOAuth,
     db: AsyncSession,
 ) -> TaskV2:
     """

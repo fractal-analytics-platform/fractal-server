@@ -22,7 +22,7 @@ from ....models.v1 import Task
 from ....models.v1 import Workflow
 from ....models.v1 import WorkflowTask
 from ....schemas.v1 import JobStatusTypeV1
-from ....security import User
+from fractal_server.app.models import UserOAuth
 
 
 def _raise_if_v1_is_read_only() -> None:
@@ -327,7 +327,7 @@ async def _get_job_check_owner(
 async def _get_task_check_owner(
     *,
     task_id: int,
-    user: User,
+    user: UserOAuth,
     db: AsyncSession,
 ) -> Task:
     """
