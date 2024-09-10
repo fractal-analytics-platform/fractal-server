@@ -3,11 +3,7 @@ Definition of `/auth/current-user/` endpoints
 """
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
-from fastapi_users import exceptions
 from fastapi_users import schemas
-from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import current_active_user
@@ -46,18 +42,16 @@ async def patch_current_user(
     user_manager: UserManager = Depends(get_user_manager),
     db: AsyncSession = Depends(get_async_db),
 ):
+    """
+    Note: a user cannot patch their own password (as enforced within the
+    `UserUpdateStrict` schema).
+    """
     update = UserUpdate(**user_update.dict(exclude_unset=True))
 
-    try:
-        user = await user_manager.update(update, current_user, safe=True)
-    except exceptions.InvalidPasswordException as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
-                "reason": e.reason,
-            },
-        )
+    # NOTE: here it would be relevant to catch an `InvalidPasswordException`
+    # (from `fastapi_users.exceptions`), if we were to allow users change
+    # their own password
+    user = await user_manager.update(update, current_user, safe=True)
     patched_user = schemas.model_validate(UserOAuth, user)
 
     patched_user_with_groups = await _get_single_user_with_group_names(
