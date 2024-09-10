@@ -18,8 +18,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("task") as batch_op:
-        batch_op.drop_column("is_v2_compatible")
 
     with op.batch_alter_table("workflowtaskv2") as batch_op:
         batch_op.alter_column(
@@ -63,6 +61,9 @@ def upgrade() -> None:
     ) as batch_op:
         batch_op.drop_column("is_legacy_task")
         batch_op.drop_column("task_legacy_id")
+
+    with op.batch_alter_table("task") as batch_op:
+        batch_op.drop_column("is_v2_compatible")
 
 
 def downgrade() -> None:
