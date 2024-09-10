@@ -16,6 +16,7 @@ __all__ = (
     "UserRead",
     "UserUpdate",
     "UserCreate",
+    "UserUpdateNewGroups",
 )
 
 
@@ -134,3 +135,14 @@ class UserCreate(schemas.BaseUserCreate):
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
+
+
+class UserUpdateNewGroups(BaseModel, extra=Extra.forbid):  # FIXME RENAME
+    """
+    Simple schema for `add_groups_to_user` endpoint.
+
+    Attributes:
+        new_group_ids: IDs of groups to be added to user.
+    """
+
+    new_group_ids: list[int] = Field(default_factory=list)
