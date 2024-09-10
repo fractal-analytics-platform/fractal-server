@@ -12,7 +12,7 @@ from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 
 # revision identifiers, used by Alembic.
 revision = "d9a140db5d42"
-down_revision = "5bf02391cfef"
+down_revision = "091b01f51f88"
 branch_labels = None
 depends_on = None
 
