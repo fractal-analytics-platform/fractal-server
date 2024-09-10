@@ -3,7 +3,7 @@
 # 2.4.0
 
 * App:
-    * Move creation of first user from application startup into `fractalctl set-db` command (\#1738).
+    * Move creation of first user from application startup into `fractalctl set-db` command (\#1738, \#1748).
     * Add creation of default user group into `fractalctl set-db` command (\#1738).
     * Create `update-db-script` for current version, that adds all users to default group (\#1738).
 * API:
@@ -15,6 +15,8 @@
 * Internal
     * Refactored `fractal_server.app.auth` and `fractal_server.app.security` (\#1738)/
     * Export all relevant modules in `app.models`, since it matters e.g. for `autogenerate`-ing migration scripts (\#1738).
+* Testing
+    * Add `UserGroup` validation to `scripts/validate_db_data_with_read_schemas.py` (\#1746).
 
 
 # 2.3.11
