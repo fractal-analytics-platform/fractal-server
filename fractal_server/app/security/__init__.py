@@ -306,14 +306,20 @@ async def _create_first_user(
 
 
 def _create_first_group():
+    logger.info(
+        f"START _create_first_group, with name {FRACTAL_DEFAULT_GROUP_NAME}"
+    )
     with next(get_sync_db()) as db:
         group_all = db.execute(select(UserGroup))
         if group_all.scalars().one_or_none() is None:
-            first_group = UserGroup(name="All")
+            first_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
             db.add(first_group)
             db.commit()
-            logger.warning(f"Create group {FRACTAL_DEFAULT_GROUP_NAME}")
+            logger.info(f"Created group {FRACTAL_DEFAULT_GROUP_NAME}")
         else:
-            logger.warning(
-                f"Group {FRACTAL_DEFAULT_GROUP_NAME} already exists"
+            logger.info(
+                f"Group {FRACTAL_DEFAULT_GROUP_NAME} already exists, skip."
             )
+    logger.info(
+        f"END   _create_first_group, with name {FRACTAL_DEFAULT_GROUP_NAME}"
+    )
