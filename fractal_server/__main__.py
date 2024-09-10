@@ -86,11 +86,11 @@ def set_db():
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
     print(f"START: Run alembic.config, with argv={alembic_args}")
     alembic.config.main(argv=alembic_args)
-    print("END: alembic.config")
+    print("END: alembic.config\n")
     # Insert default group
     print("START: Default group creation")
     _create_first_group()
-    print("END: Default group creation")
+    print("END: Default group creation\n")
     # NOTE: It will be fixed with #1739
     settings = Inject(get_settings)
     print("START: First user creation")
@@ -103,7 +103,7 @@ def set_db():
             is_verified=True,
         )
     )
-    print("END: First user creation")
+    print("END: First user creation\n")
 
 
 def update_db_data():
