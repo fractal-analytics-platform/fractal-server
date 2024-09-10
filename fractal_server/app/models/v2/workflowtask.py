@@ -36,6 +36,6 @@ class WorkflowTaskV2(SQLModel, table=True):
     )
 
     # Task
-    task_type: Literal["parallel", "non_parallel", "compound"]
+    task_type: str
     task_id: int = Field(foreign_key="taskv2.id")
     task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
