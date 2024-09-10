@@ -43,7 +43,6 @@ from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
 from fastapi_users.models import UP
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import func
@@ -294,12 +293,6 @@ async def _create_first_user(
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     logger.info(f"User {user.email} created")
-
-    except IntegrityError:
-        logger.warning(
-            f"Creation of user {email} failed with IntegrityError "
-            "(likely due to concurrent attempts from different workers)."
-        )
 
     except UserAlreadyExists:
         logger.warning(f"User {email} already exists")

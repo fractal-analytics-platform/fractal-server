@@ -3,7 +3,7 @@
 # 2.4.0
 
 * App:
-    * Move creation of first user from application startup into `fractalctl set-db` command (\#1738).
+    * Move creation of first user from application startup into `fractalctl set-db` command (\#1738, \#1748).
     * Add creation of default user group into `fractalctl set-db` command (\#1738).
     * Create `update-db-script` for current version, that adds all users to default group (\#1738).
 * API:
