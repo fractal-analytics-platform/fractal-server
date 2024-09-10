@@ -1,13 +1,13 @@
 """
 Definition of `/auth/group/` routes
 """
-import itertools
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import join
 from sqlmodel import col
 from sqlmodel import select
 
@@ -37,37 +37,39 @@ async def get_list_user_groups(
     FIXME docstring x
     """
 
-    # Get all groups, sorted by `id`
-    stm_groups = select(UserGroup).order_by("id")
-    res = await db.execute(stm_groups)
-    groups = res.scalars().all()
-
     if user_ids is False:
+        # Get all groups, sorted by `id`
+        stm_groups = select(UserGroup).order_by("id")
+        res = await db.execute(stm_groups)
+        groups = res.scalars().all()
         return groups
 
-    # Get all links, sorted by `group_id`
-    stm_links = select(LinkUserGroup).order_by("group_id")
-    res = await db.execute(stm_links)
-    links = res.scalars().all()
+    else:
 
-    # Enrich group objects with `user_ids` attribute
-    for ind, (group_id, group_elements_iterator) in enumerate(
-        itertools.groupby(links, key=lambda _link: _link.group_id)
-    ):
-        if group_id != groups[ind].id:
-            raise HTTPException(
-                status_code=500,
-                detail=(
-                    f"Error while creating `user_ids` for {group_id=}, "
-                    f"with {ind=} and {groups[ind]=}."
-                ),
+        SEPARATOR = ","
+
+        stm = (
+            select(
+                UserGroup,
+                func.aggregate_strings(LinkUserGroup.user_id, SEPARATOR),
             )
-        groups[ind] = dict(
-            groups[ind].model_dump(),
-            user_ids=[link.user_id for link in group_elements_iterator],
+            .select_from(
+                join(
+                    LinkUserGroup,
+                    UserGroup,
+                    LinkUserGroup.group_id == UserGroup.id,
+                )
+            )
+            .group_by(LinkUserGroup.group_id)
+            .order_by(UserGroup.id)
         )
-
-    return groups
+        res = await db.execute(stm)
+        enriched_groups = []
+        for row in res.all():
+            group, user_ids_string = row[:]
+            user_ids = [int(_id) for _id in user_ids_string.split(SEPARATOR)]
+            enriched_groups.append(dict(group.model_dump(), user_ids=user_ids))
+        return enriched_groups
 
 
 @router_group.get(
