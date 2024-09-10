@@ -8,6 +8,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import select
+import itertools
 
 from . import current_active_superuser
 from ...db import get_async_db
@@ -23,37 +24,45 @@ from fractal_server.app.models import UserOAuth
 router_group = APIRouter()
 
 
-@router_group.get(
-    "/group/", response_model=list[UserGroupRead], status_code=200
-)
+@router_group.get("/group/", response_model=list[UserGroupRead], status_code=200)
 async def get_list_user_groups(
     user_ids: bool = False,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
     """
-    FIXME docstring
+    FIXME docstring x
     """
 
-    # Get all groups
-    stm_all_groups = select(UserGroup)
-    res = await db.execute(stm_all_groups)
+    # Get all groups, sorted by `id`
+    stm_groups = select(UserGroup).order_by("id")
+    res = await db.execute(stm_groups)
     groups = res.scalars().all()
 
-    if user_ids is True:
-        # Get all user/group links
-        stm_all_links = select(LinkUserGroup)
-        res = await db.execute(stm_all_links)
-        links = res.scalars().all()
+    if user_ids is False:
+        return groups
 
-        # FIXME GROUPS: this must be optimized
-        for ind, group in enumerate(groups):
-            groups[ind] = dict(
-                group.model_dump(),
-                user_ids=[
-                    link.user_id for link in links if link.group_id == group.id
-                ],
+    # Get all links, sorted by `group_id`
+    stm_links = select(LinkUserGroup).order_by("group_id")
+    res = await db.execute(stm_links)
+    links = res.scalars().all()
+
+    # Enrich group objects with `user_ids` attribute
+    for ind, (group_id, group_elements_iterator) in enumerate(
+        itertools.groupby(links, key=lambda _link: _link.group_id)
+    ):
+        if group_id != groups[ind].id:
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    f"Error while creating `user_ids` for {group_id=}, "
+                    f"with {ind=} and {groups[ind]=}."
+                ),
             )
+        groups[ind] = dict(
+            groups[ind].model_dump(),
+            user_ids=[link.user_id for link in group_elements_iterator],
+        )
 
     return groups
 
