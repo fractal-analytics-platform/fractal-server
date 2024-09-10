@@ -18,35 +18,51 @@ depends_on = None
 
 
 def upgrade() -> None:
+    with op.batch_alter_table("task") as batch_op:
+        batch_op.drop_column("is_v2_compatible")
 
-    with op.batch_alter_table(
-        "workflowtaskv2", schema=None, naming_convention=NAMING_CONVENTION
-    ) as batch_op:
+    with op.batch_alter_table("workflowtaskv2") as batch_op:
         batch_op.alter_column(
             "task_id", existing_type=sa.INTEGER(), nullable=False
         )
+
+    # NOTE: in sqlite, this `drop_constraint` only works if
+    # `batch_alter_table` has a `naming_convention` set. Ref
+    # https://alembic.sqlalchemy.org/en/latest/batch.html#dropping-unnamed-or-named-foreign-key-constraints
+    with op.batch_alter_table(
+        "workflowtaskv2", naming_convention=NAMING_CONVENTION
+    ) as batch_op:
         batch_op.drop_constraint(
             "fk_workflowtaskv2_task_legacy_id_task", type_="foreignkey"
         )
 
-        if (
-            op.get_bind().dialect.name == "sqlite"
-            and op.get_bind()
-            .execute(
-                sa.text(
-                    "SELECT name FROM sqlite_master WHERE type='index' "
-                    "AND name='idx_workflowtaskv2_task_legacy_id'"
-                )
+    # NOTE: in sqlite, the `drop_index` command fails if the existing table
+    # has zero rows, while it succeeds if there are already some rows
+    if op.get_bind().dialect.name == "sqlite":
+        import sqlite3
+        import logging
+
+        logger = logging.getLogger("alembic.runtime.migration")
+        logger.warning(
+            f"Using sqlite, with {sqlite3.version=} and "
+            f"{sqlite3.sqlite_version=}"
+        )
+        logger.warning("Now drop index 'idx_workflowtaskv2_task_legacy_id'")
+        try:
+            with op.batch_alter_table("workflowtaskv2") as batch_op:
+                batch_op.drop_index("idx_workflowtaskv2_task_legacy_id")
+        except sa.exc.OperationalError:
+            logger.warning(
+                "Could not drop index; "
+                "this is expected, when the database is empty."
             )
-            .fetchone()
-        ):
-            batch_op.drop_index("idx_workflowtaskv2_task_legacy_id")
+            logger.warning("Continue.")
 
-        batch_op.drop_column("task_legacy_id")
+    with op.batch_alter_table(
+        "workflowtaskv2", schema=None, naming_convention=NAMING_CONVENTION
+    ) as batch_op:
         batch_op.drop_column("is_legacy_task")
-
-    with op.batch_alter_table("task", schema=None) as batch_op:
-        batch_op.drop_column("is_v2_compatible")
+        batch_op.drop_column("task_legacy_id")
 
 
 def downgrade() -> None:
