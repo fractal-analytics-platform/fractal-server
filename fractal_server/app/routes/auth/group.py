@@ -46,7 +46,8 @@ async def get_list_user_groups(
         res = await db.execute(stm_all_links)
         links = res.scalars().all()
 
-        # FIXME GROUPS: this must be optimized
+        # TODO: possible optimizations for this construction are listed in
+        # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
         for ind, group in enumerate(groups):
             groups[ind] = dict(
                 group.model_dump(),
