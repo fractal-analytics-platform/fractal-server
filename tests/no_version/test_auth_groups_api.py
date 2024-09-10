@@ -199,3 +199,55 @@ async def test_create_user_group_same_name(registered_superuser_client):
     )
     assert res.status_code == 422
     assert "A group with the same name already exists" in str(res.json())
+
+
+async def test_get_user_optional_group_info(
+    registered_client, registered_superuser_client
+):
+    """
+    Test that GET-ting a single user may be enriched with group IDs/names.
+    """
+
+    # Preliminary phase: create a group and associate a user to it.
+    GROUP_NAME = "my group"
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/", json=dict(name=GROUP_NAME)
+    )
+    assert res.status_code == 201
+    group_id = res.json()["id"]
+
+    # Get current user and check it has no group names/ID
+    res = await registered_client.get(f"{PREFIX}/current-user/")
+    assert res.status_code == 200
+    current_user = res.json()
+    current_user_id = current_user["id"]
+    assert current_user["group_names"] is None
+    assert current_user["group_ids"] is None
+
+    # Add current user to group
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_id}/",
+        json=dict(new_user_ids=[current_user_id]),
+    )
+    assert res.status_code == 200
+
+    # Registered user can see group names
+    res = await registered_client.get(
+        f"{PREFIX}/current-user/?group_names=True"
+    )
+    assert res.status_code == 200
+    current_user = res.json()
+    debug(current_user)
+    current_user_id = current_user["id"]
+    assert current_user["group_names"] == [GROUP_NAME]
+    assert current_user["group_ids"] is None
+
+    # Superusers can see group IDs
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{current_user_id}/"
+    )
+    assert res.status_code == 200
+    user = res.json()
+    debug(user)
+    assert user["group_names"] is None
+    assert user["group_ids"] == [group_id]
