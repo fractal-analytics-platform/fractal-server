@@ -251,3 +251,13 @@ async def test_get_user_optional_group_info(
     debug(user)
     assert user["group_names"] is None
     assert user["group_ids"] == [group_id]
+
+    # Superusers don't see group IDs, if group_ids=False
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{current_user_id}/" "?group_ids=False"
+    )
+    assert res.status_code == 200
+    user = res.json()
+    debug(user)
+    assert user["group_names"] is None
+    assert user["group_ids"] is None
