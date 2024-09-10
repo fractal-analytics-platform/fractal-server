@@ -90,6 +90,7 @@ async def test_user_group_crud(registered_superuser_client):
     # Preliminary: register two new users
     credentials_user_A = dict(email="aaa@example.org", password="12345")
     credentials_user_B = dict(email="bbb@example.org", password="12345")
+    credentials_user_C = dict(email="ccc@example.org", password="12345")
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=credentials_user_A
     )
@@ -100,15 +101,20 @@ async def test_user_group_crud(registered_superuser_client):
     )
     assert res.status_code == 201
     user_B_id = res.json()["id"]
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=credentials_user_C
+    )
+    assert res.status_code == 201
+    user_C_id = res.json()["id"]
 
-    # Create group 1 with user A
+    # Create group 1
     res = await registered_superuser_client.post(
         f"{PREFIX}/group/", json=dict(name="group 1")
     )
     assert res.status_code == 201
     group_1_id = res.json()["id"]
 
-    # Create group 2 with users A and B
+    # Create group 2
     res = await registered_superuser_client.post(
         f"{PREFIX}/group/",
         json=dict(name="group 2"),
@@ -116,15 +122,17 @@ async def test_user_group_crud(registered_superuser_client):
     assert res.status_code == 201
     group_2_id = res.json()["id"]
 
-    # Add user A to group 1
+    # Add users A and B and C to group 1
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{group_1_id}/",
-        json=dict(new_user_ids=[user_A_id, user_B_id]),
+        json=dict(new_user_ids=[user_A_id, user_B_id, user_C_id]),
     )
     assert res.status_code == 200
+
     # Add user B to group 2
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_2_id}/", json=dict(new_user_ids=[user_B_id])
+        f"{PREFIX}/group/{group_2_id}/",
+        json=dict(new_user_ids=[user_B_id]),
     )
     assert res.status_code == 200
 
@@ -133,11 +141,12 @@ async def test_user_group_crud(registered_superuser_client):
         f"{PREFIX}/group/?user_ids=true"
     )
     assert res.status_code == 200
+
     groups_data = res.json()
     assert len(groups_data) == 2
     for group in groups_data:
         if group["name"] == "group 1":
-            assert set(group["user_ids"]) == {user_A_id, user_B_id}
+            assert set(group["user_ids"]) == {user_A_id, user_B_id, user_C_id}
         elif group["name"] == "group 2":
             assert group["user_ids"] == [user_B_id]
         else:
