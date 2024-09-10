@@ -55,8 +55,6 @@ class UserUpdate(schemas.BaseUserUpdate):
     username: Optional[str]
     slurm_accounts: Optional[list[StrictStr]]
 
-    new_group_ids: Optional[list[int]] = None
-
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
         valstr("slurm_user")
