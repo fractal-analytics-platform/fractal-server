@@ -1,5 +1,22 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.4.0
+
+* App:
+    * Move creation of first user from application startup into `fractalctl set-db` command (\#1738).
+    * Add creation of default user group into `fractalctl set-db` command (\#1738).
+    * Create `update-db-script` for current version, that adds all users to default group (\#1738).
+* API:
+    * Added `/auth/group/` and `/auth/group-names/` routers (\#1738).
+    * Implement `/auth/users/{id}/` POST/PATCH routes in `fractal-server` (\#1738).
+    * Add `UserManager.on_after_register` hook to add new users to default user group (\#1738).
+* Database:
+    * Added new `usergroup` and `linkusergroup` tables (\#1738).
+* Internal
+    * Refactored `fractal_server.app.auth` and `fractal_server.app.security` (\#1738)/
+    * Export all relevant modules in `app.models`, since it matters e.g. for `autogenerate`-ing migration scripts (\#1738).
+
+
 # 2.3.11
 
 * SSH runner:
