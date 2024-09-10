@@ -1,6 +1,8 @@
 """
 Definition of `/auth/group/` routes
 """
+import itertools
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -8,7 +10,6 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import select
-import itertools
 
 from . import current_active_superuser
 from ...db import get_async_db
@@ -24,7 +25,9 @@ from fractal_server.app.models import UserOAuth
 router_group = APIRouter()
 
 
-@router_group.get("/group/", response_model=list[UserGroupRead], status_code=200)
+@router_group.get(
+    "/group/", response_model=list[UserGroupRead], status_code=200
+)
 async def get_list_user_groups(
     user_ids: bool = False,
     user: UserOAuth = Depends(current_active_superuser),
