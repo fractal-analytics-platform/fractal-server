@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
+from sqlmodel import func
 from sqlmodel import select
 
 from . import current_active_superuser
@@ -19,7 +20,6 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 
-
 router_group = APIRouter()
 
 
@@ -31,9 +31,6 @@ async def get_list_user_groups(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
-    """
-    FIXME docstring
-    """
 
     # Get all groups
     stm_all_groups = select(UserGroup)
@@ -46,7 +43,8 @@ async def get_list_user_groups(
         res = await db.execute(stm_all_links)
         links = res.scalars().all()
 
-        # FIXME GROUPS: this must be optimized
+        # TODO: possible optimizations for this construction are listed in
+        # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
         for ind, group in enumerate(groups):
             groups[ind] = dict(
                 group.model_dump(),
@@ -68,9 +66,6 @@ async def get_single_user_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
     group = await _get_single_group_with_user_ids(group_id=group_id, db=db)
     return group
 
@@ -85,9 +80,6 @@ async def create_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
 
     # Check that name is not already in use
     existing_name_str = select(UserGroup).where(
@@ -119,24 +111,21 @@ async def update_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
 
     # Check that all required users exist
     # Note: The reason for introducing `col` is as in
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors,
-    stm = select(UserOAuth).where(
+    stm = select(func.count()).where(
         col(UserOAuth.id).in_(group_update.new_user_ids)
     )
     res = await db.execute(stm)
-    matching_users = res.scalars().unique().all()
-    if not len(matching_users) == len(group_update.new_user_ids):
+    number_matching_users = res.scalar()
+    if number_matching_users != len(group_update.new_user_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(
-                f"At least user with IDs {group_update.new_user_ids} "
-                "does not exist."
+                f"Not all requested users (IDs {group_update.new_user_ids}) "
+                "exist."
             ),
         )
 
@@ -161,9 +150,6 @@ async def delete_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    """
-    FIXME docstring
-    """
     raise HTTPException(
         status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
         detail=(

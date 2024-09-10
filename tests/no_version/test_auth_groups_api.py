@@ -73,7 +73,7 @@ async def test_update_group(registered_superuser_client):
     assert res.status_code == 200
     assert res.json()["user_ids"] == []
 
-    # Patch an existing group by adding a valid users
+    # Patch an existing group by adding a valid user
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{group_id}/",
         json=dict(new_user_ids=[user_A_id]),
