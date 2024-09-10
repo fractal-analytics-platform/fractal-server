@@ -58,13 +58,13 @@ with next(get_sync_db()) as db:
         group for group in groups if group.name == FRACTAL_DEFAULT_GROUP_NAME
     )
     stm = (
-        select(UserOAuth)
+        select(UserOAuth.id)
         .join(LinkUserGroup)
         .where(LinkUserGroup.user_id == UserOAuth.id)
         .where(LinkUserGroup.group_id == default_group.id)
     )
-    users_in_default_group = db.execute(stm).scalars().unique().all()
-    if set(users) == set(users_in_default_group):
+    ids_default_group = db.execute(stm).scalars().unique().all()
+    if set(user.id for user in users) == set(ids_default_group):
         print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}")
     else:
         raise ValueError
