@@ -1,14 +1,9 @@
-from passlib.context import CryptContext
-
-from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
-from scripts.client import DEFAULT_CREDENTIALS
 from scripts.client import FractalClient
 
 
@@ -35,25 +30,6 @@ def create_image_list(n_images: int) -> list:
             }
         )
     return images_list
-
-
-def create_first_user() -> None:
-    context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    hashed_password = context.hash(DEFAULT_CREDENTIALS["password"])
-
-    user_db = UserOAuth(
-        email=DEFAULT_CREDENTIALS["username"],
-        hashed_password=hashed_password,
-        username="admin",
-        slurm_user="slurm",
-        is_superuser=True,
-        is_verified=True,
-    )
-
-    with next(get_sync_db()) as session:
-        session.add(user_db)
-        session.commit()
-        print("Admin created!")
 
 
 def _create_user_client(
@@ -255,7 +231,6 @@ def _user_flow_job(
 
 
 if __name__ == "__main__":
-    create_first_user()
     admin = FractalClient()
 
     working_task = admin.add_working_task()

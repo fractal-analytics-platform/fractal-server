@@ -18,8 +18,8 @@ from ....models.v2 import TaskV2
 from ....schemas.v2 import TaskCollectCustomV2
 from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import TaskReadV2
-from ....security import current_active_verified_user
-from ....security import User
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.tasks.v2.background_operations import _insert_tasks
 from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
@@ -36,7 +36,7 @@ logger = set_logger(__name__)
 )
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: DBSyncSession = Depends(get_sync_db),
 ) -> list[TaskReadV2]:
 

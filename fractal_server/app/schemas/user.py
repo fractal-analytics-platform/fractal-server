@@ -34,6 +34,8 @@ class UserRead(schemas.BaseUser[int]):
     cache_dir: Optional[str]
     username: Optional[str]
     slurm_accounts: list[str]
+    group_names: Optional[list[str]] = None
+    group_ids: Optional[list[int]] = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):

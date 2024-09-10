@@ -92,7 +92,9 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 403
 
     # GET/{user_id} with superuser user
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{user_id}/?group_ids=false"
+    )
     debug(res.json())
     assert res.status_code == 200
 
@@ -102,7 +104,9 @@ async def test_patch_current_user_cache_dir(registered_client):
     Test several scenarios for updating `slurm_accounts` and `cache_dir`
     for the current user.
     """
-    res = await registered_client.get(f"{PREFIX}/current-user/")
+    res = await registered_client.get(
+        f"{PREFIX}/current-user/?group_names=True"
+    )
     pre_patch_user = res.json()
 
     # Successful API call with empty payload
@@ -246,6 +250,13 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     assert res.status_code == 201
     pre_patch_user = res.json()
 
+    # FIXME the following workaround won't be necessary when we tackle
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/1737,
+    # so that the register-user POST endpoint will also take care of producing
+    # the appropriate `user_ids` attribute.
+    pre_patch_user["group_ids"] = []
+    debug(pre_patch_user)
+
     update = dict(
         email="patch@fractal.xy",
         is_active=False,
@@ -262,17 +273,30 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     # Fail because of repeated "FOO" in update.slurm_accounts
     assert res.status_code == 422
-    # remove one of the two "FOO" in update.slurm_accounts
-    update["slurm_accounts"] = ["FOO", "BAR"]
+
+    # Fail because invalid password
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(password=""),
+    )
+    assert res.status_code == 400
+    debug(res.json())
+    assert "The password is too short" in str(res.json()["detail"])
+
     # succeed without the repetition
+    # remove one of the two "FOO" in update.slurm_accounts, so that
+    update["slurm_accounts"] = ["FOO", "BAR"]
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
     )
     assert res.status_code == 200
     user = res.json()
+    debug(user)
+
     # assert that the attributes we wanted to update have actually changed
     for key, value in user.items():
+        debug(key)
         if key not in update:
             assert value == pre_patch_user[key]
         else:
@@ -387,24 +411,3 @@ async def test_delete_user(registered_client, registered_superuser_client):
         f"{PREFIX}/users/THIS-IS-NOT-AN-ID"
     )
     assert res.status_code == 404
-
-
-@pytest.mark.parametrize("cache_dir", ("/some/path", None))
-@pytest.mark.parametrize("username", ("my_username", None))
-@pytest.mark.parametrize("slurm_user", ("test01", None))
-async def test_MockCurrentUser_fixture(
-    db,
-    MockCurrentUser,
-    cache_dir,
-    username,
-    slurm_user,
-):
-
-    user_kwargs = dict(
-        cache_dir=cache_dir, username=username, slurm_user=slurm_user
-    )
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
-        debug(user)
-        assert user.cache_dir == cache_dir
-        assert user.username == username
-        assert user.slurm_user == slurm_user

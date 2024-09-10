@@ -6,8 +6,8 @@ from fastapi import Depends
 
 from ....config import get_settings
 from ....syringe import Inject
-from ...models.security import UserOAuth
-from ...security import current_active_superuser
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_superuser
 
 
 router_api = APIRouter()
