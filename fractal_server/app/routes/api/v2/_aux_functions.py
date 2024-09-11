@@ -418,25 +418,21 @@ async def _workflow_insert_task(
     if order is None:
         order = len(db_workflow.task_list)
 
-    # Get task from db, and extract default arguments via a Task property
-    # method
-    # NOTE: this logic remains there for V1 tasks only. When we deprecate V1
-    # tasks, we can simplify this block
+    # Get task from db
     db_task = await db.get(TaskV2, task_id)
     if db_task is None:
         raise ValueError(f"TaskV2 {task_id} not found.")
     task_type = db_task.type
 
-    final_meta_parallel = (db_task.meta_parallel or {}).copy()
-    final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
-
     # Combine meta_parallel (higher priority)
     # and db_task.meta_parallel (lower priority)
+    final_meta_parallel = (db_task.meta_parallel or {}).copy()
     final_meta_parallel.update(meta_parallel or {})
     if final_meta_parallel == {}:
         final_meta_parallel = None
     # Combine meta_non_parallel (higher priority)
     # and db_task.meta_non_parallel (lower priority)
+    final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
     final_meta_non_parallel.update(meta_non_parallel or {})
     if final_meta_non_parallel == {}:
         final_meta_non_parallel = None
