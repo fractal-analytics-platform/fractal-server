@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import func
@@ -133,7 +134,18 @@ async def update_single_group(
     for user_id in group_update.new_user_ids:
         link = LinkUserGroup(user_id=user_id, group_id=group_id)
         db.add(link)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot link users with IDs {group_update.new_user_ids} "
+                f"to group {group_id}. "
+                "Likely reason: one of these links already exists.\n"
+                f"Original error: {str(e)}"
+            ),
+        )
 
     updated_group = await _get_single_group_with_user_ids(
         group_id=group_id, db=db

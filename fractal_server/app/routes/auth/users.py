@@ -8,6 +8,7 @@ from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import func
@@ -107,7 +108,19 @@ async def patch_user(
         for new_group_id in user_update.new_group_ids:
             link = LinkUserGroup(user_id=user_id, group_id=new_group_id)
             db.add(link)
-        await db.commit()
+
+        try:
+            await db.commit()
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Cannot link groups with IDs {user_update.new_group_ids} "
+                    f"to user {user_id}. "
+                    "Likely reason: one of these links already exists.\n"
+                    f"Original error: {str(e)}"
+                ),
+            )
 
         patched_user = user_to_patch
 
