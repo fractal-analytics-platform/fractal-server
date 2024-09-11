@@ -151,6 +151,31 @@ async def test_user_group_crud(registered_superuser_client):
     for group in groups_data:
         assert group["user_ids"] is None
 
+    # Add users A and B to group 2, and fail because user B is already there
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_2_id}/",
+        json=dict(new_user_ids=[user_A_id, user_B_id]),
+    )
+    assert res.status_code == 422
+    hint_msg = "Likely reason: one of these links already exists"
+    assert hint_msg in res.json()["detail"]
+
+    # After the previous 422, verify that user A was not added (that is,
+    # verify that `db.commit` is atomic)
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/group/?user_ids=true"
+    )
+    assert res.status_code == 200
+    groups_data = res.json()
+    assert len(groups_data) == 2
+    for group in groups_data:
+        if group["name"] == "group 1":
+            assert set(group["user_ids"]) == {user_A_id, user_B_id}
+        elif group["name"] == "group 2":
+            assert group["user_ids"] == [user_B_id]
+        else:
+            raise RuntimeError("Wrong branch.")
+
 
 async def test_get_user_group_names(
     client, registered_client, registered_superuser_client
