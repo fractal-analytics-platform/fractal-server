@@ -176,6 +176,14 @@ async def test_user_group_crud(registered_superuser_client):
         else:
             raise RuntimeError("Wrong branch.")
 
+    # Create user/group link and fail because of repeated IDs
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_1_id}/",
+        json=dict(new_user_ids=[99, 99]),
+    )
+    assert res.status_code == 422
+    assert "`new_user_ids` list has repetitions'" in str(res.json())
+
 
 async def test_get_user_group_names(
     client, registered_client, registered_superuser_client
