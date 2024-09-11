@@ -20,6 +20,9 @@ from ._aux_auth import _get_single_group_with_user_ids
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 router_group = APIRouter()
 
@@ -137,14 +140,16 @@ async def update_single_group(
     try:
         await db.commit()
     except IntegrityError as e:
+        error_msg = (
+            f"Cannot link users with IDs {group_update.new_user_ids} "
+            f"to group {group_id}. "
+            "Likely reason: one of these links already exists.\n"
+            f"Original error: {str(e)}"
+        )
+        logger.info(error_msg)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Cannot link users with IDs {group_update.new_user_ids} "
-                f"to group {group_id}. "
-                "Likely reason: one of these links already exists.\n"
-                f"Original error: {str(e)}"
-            ),
+            detail=error_msg,
         )
 
     updated_group = await _get_single_group_with_user_ids(

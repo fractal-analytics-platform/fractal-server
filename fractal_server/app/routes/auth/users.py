@@ -26,8 +26,12 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
+from fractal_server.logger import set_logger
 
 router_users = APIRouter()
+
+
+logger = set_logger(__name__)
 
 
 @router_users.get("/users/{user_id}/", response_model=UserRead)
@@ -112,14 +116,16 @@ async def patch_user(
         try:
             await db.commit()
         except IntegrityError as e:
+            error_msg = (
+                f"Cannot link groups with IDs {user_update.new_group_ids} "
+                f"to user {user_id}. "
+                "Likely reason: one of these links already exists.\n"
+                f"Original error: {str(e)}"
+            )
+            logger.info(error_msg)
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Cannot link groups with IDs {user_update.new_group_ids} "
-                    f"to user {user_id}. "
-                    "Likely reason: one of these links already exists.\n"
-                    f"Original error: {str(e)}"
-                ),
+                detail=error_msg,
             )
 
         patched_user = user_to_patch
