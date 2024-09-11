@@ -8,6 +8,7 @@ from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import func
@@ -25,8 +26,12 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
+from fractal_server.logger import set_logger
 
 router_users = APIRouter()
+
+
+logger = set_logger(__name__)
 
 
 @router_users.get("/users/{user_id}/", response_model=UserRead)
@@ -107,7 +112,21 @@ async def patch_user(
         for new_group_id in user_update.new_group_ids:
             link = LinkUserGroup(user_id=user_id, group_id=new_group_id)
             db.add(link)
-        await db.commit()
+
+        try:
+            await db.commit()
+        except IntegrityError as e:
+            error_msg = (
+                f"Cannot link groups with IDs {user_update.new_group_ids} "
+                f"to user {user_id}. "
+                "Likely reason: one of these links already exists.\n"
+                f"Original error: {str(e)}"
+            )
+            logger.info(error_msg)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=error_msg,
+            )
 
         patched_user = user_to_patch
 

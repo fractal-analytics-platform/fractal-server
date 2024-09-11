@@ -456,6 +456,23 @@ async def test_add_groups_to_user_as_superuser(registered_superuser_client):
     assert res.status_code == 200
     assert res.json()["group_ids"] == [group_id]
 
+    # Create user/group link and fail because it already exists
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(new_group_ids=[group_id]),
+    )
+    assert res.status_code == 422
+    hint_msg = "Likely reason: one of these links already exists"
+    assert hint_msg in res.json()["detail"]
+
+    # Create user/group link and fail because of repeated IDs
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(new_group_ids=[99, 99]),
+    )
+    assert res.status_code == 422
+    assert "`new_group_ids` list has repetitions'" in str(res.json())
+
 
 async def test_edit_user_and_fail(registered_superuser_client):
 
