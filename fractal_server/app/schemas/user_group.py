@@ -4,6 +4,10 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import validator
+
+from ._validators import val_unique_list
+
 
 __all__ = (
     "UserGroupRead",
@@ -55,3 +59,7 @@ class UserGroupUpdate(BaseModel, extra=Extra.forbid):
     """
 
     new_user_ids: list[int] = Field(default_factory=list)
+
+    _val_unique = validator("new_user_ids", allow_reuse=True)(
+        val_unique_list("new_user_ids")
+    )

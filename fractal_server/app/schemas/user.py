@@ -106,6 +106,10 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
 class UserUpdateWithNewGroupIds(UserUpdate):
     new_group_ids: Optional[list[int]] = None
 
+    _val_unique = validator("new_group_ids", allow_reuse=True)(
+        val_unique_list("new_group_ids")
+    )
+
 
 class UserCreate(schemas.BaseUserCreate):
     """
