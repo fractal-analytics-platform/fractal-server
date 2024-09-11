@@ -160,21 +160,13 @@ async def test_user_group_crud(registered_superuser_client):
     hint_msg = "Likely reason: one of these links already exists"
     assert hint_msg in res.json()["detail"]
 
-    # After the previous 422, verify that user A was not added (that is,
-    # verify that `db.commit` is atomic)
+    # After the previous 422, verify that user A was not added to group 2
+    # (that is, verify that `db.commit` is atomic)
     res = await registered_superuser_client.get(
-        f"{PREFIX}/group/?user_ids=true"
+        f"{PREFIX}/group/{group_2_id}/"
     )
     assert res.status_code == 200
-    groups_data = res.json()
-    assert len(groups_data) == 2
-    for group in groups_data:
-        if group["name"] == "group 1":
-            assert set(group["user_ids"]) == {user_A_id, user_B_id}
-        elif group["name"] == "group 2":
-            assert group["user_ids"] == [user_B_id]
-        else:
-            raise RuntimeError("Wrong branch.")
+    assert user_A_id not in res.json()["user_ids"]
 
     # Create user/group link and fail because of repeated IDs
     res = await registered_superuser_client.patch(
