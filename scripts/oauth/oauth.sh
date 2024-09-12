@@ -26,8 +26,8 @@ standard_login(){
 }
 
 assert_users_and_oauth() {
-    # $1 desired number of "user_oauth"
-    # $2 desired number of "oauthaccount"
+    # $1 desired number of users
+    # $2 desired number of oauth accounts
     NUM_USERS=$(sqlite3 $SQLITE_PATH "SELECT * FROM user_oauth;" | wc -l)
     NUM_OAUTH=$(sqlite3 $SQLITE_PATH "SELECT * FROM oauthaccount;" | wc -l)
     if [ "$NUM_USERS" -ne "$1" ] || [ "$NUM_OAUTH" -ne "$2" ]; then
@@ -36,7 +36,7 @@ assert_users_and_oauth() {
 }
 
 assert_email_and_id(){
-    # $1 TOKEN
+    # $1 access token
     # $2 desired email
     # $3 desired user id
     WHOAMI=$(
@@ -55,16 +55,16 @@ assert_email_and_id(){
 
 # --- Test
 
-assert_users_and_oauth 1 0
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
+
+assert_users_and_oauth 1 0
 curl -X POST \
     http://127.0.0.1:8001/auth/register/ \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
     -d '{"email": "kilgore@kilgore.trout", "password": "kilgore"}'
-
 assert_users_and_oauth 2 0
 
 # Login with "kilgore@kilgore.trout" with standard login.
@@ -84,17 +84,14 @@ USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 2 1
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $USER_ID
 
-# Change "kilgore@kilgore.trout" email into "kilgore@fractal.xy".
+# Change email into "kilgore@fractal.xy".
 curl -X PATCH \
     "http://127.0.0.1:8001/auth/users/$USER_ID/" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
     -d '{"email": "kilgore@fractal.xy"}'
 
-assert_users_and_oauth 2 1
-
 # Test I can login as "kilgore@fractal.xy" with both standard and oauth login.
-
 USER_TOKEN=$(standard_login "kilgore@fractal.xy" "kilgore")
 assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
@@ -102,6 +99,7 @@ USER_TOKEN_OAUTH=$(oauth_login)
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@fractal.xy" $USER_ID
 
 # Remove all oauth accounts from db.
+assert_users_and_oauth 2 1
 sqlite3 $SQLITE_PATH "DELETE FROM oauthaccount;"
 assert_users_and_oauth 2 0
 
@@ -109,8 +107,9 @@ assert_users_and_oauth 2 0
 USER_TOKEN=$(standard_login "kilgore@fractal.xy" "kilgore")
 assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
-# Using oauth login will create another user: "kilgore@kilgore.trout".
+# Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0
 USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
+
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
