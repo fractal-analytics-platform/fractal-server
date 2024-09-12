@@ -15,6 +15,8 @@ oauth_login(){
 }
 
 standard_login(){
+    # $1: username
+    # $2: password
     TOKEN=$(curl --silent -X POST \
         http://127.0.0.1:8001/auth/token/login/ \
         -H "Content-Type: application/x-www-form-urlencoded" \
@@ -23,9 +25,9 @@ standard_login(){
     echo $TOKEN
 }
 
-
 assert_users_and_oauth() {
-    # There must be $1 "user_oauth" and $2 "oauthaccount"
+    # $1 desired number of "user_oauth"
+    # $2 desired number of "oauthaccount"
     NUM_USERS=$(sqlite3 $SQLITE_PATH "SELECT * FROM user_oauth;" | wc -l)
     NUM_OAUTH=$(sqlite3 $SQLITE_PATH "SELECT * FROM oauthaccount;" | wc -l)
     if [ "$NUM_USERS" -ne "$1" ] || [ "$NUM_OAUTH" -ne "$2" ]; then
@@ -35,8 +37,8 @@ assert_users_and_oauth() {
 
 assert_email_and_id(){
     # $1 TOKEN
-    # $2 email to assert
-    # $3 id to assert
+    # $2 desired email
+    # $3 desired user id
     WHOAMI=$(
         curl --silent -H "Authorization: Bearer $1" \
         http://127.0.0.1:8001/auth/current-user/
