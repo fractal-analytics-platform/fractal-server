@@ -39,12 +39,12 @@ assert_email_and_id(){
     # $1 access token
     # $2 desired email
     # $3 desired user id
-    WHOAMI=$(
+    USER=$(
         curl --silent -H "Authorization: Bearer $1" \
         http://127.0.0.1:8001/auth/current-user/
     )
-    EMAIL=$(echo $WHOAMI | jq -r ".email")
-    ID=$(echo $WHOAMI | jq -r ".id")
+    EMAIL=$(echo $USER | jq -r ".email")
+    ID=$(echo $USER | jq -r ".id")
     if [ "$EMAIL" != "$2" ]; then
         exit 1
     fi
