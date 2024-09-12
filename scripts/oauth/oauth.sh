@@ -3,15 +3,15 @@
 # --- Functions
 
 oauth_login(){
-    DEX_AUTHORIZATION_URL=$(curl --silent \
+    AUTHORIZATION_URL=$(curl --silent \
         http://127.0.0.1:8001/auth/dexidp/authorize/ \
         | jq -r ".authorization_url"
     )
-    USER_TOKEN_OAUTH=$(
-        curl -L --silent --output /dev/null --cookie-jar - "$DEX_AUTHORIZATION_URL" \
+    TOKEN_OAUTH=$(
+        curl -L --silent --output /dev/null --cookie-jar - "$AUTHORIZATION_URL" \
         | grep "fastapiusersauth" | awk '{print $NF}'
     )
-    echo $USER_TOKEN_OAUTH
+    echo $TOKEN_OAUTH
 }
 
 standard_login(){
@@ -28,9 +28,9 @@ standard_login(){
 assert_users_and_oauth() {
     # $1 desired number of users
     # $2 desired number of oauth accounts
-    NUM_USERS=$(sqlite3 $SQLITE_PATH "SELECT * FROM user_oauth;" | wc -l)
-    NUM_OAUTH=$(sqlite3 $SQLITE_PATH "SELECT * FROM oauthaccount;" | wc -l)
-    if [ "$NUM_USERS" -ne "$1" ] || [ "$NUM_OAUTH" -ne "$2" ]; then
+    USERS=$(sqlite3 $SQLITE_PATH "SELECT * FROM user_oauth;" | wc -l)
+    OAUTH_ACCOUNTS=$(sqlite3 $SQLITE_PATH "SELECT * FROM oauthaccount;" | wc -l)
+    if [ "$USERS" -ne "$1" ] || [ "$OAUTH_ACCOUNTS" -ne "$2" ]; then
         exit 1
     fi
 }
