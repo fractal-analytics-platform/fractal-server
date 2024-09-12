@@ -94,4 +94,5 @@ jobs:
 
         - name: Test email change
           run: |
+            export SQLITE_PATH=/tmp/fractal.sqlite
             bash -x scripts/oauth/change_email.sh
