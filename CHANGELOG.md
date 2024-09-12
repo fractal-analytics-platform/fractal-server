@@ -6,6 +6,7 @@
     * Improve logging in `fractalctl set-db` (\#1764).
 * Testing:
     * Start tests of migrations from valid v2.4.0 database (\#1764).
+    * Improve `oauth.yaml` to test OAuth account flow (\#1765).
 
 # 2.4.1
 
