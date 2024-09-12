@@ -31,7 +31,7 @@ assert_users_and_oauth() {
     NUM_USERS=$(sqlite3 $SQLITE_PATH "SELECT * FROM user_oauth;" | wc -l)
     NUM_OAUTH=$(sqlite3 $SQLITE_PATH "SELECT * FROM oauthaccount;" | wc -l)
     if [ "$NUM_USERS" -ne "$1" ] || [ "$NUM_OAUTH" -ne "$2" ]; then
-    exit 1
+        exit 1
     fi
 }
 
