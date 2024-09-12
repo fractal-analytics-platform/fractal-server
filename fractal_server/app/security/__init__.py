@@ -275,7 +275,7 @@ async def _create_first_user(
                 res = await session.execute(stm)
                 existing_superuser = res.scalars().first()
                 if existing_superuser is not None:
-                    logger.info(
+                    logger.warning(
                         f"{existing_superuser.email} superuser already exists,"
                         f" skip creation of {email}"
                     )
@@ -292,7 +292,7 @@ async def _create_first_user(
                     if username is not None:
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
-                    logger.info(f"User {user.email} created")
+                    logger.warning(f"User {user.email} created")
 
     except UserAlreadyExists:
         logger.warning(f"User {email} already exists")
@@ -308,9 +308,9 @@ def _create_first_group():
             first_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
             db.add(first_group)
             db.commit()
-            logger.info(f"Created group {FRACTAL_DEFAULT_GROUP_NAME}")
+            logger.warning(f"Created group {FRACTAL_DEFAULT_GROUP_NAME}")
         else:
-            logger.info(
+            logger.warning(
                 f"Group {FRACTAL_DEFAULT_GROUP_NAME} already exists, skip."
             )
     logger.info(
