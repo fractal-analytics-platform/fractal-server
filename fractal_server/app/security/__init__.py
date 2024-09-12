@@ -55,9 +55,9 @@ from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 
-logger = get_logger(__name__)
+logger = set_logger(__name__)
 
 FRACTAL_DEFAULT_GROUP_NAME = "All"
 
@@ -264,9 +264,10 @@ async def _create_first_user(
         is_verified: `True` if the new user is verifie
         username:
     """
+    function_logger = set_logger("fractal_server.create_first_user")
+    function_logger.info(f"START _create_first_user, with email '{email}'")
     try:
         async with get_async_session_context() as session:
-
             if is_superuser is True:
                 # If a superuser already exists, exit
                 stm = select(UserOAuth).where(  # noqa
@@ -275,9 +276,9 @@ async def _create_first_user(
                 res = await session.execute(stm)
                 existing_superuser = res.scalars().first()
                 if existing_superuser is not None:
-                    logger.info(
-                        f"{existing_superuser.email} superuser already exists,"
-                        f" skip creation of {email}"
+                    function_logger.info(
+                        f"'{existing_superuser.email}' superuser already "
+                        f"exists, skip creation of '{email}'"
                     )
                     return None
 
@@ -292,15 +293,19 @@ async def _create_first_user(
                     if username is not None:
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
-                    logger.info(f"User {user.email} created")
+                    function_logger.info(f"User '{user.email}' created")
 
     except UserAlreadyExists:
-        logger.warning(f"User {email} already exists")
+        function_logger.warning(f"User '{email}' already exists")
+    finally:
+        function_logger.info(f"END   _create_first_user, with email '{email}'")
 
 
 def _create_first_group():
-    logger.info(
-        f"START _create_first_group, with name {FRACTAL_DEFAULT_GROUP_NAME}"
+    function_logger = set_logger("fractal_server.create_first_group")
+
+    function_logger.info(
+        f"START _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
     )
     with next(get_sync_db()) as db:
         group_all = db.execute(select(UserGroup))
@@ -308,11 +313,13 @@ def _create_first_group():
             first_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
             db.add(first_group)
             db.commit()
-            logger.info(f"Created group {FRACTAL_DEFAULT_GROUP_NAME}")
-        else:
-            logger.info(
-                f"Group {FRACTAL_DEFAULT_GROUP_NAME} already exists, skip."
+            function_logger.info(
+                f"Created group '{FRACTAL_DEFAULT_GROUP_NAME}'"
             )
-    logger.info(
-        f"END   _create_first_group, with name {FRACTAL_DEFAULT_GROUP_NAME}"
+        else:
+            function_logger.info(
+                f"Group '{FRACTAL_DEFAULT_GROUP_NAME}' already exists, skip."
+            )
+    function_logger.info(
+        f"END   _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
     )
