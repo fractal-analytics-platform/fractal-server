@@ -151,7 +151,7 @@
 | fractal\_server/app/schemas/v2/task\_collection.py                             |       84 |        0 |       30 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/workflow.py                                     |       40 |        0 |        7 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/workflowtask.py                                 |      123 |        0 |       28 |        0 |    100% |           |
-| fractal\_server/app/security/\_\_init\_\_.py                                   |      147 |       30 |       38 |        2 |     77% |110-123, 142-143, 148-157, 162-170, 189, 211-219 |
+| fractal\_server/app/security/\_\_init\_\_.py                                   |      151 |       30 |       38 |        2 |     78% |110-123, 142-143, 148-157, 162-170, 189, 211-219 |
 | fractal\_server/config.py                                                      |      277 |       12 |      113 |       12 |     93% |226, 246, 625-626, 631, 635, 639, 643, 647, 656, 661, 668, 673->exit |
 | fractal\_server/images/\_\_init\_\_.py                                         |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                               |       65 |        1 |       34 |        1 |     98% |        57 |
@@ -180,7 +180,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       26 |        0 |    100% |           |
-|                                                                      **TOTAL** | **10010** |  **375** | **2903** |  **198** | **95%** |           |
+|                                                                      **TOTAL** | **10014** |  **375** | **2903** |  **198** | **95%** |           |
 
 
 ## Setup coverage badge
