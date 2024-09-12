@@ -20,6 +20,13 @@ __all__ = (
 )
 
 
+class OAuthAccountRead(BaseModel):
+    id: int
+    account_email: str
+    oauth_name: str
+    expires_at: Optional[int] = None
+
+
 class UserRead(schemas.BaseUser[int]):
     """
     Schema for `User` read from database.
@@ -37,6 +44,7 @@ class UserRead(schemas.BaseUser[int]):
     slurm_accounts: list[str]
     group_names: Optional[list[str]] = None
     group_ids: Optional[list[int]] = None
+    oauth_accounts: list[OAuthAccountRead] = Field(default_factory=list)
 
 
 class UserUpdate(schemas.BaseUserUpdate):
