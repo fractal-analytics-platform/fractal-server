@@ -2,8 +2,12 @@
 
 # 2.4.1
 
+This is mainly a bugfix release, re-implementing a check that was removed in 2.4.0.
+
 * API:
     * Re-introduce check for existing-user-email in `PATCH /auth/users/{id}/` (\#1760).
+* App:
+    * Improve logging in `fractalctl set-db` (\#1764).
 * Testing:
     * Start tests of migrations from valid v2.4.0 database (\#1764).
 
