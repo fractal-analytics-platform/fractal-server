@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.4.1
+
+* API:
+    * Re-introduce check for existing-user-email in `PATCH /auth/users/{id}/` (\#1760).
+
 # 2.4.0
 
 * App:
