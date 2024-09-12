@@ -83,7 +83,7 @@ jobs:
             export JWT_SECRET_KEY=jwt_secret_key
             export JWT_EXPIRE_SECONDS=1000
             export DB_ENGINE=sqlite
-            export SQLITE_PATH=fractal.sqlite
+            export SQLITE_PATH=/dev/fractal/fractal.sqlite
             export OAUTH_DEXIDP_CLIENT_ID=client_test_id
             export OAUTH_DEXIDP_CLIENT_SECRET=client_test_secret
             export OAUTH_DEXIDP_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
