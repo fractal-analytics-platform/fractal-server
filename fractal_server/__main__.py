@@ -88,12 +88,11 @@ def set_db():
     alembic.config.main(argv=alembic_args)
     print("END: alembic.config")
     # Insert default group
-    print("START: Default group creation")
+    print()
     _create_first_group()
-    print("END: Default group creation")
+    print()
     # NOTE: It will be fixed with #1739
     settings = Inject(get_settings)
-    print("START: First user creation")
     asyncio.run(
         _create_first_user(
             email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
@@ -103,7 +102,7 @@ def set_db():
             is_verified=True,
         )
     )
-    print("END: First user creation")
+    print()
 
 
 def update_db_data():
