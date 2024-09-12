@@ -4,6 +4,8 @@
 
 * API:
     * Re-introduce check for existing-user-email in `PATCH /auth/users/{id}/` (\#1760).
+* Testing:
+    * Start tests of migrations from valid v2.4.0 database (\#1764).
 
 # 2.4.0
 
