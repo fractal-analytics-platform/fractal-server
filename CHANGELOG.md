@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API:
+    * Add OAuth accounts info to `UserRead` at `.oauth_accounts` (\#1765).
 * App:
     * Improve logging in `fractalctl set-db` (\#1764).
 * Testing:
