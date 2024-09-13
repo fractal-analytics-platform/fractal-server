@@ -16,6 +16,22 @@ runner.
     * Drop `/task-legacy/` endpoint (\#1721).
     * Remove legacy task code branches from `WorkflowTaskV2` CRUD endpoints (\#1721).
 
+# 2.4.2
+
+* Runner:
+    * Add `--set-home` to `sudo -u` impersonation command, to fix Ubuntu18 behavior (\#1762).
+* App:
+    * Improve logging in `fractalctl set-db` (\#1764).
+* Testing:
+    * Start tests of migrations from valid v2.4.0 database (\#1764).
+
+# 2.4.1
+
+This is mainly a bugfix release, re-implementing a check that was removed in 2.4.0.
+
+* API:
+    * Re-introduce check for existing-user-email in `PATCH /auth/users/{id}/` (\#1760).
+
 # 2.4.0
 
 This release introduces support for user groups, but without linking it to any
