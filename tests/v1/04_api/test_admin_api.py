@@ -593,7 +593,7 @@ async def test_patch_job(
     ORIGINAL_STATUS = JobStatusTypeV1.SUBMITTED
     NEW_STATUS = JobStatusTypeV1.FAILED
 
-    async with MockCurrentUser(user_kwargs={"id": 111111}) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="source")
@@ -683,7 +683,7 @@ async def test_stop_job(
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
-    async with MockCurrentUser(user_kwargs={"id": 1111}) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="source")
@@ -730,7 +730,7 @@ async def test_download_job_logs(
     db,
     tmp_path,
 ):
-    async with MockCurrentUser(user_kwargs={"id": 1111}) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
         input_dataset = await dataset_factory(project_id=prj.id, name="input")
         output_dataset = await dataset_factory(
