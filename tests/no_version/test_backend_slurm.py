@@ -334,7 +334,7 @@ def test_submit_pre_command(fake_process, tmp_path):
     # command to check that a certain folder exists. This will change if we
     # remove this check from FractalSlurmExecutor, or if another subprocess
     # command is called before the `ls` one.
-    target = f"sudo --non-interactive -u {slurm_user} ls"
+    target = f"sudo --set-home --non-interactive -u {slurm_user} ls"
     debug([target in call for call in call_strings])
     assert any([target in call for call in call_strings])
 
