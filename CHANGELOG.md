@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.5.0 (unreleased)
+# 2.5.0
 
 This release removes support for including V1 tasks in V2 workflows. This comes
 with changes to the database (data and metadata), to the API, and to the V2
