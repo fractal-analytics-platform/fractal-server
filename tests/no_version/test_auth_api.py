@@ -585,6 +585,12 @@ async def test_oauth_accounts_list(
     # test GET /auth/users/{user_id}/
     res = await registered_superuser_client.get(f"{PREFIX}/users/{u1.id}/")
     assert len(res.json()["oauth_accounts"]) == 2
+    assert res.json()["group_ids"] is not None
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{u1.id}/?group_ids=false"
+    )
+    assert len(res.json()["oauth_accounts"]) == 2
+    assert res.json()["group_ids"] is None
     res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
     assert len(res.json()["oauth_accounts"]) == 1
 

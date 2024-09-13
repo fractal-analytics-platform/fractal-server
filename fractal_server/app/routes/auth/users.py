@@ -132,13 +132,14 @@ async def patch_user(
             user_update_without_groups = UserUpdate(
                 **user_update_dict_without_groups
             )
-            patched_user = await user_manager.update(
+            user = await user_manager.update(
                 user_update_without_groups,
                 user_to_patch,
                 safe=False,
                 request=None,
             )
-            schemas.model_validate(UserOAuth, patched_user)
+            patched_user = schemas.model_validate(UserOAuth, user)
+            await db.refresh(patched_user)  # needed to load `oauthaccounts`
         except exceptions.InvalidPasswordException as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

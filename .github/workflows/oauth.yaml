@@ -8,8 +8,8 @@ on:
 
 jobs:
 
-  test_oauth2_account_flow:
-    name: OAuth2-AccountFlow
+  test_oauth2_oidc:
+    name: OAuth2-OIDC
     runs-on: ubuntu-22.04
 
     services:
@@ -51,5 +51,5 @@ jobs:
             fractalctl start --port 8001 &
             sleep 2
 
-        - name: Test OAuth2 account flow
+        - name: Run OAuth2 script
           run: bash -x scripts/oauth/oauth.sh
