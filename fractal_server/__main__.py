@@ -86,7 +86,7 @@ def set_db():
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
     print(f"START: Run alembic.config, with argv={alembic_args}")
     alembic.config.main(argv=alembic_args)
-    print("END: alembic.config\n")
+    print("END: alembic.config")
     # Insert default group
     print()
     _create_first_group()
