@@ -32,11 +32,10 @@ async def _get_single_user_with_group_names(
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()
     group_names = [group.name for group in groups]
-    oauth_accounts = [account for account in user.oauth_accounts]
     return UserRead(
         **user.model_dump(),
         group_names=group_names,
-        oauth_accounts=oauth_accounts,
+        oauth_accounts=user.oauth_accounts,
     )
 
 
@@ -58,9 +57,10 @@ async def _get_single_user_with_group_ids(
     res = await db.execute(stm_links)
     links = res.scalars().unique().all()
     group_ids = [link.group_id for link in links]
-    oauth_accounts = [account for account in user.oauth_accounts]
     return UserRead(
-        **user.model_dump(), group_ids=group_ids, oauth_accounts=oauth_accounts
+        **user.model_dump(),
+        group_ids=group_ids,
+        oauth_accounts=user.oauth_accounts,
     )
 
 
