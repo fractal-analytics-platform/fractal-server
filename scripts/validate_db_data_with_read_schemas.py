@@ -43,7 +43,7 @@ with next(get_sync_db()) as db:
     stm = select(UserOAuth)
     users = db.execute(stm).scalars().unique().all()
     for user in sorted(users, key=lambda x: x.id):
-        UserRead(**user.model_dump())
+        UserRead(**user.model_dump(), oauth_accounts=user.oauth_accounts)
         print(f"User {user.id} validated")
 
     # USER GROUPS
