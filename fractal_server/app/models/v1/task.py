@@ -5,7 +5,6 @@ from typing import Optional
 
 from pydantic import HttpUrl
 from sqlalchemy import Column
-from sqlalchemy import sql
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
@@ -48,10 +47,6 @@ class Task(_TaskBaseV1, SQLModel, table=True):
     args_schema_version: Optional[str]
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
-
-    is_v2_compatible: bool = Field(
-        default=False, sa_column_kwargs={"server_default": sql.false()}
-    )
 
     @property
     def parallelization_level(self) -> Optional[str]:

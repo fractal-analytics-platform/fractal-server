@@ -50,56 +50,29 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    is_legacy_task: Optional[bool]
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
-    task: Optional[TaskV2Mock] = None
-    task_legacy: Optional[TaskV1Mock] = None
-    is_legacy_task: bool = False
+    task: TaskV2Mock
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int = 0
     id: int = 1
     workflow_id: int = 0
-    task_legacy_id: Optional[int]
-    task_id: Optional[int]
-
-    @root_validator(pre=False)
-    def _legacy_or_not(cls, values):
-        is_legacy_task = values["is_legacy_task"]
-        task = values.get("task")
-        task_legacy = values.get("task_legacy")
-        if is_legacy_task:
-            if task_legacy is None or task is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_legacy_id"] = task_legacy.id
-        else:
-            if task is None or task_legacy is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_id"] = task.id
-        return values
+    task_id: int
 
     @root_validator(pre=False)
     def merge_meta(cls, values):
-        if values["is_legacy_task"]:
-            task_meta = values["task"].meta
-            if task_meta:
-                values["meta"] = {
-                    **task_meta,
-                    **values["meta"],
-                }
-        else:
-            task_meta_parallel = values["task"].meta_parallel
-            if task_meta_parallel:
-                values["meta_parallel"] = {
-                    **task_meta_parallel,
-                    **values["meta_parallel"],
-                }
-            task_meta_non_parallel = values["task"].meta_non_parallel
-            if task_meta_non_parallel:
-                values["meta_non_parallel"] = {
-                    **task_meta_non_parallel,
-                    **values["meta_non_parallel"],
-                }
+        task_meta_parallel = values["task"].meta_parallel
+        if task_meta_parallel:
+            values["meta_parallel"] = {
+                **task_meta_parallel,
+                **values["meta_parallel"],
+            }
+        task_meta_non_parallel = values["task"].meta_non_parallel
+        if task_meta_non_parallel:
+            values["meta_non_parallel"] = {
+                **task_meta_non_parallel,
+                **values["meta_non_parallel"],
+            }
         return values
 
 
@@ -180,6 +153,7 @@ def test_get_slurm_config(tmp_path: Path):
     )
     mywftask = WorkflowTaskV2Mock(
         task=mytask,
+        task_id=mytask.id,
         args_non_parallel=dict(message="test"),
         meta_non_parallel=meta_non_parallel,
     )
@@ -241,6 +215,7 @@ def test_get_slurm_config_fail(tmp_path):
     get_slurm_config(
         wftask=WorkflowTaskV2Mock(
             task=TaskV2Mock(),
+            task_id=TaskV2Mock().id,
             meta_non_parallel={},
         ),
         config_path=config_path_valid,
@@ -258,6 +233,7 @@ def test_get_slurm_config_fail(tmp_path):
         get_slurm_config(
             wftask=WorkflowTaskV2Mock(
                 task=TaskV2Mock(),
+                task_id=TaskV2Mock().id,
                 meta_non_parallel={},
             ),
             config_path=config_path_invalid,
@@ -321,6 +297,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     )
     mywftask = WorkflowTaskV2Mock(
         task=TaskV2Mock(meta_non_parallel=None),
+        task_id=TaskV2Mock(meta_non_parallel=None).id,
         args_non_parallel=dict(message="test"),
         meta_non_parallel=meta_non_parallel,
     )
@@ -362,7 +339,7 @@ def test_slurm_submit_setup(
     )
 
     # No account in `wftask.meta` --> OK
-    wftask = WorkflowTaskV2Mock(task=TaskV2Mock())
+    wftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
         workflow_dir_local=tmp_path,
@@ -376,6 +353,7 @@ def test_slurm_submit_setup(
     wftask = WorkflowTaskV2Mock(
         meta_non_parallel=dict(key="value", account="MyFakeAccount"),
         task=TaskV2Mock(),
+        task_id=TaskV2Mock().id,
     )
     with pytest.raises(SlurmConfigError) as e:
         _slurm_submit_setup(
@@ -425,7 +403,7 @@ def test_get_slurm_config_gpu_options(tmp_path: Path):
         json.dump(slurm_config_dict, f)
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
-    mywftask = WorkflowTaskV2Mock(task=TaskV2Mock())
+    mywftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
     slurm_config = get_slurm_config(
         wftask=mywftask,
         config_path=config_path,
@@ -437,7 +415,9 @@ def test_get_slurm_config_gpu_options(tmp_path: Path):
 
     # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
     mywftask = WorkflowTaskV2Mock(
-        meta_non_parallel=dict(needs_gpu=True), task=TaskV2Mock()
+        meta_non_parallel=dict(needs_gpu=True),
+        task=TaskV2Mock(),
+        task_id=TaskV2Mock().id,
     )
     slurm_config = get_slurm_config(
         wftask=mywftask,

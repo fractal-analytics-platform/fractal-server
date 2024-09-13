@@ -6,6 +6,7 @@ from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import TaskCollectPipV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
@@ -46,17 +47,6 @@ def test_extra_on_create_models():
     WorkflowTaskCreateV2()
     with pytest.raises(ValidationError):
         WorkflowTaskCreateV2(foo="bar")
-
-
-def test_validate_legacy_task():
-
-    WorkflowTaskCreateV2(meta_non_parallel={"a": "b"})
-    with pytest.raises(ValidationError):
-        WorkflowTaskCreateV2(is_legacy_task=True, meta_non_parallel={"a": "b"})
-
-    WorkflowTaskCreateV2(args_non_parallel={"a": "b"})
-    with pytest.raises(ValidationError):
-        WorkflowTaskCreateV2(is_legacy_task=True, args_non_parallel={"a": "b"})
 
 
 def test_dictionary_keys_validation():
@@ -125,23 +115,14 @@ def test_workflow_task_dump():
     WorkflowTaskDumpV2(
         id=1,
         workflow_id=1,
-        is_legacy_task=False,
         input_filters=Filters(),
         task_id=1,
+        task=TaskDumpV2(
+            id=1,
+            name="name",
+            type="type",
+            source="source",
+            input_types={},
+            output_types={},
+        ),
     )
-    with pytest.raises(ValidationError, match="both"):
-        WorkflowTaskDumpV2(
-            id=1,
-            workflow_id=1,
-            is_legacy_task=False,
-            input_filters=Filters(),
-            task_id=1,
-            task_legacy_id=1,
-        )
-    with pytest.raises(ValidationError, match="none"):
-        WorkflowTaskDumpV2(
-            id=1,
-            workflow_id=1,
-            is_legacy_task=False,
-            input_filters=Filters(),
-        )

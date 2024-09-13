@@ -15,14 +15,9 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
     )
 
     for wftask in wf_task_list:
-        if wftask.task is not None:
-            subfolder = workflow_dir_local / task_subfolder_name(
-                order=wftask.order, task_name=wftask.task.name
-            )
-        else:
-            subfolder = workflow_dir_local / task_subfolder_name(
-                order=wftask.order, task_name=wftask.task_legacy.name
-            )
+        subfolder = workflow_dir_local / task_subfolder_name(
+            order=wftask.order, task_name=wftask.task.name
+        )
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
@@ -57,6 +52,7 @@ def test_parallelize_on_no_images(tmp_path: Path, executor: Executor):
                     id=0,
                     source="source",
                 ),
+                task_id=0,
                 id=0,
                 order=0,
             )
@@ -91,6 +87,7 @@ def test_parallelize_on_no_images_compound(tmp_path: Path, executor: Executor):
                     id=0,
                     source="source",
                 ),
+                task_id=0,
                 id=0,
                 order=0,
             )

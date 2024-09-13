@@ -1,5 +1,21 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.5.0
+
+This release removes support for including V1 tasks in V2 workflows. This comes
+with changes to the database (data and metadata), to the API, and to the V2
+runner.
+
+* Runner:
+    * Deprecate running v1 tasks within v2 workflows (\#1721).
+* Database:
+    * Remove `Task.is_v2_compatible` column (\#1721).
+    * For table `WorkflowTaskV2`, drop `is_legacy_task` and `task_legacy_id` columns, remove `task_legacy` ORM attribute, make `task_id` required, make `task` required (\#1721).
+* API:
+    * Drop v1-v2-task-compatibility admin endpoint (\#1721).
+    * Drop `/task-legacy/` endpoint (\#1721).
+    * Remove legacy task code branches from `WorkflowTaskV2` CRUD endpoints (\#1721).
+
 # 2.4.2
 
 * Runner:
@@ -17,6 +33,11 @@ This is mainly a bugfix release, re-implementing a check that was removed in 2.4
     * Re-introduce check for existing-user-email in `PATCH /auth/users/{id}/` (\#1760).
 
 # 2.4.0
+
+This release introduces support for user groups, but without linking it to any
+access-control rules (which will be introduced later).
+
+> NOTE: This release requires running the `fractalctl update-db-data` script.
 
 * App:
     * Move creation of first user from application startup into `fractalctl set-db` command (\#1738, \#1748).

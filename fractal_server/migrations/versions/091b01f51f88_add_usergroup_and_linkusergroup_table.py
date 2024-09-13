@@ -1,4 +1,4 @@
-"""“Add_usergroup_and_linkusergroup_table”
+"""Add_usergroup_and_linkusergroup_table
 
 Revision ID: 091b01f51f88
 Revises: 5bf02391cfef

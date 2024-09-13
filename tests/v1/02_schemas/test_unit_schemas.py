@@ -507,7 +507,6 @@ def test_workflow_read_non_empty_task_list():
         input_type="input_type",
         output_type="output_type",
         meta=dict(something="else"),
-        is_v2_compatible=False,
     )
     # Create two WorkflowTaskRead
     wft1 = WorkflowTaskReadV1(id=1, task_id=1, workflow_id=1, task=t1)

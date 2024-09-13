@@ -13,7 +13,6 @@ from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
 from ....db import AsyncSession
-from ....models.v1 import Task
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
 from ....models.v2 import LinkUserProjectV2
@@ -389,7 +388,6 @@ async def _workflow_insert_task(
     *,
     workflow_id: int,
     task_id: int,
-    is_legacy_task: bool = False,
     order: Optional[int] = None,
     meta_parallel: Optional[dict[str, Any]] = None,
     meta_non_parallel: Optional[dict[str, Any]] = None,
@@ -404,7 +402,7 @@ async def _workflow_insert_task(
     Args:
         workflow_id:
         task_id:
-        is_legacy_task:
+
         order:
         meta_parallel:
         meta_non_parallel:
@@ -420,52 +418,21 @@ async def _workflow_insert_task(
     if order is None:
         order = len(db_workflow.task_list)
 
-    # Get task from db, and extract default arguments via a Task property
-    # method
-    # NOTE: this logic remains there for V1 tasks only. When we deprecate V1
-    # tasks, we can simplify this block
-    if is_legacy_task is True:
-        db_task = await db.get(Task, task_id)
-        if db_task is None:
-            raise ValueError(f"Task {task_id} not found.")
-        task_type = "parallel"
-
-        final_args_parallel = db_task.default_args_from_args_schema.copy()
-        final_args_non_parallel = {}
-        final_meta_parallel = (db_task.meta or {}).copy()
-        final_meta_non_parallel = {}
-
-    else:
-        db_task = await db.get(TaskV2, task_id)
-        if db_task is None:
-            raise ValueError(f"TaskV2 {task_id} not found.")
-        task_type = db_task.type
-
-        final_args_non_parallel = {}
-        final_args_parallel = {}
-        final_meta_parallel = (db_task.meta_parallel or {}).copy()
-        final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
-
-    # Combine arg_parallel
-    if args_parallel is not None:
-        for k, v in args_parallel.items():
-            final_args_parallel[k] = v
-    if final_args_parallel == {}:
-        final_args_parallel = None
-    # Combine arg_non_parallel
-    if args_non_parallel is not None:
-        for k, v in args_non_parallel.items():
-            final_args_non_parallel[k] = v
-    if final_args_non_parallel == {}:
-        final_args_non_parallel = None
+    # Get task from db
+    db_task = await db.get(TaskV2, task_id)
+    if db_task is None:
+        raise ValueError(f"TaskV2 {task_id} not found.")
+    task_type = db_task.type
 
     # Combine meta_parallel (higher priority)
     # and db_task.meta_parallel (lower priority)
+    final_meta_parallel = (db_task.meta_parallel or {}).copy()
     final_meta_parallel.update(meta_parallel or {})
     if final_meta_parallel == {}:
         final_meta_parallel = None
     # Combine meta_non_parallel (higher priority)
     # and db_task.meta_non_parallel (lower priority)
+    final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
     final_meta_non_parallel.update(meta_non_parallel or {})
     if final_meta_non_parallel == {}:
         final_meta_non_parallel = None
@@ -479,11 +446,9 @@ async def _workflow_insert_task(
     # Create DB entry
     wf_task = WorkflowTaskV2(
         task_type=task_type,
-        is_legacy_task=is_legacy_task,
-        task_id=(task_id if not is_legacy_task else None),
-        task_legacy_id=(task_id if is_legacy_task else None),
-        args_non_parallel=final_args_non_parallel,
-        args_parallel=final_args_parallel,
+        task_id=task_id,
+        args_non_parallel=args_non_parallel,
+        args_parallel=args_parallel,
         meta_parallel=final_meta_parallel,
         meta_non_parallel=final_meta_non_parallel,
         **input_filters_kwarg,
