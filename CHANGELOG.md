@@ -1,7 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.4.2
 
+* Runner:
+    * Add `--set-home` to `sudo -u` impersonation command, to fix Ubuntu18 behavior (\#1762).
 * App:
     * Improve logging in `fractalctl set-db` (\#1764).
 * Testing:

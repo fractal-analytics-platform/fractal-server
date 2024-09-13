@@ -1134,7 +1134,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             f.write(sbatch_script)
 
         # Prepare submission command
-        pre_command = f"sudo --non-interactive -u {self.slurm_user}"
+        pre_command = f"sudo --set-home --non-interactive -u {self.slurm_user}"
         submit_command = f"sbatch --parsable {job.slurm_script}"
         full_command = f"{pre_command} {submit_command}"
 
