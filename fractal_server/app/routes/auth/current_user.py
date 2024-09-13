@@ -52,9 +52,8 @@ async def patch_current_user(
     # (from `fastapi_users.exceptions`), if we were to allow users change
     # their own password
     user = await user_manager.update(update, current_user, safe=True)
-    patched_user = schemas.model_validate(UserOAuth, user)
-
+    schemas.model_validate(UserOAuth, user)
     patched_user_with_groups = await _get_single_user_with_group_names(
-        patched_user, db
+        user, db
     )
     return patched_user_with_groups
