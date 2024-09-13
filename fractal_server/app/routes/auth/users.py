@@ -151,6 +151,11 @@ async def patch_user(
                     "reason": e.reason,
                 },
             )
+        except exceptions.UserAlreadyExists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+            )
     else:
         # Nothing to do, just continue
         patched_user = user_to_patch

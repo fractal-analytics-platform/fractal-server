@@ -312,6 +312,22 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     assert res.status_code == 422
 
+    # Setting the email to an existing one fails with 4
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/",
+    )
+    assert res.status_code == 200
+    users = res.json()
+    assert len(users) == 2
+    user_0_id = users[0]["id"]
+    user_1_email = users[1]["email"]
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_0_id}/",
+        json=dict(email=user_1_email),
+    )
+    assert res.status_code == 400
+    assert "UPDATE_USER_EMAIL_ALREADY_EXISTS" == res.json()["detail"]
+
     for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
         res = await registered_superuser_client.patch(
             f"{PREFIX}/users/{user_id}/",
