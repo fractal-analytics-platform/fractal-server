@@ -1,16 +1,20 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.4.2
+# 2.5.0 (Unreleased)
 
 * API:
     * Add OAuth accounts info to `UserRead` at `.oauth_accounts` (\#1765).
+* Testing:
+    * Improve OAuth Github Action to test OAuth account flow (\#1765).
+
+# 2.4.2
+
 * App:
     * Improve logging in `fractalctl set-db` (\#1764).
 * Runner:
     * Add `--set-home` to `sudo -u` impersonation command, to fix Ubuntu18 behavior (\#1762).
 * Testing:
     * Start tests of migrations from valid v2.4.0 database (\#1764).
-    * Improve OAuth Github Action to test OAuth account flow (\#1765).
 
 # 2.4.1
 

@@ -53,10 +53,12 @@ async def patch_current_user(
     # their own password
 
     user = await user_manager.update(update, current_user, safe=True)
-    schemas.model_validate(UserOAuth, user)
-    await db.refresh(user)  # needed to load `oauthaccounts`
+    validated_user = schemas.model_validate(UserOAuth, user)
 
+    patched_user = await db.get(
+        UserOAuth, validated_user.id, populate_existing=True
+    )
     patched_user_with_groups = await _get_single_user_with_group_names(
-        user, db
+        patched_user, db
     )
     return patched_user_with_groups

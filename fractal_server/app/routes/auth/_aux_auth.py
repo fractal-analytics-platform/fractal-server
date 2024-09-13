@@ -105,9 +105,7 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
         user_id: ID of the user
         db: Async db session
     """
-    stm = select(UserOAuth).where(UserOAuth.id == user_id)
-    res = await db.execute(stm)
-    user = res.scalars().unique().one_or_none()
+    user = await db.get(UserOAuth, user_id, populate_existing=True)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
