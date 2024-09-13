@@ -44,7 +44,7 @@ class UserRead(schemas.BaseUser[int]):
     slurm_accounts: list[str]
     group_names: Optional[list[str]] = None
     group_ids: Optional[list[int]] = None
-    oauth_accounts: list[OAuthAccountRead] = Field(default_factory=list)
+    oauth_accounts: list[OAuthAccountRead]
 
 
 class UserUpdate(schemas.BaseUserUpdate):

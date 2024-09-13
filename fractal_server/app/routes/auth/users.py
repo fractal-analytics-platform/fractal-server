@@ -138,8 +138,8 @@ async def patch_user(
                 safe=False,
                 request=None,
             )
-            patched_user = schemas.model_validate(UserOAuth, user)
-            await db.refresh(patched_user)  # needed to load `oauthaccounts`
+            schemas.model_validate(UserOAuth, user)
+            await db.refresh(user)  # needed to load `oauthaccounts`
         except exceptions.InvalidPasswordException as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
