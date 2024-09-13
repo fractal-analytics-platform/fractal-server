@@ -251,11 +251,15 @@ async def MockCurrentUser(app, db):
         async def __aenter__(self):
 
             if self.user_kwargs is not None and "id" in self.user_kwargs:
-                db_user = await db.get(UserOAuth, self.user_kwargs["id"])
+                db_user = await db.get(
+                    UserOAuth, self.user_kwargs["id"], populate_existing=True
+                )
+                if db_user is None:
+                    raise RuntimeError(
+                        f"User with id {self.user_kwargs['id']} doesn't exist"
+                    )
+                self.user = db_user
             else:
-                db_user = None
-
-            if db_user is None:
                 # Create new user
                 defaults = dict(
                     email=self.email,
@@ -277,9 +281,6 @@ async def MockCurrentUser(app, db):
                     db.add(self.user)
                     await db.commit()
                     await db.refresh(self.user)
-            else:
-                await db.refresh(db_user)
-                self.user = db_user
 
             # Removing object from test db session, so that we can operate
             # on user from other sessions
