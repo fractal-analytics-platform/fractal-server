@@ -17,7 +17,6 @@ from ..filenames import FILTERS_FILENAME
 from ..filenames import HISTORY_FILENAME
 from ..filenames import IMAGES_FILENAME
 from .runner_functions import no_op_submit_setup_call
-from .runner_functions import run_v1_task_parallel
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
@@ -53,16 +52,8 @@ def execute_tasks_v2(
 
     for wftask in wf_task_list:
         task = wftask.task
-        task_legacy = wftask.task_legacy
-        if wftask.is_legacy_task:
-            task_name = task_legacy.name
-            logger.debug(
-                f"SUBMIT {wftask.order}-th task "
-                f'(legacy, name="{task_name}")'
-            )
-        else:
-            task_name = task.name
-            logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
+        task_name = task.name
+        logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
 
         # PRE TASK EXECUTION
 
@@ -78,67 +69,53 @@ def execute_tasks_v2(
             filters=Filters(**pre_filters),
         )
         # Verify that filtered images comply with task input_types
-        if not wftask.is_legacy_task:
-            for image in filtered_images:
-                if not match_filter(image, Filters(types=task.input_types)):
-                    raise JobExecutionError(
-                        "Invalid filtered image list\n"
-                        f"Task input types: {task.input_types=}\n"
-                        f'Image zarr_url: {image["zarr_url"]}\n'
-                        f'Image types: {image["types"]}\n'
-                    )
+        for image in filtered_images:
+            if not match_filter(image, Filters(types=task.input_types)):
+                raise JobExecutionError(
+                    "Invalid filtered image list\n"
+                    f"Task input types: {task.input_types=}\n"
+                    f'Image zarr_url: {image["zarr_url"]}\n'
+                    f'Image types: {image["types"]}\n'
+                )
 
         # TASK EXECUTION (V2)
-        if not wftask.is_legacy_task:
-            if task.type == "non_parallel":
-                current_task_output = run_v2_task_non_parallel(
-                    images=filtered_images,
-                    zarr_dir=zarr_dir,
-                    wftask=wftask,
-                    task=task,
-                    workflow_dir_local=workflow_dir_local,
-                    workflow_dir_remote=workflow_dir_remote,
-                    executor=executor,
-                    logger_name=logger_name,
-                    submit_setup_call=submit_setup_call,
-                )
-            elif task.type == "parallel":
-                current_task_output = run_v2_task_parallel(
-                    images=filtered_images,
-                    wftask=wftask,
-                    task=task,
-                    workflow_dir_local=workflow_dir_local,
-                    workflow_dir_remote=workflow_dir_remote,
-                    executor=executor,
-                    logger_name=logger_name,
-                    submit_setup_call=submit_setup_call,
-                )
-            elif task.type == "compound":
-                current_task_output = run_v2_task_compound(
-                    images=filtered_images,
-                    zarr_dir=zarr_dir,
-                    wftask=wftask,
-                    task=task,
-                    workflow_dir_local=workflow_dir_local,
-                    workflow_dir_remote=workflow_dir_remote,
-                    executor=executor,
-                    logger_name=logger_name,
-                    submit_setup_call=submit_setup_call,
-                )
-            else:
-                raise ValueError(f"Unexpected error: Invalid {task.type=}.")
-        # TASK EXECUTION (V1)
-        else:
-            current_task_output = run_v1_task_parallel(
+        if task.type == "non_parallel":
+            current_task_output = run_v2_task_non_parallel(
                 images=filtered_images,
+                zarr_dir=zarr_dir,
                 wftask=wftask,
-                task_legacy=task_legacy,
-                executor=executor,
-                logger_name=logger_name,
+                task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
+                executor=executor,
+                logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
+        elif task.type == "parallel":
+            current_task_output = run_v2_task_parallel(
+                images=filtered_images,
+                wftask=wftask,
+                task=task,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
+                executor=executor,
+                logger_name=logger_name,
+                submit_setup_call=submit_setup_call,
+            )
+        elif task.type == "compound":
+            current_task_output = run_v2_task_compound(
+                images=filtered_images,
+                zarr_dir=zarr_dir,
+                wftask=wftask,
+                task=task,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
+                executor=executor,
+                logger_name=logger_name,
+                submit_setup_call=submit_setup_call,
+            )
+        else:
+            raise ValueError(f"Unexpected error: Invalid {task.type=}.")
 
         # POST TASK EXECUTION
 
@@ -191,8 +168,7 @@ def execute_tasks_v2(
                 # Update image attributes/types with task output and manifest
                 updated_attributes.update(image["attributes"])
                 updated_types.update(image["types"])
-                if not wftask.is_legacy_task:
-                    updated_types.update(task.output_types)
+                updated_types.update(task.output_types)
 
                 # Unset attributes with None value
                 updated_attributes = {
@@ -249,8 +225,7 @@ def execute_tasks_v2(
                     if value is not None
                 }
                 updated_types.update(image["types"])
-                if not wftask.is_legacy_task:
-                    updated_types.update(task.output_types)
+                updated_types.update(task.output_types)
                 new_image = dict(
                     zarr_url=image["zarr_url"],
                     origin=image["origin"],
@@ -282,10 +257,7 @@ def execute_tasks_v2(
             )
 
         # Find manifest ouptut types
-        if wftask.is_legacy_task:
-            types_from_manifest = {}
-        else:
-            types_from_manifest = task.output_types
+        types_from_manifest = task.output_types
 
         # Find task-output types
         if current_task_output.filters is not None:

@@ -242,7 +242,6 @@ async def workflowtask_factory_v2(db: AsyncSession):
         defaults = dict(
             workflow_id=workflow_id,
             task_id=task_id,
-            is_legacy_task=False,
             task_type=task.type,
         )
         args = dict(**defaults)

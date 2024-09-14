@@ -208,10 +208,7 @@ async def submit_workflow(
             # Create all tasks subfolders
             for order in range(job.first_task_index, job.last_task_index + 1):
                 this_wftask = workflow.task_list[order]
-                if this_wftask.is_legacy_task:
-                    task_name = this_wftask.task_legacy.name
-                else:
-                    task_name = this_wftask.task.name
+                task_name = this_wftask.task.name
                 subfolder_name = task_subfolder_name(
                     order=order,
                     task_name=task_name,

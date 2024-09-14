@@ -16,8 +16,6 @@ from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
-from .v1_compat import convert_v2_args_into_v1
-from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
@@ -28,7 +26,6 @@ __all__ = [
     "run_v2_task_non_parallel",
     "run_v2_task_parallel",
     "run_v2_task_compound",
-    "run_v1_task_parallel",
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
@@ -317,58 +314,3 @@ def run_v2_task_compound(
 
     merged_output = merge_outputs(outputs)
     return merged_output
-
-
-def run_v1_task_parallel(
-    *,
-    images: list[dict[str, Any]],
-    task_legacy: TaskV1,
-    wftask: WorkflowTaskV2,
-    executor: Executor,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
-) -> TaskOutput:
-
-    _check_parallelization_list_size(images)
-
-    executor_options = _get_executor_options(
-        wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
-        which_type="parallel",
-    )
-
-    list_function_kwargs = []
-    for ind, image in enumerate(images):
-        list_function_kwargs.append(
-            convert_v2_args_into_v1(
-                kwargs_v2=dict(
-                    zarr_url=image["zarr_url"],
-                    **(wftask.args_parallel or {}),
-                ),
-                parallelization_level=task_legacy.parallelization_level,
-            ),
-        )
-        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
-
-    results_iterator = executor.map(
-        functools.partial(
-            run_single_task,
-            wftask=wftask,
-            command=task_legacy.command,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
-            is_task_v1=True,
-        ),
-        list_function_kwargs,
-        **executor_options,
-    )
-    # Explicitly iterate over the whole list, so that all futures are waited
-    list(results_iterator)
-
-    # Ignore any output metadata for V1 tasks, and return an empty object
-    out = TaskOutput()
-    return out
