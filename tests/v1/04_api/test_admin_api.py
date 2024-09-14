@@ -623,9 +623,7 @@ async def test_patch_job(
         assert res.status_code == 401
 
         # Patch job as superuser
-        async with MockCurrentUser(
-            user_kwargs={"id": 222222, "is_superuser": True}
-        ):
+        async with MockCurrentUser(user_kwargs={"is_superuser": True}):
             # Fail due to invalid payload (missing attribute "status")
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/job/{job.id}/",
@@ -700,7 +698,7 @@ async def test_stop_job(
             status=JobStatusTypeV1.SUBMITTED,
         )
 
-    async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
 
         res = await registered_superuser_client.get(
             f"{PREFIX}/job/{job.id}/stop/",
@@ -750,7 +748,7 @@ async def test_download_job_logs(
             output_dataset_id=output_dataset.id,
         )
 
-    async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
 
         # Write a log file in working_dir
         LOG_CONTENT = "This is a log\n"
