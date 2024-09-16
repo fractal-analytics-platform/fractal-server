@@ -10,7 +10,7 @@ from pydantic.types import StrictStr
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
 from ._validators import valstr
-
+from fractal_server.string_tools import validate_cmd
 
 __all__ = (
     "UserRead",
@@ -60,13 +60,15 @@ class UserUpdate(schemas.BaseUserUpdate):
         valstr("slurm_user")
     )
     _username = validator("username", allow_reuse=True)(valstr("username"))
-    _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
-    )
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
         val_unique_list("slurm_accounts")
     )
+
+    @validator("cache_dir")
+    def cache_dir_validator(cls, value):
+        val_absolute_path("cache_dir")(value)
+        validate_cmd(value)
 
     @validator(
         "is_active",
@@ -98,9 +100,10 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
         val_unique_list("slurm_accounts")
     )
 
-    _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
-    )
+    @validator("cache_dir")
+    def cache_dir_validator(cls, value):
+        val_absolute_path("cache_dir")(value)
+        validate_cmd(value)
 
 
 class UserUpdateWithNewGroupIds(UserUpdate):
@@ -140,6 +143,8 @@ class UserCreate(schemas.BaseUserCreate):
         valstr("slurm_user")
     )
     _username = validator("username", allow_reuse=True)(valstr("username"))
-    _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
-    )
+
+    @validator("cache_dir")
+    def cache_dir_validator(cls, value):
+        val_absolute_path("cache_dir")(value)
+        validate_cmd(value)
