@@ -11,6 +11,7 @@ from pydantic import validator
 
 from .._validators import valdictkeys
 from .._validators import valstr
+from fractal_server.string_tools import validate_cmd
 
 
 class TaskCreateV2(BaseModel, extra=Extra.forbid):
@@ -43,6 +44,11 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
                 "Task must have at least one valid command "
                 "(parallel and/or non_parallel)"
             )
+        if command_parallel is not None:
+            validate_cmd(command_parallel)
+        if command_non_parallel is not None:
+            validate_cmd(command_non_parallel)
+
         return values
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
