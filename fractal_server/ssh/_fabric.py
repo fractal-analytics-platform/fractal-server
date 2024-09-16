@@ -17,6 +17,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 from ..logger import get_logger
 from ..logger import set_logger
 from fractal_server.config import get_settings
+from fractal_server.string_tools import validate_cmd
 from fractal_server.syringe import Inject
 
 
@@ -159,6 +160,9 @@ class FractalSSH(object):
         Returns:
             Standard output of the command, if successful.
         """
+
+        validate_cmd(cmd)
+
         actual_max_attempts = self.default_max_attempts
         if max_attempts is not None:
             actual_max_attempts = max_attempts
