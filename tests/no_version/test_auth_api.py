@@ -1,6 +1,9 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.models.security import OAuthAccount
+from fractal_server.app.models.security import UserOAuth
+
 PREFIX = "/auth"
 
 
@@ -18,6 +21,7 @@ async def test_get_current_user(
     debug(res.json())
     assert res.status_code == 200
     assert not res.json()["is_superuser"]
+    assert res.json()["oauth_accounts"] == []
 
     # Registered superuser
     res = await registered_superuser_client.get(f"{PREFIX}/current-user/")
@@ -50,6 +54,7 @@ async def test_register_user(registered_client, registered_superuser_client):
     assert res.status_code == 201
     assert res.json()["email"] == EMAIL
     assert res.json()["slurm_accounts"] == payload_register["slurm_accounts"]
+    assert res.json()["oauth_accounts"] == []
 
 
 async def test_list_users(registered_client, registered_superuser_client):
@@ -71,11 +76,12 @@ async def test_list_users(registered_client, registered_superuser_client):
 
     # Superuser can list
     res = await registered_superuser_client.get(f"{PREFIX}/users/")
-    debug(res.json())
+    assert res.status_code == 200
     list_emails = [u["email"] for u in res.json()]
     assert "0@asd.asd" in list_emails
     assert "1@asd.asd" in list_emails
-    assert res.status_code == 200
+    for user in res.json():
+        assert user["oauth_accounts"] == []
 
 
 async def test_show_user(registered_client, registered_superuser_client):
@@ -97,6 +103,7 @@ async def test_show_user(registered_client, registered_superuser_client):
     )
     debug(res.json())
     assert res.status_code == 200
+    assert res.json()["oauth_accounts"] == []
 
 
 async def test_patch_current_user_cache_dir(registered_client):
@@ -524,3 +531,85 @@ async def test_edit_user_and_fail(registered_superuser_client):
         json={},
     )
     assert res.status_code == 200
+
+
+async def test_oauth_accounts_list(
+    client, db, MockCurrentUser, registered_superuser_client
+):
+
+    u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
+    u2 = UserOAuth(email="user2@email.com", hashed_password="abc2")
+    db.add(u1)
+    db.add(u2)
+    await db.commit()
+    await db.refresh(u1)
+    await db.refresh(u2)
+
+    oauth1 = OAuthAccount(
+        user_id=u1.id,
+        oauth_name="github",
+        account_email="user1@github.com",
+        account_id="111",
+        access_token="aaa",
+    )
+    oauth2 = OAuthAccount(
+        user_id=u1.id,
+        oauth_name="google",
+        account_email="user1@gmail.com",
+        account_id="222",
+        access_token="bbb",
+    )
+    oauth3 = OAuthAccount(
+        user_id=u2.id,
+        oauth_name="oidc",
+        account_email="user2@uzh.com",
+        account_id="333",
+        access_token="ccc",
+    )
+    db.add(oauth1)
+    db.add(oauth2)
+    db.add(oauth3)
+
+    await db.commit()
+
+    # test GET /auth/users/
+    res = await registered_superuser_client.get(f"{PREFIX}/users/")
+    for user in res.json():
+        if user["id"] == u1.id:
+            assert len(user["oauth_accounts"]) == 2
+        elif user["id"] == u2.id:
+            assert len(user["oauth_accounts"]) == 1
+        else:
+            assert len(user["oauth_accounts"]) == 0
+
+    # test GET /auth/users/{user_id}/
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{u1.id}/")
+    assert len(res.json()["oauth_accounts"]) == 2
+    assert res.json()["group_ids"] is not None
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{u1.id}/?group_ids=false"
+    )
+    assert len(res.json()["oauth_accounts"]) == 2
+    assert res.json()["group_ids"] is None
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
+    assert len(res.json()["oauth_accounts"]) == 1
+
+    # test PATCH /auth/users/{user_id}
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{u1.id}/", json=dict(password="password")
+    )
+    assert len(res.json()["oauth_accounts"]) == 2
+
+    # test GET /auth/current-user/
+    async with MockCurrentUser(user_kwargs=dict(id=u1.id)):
+        res = await client.get(f"{PREFIX}/current-user/")
+        assert len(res.json()["oauth_accounts"]) == 2
+        res = await client.get(f"{PREFIX}/current-user/?group_names=true")
+        assert len(res.json()["oauth_accounts"]) == 2
+
+    # test PATCH /auth/current-user/
+    async with MockCurrentUser(user_kwargs=dict(id=u2.id)):
+        res = await client.patch(
+            f"{PREFIX}/current-user/", json=dict(cache_dir="/foo/bar")
+        )
+        assert len(res.json()["oauth_accounts"]) == 1

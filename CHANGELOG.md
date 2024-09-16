@@ -1,5 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
 # 2.5.0
 
 This release removes support for including V1 tasks in V2 workflows. This comes
@@ -15,13 +16,16 @@ runner.
     * Drop v1-v2-task-compatibility admin endpoint (\#1721).
     * Drop `/task-legacy/` endpoint (\#1721).
     * Remove legacy task code branches from `WorkflowTaskV2` CRUD endpoints (\#1721).
+    * Add OAuth accounts info to `UserRead` at `.oauth_accounts` (\#1765).
+* Testing:
+    * Improve OAuth Github Action to test OAuth account flow (\#1765).
 
 # 2.4.2
 
-* Runner:
-    * Add `--set-home` to `sudo -u` impersonation command, to fix Ubuntu18 behavior (\#1762).
 * App:
     * Improve logging in `fractalctl set-db` (\#1764).
+* Runner:
+    * Add `--set-home` to `sudo -u` impersonation command, to fix Ubuntu18 behavior (\#1762).
 * Testing:
     * Start tests of migrations from valid v2.4.0 database (\#1764).
 

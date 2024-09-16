@@ -297,7 +297,7 @@ async def test_patch_job(
     ORIGINAL_STATUS = JobStatusTypeV2.SUBMITTED
     NEW_STATUS = JobStatusTypeV2.FAILED
 
-    async with MockCurrentUser(user_kwargs={"id": 111111}) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(name="task", source="source")
@@ -326,9 +326,7 @@ async def test_patch_job(
         assert res.status_code == 401
 
         # Patch job as superuser
-        async with MockCurrentUser(
-            user_kwargs={"id": 222222, "is_superuser": True}
-        ):
+        async with MockCurrentUser(user_kwargs={"is_superuser": True}):
             # Fail due to invalid payload (missing attribute "status")
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/job/{job.id}/",
@@ -386,7 +384,7 @@ async def test_stop_job(
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
-    async with MockCurrentUser(user_kwargs={"id": 1111}) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(name="task", source="source")
@@ -402,7 +400,7 @@ async def test_stop_job(
             status=JobStatusTypeV2.SUBMITTED,
         )
 
-    async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
 
         res = await registered_superuser_client.get(
             f"{PREFIX}/job/{job.id}/stop/",
@@ -432,7 +430,7 @@ async def test_download_job_logs(
     db,
     tmp_path,
 ):
-    async with MockCurrentUser(user_kwargs={"id": 1111}) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=prj.id, name="dataset")
         workflow = await workflow_factory_v2(project_id=prj.id)
@@ -448,7 +446,7 @@ async def test_download_job_logs(
             dataset_id=dataset.id,
         )
 
-    async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
 
         # Write a log file in working_dir
         LOG_CONTENT = "This is a log\n"

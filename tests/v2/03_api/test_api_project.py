@@ -51,7 +51,7 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
     assert res.status_code == 401
 
     # authenticated
-    async with MockCurrentUser(user_kwargs=dict(id=1)) as userA:
+    async with MockCurrentUser() as userA:
         res = await client.post(
             f"{PREFIX}/project/", json=dict(name="project")
         )
@@ -60,7 +60,7 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
         assert len(await _project_list_v2(userA, db)) == 1
         other_project = res.json()
 
-    async with MockCurrentUser(user_kwargs=dict(id=2)) as userB:
+    async with MockCurrentUser() as userB:
 
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200

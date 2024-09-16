@@ -20,6 +20,22 @@ __all__ = (
 )
 
 
+class OAuthAccountRead(BaseModel):
+    """
+    Schema for storing essential `OAuthAccount` information within
+    `UserRead.oauth_accounts`.
+
+    Attributes:
+        id: ID of the row in fractal-owned `oauthaccount` table.
+        account_email: Email associated to OAuth account
+        oauth_name: Name of the OAuth provider (e.g. `github`)
+    """
+
+    id: int
+    account_email: str
+    oauth_name: str
+
+
 class UserRead(schemas.BaseUser[int]):
     """
     Schema for `User` read from database.
@@ -37,6 +53,7 @@ class UserRead(schemas.BaseUser[int]):
     slurm_accounts: list[str]
     group_names: Optional[list[str]] = None
     group_ids: Optional[list[int]] = None
+    oauth_accounts: list[OAuthAccountRead]
 
 
 class UserUpdate(schemas.BaseUserUpdate):

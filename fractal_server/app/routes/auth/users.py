@@ -43,10 +43,8 @@ async def get_user(
 ) -> UserRead:
     user = await _user_or_404(user_id, db)
     if group_ids:
-        user_with_group_ids = await _get_single_user_with_group_ids(user, db)
-        return user_with_group_ids
-    else:
-        return user
+        user = await _get_single_user_with_group_ids(user, db)
+    return user
 
 
 @router_users.patch("/users/{user_id}/", response_model=UserRead)
@@ -127,9 +125,7 @@ async def patch_user(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=error_msg,
             )
-
         patched_user = user_to_patch
-
     elif edit_attributes:
         # Modify user attributes
         try:
@@ -142,7 +138,10 @@ async def patch_user(
                 safe=False,
                 request=None,
             )
-            patched_user = schemas.model_validate(UserOAuth, user)
+            validated_user = schemas.model_validate(UserOAuth, user)
+            patched_user = await db.get(
+                UserOAuth, validated_user.id, populate_existing=True
+            )
         except exceptions.InvalidPasswordException as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -189,9 +188,11 @@ async def list_users(
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
     for ind, user in enumerate(user_list):
         user_list[ind] = dict(
-            user.model_dump(),
+            **user.model_dump(),
+            oauth_accounts=user.oauth_accounts,
             group_ids=[
                 link.group_id for link in links if link.user_id == user.id
             ],
         )
+
     return user_list
