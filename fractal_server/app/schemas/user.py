@@ -30,6 +30,7 @@ class OAuthAccountRead(BaseModel):
         account_email: Email associated to OAuth account
         oauth_name: Name of the OAuth provider (e.g. `github`)
     """
+
     id: int
     account_email: str
     oauth_name: str
