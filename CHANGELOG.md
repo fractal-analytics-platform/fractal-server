@@ -1,11 +1,5 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.5.1 (Unreleased)
-
-* API:
-    * Add OAuth accounts info to `UserRead` at `.oauth_accounts` (\#1765).
-* Testing:
-    * Improve OAuth Github Action to test OAuth account flow (\#1765).
 
 # 2.5.0
 
@@ -22,6 +16,9 @@ runner.
     * Drop v1-v2-task-compatibility admin endpoint (\#1721).
     * Drop `/task-legacy/` endpoint (\#1721).
     * Remove legacy task code branches from `WorkflowTaskV2` CRUD endpoints (\#1721).
+    * Add OAuth accounts info to `UserRead` at `.oauth_accounts` (\#1765).
+* Testing:
+    * Improve OAuth Github Action to test OAuth account flow (\#1765).
 
 # 2.4.2
 
