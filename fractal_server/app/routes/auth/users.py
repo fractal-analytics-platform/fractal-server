@@ -189,7 +189,7 @@ async def list_users(
     for ind, user in enumerate(user_list):
         user_list[ind] = dict(
             **user.model_dump(),
-            oauth_accounts=[account for account in user.oauth_accounts],
+            oauth_accounts=user.oauth_accounts,
             group_ids=[
                 link.group_id for link in links if link.user_id == user.id
             ],
