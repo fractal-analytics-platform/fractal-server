@@ -1,7 +1,7 @@
 import string
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
-__NOT_ALLOWED_FOR_COMMANDS__ = r"`#$&*()\|[]{};<>?!"
+__NOT_ALLOWED_FOR_COMMANDS__ = r"`#$&()\|[]{};<>?!"
 
 
 def sanitize_string(value: str) -> str:
