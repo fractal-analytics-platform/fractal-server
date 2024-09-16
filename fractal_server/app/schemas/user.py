@@ -22,14 +22,17 @@ __all__ = (
 
 class OAuthAccountRead(BaseModel):
     """
-    Schema for storing essential `OAuthAccount` informations within
+    Schema for storing essential `OAuthAccount` information within
     `UserRead.oauth_accounts`.
-    """
 
+    Attributes:
+        id: ID of the row in fractal-owned `oauthaccount` table.
+        account_email: Email associated to OAuth account
+        oauth_name: Name of the OAuth provider (e.g. `github`)
+    """
     id: int
     account_email: str
     oauth_name: str
-    expires_at: Optional[int] = None
 
 
 class UserRead(schemas.BaseUser[int]):
