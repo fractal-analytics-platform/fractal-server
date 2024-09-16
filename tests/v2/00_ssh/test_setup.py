@@ -26,7 +26,7 @@ def test_versions(fractal_ssh: FractalSSH, current_py_version: str):
     python_bin = f"/usr/bin/python{current_py_version}"
     command = f"{python_bin} --version"
     print(f"COMMAND:\n{command}")
-    stdout = fractal_ssh.run_command(cmd=command)
+    stdout = fractal_ssh.run_command(cmd=command, allow_char=";")
     print(f"STDOUT:\n{stdout}")
 
     python_command = "import fractal_server as fs; print(fs.__VERSION__);"

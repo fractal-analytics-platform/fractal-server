@@ -46,9 +46,19 @@ def slugify_task_name_for_source(task_name: str) -> str:
     return task_name.replace(" ", "_").lower()
 
 
-def validate_cmd(command: str):
-    if set(command) & set(__NOT_ALLOWED_FOR_COMMANDS__):
+def validate_cmd(command: str, allow_char: str = ""):
+    """
+    Assert that the provided `command` does not contain any of the forbidden
+    characters for commands
+    (fractal_server.string_tools.__NOT_ALLOWED_FOR_COMMANDS__)
+
+    Args:
+        command: command to validate.
+        allow_char: chars to accept among the forbidden ones
+    """
+    forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__) - set(allow_char)
+    if set(command) & forbidden:  # if sets intersect
         raise ValueError(
-            "Commands must not contain any of this characters: "
-            f"'{__NOT_ALLOWED_FOR_COMMANDS__}'\nProvided command: '{command}'."
+            f"Command must not contain any of this characters: '{forbidden}'\n"
+            f"Provided command: '{command}'."
         )
