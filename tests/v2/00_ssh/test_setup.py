@@ -33,6 +33,6 @@ def test_versions(fractal_ssh: FractalSSH, current_py_version: str):
     command = f"{python_bin} -c '{python_command}'"
 
     print(f"COMMAND:\n{command}")
-    stdout = fractal_ssh.run_command(cmd=command, allow_char=r";'")
+    stdout = fractal_ssh.run_command(cmd=command, allow_char=r";'()")
     print(f"STDOUT:\n{stdout}")
     assert stdout.strip() == str(fractal_server.__VERSION__)
