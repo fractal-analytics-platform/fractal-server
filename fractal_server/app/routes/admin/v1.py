@@ -21,7 +21,6 @@ from ....utils import get_timestamp
 from ....zip_tools import _zip_folder_to_byte_stream_iterator
 from ...db import AsyncSession
 from ...db import get_async_db
-from ...models.security import UserOAuth as User
 from ...models.v1 import ApplyWorkflow
 from ...models.v1 import Dataset
 from ...models.v1 import JobStatusTypeV1
@@ -33,9 +32,10 @@ from ...schemas.v1 import ApplyWorkflowUpdateV1
 from ...schemas.v1 import DatasetReadV1
 from ...schemas.v1 import ProjectReadV1
 from ...schemas.v1 import WorkflowReadV1
-from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
 from ..aux._runner import _check_shutdown_is_supported
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_superuser
 
 router_admin_v1 = APIRouter()
 
@@ -63,7 +63,7 @@ async def view_project(
     user_id: Optional[int] = None,
     timestamp_created_min: Optional[datetime] = None,
     timestamp_created_max: Optional[datetime] = None,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectReadV1]:
     """
@@ -80,7 +80,7 @@ async def view_project(
         stm = stm.where(Project.id == id)
 
     if user_id is not None:
-        stm = stm.where(Project.user_list.any(User.id == user_id))
+        stm = stm.where(Project.user_list.any(UserOAuth.id == user_id))
     if timestamp_created_min is not None:
         timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
         stm = stm.where(Project.timestamp_created >= timestamp_created_min)
@@ -103,7 +103,7 @@ async def view_workflow(
     name_contains: Optional[str] = None,
     timestamp_created_min: Optional[datetime] = None,
     timestamp_created_max: Optional[datetime] = None,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowReadV1]:
     """
@@ -119,7 +119,7 @@ async def view_workflow(
 
     if user_id is not None:
         stm = stm.join(Project).where(
-            Project.user_list.any(User.id == user_id)
+            Project.user_list.any(UserOAuth.id == user_id)
         )
     if id is not None:
         stm = stm.where(Workflow.id == id)
@@ -153,7 +153,7 @@ async def view_dataset(
     type: Optional[str] = None,
     timestamp_created_min: Optional[datetime] = None,
     timestamp_created_max: Optional[datetime] = None,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetReadV1]:
     """
@@ -170,7 +170,7 @@ async def view_dataset(
 
     if user_id is not None:
         stm = stm.join(Project).where(
-            Project.user_list.any(User.id == user_id)
+            Project.user_list.any(UserOAuth.id == user_id)
         )
     if id is not None:
         stm = stm.where(Dataset.id == id)
@@ -211,7 +211,7 @@ async def view_job(
     end_timestamp_min: Optional[datetime] = None,
     end_timestamp_max: Optional[datetime] = None,
     log: bool = True,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowReadV1]:
     """
@@ -243,7 +243,7 @@ async def view_job(
         stm = stm.where(ApplyWorkflow.id == id)
     if user_id is not None:
         stm = stm.join(Project).where(
-            Project.user_list.any(User.id == user_id)
+            Project.user_list.any(UserOAuth.id == user_id)
         )
     if project_id is not None:
         stm = stm.where(ApplyWorkflow.project_id == project_id)
@@ -282,7 +282,7 @@ async def view_job(
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> ApplyWorkflowReadV1:
 
@@ -311,7 +311,7 @@ async def view_single_job(
 async def update_job(
     job_update: ApplyWorkflowUpdateV1,
     job_id: int,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
     """
@@ -344,7 +344,7 @@ async def update_job(
 @router_admin_v1.get("/job/{job_id}/stop/", status_code=202)
 async def stop_job(
     job_id: int,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -371,7 +371,7 @@ async def stop_job(
 )
 async def download_job_logs(
     job_id: int,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """

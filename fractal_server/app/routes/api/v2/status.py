@@ -13,11 +13,11 @@ from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....schemas.v2.dataset import WorkflowTaskStatusTypeV2
 from ....schemas.v2.status import StatusReadV2
-from ....security import current_active_user
-from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 
 router = APIRouter()
@@ -33,7 +33,7 @@ async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[StatusReadV2]:
     """

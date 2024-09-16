@@ -25,10 +25,15 @@ from .....ssh._fabric import FractalSSH
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
+from ...exceptions import JobExecutionError
 from ...executors.slurm.ssh.executor import FractalSlurmSSHExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
+from fractal_server.logger import set_logger
+
+
+logger = set_logger(__name__)
 
 
 def _process_workflow(
@@ -59,6 +64,18 @@ def _process_workflow(
 
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
+
+    # Create main remote folder
+    try:
+        fractal_ssh.mkdir(folder=str(workflow_dir_remote))
+        logger.info(f"Created {str(workflow_dir_remote)} via SSH.")
+    except Exception as e:
+        error_msg = (
+            f"Could not create {str(workflow_dir_remote)} via SSH.\n"
+            f"Original error: {str(e)}."
+        )
+        logger.error(error_msg)
+        raise JobExecutionError(info=error_msg)
 
     with FractalSlurmSSHExecutor(
         fractal_ssh=fractal_ssh,

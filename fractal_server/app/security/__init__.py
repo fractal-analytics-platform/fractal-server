@@ -29,40 +29,37 @@ All routes are registerd under the `auth/` prefix.
 import contextlib
 from typing import Any
 from typing import AsyncGenerator
-from typing import Dict
 from typing import Generic
 from typing import Optional
 from typing import Type
 
 from fastapi import Depends
+from fastapi import Request
 from fastapi_users import BaseUserManager
-from fastapi_users import FastAPIUsers
 from fastapi_users import IntegerIDMixin
-from fastapi_users.authentication import AuthenticationBackend
-from fastapi_users.authentication import BearerTransport
-from fastapi_users.authentication import CookieTransport
-from fastapi_users.authentication import JWTStrategy
 from fastapi_users.db.base import BaseUserDatabase
 from fastapi_users.exceptions import InvalidPasswordException
 from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
 from fastapi_users.models import UP
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import func
 from sqlmodel import select
 
-from ...config import get_settings
-from ...syringe import Inject
 from ..db import get_async_db
-from fractal_server.app.models.security import OAuthAccount
-from fractal_server.app.models.security import UserOAuth as User
+from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import OAuthAccount
+from fractal_server.app.models import UserGroup
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 
-logger = get_logger(__name__)
+logger = set_logger(__name__)
+
+FRACTAL_DEFAULT_GROUP_NAME = "All"
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -125,7 +122,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
             return user
         return None
 
-    async def create(self, create_dict: Dict[str, Any]) -> UP:
+    async def create(self, create_dict: dict[str, Any]) -> UP:
         """Create a user."""
         user = self.user_model(**create_dict)
         self.session.add(user)
@@ -133,7 +130,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         await self.session.refresh(user)
         return user
 
-    async def update(self, user: UP, update_dict: Dict[str, Any]) -> UP:
+    async def update(self, user: UP, update_dict: dict[str, Any]) -> UP:
         for key, value in update_dict.items():
             setattr(user, key, value)
         self.session.add(user)
@@ -146,7 +143,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         await self.session.commit()
 
     async def add_oauth_account(
-        self, user: UP, create_dict: Dict[str, Any]
+        self, user: UP, create_dict: dict[str, Any]
     ) -> UP:  # noqa
         if self.oauth_account_model is None:
             raise NotImplementedError()
@@ -160,7 +157,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         return user
 
     async def update_oauth_account(
-        self, user: UP, oauth_account: OAP, update_dict: Dict[str, Any]
+        self, user: UP, oauth_account: OAP, update_dict: dict[str, Any]
     ) -> UP:
         if self.oauth_account_model is None:
             raise NotImplementedError()
@@ -176,13 +173,14 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 async def get_user_db(
     session: AsyncSession = Depends(get_async_db),
 ) -> AsyncGenerator[SQLModelUserDatabaseAsync, None]:
-    yield SQLModelUserDatabaseAsync(session, User, OAuthAccount)
+    yield SQLModelUserDatabaseAsync(session, UserOAuth, OAuthAccount)
 
 
-class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    async def validate_password(self, password: str, user: User) -> None:
+class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
+    async def validate_password(self, password: str, user: UserOAuth) -> None:
         # check password length
-        min_length, max_length = 4, 100
+        min_length = 4
+        max_length = 100
         if len(password) < min_length:
             raise InvalidPasswordException(
                 f"The password is too short (minimum length: {min_length})."
@@ -192,59 +190,44 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 f"The password is too long (maximum length: {min_length})."
             )
 
+    async def on_after_register(
+        self, user: UserOAuth, request: Optional[Request] = None
+    ):
+        logger.info(
+            f"New-user registration completed ({user.id=}, {user.email=})."
+        )
+        async for db in get_async_db():
+            # Find default group
+            stm = select(UserGroup).where(
+                UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+            )
+            res = await db.execute(stm)
+            default_group = res.scalar_one_or_none()
+            if default_group is None:
+                logger.error(
+                    f"No group found with name {FRACTAL_DEFAULT_GROUP_NAME}"
+                )
+            else:
+                logger.warning(
+                    f"START adding {user.email} user to group "
+                    f"{default_group.id=}."
+                )
+                link = LinkUserGroup(
+                    user_id=user.id, group_id=default_group.id
+                )
+                db.add(link)
+                await db.commit()
+                logger.warning(
+                    f"END   adding {user.email} user to group "
+                    f"{default_group.id=}."
+                )
+
 
 async def get_user_manager(
     user_db: SQLModelUserDatabaseAsync = Depends(get_user_db),
 ) -> AsyncGenerator[UserManager, None]:
     yield UserManager(user_db)
 
-
-bearer_transport = BearerTransport(tokenUrl="/auth/token/login")
-cookie_transport = CookieTransport(cookie_samesite="none")
-
-
-def get_jwt_strategy() -> JWTStrategy:
-    settings = Inject(get_settings)
-    return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,  # type: ignore
-        lifetime_seconds=settings.JWT_EXPIRE_SECONDS,
-    )
-
-
-def get_jwt_cookie_strategy() -> JWTStrategy:
-    settings = Inject(get_settings)
-    return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,  # type: ignore
-        lifetime_seconds=settings.COOKIE_EXPIRE_SECONDS,
-    )
-
-
-token_backend = AuthenticationBackend(
-    name="bearer-jwt",
-    transport=bearer_transport,
-    get_strategy=get_jwt_strategy,
-)
-cookie_backend = AuthenticationBackend(
-    name="cookie-jwt",
-    transport=cookie_transport,
-    get_strategy=get_jwt_cookie_strategy,
-)
-
-
-fastapi_users = FastAPIUsers[User, int](
-    get_user_manager,
-    [token_backend, cookie_backend],
-)
-
-
-# Create dependencies for users
-current_active_user = fastapi_users.current_user(active=True)
-current_active_verified_user = fastapi_users.current_user(
-    active=True, verified=True
-)
-current_active_superuser = fastapi_users.current_user(
-    active=True, superuser=True
-)
 
 get_async_session_context = contextlib.asynccontextmanager(get_async_db)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
@@ -281,20 +264,21 @@ async def _create_first_user(
         is_verified: `True` if the new user is verifie
         username:
     """
+    function_logger = set_logger("fractal_server.create_first_user")
+    function_logger.info(f"START _create_first_user, with email '{email}'")
     try:
         async with get_async_session_context() as session:
-
             if is_superuser is True:
                 # If a superuser already exists, exit
-                stm = select(User).where(
-                    User.is_superuser == True  # noqa E712
-                )
+                stm = select(UserOAuth).where(  # noqa
+                    UserOAuth.is_superuser == True  # noqa
+                )  # noqa
                 res = await session.execute(stm)
                 existing_superuser = res.scalars().first()
                 if existing_superuser is not None:
-                    logger.info(
-                        f"{existing_superuser.email} superuser already exists,"
-                        f" skip creation of {email}"
+                    function_logger.info(
+                        f"'{existing_superuser.email}' superuser already "
+                        f"exists, skip creation of '{email}'"
                     )
                     return None
 
@@ -309,13 +293,33 @@ async def _create_first_user(
                     if username is not None:
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
-                    logger.info(f"User {user.email} created")
-
-    except IntegrityError:
-        logger.warning(
-            f"Creation of user {email} failed with IntegrityError "
-            "(likely due to concurrent attempts from different workers)."
-        )
+                    function_logger.info(f"User '{user.email}' created")
 
     except UserAlreadyExists:
-        logger.warning(f"User {email} already exists")
+        function_logger.warning(f"User '{email}' already exists")
+    finally:
+        function_logger.info(f"END   _create_first_user, with email '{email}'")
+
+
+def _create_first_group():
+    function_logger = set_logger("fractal_server.create_first_group")
+
+    function_logger.info(
+        f"START _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
+    )
+    with next(get_sync_db()) as db:
+        group_all = db.execute(select(UserGroup))
+        if group_all.scalars().one_or_none() is None:
+            first_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
+            db.add(first_group)
+            db.commit()
+            function_logger.info(
+                f"Created group '{FRACTAL_DEFAULT_GROUP_NAME}'"
+            )
+        else:
+            function_logger.info(
+                f"Group '{FRACTAL_DEFAULT_GROUP_NAME}' already exists, skip."
+            )
+    function_logger.info(
+        f"END   _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
+    )

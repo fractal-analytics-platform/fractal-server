@@ -229,10 +229,10 @@ async def registered_superuser_client(
 
 @pytest.fixture
 async def MockCurrentUser(app, db):
-    from fractal_server.app.security import current_active_verified_user
-    from fractal_server.app.security import current_active_user
-    from fractal_server.app.security import current_active_superuser
-    from fractal_server.app.security import User
+    from fractal_server.app.routes.auth import current_active_verified_user
+    from fractal_server.app.routes.auth import current_active_user
+    from fractal_server.app.routes.auth import current_active_superuser
+    from fractal_server.app.routes.auth import UserOAuth
 
     def _random_email():
         return f"{random.randint(0, 100000000)}@example.org"
@@ -263,7 +263,7 @@ async def MockCurrentUser(app, db):
             )
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
-            self.user = User(name=self.name, **defaults)
+            self.user = UserOAuth(name=self.name, **defaults)
 
             try:
                 db.add(self.user)

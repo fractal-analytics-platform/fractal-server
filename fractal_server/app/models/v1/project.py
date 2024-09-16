@@ -10,7 +10,7 @@ from sqlmodel import SQLModel
 from . import LinkUserProject
 from ....utils import get_timestamp
 from ...schemas.v1.project import _ProjectBaseV1
-from ..security import UserOAuth
+from fractal_server.app.models import UserOAuth
 
 
 class Project(_ProjectBaseV1, SQLModel, table=True):

@@ -49,7 +49,7 @@ def _run_command_as_user(
     """
     logger.debug(f'[_run_command_as_user] {user=}, cmd="{cmd}"')
     if user:
-        new_cmd = f"sudo --non-interactive -u {user} {cmd}"
+        new_cmd = f"sudo --set-home --non-interactive -u {user} {cmd}"
     else:
         new_cmd = cmd
     res = subprocess.run(  # nosec

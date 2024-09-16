@@ -12,9 +12,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
-from pydantic import root_validator
 
-from fractal_server.app.schemas.v1.dumps import TaskDumpV1
 from fractal_server.images import Filters
 
 
@@ -45,29 +43,10 @@ class WorkflowTaskDumpV2(BaseModel):
     workflow_id: int
     order: Optional[int]
 
-    is_legacy_task: bool
-
     input_filters: Filters
 
-    task_id: Optional[int]
-    task: Optional[TaskDumpV2]
-    task_legacy_id: Optional[int]
-    task_legacy: Optional[TaskDumpV1]
-
-    # Validators
-    @root_validator
-    def task_v1_or_v2(cls, values):
-        v1 = values.get("task_legacy_id")
-        v2 = values.get("task_id")
-        if ((v1 is not None) and (v2 is not None)) or (
-            (v1 is None) and (v2 is None)
-        ):
-            message = "both" if (v1 and v2) else "none"
-            raise ValueError(
-                "One and only one must be provided between "
-                f"'task_legacy_id' and 'task_id' (you provided {message})"
-            )
-        return values
+    task_id: int
+    task: TaskDumpV2
 
 
 class WorkflowDumpV2(BaseModel, extra=Extra.forbid):

@@ -69,59 +69,19 @@ class TaskV2Mock(BaseModel):
                 return "compound"
 
 
-class TaskV1Mock(BaseModel):
-    id: int
-    name: str
-    command: str  # str
-    source: str = Field(unique=True)
-    input_type: str
-    output_type: str
-    meta: Optional[dict[str, Any]] = Field(default_factory=dict)
-
-    @property
-    def parallelization_level(self) -> Optional[str]:
-        try:
-            return self.meta["parallelization_level"]
-        except KeyError:
-            return None
-
-    @property
-    def is_parallel(self) -> bool:
-        return bool(self.parallelization_level)
-
-
 class WorkflowTaskV2Mock(BaseModel):
     args_non_parallel: dict[str, Any] = Field(default_factory=dict)
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    is_legacy_task: Optional[bool]
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
-    task: Optional[TaskV2Mock] = None
-    task_legacy: Optional[TaskV1Mock] = None
-    is_legacy_task: bool = False
+    task: TaskV2Mock
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int
     id: int
     workflow_id: int = 0
-    task_legacy_id: Optional[int]
-    task_id: Optional[int]
-
-    @root_validator(pre=False)
-    def _legacy_or_not(cls, values):
-        is_legacy_task = values["is_legacy_task"]
-        task = values.get("task")
-        task_legacy = values.get("task_legacy")
-        if is_legacy_task:
-            if task_legacy is None or task is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_legacy_id"] = task_legacy.id
-        else:
-            if task is None or task_legacy is not None:
-                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
-            values["task_id"] = task.id
-        return values
+    task_id: int
 
     @validator("input_filters", always=True)
     def _default_filters(cls, value):

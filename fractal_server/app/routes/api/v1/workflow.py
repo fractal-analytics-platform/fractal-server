@@ -33,14 +33,14 @@ from ....schemas.v1 import WorkflowImportV1
 from ....schemas.v1 import WorkflowReadV1
 from ....schemas.v1 import WorkflowTaskCreateV1
 from ....schemas.v1 import WorkflowUpdateV1
-from ....security import current_active_user
-from ....security import User
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _raise_if_v1_is_read_only
 from ._aux_functions import _workflow_insert_task
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 
 
 router = APIRouter()
@@ -52,7 +52,7 @@ router = APIRouter()
 )
 async def get_workflow_list(
     project_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[WorkflowReadV1]]:
     """
@@ -79,7 +79,7 @@ async def get_workflow_list(
 async def create_workflow(
     project_id: int,
     workflow: WorkflowCreateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowReadV1]:
     """
@@ -110,7 +110,7 @@ async def create_workflow(
 async def read_workflow(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowReadV1]:
     """
@@ -132,7 +132,7 @@ async def update_workflow(
     project_id: int,
     workflow_id: int,
     patch: WorkflowUpdateV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowReadV1]:
     """
@@ -184,7 +184,7 @@ async def update_workflow(
 async def delete_workflow(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -236,7 +236,7 @@ async def delete_workflow(
 async def export_worfklow(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowExportV1]:
     """
@@ -269,7 +269,7 @@ async def export_worfklow(
 async def import_workflow(
     project_id: int,
     workflow: WorkflowImportV1,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowReadV1]:
     """
@@ -340,14 +340,16 @@ async def import_workflow(
 
 @router.get("/workflow/", response_model=list[WorkflowReadV1])
 async def get_user_workflows(
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowReadV1]:
     """
     Returns all the workflows of the current user
     """
     stm = select(Workflow)
-    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    stm = stm.join(Project).where(
+        Project.user_list.any(UserOAuth.id == user.id)
+    )
     res = await db.execute(stm)
     workflow_list = res.scalars().all()
     return workflow_list

@@ -50,6 +50,9 @@ def test_dummy_insert_single_image(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                task_id=fractal_tasks_mock_no_db[
+                    "dummy_insert_single_image"
+                ].id,
                 id=0,
                 order=0,
             )
@@ -64,6 +67,9 @@ def test_dummy_insert_single_image(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                task_id=fractal_tasks_mock_no_db[
+                    "dummy_insert_single_image"
+                ].id,
                 id=1,
                 order=1,
             )
@@ -80,6 +86,9 @@ def test_dummy_insert_single_image(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                    task_id=fractal_tasks_mock_no_db[
+                        "dummy_insert_single_image"
+                    ].id,
                     args_non_parallel={
                         "full_new_image": dict(
                             zarr_url=IMAGES[0]["zarr_url"], origin="/somewhere"
@@ -116,6 +125,7 @@ def test_dummy_insert_single_image(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=PATCHED_TASK,
+                    task_id=PATCHED_TASK.id,
                     args_non_parallel={"types": {KEY: True}},
                     id=2,
                     order=2,
@@ -140,6 +150,9 @@ def test_dummy_insert_single_image(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                    task_id=fractal_tasks_mock_no_db[
+                        "dummy_insert_single_image"
+                    ].id,
                     args_non_parallel={"fail": True},
                     id=2,
                     order=2,
@@ -158,6 +171,9 @@ def test_dummy_insert_single_image(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                    task_id=fractal_tasks_mock_no_db[
+                        "dummy_insert_single_image"
+                    ].id,
                     args_non_parallel={"fail_2": True},
                     id=3,
                     order=3,
@@ -194,6 +210,7 @@ def test_dummy_remove_images(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_remove_images"],
+                task_id=fractal_tasks_mock_no_db["dummy_remove_images"].id,
                 id=0,
                 order=0,
             )
@@ -213,6 +230,7 @@ def test_dummy_remove_images(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_remove_images"],
+                    task_id=fractal_tasks_mock_no_db["dummy_remove_images"].id,
                     id=1,
                     order=1,
                     args_non_parallel=dict(
@@ -257,6 +275,7 @@ def test_dummy_unset_attribute(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
+                task_id=fractal_tasks_mock_no_db["dummy_unset_attribute"].id,
                 args_non_parallel=dict(attribute="key2"),
                 id=0,
                 order=0,
@@ -273,6 +292,7 @@ def test_dummy_unset_attribute(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
+                task_id=fractal_tasks_mock_no_db["dummy_unset_attribute"].id,
                 args_non_parallel=dict(attribute="missing-attribute"),
                 id=1,
                 order=1,
@@ -304,6 +324,9 @@ def test_dummy_insert_single_image_none_attribute(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                task_id=fractal_tasks_mock_no_db[
+                    "dummy_insert_single_image"
+                ].id,
                 args_non_parallel=dict(attributes={"attribute-name": None}),
                 id=0,
                 order=0,
@@ -334,6 +357,9 @@ def test_dummy_insert_single_image_normalization(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+                task_id=fractal_tasks_mock_no_db[
+                    "dummy_insert_single_image"
+                ].id,
                 id=0,
                 order=0,
                 args_non_parallel={"trailing_slash": True},
@@ -372,6 +398,7 @@ def test_default_inclusion_of_images(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["generic_task_parallel"],
+                task_id=fractal_tasks_mock_no_db["generic_task_parallel"].id,
                 id=0,
                 order=0,
             )

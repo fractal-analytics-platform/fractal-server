@@ -9,19 +9,23 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+from datetime import datetime
 from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import Column
+from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from fractal_server.utils import get_timestamp
+
 
 class OAuthAccount(SQLModel, table=True):
     """
-    OAuth account model
+    ORM model for OAuth accounts (`oauthaccount` database table).
 
     This class is based on fastapi_users_db_sqlmodel::SQLModelBaseOAuthAccount.
     Original Copyright: 2021 François Voron, released under MIT licence.
@@ -56,7 +60,7 @@ class OAuthAccount(SQLModel, table=True):
 
 class UserOAuth(SQLModel, table=True):
     """
-    User model
+    ORM model for the `user_oauth` database table.
 
     This class is a modification of SQLModelBaseUserDB from from
     fastapi_users_db_sqlmodel. Original Copyright: 2022 François Voron,
@@ -74,7 +78,6 @@ class UserOAuth(SQLModel, table=True):
         cache_dir:
         username:
         oauth_accounts:
-        project_list:
     """
 
     __tablename__ = "user_oauth"
@@ -103,3 +106,21 @@ class UserOAuth(SQLModel, table=True):
 
     class Config:
         orm_mode = True
+
+
+class UserGroup(SQLModel, table=True):
+    """
+    ORM model for the `usergroup` database table.
+
+    Attributes:
+        id: ID of the group
+        name: Name of the group
+        timestamp_created: Time of creation
+    """
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True)
+    timestamp_created: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )

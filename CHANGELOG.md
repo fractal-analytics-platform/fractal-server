@@ -1,7 +1,66 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.3.11 (Unreleased)
+# 2.5.0
 
+This release removes support for including V1 tasks in V2 workflows. This comes
+with changes to the database (data and metadata), to the API, and to the V2
+runner.
+
+* Runner:
+    * Deprecate running v1 tasks within v2 workflows (\#1721).
+* Database:
+    * Remove `Task.is_v2_compatible` column (\#1721).
+    * For table `WorkflowTaskV2`, drop `is_legacy_task` and `task_legacy_id` columns, remove `task_legacy` ORM attribute, make `task_id` required, make `task` required (\#1721).
+* API:
+    * Drop v1-v2-task-compatibility admin endpoint (\#1721).
+    * Drop `/task-legacy/` endpoint (\#1721).
+    * Remove legacy task code branches from `WorkflowTaskV2` CRUD endpoints (\#1721).
+
+# 2.4.2
+
+* Runner:
+    * Add `--set-home` to `sudo -u` impersonation command, to fix Ubuntu18 behavior (\#1762).
+* App:
+    * Improve logging in `fractalctl set-db` (\#1764).
+* Testing:
+    * Start tests of migrations from valid v2.4.0 database (\#1764).
+
+# 2.4.1
+
+This is mainly a bugfix release, re-implementing a check that was removed in 2.4.0.
+
+* API:
+    * Re-introduce check for existing-user-email in `PATCH /auth/users/{id}/` (\#1760).
+
+# 2.4.0
+
+This release introduces support for user groups, but without linking it to any
+access-control rules (which will be introduced later).
+
+> NOTE: This release requires running the `fractalctl update-db-data` script.
+
+* App:
+    * Move creation of first user from application startup into `fractalctl set-db` command (\#1738, \#1748).
+    * Add creation of default user group into `fractalctl set-db` command (\#1738).
+    * Create `update-db-script` for current version, that adds all users to default group (\#1738).
+* API:
+    * Added `/auth/group/` and `/auth/group-names/` routers (\#1738, \#1752).
+    * Implement `/auth/users/{id}/` POST/PATCH routes in `fractal-server` (\#1738, \#1747, \#1752).
+    * Introduce `UserUpdateWithNewGroupIds` schema for `PATCH /auth/users/{id}/` (\#1747, \#1752).
+    * Add `UserManager.on_after_register` hook to add new users to default user group (\#1738).
+* Database:
+    * Added new `usergroup` and `linkusergroup` tables (\#1738).
+* Internal
+    * Refactored `fractal_server.app.auth` and `fractal_server.app.security` (\#1738)/
+    * Export all relevant modules in `app.models`, since it matters e.g. for `autogenerate`-ing migration scripts (\#1738).
+* Testing
+    * Add `UserGroup` validation to `scripts/validate_db_data_with_read_schemas.py` (\#1746).
+
+
+# 2.3.11
+
+* SSH runner:
+    * Move remote-folder creation from `submit_workflow` to more specific `_process_workflow` (\#1728).
 * Benchmarks:
     * Add `GET /auth/token/login/` to tested endpoints (\#1720).
 * Testing:

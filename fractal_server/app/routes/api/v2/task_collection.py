@@ -25,9 +25,9 @@ from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
-from ....security import current_active_user
-from ....security import current_active_verified_user
-from ....security import User
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
@@ -69,7 +69,7 @@ async def collect_tasks_pip(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
     """
@@ -289,7 +289,7 @@ async def collect_tasks_pip(
 @router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
 async def check_collection_status(
     state_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     verbose: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:  # State[TaskCollectStatus]

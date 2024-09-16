@@ -194,15 +194,11 @@ async def submit_workflow(
                     folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
                 )
             elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+                # Folder creation is deferred to _process_workflow
                 WORKFLOW_DIR_REMOTE = (
                     Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
                     / WORKFLOW_DIR_LOCAL.name
                 )
-                # FIXME SSH: move mkdir to executor, likely within handshake
-                fractal_ssh.mkdir(
-                    folder=str(WORKFLOW_DIR_REMOTE),
-                )
-                logger.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
                 logger.error(
                     "Invalid FRACTAL_RUNNER_BACKEND="
@@ -212,10 +208,7 @@ async def submit_workflow(
             # Create all tasks subfolders
             for order in range(job.first_task_index, job.last_task_index + 1):
                 this_wftask = workflow.task_list[order]
-                if this_wftask.is_legacy_task:
-                    task_name = this_wftask.task_legacy.name
-                else:
-                    task_name = this_wftask.task.name
+                task_name = this_wftask.task.name
                 subfolder_name = task_subfolder_name(
                     order=order,
                     task_name=task_name,

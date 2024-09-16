@@ -16,6 +16,7 @@ __all__ = (
     "UserRead",
     "UserUpdate",
     "UserCreate",
+    "UserUpdateWithNewGroupIds",
 )
 
 
@@ -34,6 +35,8 @@ class UserRead(schemas.BaseUser[int]):
     cache_dir: Optional[str]
     username: Optional[str]
     slurm_accounts: list[str]
+    group_names: Optional[list[str]] = None
+    group_ids: Optional[list[int]] = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
@@ -97,6 +100,14 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
 
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
+    )
+
+
+class UserUpdateWithNewGroupIds(UserUpdate):
+    new_group_ids: Optional[list[int]] = None
+
+    _val_unique = validator("new_group_ids", allow_reuse=True)(
+        val_unique_list("new_group_ids")
     )
 
 

@@ -24,8 +24,6 @@ from ....utils import get_timestamp
 from ....zip_tools import _zip_folder_to_byte_stream_iterator
 from ...db import AsyncSession
 from ...db import get_async_db
-from ...models.security import UserOAuth as User
-from ...models.v1 import Task
 from ...models.v2 import JobV2
 from ...models.v2 import ProjectV2
 from ...models.v2 import TaskV2
@@ -36,9 +34,10 @@ from ...schemas.v2 import JobReadV2
 from ...schemas.v2 import JobStatusTypeV2
 from ...schemas.v2 import JobUpdateV2
 from ...schemas.v2 import ProjectReadV2
-from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
 from ..aux._runner import _check_shutdown_is_supported
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_superuser
 
 router_admin_v2 = APIRouter()
 
@@ -64,7 +63,7 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
 async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectReadV2]:
     """
@@ -80,7 +79,7 @@ async def view_project(
     if id is not None:
         stm = stm.where(ProjectV2.id == id)
     if user_id is not None:
-        stm = stm.where(ProjectV2.user_list.any(User.id == user_id))
+        stm = stm.where(ProjectV2.user_list.any(UserOAuth.id == user_id))
 
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -102,7 +101,7 @@ async def view_job(
     end_timestamp_min: Optional[datetime] = None,
     end_timestamp_max: Optional[datetime] = None,
     log: bool = True,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[JobReadV2]:
     """
@@ -132,7 +131,7 @@ async def view_job(
         stm = stm.where(JobV2.id == id)
     if user_id is not None:
         stm = stm.join(ProjectV2).where(
-            ProjectV2.user_list.any(User.id == user_id)
+            ProjectV2.user_list.any(UserOAuth.id == user_id)
         )
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
@@ -169,7 +168,7 @@ async def view_job(
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
 
@@ -198,7 +197,7 @@ async def view_single_job(
 async def update_job(
     job_update: JobUpdateV2,
     job_id: int,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[JobReadV2]:
     """
@@ -231,7 +230,7 @@ async def update_job(
 @router_admin_v2.get("/job/{job_id}/stop/", status_code=202)
 async def stop_job(
     job_id: int,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -258,7 +257,7 @@ async def stop_job(
 )
 async def download_job_logs(
     job_id: int,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """
@@ -279,35 +278,6 @@ async def download_job_logs(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )
-
-
-class TaskCompatibility(BaseModel):
-    is_v2_compatible: bool
-
-
-@router_admin_v2.patch(
-    "/task-v1/{task_id}/",
-    status_code=status.HTTP_200_OK,
-)
-async def flag_task_v1_as_v2_compatible(
-    task_id: int,
-    compatibility: TaskCompatibility,
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> Response:
-
-    task = await db.get(Task, task_id)
-    if task is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task {task_id} not found",
-        )
-
-    task.is_v2_compatible = compatibility.is_v2_compatible
-    await db.commit()
-    await db.close()
-
-    return Response(status_code=status.HTTP_200_OK)
 
 
 class TaskV2Minimal(BaseModel):
@@ -352,7 +322,7 @@ async def query_tasks(
     owner: Optional[str] = None,
     kind: Optional[Literal["common", "users"]] = None,
     max_number_of_results: int = 25,
-    user: User = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
     """

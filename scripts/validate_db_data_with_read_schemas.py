@@ -1,6 +1,8 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.linkusergroup import LinkUserGroup
+from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v1 import Dataset
@@ -16,6 +18,7 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.user import UserRead
+from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import DatasetReadV1
 from fractal_server.app.schemas.v1 import ProjectReadV1
@@ -28,10 +31,10 @@ from fractal_server.app.schemas.v2 import CollectionStateReadV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import TaskLegacyReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 with next(get_sync_db()) as db:
 
@@ -41,6 +44,46 @@ with next(get_sync_db()) as db:
     for user in sorted(users, key=lambda x: x.id):
         UserRead(**user.model_dump())
         print(f"User {user.id} validated")
+
+    # USER GROUPS
+    stm = select(UserGroup)
+    groups = db.execute(stm).scalars().unique().all()
+    for group in sorted(groups, key=lambda x: x.id):
+        UserGroupRead(**group.model_dump())
+        print(f"UserGroup {group.id} validated")
+
+    # DEFAULT GROUP
+    default_group = next(
+        (
+            group
+            for group in groups
+            if group.name == FRACTAL_DEFAULT_GROUP_NAME
+        ),
+        None,
+    )
+    if default_group is None:
+        raise ValueError(
+            f"Default group '{FRACTAL_DEFAULT_GROUP_NAME}' does not exist."
+        )
+
+    stm = (
+        select(UserOAuth.id)
+        .join(LinkUserGroup)
+        .where(LinkUserGroup.user_id == UserOAuth.id)
+        .where(LinkUserGroup.group_id == default_group.id)
+    )
+    user_ids_in_default_group = set(db.execute(stm).scalars().unique().all())
+    all_user_ids = set(user.id for user in users)
+    if user_ids_in_default_group == all_user_ids:
+        print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}'")
+    else:
+        user_ids_not_in_default_group = (
+            all_user_ids - user_ids_in_default_group
+        )
+        raise ValueError(
+            "The following users are not in defualt group:\n"
+            f"{user_ids_not_in_default_group}"
+        )
 
     # V1
 
@@ -133,22 +176,12 @@ with next(get_sync_db()) as db:
         # validate task_list
         task_list = []
         for wftask in workflow.task_list:
-            if wftask.is_legacy_task is True:
-                task_list.append(
-                    WorkflowTaskReadV2(
-                        **wftask.model_dump(),
-                        task_legacy=TaskLegacyReadV2(
-                            **wftask.task.model_dump()
-                        ),
-                    )
+            task_list.append(
+                WorkflowTaskReadV2(
+                    **wftask.model_dump(),
+                    task=TaskReadV2(**wftask.task.model_dump()),
                 )
-            else:
-                task_list.append(
-                    WorkflowTaskReadV2(
-                        **wftask.model_dump(),
-                        task=TaskReadV2(**wftask.task.model_dump()),
-                    )
-                )
+            )
 
         WorkflowReadV2(
             **workflow.model_dump(),

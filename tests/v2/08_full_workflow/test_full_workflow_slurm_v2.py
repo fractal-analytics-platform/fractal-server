@@ -1,7 +1,6 @@
 import shlex
 import subprocess
 
-import pytest
 from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
@@ -254,9 +253,7 @@ async def test_non_executable_task_command_slurm(
     )
 
 
-@pytest.mark.parametrize("legacy", [False, True])
 async def test_failing_workflow_UnknownError_slurm(
-    legacy: bool,
     client,
     MockCurrentUser,
     testdata_path,
@@ -288,7 +285,6 @@ async def test_failing_workflow_UnknownError_slurm(
         user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
         client=client,
         monkeypatch=monkeypatch,
-        legacy=legacy,
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,

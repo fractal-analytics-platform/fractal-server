@@ -9,16 +9,15 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v1 import Task
 from ....models.v2 import TaskV2
 from ....schemas.v2 import WorkflowTaskCreateV2
 from ....schemas.v2 import WorkflowTaskReadV2
 from ....schemas.v2 import WorkflowTaskUpdateV2
-from ....security import current_active_user
-from ....security import User
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 
 router = APIRouter()
 
@@ -33,7 +32,7 @@ async def create_workflowtask(
     workflow_id: int,
     task_id: int,
     new_task: WorkflowTaskCreateV2,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowTaskReadV2]:
     """
@@ -44,27 +43,14 @@ async def create_workflowtask(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    if new_task.is_legacy_task is True:
-        task = await db.get(Task, task_id)
-        if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found.",
-            )
-        if not task.is_v2_compatible:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Task {task_id} is not V2-compatible.",
-            )
-    else:
-        task = await db.get(TaskV2, task_id)
-        if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"TaskV2 {task_id} not found.",
-            )
+    task = await db.get(TaskV2, task_id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskV2 {task_id} not found.",
+        )
 
-    if new_task.is_legacy_task is True or task.type == "parallel":
+    if task.type == "parallel":
         if (
             new_task.meta_non_parallel is not None
             or new_task.args_non_parallel is not None
@@ -74,7 +60,7 @@ async def create_workflowtask(
                 detail=(
                     "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
                     "`WorkflowTask.args_non_parallel` if the associated Task "
-                    "is `parallel` (or legacy)."
+                    "is `parallel`."
                 ),
             )
     elif task.type == "non_parallel":
@@ -93,7 +79,6 @@ async def create_workflowtask(
 
     workflow_task = await _workflow_insert_task(
         workflow_id=workflow.id,
-        is_legacy_task=new_task.is_legacy_task,
         task_id=task_id,
         order=new_task.order,
         meta_non_parallel=new_task.meta_non_parallel,
@@ -117,7 +102,7 @@ async def read_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     workflow_task, _ = await _get_workflow_task_check_owner(
@@ -139,7 +124,7 @@ async def update_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdateV2,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowTaskReadV2]:
     """
@@ -182,16 +167,7 @@ async def update_workflowtask(
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args_parallel":
             # Get default arguments via a Task property method
-            if db_wf_task.is_legacy_task:
-                default_args = (
-                    db_wf_task.task_legacy.default_args_from_args_schema
-                )
-                actual_args = deepcopy(default_args)
-                if value is not None:
-                    for k, v in value.items():
-                        actual_args[k] = v
-            else:
-                actual_args = deepcopy(value)
+            actual_args = deepcopy(value)
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
@@ -223,7 +199,7 @@ async def delete_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

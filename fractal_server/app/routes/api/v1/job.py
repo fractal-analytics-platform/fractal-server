@@ -16,20 +16,20 @@ from ....models.v1 import JobStatusTypeV1
 from ....models.v1 import Project
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v1 import ApplyWorkflowReadV1
-from ....security import current_active_user
-from ....security import User
 from ...aux._job import _write_shutdown_file
 from ...aux._runner import _check_shutdown_is_supported
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
 
 router = APIRouter()
 
 
 @router.get("/job/", response_model=list[ApplyWorkflowReadV1])
 async def get_user_jobs(
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowReadV1]:
@@ -37,7 +37,9 @@ async def get_user_jobs(
     Returns all the jobs of the current user
     """
     stm = select(ApplyWorkflow)
-    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    stm = stm.join(Project).where(
+        Project.user_list.any(UserOAuth.id == user.id)
+    )
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()
@@ -55,7 +57,7 @@ async def get_user_jobs(
 async def get_workflow_jobs(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ApplyWorkflowReadV1]]:
     """
@@ -78,7 +80,7 @@ async def read_job(
     project_id: int,
     job_id: int,
     show_tmp_logs: bool = False,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
     """
@@ -111,7 +113,7 @@ async def read_job(
 async def download_job_logs(
     project_id: int,
     job_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """
@@ -141,7 +143,7 @@ async def download_job_logs(
 )
 async def get_job_list(
     project_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ApplyWorkflowReadV1]]:
@@ -170,7 +172,7 @@ async def get_job_list(
 async def stop_job(
     project_id: int,
     job_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

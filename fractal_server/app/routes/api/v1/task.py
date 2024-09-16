@@ -17,11 +17,11 @@ from ....models.v2 import TaskV2
 from ....schemas.v1 import TaskCreateV1
 from ....schemas.v1 import TaskReadV1
 from ....schemas.v1 import TaskUpdateV1
-from ....security import current_active_user
-from ....security import current_active_verified_user
-from ....security import User
 from ._aux_functions import _get_task_check_owner
 from ._aux_functions import _raise_if_v1_is_read_only
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_active_verified_user
 
 router = APIRouter()
 
@@ -30,7 +30,7 @@ logger = set_logger(__name__)
 
 @router.get("/", response_model=list[TaskReadV1])
 async def get_list_task(
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     args_schema: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV1]:
@@ -51,7 +51,7 @@ async def get_list_task(
 @router.get("/{task_id}/", response_model=TaskReadV1)
 async def get_task(
     task_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskReadV1:
     """
@@ -70,7 +70,7 @@ async def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdateV1,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskReadV1]:
     """
@@ -116,7 +116,7 @@ async def patch_task(
 )
 async def create_task(
     task: TaskCreateV1,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskReadV1]:
     """
@@ -170,7 +170,7 @@ async def create_task(
 @router.delete("/{task_id}/", status_code=204)
 async def delete_task(
     task_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

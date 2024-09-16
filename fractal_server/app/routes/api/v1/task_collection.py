@@ -22,10 +22,10 @@ from ....models.v1 import Task
 from ....schemas.v1 import StateRead
 from ....schemas.v1 import TaskCollectPipV1
 from ....schemas.v1 import TaskCollectStatusV1
-from ....security import current_active_user
-from ....security import current_active_verified_user
-from ....security import User
 from ._aux_functions import _raise_if_v1_is_read_only
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
@@ -63,7 +63,7 @@ async def collect_tasks_pip(
     task_collect: TaskCollectPipV1,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: User = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> StateRead:  # State[TaskCollectStatus]
     """
@@ -211,7 +211,7 @@ async def collect_tasks_pip(
 @router.get("/collect/{state_id}/", response_model=StateRead)
 async def check_collection_status(
     state_id: int,
-    user: User = Depends(current_active_user),
+    user: UserOAuth = Depends(current_active_user),
     verbose: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> StateRead:  # State[TaskCollectStatus]

@@ -92,7 +92,9 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 403
 
     # GET/{user_id} with superuser user
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{user_id}/?group_ids=false"
+    )
     debug(res.json())
     assert res.status_code == 200
 
@@ -102,7 +104,9 @@ async def test_patch_current_user_cache_dir(registered_client):
     Test several scenarios for updating `slurm_accounts` and `cache_dir`
     for the current user.
     """
-    res = await registered_client.get(f"{PREFIX}/current-user/")
+    res = await registered_client.get(
+        f"{PREFIX}/current-user/?group_names=True"
+    )
     pre_patch_user = res.json()
 
     # Successful API call with empty payload
@@ -246,6 +250,13 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     assert res.status_code == 201
     pre_patch_user = res.json()
 
+    # FIXME the following workaround won't be necessary when we tackle
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/1737,
+    # so that the register-user POST endpoint will also take care of producing
+    # the appropriate `user_ids` attribute.
+    pre_patch_user["group_ids"] = []
+    debug(pre_patch_user)
+
     update = dict(
         email="patch@fractal.xy",
         is_active=False,
@@ -262,17 +273,30 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     # Fail because of repeated "FOO" in update.slurm_accounts
     assert res.status_code == 422
-    # remove one of the two "FOO" in update.slurm_accounts
-    update["slurm_accounts"] = ["FOO", "BAR"]
+
+    # Fail because invalid password
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(password=""),
+    )
+    assert res.status_code == 400
+    debug(res.json())
+    assert "The password is too short" in str(res.json()["detail"])
+
     # succeed without the repetition
+    # remove one of the two "FOO" in update.slurm_accounts, so that
+    update["slurm_accounts"] = ["FOO", "BAR"]
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
     )
     assert res.status_code == 200
     user = res.json()
+    debug(user)
+
     # assert that the attributes we wanted to update have actually changed
     for key, value in user.items():
+        debug(key)
         if key not in update:
             assert value == pre_patch_user[key]
         else:
@@ -287,6 +311,22 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         json=dict(email="hello, world!"),
     )
     assert res.status_code == 422
+
+    # Setting the email to an existing one fails with 4
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/",
+    )
+    assert res.status_code == 200
+    users = res.json()
+    assert len(users) == 2
+    user_0_id = users[0]["id"]
+    user_1_email = users[1]["email"]
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_0_id}/",
+        json=dict(email=user_1_email),
+    )
+    assert res.status_code == 400
+    assert "UPDATE_USER_EMAIL_ALREADY_EXISTS" == res.json()["detail"]
 
     for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
         res = await registered_superuser_client.patch(
@@ -389,22 +429,98 @@ async def test_delete_user(registered_client, registered_superuser_client):
     assert res.status_code == 404
 
 
-@pytest.mark.parametrize("cache_dir", ("/some/path", None))
-@pytest.mark.parametrize("username", ("my_username", None))
-@pytest.mark.parametrize("slurm_user", ("test01", None))
-async def test_MockCurrentUser_fixture(
-    db,
-    MockCurrentUser,
-    cache_dir,
-    username,
-    slurm_user,
-):
+async def test_add_groups_to_user_as_superuser(registered_superuser_client):
 
-    user_kwargs = dict(
-        cache_dir=cache_dir, username=username, slurm_user=slurm_user
+    # Create user
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(
+            email="test@fractal.xy",
+            password="12345",
+            slurm_accounts=["foo", "bar"],
+        ),
     )
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
-        debug(user)
-        assert user.cache_dir == cache_dir
-        assert user.username == username
-        assert user.slurm_user == slurm_user
+    assert res.status_code == 201
+    user_id = res.json()["id"]
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
+    assert res.status_code == 200
+    user = res.json()
+    debug(user)
+    assert user["group_ids"] == []
+
+    # Create group
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/",
+        json=dict(name="groupname"),
+    )
+    assert res.status_code == 201
+    group_id = res.json()["id"]
+
+    # Create user/group link and fail because of invalid `group_id``
+    invalid_group_id = 999999
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(new_group_ids=[invalid_group_id]),
+    )
+    assert res.status_code == 404
+
+    # Create user/group link and succeed
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(new_group_ids=[group_id]),
+    )
+    assert res.status_code == 200
+    assert res.json()["group_ids"] == [group_id]
+
+    # Create user/group link and fail because it already exists
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(new_group_ids=[group_id]),
+    )
+    assert res.status_code == 422
+    hint_msg = "Likely reason: one of these links already exists"
+    assert hint_msg in res.json()["detail"]
+
+    # Create user/group link and fail because of repeated IDs
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(new_group_ids=[99, 99]),
+    )
+    assert res.status_code == 422
+    assert "`new_group_ids` list has repetitions'" in str(res.json())
+
+
+async def test_edit_user_and_fail(registered_superuser_client):
+
+    # Create user
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(
+            email="test@fractal.xy",
+            password="12345",
+            slurm_accounts=["foo", "bar"],
+        ),
+    )
+    assert res.status_code == 201
+    user_id = res.json()["id"]
+
+    # Patch both user attributes and user/group relationship, and fail
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(
+            slurm_user="new-slurm-user",
+            new_group_ids=[],
+        ),
+    )
+    assert res.status_code == 422
+    expected_detail = (
+        "Cannot modify both user attributes and group membership."
+    )
+    assert expected_detail in res.json()["detail"]
+
+    # Make a dummy patch to user, and succeed
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json={},
+    )
+    assert res.status_code == 200
