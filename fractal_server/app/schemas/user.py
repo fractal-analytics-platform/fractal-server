@@ -21,6 +21,11 @@ __all__ = (
 
 
 class OAuthAccountRead(BaseModel):
+    """
+    Schema for storing essential `OAuthAccount` informations within
+    `UserRead.oauth_accounts`.
+    """
+
     id: int
     account_email: str
     oauth_name: str
