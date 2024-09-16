@@ -1,6 +1,7 @@
 import string
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
+__NOT_ALLOWED_FOR_COMMANDS__ = r"`#$&*()\|[]{};<>?!"
 
 
 def sanitize_string(value: str) -> str:
@@ -43,3 +44,11 @@ def slugify_task_name_for_source(task_name: str) -> str:
         Slug-ified task name.
     """
     return task_name.replace(" ", "_").lower()
+
+
+def validate_cmd(command: str):
+    if set(command) & set(__NOT_ALLOWED_FOR_COMMANDS__):
+        raise ValueError(
+            "Commands must not contain any of this characters: "
+            f"'{__NOT_ALLOWED_FOR_COMMANDS__}'\nProvided command: '{command}'."
+        )

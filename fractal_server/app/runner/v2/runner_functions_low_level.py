@@ -12,6 +12,7 @@ from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.task_files import get_task_file_paths
+from fractal_server.string_tools import validate_cmd
 
 
 def _call_command_wrapper(cmd: str, log_path: Path) -> None:
@@ -25,6 +26,8 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
                             exit code (e.g. due to the subprocess receiving a
                             TERM or KILL signal)
     """
+
+    validate_cmd(cmd)
 
     # Verify that task command is executable
     if shutil.which(shlex_split(cmd)[0]) is None:

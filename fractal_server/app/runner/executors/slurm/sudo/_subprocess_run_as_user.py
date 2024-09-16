@@ -20,6 +20,7 @@ import subprocess  # nosec
 from typing import Optional
 
 from ......logger import set_logger
+from fractal_server.string_tools import validate_cmd
 
 logger = set_logger(__name__)
 
@@ -47,6 +48,7 @@ def _run_command_as_user(
     Returns:
         res: The return value from `subprocess.run`.
     """
+    validate_cmd(cmd)
     logger.debug(f'[_run_command_as_user] {user=}, cmd="{cmd}"')
     if user:
         new_cmd = f"sudo --set-home --non-interactive -u {user} {cmd}"

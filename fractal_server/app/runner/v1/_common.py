@@ -31,6 +31,7 @@ from .common import write_args_file
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 from fractal_server.app.runner.filenames import METADATA_FILENAME
 from fractal_server.app.runner.task_files import get_task_file_paths
+from fractal_server.string_tools import validate_cmd
 
 
 def no_op_submit_setup_call(
@@ -77,6 +78,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
                             TERM or KILL signal)
     """
 
+    validate_cmd(cmd)
     # Verify that task command is executable
     if shutil.which(shlex_split(cmd)[0]) is None:
         msg = (
