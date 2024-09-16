@@ -67,9 +67,8 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     @validator("cache_dir")
     def cache_dir_validator(cls, value):
-        val_absolute_path("cache_dir")(value)
         validate_cmd(value)
-        return value
+        return val_absolute_path("cache_dir")(value)
 
     @validator(
         "is_active",
@@ -103,9 +102,8 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
 
     @validator("cache_dir")
     def cache_dir_validator(cls, value):
-        val_absolute_path("cache_dir")(value)
         validate_cmd(value)
-        return value
+        return val_absolute_path("cache_dir")(value)
 
 
 class UserUpdateWithNewGroupIds(UserUpdate):
@@ -148,6 +146,5 @@ class UserCreate(schemas.BaseUserCreate):
 
     @validator("cache_dir")
     def cache_dir_validator(cls, value):
-        val_absolute_path("cache_dir")(value)
         validate_cmd(value)
-        return value
+        return val_absolute_path("cache_dir")(value)
