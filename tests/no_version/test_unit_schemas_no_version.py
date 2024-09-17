@@ -119,11 +119,10 @@ def test_user_update_strict():
     UserUpdateStrict(slurm_accounts=["a", "b", "c"])
 
     UserUpdateStrict(cache_dir="/path")
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError, match="must not contain any of this characters"
+    ):
         UserUpdateStrict(cache_dir="/path*;")
-    assert (
-        "must not contain any of this characters" in e.value.errors()[0]["msg"]
-    )
 
 
 def test_user_group_create():

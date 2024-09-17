@@ -62,7 +62,7 @@ def validate_cmd(command: str, allow_char: Optional[str] = None):
     """
     forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__)
     if allow_char is not None:
-        forbidden -= set(allow_char)
+        forbidden = forbidden - set(allow_char)
     if not forbidden.isdisjoint(set(command)):
         raise ValueError(
             f"Command must not contain any of this characters: '{forbidden}'\n"

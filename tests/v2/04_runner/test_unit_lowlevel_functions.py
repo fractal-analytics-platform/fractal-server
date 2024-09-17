@@ -19,6 +19,7 @@ async def test_command_wrapper(tmp_path):
         )
 
     future1.result()
-    with pytest.raises(TaskExecutionError) as e:
+    with pytest.raises(
+        TaskExecutionError, match="must not contain any of this characters"
+    ):
         future2.result()
-    assert "must not contain any of this characters" in e._excinfo[1].args[0]
