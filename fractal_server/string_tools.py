@@ -1,4 +1,5 @@
 import string
+from typing import Optional
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
 __NOT_ALLOWED_FOR_COMMANDS__ = r"`#$&*()\|[]{};<>?!"
@@ -46,7 +47,7 @@ def slugify_task_name_for_source(task_name: str) -> str:
     return task_name.replace(" ", "_").lower()
 
 
-def validate_cmd(command: str, allow_char: str = ""):
+def validate_cmd(command: str, allow_char: Optional[str] = None):
     """
     Assert that the provided `command` does not contain any of the forbidden
     characters for commands
@@ -56,7 +57,9 @@ def validate_cmd(command: str, allow_char: str = ""):
         command: command to validate.
         allow_char: chars to accept among the forbidden ones
     """
-    forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__) - set(allow_char)
+    forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__)
+    if allow_char is not None:
+        forbidden -= set(allow_char)
     if not forbidden.isdisjoint(set(command)):
         raise ValueError(
             f"Command must not contain any of this characters: '{forbidden}'\n"
