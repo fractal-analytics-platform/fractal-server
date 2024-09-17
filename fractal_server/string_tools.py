@@ -2,6 +2,9 @@ import string
 from typing import Optional
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
+
+# List of invalid characters discussed here:
+# https://github.com/fractal-analytics-platform/fractal-server/issues/1647
 __NOT_ALLOWED_FOR_COMMANDS__ = r"`#$&*()\|[]{};<>?!"
 
 
