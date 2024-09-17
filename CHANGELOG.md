@@ -3,8 +3,10 @@
 
 # 2.5.1 (Unreleased)
 
-* App:
+* API:
     * Add validation for user-provided strings that execute commands with subprocess or remote-shell (\#1767).
+* Runner and task collection:
+    * Validate commands before running them via `subprocess` or `fabric` (\#1767).
 
 # 2.5.0
 
