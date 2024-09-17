@@ -57,7 +57,7 @@ def validate_cmd(command: str, allow_char: str = ""):
         allow_char: chars to accept among the forbidden ones
     """
     forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__) - set(allow_char)
-    if set(command) & forbidden:  # if sets intersect
+    if not forbidden.isdisjoint(set(command)):
         raise ValueError(
             f"Command must not contain any of this characters: '{forbidden}'\n"
             f"Provided command: '{command}'."
