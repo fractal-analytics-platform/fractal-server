@@ -3,11 +3,15 @@ import subprocess  # nosec
 from typing import Optional
 
 from fractal_server.logger import get_logger
+from fractal_server.string_tools import validate_cmd
 
 
 def run_subprocess(
-    cmd: str, logger_name: Optional[str] = None
+    cmd: str,
+    allow_char: Optional[str] = None,
+    logger_name: Optional[str] = None,
 ) -> subprocess.CompletedProcess:
+    validate_cmd(cmd, allow_char=allow_char)
     logger = get_logger(logger_name)
     try:
         res = subprocess.run(  # nosec

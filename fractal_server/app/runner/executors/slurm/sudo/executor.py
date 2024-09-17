@@ -47,6 +47,7 @@ from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.string_tools import validate_cmd
 
 
 logger = set_logger(__name__)
@@ -65,6 +66,7 @@ def _subprocess_run_or_raise(full_command: str) -> Optional[CompletedProcess]:
     Returns:
         The actual `CompletedProcess` output of `subprocess.run`.
     """
+    validate_cmd(full_command)
     try:
         output = subprocess.run(  # nosec
             shlex.split(full_command),
@@ -1266,6 +1268,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             pre_command = f"sudo --non-interactive -u {self.slurm_user}"
             submit_command = f"scancel {scancel_string}"
             full_command = f"{pre_command} {submit_command}"
+            validate_cmd(full_command)
             logger.debug(f"Now execute `{full_command}`")
             try:
                 subprocess.run(  # nosec

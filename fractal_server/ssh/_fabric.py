@@ -17,6 +17,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 from ..logger import get_logger
 from ..logger import set_logger
 from fractal_server.config import get_settings
+from fractal_server.string_tools import validate_cmd
 from fractal_server.syringe import Inject
 
 
@@ -143,6 +144,7 @@ class FractalSSH(object):
         self,
         *,
         cmd: str,
+        allow_char: Optional[str] = None,
         max_attempts: Optional[int] = None,
         base_interval: Optional[int] = None,
         lock_timeout: Optional[int] = None,
@@ -152,6 +154,7 @@ class FractalSSH(object):
 
         Args:
             cmd: Command to be run
+            allow_char: Forbidden chars to allow for this command
             max_attempts:
             base_interval:
             lock_timeout:
@@ -159,6 +162,9 @@ class FractalSSH(object):
         Returns:
             Standard output of the command, if successful.
         """
+
+        validate_cmd(cmd, allow_char=allow_char)
+
         actual_max_attempts = self.default_max_attempts
         if max_attempts is not None:
             actual_max_attempts = max_attempts

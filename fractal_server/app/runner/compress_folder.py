@@ -48,7 +48,7 @@ def create_tar_archive(
         "."
     )
     logger.debug(f"cmd tar:\n{cmd_tar}")
-    run_subprocess(cmd=cmd_tar, logger_name=logger_name)
+    run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
 
 
 def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):

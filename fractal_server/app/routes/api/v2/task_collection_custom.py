@@ -20,11 +20,11 @@ from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import TaskReadV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.string_tools import validate_cmd
 from fractal_server.tasks.v2.background_operations import _insert_tasks
 from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
 )
-
 
 router = APIRouter()
 
@@ -74,6 +74,7 @@ async def collect_task_custom(
         package_name_underscore = task_collect.package_name.replace("-", "_")
         # Note that python_command is then used as part of a subprocess.run
         # statement: be careful with mixing `'` and `"`.
+        validate_cmd(package_name_underscore)
         python_command = (
             "import importlib.util; "
             "from pathlib import Path; "

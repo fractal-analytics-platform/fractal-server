@@ -1,6 +1,11 @@
 import string
+from typing import Optional
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
+
+# List of invalid characters discussed here:
+# https://github.com/fractal-analytics-platform/fractal-server/issues/1647
+__NOT_ALLOWED_FOR_COMMANDS__ = r"`#$&*()\|[]{};<>?!"
 
 
 def sanitize_string(value: str) -> str:
@@ -43,3 +48,23 @@ def slugify_task_name_for_source(task_name: str) -> str:
         Slug-ified task name.
     """
     return task_name.replace(" ", "_").lower()
+
+
+def validate_cmd(command: str, allow_char: Optional[str] = None):
+    """
+    Assert that the provided `command` does not contain any of the forbidden
+    characters for commands
+    (fractal_server.string_tools.__NOT_ALLOWED_FOR_COMMANDS__)
+
+    Args:
+        command: command to validate.
+        allow_char: chars to accept among the forbidden ones
+    """
+    forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__)
+    if allow_char is not None:
+        forbidden = forbidden - set(allow_char)
+    if not forbidden.isdisjoint(set(command)):
+        raise ValueError(
+            f"Command must not contain any of this characters: '{forbidden}'\n"
+            f"Provided command: '{command}'."
+        )
