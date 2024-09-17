@@ -73,14 +73,21 @@ def test_user_create():
     assert u.cache_dir == CACHE_DIR
     # With invalid cache_dir attribute
     with pytest.raises(ValidationError) as e:
-        u = UserCreate(email="a@b.c", password="asd", cache_dir="  ")
+        UserCreate(email="a@b.c", password="asd", cache_dir="  ")
     debug(e.value)
     assert "cannot be empty" in e.value.errors()[0]["msg"]
     # With invalid cache_dir attribute
     with pytest.raises(ValidationError) as e:
-        u = UserCreate(email="a@b.c", password="asd", cache_dir="xxx")
+        UserCreate(email="a@b.c", password="asd", cache_dir="xxx")
     debug(e.value)
     assert "must be an absolute path" in e.value.errors()[0]["msg"]
+    # With invalid cache_dir attribute
+    with pytest.raises(ValidationError) as e:
+        UserCreate(email="a@b.c", password="asd", cache_dir=f"{CACHE_DIR}*;")
+    debug(e.value)
+    assert (
+        "must not contain any of this characters" in e.value.errors()[0]["msg"]
+    )
     # With all attributes
     u = UserCreate(
         email="a@b.c",
@@ -110,6 +117,13 @@ def test_user_update_strict():
         UserUpdateStrict(slurm_accounts=["a", "b", "a"])
     UserUpdateStrict(slurm_accounts=None)
     UserUpdateStrict(slurm_accounts=["a", "b", "c"])
+
+    UserUpdateStrict(cache_dir="/path")
+    with pytest.raises(ValidationError) as e:
+        UserUpdateStrict(cache_dir="/path*;")
+    assert (
+        "must not contain any of this characters" in e.value.errors()[0]["msg"]
+    )
 
 
 def test_user_group_create():
