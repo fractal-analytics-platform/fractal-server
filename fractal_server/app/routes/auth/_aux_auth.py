@@ -32,7 +32,11 @@ async def _get_single_user_with_group_names(
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()
     group_names = [group.name for group in groups]
-    return UserRead(**user.model_dump(), group_names=group_names)
+    return UserRead(
+        **user.model_dump(),
+        group_names=group_names,
+        oauth_accounts=user.oauth_accounts,
+    )
 
 
 async def _get_single_user_with_group_ids(
@@ -53,7 +57,11 @@ async def _get_single_user_with_group_ids(
     res = await db.execute(stm_links)
     links = res.scalars().unique().all()
     group_ids = [link.group_id for link in links]
-    return UserRead(**user.model_dump(), group_ids=group_ids)
+    return UserRead(
+        **user.model_dump(),
+        group_ids=group_ids,
+        oauth_accounts=user.oauth_accounts,
+    )
 
 
 async def _get_single_group_with_user_ids(
@@ -97,9 +105,7 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
         user_id: ID of the user
         db: Async db session
     """
-    stm = select(UserOAuth).where(UserOAuth.id == user_id)
-    res = await db.execute(stm)
-    user = res.scalars().unique().one_or_none()
+    user = await db.get(UserOAuth, user_id, populate_existing=True)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found."

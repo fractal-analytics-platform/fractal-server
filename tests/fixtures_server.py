@@ -250,32 +250,38 @@ async def MockCurrentUser(app, db):
 
         async def __aenter__(self):
 
-            # FIXME: if user_kwargs has an "id" key-value pair, then we should
-            # try to `db.get(User, id)` (and create a new one if it does not
-            # exist). This would allow to re-use the same user again, if it is
-            # not deleted after closing this context manager.
+            if self.user_kwargs is not None and "id" in self.user_kwargs:
+                db_user = await db.get(
+                    UserOAuth, self.user_kwargs["id"], populate_existing=True
+                )
+                if db_user is None:
+                    raise RuntimeError(
+                        f"User with id {self.user_kwargs['id']} doesn't exist"
+                    )
+                self.user = db_user
+            else:
+                # Create new user
+                defaults = dict(
+                    email=self.email,
+                    hashed_password="fake_hashed_password",
+                    slurm_user="test01",
+                )
+                if self.user_kwargs:
+                    defaults.update(self.user_kwargs)
+                self.user = UserOAuth(name=self.name, **defaults)
 
-            # Create new user
-            defaults = dict(
-                email=self.email,
-                hashed_password="fake_hashed_password",
-                slurm_user="test01",
-            )
-            if self.user_kwargs:
-                defaults.update(self.user_kwargs)
-            self.user = UserOAuth(name=self.name, **defaults)
+                try:
+                    db.add(self.user)
+                    await db.commit()
+                    await db.refresh(self.user)
+                except IntegrityError:
+                    # Safety net, in case of non-unique email addresses
+                    await db.rollback()
+                    self.user.email = _random_email()
+                    db.add(self.user)
+                    await db.commit()
+                    await db.refresh(self.user)
 
-            try:
-                db.add(self.user)
-                await db.commit()
-                await db.refresh(self.user)
-            except IntegrityError:
-                # Safety net, in case of non-unique email addresses
-                await db.rollback()
-                self.user.email = _random_email()
-                db.add(self.user)
-                await db.commit()
-                await db.refresh(self.user)
             # Removing object from test db session, so that we can operate
             # on user from other sessions
             db.expunge(self.user)

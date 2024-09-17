@@ -196,7 +196,7 @@ async def test_get_job(
     client,
     tmp_path,
 ):
-    async with MockCurrentUser(user_kwargs={"id": 1}) as user:
+    async with MockCurrentUser() as user:
         x_project = await project_factory(user)
         x_workflow = await workflow_factory(project_id=x_project.id)
         x_task = await task_factory(source="x")
@@ -212,7 +212,7 @@ async def test_get_job(
             working_dir=tmp_path,
         )
 
-    async with MockCurrentUser(user_kwargs={"id": 2}) as user:
+    async with MockCurrentUser() as user:
         y_project = await project_factory(user)
         y_workflow = await workflow_factory(project_id=y_project.id)
         y_task = await task_factory(source="y")
@@ -320,7 +320,7 @@ async def test_get_user_jobs(
     tmp_path,
 ):
 
-    async with MockCurrentUser(user_kwargs={"id": 123}) as user:
+    async with MockCurrentUser() as user:
 
         task = await task_factory()
 
@@ -368,7 +368,7 @@ async def test_get_user_jobs(
         assert len(res.json()) == 5
         assert res.json()[0]["log"] is None
 
-    async with MockCurrentUser(user_kwargs={"id": 321}):
+    async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 0
