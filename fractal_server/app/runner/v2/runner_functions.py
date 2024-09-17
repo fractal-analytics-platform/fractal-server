@@ -121,7 +121,7 @@ def run_v2_task_non_parallel(
     """
     This runs server-side (see `executor` argument)
     """
-    logging.warning("XXX [run_v2_task_non_parallel] START")
+    executor._emit_log("run_v2_task_non_parallel - START")
 
     if workflow_dir_remote is None:
         workflow_dir_remote = workflow_dir_local
@@ -143,11 +143,11 @@ def run_v2_task_non_parallel(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
-    logging.warning(
-        f"XXXC01 [run_v2_task_non_parallel] I will now call executor.submit {wftask.id=}, {task.command_non_parallel=}"
+    executor._emit_log(
+        f"C01 [run_v2_task_non_parallel] I will now call executor.submit {wftask.id=}, {task.command_non_parallel=}"
     )
-    logging.warning(f"XXXC02 [run_v2_task_non_parallel] {executor_options=}")
-    logging.warning(f"XXXC03 [run_v2_task_non_parallel] {function_kwargs=}")
+    executor._emit_log(f"C02 [run_v2_task_non_parallel] {executor_options=}")
+    executor._emit_log(f"C03 [run_v2_task_non_parallel] {function_kwargs=}")
 
     future = executor.submit(
         functools.partial(
@@ -161,9 +161,7 @@ def run_v2_task_non_parallel(
         **executor_options,
     )
     output = future.result()
-
-    logging.warning(f"XXXC04 [run_v2_task_non_parallel] END, with {output=}")
-
+    executor._emit_log(f"C04 [run_v2_task_non_parallel] END, with {output=}")
     if output is None:
         return TaskOutput()
     else:
@@ -195,6 +193,7 @@ def run_v2_task_parallel(
         which_type="parallel",
     )
 
+    executor._emit_log(f"C05 [run_v2_task_parallel] {executor_options=}")
     list_function_kwargs = []
     for ind, image in enumerate(images):
         list_function_kwargs.append(
@@ -205,6 +204,7 @@ def run_v2_task_parallel(
         )
         list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
+    executor._emit_log("C06 [run_v2_task_parallel] PRE map")
     results_iterator = executor.map(
         functools.partial(
             run_single_task,
@@ -216,8 +216,10 @@ def run_v2_task_parallel(
         list_function_kwargs,
         **executor_options,
     )
+
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
+    executor._emit_log(f"C07 [run_v2_task_parallel] POST map, {outputs=}")
 
     # Validate all non-None outputs
     for ind, output in enumerate(outputs):
@@ -227,6 +229,9 @@ def run_v2_task_parallel(
             outputs[ind] = _cast_and_validate_TaskOutput(output)
 
     merged_output = merge_outputs(outputs)
+    executor._emit_log(
+        f"C08 [run_v2_task_parallel] POST map, {merged_output=}"
+    )
     return merged_output
 
 
@@ -264,6 +269,8 @@ def run_v2_task_compound(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
+    executor._emit_log("C09 [run_v2_task_compound] PRE submit")
+
     future = executor.submit(
         functools.partial(
             run_single_task,
@@ -276,6 +283,8 @@ def run_v2_task_compound(
         **executor_options_init,
     )
     output = future.result()
+    executor._emit_log(f"C10 [run_v2_task_compound] POST submit {output=}")
+
     if output is None:
         init_task_output = InitTaskOutput()
     else:
@@ -300,6 +309,8 @@ def run_v2_task_compound(
         )
         list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
+    executor._emit_log("C11 [run_v2_task_compound] PRE map")
+
     results_iterator = executor.map(
         functools.partial(
             run_single_task,
@@ -313,6 +324,7 @@ def run_v2_task_compound(
     )
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
+    executor._emit_log(f"C12 [run_v2_task_compound] POST map {outputs=}")
 
     # Validate all non-None outputs
     for ind, output in enumerate(outputs):
@@ -323,4 +335,6 @@ def run_v2_task_compound(
             outputs[ind] = validated_output
 
     merged_output = merge_outputs(outputs)
+    executor._emit_log(f"C12 [run_v2_task_compound] POST map {merged_output=}")
+
     return merged_output

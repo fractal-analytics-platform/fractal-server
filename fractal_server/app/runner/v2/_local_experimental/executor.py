@@ -33,7 +33,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(
         self, shutdown_file: Path, interval: float = 1.0, *args, **kwargs
     ):
-        logging.warning("XXXD01 [FractalProcessPoolExecutor.__init__] START")
+        self._emit_log("D01 FractalProcessPoolExecutor.__init__ START")
         super().__init__(*args, **kwargs)
         self.shutdown_file = Path(shutdown_file)
         self.interval = float(interval)
@@ -45,24 +45,22 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
             target=self._run, daemon=True
         )
         self._shutdown_file_thread.start()
-        logging.warning(
-            f"XXXD02 [FractalProcessPoolExecutor.__init__] {self._shutdown_file_thread=}"
+        self._emit_log(
+            f"D02 FractalProcessPoolExecutor.__init__ {self._shutdown_file_thread=}"
         )
-        logging.warning(
-            f"XXXD03 [FractalProcessPoolExecutor.__init__] END, with {id(self)=}"
-        )
+        self._emit_log("D03 FractalProcessPoolExecutor.__init__ END")
 
     def _run(self):
         """
         Running on '_shutdown_file_thread'.
         """
-        logging.warning("XXXD04 [FractalProcessPoolExecutor._run] START")
+        self._emit_log("D04 FractalProcessPoolExecutor._run START")
 
         while True:
 
             if self.shutdown_file.exists() or self._shutdown:
-                logging.warning(
-                    f"XXXD05 [FractalProcessPoolExecutor._run] DETECTED SHUTDOWN for {id(self)=}"
+                self._emit_log(
+                    "D05 FractalProcessPoolExecutor._run DETECTED SHUTDOWN FILE"
                 )
                 try:
                     self._terminate_processes()
@@ -81,43 +79,43 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         """
 
         logger.info("Start terminating FractalProcessPoolExecutor processes.")
-        logging.warning(
-            f"XXXD06 [FractalProcessPoolExecutor._terminate_processes] START, with {id(self)=}"
+        self._emit_log(
+            "D06 FractalProcessPoolExecutor._terminate_processes START"
         )
         # We use 'psutil' in order to easily access the PIDs of the children.
         if self._processes is not None:
-            logging.warning(
-                f"XXXD07 [FractalProcessPoolExecutor._terminate_processes] {self._processes=}, with {id(self)=}"
+            self._emit_log(
+                f"D07 FractalProcessPoolExecutor._terminate_processes - {self._processes=}"
             )
             for pid in self._processes.keys():
-                logging.info(
-                    f"XXXD08 [FractalProcessPoolExecutor._terminate_processes] handle {pid=} with {id(self)=}"
+                self._emit_log(
+                    f"D08 FractalProcessPoolExecutor._terminate_processes - handle {pid=}"
                 )
                 parent = psutil.Process(pid)
                 children = parent.children(recursive=True)
                 for child in children:
-                    logging.warning(
-                        f"XXXD09 [FractalProcessPoolExecutor._terminate_processes] handle {child=} with {id(self)=}"
+                    self._emit_log(
+                        f"D09 FractalProcessPoolExecutor._terminate_processes - handle {child=}"
                     )
                     child.kill()
-                logging.warning(
-                    f"XXXD10 [FractalProcessPoolExecutor._terminate_processes] handle {parent=} with {id(self)=}"
+                self._emit_log(
+                    f"D10 [FractalProcessPoolExecutor._terminate_processes] handle {parent=}"
                 )
                 parent.kill()
                 logger.info(f"Process {pid} and its children terminated.")
         logger.info("FractalProcessPoolExecutor processes terminated.")
 
     def shutdown(self, *args, **kwargs) -> None:
-        logging.warning(
-            f"XXXD11 [FractalProcessPoolExecutor._terminate_processes] set _shutdown=True {id(self)=}"
+        self._emit_log(
+            "D11 FractalProcessPoolExecutor._terminate_processes - set _shutdown=True"
         )
         self._shutdown = True
-        logging.warning(
-            f"XXXD12 [FractalProcessPoolExecutor._terminate_processes] POST thread join {id(self)=}"
+        self._emit_log(
+            "D12 FractalProcessPoolExecutor._terminate_processes - POST thread join"
         )
         self._shutdown_file_thread.join()
-        logging.warning(
-            f"XXXD13 [FractalProcessPoolExecutor._terminate_processes] POST thread join {id(self)=}"
+        self._emit_log(
+            "D13 FractalProcessPoolExecutor._terminate_processes - POST thread join"
         )
         return super().shutdown(*args, **kwargs)
 
@@ -132,12 +130,12 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         additional keyword argument (`local_backend_config`), which is then
         simply ignored.
         """
-        logging.warning(
-            f"XXXD14 [FractalProcessPoolExecutor._terminate_processes] PRE submit, {id(self)=}"
+        self._emit_log(
+            "D14 FractalProcessPoolExecutor._terminate_processes - PRE submit"
         )
         out = super().submit(*args, **kwargs)
-        logging.warning(
-            f"XXXD15 [FractalProcessPoolExecutor._terminate_processes] POST submit, {id(self)=}"
+        self._emit_log(
+            "D15 - FractalProcessPoolExecutor._terminate_processes] POST submit"
         )
         return out
 
@@ -171,9 +169,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
                                  `parallel_tasks_per_job`.
         """
 
-        logging.warning(
-            f"XXXD16 [FractalProcessPoolExecutor.map] START {id(self)=}"
-        )
+        self._emit_log("D16 FractalProcessPoolExecutor.map - START")
         # Preliminary check
         iterable_lengths = [len(it) for it in iterables]
         if not len(set(iterable_lengths)) == 1:
@@ -195,8 +191,8 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
                 it[ind_chunk : ind_chunk + parallel_tasks_per_job]  # noqa
                 for it in iterables
             ]
-            logging.warning(
-                f"XXXD17 [FractalProcessPoolExecutor.map] PRE map {id(self)=}, {chunk_iterables=}"
+            self._emit_log(
+                f"D17 FractalProcessPoolExecutor.map - PRE map, {chunk_iterables=}"
             )
 
             map_iter = super().map(fn, *chunk_iterables)
@@ -205,8 +201,12 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
                 results.extend(list(map_iter))
             except BrokenProcessPool as e:
                 raise JobExecutionError(info=e.args[0])
-            logging.warning(
-                f"XXXD18 [FractalProcessPoolExecutor.map] POST map {id(self)=}, {chunk_iterables=}"
+            self._emit_log(
+                f"D18 FractalProcessPoolExecutor.map] POST map, {chunk_iterables=}"
             )
 
         return iter(results)
+
+    def _emit_log(self, line: str):
+        executor_id = id(self)
+        logging.warning(f"[XXX-{executor_id}] {line}")

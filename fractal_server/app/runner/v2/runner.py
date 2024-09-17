@@ -37,7 +37,7 @@ def execute_tasks_v2(
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> DatasetV2:
 
-    logging.warning("XXX [execute_tasks_v2] START")
+    executor._emit_log("[execute_tasks_v2] START")
 
     logger = logging.getLogger(logger_name)
 
@@ -81,11 +81,11 @@ def execute_tasks_v2(
                 )
 
         # TASK EXECUTION (V2)
-        logging.warning(
-            f"XXXB01 [execute_tasks_v2] START execution of task with {task.id=} and {task.type=}"
+        executor._emit_log(
+            f"B01 [execute_tasks_v2] START execution of task with {task.id=} and {task.type=}"
         )
         if task.type == "non_parallel":
-            logging.warning("XXXB02")
+            executor._emit_log("B02")
             current_task_output = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
@@ -97,9 +97,9 @@ def execute_tasks_v2(
                 logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
-            logging.warning("XXXB03")
+            executor._emit_log("B03")
         elif task.type == "parallel":
-            logging.warning("XXXB04")
+            executor._emit_log("B04")
             current_task_output = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
@@ -110,9 +110,9 @@ def execute_tasks_v2(
                 logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
-            logging.warning("XXXB05")
+            executor._emit_log("B05")
         elif task.type == "compound":
-            logging.warning("XXXB06")
+            executor._emit_log("B06")
             current_task_output = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
@@ -124,13 +124,13 @@ def execute_tasks_v2(
                 logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
-            logging.warning("XXXB07")
+            executor._emit_log("B07")
         else:
-            logging.warning("XXXB08")
+            executor._emit_log("B08")
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
 
         # POST TASK EXECUTION
-        logging.warning("XXXB09")
+        executor._emit_log("B09")
 
         # If `current_task_output` includes no images (to be created, edited or
         # removed), then flag all the input images as modified. See
@@ -145,11 +145,11 @@ def execute_tasks_v2(
                     dict(zarr_url=img["zarr_url"]) for img in filtered_images
                 ],
             )
-        logging.warning("XXXB10")
+        executor._emit_log("B10")
 
         # Update image list
         current_task_output.check_zarr_urls_are_unique()
-        logging.warning("XXXB11")
+        executor._emit_log("B11")
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.dict()
             # Edit existing image
@@ -175,7 +175,7 @@ def execute_tasks_v2(
                         f"Image with zarr_url {image['zarr_url']} not found, "
                         "while updating image list."
                     )
-                logging.warning("XXXB12")
+                executor._emit_log("B12")
                 original_img = img_search["image"]
                 original_index = img_search["index"]
                 updated_attributes = copy(original_img["attributes"])
@@ -186,7 +186,7 @@ def execute_tasks_v2(
                 updated_types.update(image["types"])
                 updated_types.update(task.output_types)
 
-                logging.warning("XXXB13")
+                executor._emit_log("B13")
                 # Unset attributes with None value
                 updated_attributes = {
                     key: value
@@ -200,17 +200,17 @@ def execute_tasks_v2(
                     types=updated_types,
                     attributes=updated_attributes,
                 )
-                logging.warning("XXXB14")
+                executor._emit_log("B14")
 
                 # Update image in the dataset image list
                 tmp_images[original_index]["attributes"] = updated_attributes
                 tmp_images[original_index]["types"] = updated_types
             # Add new image
             else:
-                logging.warning("XXXB15")
+                executor._emit_log("B15")
                 # Check that image['zarr_url'] is relative to zarr_dir
                 if not image["zarr_url"].startswith(zarr_dir):
-                    logging.warning("XXXB16")
+                    executor._emit_log("B16")
                     raise JobExecutionError(
                         "Cannot create image if zarr_dir is not a parent "
                         "directory of zarr_url.\n"
@@ -228,7 +228,7 @@ def execute_tasks_v2(
                 # Propagate attributes and types from `origin` (if any)
                 updated_attributes = {}
                 updated_types = {}
-                logging.warning("XXXB16")
+                executor._emit_log("B16")
                 if image["origin"] is not None:
                     img_search = find_image_by_zarr_url(
                         images=tmp_images,
@@ -253,13 +253,13 @@ def execute_tasks_v2(
                     attributes=updated_attributes,
                     types=updated_types,
                 )
-                logging.warning("XXXB17")
+                executor._emit_log("B17")
                 # Validate new image
                 SingleImage(**new_image)
                 # Add image into the dataset image list
                 tmp_images.append(new_image)
 
-        logging.warning("XXXB18")
+        executor._emit_log("B18")
         # Remove images from tmp_images
         for img_zarr_url in current_task_output.image_list_removals:
             img_search = find_image_by_zarr_url(
@@ -271,7 +271,7 @@ def execute_tasks_v2(
                 )
             else:
                 tmp_images.pop(img_search["index"])
-        logging.warning("XXXB19")
+        executor._emit_log("B19")
         # Update filters.attributes:
         # current + (task_output: not really, in current examples..)
         if current_task_output.filters is not None:
@@ -279,7 +279,7 @@ def execute_tasks_v2(
                 current_task_output.filters.attributes
             )
 
-        logging.warning("XXXB20")
+        executor._emit_log("B20")
         # Find manifest ouptut types
         types_from_manifest = task.output_types
 
@@ -289,7 +289,7 @@ def execute_tasks_v2(
         else:
             types_from_task = {}
 
-        logging.warning("XXXB21")
+        executor._emit_log("B21")
         # Check that key sets are disjoint
         set_types_from_manifest = set(types_from_manifest.keys())
         set_types_from_task = set(types_from_task.keys())
@@ -316,7 +316,7 @@ def execute_tasks_v2(
                 # component_list=fil, #FIXME
             ),
         ).dict()
-        logging.warning("XXXB22")
+        executor._emit_log("B22")
         tmp_history.append(history_item)
 
         # Write current dataset attributes (history, images, filters) into
@@ -330,7 +330,7 @@ def execute_tasks_v2(
         with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
             json.dump(tmp_images, f, indent=2)
 
-        logging.warning("XXXB23")
+        executor._emit_log("B23")
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
 
     # NOTE: tmp_history only contains the newly-added history items (to be
@@ -342,7 +342,7 @@ def execute_tasks_v2(
         images=tmp_images,
     )
 
-    logging.warning("XXXB24")
-    logging.warning(f"XXX [execute_tasks_v2] END {result=}")
+    executor._emit_log("B24")
+    executor._emit_log(f"[execute_tasks_v2] END {result=}")
 
     return result
