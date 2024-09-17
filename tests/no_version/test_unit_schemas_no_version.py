@@ -82,12 +82,13 @@ def test_user_create():
     debug(e.value)
     assert "must be an absolute path" in e.value.errors()[0]["msg"]
     # With invalid cache_dir attribute
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match="must not contain any of this characters"
+    ) as e:
         UserCreate(email="a@b.c", password="asd", cache_dir=f"{CACHE_DIR}*;")
     debug(e.value)
-    assert (
-        "must not contain any of this characters" in e.value.errors()[0]["msg"]
-    )
+    
     # With all attributes
     u = UserCreate(
         email="a@b.c",
