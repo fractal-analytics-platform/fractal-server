@@ -1,6 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
 
+# 2.5.1 (Unreleased)
+
+* App:
+    * Add validation for user-provided strings that execute commands with subprocess or remote-shell (\#1767).
+
 # 2.5.0
 
 This release removes support for including V1 tasks in V2 workflows. This comes
