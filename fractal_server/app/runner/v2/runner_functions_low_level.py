@@ -27,7 +27,12 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
                             TERM or KILL signal)
     """
 
-    validate_cmd(cmd)
+    try:
+        validate_cmd(cmd)
+    except ValueError as e:
+        raise JobExecutionError(
+            info=f"Invalid command. Original error: {str(e)}"
+        )
 
     # Verify that task command is executable
     if shutil.which(shlex_split(cmd)[0]) is None:
