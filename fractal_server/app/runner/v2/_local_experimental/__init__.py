@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Optional
@@ -34,6 +35,10 @@ def _process_workflow(
     with FractalProcessPoolExecutor(
         shutdown_file=workflow_dir_local / SHUTDOWN_FILENAME
     ) as executor:
+        logging.warning("XXXA01 [_process_workflow] START")
+        logging.warning(
+            f"XXXA02 [_process_workflow] I created a FractalProcessPoolExecutor with {id(executor)=}"
+        )
         try:
             new_dataset_attributes = execute_tasks_v2(
                 wf_task_list=workflow.task_list[
@@ -53,7 +58,10 @@ def _process_workflow(
                     f"an executor shutdown.\nOriginal error:\n{e.args[0]}"
                 )
             )
-
+        logging.warning(
+            f"XXXA03 [_process_workflow] End of FractalProcessPoolExecutor context, with {id(executor)=}"
+        )
+    logging.warning("XXXA04 [_process_workflow] END")
     return new_dataset_attributes
 
 

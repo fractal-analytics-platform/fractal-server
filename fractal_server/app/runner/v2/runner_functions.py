@@ -121,6 +121,7 @@ def run_v2_task_non_parallel(
     """
     This runs server-side (see `executor` argument)
     """
+    logging.warning("XXX [run_v2_task_non_parallel] START")
 
     if workflow_dir_remote is None:
         workflow_dir_remote = workflow_dir_local
@@ -142,6 +143,12 @@ def run_v2_task_non_parallel(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
+    logging.warning(
+        f"XXXC01 [run_v2_task_non_parallel] I will now call executor.submit {wftask.id=}, {task.command_non_parallel=}"
+    )
+    logging.warning(f"XXXC02 [run_v2_task_non_parallel] {executor_options=}")
+    logging.warning(f"XXXC03 [run_v2_task_non_parallel] {function_kwargs=}")
+
     future = executor.submit(
         functools.partial(
             run_single_task,
@@ -154,6 +161,9 @@ def run_v2_task_non_parallel(
         **executor_options,
     )
     output = future.result()
+
+    logging.warning(f"XXXC04 [run_v2_task_non_parallel] END, with {output=}")
+
     if output is None:
         return TaskOutput()
     else:
