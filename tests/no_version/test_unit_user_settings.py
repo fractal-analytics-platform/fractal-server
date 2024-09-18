@@ -60,4 +60,23 @@ async def test_unit_link_user_to_settings(db):
     assert user_C.settings is not None
     assert user_C.user_settings_id is not None
 
+    # User associated to settings during its initial creation / second version
+    user_D = UserOAuth(
+        email="d@d.d",
+        hashed_password="xxx",
+        is_active=True,
+        is_superuser=False,
+        is_verified=True,
+    )
+    db.add(user_D)
+    await db.commit()
+    await db.refresh(user_D)
+    user_D.settings = UserSettings()
+    await db.merge(user_D)
+    await db.commit()
+    await db.refresh(user_D)
+    debug(user_D)
+    assert user_D.user_settings_id is not None
+    assert user_D.settings is not None
+
     # FIXME: Test delete cascade
