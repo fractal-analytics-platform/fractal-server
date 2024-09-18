@@ -60,7 +60,8 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
 
             if self.shutdown_file.exists() or self._shutdown:
                 self._emit_log(
-                    "D05 FractalProcessPoolExecutor._run DETECTED SHUTDOWN FILE"
+                    "D05 FractalProcessPoolExecutor._run DETECTED SHUTDOWN "
+                    f"{self.shutdown_file=}, {self.shutdown_file.exists()=}"
                 )
                 try:
                     self._terminate_processes()
