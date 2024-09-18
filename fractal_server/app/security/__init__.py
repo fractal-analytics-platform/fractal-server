@@ -294,9 +294,13 @@ async def _create_first_user(
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     function_logger.info(f"User '{user.email}' created")
-
     except UserAlreadyExists:
         function_logger.warning(f"User '{email}' already exists")
+    except Exception as e:
+        function_logger.error(
+            f"ERROR in _create_first_user, original error {str(e)}"
+        )
+        raise e
     finally:
         function_logger.info(f"END   _create_first_user, with email '{email}'")
 
