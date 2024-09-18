@@ -20,6 +20,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from .user_settings import UserSettings
 from fractal_server.utils import get_timestamp
 
 
@@ -102,6 +103,13 @@ class UserOAuth(SQLModel, table=True):
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
+    )
+
+    user_settings_id: Optional[int] = Field(
+        foreign_key="user_settings.id", default=None
+    )
+    settings: Optional[UserSettings] = Relationship(
+        sa_relationship_kwargs=dict(lazy="selectin")
     )
 
     class Config:
