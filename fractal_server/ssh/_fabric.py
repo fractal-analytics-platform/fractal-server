@@ -353,6 +353,7 @@ def get_ssh_connection(
     Returns:
         Fabric connection object
     """
+    # FIXME: Remove this block
     settings = Inject(get_settings)
     if host is None:
         host = settings.FRACTAL_SLURM_SSH_HOST
@@ -368,3 +369,65 @@ def get_ssh_connection(
         connect_kwargs={"key_filename": key_filename},
     )
     return connection
+
+
+class FractalSSHCollection(object):
+    _lock: Lock
+    _fractal_ssh_collection: dict[int, FractalSSH]
+    _timeout: float
+    _logger_name: str
+
+    def __init__(
+        self,
+        *,
+        timeout: float = 10.0,
+        logger_name: str = "fractal_server.FractalSSHCollection",
+    ):
+        self._lock = Lock()
+        self._fractal_ssh_collection = {}
+        self._timeout = timeout
+        self.logger_name = logger_name
+        set_logger(self.logger_name)
+
+    def get_fractal_ssh(
+        self,
+        *,
+        host: str,
+        user: str,
+        key_path: str,
+    ) -> FractalSSH:
+        key = hash((host, user, key_path))
+        fractal_ssh = self._fractal_ssh_collection.get(key, None)
+        if fractal_ssh is not None:
+            return fractal_ssh
+        else:
+            with self.acquire_lock_with_timeout():
+                connection = get_ssh_connection(
+                    host=host, user=user, key_filename=key_path
+                )
+                self._fractal_ssh_collection[key] = FractalSSH(
+                    connection=connection
+                )
+
+    @contextmanager
+    def acquire_lock_with_timeout(self) -> Generator[Literal[True], Any, None]:
+        self.logger.debug(
+            f"Trying to acquire lock, with timeout {self._timeout} s"
+        )
+        result = self._lock.acquire(timeout=self._timeout)
+        try:
+            if not result:
+                self.logger.error("Lock was *NOT* acquired.")
+                raise FractalSSHTimeoutError(
+                    f"Failed to acquire lock within {self._timeout} ss"
+                )
+            self.logger.debug("Lock was acquired.")
+            yield result
+        finally:
+            if result:
+                self._lock.release()
+                self.logger.debug("Lock was released")
+
+    @property
+    def logger(self) -> logging.Logger:
+        return get_logger(self.logger_name)
