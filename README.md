@@ -83,7 +83,7 @@
 | fractal\_server/app/runner/executors/slurm/sudo/\_check\_jobs\_status.py       |       24 |        1 |       10 |        2 |     91% |25->31, 62 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_executor\_wait\_thread.py    |       47 |        3 |       16 |        1 |     94% |93->exit, 124-127 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_subprocess\_run\_as\_user.py |       46 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      446 |       41 |      147 |       14 |     90% |168, 180, 529, 627, 636, 645, 677-688, 824->exit, 827-828, 903-912, 928-932, 960->963, 976-981, 1058, 1076-1082, 1128, 1147-1154, 1215->1214, 1280-1286 |
+| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      446 |       36 |      147 |       14 |     91% |168, 180, 529, 627, 636, 645, 677-688, 824->exit, 827-828, 903-912, 928-932, 960->963, 979, 1058, 1076-1082, 1128, 1147-1154, 1215->1214, 1280-1286 |
 | fractal\_server/app/runner/extract\_archive.py                                 |       32 |        2 |        8 |        2 |     90% |    25, 85 |
 | fractal\_server/app/runner/filenames.py                                        |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/run\_subprocess.py                                  |       20 |        0 |        2 |        0 |    100% |           |
@@ -178,7 +178,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       26 |        0 |    100% |           |
-|                                                                      **TOTAL** | **9868** |  **371** | **2821** |  **191** | **95%** |           |
+|                                                                      **TOTAL** | **9868** |  **366** | **2821** |  **191** | **95%** |           |
 
 
 ## Setup coverage badge
