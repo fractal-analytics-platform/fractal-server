@@ -273,7 +273,8 @@ async def MockCurrentUser(app, db):
                 self.user = UserOAuth(name=self.name, **defaults)
 
                 user_settings_dict = self.user_settings_dict or {}
-                self.user.settings = UserSettings(**user_settings_dict)
+                user_settings = UserSettings(**user_settings_dict)
+                self.user.settings = user_settings
 
                 try:
                     db.add(self.user)
@@ -289,6 +290,7 @@ async def MockCurrentUser(app, db):
 
             # Removing object from test db session, so that we can operate
             # on user from other sessions
+            db.expunge(user_settings)
             db.expunge(self.user)
 
             # Find out which dependencies should be overridden, and store their
