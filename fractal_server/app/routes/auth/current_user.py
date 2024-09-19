@@ -12,8 +12,8 @@ from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateStrict
 from ._aux_auth import _get_single_user_with_group_names
-from ._aux_auth import _user_settings_or_404
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas import UserSettingsReadStrict
 from fractal_server.app.schemas import UserSettingsUpdateStrict
 from fractal_server.app.security import get_user_manager
@@ -74,7 +74,7 @@ async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-    return await _user_settings_or_404(user_id=current_user.id, db=db)
+    return await db.get(UserSettings, current_user.user_settings_id)
 
 
 @router_current_user.patch(
@@ -85,8 +85,8 @@ async def patch_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-    current_user_settings = await _user_settings_or_404(
-        user_id=current_user.id, db=db
+    current_user_settings = await db.get(
+        UserSettings, current_user.user_settings_id
     )
 
     for k, v in settings_update.dict(exclude_unset=True).items():
@@ -95,6 +95,5 @@ async def patch_current_user_settings(
     db.add(current_user_settings)
     await db.commit()
     await db.refresh(current_user_settings)
-    await db.close()
 
     return current_user_settings

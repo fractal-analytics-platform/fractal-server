@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import current_active_superuser
 from ...db import get_async_db
-from ._aux_auth import _user_settings_or_404
+from ._aux_auth import _user_or_404
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas import UserSettingsRead
 from fractal_server.app.schemas import UserSettingsUpdate
 from fractal_server.logger import set_logger
@@ -25,7 +26,8 @@ async def get_user_settings(
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsRead:
 
-    return await _user_settings_or_404(user_id=user_id, db=db)
+    user = await _user_or_404(user_id=user_id, db=db)
+    return await db.get(UserSettings, user.user_settings_id)
 
 
 @router_users_settings.patch(
@@ -37,8 +39,8 @@ async def patch_user_settings(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsRead:
-
-    user_settings = await _user_settings_or_404(user_id=user_id, db=db)
+    user = await _user_or_404(user_id=user_id, db=db)
+    user_settings = await db.get(UserSettings, user.user_settings_id)
 
     for k, v in settings_update.dict(exclude_unset=True).items():
         setattr(user_settings, k, v)
@@ -46,6 +48,5 @@ async def patch_user_settings(
     db.add(user_settings)
     await db.commit()
     await db.refresh(user_settings)
-    await db.close()
 
     return user_settings

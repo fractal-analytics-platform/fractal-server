@@ -3,7 +3,6 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from fractal_server.app.models import UserSettings
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
@@ -112,19 +111,3 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
         )
     return user
-
-
-async def _user_settings_or_404(
-    user_id: int, db: AsyncSession
-) -> UserSettings:
-
-    user = await _user_or_404(user_id=user_id, db=db)
-    user_settings = await db.get(UserSettings, user.user_settings_id)
-
-    if user_settings is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"User {user_id} has no UserSettings.",
-        )
-
-    return user_settings
