@@ -8,7 +8,6 @@ from typing import Union
 
 from fastapi import HTTPException
 from fastapi import status
-from pydantic import ValidationError
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
@@ -23,10 +22,8 @@ from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.images import Filters
 from fractal_server.logger import set_logger
-from fractal_server.user_settings import SlurmSshUserSettings
 
 
 logger = set_logger(__name__)
@@ -493,35 +490,3 @@ async def clean_app_job_list_v2(
         if job.status == JobStatusTypeV2.SUBMITTED
     ]
     return submitted_job_ids
-
-
-async def validate_user_settings(
-    *, user: UserOAuth, backend: str, db: AsyncSession
-):
-    """
-    FIXME docstring
-    """
-    # First: check that the foreign-key exists. TODO: remove this check,
-    # after this column is made required
-    if user.user_settings_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Error: user '{user.email}' has no settings.",
-        )
-
-    user_settings = await db.get(UserSettings, user.user_settings_id)
-
-    if backend == "slurm_ssh":
-        try:
-            SlurmSshUserSettings(**user_settings.model_dump())
-        except ValidationError as e:
-            error_msg = (
-                "User settings are not valid for "
-                f"FRACTAL_RUNNER_BACKEND='{backend}'. "
-                f"Original error: {str(e)}"
-            )
-            logger.warning(error_msg)
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=error_msg,
-            )
