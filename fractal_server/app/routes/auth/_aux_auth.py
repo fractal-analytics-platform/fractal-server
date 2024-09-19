@@ -115,15 +115,9 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
 
 
 async def _user_settings_or_404(user_id: int, db: AsyncSession):
-    stm = (
-        select(UserSettings)
-        .join(UserOAuth)
-        .where(UserOAuth.id == user_id)
-        .where(UserOAuth.user_settings_id == UserSettings.id)
-    )
-    res = await db.execute(stm)
-    user_settings = res.scalars().one_or_none()
-    await db.close()
+
+    user = await _user_or_404(user_id=user_id, db=db)
+    user_settings = await db.get(UserSettings, user.user_settings_id)
 
     if user_settings is None:
         raise HTTPException(
