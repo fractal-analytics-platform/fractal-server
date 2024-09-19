@@ -4,14 +4,14 @@ from pydantic import BaseModel
 
 
 __all__ = (
-    "SettingsRead",
-    "SettingsReadStrict",
-    "SettingsUpdate",
-    "SettingsUpdateStrict",
+    "UserSettingsRead",
+    "UserSettingsReadStrict",
+    "UserSettingsUpdate",
+    "UserSettingsUpdateStrict",
 )
 
 
-class SettingsRead(BaseModel):
+class UserSettingsRead(BaseModel):
     id: int
     ssh_host: Optional[str]
     ssh_username: Optional[str]
@@ -20,11 +20,11 @@ class SettingsRead(BaseModel):
     ssh_jobs_dir: Optional[str]
 
 
-class SettingsReadStrict(BaseModel):
+class UserSettingsReadStrict(BaseModel):
     id: int
 
 
-class SettingsUpdate(BaseModel):
+class UserSettingsUpdate(BaseModel):
     ssh_host: Optional[str]
     ssh_username: Optional[str]
     ssh_private_key_path: Optional[str]
@@ -32,5 +32,5 @@ class SettingsUpdate(BaseModel):
     ssh_jobs_dir: Optional[str]
 
 
-class SettingsUpdateStrict(BaseModel):
+class UserSettingsUpdateStrict(BaseModel):
     pass

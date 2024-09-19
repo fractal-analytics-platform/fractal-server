@@ -15,8 +15,8 @@ from ...schemas.user import UserUpdateStrict
 from ._aux_auth import _get_single_user_with_group_names
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
-from fractal_server.app.schemas import SettingsReadStrict
-from fractal_server.app.schemas import SettingsUpdateStrict
+from fractal_server.app.schemas import UserSettingsReadStrict
+from fractal_server.app.schemas import UserSettingsUpdateStrict
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
 
@@ -69,12 +69,12 @@ async def patch_current_user(
 
 
 @router_current_user.get(
-    "/current-user/settings/", response_model=SettingsReadStrict
+    "/current-user/settings/", response_model=UserSettingsReadStrict
 )
 async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> SettingsReadStrict:
+) -> UserSettingsReadStrict:
     stm = (
         select(UserSettings)
         .join(UserOAuth)
@@ -89,13 +89,13 @@ async def get_current_user_settings(
 
 
 @router_current_user.patch(
-    "/current-user/settings/", response_model=SettingsReadStrict
+    "/current-user/settings/", response_model=UserSettingsReadStrict
 )
 async def patch_current_user_settings(
-    settings_update: SettingsUpdateStrict,
+    settings_update: UserSettingsUpdateStrict,
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> SettingsReadStrict:
+) -> UserSettingsReadStrict:
     current_user_settings = await get_current_user_settings(
         current_user=current_user, db=db
     )
