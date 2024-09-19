@@ -6,7 +6,6 @@ from .group_names import router_group_names
 from .login import router_login
 from .oauth import router_oauth
 from .register import router_register
-from .user_settings import router_users_settings
 from .users import router_users
 
 router_auth = APIRouter()
@@ -16,6 +15,5 @@ router_auth.include_router(router_current_user)
 router_auth.include_router(router_login)
 router_auth.include_router(router_group_names)
 router_auth.include_router(router_users)
-router_auth.include_router(router_users_settings)
 router_auth.include_router(router_group)
 router_auth.include_router(router_oauth)

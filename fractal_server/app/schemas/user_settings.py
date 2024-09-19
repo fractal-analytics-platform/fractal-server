@@ -41,7 +41,7 @@ class UserSettingsUpdate(BaseModel):
     )
     _ssh_private_key_path = validator(
         "ssh_private_key_path", allow_reuse=True
-    )(valstr("ssh_private_key_path"))
+    )(val_absolute_path("ssh_private_key_path"))
 
     _ssh_tasks_dir = validator("ssh_tasks_dir", allow_reuse=True)(
         val_absolute_path("ssh_tasks_dir")

@@ -74,7 +74,8 @@ async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-    return await db.get(UserSettings, current_user.user_settings_id)
+    user_settings = await db.get(UserSettings, current_user.user_settings_id)
+    return user_settings
 
 
 @router_current_user.patch(
