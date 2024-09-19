@@ -686,7 +686,7 @@ async def test_get_and_patch_current_user_settings(registered_client):
         else:
             assert v is None
 
-    patch = dict(cache_dir="/tmp/foo_cache")
+    patch = dict(slurm_accounts=["foo", "bar"], cache_dir="/tmp/foo_cache")
     res = await registered_client.patch(
         f"{PREFIX}/current-user/settings/", json=patch
     )
