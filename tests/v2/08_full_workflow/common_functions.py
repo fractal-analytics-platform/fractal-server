@@ -497,6 +497,7 @@ async def workflow_with_non_python_task(
     tmp777_path: Path,
     additional_user_kwargs=None,
     this_should_fail: bool = False,
+    user_settings_dict: Optional[dict] = None,
 ) -> str:
     """
     Run a non-python-task Fractal job.
@@ -510,7 +511,9 @@ async def workflow_with_non_python_task(
         user_kwargs.update(additional_user_kwargs)
     debug(user_kwargs)
 
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
+    ) as user:
         # Create project
         project = await project_factory_v2(user)
         project_id = project.id
