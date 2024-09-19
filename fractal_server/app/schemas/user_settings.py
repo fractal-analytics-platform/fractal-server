@@ -19,38 +19,35 @@ __all__ = (
 
 class UserSettingsRead(BaseModel):
     id: int
-    # SSH
+    # SSH-SLURM
     ssh_host: Optional[str]
     ssh_username: Optional[str]
     ssh_private_key_path: Optional[str]
     ssh_tasks_dir: Optional[str]
     ssh_jobs_dir: Optional[str]
-    # Slurm
+    # SUDO-SLURM
     slurm_user: Optional[str]
     slurm_accounts: list[str]
-    # Cache
     cache_dir: Optional[str]
 
 
 class UserSettingsReadStrict(BaseModel):
-    # Slurm
+    # SUDO-SLURM
     slurm_user: Optional[str]
     slurm_accounts: list[str]
-    # Cache
     cache_dir: Optional[str]
 
 
 class UserSettingsUpdate(BaseModel):
-    # SSH
+    # SSH-SLURM
     ssh_host: Optional[str]
     ssh_username: Optional[str]
     ssh_private_key_path: Optional[str]
     ssh_tasks_dir: Optional[str]
     ssh_jobs_dir: Optional[str]
-    # Slurm
+    # SUDO-SLURM
     slurm_user: Optional[str]
     slurm_accounts: Optional[list[StrictStr]]
-    # Cache
     cache_dir: Optional[str]
 
     _ssh_host = validator("ssh_host", allow_reuse=True)(valstr("ssh_host"))
@@ -82,9 +79,8 @@ class UserSettingsUpdate(BaseModel):
 
 
 class UserSettingsUpdateStrict(BaseModel):
-    # Slurm
+    # SUDO-SLURM
     slurm_accounts: Optional[list[StrictStr]]
-    # Cache
     cache_dir: Optional[str]
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
