@@ -118,31 +118,48 @@ async def test_validate_user_settings(db):
         ssh_tasks_dir="/x",
         ssh_username="x",
     )
-    user_with_valid_settings = UserOAuth(
+    user_with_valid_ssh_settings = UserOAuth(
         email="c@c.c",
         **common_attributes,
         settings=valid_settings,
     )
-    db.add(user_with_valid_settings)
+    db.add(user_with_valid_ssh_settings)
     await db.commit()
-    await db.refresh(user_with_valid_settings)
+    await db.refresh(user_with_valid_ssh_settings)
 
-    debug(user_without_settings)
-    debug(user_with_invalid_settings)
-    debug(user_with_valid_settings)
-
+    # User with no settings
     with pytest.raises(HTTPException, match="has no settings"):
         await validate_user_settings(
             user=user_without_settings, backend="slurm_ssh", db=db
         )
 
+    # User with empty settings: backend="local"
+    await validate_user_settings(
+        user=user_with_invalid_settings, backend="local", db=db
+    )
+    # User with empty settings: backend="slurm_ssh"
     with pytest.raises(
         HTTPException, match="validation errors for SlurmSshUserSettings"
     ):
         await validate_user_settings(
             user=user_with_invalid_settings, backend="slurm_ssh", db=db
         )
+    # User with empty settings: backend="slurm"
+    with pytest.raises(
+        HTTPException, match="validation errors for SlurmSudoUserSettings"
+    ):
+        await validate_user_settings(
+            user=user_with_invalid_settings, backend="slurm", db=db
+        )
 
+    # User with valid SSH settings: backend="slurm_ssh"
     await validate_user_settings(
-        user=user_with_valid_settings, backend="slurm_ssh", db=db
+        user=user_with_valid_ssh_settings, backend="slurm_ssh", db=db
     )
+    # User with valid SSH settings: backend="slurm"
+    with pytest.raises(
+        HTTPException, match="validation errors for SlurmSudoUserSettings"
+    ):
+        await validate_user_settings(
+            user=user_with_valid_ssh_settings, backend="slurm", db=db
+        )

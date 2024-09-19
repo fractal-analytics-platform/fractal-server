@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from fastapi import status
+from pydantic import BaseModel
 from pydantic import ValidationError
 
 from fractal_server.app.db import AsyncSession
@@ -7,6 +8,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.api.v2._aux_functions import logger
 from fractal_server.user_settings import SlurmSshUserSettings
+from fractal_server.user_settings import SlurmSudoUserSettings
 
 
 async def validate_user_settings(
@@ -26,16 +28,22 @@ async def validate_user_settings(
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
     if backend == "slurm_ssh":
-        try:
-            SlurmSshUserSettings(**user_settings.model_dump())
-        except ValidationError as e:
-            error_msg = (
-                "User settings are not valid for "
-                f"FRACTAL_RUNNER_BACKEND='{backend}'. "
-                f"Original error: {str(e)}"
-            )
-            logger.warning(error_msg)
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=error_msg,
-            )
+        UserSettingsModel = SlurmSshUserSettings
+    elif backend == "slurm":
+        UserSettingsModel = SlurmSudoUserSettings
+    else:
+        UserSettingsModel = BaseModel
+
+    try:
+        UserSettingsModel(**user_settings.model_dump())
+    except ValidationError as e:
+        error_msg = (
+            "User settings are not valid for "
+            f"FRACTAL_RUNNER_BACKEND='{backend}'. "
+            f"Original error: {str(e)}"
+        )
+        logger.warning(error_msg)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_msg,
+        )
