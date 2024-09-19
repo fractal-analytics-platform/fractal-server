@@ -233,6 +233,7 @@ async def MockCurrentUser(app, db):
     from fractal_server.app.routes.auth import current_active_user
     from fractal_server.app.routes.auth import current_active_superuser
     from fractal_server.app.routes.auth import UserOAuth
+    from fractal_server.app.models import UserSettings
 
     def _random_email():
         return f"{random.randint(0, 100000000)}@example.org"
@@ -245,6 +246,7 @@ async def MockCurrentUser(app, db):
 
         name: str = "User Name"
         user_kwargs: Optional[dict[str, Any]] = None
+        user_settings_dict: Optional[dict[str, Any]] = None
         email: Optional[str] = field(default_factory=_random_email)
         previous_dependencies: dict = field(default_factory=dict)
 
@@ -260,7 +262,7 @@ async def MockCurrentUser(app, db):
                     )
                 self.user = db_user
             else:
-                # Create new user
+                # Create new user and new settings
                 defaults = dict(
                     email=self.email,
                     hashed_password="fake_hashed_password",
@@ -269,6 +271,9 @@ async def MockCurrentUser(app, db):
                 if self.user_kwargs:
                     defaults.update(self.user_kwargs)
                 self.user = UserOAuth(name=self.name, **defaults)
+
+                user_settings_dict = self.user_settings_dict or {}
+                self.user.settings = UserSettings(**user_settings_dict)
 
                 try:
                     db.add(self.user)
