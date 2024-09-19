@@ -260,6 +260,9 @@ async def MockCurrentUser(app, db):
                         f"User with id {self.user_kwargs['id']} doesn't exist"
                     )
                 self.user = db_user
+                # Removing objects from test db session, so that we can operate
+                # on them from other sessions
+                db.expunge(self.user)
             else:
                 # Create new user
                 user_attributes = dict(
@@ -287,10 +290,10 @@ async def MockCurrentUser(app, db):
                     await db.commit()
                 await db.refresh(self.user)
 
-            # Removing object from test db session, so that we can operate
-            # on user from other sessions
-            db.expunge(user_settings)
-            db.expunge(self.user)
+                # Removing objects from test db session, so that we can operate
+                # on them from other sessions
+                db.expunge(user_settings)
+                db.expunge(self.user)
 
             # Find out which dependencies should be overridden, and store their
             # pre-override value
