@@ -5,6 +5,7 @@
 
 * API:
     * Add validation for user-provided strings that execute commands with subprocess or remote-shell (\#1767).
+    * Make `WorkflowTaskDumpV2` attributes `task_id` and `task` optional (\#1784).
 * Runner and task collection:
     * Validate commands before running them via `subprocess` or `fabric` (\#1767).
 
