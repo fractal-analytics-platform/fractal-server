@@ -613,3 +613,71 @@ async def test_oauth_accounts_list(
             f"{PREFIX}/current-user/", json=dict(cache_dir="/foo/bar")
         )
         assert len(res.json()["oauth_accounts"]) == 1
+
+
+async def test_get_and_patch_user_settings(registered_superuser_client):
+
+    # Register new user
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=dict(email="a@b.c", password="1234")
+    )
+    assert res.status_code == 201
+    user_id = res.json()["id"]
+
+    # Get user settings
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{user_id}/settings/",
+    )
+    assert res.status_code == 200
+    for k, v in res.json().items():
+        if k == "id":
+            assert v == user_id
+        else:
+            assert v is None
+
+    # Path user settings
+    patch = dict(
+        ssh_host="127.0.0.1",
+        ssh_username="fractal",
+        ssh_private_key_path="/tmp/fractal",
+        ssh_tasks_dir="/tmp/tasks",
+        # missing "ssh_jobs_dir"
+    )
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/settings/", json=patch
+    )
+    assert res.status_code == 200
+
+    # Assert patch was successful
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{user_id}/settings/",
+    )
+    for k, v in res.json().items():
+        if k in patch:
+            assert v == patch[k]
+        elif k == "id":
+            assert v == user_id
+        else:
+            assert v is None
+
+    # Get non-existing-user settings
+    res = await registered_superuser_client.get(f"{PREFIX}/users/42/settings/")
+    assert res.status_code == 404
+    # Patch non-existing-user settings
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/42/settings/", json=dict()
+    )
+    assert res.status_code == 404
+
+
+async def test_get_and_patch_current_user_settings(registered_client):
+
+    res = await registered_client.get(f"{PREFIX}/current-user/settings/")
+    assert res.status_code == 200
+    assert list(res.json().keys()) == ["id"]
+
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/settings/", json=dict()
+    )
+    assert res.status_code == 200
+    assert list(res.json().keys()) == ["id"]

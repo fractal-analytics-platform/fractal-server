@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi_users import schemas
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from . import current_active_user
 from ...db import get_async_db
@@ -13,6 +14,9 @@ from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateStrict
 from ._aux_auth import _get_single_user_with_group_names
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import UserSettings
+from fractal_server.app.schemas import SettingsReadStrict
+from fractal_server.app.schemas import SettingsUpdateStrict
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
 
@@ -62,3 +66,45 @@ async def patch_current_user(
         patched_user, db
     )
     return patched_user_with_groups
+
+
+@router_current_user.get(
+    "/current-user/settings/", response_model=SettingsReadStrict
+)
+async def get_current_user_settings(
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> SettingsReadStrict:
+    stm = (
+        select(UserSettings)
+        .join(UserOAuth)
+        .where(UserOAuth.id == current_user.id)
+        .where(UserOAuth.user_settings_id == UserSettings.id)
+    )
+    res = await db.execute(stm)
+    current_user_settings = res.scalars().one()
+    await db.close()
+
+    return current_user_settings
+
+
+@router_current_user.patch(
+    "/current-user/settings/", response_model=SettingsReadStrict
+)
+async def patch_current_user_settings(
+    settings_update: SettingsUpdateStrict,
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> SettingsReadStrict:
+    current_user_settings = await get_current_user_settings(
+        current_user=current_user, db=db
+    )
+    for k, v in settings_update.dict(exclude_unset=True).items():
+        setattr(current_user_settings, k, v)
+
+    db.add(current_user_settings)
+    await db.commit()
+    await db.refresh(current_user_settings)
+    await db.close()
+
+    return current_user_settings
