@@ -1,14 +1,11 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from . import current_active_superuser
 from ...db import get_async_db
+from ._aux_auth import _user_settings_or_404
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas import UserSettingsRead
 from fractal_server.app.schemas import UserSettingsUpdate
 from fractal_server.logger import set_logger
@@ -28,23 +25,7 @@ async def get_user_settings(
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsRead:
 
-    stm = (
-        select(UserSettings)
-        .join(UserOAuth)
-        .where(UserOAuth.id == user_id)
-        .where(UserOAuth.user_settings_id == UserSettings.id)
-    )
-    res = await db.execute(stm)
-    user_settings = res.scalars().one_or_none()
-    await db.close()
-
-    if user_settings is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Settings for User {user_id}  not found.",
-        )
-
-    return user_settings
+    return await _user_settings_or_404(user_id=user_id, db=db)
 
 
 @router_users_settings.patch(
@@ -57,9 +38,8 @@ async def patch_user_settings(
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsRead:
 
-    user_settings = await get_user_settings(
-        user_id=user_id, superuser=superuser, db=db
-    )
+    user_settings = await _user_settings_or_404(user_id=user_id, db=db)
+
     for k, v in settings_update.dict(exclude_unset=True).items():
         setattr(user_settings, k, v)
 

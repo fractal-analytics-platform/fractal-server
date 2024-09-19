@@ -5,7 +5,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi_users import schemas
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from . import current_active_user
 from ...db import get_async_db
@@ -13,8 +12,8 @@ from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateStrict
 from ._aux_auth import _get_single_user_with_group_names
+from ._aux_auth import _user_settings_or_404
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas import UserSettingsReadStrict
 from fractal_server.app.schemas import UserSettingsUpdateStrict
 from fractal_server.app.security import get_user_manager
@@ -75,17 +74,7 @@ async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-    stm = (
-        select(UserSettings)
-        .join(UserOAuth)
-        .where(UserOAuth.id == current_user.id)
-        .where(UserOAuth.user_settings_id == UserSettings.id)
-    )
-    res = await db.execute(stm)
-    current_user_settings = res.scalars().one()
-    await db.close()
-
-    return current_user_settings
+    return await _user_settings_or_404(user_id=current_user.id, db=db)
 
 
 @router_current_user.patch(
@@ -96,9 +85,10 @@ async def patch_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-    current_user_settings = await get_current_user_settings(
-        current_user=current_user, db=db
+    current_user_settings = await _user_settings_or_404(
+        user_id=current_user.id, db=db
     )
+
     for k, v in settings_update.dict(exclude_unset=True).items():
         setattr(current_user_settings, k, v)
 
