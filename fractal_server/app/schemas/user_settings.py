@@ -83,14 +83,10 @@ class UserSettingsUpdate(BaseModel):
 
 class UserSettingsUpdateStrict(BaseModel):
     # Slurm
-    slurm_user: Optional[str]
     slurm_accounts: Optional[list[StrictStr]]
     # Cache
     cache_dir: Optional[str]
 
-    _slurm_user = validator("slurm_user", allow_reuse=True)(
-        valstr("slurm_user")
-    )
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
         val_unique_list("slurm_accounts")
     )
