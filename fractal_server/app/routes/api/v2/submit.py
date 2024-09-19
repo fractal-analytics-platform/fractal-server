@@ -30,6 +30,7 @@ from ....schemas.v2 import JobStatusTypeV2
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
+from ._aux_functions import validate_user_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_verified_user
 
@@ -109,8 +110,14 @@ async def apply_workflow(
             ),
         )
 
-    # If backend is SLURM, check that the user has required attributes
+    # Validate user settings (which will eventually replace the block below,
+    # where check required user attributes)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+    validate_user_settings(
+        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+    )
+
+    # If backend is SLURM, check that the user has required attributes
     if FRACTAL_RUNNER_BACKEND == "slurm":
         if not user.slurm_user:
             raise HTTPException(

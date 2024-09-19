@@ -25,6 +25,7 @@ from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
+from ._aux_functions import validate_user_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -40,7 +41,6 @@ from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
-
 
 router = APIRouter()
 
@@ -106,6 +106,11 @@ async def collect_tasks_pip(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid task-collection object. Original error: {e}",
         )
+
+    # Validate user settings (backend-specific)
+    validate_user_settings(
+        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+    )
 
     # END of SSH/non-SSH common part
 
