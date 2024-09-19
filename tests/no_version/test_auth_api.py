@@ -632,6 +632,8 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
     for k, v in res.json().items():
         if k == "id":
             assert v == user_id
+        elif k == "slurm_accounts":
+            assert v == []
         else:
             assert v is None
 
@@ -642,10 +644,14 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
         ssh_private_key_path="/tmp/fractal",
         ssh_tasks_dir="/tmp/tasks",
         # missing "ssh_jobs_dir"
+        # missing "slurm_user"
+        slurm_accounts=["foo", "bar"],
+        cache_dir="/tmp/cache",
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/settings/", json=patch
     )
+    debug(res.json())
     assert res.status_code == 200
 
     # Assert patch was successful
@@ -674,10 +680,22 @@ async def test_get_and_patch_current_user_settings(registered_client):
 
     res = await registered_client.get(f"{PREFIX}/current-user/settings/")
     assert res.status_code == 200
-    assert list(res.json().keys()) == ["id"]
+    for k, v in res.json().items():
+        if k == "slurm_accounts":
+            assert v == []
+        else:
+            assert v is None
 
+    patch = dict(slurm_accounts=["foo", "bar"])
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/settings/", json=dict()
+        f"{PREFIX}/current-user/settings/", json=patch
     )
     assert res.status_code == 200
-    assert list(res.json().keys()) == ["id"]
+
+    # Assert patch was successful
+    res = await registered_client.get(f"{PREFIX}/current-user/settings/")
+    for k, v in res.json().items():
+        if k in patch:
+            assert v == patch[k]
+        else:
+            assert v is None
