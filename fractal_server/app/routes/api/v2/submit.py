@@ -113,7 +113,7 @@ async def apply_workflow(
     # Validate user settings (which will eventually replace the block below,
     # where check required user attributes)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    validate_user_settings(
+    await validate_user_settings(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 

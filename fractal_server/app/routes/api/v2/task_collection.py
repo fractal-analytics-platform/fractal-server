@@ -108,7 +108,7 @@ async def collect_tasks_pip(
         )
 
     # Validate user settings (backend-specific)
-    validate_user_settings(
+    await validate_user_settings(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 
