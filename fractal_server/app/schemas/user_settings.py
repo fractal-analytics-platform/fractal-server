@@ -20,35 +20,35 @@ __all__ = (
 class UserSettingsRead(BaseModel):
     id: int
     # SSH-SLURM
-    ssh_host: Optional[str]
-    ssh_username: Optional[str]
-    ssh_private_key_path: Optional[str]
-    ssh_tasks_dir: Optional[str]
-    ssh_jobs_dir: Optional[str]
+    ssh_host: Optional[str] = None
+    ssh_username: Optional[str] = None
+    ssh_private_key_path: Optional[str] = None
+    ssh_tasks_dir: Optional[str] = None
+    ssh_jobs_dir: Optional[str] = None
     # SUDO-SLURM
-    slurm_user: Optional[str]
+    slurm_user: Optional[str] = None
     slurm_accounts: list[str]
-    cache_dir: Optional[str]
+    cache_dir: Optional[str] = None
 
 
 class UserSettingsReadStrict(BaseModel):
     # SUDO-SLURM
-    slurm_user: Optional[str]
+    slurm_user: Optional[str] = None
     slurm_accounts: list[str]
-    cache_dir: Optional[str]
+    cache_dir: Optional[str] = None
 
 
 class UserSettingsUpdate(BaseModel):
     # SSH-SLURM
-    ssh_host: Optional[str]
-    ssh_username: Optional[str]
-    ssh_private_key_path: Optional[str]
-    ssh_tasks_dir: Optional[str]
-    ssh_jobs_dir: Optional[str]
+    ssh_host: Optional[str] = None
+    ssh_username: Optional[str] = None
+    ssh_private_key_path: Optional[str] = None
+    ssh_tasks_dir: Optional[str] = None
+    ssh_jobs_dir: Optional[str] = None
     # SUDO-SLURM
-    slurm_user: Optional[str]
-    slurm_accounts: Optional[list[StrictStr]]
-    cache_dir: Optional[str]
+    slurm_user: Optional[str] = None
+    slurm_accounts: Optional[list[StrictStr]] = None
+    cache_dir: Optional[str] = None
 
     _ssh_host = validator("ssh_host", allow_reuse=True)(valstr("ssh_host"))
     _ssh_username = validator("ssh_username", allow_reuse=True)(
@@ -80,8 +80,8 @@ class UserSettingsUpdate(BaseModel):
 
 class UserSettingsUpdateStrict(BaseModel):
     # SUDO-SLURM
-    slurm_accounts: Optional[list[StrictStr]]
-    cache_dir: Optional[str]
+    slurm_accounts: Optional[list[StrictStr]] = None
+    cache_dir: Optional[str] = None
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
         val_unique_list("slurm_accounts")

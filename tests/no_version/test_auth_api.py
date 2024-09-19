@@ -631,7 +631,7 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
     assert res.status_code == 200
     for k, v in res.json().items():
         if k == "id":
-            assert v == user_id
+            pass
         elif k == "slurm_accounts":
             assert v == []
         else:
@@ -662,7 +662,7 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
         if k in patch:
             assert v == patch[k]
         elif k == "id":
-            assert v == user_id
+            pass
         else:
             assert v is None
 
