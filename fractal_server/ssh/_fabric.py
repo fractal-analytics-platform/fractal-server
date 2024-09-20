@@ -468,7 +468,7 @@ class FractalSSHCollection(object):
             out = self._data.pop(key, None)
         return out
 
-    def close(self):
+    def close_all(self):
         """
         Close all `FractalSSH` objects in the collection.
         """
