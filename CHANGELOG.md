@@ -1,14 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
 
-# 2.5.1 (Unreleased)
+# 2.5.1
 
 * API:
+    * Make `WorkflowTaskDumpV2` attributes `task_id` and `task` optional (\#1784).
     * Add validation for user-provided strings that execute commands with subprocess or remote-shell (\#1767).
 * Runner and task collection:
     * Validate commands before running them via `subprocess` or `fabric` (\#1767).
 
 # 2.5.0
+
+> WARNING: This release has a minor API bug when displaying a V2 dataset with a history that contains legacy tasks. It's recommended to update to 2.5.1.
 
 This release removes support for including V1 tasks in V2 workflows. This comes
 with changes to the database (data and metadata), to the API, and to the V2
