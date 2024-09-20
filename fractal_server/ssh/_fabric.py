@@ -432,10 +432,12 @@ class FractalSSHCollection(object):
         key = (host, user, key_path)
         fractal_ssh = self._data.get(key, None)
         if fractal_ssh is not None:
-            logger.info(f"[get, {user=}] Found existing instance.")
+            self.logger.info(
+                f"Return existing FractalSSH object for {user}@{host}"
+            )
             return fractal_ssh
         else:
-            logger.info(f"[get, {user=}] No available instance, creating one.")
+            self.logger.info(f"Add new FractalSSH object for {user}@{host}")
             with self.acquire_lock_with_timeout():
                 connection = Connection(
                     host=host,
@@ -445,6 +447,24 @@ class FractalSSHCollection(object):
                 )
                 self._data[key] = FractalSSH(connection=connection)
                 return self._data[key]
+
+    def contains(
+        self,
+        *,
+        host: str,
+        user: str,
+        key_path: str,
+    ) -> bool:
+        """
+        Return whether a given key is present in the collection.
+
+        Arguments:
+            host:
+            user:
+            key_path:
+        """
+        key = (host, user, key_path)
+        return key in self._data.keys()
 
     def pop(
         self,
