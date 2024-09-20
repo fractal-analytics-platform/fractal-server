@@ -107,7 +107,9 @@ async def lifespan(app: FastAPI):
     config_uvicorn_loggers()
     logger.info("End application startup")
     reset_logger_handlers(logger)
+
     yield
+
     logger = get_logger("fractal_server.lifespan")
     logger.info("Start application shutdown")
 
@@ -117,7 +119,7 @@ async def lifespan(app: FastAPI):
             f"(current size: {app.state.fractal_ssh_collection.size})."
         )
 
-        app.state.fractal_ssh_colleciton.close_all()
+        app.state.fractal_ssh_collection.close_all()
 
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
