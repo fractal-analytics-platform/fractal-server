@@ -1,6 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
 
+# 2.5.2
+
+* App:
+    * Replace `fractal_ssh` attribute with `fractal_ssh_collection`, in `app.state` (\#1790).
+    * Move creation of SSH connections from app startup to endpoints (\#1790).
+* Internal
+    * Introduce `FractalSSHCollection`, in view of support for multiple SSH/Slurm service users (\#1790).
+
 # 2.5.1
 
 * API:
