@@ -9,7 +9,7 @@ def test_unit_FractalSSHCollection():
 
     # Create empty collection
     collection = FractalSSHCollection()
-    assert collection._data == {}
+    assert collection.size == 0
     assert not collection._lock.locked()
 
     # Add a value to the collection for the first time
@@ -17,7 +17,7 @@ def test_unit_FractalSSHCollection():
     first_id_object_A = id(fractal_ssh_A_first)
     assert collection.contains(**credentials_A)
     assert not collection.contains(**credentials_B)
-    assert len(collection._data) == 1
+    assert collection.size == 1
     assert not collection._lock.locked()
 
     # Re-add the same value to the collection
@@ -25,7 +25,7 @@ def test_unit_FractalSSHCollection():
     second_id_object_A = id(fractal_ssh_A_second)
     assert collection.contains(**credentials_A)
     assert not collection.contains(**credentials_B)
-    assert len(collection._data) == 1
+    assert collection.size == 1
     assert not collection._lock.locked()
 
     # Calling `get` twice returns the same Python object
@@ -35,7 +35,7 @@ def test_unit_FractalSSHCollection():
     fractal_ssh_B = collection.get(**credentials_B)
     assert collection.contains(**credentials_A)
     assert collection.contains(**credentials_B)
-    assert len(collection._data) == 2
+    assert collection.size == 2
     assert not collection._lock.locked()
     assert id(fractal_ssh_B) != first_id_object_A
 
@@ -44,7 +44,7 @@ def test_unit_FractalSSHCollection():
     assert popped_object_A is not None
     assert not collection.contains(**credentials_A)
     assert collection.contains(**credentials_B)
-    assert len(collection._data) == 1
+    assert collection.size == 1
     assert not collection._lock.locked()
 
     # Pop a missing value from the collection
@@ -52,7 +52,7 @@ def test_unit_FractalSSHCollection():
     assert popped_object_A is None
     assert not collection.contains(**credentials_A)
     assert collection.contains(**credentials_B)
-    assert len(collection._data) == 1
+    assert collection.size == 1
     assert not collection._lock.locked()
 
 
@@ -91,3 +91,6 @@ def test_run_command_through_collection(
         ValueError,
     ):
         invalid_fractal_ssh.run_command(cmd="ls")
+
+    # Check that `close_all` works both for valid and invalid connections
+    fractal_ssh_collection.close_all()
