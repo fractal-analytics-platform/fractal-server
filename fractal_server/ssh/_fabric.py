@@ -399,7 +399,7 @@ class FractalSSHCollection(object):
     def __init__(
         self,
         *,
-        timeout: float = 10.0,
+        timeout: float = 5.0,
         logger_name: str = "fractal_server.FractalSSHCollection",
     ):
         self._lock = Lock()
@@ -437,13 +437,14 @@ class FractalSSHCollection(object):
         else:
             logger.info(f"[get, {user=}] No available instance, creating one.")
             with self.acquire_lock_with_timeout():
-                connection = connection = Connection(
+                connection = Connection(
                     host=host,
                     user=user,
                     forward_agent=False,
                     connect_kwargs={"key_filename": key_path},
                 )
                 self._data[key] = FractalSSH(connection=connection)
+                return self._data[key]
 
     def pop(
         self,
@@ -466,6 +467,13 @@ class FractalSSHCollection(object):
         with self.acquire_lock_with_timeout():
             out = self._data.pop(key, None)
         return out
+
+    def close(self):
+        """
+        Close all `FractalSSH` objects in the collection.
+        """
+        for fractal_ssh in self._data.values():
+            fractal_ssh.close()
 
     @contextmanager
     def acquire_lock_with_timeout(self) -> Generator[Literal[True], Any, None]:
