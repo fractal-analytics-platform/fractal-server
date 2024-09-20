@@ -7,7 +7,6 @@ from typing import Any
 from typing import Generator
 from typing import Literal
 from typing import Optional
-from typing import Union
 
 import paramiko.sftp_client
 from fabric import Connection
@@ -473,15 +472,15 @@ class FractalSSHCollection(object):
         key = (host, user, key_path)
         return key in self._data.keys()
 
-    def pop(
+    def remove(
         self,
         *,
         host: str,
         user: str,
         key_path: str,
-    ) -> Union[None, FractalSSH]:
+    ) -> None:
         """
-        Pop a key from `_data` and return the value (if present) or `None`.
+        Remove a key from `_data` and close the corresponding connection.
 
         Note: Changing `_data` requires acquiring `_lock`.
 
@@ -492,20 +491,28 @@ class FractalSSHCollection(object):
         """
         key = (host, user, key_path)
         with self.acquire_lock_with_timeout():
-            out = self._data.pop(key, None)
-        return out
+            self.logger.info(
+                f"Removing FractalSSH object for {user}@{host} "
+                "from collection."
+            )
+            fractal_ssh_obj = self._data.pop(key)
+            self.logger.info(
+                f"Closing FractalSSH object for {user}@{host} "
+                f"({fractal_ssh_obj.is_connected=})."
+            )
+            fractal_ssh_obj.close()
 
     def close_all(self):
         """
         Close all `FractalSSH` objects in the collection.
         """
-        for key, fractal_ssh in self._data.items():
+        for key, fractal_ssh_obj in self._data.items():
             host, user, _ = key[:]
             self.logger.info(
                 f"Closing FractalSSH object for {user}@{host} "
-                f"({fractal_ssh.is_connected=})."
+                f"({fractal_ssh_obj.is_connected=})."
             )
-            fractal_ssh.close()
+            fractal_ssh_obj.close()
 
     @contextmanager
     def acquire_lock_with_timeout(self) -> Generator[Literal[True], Any, None]:

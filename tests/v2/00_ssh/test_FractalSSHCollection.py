@@ -39,17 +39,16 @@ def test_unit_FractalSSHCollection():
     assert not collection._lock.locked()
     assert id(fractal_ssh_B) != first_id_object_A
 
-    # Pop a value from the collection
-    popped_object_A = collection.pop(**credentials_A)
-    assert popped_object_A is not None
+    # Remove a value from the collection
+    collection.remove(**credentials_A)
     assert not collection.contains(**credentials_A)
     assert collection.contains(**credentials_B)
     assert collection.size == 1
     assert not collection._lock.locked()
 
-    # Pop a missing value from the collection
-    popped_object_A = collection.pop(**credentials_A)
-    assert popped_object_A is None
+    # Remove a missing value from the collection
+    with pytest.raises(KeyError):
+        collection.remove(**credentials_A)
     assert not collection.contains(**credentials_A)
     assert collection.contains(**credentials_B)
     assert collection.size == 1
