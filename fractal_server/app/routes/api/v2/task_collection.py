@@ -131,7 +131,7 @@ async def collect_tasks_pip(
             key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
         )
         fractal_ssh_collection = request.app.state.fractal_ssh_collection
-        fractal_ssh = fractal_ssh_collection.get(ssh_credentials)
+        fractal_ssh = fractal_ssh_collection.get(**ssh_credentials)
 
         background_tasks.add_task(
             background_collect_pip_ssh,
