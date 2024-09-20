@@ -1,8 +1,11 @@
 import sys
+import threading
+import time
 from os import environ
 from pathlib import Path
 
 import pytest
+from devtools import debug
 
 
 environ["PYTHONASYNCIODEBUG"] = "1"
@@ -66,3 +69,19 @@ from .fixtures_tasks_v2 import *  # noqa F403
 from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
 from .fixtures_commands import *  # noqa F403
+
+
+@pytest.fixture(scope="function", autouse=True)
+def count_threads():
+    initial_threads = threading.enumerate()
+    yield
+    final_threads = threading.enumerate()
+
+    # Grace time, before error
+    if len(final_threads) != len(initial_threads):
+        time.sleep(0.5)
+
+    if len(final_threads) != len(initial_threads):
+        debug(initial_threads)
+        debug(final_threads)
+        raise RuntimeError(f"{initial_threads=}, {final_threads=}")
