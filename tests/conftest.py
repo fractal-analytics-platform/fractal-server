@@ -71,16 +71,23 @@ from .fixtures_slurm import *  # noqa F403
 from .fixtures_commands import *  # noqa F403
 
 
+def _get_threads():
+    # threads = threading.enumerate()
+    threads = [t for t in threading.enumerate() if not t._is_stopped]
+    return threads
+
+
 @pytest.fixture(scope="function", autouse=True)
 def count_threads():
-    initial_threads = threading.enumerate()
+    initial_threads = _get_threads()
     yield
-    final_threads = threading.enumerate()
+    final_threads = _get_threads()
 
     # Grace time, before error
     if len(final_threads) != len(initial_threads):
         time.sleep(0.5)
 
+    final_threads = _get_threads()
     if len(final_threads) != len(initial_threads):
         debug(initial_threads)
         debug(final_threads)
