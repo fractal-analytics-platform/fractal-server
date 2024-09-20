@@ -126,6 +126,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
 
         if kwargs != {}:
+            self._stop_and_join_wait_thread()
             raise ValueError(
                 f"FractalSlurmSSHExecutor received unexpected {kwargs=}"
             )
@@ -189,6 +190,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 for line in self.common_script_lines
                 if line.startswith("#SBATCH --account=")
             )
+            self._stop_and_join_wait_thread()
             raise RuntimeError(
                 "Invalid line in `FractalSlurmSSHExecutor."
                 "common_script_lines`: "
@@ -1385,6 +1387,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.fractal_ssh.run_command(cmd=scancel_command)
         logger.debug("Executor shutdown: end")
 
+    def _stop_and_join_wait_thread(self):
+        self.wait_thread.stop()
+        self.wait_thread.join()
+
     def __exit__(self, *args, **kwargs):
         """
         See
@@ -1393,8 +1399,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         logger.debug(
             "[FractalSlurmSSHExecutor.__exit__] Stop and join `wait_thread`"
         )
-        self.wait_thread.stop()
-        self.wait_thread.join()
+        self._stop_and_join_wait_thread()
         logger.debug("[FractalSlurmSSHExecutor.__exit__] End")
 
     def run_squeue(self, job_ids):
