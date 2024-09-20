@@ -85,7 +85,7 @@ def count_threads():
 
     # Grace time, before error
     if len(final_threads) != len(initial_threads):
-        time.sleep(0.5)
+        time.sleep(0.005)
 
     final_threads = _get_threads()
     if len(final_threads) != len(initial_threads):
