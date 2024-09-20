@@ -39,6 +39,14 @@ async def test_workflow_with_non_python_task_slurm_ssh(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
+    user_settings_dict = dict(
+        ssh_host=slurmlogin_ip,
+        ssh_username=SLURM_USER,
+        ssh_private_key_path=ssh_keys["private"],
+        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+    )
+
     connection = get_ssh_connection()
     app.state.fractal_ssh = FractalSSH(connection=connection)
 
@@ -46,6 +54,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
 
     await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
+        user_settings_dict=user_settings_dict,
         client=client,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
@@ -91,6 +100,14 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
+    user_settings_dict = dict(
+        ssh_host=slurmlogin_ip,
+        ssh_username=SLURM_USER,
+        ssh_private_key_path="/invalid/path",
+        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+    )
+
     connection = get_ssh_connection()
     app.state.fractal_ssh = FractalSSH(connection=connection)
 
@@ -99,6 +116,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     job_logs = await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
         client=client,
+        user_settings_dict=user_settings_dict,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,

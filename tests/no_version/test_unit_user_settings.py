@@ -1,7 +1,12 @@
+import pytest
 from devtools import debug
+from fastapi import HTTPException
 
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.routes.aux.validate_user_settings import (
+    validate_user_settings,
+)
 
 
 async def test_unit_link_user_to_settings(db):
@@ -80,3 +85,81 @@ async def test_unit_link_user_to_settings(db):
     assert user_D.settings is not None
 
     # FIXME: Test delete cascade
+
+
+async def test_validate_user_settings(db):
+    common_attributes = dict(
+        hashed_password="xxx",
+        is_active=True,
+        is_superuser=False,
+        is_verified=True,
+    )
+
+    # Prepare users
+    user_without_settings = UserOAuth(email="a@a.a", **common_attributes)
+    db.add(user_without_settings)
+    await db.commit()
+    await db.refresh(user_without_settings)
+
+    invalid_settings = UserSettings()
+    user_with_invalid_settings = UserOAuth(
+        email="b@b.b",
+        **common_attributes,
+        settings=invalid_settings,
+    )
+    db.add(user_with_invalid_settings)
+    await db.commit()
+    await db.refresh(user_with_invalid_settings)
+
+    valid_settings = UserSettings(
+        ssh_host="x",
+        ssh_jobs_dir="/x",
+        ssh_private_key_path="/x",
+        ssh_tasks_dir="/x",
+        ssh_username="x",
+    )
+    user_with_valid_ssh_settings = UserOAuth(
+        email="c@c.c",
+        **common_attributes,
+        settings=valid_settings,
+    )
+    db.add(user_with_valid_ssh_settings)
+    await db.commit()
+    await db.refresh(user_with_valid_ssh_settings)
+
+    # User with no settings
+    with pytest.raises(HTTPException, match="has no settings"):
+        await validate_user_settings(
+            user=user_without_settings, backend="slurm_ssh", db=db
+        )
+
+    # User with empty settings: backend="local"
+    await validate_user_settings(
+        user=user_with_invalid_settings, backend="local", db=db
+    )
+    # User with empty settings: backend="slurm_ssh"
+    with pytest.raises(
+        HTTPException, match="validation errors for SlurmSshUserSettings"
+    ):
+        await validate_user_settings(
+            user=user_with_invalid_settings, backend="slurm_ssh", db=db
+        )
+    # User with empty settings: backend="slurm"
+    with pytest.raises(
+        HTTPException, match="validation errors for SlurmSudoUserSettings"
+    ):
+        await validate_user_settings(
+            user=user_with_invalid_settings, backend="slurm", db=db
+        )
+
+    # User with valid SSH settings: backend="slurm_ssh"
+    await validate_user_settings(
+        user=user_with_valid_ssh_settings, backend="slurm_ssh", db=db
+    )
+    # User with valid SSH settings: backend="slurm"
+    with pytest.raises(
+        HTTPException, match="validation errors for SlurmSudoUserSettings"
+    ):
+        await validate_user_settings(
+            user=user_with_valid_ssh_settings, backend="slurm", db=db
+        )

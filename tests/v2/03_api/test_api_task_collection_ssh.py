@@ -7,6 +7,7 @@ from fractal_server.ssh._fabric import FractalSSH
 
 
 PREFIX = "api/v2/task"
+SLURM_USER = "test01"
 
 
 async def test_task_collection_ssh_from_pypi(
@@ -19,6 +20,8 @@ async def test_task_collection_ssh_from_pypi(
     tmp777_path: Path,
     fractal_ssh: FractalSSH,
     current_py_version: str,
+    slurmlogin_ip,
+    ssh_keys,
 ):
 
     # Define and create remote working directory
@@ -39,7 +42,18 @@ async def test_task_collection_ssh_from_pypi(
     }
     override_settings_factory(**settings_overrides)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    user_settings_dict = dict(
+        ssh_host=slurmlogin_ip,
+        ssh_username=SLURM_USER,
+        ssh_private_key_path=ssh_keys["private"],
+        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+    )
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
 
         # CASE 1: successful collection
 
