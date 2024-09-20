@@ -125,7 +125,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
     async def create(self, create_dict: dict[str, Any]) -> UP:
         """Create a user."""
-        user = self.user_model(**create_dict)
+        user = self.user_model(**create_dict, settings=UserSettings())
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
@@ -219,17 +219,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 logger.info(
                     f"Added {user.email} user to group {default_group.id=}."
                 )
-
-            this_user = await db.get(UserOAuth, user.id)
-
-            this_user.settings = UserSettings()
-            await db.merge(this_user)
-            await db.commit()
-            await db.refresh(this_user)
-            logger.info(
-                f"Associated empty settings (id={this_user.user_settings_id}) "
-                f"to '{this_user.email}'."
-            )
 
 
 async def get_user_manager(
