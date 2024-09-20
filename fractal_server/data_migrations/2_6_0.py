@@ -18,8 +18,10 @@ def fix_db():
     global_settings = Inject(get_settings)
 
     with next(get_sync_db()) as db:
-        for user in db.execute(select(UserOAuth)).scalars().unique().all():
-            user.settings = UserSettings(
+        users = db.execute(select(UserOAuth)).scalars().unique().all()
+        for user in sorted(users, key=lambda x: x.id):
+            logger.warning(f"START handling user {user.id}: '{user.email}'")
+            user_settings = UserSettings(
                 # SSH
                 ssh_host=global_settings.FRACTAL_SLURM_SSH_HOST,
                 ssh_username=global_settings.FRACTAL_SLURM_SSH_USER,
@@ -37,9 +39,11 @@ def fix_db():
                 slurm_accounts=user.slurm_accounts,
                 cache_dir=user.cache_dir,
             )
+            user.settings = user_settings
             db.add(user)
-            logger.warning(f"Added UserSettings for User {user.id} ")
-        db.commit()
-        logger.warning("Commited UserSettings to the database")
+            db.commit()
+            db.refresh(user)
+            logger.warning(f"New user {user.id} settings:\n{user.settings}")
+            logger.warning(f"END handling user {user.id}: '{user.email}'")
 
     logger.warning("END of execution of fix_db function")
