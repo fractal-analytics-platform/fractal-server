@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHCollection
 
 
 PREFIX = "api/v2/task"
@@ -17,16 +17,19 @@ async def test_task_collection_ssh_from_pypi(
     override_settings_factory,
     tmp_path: Path,
     tmp777_path: Path,
-    fractal_ssh: FractalSSH,
+    fractal_ssh_collection: FractalSSHCollection,
     current_py_version: str,
 ):
+
+    assert fractal_ssh_collection.size == 1
+    fractal_ssh = list(fractal_ssh_collection._data.values())[0]
 
     # Define and create remote working directory
     WORKING_BASE_DIR = (tmp777_path / "working_dir").as_posix()
     fractal_ssh.mkdir(folder=WORKING_BASE_DIR)
 
     # Assign FractalSSH object to app state
-    app.state.fractal_ssh = fractal_ssh
+    app.state.fractal_ssh_collection = fractal_ssh_collection
 
     # Override settins with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
