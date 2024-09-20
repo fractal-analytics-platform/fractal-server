@@ -15,6 +15,7 @@ from pytest import TempPathFactory
 from pytest_docker.plugin import containers_scope
 
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHCollection
 
 
 @pytest.fixture(scope=containers_scope)
@@ -187,3 +188,34 @@ def fractal_ssh(
         fractal_ssh_object = FractalSSH(connection=connection)
         fractal_ssh_object.check_connection()
         yield fractal_ssh_object
+
+
+@pytest.fixture
+def fractal_ssh_collection(
+    slurmlogin_ip,
+    ssh_alive,
+    ssh_keys,
+    monkeypatch,
+) -> Generator[FractalSSHCollection, Any, None]:
+    """
+    Return a `FractalSSHCollection` object which already contains a valid
+    `FractalSSH` object.
+    """
+
+    ssh_private_key = ssh_keys["private"]
+
+    # https://github.com/fabric/fabric/issues/1979
+    # https://github.com/fabric/fabric/issues/2005#issuecomment-525664468
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+
+    collection = FractalSSHCollection()
+    fractal_ssh_obj: FractalSSH = collection.get(
+        host=slurmlogin_ip,
+        user="fractal",
+        key_path=ssh_private_key,
+    )
+    fractal_ssh_obj.check_connection()
+
+    yield collection
+
+    collection.close_all()
