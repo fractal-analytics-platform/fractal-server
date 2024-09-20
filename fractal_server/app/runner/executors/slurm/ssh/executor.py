@@ -126,7 +126,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
 
         if kwargs != {}:
-            self._stop_and_join_wait_thread()
             raise ValueError(
                 f"FractalSlurmSSHExecutor received unexpected {kwargs=}"
             )

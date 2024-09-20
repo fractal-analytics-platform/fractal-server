@@ -240,7 +240,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
 
         if not slurm_user:
-            self._stop_and_join_wait_thread()
             raise RuntimeError(
                 "Missing attribute FractalSlurmExecutor.slurm_user"
             )
