@@ -416,6 +416,13 @@ class FractalSSHCollection(object):
         """
         return get_logger(self._logger_name)
 
+    @property
+    def size(self) -> int:
+        """
+        Number of current key-value pairs in `self._data`.
+        """
+        return len(self._data.values())
+
     def get(self, *, host: str, user: str, key_path: str) -> FractalSSH:
         """
         Get the `FractalSSH` for the current credentials, or create one.
