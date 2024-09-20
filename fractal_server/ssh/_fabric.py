@@ -433,8 +433,6 @@ class FractalSSHCollection(object):
             user:
             key_path:
         """
-        # FIXME: should we use a hash rather than the tuple?
-        # It'd be less readable.
         key = (host, user, key_path)
         fractal_ssh = self._data.get(key, None)
         if fractal_ssh is not None:
