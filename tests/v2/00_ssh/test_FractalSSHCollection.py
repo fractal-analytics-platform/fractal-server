@@ -55,6 +55,9 @@ def test_unit_FractalSSHCollection():
     assert collection.size == 1
     assert not collection._lock.locked()
 
+    # Call `close_all`, in the presence of both valid and invalid connections
+    collection.close_all()
+
 
 def test_run_command_through_collection(
     slurmlogin_ip,

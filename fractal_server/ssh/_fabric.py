@@ -499,7 +499,12 @@ class FractalSSHCollection(object):
         """
         Close all `FractalSSH` objects in the collection.
         """
-        for fractal_ssh in self._data.values():
+        for key, fractal_ssh in self._data.items():
+            host, user, _ = key[:]
+            self.logger.info(
+                f"Closing FractalSSH object for {user}@{host} "
+                f"({fractal_ssh.is_connected=})."
+            )
             fractal_ssh.close()
 
     @contextmanager
