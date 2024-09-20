@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.ssh._fabric import FractalSSHCollection
+from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
@@ -17,7 +17,7 @@ async def test_task_collection_ssh_from_pypi(
     override_settings_factory,
     tmp_path: Path,
     tmp777_path: Path,
-    fractal_ssh_collection: FractalSSHCollection,
+    fractal_ssh_list: FractalSSHList,
     current_py_version: str,
     slurmlogin_ip,
     ssh_keys,
@@ -29,15 +29,15 @@ async def test_task_collection_ssh_from_pypi(
         key_path=ssh_keys["private"],
     )
 
-    assert not fractal_ssh_collection.contains(**credentials)
-    fractal_ssh = fractal_ssh_collection.get(**credentials)
+    assert not fractal_ssh_list.contains(**credentials)
+    fractal_ssh = fractal_ssh_list.get(**credentials)
 
     # Define and create remote working directory
     WORKING_BASE_DIR = (tmp777_path / "working_dir").as_posix()
     fractal_ssh.mkdir(folder=WORKING_BASE_DIR)
 
     # Assign FractalSSH object to app state
-    app.state.fractal_ssh_collection = fractal_ssh_collection
+    app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settins with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")

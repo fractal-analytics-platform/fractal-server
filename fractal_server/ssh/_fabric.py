@@ -25,7 +25,7 @@ class FractalSSHTimeoutError(RuntimeError):
     pass
 
 
-class FractalSSHCollectionTimeoutError(RuntimeError):
+class FractalSSHListTimeoutError(RuntimeError):
     pass
 
 
@@ -373,7 +373,7 @@ def get_ssh_connection(
     return connection
 
 
-class FractalSSHCollection(object):
+class FractalSSHList(object):
     """
     Collection of `FractalSSH` objects
 
@@ -399,7 +399,7 @@ class FractalSSHCollection(object):
         self,
         *,
         timeout: float = 5.0,
-        logger_name: str = "fractal_server.FractalSSHCollection",
+        logger_name: str = "fractal_server.FractalSSHList",
     ):
         self._lock = Lock()
         self._data = {}
@@ -442,13 +442,13 @@ class FractalSSHCollection(object):
             return fractal_ssh
         else:
             self.logger.info(f"Add new FractalSSH object for {user}@{host}")
+            connection = Connection(
+                host=host,
+                user=user,
+                forward_agent=False,
+                connect_kwargs={"key_filename": key_path},
+            )
             with self.acquire_lock_with_timeout():
-                connection = Connection(
-                    host=host,
-                    user=user,
-                    forward_agent=False,
-                    connect_kwargs={"key_filename": key_path},
-                )
                 self._data[key] = FractalSSH(connection=connection)
                 return self._data[key]
 
@@ -500,9 +500,14 @@ class FractalSSHCollection(object):
             )
             fractal_ssh_obj.close()
 
-    def close_all(self):
+    def close_all(self, *, timeout: float = 5.0):
         """
         Close all `FractalSSH` objects in the collection.
+
+        Arguments:
+            timeout:
+                Timeout for `FractalSSH._lock` acquisition, to be obtained
+                before closing.
         """
         for key, fractal_ssh_obj in self._data.items():
             host, user, _ = key[:]
@@ -510,7 +515,8 @@ class FractalSSHCollection(object):
                 f"Closing FractalSSH object for {user}@{host} "
                 f"({fractal_ssh_obj.is_connected=})."
             )
-            fractal_ssh_obj.close()
+            with fractal_ssh_obj.acquire_timeout(timeout=timeout):
+                fractal_ssh_obj.close()
 
     @contextmanager
     def acquire_lock_with_timeout(self) -> Generator[Literal[True], Any, None]:
@@ -521,7 +527,7 @@ class FractalSSHCollection(object):
         try:
             if not result:
                 self.logger.error("Lock was *NOT* acquired.")
-                raise FractalSSHCollectionTimeoutError(
+                raise FractalSSHListTimeoutError(
                     f"Failed to acquire lock within {self._timeout} ss"
                 )
             self.logger.debug("Lock was acquired.")

@@ -14,7 +14,7 @@ from pytest import TempPathFactory
 from pytest_docker.plugin import containers_scope
 
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import FractalSSHCollection
+from fractal_server.ssh._fabric import FractalSSHList
 
 
 @pytest.fixture(scope=containers_scope)
@@ -166,14 +166,14 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
 
 
 @pytest.fixture
-def fractal_ssh_collection(
+def fractal_ssh_list(
     slurmlogin_ip,
     ssh_alive,
     ssh_keys,
     monkeypatch,
-) -> Generator[FractalSSHCollection, Any, None]:
+) -> Generator[FractalSSHList, Any, None]:
     """
-    Return a `FractalSSHCollection` object which already contains a valid
+    Return a `FractalSSHList` object which already contains a valid
     `FractalSSH` object.
     """
 
@@ -181,7 +181,7 @@ def fractal_ssh_collection(
     # https://github.com/fabric/fabric/issues/2005#issuecomment-525664468
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
-    collection = FractalSSHCollection()
+    collection = FractalSSHList()
     fractal_ssh_obj: FractalSSH = collection.get(
         host=slurmlogin_ip,
         user="fractal",
@@ -196,12 +196,12 @@ def fractal_ssh_collection(
 
 @pytest.fixture
 def fractal_ssh(
-    fractal_ssh_collection,
+    fractal_ssh_list,
     slurmlogin_ip,
     ssh_keys,
 ) -> Generator[FractalSSH, Any, None]:
 
-    fractal_ssh_obj: FractalSSH = fractal_ssh_collection.get(
+    fractal_ssh_obj: FractalSSH = fractal_ssh_list.get(
         host=slurmlogin_ip,
         user="fractal",
         key_path=ssh_keys["private"],

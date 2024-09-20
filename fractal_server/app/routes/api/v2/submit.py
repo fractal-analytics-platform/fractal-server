@@ -245,8 +245,8 @@ async def apply_workflow(
             host=settings.FRACTAL_SLURM_SSH_HOST,
             key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
         )
-        fractal_ssh_collection = request.app.state.fractal_ssh_collection
-        fractal_ssh = fractal_ssh_collection.get(**ssh_credentials)
+        fractal_ssh_list = request.app.state.fractal_ssh_list
+        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
     else:
         fractal_ssh = None
 
