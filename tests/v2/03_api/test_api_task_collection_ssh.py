@@ -33,8 +33,8 @@ async def test_task_collection_ssh_from_pypi(
     fractal_ssh = fractal_ssh_collection.get(**credentials)
 
     # Define and create remote working directory
-    WORKING_BASE_DIR = tmp777_path / "working_dir"
-    fractal_ssh.mkdir(folder=WORKING_BASE_DIR.as_posix())
+    WORKING_BASE_DIR = (tmp777_path / "working_dir").as_posix()
+    fractal_ssh.mkdir(folder=WORKING_BASE_DIR)
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_collection = fractal_ssh_collection
