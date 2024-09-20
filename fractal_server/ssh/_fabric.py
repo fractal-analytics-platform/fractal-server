@@ -7,6 +7,7 @@ from typing import Any
 from typing import Generator
 from typing import Literal
 from typing import Optional
+from typing import Union
 
 import paramiko.sftp_client
 from fabric import Connection
@@ -25,11 +26,14 @@ class FractalSSHTimeoutError(RuntimeError):
     pass
 
 
+class FractalSSHCollectionTimeoutError(RuntimeError):
+    pass
+
+
 logger = set_logger(__name__)
 
 
 class FractalSSH(object):
-
     """
     FIXME SSH: Fix docstring
 
@@ -111,7 +115,6 @@ class FractalSSH(object):
     def run(
         self, *args, lock_timeout: Optional[float] = None, **kwargs
     ) -> Any:
-
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
@@ -372,8 +375,24 @@ def get_ssh_connection(
 
 
 class FractalSSHCollection(object):
+    """
+    Collection of `FractalSSH` objects
+
+    Attributes are all private, and access to this collection must be
+    through methods (mostly the `get` one).
+
+    Attributes:
+        _data:
+            Mapping of unique keys (the SSH-credentials tuples) to
+            `FractalSSH` objects.
+        _lock:
+            A `threading.Lock object`, to be acquired when changing `_data`.
+        _timeout: Timeout for `_lock` acquisition.
+        _logger_name: Logger name.
+    """
+
+    _data: dict[tuple[str, str, str], FractalSSH]
     _lock: Lock
-    _fractal_ssh_collection: dict[int, FractalSSH]
     _timeout: float
     _logger_name: str
 
@@ -384,30 +403,69 @@ class FractalSSHCollection(object):
         logger_name: str = "fractal_server.FractalSSHCollection",
     ):
         self._lock = Lock()
-        self._fractal_ssh_collection = {}
+        self._data = {}
         self._timeout = timeout
-        self.logger_name = logger_name
-        set_logger(self.logger_name)
+        self._logger_name = logger_name
+        set_logger(self._logger_name)
 
-    def get_fractal_ssh(
+    @property
+    def logger(self) -> logging.Logger:
+        """
+        This property exists so that we never have to propagate the
+        `Logger` object.
+        """
+        return get_logger(self._logger_name)
+
+    def get(self, *, host: str, user: str, key_path: str) -> FractalSSH:
+        """
+        Get the `FractalSSH` for the current credentials, or create one.
+
+        Note: Changing `_data` requires acquiring `_lock`.
+
+        Arguments:
+            host:
+            user:
+            key_path:
+        """
+        # FIXME: should we use a hash rather than the tuple?
+        # It'd be less readable.
+        key = (host, user, key_path)
+        fractal_ssh = self._data.get(key, None)
+        if fractal_ssh is not None:
+            logger.info(f"[get, {user=}] Found existing instance.")
+            return fractal_ssh
+        else:
+            logger.info(f"[get, {user=}] No available instance, creating one.")
+            with self.acquire_lock_with_timeout():
+                connection = connection = Connection(
+                    host=host,
+                    user=user,
+                    forward_agent=False,
+                    connect_kwargs={"key_filename": key_path},
+                )
+                self._data[key] = FractalSSH(connection=connection)
+
+    def pop(
         self,
         *,
         host: str,
         user: str,
         key_path: str,
-    ) -> FractalSSH:
-        key = hash((host, user, key_path))
-        fractal_ssh = self._fractal_ssh_collection.get(key, None)
-        if fractal_ssh is not None:
-            return fractal_ssh
-        else:
-            with self.acquire_lock_with_timeout():
-                connection = get_ssh_connection(
-                    host=host, user=user, key_filename=key_path
-                )
-                self._fractal_ssh_collection[key] = FractalSSH(
-                    connection=connection
-                )
+    ) -> Union[None, FractalSSH]:
+        """
+        Pop a key from `_data` and return the value (if present) or `None`.
+
+        Note: Changing `_data` requires acquiring `_lock`.
+
+        Arguments:
+            host:
+            user:
+            key_path:
+        """
+        key = (host, user, key_path)
+        with self.acquire_lock_with_timeout():
+            out = self._data.pop(key, None)
+        return out
 
     @contextmanager
     def acquire_lock_with_timeout(self) -> Generator[Literal[True], Any, None]:
@@ -418,7 +476,7 @@ class FractalSSHCollection(object):
         try:
             if not result:
                 self.logger.error("Lock was *NOT* acquired.")
-                raise FractalSSHTimeoutError(
+                raise FractalSSHCollectionTimeoutError(
                     f"Failed to acquire lock within {self._timeout} ss"
                 )
             self.logger.debug("Lock was acquired.")
@@ -427,7 +485,3 @@ class FractalSSHCollection(object):
             if result:
                 self._lock.release()
                 self.logger.debug("Lock was released")
-
-    @property
-    def logger(self) -> logging.Logger:
-        return get_logger(self.logger_name)
