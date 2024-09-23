@@ -163,17 +163,26 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         settings = Inject(get_settings)
         self.python_remote = settings.FRACTAL_SLURM_WORKER_PYTHON
         if self.python_remote is None:
+            self._stop_and_join_wait_thread()
             raise ValueError("FRACTAL_SLURM_WORKER_PYTHON is not set. Exit.")
 
         # Initialize connection and perform handshake
         self.fractal_ssh = fractal_ssh
         logger.warning(self.fractal_ssh)
-        self.handshake()
+        try:
+            self.handshake()
+        except Exception as e:
+            self._stop_and_join_wait_thread()
+            raise e
 
         # Set/validate parameters for SLURM submission scripts
         self.slurm_account = slurm_account
         self.common_script_lines = common_script_lines or []
-        self._validate_common_script_lines()
+        try:
+            self._validate_common_script_lines()
+        except Exception as e:
+            self._stop_and_join_wait_thread()
+            raise e
 
         # Set/initialize some more options
         self.keep_pickle_files = keep_pickle_files
@@ -189,7 +198,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 for line in self.common_script_lines
                 if line.startswith("#SBATCH --account=")
             )
-            self._stop_and_join_wait_thread()
             raise RuntimeError(
                 "Invalid line in `FractalSlurmSSHExecutor."
                 "common_script_lines`: "
