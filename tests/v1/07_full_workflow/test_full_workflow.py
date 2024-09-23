@@ -24,7 +24,7 @@ from devtools import debug
 
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
-
+from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "/api/v1"
 
@@ -62,7 +62,6 @@ async def test_full_workflow(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        from tests.fixtures_slurm import SLURM_USER
 
         user_settings_dict["cache_dir"] = user_cache_dir
         user_settings_dict["slurm_user"] = SLURM_USER
@@ -276,6 +275,7 @@ async def test_failing_workflow_UnknownError(
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
@@ -374,6 +374,7 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
@@ -523,7 +524,6 @@ async def test_failing_workflow_JobExecutionError_slurm(
     resource_factory,
     tmp_path,
 ):
-    from tests.fixtures_slurm import SLURM_USER
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm",
@@ -921,6 +921,7 @@ async def test_non_executable_task_command(
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
