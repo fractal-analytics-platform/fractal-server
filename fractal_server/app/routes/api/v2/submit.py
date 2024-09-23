@@ -221,7 +221,7 @@ async def apply_workflow(
         )
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
-            Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)  # FIXME ?
+            Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
             / f"{WORKFLOW_DIR_LOCAL.name}"
         )
 
