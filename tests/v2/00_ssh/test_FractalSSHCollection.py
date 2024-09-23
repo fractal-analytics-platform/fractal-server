@@ -1,6 +1,7 @@
 import pytest
 
 from fractal_server.ssh._fabric import FractalSSHList
+from fractal_server.ssh._fabric import FractalSSHListTimeoutError
 
 
 def test_unit_FractalSSHList():
@@ -96,3 +97,19 @@ def test_run_command_through_FractalSSHList(
 
     # Check that `close_all` works both for valid and invalid connections
     fractal_ssh_list.close_all()
+
+
+def test_lock_FractalSSHList():
+
+    # Create empty collection
+    collection = FractalSSHList(timeout=0.1)
+    assert not collection._lock.locked()
+
+    # When lock is taken, observe timeout error
+    collection._lock.acquire()
+    with pytest.raises(FractalSSHListTimeoutError):
+        collection.get(host="host", user="user", key_path="/key_path")
+
+    # After lock is released, the same operation goes through
+    collection._lock.release()
+    collection.get(host="host", user="user", key_path="/key_path")
