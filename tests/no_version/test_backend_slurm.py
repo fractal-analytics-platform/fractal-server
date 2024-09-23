@@ -278,21 +278,23 @@ def test_missing_slurm_user(tmp_path, tmp777_path):
 
 def test_slurm_account_in_common_script_lines(tmp_path, tmp777_path):
     # No error
-    FractalSlurmExecutor(
+    with FractalSlurmExecutor(
         slurm_user="slurm_user",
         workflow_dir_local=tmp_path,
         workflow_dir_remote=tmp777_path,
         common_script_lines=["#SBATCH --partition=something"],
-    )
+    ):
+        pass
 
     # Error
     with pytest.raises(RuntimeError) as e:
-        FractalSlurmExecutor(
+        with FractalSlurmExecutor(
             slurm_user="slurm_user",
             workflow_dir_local=tmp_path,
             workflow_dir_remote=tmp777_path,
             common_script_lines=["#SBATCH --account=something"],
-        )
+        ):
+            pass
     debug(str(e.value))
     assert "SLURM account" in str(e.value)
 

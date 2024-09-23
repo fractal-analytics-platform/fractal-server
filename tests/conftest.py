@@ -1,4 +1,7 @@
+import logging
 import sys
+import threading
+import time
 from os import environ
 from pathlib import Path
 
@@ -66,3 +69,53 @@ from .fixtures_tasks_v2 import *  # noqa F403
 from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
 from .fixtures_commands import *  # noqa F403
+
+
+def _get_threads():
+    threads = [t for t in threading.enumerate() if not t._is_stopped]
+    return threads, len(threads)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def check_threads(request):
+    """
+    Check that the number of active threads does not increase when running a
+    test. When hitting a bad conditiona, the check is repeated several times
+    (with a grace-time interval at each iteration) before raising an error.
+    This is because it may take some time before some thread is actually
+    closed; the maximum test delay is around 2 seconds (plus small overheads).
+    """
+    test_name = request.node.name
+    LOG_PREFIX = f"[check_threads({test_name})]"
+    CHECK_THREADS_MAX_ITERATIONS = 10
+    CHECK_THREADS_GRACE_TIME = 0.2
+
+    _, num_initial_threads = _get_threads()
+
+    yield
+
+    final_threads, num_final_threads = _get_threads()
+
+    if num_final_threads == num_initial_threads:
+        logging.debug(f"{LOG_PREFIX} All good.")
+    else:
+        logging.warning(
+            f"{LOG_PREFIX} " f"{num_final_threads=} != {num_initial_threads=}"
+        )
+        logging.warning(f"{LOG_PREFIX} {final_threads=}")
+        logging.warning(f"{LOG_PREFIX} Start loop of redundant checks")
+        for iteration in range(CHECK_THREADS_MAX_ITERATIONS):
+            time.sleep(CHECK_THREADS_GRACE_TIME)
+            current_threads, num_current_threads = _get_threads()
+            logging.warning(f"{LOG_PREFIX} {current_threads=}")
+            if num_current_threads == num_initial_threads:
+                logging.warning(
+                    f"{LOG_PREFIX} At {iteration=}, {num_current_threads=}. "
+                    "Break."
+                )
+                break
+        if num_current_threads != num_initial_threads:
+            raise RuntimeError(
+                f"{LOG_PREFIX} "
+                f"After {CHECK_THREADS_MAX_ITERATIONS=}, {current_threads=}"
+            )

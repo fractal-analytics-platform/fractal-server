@@ -140,7 +140,19 @@ class FractalSSH(object):
                 )
 
     def close(self) -> None:
-        return self._connection.close()
+        """
+        Aggressively close `self._connection`.
+
+        When `Connection.is_connected` is `False`, `Connection.close()` does
+        not call `Connection.client.close()`. Thus we do this explicitly here,
+        because we observed cases where `is_connected=False` but the underlying
+        `Transport` object was not closed.
+        """
+
+        self._connection.close()
+
+        if self._connection.client is not None:
+            self._connection.client.close()
 
     def run_command(
         self,
