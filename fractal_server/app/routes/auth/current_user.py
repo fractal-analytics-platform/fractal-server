@@ -54,8 +54,8 @@ async def patch_current_user(
     # NOTE: here it would be relevant to catch an `InvalidPasswordException`
     # (from `fastapi_users.exceptions`), if we were to allow users change
     # their own password
-
-    user = await user_manager.update(update, current_user, safe=True)
+    user_db = await db.get(UserOAuth, current_user.id)
+    user = await user_manager.update(update, user_db, safe=True)
     validated_user = schemas.model_validate(UserOAuth, user)
 
     patched_user = await db.get(

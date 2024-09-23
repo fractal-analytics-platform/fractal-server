@@ -4,7 +4,6 @@ from pydantic import ValidationError
 
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user import UserUpdate
-from fractal_server.app.schemas.user import UserUpdateStrict
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
@@ -102,27 +101,6 @@ def test_user_create():
     assert u.username
     with pytest.raises(ValidationError) as e:
         UserUpdate(cache_dir=None)
-
-
-def test_user_update_strict():
-    with pytest.raises(ValidationError):
-        UserUpdateStrict(slurm_accounts=[42, "Foo"])
-    with pytest.raises(ValidationError):
-        UserUpdateStrict(slurm_accounts=["Foo", True])
-    with pytest.raises(ValidationError):
-        UserUpdateStrict(slurm_accounts="NOT A LIST")
-    with pytest.raises(ValidationError):
-        UserUpdateStrict(slurm_accounts=[{"NOT": "VALID"}])
-    with pytest.raises(ValidationError):
-        UserUpdateStrict(slurm_accounts=["a", "b", "a"])
-    UserUpdateStrict(slurm_accounts=None)
-    UserUpdateStrict(slurm_accounts=["a", "b", "c"])
-
-    UserUpdateStrict(cache_dir="/path")
-    with pytest.raises(
-        ValidationError, match="must not contain any of this characters"
-    ):
-        UserUpdateStrict(cache_dir="/path*;")
 
 
 def test_user_group_create():

@@ -3,6 +3,7 @@ from devtools import debug
 
 from fractal_server.app.models.security import OAuthAccount
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.security import UserSettings
 
 PREFIX = "/auth"
 
@@ -36,9 +37,7 @@ async def test_register_user(registered_client, registered_superuser_client):
     """
 
     EMAIL = "asd@asd.asd"
-    payload_register = dict(
-        email=EMAIL, password="12345", slurm_accounts=["A", "B"]
-    )
+    payload_register = dict(email=EMAIL, password="12345")
 
     # Non-superuser user: FORBIDDEN
     res = await registered_client.post(
@@ -53,8 +52,12 @@ async def test_register_user(registered_client, registered_superuser_client):
     )
     assert res.status_code == 201
     assert res.json()["email"] == EMAIL
-    assert res.json()["slurm_accounts"] == payload_register["slurm_accounts"]
     assert res.json()["oauth_accounts"] == []
+
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/{res.json()['id']}/settings/"
+    )
+    assert res.status_code == 200
 
 
 async def test_list_users(registered_client, registered_superuser_client):
@@ -106,153 +109,21 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.json()["oauth_accounts"] == []
 
 
-async def test_patch_current_user_cache_dir(registered_client):
-    """
-    Test several scenarios for updating `slurm_accounts` and `cache_dir`
-    for the current user.
-    """
-    res = await registered_client.get(
-        f"{PREFIX}/current-user/?group_names=True"
+async def test_patch_current_user(registered_client, client):
+    res1 = await registered_client.get(
+        f"{PREFIX}/current-user/?group_names=true"
     )
-    pre_patch_user = res.json()
+    res2 = await registered_client.patch(f"{PREFIX}/current-user/", json={})
+    assert res2.status_code == 200
 
-    # Successful API call with empty payload
-    res = await registered_client.patch(f"{PREFIX}/current-user/", json={})
-    assert res.status_code == 200
-    assert res.json() == pre_patch_user
-
-    # Successful update
-    assert pre_patch_user["cache_dir"] is None
-    NEW_SLURM_ACCOUNTS = ["foo", "bar"]
-    assert pre_patch_user["slurm_accounts"] != NEW_SLURM_ACCOUNTS
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
-        json={"cache_dir": "/tmp", "slurm_accounts": NEW_SLURM_ACCOUNTS},
-    )
-    assert res.status_code == 200
-    assert res.json()["cache_dir"] == "/tmp"
-    assert res.json()["slurm_accounts"] == NEW_SLURM_ACCOUNTS
-
-    # slurm_accounts must be a list of StrictStr without repetitions
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
-        json={"slurm_accounts": ["a", "b", "c"]},
-    )
-    assert res.status_code == 200
-    assert res.json()["slurm_accounts"] == ["a", "b", "c"]
-
-    # Failed update due to empty string
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": ""}
-    )
-    assert res.status_code == 422
-
-    # Failed update due to null value
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": None}
-    )
-    assert res.status_code == 422
-
-    # Failed update due to non-absolute path
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
-    )
-    assert res.status_code == 422
-
-
-async def test_patch_current_user_no_extra(registered_client):
-    """
-    Test that the PATCH-current-user endpoint fails when extra attributes are
-    provided.
-    """
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp", "foo": "bar"}
-    )
-    assert res.status_code == 422
-
-
-async def test_patch_current_user_password_fails(registered_client, client):
-    """
-    This test exists for the same reason that test_patch_current_user_password
-    is skipped.
-    """
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "something"}
-    )
-    assert res.status_code == 422
-
-
-@pytest.mark.skip(reason="Users cannot edit their own password for the moment")
-async def test_patch_current_user_password(registered_client, client):
-    """
-    Test several scenarios for updating `password` for the current user.
-    """
-    res = await registered_client.get(f"{PREFIX}/current-user/")
-    user_email = res.json()["email"]
-
-    # Fail due to null password
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": None}
-    )
-    assert res.status_code == 422
-
-    # Fail due to empty-string password
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": ""}
-    )
-    assert res.status_code == 422
-
-    # Fail due to invalid password (too short)
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "abc"}
-    )
-    assert res.status_code == 400
-    assert "too short" in res.json()["detail"]["reason"]
-
-    # Fail due to invalid password (too long)
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "x" * 101}
-    )
-    assert res.status_code == 400
-    assert "too long" in res.json()["detail"]["reason"]
-
-    # Successful password update
-    NEW_PASSWORD = "my-new-password"
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": NEW_PASSWORD}
-    )
-    assert res.status_code == 200
-
-    # Check that old password is not valid any more
-    res = await client.post(
-        "auth/token/login/",
-        data=dict(
-            username=user_email,
-            password="12345",  # default password of registered_client
-        ),
-    )
-    assert res.status_code == 400
-
-    # Check that new password is valid
-    res = await client.post(
-        "auth/token/login/",
-        data=dict(
-            username=user_email,
-            password=NEW_PASSWORD,
-        ),
-    )
-    assert res.status_code == 200
+    assert res1.json() == res2.json()
 
 
 async def test_edit_users_as_superuser(registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(
-            email="test@fractal.xy",
-            password="12345",
-            slurm_accounts=["foo", "bar"],
-        ),
+        json=dict(email="test@fractal.xy", password="12345"),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -262,24 +133,20 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     # so that the register-user POST endpoint will also take care of producing
     # the appropriate `user_ids` attribute.
     pre_patch_user["group_ids"] = []
-    debug(pre_patch_user)
 
     update = dict(
         email="patch@fractal.xy",
         is_active=False,
         is_superuser=True,
         is_verified=True,
-        slurm_user="slurm_patch",
-        cache_dir="/patch",
         username="user_patch",
-        slurm_accounts=["FOO", "BAR", "FOO"],
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
     )
-    # Fail because of repeated "FOO" in update.slurm_accounts
-    assert res.status_code == 422
+    assert res.status_code == 200
+    user = res.json()
 
     # Fail because invalid password
     res = await registered_superuser_client.patch(
@@ -289,17 +156,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     assert res.status_code == 400
     debug(res.json())
     assert "The password is too short" in str(res.json()["detail"])
-
-    # succeed without the repetition
-    # remove one of the two "FOO" in update.slurm_accounts, so that
-    update["slurm_accounts"] = ["FOO", "BAR"]
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{pre_patch_user['id']}/",
-        json=update,
-    )
-    assert res.status_code == 200
-    user = res.json()
-    debug(user)
 
     # assert that the attributes we wanted to update have actually changed
     for key, value in user.items():
@@ -342,21 +198,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         )
         assert res.status_code == 422
 
-    # SLURM_USER
-    # String attribute 'slurm_user' cannot be empty
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"slurm_user": "      "},
-    )
-    assert res.status_code == 422
-    # String attribute 'slurm_user' cannot be None
-    assert res.status_code == 422
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"slurm_user": None},
-    )
-    assert res.status_code == 422
-
     # USERNAME
     # String attribute 'username' cannot be empty
     res = await registered_superuser_client.patch(
@@ -368,13 +209,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
         json={"username": None},
-    )
-    assert res.status_code == 422
-
-    # CACHE_DIR
-    # String attribute 'cache_dir' cannot be None
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/", json={"cache_dir": None}
     )
     assert res.status_code == 422
 
@@ -502,11 +336,7 @@ async def test_edit_user_and_fail(registered_superuser_client):
     # Create user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(
-            email="test@fractal.xy",
-            password="12345",
-            slurm_accounts=["foo", "bar"],
-        ),
+        json=dict(email="test@fractal.xy", password="12345"),
     )
     assert res.status_code == 201
     user_id = res.json()["id"]
@@ -514,10 +344,7 @@ async def test_edit_user_and_fail(registered_superuser_client):
     # Patch both user attributes and user/group relationship, and fail
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
-        json=dict(
-            slurm_user="new-slurm-user",
-            new_group_ids=[],
-        ),
+        json=dict(new_group_ids=[], username="pippo"),
     )
     assert res.status_code == 422
     expected_detail = (
@@ -527,8 +354,7 @@ async def test_edit_user_and_fail(registered_superuser_client):
 
     # Make a dummy patch to user, and succeed
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={},
+        f"{PREFIX}/users/{user_id}/", json={}
     )
     assert res.status_code == 200
 
@@ -537,40 +363,46 @@ async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
 
-    u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
-    u2 = UserOAuth(email="user2@email.com", hashed_password="abc2")
+    u1 = UserOAuth(
+        email="user1@email.com",
+        hashed_password="abc1",
+        settings=UserSettings(),
+        oauth_accounts=[
+            OAuthAccount(
+                oauth_name="github",
+                account_email="user1@github.com",
+                account_id="111",
+                access_token="aaa",
+            ),
+            OAuthAccount(
+                oauth_name="google",
+                account_email="user1@gmail.com",
+                account_id="222",
+                access_token="bbb",
+            ),
+        ],
+    )
     db.add(u1)
+
+    u2 = UserOAuth(
+        email="user2@email.com",
+        hashed_password="abc2",
+        settings=UserSettings(),
+        oauth_accounts=[
+            OAuthAccount(
+                oauth_name="oidc",
+                account_email="user2@uzh.com",
+                account_id="333",
+                access_token="ccc",
+            ),
+        ],
+    )
     db.add(u2)
+
     await db.commit()
     await db.refresh(u1)
     await db.refresh(u2)
-
-    oauth1 = OAuthAccount(
-        user_id=u1.id,
-        oauth_name="github",
-        account_email="user1@github.com",
-        account_id="111",
-        access_token="aaa",
-    )
-    oauth2 = OAuthAccount(
-        user_id=u1.id,
-        oauth_name="google",
-        account_email="user1@gmail.com",
-        account_id="222",
-        access_token="bbb",
-    )
-    oauth3 = OAuthAccount(
-        user_id=u2.id,
-        oauth_name="oidc",
-        account_email="user2@uzh.com",
-        account_id="333",
-        access_token="ccc",
-    )
-    db.add(oauth1)
-    db.add(oauth2)
-    db.add(oauth3)
-
-    await db.commit()
+    debug(u1, u2)
 
     # test GET /auth/users/
     res = await registered_superuser_client.get(f"{PREFIX}/users/")
@@ -609,9 +441,9 @@ async def test_oauth_accounts_list(
 
     # test PATCH /auth/current-user/
     async with MockCurrentUser(user_kwargs=dict(id=u2.id)):
-        res = await client.patch(
-            f"{PREFIX}/current-user/", json=dict(cache_dir="/foo/bar")
-        )
+        db.expire_all()
+        res = await client.patch(f"{PREFIX}/current-user/", json=dict())
+        debug(res.json())
         assert len(res.json()["oauth_accounts"]) == 1
 
 
