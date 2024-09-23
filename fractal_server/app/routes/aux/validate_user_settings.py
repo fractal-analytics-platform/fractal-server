@@ -30,14 +30,14 @@ async def validate_user_settings(
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
     if backend == "slurm_ssh":
-        UserSettingsModel = SlurmSshUserSettings
+        UserSettingsValidationModel = SlurmSshUserSettings
     elif backend == "slurm":
-        UserSettingsModel = SlurmSudoUserSettings
+        UserSettingsValidationModel = SlurmSudoUserSettings
     else:
-        UserSettingsModel = BaseModel
+        UserSettingsValidationModel = BaseModel
 
     try:
-        UserSettingsModel(**user_settings.model_dump())
+        UserSettingsValidationModel(**user_settings.model_dump())
     except ValidationError as e:
         error_msg = (
             "User settings are not valid for "
