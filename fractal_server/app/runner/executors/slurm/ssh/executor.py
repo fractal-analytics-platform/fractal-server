@@ -172,6 +172,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         try:
             self.handshake()
         except Exception as e:
+            logger.warning(
+                "Stop/join waiting thread and then "
+                f"re-raise original error {str(e)}"
+            )
             self._stop_and_join_wait_thread()
             raise e
 
@@ -181,6 +185,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         try:
             self._validate_common_script_lines()
         except Exception as e:
+            logger.warning(
+                "Stop/join waiting thread and then "
+                f"re-raise original error {str(e)}"
+            )
             self._stop_and_join_wait_thread()
             raise e
 
