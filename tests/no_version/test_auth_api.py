@@ -207,10 +207,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(
-            email="test@fractal.xy",
-            password="12345",
-        ),
+        json=dict(email="test@fractal.xy", password="12345"),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -532,9 +529,7 @@ async def test_oauth_accounts_list(
 
     # test PATCH /auth/current-user/
     async with MockCurrentUser(user_kwargs=dict(id=u2.id)):
-        res = await client.patch(
-            f"{PREFIX}/current-user/", json=dict(cache_dir="/foo/bar")
-        )
+        res = await client.patch(f"{PREFIX}/current-user/", json=dict())
         assert len(res.json()["oauth_accounts"]) == 1
 
 
