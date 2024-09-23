@@ -8,6 +8,7 @@
 * Internal
     * Introduce `FractalSSHList`, in view of support for multiple SSH/Slurm service users (\#1790).
     * Make `FractalSSH.close()` more aggressively close `Transport` attribute (\#1790).
+    * Set `look_for_keys=False` for paramiko/fabric connection (\#1790).
 * Testing:
     * Add fixture to always test that threads do not accumulate during tests (\#1790).
 
