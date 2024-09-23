@@ -1,6 +1,5 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-
 # 2.5.2
 
 * App:
@@ -8,6 +7,9 @@
     * Move creation of SSH connections from app startup to endpoints (\#1790).
 * Internal
     * Introduce `FractalSSHList`, in view of support for multiple SSH/Slurm service users (\#1790).
+    * Make `FractalSSH.close()` more aggressively close `Transport` attribute (\#1790).
+* Testing:
+    * Add fixture to always test that threads do not accumulate during tests (\#1790).
 
 # 2.5.1
 
