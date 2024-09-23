@@ -420,7 +420,10 @@ class FractalSSHList(object):
                 host=host,
                 user=user,
                 forward_agent=False,
-                connect_kwargs={"key_filename": key_path},
+                connect_kwargs={
+                    "key_filename": key_path,
+                    "look_for_keys": False,
+                },
             )
             with self.acquire_lock_with_timeout():
                 self._data[key] = FractalSSH(connection=connection)
