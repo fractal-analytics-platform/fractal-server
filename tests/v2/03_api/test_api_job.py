@@ -405,7 +405,8 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={"slurm_accounts": SLURM_LIST, "is_verified": True}
+        user_kwargs={"is_verified": True},
+        user_settings_dict={"slurm_accounts": SLURM_LIST},
     ) as user2:
         project = await project_factory_v2(user2)
         dataset = await dataset_factory_v2(
@@ -423,7 +424,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has a non empty SLURM accounts list
-        assert user2.slurm_accounts == SLURM_LIST
+        assert user2.settings.slurm_accounts == SLURM_LIST
 
         # If no slurm_account is provided, we use the first one of the list
 
