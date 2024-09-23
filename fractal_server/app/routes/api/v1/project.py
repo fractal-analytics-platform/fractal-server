@@ -34,6 +34,7 @@ from ....schemas.v1 import JobStatusTypeV1
 from ....schemas.v1 import ProjectCreateV1
 from ....schemas.v1 import ProjectReadV1
 from ....schemas.v1 import ProjectUpdateV1
+from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
@@ -321,24 +322,24 @@ async def apply_workflow(
             ),
         )
 
+    # Validate user settings (which will eventually replace the block below,
+    # where check required user attributes)
+    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+    await validate_user_settings(
+        user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
+    )
+
     # If backend is SLURM, check that the user has required attributes
-    backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend == "slurm":
+    if FRACTAL_RUNNER_BACKEND == "slurm":
         if not user.slurm_user:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"FRACTAL_RUNNER_BACKEND={backend}, "
-                    f"but {user.slurm_user=}."
-                ),
+                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.slurm_user=}.",
             )
         if not user.cache_dir:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"FRACTAL_RUNNER_BACKEND={backend}, "
-                    f"but {user.cache_dir=}."
-                ),
+                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.cache_dir=}.",
             )
 
     # Check that datasets have the right number of resources

@@ -114,7 +114,7 @@ async def apply_workflow(
     # where check required user attributes)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
     )
 
     # If backend is SLURM, check that the user has required attributes
