@@ -16,9 +16,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 
 from ..logger import get_logger
 from ..logger import set_logger
-from fractal_server.config import get_settings
 from fractal_server.string_tools import validate_cmd
-from fractal_server.syringe import Inject
 
 
 class FractalSSHTimeoutError(RuntimeError):
@@ -347,42 +345,6 @@ class FractalSSH(object):
         with self.acquire_timeout(timeout=actual_lock_timeout):
             with self.sftp().open(filename=path, mode="w") as f:
                 f.write(content)
-
-
-def get_ssh_connection(
-    *,
-    host: Optional[str] = None,
-    user: Optional[str] = None,
-    key_filename: Optional[str] = None,
-) -> Connection:
-    """
-    Create a `fabric.Connection` object based on fractal-server settings
-    or explicit arguments.
-
-    Args:
-        host:
-        user:
-        key_filename:
-
-    Returns:
-        Fabric connection object
-    """
-    # FIXME: Remove this block
-    settings = Inject(get_settings)
-    if host is None:
-        host = settings.FRACTAL_SLURM_SSH_HOST
-    if user is None:
-        user = settings.FRACTAL_SLURM_SSH_USER
-    if key_filename is None:
-        key_filename = settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
-
-    connection = Connection(
-        host=host,
-        user=user,
-        forward_agent=False,
-        connect_kwargs={"key_filename": key_filename},
-    )
-    return connection
 
 
 class FractalSSHList(object):
