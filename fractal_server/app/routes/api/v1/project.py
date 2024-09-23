@@ -322,25 +322,11 @@ async def apply_workflow(
             ),
         )
 
-    # Validate user settings (which will eventually replace the block below,
-    # where check required user attributes)
+    # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    await validate_user_settings(
+    user_settings = await validate_user_settings(
         user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
     )
-
-    # If backend is SLURM, check that the user has required attributes
-    if FRACTAL_RUNNER_BACKEND == "slurm":
-        if not user.slurm_user:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.slurm_user=}.",
-            )
-        if not user.cache_dir:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.cache_dir=}.",
-            )
 
     # Check that datasets have the right number of resources
     if not input_dataset.resource_list:
@@ -387,7 +373,7 @@ async def apply_workflow(
         )
 
     if apply_workflow.slurm_account is not None:
-        if apply_workflow.slurm_account not in user.slurm_accounts:
+        if apply_workflow.slurm_account not in user_settings.slurm_accounts:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -396,8 +382,8 @@ async def apply_workflow(
                 ),
             )
     else:
-        if len(user.slurm_accounts) > 0:
-            apply_workflow.slurm_account = user.slurm_accounts[0]
+        if len(user_settings.slurm_accounts) > 0:
+            apply_workflow.slurm_account = user_settings.slurm_accounts[0]
 
     # Add new ApplyWorkflow object to DB
     job = ApplyWorkflow(
@@ -481,8 +467,8 @@ async def apply_workflow(
         output_dataset_id=output_dataset.id,
         job_id=job.id,
         worker_init=apply_workflow.worker_init,
-        slurm_user=user.slurm_user,
-        user_cache_dir=user.cache_dir,
+        slurm_user=user_settings.slurm_user,
+        user_cache_dir=user_settings.cache_dir,
     )
     request.app.state.jobsV1.append(job.id)
     logger.info(

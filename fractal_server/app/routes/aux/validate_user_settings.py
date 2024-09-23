@@ -13,7 +13,7 @@ from fractal_server.user_settings import SlurmSudoUserSettings
 
 async def validate_user_settings(
     *, user: UserOAuth, backend: str, db: AsyncSession
-):
+) -> UserSettings:
     """
     FIXME docstring
     """
@@ -47,3 +47,5 @@ async def validate_user_settings(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=error_msg,
         )
+
+    return user_settings
