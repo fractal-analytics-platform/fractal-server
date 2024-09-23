@@ -90,17 +90,17 @@ def check_threads(request):
     CHECK_THREADS_MAX_ITERATIONS = 10
     CHECK_THREADS_GRACE_TIME = 0.2
 
-    _, num_initial_threads = _get_threads()
+    initial_threads, num_initial_threads = _get_threads()
 
     yield
 
     final_threads, num_final_threads = _get_threads()
 
-    if num_final_threads == num_initial_threads:
+    if num_final_threads <= num_initial_threads:
         logging.debug(f"{LOG_PREFIX} All good.")
     else:
         logging.warning(
-            f"{LOG_PREFIX} " f"{num_final_threads=} != {num_initial_threads=}"
+            f"{LOG_PREFIX} {num_final_threads=} > {num_initial_threads=}"
         )
         logging.warning(f"{LOG_PREFIX} {final_threads=}")
         logging.warning(f"{LOG_PREFIX} Start loop of redundant checks")
@@ -108,14 +108,14 @@ def check_threads(request):
             time.sleep(CHECK_THREADS_GRACE_TIME)
             current_threads, num_current_threads = _get_threads()
             logging.warning(f"{LOG_PREFIX} {current_threads=}")
-            if num_current_threads == num_initial_threads:
+            if num_current_threads <= num_initial_threads:
                 logging.warning(
                     f"{LOG_PREFIX} At {iteration=}, {num_current_threads=}. "
-                    "Break."
+                    "Exit."
                 )
-                break
-        if num_current_threads != num_initial_threads:
-            raise RuntimeError(
-                f"{LOG_PREFIX} "
-                f"After {CHECK_THREADS_MAX_ITERATIONS=}, {current_threads=}"
-            )
+                return
+        raise RuntimeError(
+            f"{LOG_PREFIX} "
+            f"After {CHECK_THREADS_MAX_ITERATIONS=}, "
+            f"{current_threads=}, {initial_threads=}."
+        )
