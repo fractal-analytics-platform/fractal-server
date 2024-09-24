@@ -22,6 +22,7 @@ from ....models.v1 import Task
 from ....models.v1 import Workflow
 from ....models.v1 import WorkflowTask
 from ....schemas.v1 import JobStatusTypeV1
+from ...aux.validate_user_settings import verify_user_has_settings
 from fractal_server.app.models import UserOAuth
 
 
@@ -367,6 +368,7 @@ async def _get_task_check_owner(
                 ),
             )
         else:
+            verify_user_has_settings(user)
             owner = user.username or user.settings.slurm_user
             if owner != task.owner:
                 raise HTTPException(

@@ -17,6 +17,7 @@ from ....models.v2 import TaskV2
 from ....schemas.v1 import TaskCreateV1
 from ....schemas.v1 import TaskReadV1
 from ....schemas.v1 import TaskUpdateV1
+from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions import _get_task_check_owner
 from ._aux_functions import _raise_if_v1_is_read_only
 from fractal_server.app.models import UserOAuth
@@ -126,7 +127,7 @@ async def create_task(
     # Set task.owner attribute
     if user.username:
         owner = user.username
-    elif user.settings.slurm_user:
+    elif verify_user_has_settings(user) is None and user.settings.slurm_user:
         owner = user.settings.slurm_user
     else:
         raise HTTPException(

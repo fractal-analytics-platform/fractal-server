@@ -18,6 +18,7 @@ from ....models.v2 import TaskV2
 from ....schemas.v2 import TaskCollectCustomV2
 from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import TaskReadV2
+from ...aux.validate_user_settings import verify_user_has_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.string_tools import validate_cmd
@@ -112,6 +113,7 @@ async def collect_task_custom(
         package_root = Path(task_collect.package_root)
 
     # Set task.owner attribute
+    verify_user_has_settings(user)
     owner = user.username or user.settings.slurm_user
     if owner is None:
         raise HTTPException(
