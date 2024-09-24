@@ -274,7 +274,8 @@ async def MockCurrentUser(app, db):
                 self.user = UserOAuth(**user_attributes)
 
                 # Create new user_settings object and associate it to user
-                user_settings_dict = self.user_settings_dict or {}
+                user_settings_dict = dict(slurm_user="test01")
+                user_settings_dict.update(self.user_settings_dict or {})
                 user_settings = UserSettings(**user_settings_dict)
                 self.user.settings = user_settings
 
