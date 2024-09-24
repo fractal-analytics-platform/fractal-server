@@ -110,7 +110,7 @@ class UserOAuth(SQLModel, table=True):
         foreign_key="user_settings.id", default=None
     )
     settings: Optional[UserSettings] = Relationship(
-        sa_relationship_kwargs=dict(lazy="selectin")
+        sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")
     )
 
     class Config:
