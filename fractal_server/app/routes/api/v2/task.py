@@ -151,16 +151,18 @@ async def create_task(
     # Set task.owner attribute
     if user.username:
         owner = user.username
-    elif verify_user_has_settings(user) and user.settings.slurm_user:
-        owner = user.settings.slurm_user
     else:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Cannot add a new task because current user does not "
-                "have `username` or `slurm_user` attributes."
-            ),
-        )
+        verify_user_has_settings(user)
+        if user.settings.slurm_user:
+            owner = user.settings.slurm_user
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot add a new task because current user does not "
+                    "have `username` or `slurm_user` attributes."
+                ),
+            )
 
     # Prepend owner to task.source
     task.source = f"{owner}:{task.source}"
