@@ -19,33 +19,28 @@ __all__ = (
 
 class UserSettingsRead(BaseModel):
     id: int
-    # SSH-SLURM
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
     ssh_private_key_path: Optional[str] = None
     ssh_tasks_dir: Optional[str] = None
     ssh_jobs_dir: Optional[str] = None
-    # SUDO-SLURM
     slurm_user: Optional[str] = None
     slurm_accounts: list[str]
     cache_dir: Optional[str] = None
 
 
 class UserSettingsReadStrict(BaseModel):
-    # SUDO-SLURM
     slurm_user: Optional[str] = None
     slurm_accounts: list[str]
     cache_dir: Optional[str] = None
 
 
 class UserSettingsUpdate(BaseModel):
-    # SSH-SLURM
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
     ssh_private_key_path: Optional[str] = None
     ssh_tasks_dir: Optional[str] = None
     ssh_jobs_dir: Optional[str] = None
-    # SUDO-SLURM
     slurm_user: Optional[str] = None
     slurm_accounts: Optional[list[StrictStr]] = None
     cache_dir: Optional[str] = None
@@ -79,7 +74,6 @@ class UserSettingsUpdate(BaseModel):
 
 
 class UserSettingsUpdateStrict(BaseModel):
-    # SUDO-SLURM
     slurm_accounts: Optional[list[StrictStr]] = None
     cache_dir: Optional[str] = None
 
