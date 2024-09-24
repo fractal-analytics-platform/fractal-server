@@ -105,7 +105,6 @@ class UserOAuth(SQLModel, table=True):
         sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
     )
 
-    # FIXME: Implement cascade
     user_settings_id: Optional[int] = Field(
         foreign_key="user_settings.id", default=None
     )
