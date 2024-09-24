@@ -268,14 +268,14 @@ async def MockCurrentUser(app, db):
                 user_attributes = dict(
                     email=self.email,
                     hashed_password="fake_hashed_password",
-                    slurm_user="test01",
                 )
                 if self.user_kwargs is not None:
                     user_attributes.update(self.user_kwargs)
                 self.user = UserOAuth(**user_attributes)
 
                 # Create new user_settings object and associate it to user
-                user_settings_dict = self.user_settings_dict or {}
+                user_settings_dict = dict(slurm_user="test01")
+                user_settings_dict.update(self.user_settings_dict or {})
                 user_settings = UserSettings(**user_settings_dict)
                 self.user.settings = user_settings
 

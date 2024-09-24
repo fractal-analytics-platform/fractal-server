@@ -488,6 +488,25 @@ async def test_task_collection_custom(
         assert res.status_code == 422
         assert "doesn't exist or is not a directory" in res.json()["detail"]
 
+    # Test owner=user.username
+    USERNAME = "username"
+    async with MockCurrentUser(
+        user_kwargs=dict(username=USERNAME, is_verified=True)
+    ):
+
+        payload_name = TaskCollectCustomV2(
+            manifest=manifest,
+            python_interpreter=python_bin,
+            source="xyz",
+            package_name=package_name,
+        )
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_name.dict()
+        )
+        assert res.status_code == 201
+        for task in res.json():
+            assert task["owner"] == USERNAME
+
 
 async def test_task_collection_custom_fail_with_ssh(
     client,

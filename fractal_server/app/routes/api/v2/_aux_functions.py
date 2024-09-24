@@ -21,6 +21,7 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
+from ...aux.validate_user_settings import verify_user_has_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.images import Filters
 
@@ -362,7 +363,11 @@ async def _get_task_check_owner(
                 ),
             )
         else:
-            owner = user.username or user.slurm_user
+            if user.username:
+                owner = user.username
+            else:
+                verify_user_has_settings(user)
+                owner = user.settings.slurm_user
             if owner != task.owner:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
