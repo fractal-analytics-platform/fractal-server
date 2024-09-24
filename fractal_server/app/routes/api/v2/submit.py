@@ -221,8 +221,7 @@ async def apply_workflow(
         )
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
-            Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
-            / f"{WORKFLOW_DIR_LOCAL.name}"
+            Path(user_settings.ssh_jobs_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
         )
 
     # Update job folders in the db
@@ -234,20 +233,24 @@ async def apply_workflow(
     # User appropriate FractalSSH object
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         ssh_credentials = dict(
-            user=settings.FRACTAL_SLURM_SSH_USER,
-            host=settings.FRACTAL_SLURM_SSH_HOST,
-            key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
     else:
         fractal_ssh = None
 
+    # Expunge user settings from db, to use in background task
+    db.expunge(user_settings)
+
     background_tasks.add_task(
         submit_workflow,
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         job_id=job.id,
+        user_settings=user_settings,
         worker_init=job.worker_init,
         slurm_user=user_settings.slurm_user,
         user_cache_dir=user_settings.cache_dir,

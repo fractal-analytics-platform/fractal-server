@@ -1,3 +1,4 @@
+from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -29,6 +30,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=9999999,
+            user_settings=UserSettings(),
         )
 
         job = await job_factory_v2(
@@ -42,6 +44,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=9999999,
             dataset_id=9999999,
             job_id=job.id,
+            user_settings=UserSettings(),
         )
         await db.refresh(job)
         assert job.status == JobStatusTypeV2.FAILED
@@ -80,6 +83,7 @@ async def test_fail_submit_workflows_wrong_backend(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=job.id,
+            user_settings=UserSettings(),
         )
         await db.refresh(job)
         assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log
