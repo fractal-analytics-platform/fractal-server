@@ -384,10 +384,7 @@ async def test_patch_args_schema(MockCurrentUser, client):
     the PATCH endpoint.
     """
 
-    async with MockCurrentUser(
-        user_kwargs={"is_verified": True},
-        user_settings_dict={"slurm_user": "test01"},
-    ):
+    async with MockCurrentUser(user_kwargs={"is_verified": True}):
         task = TaskCreateV1(
             name="task_name",
             command="task_command",
