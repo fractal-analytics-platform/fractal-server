@@ -276,10 +276,7 @@ async def test_post_worfkflow_task(client, MockCurrentUser, project_factory):
         the Workflow.task_list is called
     THEN the new WorkflowTask is inserted in Workflow.task_list
     """
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         workflow = {"name": "My Workflow"}
         res = await client.post(
@@ -360,10 +357,7 @@ async def test_delete_workflow_task(
     THEN the selected WorkflowTask is properly removed
         from Workflow.task_list
     """
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         workflow = {"name": "My Workflow"}
         res = await client.post(
@@ -510,10 +504,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
     WHEN the endpoint to PATCH a WorkflowTask is called
     THEN the WorkflowTask is updated
     """
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         workflow = {"name": "WF"}
         res = await client.post(
@@ -678,10 +669,7 @@ async def test_patch_workflow_task_failures(
     WHEN the endpoint to PATCH a WorkflowTask is called with invalid arguments
     THEN the correct status code is returned
     """
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         # Prepare two workflows, with one task each
         project = await project_factory(user)
@@ -945,10 +933,7 @@ async def test_reorder_task_list(
 
     num_tasks = len(reordered_workflowtask_ids)
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         # Create project and empty workflow
         project = await project_factory(user)
@@ -1029,10 +1014,7 @@ async def test_reorder_task_list_fail(
     """
     num_tasks = 3
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory(user)
         payload = {"name": "WF"}
@@ -1134,10 +1116,7 @@ async def test_delete_workflow_with_job(
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory, client):
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict={"slurm_user": "test01"},
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         workflow = {"name": "My Workflow"}
         res = await client.post(
