@@ -113,8 +113,11 @@ async def collect_task_custom(
         package_root = Path(task_collect.package_root)
 
     # Set task.owner attribute
-    verify_user_has_settings(user)
-    owner = user.username or user.settings.slurm_user
+    if user.username:
+        owner = user.username
+    else:
+        verify_user_has_settings(user)
+        owner = user.settings.slurm_user
     if owner is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

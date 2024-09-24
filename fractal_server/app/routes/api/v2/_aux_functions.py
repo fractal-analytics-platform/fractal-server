@@ -363,8 +363,11 @@ async def _get_task_check_owner(
                 ),
             )
         else:
-            verify_user_has_settings(user)
-            owner = user.username or user.settings.slurm_user
+            if user.username:
+                owner = user.username
+            else:
+                verify_user_has_settings(user)
+                owner = user.settings.slurm_user
             if owner != task.owner:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
