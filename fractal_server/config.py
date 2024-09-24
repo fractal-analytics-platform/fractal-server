@@ -631,22 +631,6 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
                 )
-            if self.FRACTAL_SLURM_SSH_USER is None:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_SSH_USER when {info}"
-                )
-            if self.FRACTAL_SLURM_SSH_HOST is None:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_SSH_HOST when {info}"
-                )
-            if self.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH is None:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH when {info}"
-                )
-            if self.FRACTAL_SLURM_SSH_WORKING_BASE_DIR is None:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_SSH_WORKING_BASE_DIR when {info}"
-                )
 
             from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
