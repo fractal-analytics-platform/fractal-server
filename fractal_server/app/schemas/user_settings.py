@@ -63,9 +63,14 @@ class UserSettingsUpdate(BaseModel):
     _slurm_user = validator("slurm_user", allow_reuse=True)(
         valstr("slurm_user")
     )
-    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
-        val_unique_list("slurm_accounts")
-    )
+
+    @validator("slurm_accounts")
+    def slurm_accounts_validator(cls, value):
+        if value is None:
+            return value
+        for i, item in enumerate(value):
+            value[i] = valstr(f"slurm_accounts[{i}]")(item)
+        return val_unique_list("slurm_accounts")(value)
 
     @validator("cache_dir")
     def cache_dir_validator(cls, value):

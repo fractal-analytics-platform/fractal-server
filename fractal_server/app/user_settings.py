@@ -20,6 +20,7 @@ class SlurmSshUserSettings(BaseModel):
     ssh_private_key_path: str
     ssh_tasks_dir: str
     ssh_jobs_dir: str
+    slurm_accounts: list[str]
 
 
 class SlurmSudoUserSettings(BaseModel):

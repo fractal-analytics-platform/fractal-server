@@ -6,9 +6,9 @@ from pydantic import ValidationError
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.user_settings import SlurmSshUserSettings
+from fractal_server.app.user_settings import SlurmSudoUserSettings
 from fractal_server.logger import set_logger
-from fractal_server.user_settings import SlurmSshUserSettings
-from fractal_server.user_settings import SlurmSudoUserSettings
 
 logger = set_logger(__name__)
 
