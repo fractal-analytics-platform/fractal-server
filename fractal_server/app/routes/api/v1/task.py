@@ -122,12 +122,13 @@ async def create_task(
     """
     Create a new task
     """
+
     _raise_if_v1_is_read_only()
     # Set task.owner attribute
     if user.username:
         owner = user.username
-    elif user.slurm_user:
-        owner = user.slurm_user
+    elif user.settings.slurm_user:
+        owner = user.settings.slurm_user
     else:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
