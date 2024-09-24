@@ -56,12 +56,6 @@ set_db_parser.add_argument(
     default=False,
 )
 
-# fractalctl alembic-upgrade
-subparsers.add_parser(
-    "alembic-upgrade",
-    description="Initialise/upgrade database schemas",
-)
-
 # fractalctl update-db-data
 subparsers.add_parser(
     "update-db-data",
