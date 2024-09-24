@@ -397,7 +397,6 @@ async def test_patch_args_schema(MockCurrentUser, client):
         )
         payload = task.dict(exclude_unset=True)
         res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
         assert res.status_code == 201
 
         task_id = res.json()["id"]
