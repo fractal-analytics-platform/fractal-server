@@ -13,6 +13,23 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 
+def verify_user_has_settings(user: UserOAuth) -> None:
+    """
+    Check that the `user.user_settings_id` foreign-key is set.
+
+    NOTE: This check will become useless when we make the foreign-key column
+    required, but for the moment (as of v2.6.0) we have to keep it in place.
+
+    Arguments:
+        user: The user to be checked.
+    """
+    if user.user_settings_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Error: user '{user.email}' has no settings.",
+        )
+
+
 async def validate_user_settings(
     *, user: UserOAuth, backend: str, db: AsyncSession
 ) -> UserSettings:
@@ -28,14 +45,7 @@ async def validate_user_settings(
         `UserSetting` object associated to `user`, if valid.
     """
 
-    # Check that the foreign-key exists. NOTE: This check will become
-    # useless when we make the foreign-key column required, but for the
-    # moment (as of v2.6.0) we have to keep it in place.
-    if user.user_settings_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Error: user '{user.email}' has no settings.",
-        )
+    verify_user_has_settings(user)
 
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
