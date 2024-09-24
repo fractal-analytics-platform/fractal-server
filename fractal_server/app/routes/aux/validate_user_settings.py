@@ -17,10 +17,20 @@ async def validate_user_settings(
     *, user: UserOAuth, backend: str, db: AsyncSession
 ) -> UserSettings:
     """
-    FIXME docstring
+    Get a UserSettings object and validate it based on a given Fractal backend.
+
+    Arguments:
+        user: The user whose settings we should validate.
+        backend: The value of `FRACTAL_RUNNER_BACKEND`
+        db: An async DB session
+
+    Returns:
+        `UserSetting` object associated to `user`, if valid.
     """
-    # First: check that the foreign-key exists. TODO: remove this check,
-    # after this column is made required
+
+    # Check that the foreign-key exists. NOTE: This check will become
+    # useless when we make the foreign-key column required, but for the
+    # moment (as of v2.6.0) we have to keep it in place.
     if user.user_settings_id is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -34,6 +44,7 @@ async def validate_user_settings(
     elif backend == "slurm":
         UserSettingsValidationModel = SlurmSudoUserSettings
     else:
+        # For other backends, we don't validate anything
         UserSettingsValidationModel = BaseModel
 
     try:
