@@ -11,6 +11,7 @@ from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateStrict
+from ..aux.validate_user_settings import verify_user_has_settings
 from ._aux_auth import _get_single_user_with_group_names
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
@@ -74,6 +75,8 @@ async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
+
+    verify_user_has_settings(current_user)
     user_settings = await db.get(UserSettings, current_user.user_settings_id)
     return user_settings
 
@@ -86,6 +89,8 @@ async def patch_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
+
+    verify_user_has_settings(current_user)
     current_user_settings = await db.get(
         UserSettings, current_user.user_settings_id
     )

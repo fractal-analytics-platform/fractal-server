@@ -19,6 +19,7 @@ from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateWithNewGroupIds
+from ..aux.validate_user_settings import verify_user_has_settings
 from ._aux_auth import _get_single_user_with_group_ids
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -211,6 +212,7 @@ async def get_user_settings(
 ) -> UserSettingsRead:
 
     user = await _user_or_404(user_id=user_id, db=db)
+    verify_user_has_settings(user)
     user_settings = await db.get(UserSettings, user.user_settings_id)
     return user_settings
 
@@ -225,6 +227,7 @@ async def patch_user_settings(
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsRead:
     user = await _user_or_404(user_id=user_id, db=db)
+    verify_user_has_settings(user)
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
     for k, v in settings_update.dict(exclude_unset=True).items():
