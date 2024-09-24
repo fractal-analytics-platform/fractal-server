@@ -60,7 +60,7 @@ async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
 async def test_post_task(client, MockCurrentUser):
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
-        TASK_OWNER = user.username or user.slurm_user
+        TASK_OWNER = user.username or user.settings.slurm_user
         TASK_SOURCE = "some_source"
 
         # Successful task creations
@@ -136,10 +136,13 @@ async def test_post_task(client, MockCurrentUser):
     SLURM_USER = "some_slurm_user"
     USERNAME = "some_username"
     # Case 1: (username, slurm_user) = (None, None)
-    user_kwargs = dict(username=None, slurm_user=None, is_verified=True)
+    user_kwargs = dict(username=None, is_verified=True)
+    user_settings_dict = dict(slurm_user=None)
     payload = dict(name="task", command_parallel="cmd")
     payload["source"] = "source_x"
-    async with MockCurrentUser(user_kwargs=user_kwargs):
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
+    ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 422
         assert res.json()["detail"] == (
@@ -147,25 +150,32 @@ async def test_post_task(client, MockCurrentUser):
             "`username` or `slurm_user` attributes."
         )
     # Case 2: (username, slurm_user) = (not None, not None)
-    user_kwargs = dict(
-        username=USERNAME, slurm_user=SLURM_USER, is_verified=True
-    )
+    user_kwargs = dict(username=USERNAME, is_verified=True)
+    user_settings_dict = dict(slurm_user=SLURM_USER)
     payload["source"] = "source_y"
-    async with MockCurrentUser(user_kwargs=user_kwargs):
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
+    ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
     # Case 3: (username, slurm_user) = (None, not None)
-    user_kwargs = dict(username=None, slurm_user=SLURM_USER, is_verified=True)
+    user_kwargs = dict(username=None, is_verified=True)
+    user_settings_dict = dict(slurm_user=SLURM_USER)
     payload["source"] = "source_z"
-    async with MockCurrentUser(user_kwargs=user_kwargs):
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
+    ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == SLURM_USER
     # Case 4: (username, slurm_user) = (not None, None)
-    user_kwargs = dict(username=USERNAME, slurm_user=None, is_verified=True)
+    user_kwargs = dict(username=USERNAME, is_verified=True)
+    user_settings_dict = dict(slurm_user=None)
     payload["source"] = "source_xyz"
-    async with MockCurrentUser(user_kwargs=user_kwargs):
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
+    ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
@@ -260,7 +270,8 @@ async def test_patch_task_auth(
         assert res.json()["name"] == "new_name_1"
 
     async with MockCurrentUser(
-        user_kwargs={"slurm_user": USER_2, "is_verified": True}
+        user_kwargs={"is_verified": True},
+        user_settings_dict={"slurm_user": USER_2},
     ):
         update = TaskUpdateV2(name="new_name_2")
 

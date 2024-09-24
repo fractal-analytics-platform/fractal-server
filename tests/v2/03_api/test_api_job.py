@@ -212,7 +212,7 @@ async def test_project_apply_missing_user_attributes(
         assert res.status_code == 422
         assert "User settings are not valid" in res.json()["detail"]
         assert (
-            "validation errors for SlurmSudoUserSettings"
+            "validation error for SlurmSudoUserSettings"
             in res.json()["detail"]
         )
 
