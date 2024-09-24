@@ -84,8 +84,6 @@ async def test_unit_link_user_to_settings(db):
     assert user_D.user_settings_id is not None
     assert user_D.settings is not None
 
-    # FIXME: Test delete cascade
-
 
 async def test_validate_user_settings(db):
     common_attributes = dict(
