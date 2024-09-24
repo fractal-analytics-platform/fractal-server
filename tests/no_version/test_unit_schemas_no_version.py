@@ -79,6 +79,9 @@ def test_user_settings_update():
     update = UserSettingsUpdate(ssh_host="NEW_HOST")
     assert update.slurm_accounts is None
 
+    update = UserSettingsUpdate(ssh_host="NEW_HOST", slurm_accounts=None)
+    assert update.slurm_accounts is None
+
     with pytest.raises(ValidationError):
         UserSettingsUpdate(slurm_accounts=[""])
     with pytest.raises(ValidationError):
