@@ -289,10 +289,6 @@ async def MockCurrentUser(app, db):
                     await db.commit()
                 await db.refresh(self.user)
 
-                from devtools import debug  # !
-
-                debug(self.user)  # !
-
                 # Removing objects from test db session, so that we can operate
                 # on them from other sessions
                 db.expunge(user_settings)
