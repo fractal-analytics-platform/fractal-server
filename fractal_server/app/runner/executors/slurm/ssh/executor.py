@@ -163,17 +163,34 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         settings = Inject(get_settings)
         self.python_remote = settings.FRACTAL_SLURM_WORKER_PYTHON
         if self.python_remote is None:
+            self._stop_and_join_wait_thread()
             raise ValueError("FRACTAL_SLURM_WORKER_PYTHON is not set. Exit.")
 
         # Initialize connection and perform handshake
         self.fractal_ssh = fractal_ssh
         logger.warning(self.fractal_ssh)
-        self.handshake()
+        try:
+            self.handshake()
+        except Exception as e:
+            logger.warning(
+                "Stop/join waiting thread and then "
+                f"re-raise original error {str(e)}"
+            )
+            self._stop_and_join_wait_thread()
+            raise e
 
         # Set/validate parameters for SLURM submission scripts
         self.slurm_account = slurm_account
         self.common_script_lines = common_script_lines or []
-        self._validate_common_script_lines()
+        try:
+            self._validate_common_script_lines()
+        except Exception as e:
+            logger.warning(
+                "Stop/join waiting thread and then "
+                f"re-raise original error {str(e)}"
+            )
+            self._stop_and_join_wait_thread()
+            raise e
 
         # Set/initialize some more options
         self.keep_pickle_files = keep_pickle_files
@@ -1385,6 +1402,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.fractal_ssh.run_command(cmd=scancel_command)
         logger.debug("Executor shutdown: end")
 
+    def _stop_and_join_wait_thread(self):
+        self.wait_thread.stop()
+        self.wait_thread.join()
+
     def __exit__(self, *args, **kwargs):
         """
         See
@@ -1393,8 +1414,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         logger.debug(
             "[FractalSlurmSSHExecutor.__exit__] Stop and join `wait_thread`"
         )
-        self.wait_thread.stop()
-        self.wait_thread.join()
+        self._stop_and_join_wait_thread()
         logger.debug("[FractalSlurmSSHExecutor.__exit__] End")
 
     def run_squeue(self, job_ids):

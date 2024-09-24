@@ -2,8 +2,7 @@ import io
 
 from common_functions import workflow_with_non_python_task
 
-from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import get_ssh_connection
+from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
 
 
@@ -39,8 +38,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
-    connection = get_ssh_connection()
-    app.state.fractal_ssh = FractalSSH(connection=connection)
+    app.state.fractal_ssh_list = FractalSSHList()
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
@@ -55,7 +53,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
         tmp777_path=tmp777_path,
     )
 
-    app.state.fractal_ssh.close()
+    app.state.fractal_ssh_list.close_all()
 
 
 async def test_workflow_with_non_python_task_slurm_ssh_fail(
@@ -91,8 +89,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
-    connection = get_ssh_connection()
-    app.state.fractal_ssh = FractalSSH(connection=connection)
+    app.state.fractal_ssh_list = FractalSSHList()
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
@@ -110,4 +107,4 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     assert "Could not create" in job_logs
     assert "via SSH" in job_logs
 
-    app.state.fractal_ssh.close()
+    app.state.fractal_ssh_list.close_all()

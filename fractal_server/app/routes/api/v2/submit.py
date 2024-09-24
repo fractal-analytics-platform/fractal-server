@@ -238,6 +238,18 @@ async def apply_workflow(
     await db.merge(job)
     await db.commit()
 
+    # User appropriate FractalSSH object
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        ssh_credentials = dict(
+            user=settings.FRACTAL_SLURM_SSH_USER,
+            host=settings.FRACTAL_SLURM_SSH_HOST,
+            key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
+        )
+        fractal_ssh_list = request.app.state.fractal_ssh_list
+        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
+    else:
+        fractal_ssh = None
+
     background_tasks.add_task(
         submit_workflow,
         workflow_id=workflow.id,
@@ -246,7 +258,7 @@ async def apply_workflow(
         worker_init=job.worker_init,
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
-        fractal_ssh=request.app.state.fractal_ssh,
+        fractal_ssh=fractal_ssh,
     )
     request.app.state.jobsV2.append(job.id)
     logger.info(

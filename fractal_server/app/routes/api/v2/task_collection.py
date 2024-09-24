@@ -124,11 +124,20 @@ async def collect_tasks_pip(
         db.add(state)
         await db.commit()
 
+        # User appropriate FractalSSH object
+        ssh_credentials = dict(
+            user=settings.FRACTAL_SLURM_SSH_USER,
+            host=settings.FRACTAL_SLURM_SSH_HOST,
+            key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
+        )
+        fractal_ssh_list = request.app.state.fractal_ssh_list
+        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
+
         background_tasks.add_task(
             background_collect_pip_ssh,
             state.id,
             task_pkg,
-            request.app.state.fractal_ssh,
+            fractal_ssh,
         )
 
         response.status_code = status.HTTP_201_CREATED

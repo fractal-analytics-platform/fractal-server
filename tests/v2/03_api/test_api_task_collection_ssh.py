@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.ssh._fabric import FractalSSH
-
+from fractal_server.ssh._fabric import FractalSSHList
+from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
 
@@ -17,16 +17,27 @@ async def test_task_collection_ssh_from_pypi(
     override_settings_factory,
     tmp_path: Path,
     tmp777_path: Path,
-    fractal_ssh: FractalSSH,
+    fractal_ssh_list: FractalSSHList,
     current_py_version: str,
+    slurmlogin_ip,
+    ssh_keys,
 ):
+
+    credentials = dict(
+        host=slurmlogin_ip,
+        user=SLURM_USER,
+        key_path=ssh_keys["private"],
+    )
+
+    assert not fractal_ssh_list.contains(**credentials)
+    fractal_ssh = fractal_ssh_list.get(**credentials)
 
     # Define and create remote working directory
     WORKING_BASE_DIR = (tmp777_path / "working_dir").as_posix()
     fractal_ssh.mkdir(folder=WORKING_BASE_DIR)
 
     # Assign FractalSSH object to app state
-    app.state.fractal_ssh = fractal_ssh
+    app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settins with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
@@ -35,6 +46,9 @@ async def test_task_collection_ssh_from_pypi(
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
+        "FRACTAL_SLURM_SSH_HOST": slurmlogin_ip,
+        "FRACTAL_SLURM_SSH_USER": SLURM_USER,
+        "FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH": ssh_keys["private"],
         "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": WORKING_BASE_DIR,
     }
     override_settings_factory(**settings_overrides)
@@ -98,5 +112,6 @@ async def test_task_collection_ssh_from_pypi(
             / ".fractal"
             / f"fractal-tasks-core{PACKAGE_VERSION}"
         ).as_posix()
+        # Check that folder was removed
         with pytest.raises(RuntimeError, match="No such file or directory"):
             fractal_ssh.run_command(cmd=f"ls {remote_folder}")

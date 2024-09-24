@@ -259,6 +259,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 for line in self.common_script_lines
                 if line.startswith("#SBATCH --account=")
             )
+            self._stop_and_join_wait_thread()
             raise RuntimeError(
                 "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
                 f"'{invalid_line}'.\n"
@@ -1287,6 +1288,10 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         logger.debug("Executor shutdown: end")
 
+    def _stop_and_join_wait_thread(self):
+        self.wait_thread.stop()
+        self.wait_thread.join()
+
     def __exit__(self, *args, **kwargs):
         """
         See
@@ -1295,6 +1300,5 @@ class FractalSlurmExecutor(SlurmExecutor):
         logger.debug(
             "[FractalSlurmExecutor.__exit__] Stop and join `wait_thread`"
         )
-        self.wait_thread.stop()
-        self.wait_thread.join()
+        self._stop_and_join_wait_thread()
         logger.debug("[FractalSlurmExecutor.__exit__] End")
