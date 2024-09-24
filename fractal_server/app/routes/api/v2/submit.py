@@ -110,25 +110,11 @@ async def apply_workflow(
             ),
         )
 
-    # Validate user settings (which will eventually replace the block below,
-    # where check required user attributes)
+    # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+    user_settings = await validate_user_settings(
+        user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
     )
-
-    # If backend is SLURM, check that the user has required attributes
-    if FRACTAL_RUNNER_BACKEND == "slurm":
-        if not user.slurm_user:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.slurm_user=}.",
-            )
-        if not user.cache_dir:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.cache_dir=}.",
-            )
 
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
@@ -147,7 +133,7 @@ async def apply_workflow(
         )
 
     if job_create.slurm_account is not None:
-        if job_create.slurm_account not in user.slurm_accounts:
+        if job_create.slurm_account not in user_settings.slurm_accounts:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -156,8 +142,8 @@ async def apply_workflow(
                 ),
             )
     else:
-        if len(user.slurm_accounts) > 0:
-            job_create.slurm_account = user.slurm_accounts[0]
+        if len(user_settings.slurm_accounts) > 0:
+            job_create.slurm_account = user_settings.slurm_accounts[0]
 
     # Add new Job object to DB
     job = JobV2(
@@ -231,7 +217,7 @@ async def apply_workflow(
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
     elif FRACTAL_RUNNER_BACKEND == "slurm":
         WORKFLOW_DIR_REMOTE = (
-            Path(user.cache_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
+            Path(user_settings.cache_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
         )
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
@@ -251,8 +237,8 @@ async def apply_workflow(
         dataset_id=dataset.id,
         job_id=job.id,
         worker_init=job.worker_init,
-        slurm_user=user.slurm_user,
-        user_cache_dir=user.cache_dir,
+        slurm_user=user_settings.slurm_user,
+        user_cache_dir=user_settings.cache_dir,
         fractal_ssh=request.app.state.fractal_ssh,
     )
     request.app.state.jobsV2.append(job.id)

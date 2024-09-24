@@ -301,7 +301,7 @@ async def test_project_apply_missing_user_attributes(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "user.cache_dir=None" in res.json()["detail"]
+        assert "User settings are not valid" in res.json()["detail"]
 
         user.cache_dir = "/tmp"
         user.slurm_user = None
@@ -316,7 +316,7 @@ async def test_project_apply_missing_user_attributes(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "user.slurm_user=None" in res.json()["detail"]
+        assert "User settings are not valid" in res.json()["detail"]
 
 
 async def test_project_apply_missing_resources(
@@ -576,7 +576,8 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={"slurm_accounts": SLURM_LIST, "is_verified": True}
+        user_kwargs={"is_verified": True},
+        user_settings_dict={"slurm_accounts": SLURM_LIST},
     ) as user2:
         project = await project_factory(user2)
         dataset = await dataset_factory(
@@ -595,7 +596,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has a non empty SLURM accounts list
-        assert user2.slurm_accounts == SLURM_LIST
+        assert user2.settings.slurm_accounts == SLURM_LIST
 
         # If no slurm_account is provided, we use the first one of the list
 
@@ -615,6 +616,7 @@ async def test_project_apply_slurm_account(
                 f"&output_dataset_id={dataset.id}",
                 json=dict(slurm_account=account),
             )
+            debug(res.json())
             assert res.status_code == 202
             assert res.json()["slurm_account"] == account
 
