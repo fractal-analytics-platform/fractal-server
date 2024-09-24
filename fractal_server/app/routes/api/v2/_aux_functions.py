@@ -23,10 +23,6 @@ from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.images import Filters
-from fractal_server.logger import set_logger
-
-
-logger = set_logger(__name__)
 
 
 async def _get_project_check_owner(
