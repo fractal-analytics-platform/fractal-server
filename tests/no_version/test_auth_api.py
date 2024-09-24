@@ -572,6 +572,12 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
     debug(res.json())
     assert res.status_code == 200
 
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/settings/", json=dict(slurm_accounts=["  "])
+    )
+    debug(res.json())
+    assert res.status_code == 422
+
     # Assert patch was successful
     res = await registered_superuser_client.get(
         f"{PREFIX}/users/{user_id}/settings/",
