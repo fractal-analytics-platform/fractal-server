@@ -1,8 +1,8 @@
-"""Init user settings
+"""Add user_settings table
 
-Revision ID: dfbe4f3a7bc4
+Revision ID: 9c5ae74c9b98
 Revises: d9a140db5d42
-Create Date: 2024-09-18 16:09:20.632736
+Create Date: 2024-09-24 12:01:13.393326
 
 """
 import sqlalchemy as sa
@@ -11,12 +11,12 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "dfbe4f3a7bc4"
+revision = "9c5ae74c9b98"
 down_revision = "d9a140db5d42"
 branch_labels = None
 depends_on = None
 
-
+# Manually define constraint name, see issue #1777
 CONSTRAINT_NAME = "fk_user_oauth_user_settings_id_user_settings"
 
 
@@ -25,6 +25,9 @@ def upgrade() -> None:
     op.create_table(
         "user_settings",
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column(
+            "slurm_accounts", sa.JSON(), server_default="[]", nullable=False
+        ),
         sa.Column(
             "ssh_host", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
@@ -41,6 +44,12 @@ def upgrade() -> None:
         ),
         sa.Column(
             "ssh_jobs_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
+        sa.Column(
+            "slurm_user", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
+        sa.Column(
+            "cache_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.PrimaryKeyConstraint("id"),
     )

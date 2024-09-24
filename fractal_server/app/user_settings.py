@@ -13,6 +13,8 @@ class SlurmSshUserSettings(BaseModel):
         ssh_private_key_path: Path of private SSH key for `ssh_username`.
         ssh_tasks_dir: Task-venvs base folder on `ssh_host`.
         ssh_jobs_dir: Jobs base folder on `ssh_host`.
+        slurm_accounts:
+            List of SLURM accounts, to be used upon Fractal job submission.
     """
 
     ssh_host: str
@@ -30,7 +32,9 @@ class SlurmSudoUserSettings(BaseModel):
 
     Attributes:
         slurm_user: User to be impersonated via `sudo -u`.
-        cache_dir:
+        cache_dir: Folder where `slurm_user` can write.
+        slurm_accounts:
+            List of SLURM accounts, to be used upon Fractal job submission.
     """
 
     slurm_user: str

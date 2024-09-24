@@ -1,5 +1,19 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.6.0 (unreleased)
+
+> WARNING: This release requires running `fractalctl update-db-data` (after `fractalctl set-db`).
+
+* API:
+    * Introduce user-settings API, in `/auth/users/{user_id}/settings/` and `/auth/current-user/settings/` (\#1778).
+    * Add the creation of empty settings to `UserManager.on_after_register` hook (\#1778).
+    * Remove deprecated user's attributes (`slurm_user`, `cache_dir`, `slurm_accounts`) from API (\#1778).
+    * Validate user settings in endpoints that rely on them (\#1778).
+    * Propagate user settings to background tasks when needed (\#1778).
+* Database:
+    * Introduce new `user_settings` table, and link it to `user_oauth` (\#1778).
+
+
 # 2.5.2
 
 * App:

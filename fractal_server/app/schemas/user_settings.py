@@ -1,6 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import validator
 from pydantic.types import StrictStr
 
@@ -35,7 +36,7 @@ class UserSettingsReadStrict(BaseModel):
     cache_dir: Optional[str] = None
 
 
-class UserSettingsUpdate(BaseModel):
+class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
     ssh_private_key_path: Optional[str] = None
@@ -78,7 +79,7 @@ class UserSettingsUpdate(BaseModel):
         return val_absolute_path("cache_dir")(value)
 
 
-class UserSettingsUpdateStrict(BaseModel):
+class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
     slurm_accounts: Optional[list[StrictStr]] = None
     cache_dir: Optional[str] = None
 
