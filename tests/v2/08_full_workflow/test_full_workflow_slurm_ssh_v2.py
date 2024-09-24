@@ -29,12 +29,6 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}",
-        FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
-        FRACTAL_SLURM_SSH_USER=SLURM_USER,
-        FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH=ssh_keys["private"],
-        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=(
-            tmp777_path / "artifacts"
-        ).as_posix(),
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
@@ -89,12 +83,6 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}",
-        FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
-        FRACTAL_SLURM_SSH_USER=SLURM_USER,
-        FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH="/invalid/path",
-        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=(
-            tmp777_path / "artifacts"
-        ).as_posix(),
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 

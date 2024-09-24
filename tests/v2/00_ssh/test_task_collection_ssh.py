@@ -33,7 +33,6 @@ async def test_task_collection_ssh(
     setting_overrides = {
         "FRACTAL_SLURM_WORKER_PYTHON": f"/usr/bin/python{current_py_version}",
         PY_KEY: f"/usr/bin/python{current_py_version}",
-        "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": remote_basedir,
         "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
     }
     override_settings_factory(**setting_overrides)
@@ -52,6 +51,7 @@ async def test_task_collection_ssh(
         state_id=state.id,
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
+        tasks_base_dir=remote_basedir,
     )
     await db.refresh(state)
     debug(state)
@@ -80,6 +80,7 @@ async def test_task_collection_ssh(
         state_id=state.id,
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
+        tasks_base_dir=remote_basedir,
     )
 
     # Check that the second collection failed, since folder already exists
@@ -112,7 +113,6 @@ async def test_task_collection_ssh_failure(
     setting_overrides = {
         "FRACTAL_SLURM_WORKER_PYTHON": f"/usr/bin/python{current_py_version}",
         PY_KEY: f"/usr/bin/python{current_py_version}",
-        "FRACTAL_SLURM_SSH_WORKING_BASE_DIR": remote_basedir,
     }
     override_settings_factory(**setting_overrides)
 
@@ -131,6 +131,7 @@ async def test_task_collection_ssh_failure(
         state_id=state.id,
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
+        tasks_base_dir=remote_basedir,
     )
 
     await db.refresh(state)

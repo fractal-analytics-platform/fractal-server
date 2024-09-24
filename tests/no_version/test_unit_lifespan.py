@@ -19,7 +19,6 @@ from fractal_server.config import get_settings
 from fractal_server.main import lifespan
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.syringe import Inject
-from tests.fixtures_slurm import SLURM_USER
 
 
 async def test_app_with_lifespan(
@@ -196,12 +195,6 @@ async def test_lifespan_slurm_ssh(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_SLURM_WORKER_PYTHON="/not/relevant",
-        FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
-        FRACTAL_SLURM_SSH_USER=SLURM_USER,
-        FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH=ssh_keys["private"],
-        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=(
-            tmp777_path / "artifacts"
-        ).as_posix(),
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
     app = FastAPI()
