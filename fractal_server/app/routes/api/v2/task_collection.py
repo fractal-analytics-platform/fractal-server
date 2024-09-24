@@ -108,7 +108,7 @@ async def collect_tasks_pip(
         )
 
     # Validate user settings (backend-specific)
-    await validate_user_settings(
+    user_settings = await validate_user_settings(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 
@@ -131,9 +131,9 @@ async def collect_tasks_pip(
 
         # User appropriate FractalSSH object
         ssh_credentials = dict(
-            user=settings.FRACTAL_SLURM_SSH_USER,
-            host=settings.FRACTAL_SLURM_SSH_HOST,
-            key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
@@ -143,6 +143,7 @@ async def collect_tasks_pip(
             state.id,
             task_pkg,
             fractal_ssh,
+            user_settings.ssh_tasks_dir,
         )
 
         response.status_code = status.HTTP_201_CREATED

@@ -42,6 +42,7 @@ from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_images_failed_job
 from fractal_server import __VERSION__
+from fractal_server.app.models import UserSettings
 
 _backends = {}
 _backends["local"] = local_process_workflow
@@ -76,6 +77,7 @@ async def submit_workflow(
     workflow_id: int,
     dataset_id: int,
     job_id: int,
+    user_settings: UserSettings,
     worker_init: Optional[str] = None,
     slurm_user: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
@@ -196,8 +198,7 @@ async def submit_workflow(
             elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
                 # Folder creation is deferred to _process_workflow
                 WORKFLOW_DIR_REMOTE = (
-                    Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
-                    / WORKFLOW_DIR_LOCAL.name
+                    Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
                 )
             else:
                 logger.error(
@@ -270,11 +271,8 @@ async def submit_workflow(
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
         elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            logger.debug(f"ssh_host: {settings.FRACTAL_SLURM_SSH_HOST}")
-            logger.debug(f"ssh_user: {settings.FRACTAL_SLURM_SSH_USER}")
-            logger.debug(
-                f"base dir: {settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR}"
-            )
+            logger.debug(f"ssh_user: {user_settings.ssh_username}")
+            logger.debug(f"base dir: {user_settings.ssh_tasks_dir}")
             logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
