@@ -5,6 +5,10 @@ from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
+from fractal_server.app.schemas.user_settings import UserSettingsRead
+from fractal_server.app.schemas.user_settings import UserSettingsReadStrict
+from fractal_server.app.schemas.user_settings import UserSettingsUpdate
+from fractal_server.app.schemas.user_settings import UserSettingsUpdateStrict
 
 
 def test_user_create():
@@ -56,3 +60,36 @@ def test_user_group_read():
         id=1, name="group", timestamp_created=XX, user_ids=[1, 2]
     )
     assert g.user_ids == [1, 2]
+
+
+def test_user_settings_read():
+    data = dict(
+        id=1,
+        ssh_host="MY_HOST",
+        ssh_username="ssh_username",
+        slurm_accounts=[],
+    )
+    read = UserSettingsRead(**data)
+    assert read.dict().get("ssh_host") == "MY_HOST"
+    read_strict = UserSettingsReadStrict(**data)
+    assert read_strict.dict().get("ssh_host") is None
+
+
+def test_user_settings_update():
+    update = UserSettingsUpdate(ssh_host="NEW_HOST")
+    assert update.slurm_accounts is None
+
+    with pytest.raises(ValidationError):
+        UserSettingsUpdate(slurm_accounts=[""])
+    with pytest.raises(ValidationError):
+        UserSettingsUpdate(slurm_accounts=["a", "a"])
+    with pytest.raises(ValidationError):
+        UserSettingsUpdate(slurm_accounts=["a", "a "])
+    with pytest.raises(ValidationError):
+        UserSettingsUpdate(cache_dir="non/absolute/path")
+    with pytest.raises(ValidationError):
+        UserSettingsUpdate(cache_dir="/invalid;command; $(ls)")
+    with pytest.raises(ValidationError):
+        UserSettingsUpdateStrict(ssh_host="NEW_HOST")
+    with pytest.raises(ValidationError):
+        UserSettingsUpdateStrict(slurm_user="NEW_SLURM_USER")
