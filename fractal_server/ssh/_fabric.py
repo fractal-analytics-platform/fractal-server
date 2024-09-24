@@ -16,12 +16,14 @@ from paramiko.ssh_exception import NoValidConnectionsError
 
 from ..logger import get_logger
 from ..logger import set_logger
-from fractal_server.config import get_settings
 from fractal_server.string_tools import validate_cmd
-from fractal_server.syringe import Inject
 
 
 class FractalSSHTimeoutError(RuntimeError):
+    pass
+
+
+class FractalSSHListTimeoutError(RuntimeError):
     pass
 
 
@@ -29,7 +31,6 @@ logger = set_logger(__name__)
 
 
 class FractalSSH(object):
-
     """
     FIXME SSH: Fix docstring
 
@@ -111,7 +112,6 @@ class FractalSSH(object):
     def run(
         self, *args, lock_timeout: Optional[float] = None, **kwargs
     ) -> Any:
-
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
@@ -138,7 +138,19 @@ class FractalSSH(object):
                 )
 
     def close(self) -> None:
-        return self._connection.close()
+        """
+        Aggressively close `self._connection`.
+
+        When `Connection.is_connected` is `False`, `Connection.close()` does
+        not call `Connection.client.close()`. Thus we do this explicitly here,
+        because we observed cases where `is_connected=False` but the underlying
+        `Transport` object was not closed.
+        """
+
+        self._connection.close()
+
+        if self._connection.client is not None:
+            self._connection.client.close()
 
     def run_command(
         self,
@@ -335,36 +347,169 @@ class FractalSSH(object):
                 f.write(content)
 
 
-def get_ssh_connection(
-    *,
-    host: Optional[str] = None,
-    user: Optional[str] = None,
-    key_filename: Optional[str] = None,
-) -> Connection:
+class FractalSSHList(object):
     """
-    Create a `fabric.Connection` object based on fractal-server settings
-    or explicit arguments.
+    Collection of `FractalSSH` objects
 
-    Args:
-        host:
-        user:
-        key_filename:
+    Attributes are all private, and access to this collection must be
+    through methods (mostly the `get` one).
 
-    Returns:
-        Fabric connection object
+    Attributes:
+        _data:
+            Mapping of unique keys (the SSH-credentials tuples) to
+            `FractalSSH` objects.
+        _lock:
+            A `threading.Lock object`, to be acquired when changing `_data`.
+        _timeout: Timeout for `_lock` acquisition.
+        _logger_name: Logger name.
     """
-    settings = Inject(get_settings)
-    if host is None:
-        host = settings.FRACTAL_SLURM_SSH_HOST
-    if user is None:
-        user = settings.FRACTAL_SLURM_SSH_USER
-    if key_filename is None:
-        key_filename = settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
 
-    connection = Connection(
-        host=host,
-        user=user,
-        forward_agent=False,
-        connect_kwargs={"key_filename": key_filename},
-    )
-    return connection
+    _data: dict[tuple[str, str, str], FractalSSH]
+    _lock: Lock
+    _timeout: float
+    _logger_name: str
+
+    def __init__(
+        self,
+        *,
+        timeout: float = 5.0,
+        logger_name: str = "fractal_server.FractalSSHList",
+    ):
+        self._lock = Lock()
+        self._data = {}
+        self._timeout = timeout
+        self._logger_name = logger_name
+        set_logger(self._logger_name)
+
+    @property
+    def logger(self) -> logging.Logger:
+        """
+        This property exists so that we never have to propagate the
+        `Logger` object.
+        """
+        return get_logger(self._logger_name)
+
+    @property
+    def size(self) -> int:
+        """
+        Number of current key-value pairs in `self._data`.
+        """
+        return len(self._data.values())
+
+    def get(self, *, host: str, user: str, key_path: str) -> FractalSSH:
+        """
+        Get the `FractalSSH` for the current credentials, or create one.
+
+        Note: Changing `_data` requires acquiring `_lock`.
+
+        Arguments:
+            host:
+            user:
+            key_path:
+        """
+        key = (host, user, key_path)
+        fractal_ssh = self._data.get(key, None)
+        if fractal_ssh is not None:
+            self.logger.info(
+                f"Return existing FractalSSH object for {user}@{host}"
+            )
+            return fractal_ssh
+        else:
+            self.logger.info(f"Add new FractalSSH object for {user}@{host}")
+            connection = Connection(
+                host=host,
+                user=user,
+                forward_agent=False,
+                connect_kwargs={
+                    "key_filename": key_path,
+                    "look_for_keys": False,
+                },
+            )
+            with self.acquire_lock_with_timeout():
+                self._data[key] = FractalSSH(connection=connection)
+                return self._data[key]
+
+    def contains(
+        self,
+        *,
+        host: str,
+        user: str,
+        key_path: str,
+    ) -> bool:
+        """
+        Return whether a given key is present in the collection.
+
+        Arguments:
+            host:
+            user:
+            key_path:
+        """
+        key = (host, user, key_path)
+        return key in self._data.keys()
+
+    def remove(
+        self,
+        *,
+        host: str,
+        user: str,
+        key_path: str,
+    ) -> None:
+        """
+        Remove a key from `_data` and close the corresponding connection.
+
+        Note: Changing `_data` requires acquiring `_lock`.
+
+        Arguments:
+            host:
+            user:
+            key_path:
+        """
+        key = (host, user, key_path)
+        with self.acquire_lock_with_timeout():
+            self.logger.info(
+                f"Removing FractalSSH object for {user}@{host} "
+                "from collection."
+            )
+            fractal_ssh_obj = self._data.pop(key)
+            self.logger.info(
+                f"Closing FractalSSH object for {user}@{host} "
+                f"({fractal_ssh_obj.is_connected=})."
+            )
+            fractal_ssh_obj.close()
+
+    def close_all(self, *, timeout: float = 5.0):
+        """
+        Close all `FractalSSH` objects in the collection.
+
+        Arguments:
+            timeout:
+                Timeout for `FractalSSH._lock` acquisition, to be obtained
+                before closing.
+        """
+        for key, fractal_ssh_obj in self._data.items():
+            host, user, _ = key[:]
+            self.logger.info(
+                f"Closing FractalSSH object for {user}@{host} "
+                f"({fractal_ssh_obj.is_connected=})."
+            )
+            with fractal_ssh_obj.acquire_timeout(timeout=timeout):
+                fractal_ssh_obj.close()
+
+    @contextmanager
+    def acquire_lock_with_timeout(self) -> Generator[Literal[True], Any, None]:
+        self.logger.debug(
+            f"Trying to acquire lock, with timeout {self._timeout} s"
+        )
+        result = self._lock.acquire(timeout=self._timeout)
+        try:
+            if not result:
+                self.logger.error("Lock was *NOT* acquired.")
+                raise FractalSSHListTimeoutError(
+                    f"Failed to acquire lock within {self._timeout} ss"
+                )
+            self.logger.debug("Lock was acquired.")
+            yield result
+        finally:
+            if result:
+                self._lock.release()
+                self.logger.debug("Lock was released")

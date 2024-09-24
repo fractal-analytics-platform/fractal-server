@@ -1,4 +1,5 @@
 import logging
+import threading
 from pathlib import Path
 
 import pytest
@@ -37,6 +38,101 @@ class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
         super().__init__(*args, **kwargs)
         self._create_local_folder_structure()
         self._create_remote_folder_structure()
+
+
+def test_errors_failed_init_1(
+    override_settings_factory,
+    fractal_ssh,
+    tmp_path,
+    tmp777_path,
+):
+    """
+    Check that an exception in `FractalSSHSlurmExecutor.__init__`
+    is handled correctly.
+    """
+    threads_pre = threading.enumerate()
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
+    with pytest.raises(
+        ValueError,
+        match="FRACTAL_SLURM_WORKER_PYTHON is not set",
+    ):
+        with MockFractalSSHSlurmExecutor(
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+            slurm_poll_interval=1,
+            fractal_ssh=fractal_ssh,
+        ):
+            pass
+    threads_post = threading.enumerate()
+    debug(threads_pre, threads_post)
+    assert len(threads_post) == len(threads_pre)
+
+
+def test_errors_failed_init_2(
+    override_settings_factory,
+    current_py_version,
+    fractal_ssh,
+    tmp_path,
+    tmp777_path,
+):
+    """
+    Check that an exception in `FractalSSHSlurmExecutor.__init__`
+    is handled correctly.
+    """
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+    )
+    threads_pre = threading.enumerate()
+    with pytest.raises(RuntimeError, match="SLURM account must be set"):
+        with MockFractalSSHSlurmExecutor(
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+            slurm_poll_interval=1,
+            fractal_ssh=fractal_ssh,
+            common_script_lines=["#SBATCH --account=something"],
+        ):
+            pass
+    threads_post = threading.enumerate()
+    assert len(threads_post) == len(threads_pre)
+
+
+def test_errors_failed_init_3(
+    override_settings_factory,
+    current_py_version,
+    fractal_ssh_list,
+    tmp_path,
+    tmp777_path,
+    slurmlogin_ip,
+):
+    """
+    Check that an exception in `FractalSSHSlurmExecutor.__init__`
+    is handled correctly.
+    """
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+    )
+
+    key_path = (tmp_path / "my.key").as_posix()
+    invalid_fractal_obj = fractal_ssh_list.get(
+        host="invalid_host",
+        user="invalid_user",
+        key_path=key_path,
+    )
+    threads_pre = threading.enumerate()
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot open SSH connection",
+    ) as exc_info:
+        with MockFractalSSHSlurmExecutor(
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+            slurm_poll_interval=1,
+            fractal_ssh=invalid_fractal_obj,
+        ):
+            pass
+    debug(exc_info.value)
+    threads_post = threading.enumerate()
+    assert len(threads_post) == len(threads_pre)
 
 
 def test_slurm_ssh_executor_submit(

@@ -17,7 +17,7 @@ from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.main import lifespan
-from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.syringe import Inject
 from tests.fixtures_slurm import SLURM_USER
 
@@ -208,5 +208,5 @@ async def test_lifespan_slurm_ssh(
     async with lifespan(app):
         assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
-        assert isinstance(app.state.fractal_ssh, FractalSSH)
-        app.state.fractal_ssh.check_connection()
+        assert isinstance(app.state.fractal_ssh_list, FractalSSHList)
+        assert app.state.fractal_ssh_list.size == 0

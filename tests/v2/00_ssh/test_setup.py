@@ -16,6 +16,7 @@ def test_check_connection_failure():
         this_fractal_ssh = FractalSSH(connection=connection)
         with pytest.raises(RuntimeError):
             this_fractal_ssh.check_connection()
+        this_fractal_ssh.close()
 
 
 def test_versions(fractal_ssh: FractalSSH, current_py_version: str):

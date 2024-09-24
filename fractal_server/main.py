@@ -92,32 +92,34 @@ async def lifespan(app: FastAPI):
     settings = Inject(get_settings)
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        from fractal_server.ssh._fabric import get_ssh_connection
-        from fractal_server.ssh._fabric import FractalSSH
 
-        connection = get_ssh_connection()
-        app.state.fractal_ssh = FractalSSH(connection=connection)
+        from fractal_server.ssh._fabric import FractalSSHList
+
+        app.state.fractal_ssh_list = FractalSSHList()
+
         logger.info(
-            f"Created SSH connection "
-            f"({app.state.fractal_ssh.is_connected=})."
+            "Added empty FractalSSHList to app.state "
+            f"(id={id(app.state.fractal_ssh_list)})."
         )
     else:
-        app.state.fractal_ssh = None
+        app.state.fractal_ssh_list = None
 
     config_uvicorn_loggers()
     logger.info("End application startup")
     reset_logger_handlers(logger)
+
     yield
+
     logger = get_logger("fractal_server.lifespan")
     logger.info("Start application shutdown")
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         logger.info(
-            f"Closing SSH connection "
-            f"(current: {app.state.fractal_ssh.is_connected=})."
+            "Close FractalSSH connections "
+            f"(current size: {app.state.fractal_ssh_list.size})."
         )
 
-        app.state.fractal_ssh.close()
+        app.state.fractal_ssh_list.close_all()
 
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
