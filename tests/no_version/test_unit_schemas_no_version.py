@@ -66,13 +66,14 @@ def test_user_settings_read():
     data = dict(
         id=1,
         ssh_host="MY_HOST",
-        ssh_username="ssh_username",
+        ssh_username="MY_SSH_USERNAME",
         slurm_accounts=[],
     )
     read = UserSettingsRead(**data)
     assert read.dict().get("ssh_host") == "MY_HOST"
     read_strict = UserSettingsReadStrict(**data)
     assert read_strict.dict().get("ssh_host") is None
+    assert read_strict.dict().get("ssh_username") == "MY_SSH_USERNAME"
 
 
 def test_user_settings_update():
