@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.6.1
+
+* DB:
+    * Drop `slurm_user`, `slurm_accounts` and `cache_dir` columns from `UserOAuth` (\#1804)
+* App (internal):
+    * Remove `FRACTAL_SLURM_SSH_HOST`, `FRACTAL_SLURM_SSH_USER`, `FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH` and `FRACTAL_SLURM_SSH_WORKING_BASE_DIR` from `Settings`  (\#1804).
+
 # 2.6.0
 
 > WARNING: This release requires running `fractalctl update-db-data` (after `fractalctl set-db`).
