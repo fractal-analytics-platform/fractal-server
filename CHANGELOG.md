@@ -12,6 +12,9 @@
     * Propagate user settings to background tasks when needed (\#1778).
 * Database:
     * Introduce new `user_settings` table, and link it to `user_oauth` (\#1778).
+* Internal:
+   * Remove redundant string validation in `FractalSSH.remove_folder` and `TaskCollectCustomV2` (\#1810).
+   * Make `validate_cmd` more strict about non-string arguments (\#1810).
 
 
 # 2.5.2
