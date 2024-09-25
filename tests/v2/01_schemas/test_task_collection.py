@@ -43,7 +43,7 @@ async def test_TaskCollectCustomV2(testdata_path):
             package_root=None,
             package_name="inject;code",
         )
-    assert "Invalid package_name" in e._excinfo[1].errors()[0]["msg"]
+    assert "must not contain" in e._excinfo[1].errors()[0]["msg"]
 
     with pytest.raises(ValidationError) as e:
         TaskCollectCustomV2(

@@ -17,12 +17,13 @@ def test_acquire_lock():
     """
     Test that the lock cannot be acquired twice.
     """
-    fake_fractal_ssh = FractalSSH(connection=Connection("localhost"))
-    fake_fractal_ssh._lock.acquire(timeout=0)
-    with pytest.raises(FractalSSHTimeoutError) as e:
-        with fake_fractal_ssh.acquire_timeout(timeout=0.1):
-            pass
-    print(e)
+    with Connection("localhost") as connection:
+        fake_fractal_ssh = FractalSSH(connection=connection)
+        fake_fractal_ssh._lock.acquire(timeout=0)
+        with pytest.raises(FractalSSHTimeoutError) as e:
+            with fake_fractal_ssh.acquire_timeout(timeout=0.1):
+                pass
+        print(e)
 
 
 def test_run_command(fractal_ssh: FractalSSH):
@@ -214,50 +215,51 @@ def test_remove_folder_input_validation():
     """
     Test input validation of `remove_folder` method.
     """
-    fake_fractal_ssh = FractalSSH(connection=Connection(host="localhost"))
+    with Connection(host="localhost") as connection:
+        fake_fractal_ssh = FractalSSH(connection=connection)
 
-    # Folders which are just invalid
-    invalid_folders = [
-        None,
-        "   /somewhere",
-        "/ somewhere",
-        "somewhere",
-        "$(pwd)",
-        "`pwd`",
-    ]
-    for folder in invalid_folders:
+        # Folders which are just invalid
+        invalid_folders = [
+            None,
+            "   /somewhere",
+            "/ somewhere",
+            "somewhere",
+            "$(pwd)",
+            "`pwd`",
+        ]
+        for folder in invalid_folders:
+            with pytest.raises(ValueError) as e:
+                fake_fractal_ssh.remove_folder(folder=folder, safe_root="/")
+            print(e.value)
+
+        # Folders which are just invalid
+        invalid_folders = [
+            None,
+            "   /somewhere",
+            "/ somewhere",
+            "somewhere",
+            "$(pwd)",
+            "`pwd`",
+        ]
+        for safe_root in invalid_folders:
+            with pytest.raises(ValueError) as e:
+                fake_fractal_ssh.remove_folder(
+                    folder="/tmp/something",
+                    safe_root=safe_root,
+                )
+            print(e.value)
+
+        # Folders which are not relative to the accepted root
         with pytest.raises(ValueError) as e:
-            fake_fractal_ssh.remove_folder(folder=folder, safe_root="/")
+            fake_fractal_ssh.remove_folder(folder="/", safe_root="/tmp")
         print(e.value)
 
-    # Folders which are just invalid
-    invalid_folders = [
-        None,
-        "   /somewhere",
-        "/ somewhere",
-        "somewhere",
-        "$(pwd)",
-        "`pwd`",
-    ]
-    for safe_root in invalid_folders:
         with pytest.raises(ValueError) as e:
             fake_fractal_ssh.remove_folder(
-                folder="/tmp/something",
-                safe_root=safe_root,
+                folder="/actual_root/../something",
+                safe_root="/actual_root",
             )
         print(e.value)
-
-    # Folders which are not relative to the accepted root
-    with pytest.raises(ValueError) as e:
-        fake_fractal_ssh.remove_folder(folder="/", safe_root="/tmp")
-    print(e.value)
-
-    with pytest.raises(ValueError) as e:
-        fake_fractal_ssh.remove_folder(
-            folder="/actual_root/../something",
-            safe_root="/actual_root",
-        )
-    print(e.value)
 
 
 def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):

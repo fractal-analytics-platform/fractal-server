@@ -60,6 +60,8 @@ def validate_cmd(command: str, allow_char: Optional[str] = None):
         command: command to validate.
         allow_char: chars to accept among the forbidden ones
     """
+    if not isinstance(command, str):
+        raise ValueError(f"{command=} is not a string.")
     forbidden = set(__NOT_ALLOWED_FOR_COMMANDS__)
     if allow_char is not None:
         forbidden = forbidden - set(allow_char)
