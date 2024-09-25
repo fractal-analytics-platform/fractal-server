@@ -308,7 +308,11 @@ class FractalSSH(object):
         validate_cmd(folder)
         validate_cmd(safe_root)
 
-        if not Path(folder).is_absolute():
+        if " " in folder:
+            raise ValueError(f"folder='{folder}' includes whitespace.")
+        elif " " in safe_root:
+            raise ValueError(f"safe_root='{safe_root}' includes whitespace.")
+        elif not Path(folder).is_absolute():
             raise ValueError(f"{folder=} is not an absolute path.")
         elif not Path(safe_root).is_absolute():
             raise ValueError(f"{safe_root=} is not an absolute path.")
