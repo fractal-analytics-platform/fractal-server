@@ -406,7 +406,7 @@ async def test_stop_job(
             f"{PREFIX}/job/{job.id}/stop/",
         )
 
-        if backend == "slurm":
+        if backend in ["slurm", "slurm_ssh"]:
             assert res.status_code == 202
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
             debug(shutdown_file)
