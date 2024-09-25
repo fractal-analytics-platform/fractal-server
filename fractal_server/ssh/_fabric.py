@@ -305,21 +305,18 @@ class FractalSSH(object):
             safe_root: If `folder` is not a subfolder of the absolute
                 `safe_root` path, raise an error.
         """
-        invalid_characters = {" ", "\n", ";", "$", "`"}
+        validate_cmd(folder)
+        validate_cmd(safe_root)
 
-        if (
-            not isinstance(folder, str)
-            or not isinstance(safe_root, str)
-            or len(invalid_characters.intersection(folder)) > 0
-            or len(invalid_characters.intersection(safe_root)) > 0
-            or not Path(folder).is_absolute()
-            or not Path(safe_root).is_absolute()
-            or not Path(folder).resolve().is_relative_to(safe_root)
-        ):
+        if not Path(folder).is_absolute() or not Path(safe_root).is_absolute():
             raise ValueError(
-                f"{folder=} argument is invalid or it is not "
-                f"relative to {safe_root=}."
+                f"At least one of {folder=} and {safe_root=} "
+                "is not an absolute path."
             )
+        elif not (
+            Path(folder).resolve().is_relative_to(Path(safe_root).resolve())
+        ):
+            raise ValueError(f"{folder=} is not a subfolder of {safe_root=}.")
         else:
             cmd = f"rm -r {folder}"
             self.run_command(cmd=cmd)
