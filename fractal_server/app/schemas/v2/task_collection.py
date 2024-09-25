@@ -13,6 +13,7 @@ from .._validators import valdictkeys
 from .._validators import valstr
 from fractal_server.app.schemas._validators import valutc
 from fractal_server.app.schemas.v2 import ManifestV2
+from fractal_server.string_tools import validate_cmd
 
 
 class CollectionStatusV2(str, Enum):
@@ -144,14 +145,13 @@ class TaskCollectCustomV2(BaseModel):
         return values
 
     @validator("package_name")
-    def package_name_prevent_injection(cls, value: str):
+    def package_name_validator(cls, value: str):
         """
-        Remove all whitespace characters, and reject values containing `;`.
+        Remove all whitespace characters, then check for invalid code.
         """
         if value is not None:
-            if ";" in value:
-                raise ValueError(f"Invalid package_name: {value}")
-            value = value.replace(" ", "")
+            value = valstr("package_name")(value)
+            validate_cmd(value)
         return value
 
     @validator("package_root")
