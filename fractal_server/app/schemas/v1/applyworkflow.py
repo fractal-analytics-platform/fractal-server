@@ -4,9 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import validator
-from pydantic.types import StrictStr
 
-from .._validators import valstr
 from .._validators import valutc
 from .dumps import DatasetDumpV1
 from .dumps import ProjectDumpV1
@@ -15,7 +13,6 @@ from .dumps import WorkflowDumpV1
 
 __all__ = (
     "_ApplyWorkflowBaseV1",
-    "ApplyWorkflowCreateV1",
     "ApplyWorkflowReadV1",
 )
 
@@ -50,58 +47,6 @@ class _ApplyWorkflowBaseV1(BaseModel):
     """
 
     worker_init: Optional[str]
-
-
-class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
-    """
-    Class for `ApplyWorkflow` creation.
-
-    Attributes:
-        first_task_index:
-        last_task_index:
-        slurm_account:
-    """
-
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
-    slurm_account: Optional[StrictStr] = None
-
-    # Validators
-    _worker_init = validator("worker_init", allow_reuse=True)(
-        valstr("worker_init")
-    )
-
-    @validator("first_task_index", always=True)
-    def first_task_index_non_negative(cls, v, values):
-        """
-        Check that `first_task_index` is non-negative.
-        """
-        if v is not None and v < 0:
-            raise ValueError(
-                f"first_task_index cannot be negative (given: {v})"
-            )
-        return v
-
-    @validator("last_task_index", always=True)
-    def first_last_task_indices(cls, v, values):
-        """
-        Check that `last_task_index` is non-negative, and that it is not
-        smaller than `first_task_index`.
-        """
-        if v is not None and v < 0:
-            raise ValueError(
-                f"last_task_index cannot be negative (given: {v})"
-            )
-
-        first_task_index = values.get("first_task_index")
-        last_task_index = v
-        if first_task_index is not None and last_task_index is not None:
-            if first_task_index > last_task_index:
-                raise ValueError(
-                    f"{first_task_index=} cannot be larger than "
-                    f"{last_task_index=}"
-                )
-        return v
 
 
 class ApplyWorkflowReadV1(_ApplyWorkflowBaseV1):
@@ -156,14 +101,3 @@ class ApplyWorkflowReadV1(_ApplyWorkflowBaseV1):
     _end_timestamp = validator("end_timestamp", allow_reuse=True)(
         valutc("end_timestamp")
     )
-
-
-class ApplyWorkflowUpdateV1(BaseModel):
-    """
-    Class for updating a job status.
-
-    Attributes:
-        status: New job status.
-    """
-
-    status: JobStatusTypeV1

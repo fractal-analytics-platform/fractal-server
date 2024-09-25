@@ -4,14 +4,11 @@ from pathlib import Path
 from urllib.parse import quote
 from zipfile import ZipFile
 
-import pytest
 from devtools import debug
 
-from fractal_server.app.models.v1 import JobStatusTypeV1
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
 
@@ -576,145 +573,6 @@ async def test_view_single_job(
         res = await client.get(f"{PREFIX}/job/{job.id}/?show_tmp_logs=true")
         assert res.status_code == 200
         assert res.json()["log"] == "LOG"
-
-
-async def test_patch_job(
-    MockCurrentUser,
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    job_factory,
-    task_factory,
-    client,
-    registered_superuser_client,
-    db,
-    tmp_path,
-):
-    ORIGINAL_STATUS = JobStatusTypeV1.SUBMITTED
-    NEW_STATUS = JobStatusTypeV1.FAILED
-
-    async with MockCurrentUser() as user:
-        project = await project_factory(user)
-        workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(name="task", source="source")
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
-        )
-        dataset = await dataset_factory(project_id=project.id)
-        job = await job_factory(
-            working_dir=tmp_path.as_posix(),
-            project_id=project.id,
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            status=ORIGINAL_STATUS,
-        )
-        # Read job as job owner (standard user)
-        res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
-        assert res.status_code == 200
-        assert res.json()["status"] == ORIGINAL_STATUS
-        assert res.json()["end_timestamp"] is None
-
-        # Patch job as job owner (standard user) and fail
-        res = await client.patch(
-            f"{PREFIX}/job/{job.id}/",
-            json={"status": NEW_STATUS},
-        )
-        assert res.status_code == 401
-
-        # Patch job as superuser
-        async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-            # Fail due to invalid payload (missing attribute "status")
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"working_dir": "/tmp"},
-            )
-            assert res.status_code == 422
-            # Fail due to invalid payload (status not part of JobStatusType)
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"status": "something_invalid"},
-            )
-            assert res.status_code == 422
-            # Fail due to invalid payload (status not failed)
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"status": "done"},
-            )
-            assert res.status_code == 422
-            # Fail due to non-existing job
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{123456789}/",
-                json={"status": NEW_STATUS},
-            )
-            assert res.status_code == 404
-            # Successfully apply patch
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"status": NEW_STATUS},
-            )
-            assert res.status_code == 200
-            debug(res.json())
-            assert res.json()["status"] == NEW_STATUS
-            assert res.json()["end_timestamp"] is not None
-
-        # Read job as job owner (standard user)
-        res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
-        assert res.status_code == 200
-        assert res.json()["status"] == NEW_STATUS
-        assert res.json()["end_timestamp"] is not None
-
-
-@pytest.mark.parametrize("backend", backends_available)
-async def test_stop_job(
-    backend,
-    MockCurrentUser,
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    job_factory,
-    task_factory,
-    registered_superuser_client,
-    db,
-    tmp_path,
-    override_settings_factory,
-):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
-
-    async with MockCurrentUser() as user:
-        project = await project_factory(user)
-        workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(name="task", source="source")
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
-        )
-        dataset = await dataset_factory(project_id=project.id)
-        job = await job_factory(
-            working_dir=tmp_path.as_posix(),
-            project_id=project.id,
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            status=JobStatusTypeV1.SUBMITTED,
-        )
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
-        res = await registered_superuser_client.get(
-            f"{PREFIX}/job/{job.id}/stop/",
-        )
-
-        if backend == "slurm":
-            assert res.status_code == 202
-            shutdown_file = tmp_path / SHUTDOWN_FILENAME
-            debug(shutdown_file)
-            assert shutdown_file.exists()
-            res = await registered_superuser_client.get(
-                f"{PREFIX}/job/{job.id + 42}/stop/",
-            )
-            assert res.status_code == 404
-        else:
-            assert res.status_code == 422
 
 
 async def test_download_job_logs(

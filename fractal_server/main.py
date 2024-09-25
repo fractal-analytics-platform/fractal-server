@@ -48,7 +48,7 @@ def collect_routers(app: FastAPI) -> None:
     settings = Inject(get_settings)
 
     app.include_router(router_api, prefix="/api")
-    if settings.FRACTAL_API_V1_MODE.startswith("include"):
+    if settings.FRACTAL_API_V1_MODE == "include_read_only":
         app.include_router(router_api_v1, prefix="/api/v1")
         app.include_router(
             router_admin_v1, prefix="/admin/v1", tags=["V1 Admin area"]

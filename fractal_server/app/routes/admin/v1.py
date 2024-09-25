@@ -9,7 +9,6 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func
@@ -17,7 +16,6 @@ from sqlmodel import select
 
 from ....config import get_settings
 from ....syringe import Inject
-from ....utils import get_timestamp
 from ....zip_tools import _zip_folder_to_byte_stream_iterator
 from ...db import AsyncSession
 from ...db import get_async_db
@@ -28,12 +26,9 @@ from ...models.v1 import Project
 from ...models.v1 import Workflow
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
 from ...schemas.v1 import ApplyWorkflowReadV1
-from ...schemas.v1 import ApplyWorkflowUpdateV1
 from ...schemas.v1 import DatasetReadV1
 from ...schemas.v1 import ProjectReadV1
 from ...schemas.v1 import WorkflowReadV1
-from ..aux._job import _write_shutdown_file
-from ..aux._runner import _check_shutdown_is_supported
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_superuser
 
@@ -302,67 +297,6 @@ async def view_single_job(
             pass
 
     return job
-
-
-@router_admin_v1.patch(
-    "/job/{job_id}/",
-    response_model=ApplyWorkflowReadV1,
-)
-async def update_job(
-    job_update: ApplyWorkflowUpdateV1,
-    job_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[ApplyWorkflowReadV1]:
-    """
-    Change the status of an existing job.
-
-    This endpoint is only open to superusers, and it does not apply
-    project-based access-control to jobs.
-    """
-    job = await db.get(ApplyWorkflow, job_id)
-    if job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job {job_id} not found",
-        )
-
-    if job_update.status != JobStatusTypeV1.FAILED:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Cannot set job status to {job_update.status}",
-        )
-
-    setattr(job, "status", job_update.status)
-    setattr(job, "end_timestamp", get_timestamp())
-    await db.commit()
-    await db.refresh(job)
-    await db.close()
-    return job
-
-
-@router_admin_v1.get("/job/{job_id}/stop/", status_code=202)
-async def stop_job(
-    job_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> Response:
-    """
-    Stop execution of a workflow job.
-    """
-
-    _check_shutdown_is_supported()
-
-    job = await db.get(ApplyWorkflow, job_id)
-    if job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job {job_id} not found",
-        )
-
-    _write_shutdown_file(job=job)
-
-    return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
 @router_admin_v1.get(

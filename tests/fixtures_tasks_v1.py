@@ -8,8 +8,6 @@ from devtools import debug  # noqa
 from pydantic import BaseModel
 from pydantic import validator
 
-from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.v1.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
 
@@ -147,72 +145,3 @@ async def dummy_task_package_missing_manifest(
     wheel_relative = await execute_command("ls dist/*.whl", cwd=PACKAGE_PATH)
     wheel_path = PACKAGE_PATH / wheel_relative
     yield wheel_path
-
-
-@pytest.fixture(scope="session")
-async def install_dummy_packages(
-    tmp777_session_path, dummy_task_package, current_py_version: str
-):
-
-    from fractal_server.tasks.v1.background_operations import (
-        create_package_environment_pip,
-    )
-    from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
-
-    task_pkg = _TaskCollectPip(
-        package=dummy_task_package.as_posix(),
-        python_version=current_py_version,
-    )
-
-    pkg_info = inspect_package(dummy_task_package)
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_name = pkg_info["pkg_name"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    task_pkg.check()
-
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    task_list = await create_package_environment_pip(
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-        logger_name="dummy",
-    )
-
-    return task_list
-
-
-@pytest.fixture(scope="function")
-async def collect_packages(db_sync, install_dummy_packages):
-    from fractal_server.tasks.v1.background_operations import _insert_tasks
-
-    tasks = await _insert_tasks(task_list=install_dummy_packages, db=db_sync)
-    return tasks
-
-
-@pytest.fixture(scope="function")
-def relink_python_interpreter_v1(collect_packages, current_py_version: str):
-    """
-    Rewire python executable in tasks
-
-    """
-    import os
-    import logging
-
-    logger = logging.getLogger("RELINK")
-    logger.setLevel(logging.INFO)
-    task = collect_packages[0]
-    task_python = Path(task.command.split()[0])
-    orig_python = os.readlink(task_python)
-    logger.warning(f"RELINK: Original status: {task_python=} -> {orig_python}")
-    task_python.unlink()
-    task_python.symlink_to(f"/usr/bin/python{current_py_version}")
-    logger.warning(
-        f"RELINK: Updated status: {task_python=} -> "
-        f"{os.readlink(task_python.as_posix())}"
-    )
-    yield
-    task_python.unlink()
-    task_python.symlink_to(orig_python)
-    logger.warning(
-        f"RELINK: Restore original: {task_python=} -> "
-        f"{os.readlink(task_python.as_posix())}"
-    )

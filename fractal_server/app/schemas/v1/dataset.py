@@ -6,20 +6,14 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from .._validators import val_absolute_path
-from .._validators import valstr
 from .._validators import valutc
 from .dumps import WorkflowTaskDumpV1
 from .project import ProjectReadV1
 from .workflow import WorkflowTaskStatusTypeV1
 
 __all__ = (
-    "DatasetUpdateV1",
-    "DatasetCreateV1",
     "DatasetReadV1",
-    "ResourceCreateV1",
     "ResourceReadV1",
-    "ResourceUpdateV1",
     "DatasetStatusReadV1",
 )
 
@@ -33,24 +27,6 @@ class _ResourceBaseV1(BaseModel):
     """
 
     path: str
-
-
-class ResourceCreateV1(_ResourceBaseV1):
-    """
-    Class for `Resource` creation.
-    """
-
-    # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
-
-
-class ResourceUpdateV1(_ResourceBaseV1):
-    """
-    Class for `Resource` update.
-    """
-
-    # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
 
 
 class ResourceReadV1(_ResourceBaseV1):
@@ -99,37 +75,6 @@ class _DatasetBaseV1(BaseModel):
     meta: dict[str, Any] = Field(default={})
     history: list[_DatasetHistoryItemV1] = Field(default=[])
     read_only: bool = False
-
-
-class DatasetUpdateV1(_DatasetBaseV1):
-    """
-    Class for `Dataset` update.
-
-    Attributes:
-        name:
-        meta:
-        history:
-        read_only:
-    """
-
-    name: Optional[str]
-    meta: Optional[dict[str, Any]] = None
-    history: Optional[list[_DatasetHistoryItemV1]] = None
-    read_only: Optional[bool]
-
-    # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
-
-
-class DatasetCreateV1(_DatasetBaseV1):
-    """
-    Class for `Dataset` creation.
-    """
-
-    # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
 
 
 class DatasetReadV1(_DatasetBaseV1):

@@ -16,7 +16,7 @@ FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 @pytest.mark.skip(reason="The test takes too long")
 @pytest.mark.parametrize(
     "FRACTAL_API_V1_MODE,is_v1_enabled",
-    [("include", True), ("exclude", False)],
+    [("include_read_only", True), ("exclude", False)],
 )
 async def test_exclude_v1_api(
     FRACTAL_API_V1_MODE: str,

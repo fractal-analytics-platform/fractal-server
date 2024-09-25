@@ -11,8 +11,6 @@ from fastapi import status
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
-from .....config import get_settings
-from .....syringe import Inject
 from ....db import AsyncSession
 from ....models.v1 import ApplyWorkflow
 from ....models.v1 import Dataset
@@ -24,15 +22,6 @@ from ....models.v1 import WorkflowTask
 from ....schemas.v1 import JobStatusTypeV1
 from ...aux.validate_user_settings import verify_user_has_settings
 from fractal_server.app.models import UserOAuth
-
-
-def _raise_if_v1_is_read_only() -> None:
-    settings = Inject(get_settings)
-    if settings.FRACTAL_API_V1_MODE == "include_read_only":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Legacy API is in read-only mode.",
-        )
 
 
 async def _get_project_check_owner(

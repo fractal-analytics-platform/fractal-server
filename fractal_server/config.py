@@ -547,8 +547,8 @@ class Settings(BaseSettings):
     """
 
     FRACTAL_API_V1_MODE: Literal[
-        "include", "include_read_only", "exclude"
-    ] = "include"
+        "include_read_only", "exclude"
+    ] = "include_read_only"
     """
     Whether to include the v1 API.
     """

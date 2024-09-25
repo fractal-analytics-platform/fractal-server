@@ -6,9 +6,7 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Response
 from fastapi import status
-from sqlmodel import or_
 from sqlmodel import select
 
 from ....db import AsyncSession
@@ -18,51 +16,19 @@ from ....models.v1 import Dataset
 from ....models.v1 import Project
 from ....models.v1 import Resource
 from ....runner.filenames import HISTORY_FILENAME
-from ....schemas.v1 import DatasetCreateV1
 from ....schemas.v1 import DatasetReadV1
 from ....schemas.v1 import DatasetStatusReadV1
-from ....schemas.v1 import DatasetUpdateV1
-from ....schemas.v1 import ResourceCreateV1
 from ....schemas.v1 import ResourceReadV1
-from ....schemas.v1 import ResourceUpdateV1
 from ....schemas.v1 import WorkflowExportV1
 from ....schemas.v1 import WorkflowTaskExportV1
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _raise_if_v1_is_read_only
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 
 router = APIRouter()
-
-
-@router.post(
-    "/project/{project_id}/dataset/",
-    response_model=DatasetReadV1,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_dataset(
-    project_id: int,
-    dataset: DatasetCreateV1,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV1]:
-    """
-    Add new dataset to current project
-    """
-    _raise_if_v1_is_read_only()
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    db_dataset = Dataset(project_id=project_id, **dataset.dict())
-    db.add(db_dataset)
-    await db.commit()
-    await db.refresh(db_dataset)
-    await db.close()
-
-    return db_dataset
 
 
 @router.get(
@@ -120,147 +86,6 @@ async def read_dataset(
     return dataset
 
 
-@router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/",
-    response_model=DatasetReadV1,
-)
-async def update_dataset(
-    project_id: int,
-    dataset_id: int,
-    dataset_update: DatasetUpdateV1,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV1]:
-    """
-    Edit a dataset associated to the current project
-    """
-    _raise_if_v1_is_read_only()
-    if dataset_update.history is not None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Cannot modify dataset history.",
-        )
-
-    output = await _get_dataset_check_owner(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    db_dataset = output["dataset"]
-
-    for key, value in dataset_update.dict(exclude_unset=True).items():
-        setattr(db_dataset, key, value)
-
-    await db.commit()
-    await db.refresh(db_dataset)
-    await db.close()
-    return db_dataset
-
-
-@router.delete(
-    "/project/{project_id}/dataset/{dataset_id}/",
-    status_code=204,
-)
-async def delete_dataset(
-    project_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Response:
-    """
-    Delete a dataset associated to the current project
-    """
-    _raise_if_v1_is_read_only()
-    output = await _get_dataset_check_owner(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    dataset = output["dataset"]
-
-    # Fail if there exist jobs that are submitted and in relation with the
-    # current dataset.
-    stm = _get_submitted_jobs_statement().where(
-        or_(
-            ApplyWorkflow.input_dataset_id == dataset_id,
-            ApplyWorkflow.output_dataset_id == dataset_id,
-        )
-    )
-    res = await db.execute(stm)
-    jobs = res.scalars().all()
-    if jobs:
-        string_ids = str([job.id for job in jobs])[1:-1]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Cannot delete dataset {dataset.id} because it "
-                f"is linked to active job(s) {string_ids}."
-            ),
-        )
-
-    # Cascade operations: set foreign-keys to null for jobs which are in
-    # relationship with the current dataset
-    # input_dataset
-    stm = select(ApplyWorkflow).where(
-        ApplyWorkflow.input_dataset_id == dataset_id
-    )
-    res = await db.execute(stm)
-    jobs = res.scalars().all()
-    for job in jobs:
-        job.input_dataset_id = None
-        await db.merge(job)
-    await db.commit()
-    # output_dataset
-    stm = select(ApplyWorkflow).where(
-        ApplyWorkflow.output_dataset_id == dataset_id
-    )
-    res = await db.execute(stm)
-    jobs = res.scalars().all()
-    for job in jobs:
-        job.output_dataset_id = None
-        await db.merge(job)
-    await db.commit()
-
-    # Delete dataset
-    await db.delete(dataset)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.post(
-    "/project/{project_id}/dataset/{dataset_id}/resource/",
-    response_model=ResourceReadV1,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_resource(
-    project_id: int,
-    dataset_id: int,
-    resource: ResourceCreateV1,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[ResourceReadV1]:
-    """
-    Add resource to an existing dataset
-    """
-    _raise_if_v1_is_read_only()
-    output = await _get_dataset_check_owner(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    dataset = output["dataset"]
-    db_resource = Resource(dataset_id=dataset.id, **resource.dict())
-    db.add(db_resource)
-    await db.commit()
-    await db.refresh(db_resource)
-    await db.close()
-    return db_resource
-
-
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/resource/",
     response_model=list[ResourceReadV1],
@@ -285,83 +110,6 @@ async def get_resource_list(
     resource_list = res.scalars().all()
     await db.close()
     return resource_list
-
-
-@router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}/",
-    response_model=ResourceReadV1,
-)
-async def update_resource(
-    project_id: int,
-    dataset_id: int,
-    resource_id: int,
-    resource_update: ResourceUpdateV1,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[ResourceReadV1]:
-    """
-    Edit a resource of a dataset
-    """
-    _raise_if_v1_is_read_only()
-    output = await _get_dataset_check_owner(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    dataset = output["dataset"]
-    orig_resource = await db.get(Resource, resource_id)
-
-    if orig_resource not in dataset.resource_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Resource {resource_id} is not part of "
-                f"dataset {dataset_id}"
-            ),
-        )
-
-    for key, value in resource_update.dict(exclude_unset=True).items():
-        setattr(orig_resource, key, value)
-    await db.commit()
-    await db.refresh(orig_resource)
-    await db.close()
-    return orig_resource
-
-
-@router.delete(
-    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}/",
-    status_code=204,
-)
-async def delete_resource(
-    project_id: int,
-    dataset_id: int,
-    resource_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Response:
-    """
-    Delete a resource of a dataset
-    """
-    _raise_if_v1_is_read_only()
-    # Get the dataset DB entry
-    output = await _get_dataset_check_owner(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    dataset = output["dataset"]
-    resource = await db.get(Resource, resource_id)
-    if not resource or resource.dataset_id != dataset.id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Resource does not exist or does not belong to dataset",
-        )
-    await db.delete(resource)
-    await db.commit()
-    await db.close()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(

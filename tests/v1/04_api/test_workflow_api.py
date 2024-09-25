@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 from datetime import timezone
@@ -13,9 +12,6 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
-from fractal_server.app.schemas.v1 import WorkflowExportV1
-from fractal_server.app.schemas.v1 import WorkflowImportV1
-from fractal_server.app.schemas.v1 import WorkflowReadV1
 
 
 async def get_workflow(client, p_id, wf_id):
@@ -757,87 +753,6 @@ async def test_patch_workflow_task_failures(
         )
         debug(res.content)
         assert res.status_code == 422
-
-
-async def test_import_export_workflow(
-    client,
-    MockCurrentUser,
-    project_factory,
-    testdata_path,
-    collect_packages,
-):
-
-    # Load workflow to be imported into DB
-    with (testdata_path / "import_export/workflow.json").open("r") as f:
-        workflow_from_file = json.load(f)
-
-    # Modify tasks' source to match the existing one
-    debug(collect_packages)
-    existing_source = collect_packages[0].source
-    debug(existing_source)
-    existing_package_source = ":".join(existing_source.split(":")[:-1])
-    debug(existing_package_source)
-    task_list = workflow_from_file["task_list"]
-    for ind, wftask in enumerate(task_list):
-        old_task_source = task_list[ind]["task"]["source"]
-        new_task_source = old_task_source.replace(
-            "PKG_SOURCE", existing_package_source
-        )  # noqa
-        task_list[ind]["task"]["source"] = new_task_source
-    workflow_from_file["task_list"] = task_list[:]
-
-    debug(workflow_from_file)
-
-    # Create project
-    async with MockCurrentUser() as user:
-        prj = await project_factory(user)
-
-    # Import workflow into project
-    payload = WorkflowImportV1(**workflow_from_file).dict(exclude_none=True)
-    debug(payload)
-    res = await client.post(
-        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
-    )
-    debug(res.json())
-    assert res.status_code == 201
-    workflow_imported = res.json()
-    debug(workflow_imported)
-
-    # Check that output can be cast to WorkflowRead
-    WorkflowReadV1(**workflow_imported)
-
-    # Export workflow
-    workflow_id = workflow_imported["id"]
-    res = await client.get(
-        f"/api/v1/project/{prj.id}/workflow/{workflow_id}/export/"
-    )
-    debug(res)
-    debug(res.status_code)
-    workflow_exported = res.json()
-    debug(workflow_exported)
-    assert "id" not in workflow_exported
-    assert "project_id" not in workflow_exported
-    for wftask in workflow_exported["task_list"]:
-        assert "id" not in wftask
-        assert "task_id" not in wftask
-        assert "workflow_id" not in wftask
-        assert "id" not in wftask["task"]
-    assert res.status_code == 200
-
-    # Check that the exported workflow is an extension of the one in the
-    # original JSON file
-    wf_old = WorkflowExportV1(**workflow_from_file).dict(exclude_none=True)
-    wf_new = WorkflowExportV1(**workflow_exported).dict(exclude_none=True)
-    assert len(wf_old["task_list"]) == len(wf_new["task_list"])
-    for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
-        assert task_old.keys() <= task_new.keys()
-        if "meta" in task_old:  # then "meta" is also in task_new
-            assert task_old["meta"].items() <= task_new["meta"].items()
-            task_old.pop("meta")
-            task_new.pop("meta")
-        elif "meta" in task_new:  # but not in task_old
-            task_new.pop("meta")
-        assert task_old == task_new
 
 
 async def test_export_workflow_log(
