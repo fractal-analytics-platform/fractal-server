@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.6.0 (unreleased)
+# 2.6.0
 
 > WARNING: This release requires running `fractalctl update-db-data` (after `fractalctl set-db`).
 
