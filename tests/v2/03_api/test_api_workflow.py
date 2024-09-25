@@ -100,7 +100,6 @@ async def test_delete_workflow(
     client,
     MockCurrentUser,
     tmp_path,
-    collect_packages,
 ):
     """
     GIVEN a Workflow with two Tasks
