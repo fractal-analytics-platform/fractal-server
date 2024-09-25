@@ -6,8 +6,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import validator
 
-from .._validators import valint
-from .._validators import valstr
 from .._validators import valutc
 from .project import ProjectReadV1
 from .task import TaskExportV1
