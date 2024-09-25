@@ -34,6 +34,7 @@ class UserSettingsReadStrict(BaseModel):
     slurm_user: Optional[str] = None
     slurm_accounts: list[str]
     cache_dir: Optional[str] = None
+    ssh_username: Optional[str] = None
 
 
 class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
