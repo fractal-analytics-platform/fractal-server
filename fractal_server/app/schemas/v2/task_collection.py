@@ -150,8 +150,9 @@ class TaskCollectCustomV2(BaseModel):
         Remove all whitespace characters, then check for invalid code.
         """
         if value is not None:
-            value = valstr("package_name")(value)
             validate_cmd(value)
+            value = valstr("package_name")(value)
+            value = value.replace(" ", "")
         return value
 
     @validator("package_root")
