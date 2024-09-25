@@ -5,7 +5,7 @@
 > WARNING: This release requires running `fractalctl update-db-data` (after `fractalctl set-db`).
 
 * API:
-    * Introduce user-settings API, in `/auth/users/{user_id}/settings/` and `/auth/current-user/settings/` (\#1778).
+    * Introduce user-settings API, in `/auth/users/{user_id}/settings/` and `/auth/current-user/settings/` (\#1778, \#1807).
     * Add the creation of empty settings to `UserManager.on_after_register` hook (\#1778).
     * Remove deprecated user's attributes (`slurm_user`, `cache_dir`, `slurm_accounts`) from API, in favor of new `UserSetting` ones (\#1778).
     * Validate user settings in endpoints that rely on them (\#1778).
