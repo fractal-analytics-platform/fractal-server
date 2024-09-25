@@ -130,7 +130,7 @@
 | fractal\_server/app/schemas/\_validators.py                                    |       60 |        2 |       30 |        3 |     94% |79, 82, 95->98 |
 | fractal\_server/app/schemas/user.py                                            |       33 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/user\_group.py                                     |       18 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/user\_settings.py                                  |       58 |        0 |       10 |        0 |    100% |           |
+| fractal\_server/app/schemas/user\_settings.py                                  |       59 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/schemas/v1/\_\_init\_\_.py                                 |       34 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v1/applyworkflow.py                                |       62 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/schemas/v1/dataset.py                                      |       52 |        0 |        0 |        0 |    100% |           |
@@ -182,7 +182,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       26 |        0 |    100% |           |
-|                                                                      **TOTAL** | **10078** |  **369** | **2845** |  **186** | **95%** |           |
+|                                                                      **TOTAL** | **10079** |  **369** | **2845** |  **186** | **95%** |           |
 
 
 ## Setup coverage badge
