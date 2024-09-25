@@ -40,7 +40,9 @@ async def _project_list_v2(user: UserOAuth, db):
     return res.scalars().unique().all()
 
 
-async def test_post_and_get_project(client, db, MockCurrentUser):
+async def test_post_and_get_project(
+    client, db, MockCurrentUser, project_factory
+):
 
     PAYLOAD = dict(name="project_v2")
 
@@ -82,9 +84,8 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
 
         # create two V1 Projects
         for i in range(2):
-            res = await client.post(
-                "/api/v1/project/", json=dict(name=f"project_{i}_v1")
-            )
+            await project_factory(name=f"project_{i}_v1", user=userB)
+
         assert len(await _project_list(userB, db)) == 2
         assert len(await _project_list_v2(userB, db)) == 1
 
