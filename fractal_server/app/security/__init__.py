@@ -54,6 +54,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.logger import set_logger
 
@@ -193,6 +194,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     async def on_after_register(
         self, user: UserOAuth, request: Optional[Request] = None
     ):
+        logger = set_logger("fractal_server.on_after_register")
+
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
         )
@@ -204,23 +207,29 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             res = await db.execute(stm)
             default_group = res.scalar_one_or_none()
             if default_group is None:
-                logger.error(
+                logger.warning(
                     f"No group found with name {FRACTAL_DEFAULT_GROUP_NAME}"
                 )
             else:
-                logger.warning(
-                    f"START adding {user.email} user to group "
-                    f"{default_group.id=}."
-                )
                 link = LinkUserGroup(
                     user_id=user.id, group_id=default_group.id
                 )
                 db.add(link)
                 await db.commit()
-                logger.warning(
-                    f"END   adding {user.email} user to group "
-                    f"{default_group.id=}."
+                logger.info(
+                    f"Added {user.email} user to group {default_group.id=}."
                 )
+
+            this_user = await db.get(UserOAuth, user.id)
+
+            this_user.settings = UserSettings()
+            await db.merge(this_user)
+            await db.commit()
+            await db.refresh(this_user)
+            logger.info(
+                f"Associated empty settings (id={this_user.user_settings_id}) "
+                f"to '{this_user.email}'."
+            )
 
 
 async def get_user_manager(
@@ -294,9 +303,13 @@ async def _create_first_user(
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     function_logger.info(f"User '{user.email}' created")
-
     except UserAlreadyExists:
         function_logger.warning(f"User '{email}' already exists")
+    except Exception as e:
+        function_logger.error(
+            f"ERROR in _create_first_user, original error {str(e)}"
+        )
+        raise e
     finally:
         function_logger.info(f"END   _create_first_user, with email '{email}'")
 

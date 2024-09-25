@@ -43,9 +43,17 @@ openapi_parser.add_argument(
 )
 
 # fractalctl set-db
-subparsers.add_parser(
+set_db_parser = subparsers.add_parser(
     "set-db",
-    description="Initialise the database and apply schema migrations",
+    description=(
+        "Initialise/upgrade database schemas and create first group&user."
+    ),
+)
+set_db_parser.add_argument(
+    "--skip-init-data",
+    action="store_true",
+    help="If set, do not try creating first group and user.",
+    default=False,
 )
 
 # fractalctl update-db-data
@@ -66,27 +74,34 @@ def save_openapi(dest="openapi.json"):
         json.dump(openapi_schema, f)
 
 
-def set_db():
+def set_db(skip_init_data: bool = False):
     """
-    Set-up / Upgrade database schema
+    Upgrade database schema *and* create first group/user
 
     Call alembic to upgrade to the latest migration.
-
     Ref: https://stackoverflow.com/a/56683030/283972
+
+    Arguments:
+        skip_init_data: If `True`, skip creation of first group and user.
     """
-    import alembic.config
-    from pathlib import Path
-    import fractal_server
     from fractal_server.app.security import _create_first_user
     from fractal_server.app.security import _create_first_group
     from fractal_server.syringe import Inject
     from fractal_server.config import get_settings
+
+    import alembic.config
+    from pathlib import Path
+    import fractal_server
 
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
     print(f"START: Run alembic.config, with argv={alembic_args}")
     alembic.config.main(argv=alembic_args)
     print("END: alembic.config")
+
+    if skip_init_data:
+        return
+
     # Insert default group
     print()
     _create_first_group()
@@ -179,7 +194,7 @@ def run():
     if args.cmd == "openapi":
         save_openapi(dest=args.openapi_file)
     elif args.cmd == "set-db":
-        set_db()
+        set_db(skip_init_data=args.skip_init_data)
     elif args.cmd == "update-db-data":
         update_db_data()
     elif args.cmd == "start":

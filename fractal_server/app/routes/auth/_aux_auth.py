@@ -3,11 +3,11 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from ...models.linkusergroup import LinkUserGroup
-from ...models.security import UserGroup
-from ...models.security import UserOAuth
-from ...schemas.user import UserRead
-from ...schemas.user_group import UserGroupRead
+from fractal_server.app.models.linkusergroup import LinkUserGroup
+from fractal_server.app.models.security import UserGroup
+from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.schemas.user import UserRead
+from fractal_server.app.schemas.user_group import UserGroupRead
 
 
 async def _get_single_user_with_group_names(

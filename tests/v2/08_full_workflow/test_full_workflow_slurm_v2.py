@@ -39,6 +39,11 @@ async def test_full_workflow_slurm(
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
         user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_settings_dict=dict(
+            slurm_user=SLURM_USER,
+            slurm_accounts=[],
+            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+        ),
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
@@ -75,6 +80,11 @@ async def test_full_workflow_TaskExecutionError_slurm(
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
         user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_settings_dict=dict(
+            slurm_user=SLURM_USER,
+            slurm_accounts=[],
+            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+        ),
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
@@ -109,7 +119,14 @@ async def test_failing_workflow_JobExecutionError(
 
     user_cache_dir = str(tmp777_path / "user_cache_dir-slurm")
     user_kwargs = dict(cache_dir=user_cache_dir, is_verified=True)
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs,
+        user_settings_dict=dict(
+            slurm_user=SLURM_USER,
+            slurm_accounts=[],
+            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+        ),
+    ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
@@ -244,6 +261,11 @@ async def test_non_executable_task_command_slurm(
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
         user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_settings_dict=dict(
+            slurm_user=SLURM_USER,
+            slurm_accounts=[],
+            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+        ),
         client=client,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
@@ -283,6 +305,11 @@ async def test_failing_workflow_UnknownError_slurm(
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
         user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_settings_dict=dict(
+            slurm_user=SLURM_USER,
+            slurm_accounts=[],
+            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+        ),
         client=client,
         monkeypatch=monkeypatch,
         project_factory_v2=project_factory_v2,

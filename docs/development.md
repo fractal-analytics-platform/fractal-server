@@ -72,7 +72,7 @@ an incremental migration script, as in
 ```
 $ export SQLITE_PATH=some-test.db
 $ rm some-test.db
-$ poetry run fractalctl set-db
+$ poetry run fractalctl set-db --skip-init-data
 $ poetry run alembic revision --autogenerate -m "Some migration message"
 
 # UserWarning: SQLite is partially supported but discouraged in production environment.SQLite offers partial support for ForeignKey constraints. As such, consistency of the database cannot be guaranteed.

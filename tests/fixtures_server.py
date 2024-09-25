@@ -232,7 +232,8 @@ async def MockCurrentUser(app, db):
     from fractal_server.app.routes.auth import current_active_verified_user
     from fractal_server.app.routes.auth import current_active_user
     from fractal_server.app.routes.auth import current_active_superuser
-    from fractal_server.app.routes.auth import UserOAuth
+    from fractal_server.app.models import UserOAuth
+    from fractal_server.app.models import UserSettings
 
     def _random_email():
         return f"{random.randint(0, 100000000)}@example.org"
@@ -243,8 +244,8 @@ async def MockCurrentUser(app, db):
         Context managed user override
         """
 
-        name: str = "User Name"
         user_kwargs: Optional[dict[str, Any]] = None
+        user_settings_dict: Optional[dict[str, Any]] = None
         email: Optional[str] = field(default_factory=_random_email)
         previous_dependencies: dict = field(default_factory=dict)
 
@@ -259,32 +260,40 @@ async def MockCurrentUser(app, db):
                         f"User with id {self.user_kwargs['id']} doesn't exist"
                     )
                 self.user = db_user
+                # Removing objects from test db session, so that we can operate
+                # on them from other sessions
+                db.expunge(self.user)
             else:
                 # Create new user
-                defaults = dict(
+                user_attributes = dict(
                     email=self.email,
                     hashed_password="fake_hashed_password",
-                    slurm_user="test01",
                 )
-                if self.user_kwargs:
-                    defaults.update(self.user_kwargs)
-                self.user = UserOAuth(name=self.name, **defaults)
+                if self.user_kwargs is not None:
+                    user_attributes.update(self.user_kwargs)
+                self.user = UserOAuth(**user_attributes)
+
+                # Create new user_settings object and associate it to user
+                user_settings_dict = dict(slurm_user="test01")
+                user_settings_dict.update(self.user_settings_dict or {})
+                user_settings = UserSettings(**user_settings_dict)
+                self.user.settings = user_settings
 
                 try:
                     db.add(self.user)
                     await db.commit()
-                    await db.refresh(self.user)
                 except IntegrityError:
                     # Safety net, in case of non-unique email addresses
                     await db.rollback()
                     self.user.email = _random_email()
                     db.add(self.user)
                     await db.commit()
-                    await db.refresh(self.user)
+                await db.refresh(self.user)
 
-            # Removing object from test db session, so that we can operate
-            # on user from other sessions
-            db.expunge(self.user)
+                # Removing objects from test db session, so that we can operate
+                # on them from other sessions
+                db.expunge(user_settings)
+                db.expunge(self.user)
 
             # Find out which dependencies should be overridden, and store their
             # pre-override value

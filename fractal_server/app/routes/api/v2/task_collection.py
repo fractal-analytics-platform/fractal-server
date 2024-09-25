@@ -25,6 +25,7 @@ from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
+from ...aux.validate_user_settings import validate_user_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -40,7 +41,6 @@ from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
-
 
 router = APIRouter()
 
@@ -107,6 +107,11 @@ async def collect_tasks_pip(
             detail=f"Invalid task-collection object. Original error: {e}",
         )
 
+    # Validate user settings (backend-specific)
+    user_settings = await validate_user_settings(
+        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+    )
+
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
@@ -126,9 +131,9 @@ async def collect_tasks_pip(
 
         # User appropriate FractalSSH object
         ssh_credentials = dict(
-            user=settings.FRACTAL_SLURM_SSH_USER,
-            host=settings.FRACTAL_SLURM_SSH_HOST,
-            key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
@@ -138,6 +143,7 @@ async def collect_tasks_pip(
             state.id,
             task_pkg,
             fractal_ssh,
+            user_settings.ssh_tasks_dir,
         )
 
         response.status_code = status.HTTP_201_CREATED

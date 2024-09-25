@@ -27,6 +27,7 @@ from ....runner.v2 import submit_workflow
 from ....schemas.v2 import JobCreateV2
 from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import JobStatusTypeV2
+from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
@@ -109,19 +110,11 @@ async def apply_workflow(
             ),
         )
 
-    # If backend is SLURM, check that the user has required attributes
+    # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    if FRACTAL_RUNNER_BACKEND == "slurm":
-        if not user.slurm_user:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.slurm_user=}.",
-            )
-        if not user.cache_dir:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.cache_dir=}.",
-            )
+    user_settings = await validate_user_settings(
+        user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
+    )
 
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
@@ -140,7 +133,7 @@ async def apply_workflow(
         )
 
     if job_create.slurm_account is not None:
-        if job_create.slurm_account not in user.slurm_accounts:
+        if job_create.slurm_account not in user_settings.slurm_accounts:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -149,8 +142,8 @@ async def apply_workflow(
                 ),
             )
     else:
-        if len(user.slurm_accounts) > 0:
-            job_create.slurm_account = user.slurm_accounts[0]
+        if len(user_settings.slurm_accounts) > 0:
+            job_create.slurm_account = user_settings.slurm_accounts[0]
 
     # Add new Job object to DB
     job = JobV2(
@@ -224,12 +217,11 @@ async def apply_workflow(
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
     elif FRACTAL_RUNNER_BACKEND == "slurm":
         WORKFLOW_DIR_REMOTE = (
-            Path(user.cache_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
+            Path(user_settings.cache_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
         )
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
-            Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
-            / f"{WORKFLOW_DIR_LOCAL.name}"
+            Path(user_settings.ssh_jobs_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
         )
 
     # Update job folders in the db
@@ -241,23 +233,27 @@ async def apply_workflow(
     # User appropriate FractalSSH object
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         ssh_credentials = dict(
-            user=settings.FRACTAL_SLURM_SSH_USER,
-            host=settings.FRACTAL_SLURM_SSH_HOST,
-            key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
     else:
         fractal_ssh = None
 
+    # Expunge user settings from db, to use in background task
+    db.expunge(user_settings)
+
     background_tasks.add_task(
         submit_workflow,
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         job_id=job.id,
+        user_settings=user_settings,
         worker_init=job.worker_init,
-        slurm_user=user.slurm_user,
-        user_cache_dir=user.cache_dir,
+        slurm_user=user_settings.slurm_user,
+        user_cache_dir=user_settings.cache_dir,
         fractal_ssh=fractal_ssh,
     )
     request.app.state.jobsV2.append(job.id)

@@ -182,22 +182,20 @@ async def test_project_apply_missing_user_attributes(
     override_settings_factory,
 ):
     """
-    When using the slurm backend, user.slurm_user and user.cache_dir become
-    required attributes. If they are missing, the apply endpoint fails with a
-    422 error.
+    When using the slurm backend, some user.settings attributes are required.
+    If they are missing, the apply endpoint fails with a 422 error.
     """
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        # Make sure that user.cache_dir was not set
-        debug(user)
-        assert user.cache_dir is None
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=dict(something="else"),
+    ) as user:
 
         # Create project, datasets, workflow, task, workflowtask
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
-
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2()
         await _workflow_insert_task(
@@ -212,10 +210,14 @@ async def test_project_apply_missing_user_attributes(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "user.cache_dir=None" in res.json()["detail"]
+        assert "User settings are not valid" in res.json()["detail"]
+        assert (
+            "validation error for SlurmSudoUserSettings"
+            in res.json()["detail"]
+        )
 
-        user.cache_dir = "/tmp"
-        user.slurm_user = None
+        user.settings.cache_dir = "/tmp"
+        user.settings.slurm_user = None
         await db.commit()
 
         res = await client.post(
@@ -225,7 +227,11 @@ async def test_project_apply_missing_user_attributes(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "user.slurm_user=None" in res.json()["detail"]
+        assert "User settings are not valid" in res.json()["detail"]
+        assert (
+            "validation error for SlurmSudoUserSettings"
+            in res.json()["detail"]
+        )
 
 
 async def test_project_apply_workflow_subset(
@@ -399,7 +405,8 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={"slurm_accounts": SLURM_LIST, "is_verified": True}
+        user_kwargs={"is_verified": True},
+        user_settings_dict={"slurm_accounts": SLURM_LIST},
     ) as user2:
         project = await project_factory_v2(user2)
         dataset = await dataset_factory_v2(
@@ -417,7 +424,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has a non empty SLURM accounts list
-        assert user2.slurm_accounts == SLURM_LIST
+        assert user2.settings.slurm_accounts == SLURM_LIST
 
         # If no slurm_account is provided, we use the first one of the list
 

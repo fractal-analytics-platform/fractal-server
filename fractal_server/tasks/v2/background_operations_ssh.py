@@ -57,6 +57,7 @@ def _customize_and_run_template(
     tmpdir: str,
     logger_name: str,
     fractal_ssh: FractalSSH,
+    tasks_base_dir: str,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -72,7 +73,6 @@ def _customize_and_run_template(
     """
     logger = get_logger(logger_name)
     logger.debug(f"_customize_and_run_template {script_filename} - START")
-    settings = Inject(get_settings)
 
     # Read template
     template_path = templates_folder / script_filename
@@ -88,7 +88,7 @@ def _customize_and_run_template(
 
     # Transfer script to remote host
     script_path_remote = os.path.join(
-        settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
+        tasks_base_dir,
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
@@ -111,6 +111,7 @@ def background_collect_pip_ssh(
     state_id: int,
     task_pkg: _TaskCollectPip,
     fractal_ssh: FractalSSH,
+    tasks_base_dir: str,
 ) -> None:
     """
     Collect a task package over SSH
@@ -121,6 +122,13 @@ def background_collect_pip_ssh(
     NOTE: by making this function sync, it will run within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
+
+
+    Arguments:
+        state_id:
+        task_pkg:
+        fractal_ssh:
+        tasks_base_dir:
     """
 
     # Work within a temporary folder, where also logs will be placed
@@ -140,7 +148,6 @@ def background_collect_pip_ssh(
         with next(get_sync_db()) as db:
             try:
                 # Prepare replacements for task-collection scripts
-                settings = Inject(get_settings)
                 python_bin = get_python_interpreter_v2(
                     python_version=task_pkg.python_version
                 )
@@ -163,11 +170,12 @@ def background_collect_pip_ssh(
                         f"{install_string}=={task_pkg.package_version}"
                     )
                 package_env_dir = (
-                    Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+                    Path(tasks_base_dir)
                     / ".fractal"
                     / f"{task_pkg.package_name}{package_version}"
                 ).as_posix()
                 logger.debug(f"{package_env_dir=}")
+                settings = Inject(get_settings)
                 replacements = [
                     ("__PACKAGE_NAME__", task_pkg.package_name),
                     ("__PACKAGE_ENV_DIR__", package_env_dir),
@@ -186,6 +194,7 @@ def background_collect_pip_ssh(
                     tmpdir=tmpdir,
                     logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
+                    tasks_base_dir=tasks_base_dir,
                 )
 
                 fractal_ssh.check_connection()
@@ -332,7 +341,7 @@ def background_collect_pip_ssh(
                         )
                         fractal_ssh.remove_folder(
                             folder=package_env_dir,
-                            safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,  # noqa: E501
+                            safe_root=tasks_base_dir,
                         )
                         logger.info(
                             f"Deleted remoted folder {package_env_dir}"
