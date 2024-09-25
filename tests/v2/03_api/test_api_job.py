@@ -384,7 +384,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has an empty SLURM accounts list
-        assert user.slurm_accounts == []
+        assert user.settings.slurm_accounts == []
 
         # If no slurm_account is provided, it's automatically set to None
         res = await client.post(

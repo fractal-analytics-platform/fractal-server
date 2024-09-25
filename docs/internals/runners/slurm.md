@@ -83,7 +83,8 @@ export LIBRARY_2_FILE=/my/cache/somewhere/else/library_2.json
 ```
 Note that all paths in the values of `user_local_exports` are interpreted as
 relative to a base directory which is user-specific (for instance `/my/cache/`,
-in the example above), and which is defined in the `User.cache_dir` attribute.
+in the example above), and which is defined in the `User.settings.cache_dir`
+attribute.
 Also note that in this case `fractal-server` only compiles the configuration
 options into lines of the SLURM submission script, without performing any check
 on the validity of the given paths.
