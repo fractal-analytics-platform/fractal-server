@@ -34,6 +34,7 @@ class UserGroupRead(BaseModel):
     name: str
     timestamp_created: datetime
     user_ids: Optional[list[int]] = None
+    viewer_paths: list[str]
 
 
 class UserGroupCreate(BaseModel, extra=Extra.forbid):
