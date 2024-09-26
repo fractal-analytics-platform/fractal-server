@@ -40,7 +40,7 @@ def test_user_group_create():
     with pytest.raises(ValidationError):
         UserGroupCreate(viewer_paths=["/repeated", "/repeated"])
     with pytest.raises(ValidationError):
-        UserGroupCreate(viewer_paths=["/non/absolute"])
+        UserGroupCreate(viewer_paths=["non/absolute"])
 
 
 def test_user_group_update():
