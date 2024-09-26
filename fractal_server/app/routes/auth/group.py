@@ -163,7 +163,6 @@ async def update_single_group(
 
     # Patch `viewer_paths`
     if group_update.viewer_paths is not None:
-        await db.refresh(group)
         group.viewer_paths = group_update.viewer_paths
         db.add(group)
         await db.commit()
