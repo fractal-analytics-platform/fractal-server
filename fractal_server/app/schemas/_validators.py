@@ -69,14 +69,19 @@ def valint(attribute: str, min_val: int = 1):
     return val
 
 
-def val_absolute_path(attribute: str):
+def val_absolute_path(attribute: str, accept_none: bool = False):
     """
     Check that a string attribute is an absolute path
     """
 
     def val(string: Optional[str]) -> str:
         if string is None:
-            raise ValueError(f"String attribute '{attribute}' cannot be None")
+            if accept_none:
+                return string
+            else:
+                raise ValueError(
+                    f"String attribute '{attribute}' cannot be None"
+                )
         s = string.strip()
         if not s:
             raise ValueError(f"String attribute '{attribute}' cannot be empty")

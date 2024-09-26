@@ -47,23 +47,25 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
     slurm_accounts: Optional[list[StrictStr]] = None
     cache_dir: Optional[str] = None
 
-    _ssh_host = validator("ssh_host", allow_reuse=True)(valstr("ssh_host"))
+    _ssh_host = validator("ssh_host", allow_reuse=True)(
+        valstr("ssh_host", accept_none=True)
+    )
     _ssh_username = validator("ssh_username", allow_reuse=True)(
-        valstr("ssh_username")
+        valstr("ssh_username", accept_none=True)
     )
     _ssh_private_key_path = validator(
         "ssh_private_key_path", allow_reuse=True
-    )(val_absolute_path("ssh_private_key_path"))
+    )(val_absolute_path("ssh_private_key_path", accept_none=True))
 
     _ssh_tasks_dir = validator("ssh_tasks_dir", allow_reuse=True)(
-        val_absolute_path("ssh_tasks_dir")
+        val_absolute_path("ssh_tasks_dir", accept_none=True)
     )
     _ssh_jobs_dir = validator("ssh_jobs_dir", allow_reuse=True)(
-        val_absolute_path("ssh_jobs_dir")
+        val_absolute_path("ssh_jobs_dir", accept_none=True)
     )
 
     _slurm_user = validator("slurm_user", allow_reuse=True)(
-        valstr("slurm_user")
+        valstr("slurm_user", accept_none=True)
     )
 
     @validator("slurm_accounts")
@@ -76,6 +78,8 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
 
     @validator("cache_dir")
     def cache_dir_validator(cls, value):
+        if value is None:
+            return None
         validate_cmd(value)
         return val_absolute_path("cache_dir")(value)
 
@@ -90,5 +94,7 @@ class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
 
     @validator("cache_dir")
     def cache_dir_validator(cls, value):
+        if value is None:
+            return value
         validate_cmd(value)
         return val_absolute_path("cache_dir")(value)
