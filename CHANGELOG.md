@@ -1,15 +1,20 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.6.3 (Unreleased)
+
+* Database:
+    * Add  `viewer_paths` column to `UserGroup` table (\#1816).
+
 # 2.6.2
 
 * Allow setting `UserSettings` attributes to `None` in standard/strict PATCH endpoints (\#1814).
 
 # 2.6.1
 
-* DB:
-    * Drop `slurm_user`, `slurm_accounts` and `cache_dir` columns from `UserOAuth` (\#1804)
 * App (internal):
     * Remove `FRACTAL_SLURM_SSH_HOST`, `FRACTAL_SLURM_SSH_USER`, `FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH` and `FRACTAL_SLURM_SSH_WORKING_BASE_DIR` from `Settings`  (\#1804).
+* Database:
+    * Drop `slurm_user`, `slurm_accounts` and `cache_dir` columns from `UserOAuth` (\#1804)
 
 # 2.6.0
 
