@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
+from fractal_server.app.schemas._validators import val_absolute_path
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
@@ -133,3 +134,18 @@ def test_user_settings_update():
         assert getattr(update_request_body, key) is None
         assert key in update_request_body.dict(exclude_unset=True)
         assert key not in update_request_body.dict(exclude_none=True)
+
+
+def test_unit_val_absolute_path():
+    val_absolute_path("this_attr")("/path")
+    val_absolute_path("this_attr", accept_none=False)("/path")
+    val_absolute_path("this_attr", accept_none=True)("/path")
+
+    with pytest.raises(ValueError):
+        val_absolute_path("this_attr")(None)
+    with pytest.raises(ValueError):
+        val_absolute_path("this_attr", accept_none=False)(None)
+    val_absolute_path("this_attr", accept_none=True)(None)
+
+    with pytest.raises(ValueError):
+        val_absolute_path("this_attr")("non/absolute/path")
