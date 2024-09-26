@@ -85,10 +85,10 @@ async def test_update_group(registered_superuser_client):
     # Patch an existing group by replacing `viewer_paths` with a new list
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{group_id}/",
-        json=dict(new_user_ids=["/new"]),
+        json=dict(viewer_paths=["/new"]),
     )
     assert res.status_code == 200
-    assert res.json()["viewer_paths"] == ["/old"]
+    assert res.json()["viewer_paths"] == ["/new"]
 
 
 async def test_user_group_crud(registered_superuser_client):
