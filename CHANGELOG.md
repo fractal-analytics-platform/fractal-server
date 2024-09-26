@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Anticipate `wait_thread.shutdown_callback` assignment in `FractalSlurmExecutor`, to avoid an uncaught exception (\#1815).
+
 # 2.6.2
 
 * Allow setting `UserSettings` attributes to `None` in standard/strict PATCH endpoints (\#1814).
