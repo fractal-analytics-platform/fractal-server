@@ -2,9 +2,9 @@ name: ci
 
 on:
   push:
-    branches: ["main", "1774-introduce-user-settings"]
+    branches: ["main", "v2.7-new-tasks"]
   pull_request:
-    branches: ["main", "1774-introduce-user-settings"]
+    branches: ["main", "v2.7-new-tasks"]
 
 jobs:
 
