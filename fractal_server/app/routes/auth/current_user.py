@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi_users import schemas
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from . import current_active_user
 from ...db import get_async_db
@@ -13,6 +14,8 @@ from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateStrict
 from ..aux.validate_user_settings import verify_user_has_settings
 from ._aux_auth import _get_single_user_with_group_names
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas import UserSettingsReadStrict
@@ -103,3 +106,22 @@ async def patch_current_user_settings(
     await db.refresh(current_user_settings)
 
     return current_user_settings
+
+
+@router_current_user.get(
+    "/current-user/viewer-paths/", response_model=list[str]
+)
+async def get_current_user_viewer_paths(
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[str]:
+    """Returns the union of `viewer_paths` for all user's groups"""
+    cmd = (
+        select(UserGroup.viewer_paths)
+        .join(LinkUserGroup)
+        .where(LinkUserGroup.group_id == UserGroup.id)
+        .where(LinkUserGroup.user_id == current_user.id)
+    )
+    res = await db.execute(cmd)
+    viewer_paths = list(set(res.scalars().all()))
+    return viewer_paths
