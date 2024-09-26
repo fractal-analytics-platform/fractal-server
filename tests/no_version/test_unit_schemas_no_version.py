@@ -77,15 +77,22 @@ def test_user_settings_read():
 
 
 def test_user_settings_update():
-    update = UserSettingsUpdate(ssh_host="NEW_HOST")
-    assert update.slurm_accounts is None
 
-    update = UserSettingsUpdate(ssh_host="NEW_HOST", slurm_accounts=None)
-    assert update.slurm_accounts is None
+    update_request_body = UserSettingsUpdate(ssh_host="NEW_HOST")
+    assert update_request_body.slurm_accounts is None
 
-    update = UserSettingsUpdateStrict(cache_dir=None)
-    assert update.cache_dir is None
-    assert "cache_dir" in update.dict(exclude_unset=True).keys()
+    update_request_body = UserSettingsUpdate(
+        ssh_host="NEW_HOST", slurm_accounts=None
+    )
+    assert update_request_body.slurm_accounts is None
+
+    update_request_body = UserSettingsUpdate(cache_dir=None)
+    assert update_request_body.cache_dir is None
+    assert "cache_dir" in update_request_body.dict(exclude_unset=True).keys()
+
+    update_request_body = UserSettingsUpdateStrict(cache_dir=None)
+    assert update_request_body.cache_dir is None
+    assert "cache_dir" in update_request_body.dict(exclude_unset=True).keys()
 
     with pytest.raises(ValidationError):
         UserSettingsUpdate(slurm_accounts=[""])
@@ -101,3 +108,28 @@ def test_user_settings_update():
         UserSettingsUpdateStrict(ssh_host="NEW_HOST")
     with pytest.raises(ValidationError):
         UserSettingsUpdateStrict(slurm_user="NEW_SLURM_USER")
+
+    # Verify that a series of attributes can be made None
+    nullable_attributes = [
+        "ssh_host",
+        "ssh_username",
+        "ssh_private_key_path",
+        "ssh_tasks_dir",
+        "ssh_jobs_dir",
+        "slurm_user",
+        "cache_dir",
+    ]
+    nullable_attributes_strict = [
+        "cache_dir",
+    ]
+    for key in nullable_attributes:
+        update_request_body = UserSettingsUpdate(**{key: None})
+        assert getattr(update_request_body, key) is None
+        assert key in update_request_body.dict(exclude_unset=True)
+        assert key not in update_request_body.dict(exclude_none=True)
+
+    for key in nullable_attributes_strict:
+        update_request_body = UserSettingsUpdateStrict(**{key: None})
+        assert getattr(update_request_body, key) is None
+        assert key in update_request_body.dict(exclude_unset=True)
+        assert key not in update_request_body.dict(exclude_none=True)
