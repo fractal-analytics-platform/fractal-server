@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.6.2
 
 * Allow setting `UserSettings` attributes to `None` in standard/strict PATCH endpoints (\#1814).
 
