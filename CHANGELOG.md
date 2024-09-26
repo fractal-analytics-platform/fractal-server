@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Allow setting `UserSettings.cache_dir=None` in PATCH endpoint (\#1814).
+
 # 2.6.1
 
 * DB:
