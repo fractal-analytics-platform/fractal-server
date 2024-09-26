@@ -72,3 +72,10 @@ class UserGroupUpdate(BaseModel, extra=Extra.forbid):
     _val_unique = validator("new_user_ids", allow_reuse=True)(
         val_unique_list("new_user_ids")
     )
+
+    @validator("new_viewer_paths")
+    def viewer_paths_validator(cls, value):
+        for i, path in enumerate(value):
+            value[i] = val_absolute_path(f"new_viewer_paths[{i}]")(path)
+        value = val_unique_list("new_viewer_paths")(value)
+        return value
