@@ -132,3 +132,54 @@ async def test_get_and_patch_current_user_settings(registered_client):
             assert v == patch[k]
         else:
             assert v is None
+
+
+async def test_get_current_user_viewer_paths(
+    registered_client, registered_superuser_client
+):
+
+    # Check that a vanilla user has no viewer_paths
+    res = await registered_client.get(f"{PREFIX}viewer-paths/")
+    assert res.status_code == 200
+    assert res.json() == []
+
+    # Find current-user ID
+    res = await registered_client.get(f"{PREFIX}")
+    assert res.status_code == 200
+    user_id = res.json()["id"]
+
+    # Add one group to this user
+    res = await registered_superuser_client.post(
+        "/auth/group/", json=dict(name="group1", viewer_paths=["/a", "/b"])
+    )
+    assert res.status_code == 201
+    group1_id = res.json()["id"]
+
+    # Add user to group1
+    res = await registered_superuser_client.patch(
+        f"/auth/group/{group1_id}/", json=dict(new_user_ids=[user_id])
+    )
+    assert res.status_code == 200
+
+    # Check current-user viewer-paths again
+    res = await registered_client.get(f"{PREFIX}viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/a", "/b"}
+
+    # Add one group to this user
+    res = await registered_superuser_client.post(
+        "/auth/group/", json=dict(name="group2", viewer_paths=["/a", "/c"])
+    )
+    assert res.status_code == 201
+    group2_id = res.json()["id"]
+
+    # Add user to group1
+    res = await registered_superuser_client.patch(
+        f"/auth/group/{group2_id}/", json=dict(new_user_ids=[user_id])
+    )
+    assert res.status_code == 200
+
+    # Check current-user viewer-paths again
+    res = await registered_client.get(f"{PREFIX}viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/a", "/b", "/c"}
