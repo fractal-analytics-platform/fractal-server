@@ -2,7 +2,7 @@
 
 # Unreleased
 
-* Allow setting `UserSettings.cache_dir=None` in PATCH endpoint (\#1814).
+* Allow setting `UserSettings` attributes to `None` in standard/strict PATCH endpoints (\#1814).
 
 # 2.6.1
 
