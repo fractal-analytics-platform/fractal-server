@@ -32,15 +32,15 @@ def test_user_group_create():
         UserGroupCreate(name="group1", something="else")
 
     with pytest.raises(ValidationError):
-        UserGroupCreate(viewer_paths=None)
+        UserGroupCreate(name="group2", viewer_paths=None)
     with pytest.raises(ValidationError):
-        UserGroupCreate(viewer_paths=[""])
+        UserGroupCreate(name="group2", viewer_paths=[""])
     with pytest.raises(ValidationError):
-        UserGroupCreate(viewer_paths=[" "])
+        UserGroupCreate(name="group2", viewer_paths=[" "])
     with pytest.raises(ValidationError):
-        UserGroupCreate(viewer_paths=["/repeated", "/repeated"])
+        UserGroupCreate(name="group2", viewer_paths=["/repeated", "/repeated"])
     with pytest.raises(ValidationError):
-        UserGroupCreate(viewer_paths=["non/absolute"])
+        UserGroupCreate(name="group2", viewer_paths=["non/absolute"])
 
 
 def test_user_group_update():
