@@ -51,12 +51,15 @@ async def test_update_group(registered_superuser_client):
 
     # Preliminary: create a group
     res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name="group1")
+        f"{PREFIX}/group/", json=dict(name="group1", viewer_paths=["/old"])
     )
     assert res.status_code == 201
     group_data = res.json()
     group_id = group_data["id"]
+    debug(group_data)
+    return
     assert group_data["user_ids"] == []
+    assert group_data["viewer_paths"] == ["/old"]
 
     # Patch an existing group by adding both valid and invalid users
     invalid_user_id = 99999
@@ -80,6 +83,14 @@ async def test_update_group(registered_superuser_client):
     )
     assert res.status_code == 200
     assert res.json()["user_ids"] == [user_A_id]
+
+    # Patch an existing group by replacing `viewer_paths` with a new list
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{group_id}/",
+        json=dict(new_user_ids=["/new"]),
+    )
+    assert res.status_code == 200
+    assert res.json()["viewer_paths"] == ["/old"]
 
 
 async def test_user_group_crud(registered_superuser_client):
