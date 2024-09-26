@@ -74,7 +74,7 @@ def test_user_group_update():
     with pytest.raises(ValidationError):
         UserGroupUpdate(viewer_paths=["/repeated", "/repeated"])
     with pytest.raises(ValidationError):
-        UserGroupUpdate(viewer_paths=["/non/absolute"])
+        UserGroupUpdate(viewer_paths=["non/absolute"])
 
 
 def test_user_group_read():
