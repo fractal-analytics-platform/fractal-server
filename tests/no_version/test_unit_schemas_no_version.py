@@ -81,12 +81,25 @@ def test_user_group_read():
     from fractal_server.utils import get_timestamp
 
     XX = get_timestamp()
-    g = UserGroupRead(id=1, name="group", timestamp_created=XX)
-    assert g.user_ids is None
-    g = UserGroupRead(id=1, name="group", timestamp_created=XX, user_ids=[])
-    assert g.user_ids == []
     g = UserGroupRead(
-        id=1, name="group", timestamp_created=XX, user_ids=[1, 2]
+        id=1, name="group", timestamp_created=XX, viewer_paths=[]
+    )
+    assert g.user_ids is None
+    g = UserGroupRead(
+        id=1,
+        name="group",
+        timestamp_created=XX,
+        user_ids=[],
+        viewer_paths=["/a"],
+    )
+    assert g.user_ids == []
+    assert g.viewer_paths == ["/a"]
+    g = UserGroupRead(
+        id=1,
+        name="group",
+        timestamp_created=XX,
+        user_ids=[1, 2],
+        viewer_paths=[],
     )
     assert g.user_ids == [1, 2]
 
