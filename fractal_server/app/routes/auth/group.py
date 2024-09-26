@@ -97,7 +97,9 @@ async def create_single_group(
         )
 
     # Create and return new group
-    new_group = UserGroup(name=group_create.name)
+    new_group = UserGroup(
+        name=group_create.name, viewer_paths=group_create.viewer_paths
+    )
     db.add(new_group)
     await db.commit()
 
@@ -115,6 +117,13 @@ async def update_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
+
+    group = await db.get(UserGroup, group_id)
+    if group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"UserGroup {group_id} not found.",
+        )
 
     # Check that all required users exist
     # Note: The reason for introducing `col` is as in
@@ -151,6 +160,12 @@ async def update_single_group(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=error_msg,
         )
+
+    # Patch `viewer_paths`
+    await db.refresh(group)
+    group.viewer_paths = group_update.viewer_paths
+    db.add(group)
+    await db.commit()
 
     updated_group = await _get_single_group_with_user_ids(
         group_id=group_id, db=db
