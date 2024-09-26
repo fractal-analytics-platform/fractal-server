@@ -56,8 +56,6 @@ async def test_update_group(registered_superuser_client):
     assert res.status_code == 201
     group_data = res.json()
     group_id = group_data["id"]
-    debug(group_data)
-    return
     assert group_data["user_ids"] == []
     assert group_data["viewer_paths"] == ["/old"]
 
