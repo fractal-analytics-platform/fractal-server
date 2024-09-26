@@ -22,20 +22,37 @@ def test_user_create():
 
 
 def test_user_group_create():
-    UserGroupCreate(name="group1")
+    ug = UserGroupCreate(name="group1")
+    assert ug.viewer_paths == []
+    ug = UserGroupCreate(name="group1", viewer_paths=["/a", "/b"])
+    assert ug.viewer_paths == ["/a", "/b"]
     with pytest.raises(ValidationError):
         UserGroupCreate()
     with pytest.raises(ValidationError):
         UserGroupCreate(name="group1", something="else")
 
+    with pytest.raises(ValidationError):
+        UserGroupCreate(viewer_paths=None)
+    with pytest.raises(ValidationError):
+        UserGroupCreate(viewer_paths=[""])
+    with pytest.raises(ValidationError):
+        UserGroupCreate(viewer_paths=[" "])
+    with pytest.raises(ValidationError):
+        UserGroupCreate(viewer_paths=["/repeated", "/repeated"])
+    with pytest.raises(ValidationError):
+        UserGroupCreate(viewer_paths=["/non/absolute"])
+
 
 def test_user_group_update():
     g1 = UserGroupUpdate()
     assert g1.new_user_ids == []
+    assert g1.viewer_paths is None
     g2 = UserGroupUpdate(new_user_ids=[1])
     assert g2.new_user_ids == [1]
     g3 = UserGroupUpdate(new_user_ids=[1, 2])
     assert g3.new_user_ids == [1, 2]
+    g4 = UserGroupUpdate(viewer_paths=["/a", "/b", "/c"])
+    assert g4.viewer_paths == ["/a", "/b", "/c"]
 
     with pytest.raises(ValidationError):
         UserGroupUpdate(name="new name")
@@ -47,6 +64,17 @@ def test_user_group_update():
         UserGroupUpdate(new_user_ids=["user@example.org"])
     with pytest.raises(ValidationError):
         UserGroupUpdate(new_user_ids=[dict(email="user@example.org")])
+
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(viewer_paths=None)
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(viewer_paths=[""])
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(viewer_paths=[" "])
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(viewer_paths=["/repeated", "/repeated"])
+    with pytest.raises(ValidationError):
+        UserGroupUpdate(viewer_paths=["/non/absolute"])
 
 
 def test_user_group_read():
