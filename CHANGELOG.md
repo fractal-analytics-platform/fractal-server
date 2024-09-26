@@ -3,7 +3,6 @@
 # Unreleased
 
 * Runner:
-    * Postpone `wait_thread.start` in `FractalSlurmSSHExecutor`, to simplify threads cleanup (\#1815).
     * Anticipate `wait_thread.shutdown_callback` assignment in `FractalSlurmExecutor`, to avoid an uncaught exception (\#1815).
 
 # 2.6.2

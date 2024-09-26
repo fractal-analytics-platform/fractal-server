@@ -155,6 +155,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.workflow_dir_local / SHUTDOWN_FILENAME
         ).as_posix()
 
+        # Now start self.wait_thread (note: this must be *after* its callback
+        # methods have been defined)
+        self.wait_thread.start()
+
         # Define remote Python interpreter
         settings = Inject(get_settings)
         self.python_remote = settings.FRACTAL_SLURM_WORKER_PYTHON
@@ -191,12 +195,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Set/initialize some more options
         self.keep_pickle_files = keep_pickle_files
         self.map_jobid_to_slurm_files_local = {}
-
-        # Now start self.wait_thread.
-        # NOTE: this must be *after* its callback methods have been defined
-        # NOTE: we do this as late as possible so that if exceptions are raised
-        #       within __init__ the thread has not started yet
-        self.wait_thread.start()
 
     def _validate_common_script_lines(self):
         """
