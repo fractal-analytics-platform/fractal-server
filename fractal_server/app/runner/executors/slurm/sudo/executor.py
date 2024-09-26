@@ -246,6 +246,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         super().__init__(*args, **kwargs)
 
+        # Assign `wait_thread.shutdown_callback` early, since it may be called
+        # from within `_stop_and_join_wait_thread` (e.g. if an exception is
+        # raised within `__init__`).
+        self.wait_thread.shutdown_callback = self.shutdown
+
         self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
         self.slurm_account = slurm_account
@@ -291,7 +296,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             shutdown_file
             or (self.workflow_dir_local / SHUTDOWN_FILENAME).as_posix()
         )
-        self.wait_thread.shutdown_callback = self.shutdown
 
     def _cleanup(self, jobid: str) -> None:
         """

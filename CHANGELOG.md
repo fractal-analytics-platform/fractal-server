@@ -1,9 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
 # 2.6.3 (Unreleased)
 
 * Database:
     * Add  `viewer_paths` column to `UserGroup` table (\#1816).
+* Runner:
+    * Anticipate `wait_thread.shutdown_callback` assignment in `FractalSlurmExecutor`, to avoid an uncaught exception (\#1815).
 
 # 2.6.2
 
