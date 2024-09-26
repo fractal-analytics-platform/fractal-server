@@ -259,17 +259,17 @@ async def test_project_apply_missing_user_attributes(
     override_settings_factory,
 ):
     """
-    When using the slurm backend, user.slurm_user and user.cache_dir become
-    required attributes. If they are missing, the apply endpoint fails with a
-    422 error.
+    When using the slurm backend, `user.settings.slurm_user` and
+    `user.settings.cache_dir` become required attributes.
+    If they are missing, the apply endpoint fails with a 422 error.
     """
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        # Make sure that user.cache_dir was not set
+        # Make sure that user.settings.cache_dir was not set
         debug(user)
-        assert user.cache_dir is None
+        assert user.settings.cache_dir is None
 
         # Create project, datasets, workflow, task, workflowtask
         project = await project_factory(user)
@@ -303,8 +303,8 @@ async def test_project_apply_missing_user_attributes(
         assert res.status_code == 422
         assert "User settings are not valid" in res.json()["detail"]
 
-        user.cache_dir = "/tmp"
-        user.slurm_user = None
+        user.settings.cache_dir = "/tmp"
+        user.settings.slurm_user = None
         await db.merge(user)
         await db.commit()
 
@@ -555,7 +555,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has an empty SLURM accounts list
-        assert user.slurm_accounts == []
+        assert user.settings.slurm_accounts == []
 
         # If no slurm_account is provided, it's automatically set to None
         res = await client.post(

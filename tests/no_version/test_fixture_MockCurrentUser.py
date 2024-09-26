@@ -12,11 +12,12 @@ async def test_MockCurrentUser_fixture(
     slurm_user,
 ):
 
-    user_kwargs = dict(
-        cache_dir=cache_dir, username=username, slurm_user=slurm_user
-    )
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    user_kwargs = dict(username=username)
+    user_settings_dict = dict(cache_dir=cache_dir, slurm_user=slurm_user)
+    async with MockCurrentUser(
+        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
+    ) as user:
         debug(user)
-        assert user.cache_dir == cache_dir
         assert user.username == username
-        assert user.slurm_user == slurm_user
+        assert user.settings.cache_dir == cache_dir
+        assert user.settings.slurm_user == slurm_user
