@@ -123,5 +123,8 @@ async def get_current_user_viewer_paths(
         .where(LinkUserGroup.user_id == current_user.id)
     )
     res = await db.execute(cmd)
-    viewer_paths = list(set(res.scalars().all()))
+
+    list_of_lists = list(res.scalars().all())
+    combined_lists = [x for y in list_of_lists for x in y]
+    viewer_paths = list(set(combined_lists))
     return viewer_paths
