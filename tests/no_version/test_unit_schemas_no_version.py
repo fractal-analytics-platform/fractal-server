@@ -83,6 +83,10 @@ def test_user_settings_update():
     update = UserSettingsUpdate(ssh_host="NEW_HOST", slurm_accounts=None)
     assert update.slurm_accounts is None
 
+    update = UserSettingsUpdateStrict(cache_dir=None)
+    assert update.cache_dir is None
+    assert "cache_dir" in update.dict(exclude_unset=True).keys()
+
     with pytest.raises(ValidationError):
         UserSettingsUpdate(slurm_accounts=[""])
     with pytest.raises(ValidationError):
