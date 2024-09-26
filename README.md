@@ -85,7 +85,7 @@
 | fractal\_server/app/runner/executors/slurm/sudo/\_check\_jobs\_status.py       |       24 |        1 |       10 |        2 |     91% |25->31, 62 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_executor\_wait\_thread.py    |       47 |        3 |       16 |        1 |     94% |93->exit, 124-127 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_subprocess\_run\_as\_user.py |       46 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      449 |       36 |      147 |       14 |     91% |168, 180, 530, 628, 637, 646, 678-689, 825->exit, 828-829, 904-913, 929-933, 961->964, 980, 1059, 1077-1083, 1129, 1148-1155, 1216->1215, 1281-1287 |
+| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      449 |       48 |      147 |       13 |     89% |168, 180, 534, 632, 641, 650, 682-693, 829->exit, 832-833, 908-917, 933-937, 959-969, 981-986, 1063, 1081-1087, 1133, 1152-1159, 1220->1219, 1285-1291 |
 | fractal\_server/app/runner/extract\_archive.py                                 |       32 |        2 |        8 |        2 |     90% |    25, 85 |
 | fractal\_server/app/runner/filenames.py                                        |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/run\_subprocess.py                                  |       20 |        0 |        2 |        0 |    100% |           |
@@ -182,7 +182,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       26 |        0 |    100% |           |
-|                                                                      **TOTAL** | **10085** |  **363** | **2859** |  **185** | **95%** |           |
+|                                                                      **TOTAL** | **10085** |  **375** | **2859** |  **184** | **95%** |           |
 
 
 ## Setup coverage badge
