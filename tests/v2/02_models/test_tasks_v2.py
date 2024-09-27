@@ -6,6 +6,8 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 
 async def test_task_group_v2(db):
@@ -54,17 +56,36 @@ async def test_task_group_v2(db):
     await db.refresh(task_group)
     assert task_group.user_group_id == user_group.id
 
-    with pytest.raises(IntegrityError):
+    # Delete user_group
+
+    settings = Inject(get_settings)
+    if settings.DB_ENGINE == "sqlite":
+
         await db.delete(user_group)
         await db.commit()
-    await db.rollback()
+        await db.refresh(task_group)
 
-    await db.delete(user_group)
-    task_group.user_group_id = None
-    db.add(task_group)
-    await db.commit()
-    await db.refresh(task_group)
-    assert task_group.user_group_id is None
+        assert task_group.user_group_id is not None  # SQLite and FK problem
+
+        task_group.user_group_id = None
+        db.add(task_group)
+        await db.commit()
+
+    else:
+
+        await db.delete(user_group)
+        with pytest.raises(IntegrityError):
+            # Fail because `task_group.user_group_id` is not None
+            await db.commit()
+        await db.rollback()
+
+        await db.delete(user_group)
+        task_group.user_group_id = None
+        db.add(task_group)
+        await db.commit()
+
+        await db.refresh(task_group)
+        assert task_group.user_group_id is None
 
     # Consistency check
 
