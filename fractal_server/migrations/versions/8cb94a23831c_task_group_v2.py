@@ -6,7 +6,6 @@ Create Date: 2024-09-27 12:18:26.315721
 
 """
 import sqlalchemy as sa
-import sqlmodel
 from alembic import op
 
 
@@ -26,9 +25,6 @@ def upgrade() -> None:
         sa.Column("user_group_id", sa.Integer(), nullable=True),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
-        ),
-        sa.Column(
-            "placeholder", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.ForeignKeyConstraint(
             ["user_group_id"],
