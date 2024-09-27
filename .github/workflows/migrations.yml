@@ -122,7 +122,7 @@ jobs:
 
       - name: Apply upgrade and downgrade
         run: |
+          cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
           cd fractal_server
-          cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run alembic upgrade head
           poetry run alembic downgrade base
