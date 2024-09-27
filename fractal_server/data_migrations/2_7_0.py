@@ -168,47 +168,6 @@ def _find_task_associations(db):
     return
 
 
-def _create_task_groups_v0(db, *, dry_run: bool = True):
-    stm_tasks = select(TaskV2).order_by(TaskV2.id)
-    tasks = db.execute(stm_tasks).scalars().unique().all()
-    logger.warning("START _create_task_groups_v0")
-
-    for task in tasks:
-        logger.warning(f"START handling task {task.id}: '{task.name}'")
-        if task.taskgroupv2_id is not None:
-            logger.warning(
-                f"This task is already associated to {task.taskgroupv2_id=}, "
-                "skip."
-            )
-        else:
-            # FIXME: identify user_id
-            task_group = TaskGroupV2(
-                user_id=1,
-                user_group_id=get_default_user_group_id(db),
-                task_list=[task],
-            )
-            db.add(task_group)
-            db.commit()
-            db.refresh(task_group)
-            db.refresh(task)
-            logger.warning(f"Created task group {task_group}")
-            logger.warning(
-                f"This task is now associated to {task.taskgroupv2_id=}."
-            )
-
-        logger.warning(f"END   handling task {task.id}: '{task.name}'")
-        print()
-    logger.warning("END   _create_task_groups_v0")
-    print()
-
-
-def _create_task_groups_v1(db, *, dry_run: bool = True):
-    """
-    Finds associations based on source.
-    """
-    pass
-
-
 def fix_db(dry_run: bool = False):
     logger.warning("START execution of fix_db function")
     _check_current_version("2.7.0")
@@ -216,6 +175,5 @@ def fix_db(dry_run: bool = False):
     with next(get_sync_db()) as db:
         _get_users_mapping(db)
         _find_task_associations(db)
-        # _create_task_groups_v0(db, dry_run=dry_run)
 
     logger.warning("END of execution of fix_db function")
