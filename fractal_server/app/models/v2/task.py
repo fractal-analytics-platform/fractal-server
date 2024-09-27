@@ -4,7 +4,6 @@ from typing import Optional
 
 from pydantic import HttpUrl
 from sqlalchemy import Column
-from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -57,10 +56,7 @@ class TaskGroupV2(SQLModel, table=True):
 
     task_list: list[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(
-            lazy="selectin",
-            order_by="TaskV2.id",
-            collection_class=ordering_list("id"),
-            cascade="all, delete-orphan",
+            lazy="selectin", cascade="all, delete-orphan"
         ),
     )
 
