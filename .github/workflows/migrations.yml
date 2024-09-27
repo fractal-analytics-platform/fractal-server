@@ -66,7 +66,7 @@ jobs:
 
       - name: Install fractal-server
         run: |
-          poetry install --without dev --without docs --no-interaction -E postgres
+          poetry install --without dev --without docs --no-interaction -E postgres-psycopg
 
       - name: Convert postgres database into sqlite
         run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${SOURCE_VERSION}.sql.sqlite3 --all
@@ -84,3 +84,45 @@ jobs:
           poetry run fractalctl set-db
           echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
           poetry run python scripts/validate_db_data_with_read_schemas.py
+
+  downgrade:
+    name: "Alembic downgrade"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry==1.8.2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          cache: "poetry"
+
+      - name: Install fractal-server
+        run: |
+          poetry install --without dev --without docs --no-interaction -E postgres-psycopg
+
+      - name: Apply upgrade and downgrade
+        run: |
+          cd fractal_server
+          cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
+          poetry run alembic upgrade head
+          poetry run alembic downgrade base
