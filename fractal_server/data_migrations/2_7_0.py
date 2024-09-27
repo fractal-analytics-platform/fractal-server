@@ -13,6 +13,8 @@ from fractal_server.data_migrations.tools import _check_current_version
 
 logger = logging.getLogger("fix_db")
 
+DEFAULT_USER_EMAIL = "admin@fractal.xy"
+
 
 def _get_users_mapping(db) -> dict[str, int]:
     logger.warning("START _check_users")
@@ -51,7 +53,7 @@ def _get_users_mapping(db) -> dict[str, int]:
     return name_to_user_id
 
 
-def _default_user_group_id(db):
+def get_default_user_group_id(db):
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
@@ -63,8 +65,20 @@ def _default_user_group_id(db):
         return default_group_id
 
 
+def get_default_user_id(db):
+    stm = select(UserOAuth.id).where(UserOAuth.email == DEFAULT_USER_EMAIL)
+    res = db.execute(stm)
+    default_user_id = res.scalars().one_or_none()
+    if default_user_id is None:
+        raise RuntimeError("Default user is missing.")
+    else:
+        return default_user_id
+
+
 def _find_task_associations(db):
     user_mapping = _get_users_mapping(db)
+    default_user_id = get_default_user_id(db)
+    default_user_group_id = get_default_user_group_id(db)
 
     stm_tasks = select(TaskV2).order_by(TaskV2.id)
     res = db.execute(stm_tasks).scalars().all()
@@ -79,9 +93,13 @@ def _find_task_associations(db):
             mode, pkg_name, version, extras, py_version, name = source_fields
             task_group_key = ":".join([pkg_name, version, extras, py_version])
             if task_group_key in task_groups:
-                task_groups[task_group_key].append(task)
+                task_groups[task_group_key].append(
+                    dict(task=task, user_id=default_user_id)
+                )
             else:
-                task_groups[task_group_key] = [task]
+                task_groups[task_group_key] = [
+                    dict(task=task, user_id=default_user_id)
+                ]
         else:
             owner = task.owner
             if owner is None:
@@ -95,18 +113,56 @@ def _find_task_associations(db):
                     "B Something wrong with "
                     f"{task.id=}, {task.source=}, {task.owner=}"
                 )
-            task_group_key = hash(task)
+            task_group_key = "-".join(
+                [
+                    "NOT_PIP",
+                    str(task.id),
+                    str(task.version),
+                    task.source,
+                    str(task.owner),
+                ]
+            )
             if task_group_key in task_groups:
                 raise RuntimeError(
                     "C Something wrong with "
                     f"{task.id=}, {task.source=}, {task.owner=}"
                 )
             else:
-                task_groups[task_group_key] = [task]
-    for task_group_key, task_group_tasks in sorted(task_groups):
+                task_groups[task_group_key] = [
+                    dict(task=task, user_id=user_id)
+                ]
+
+    for task_group_key, task_group_objects in task_groups.items():
         print(task_group_key)
+        task_group_tasks = [x["task"] for x in task_group_objects]
+        task_group_user_ids = [x["user_id"] for x in task_group_objects]
+        if len(set(task_group_user_ids)) != 1:
+            raise RuntimeError(f"{task_group_user_ids=}")
         for task in task_group_tasks:
             print(f"  {task.source}")
+        if not task_group_key.startswith("NOT_PIP"):
+            cmd = next(
+                getattr(task_group_tasks[0], attr_name)
+                for attr_name in ["command_non_parallel", "command_parallel"]
+                if getattr(task_group_tasks[0], attr_name) is not None
+            )
+            python_bin = cmd.split()[0]
+        print(f"{python_bin=}")
+
+        # PRINT DRY-RUN VERSION
+        task_group = TaskGroupV2(
+            user_id=task_group_objects[0]["user_id"],
+            user_group_id=default_user_group_id,
+            task_list=task_group_tasks,
+        )
+        db.add(task_group)
+        db.commit()
+        db.refresh(task_group)
+        logger.warning(f"Created task group {task_group.id=}")
+        from devtools import debug
+
+        debug(task_group)
+
         print()
 
     return
@@ -128,7 +184,7 @@ def _create_task_groups_v0(db, *, dry_run: bool = True):
             # FIXME: identify user_id
             task_group = TaskGroupV2(
                 user_id=1,
-                user_group_id=_default_user_group_id(db),
+                user_group_id=get_default_user_group_id(db),
                 task_list=[task],
             )
             db.add(task_group)
