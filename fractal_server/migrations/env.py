@@ -5,7 +5,6 @@ from alembic import context
 from sqlalchemy.engine import Connection
 from sqlmodel import SQLModel
 
-from fractal_server.app import models  # noqa
 from fractal_server.config import get_settings
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 from fractal_server.syringe import Inject
@@ -27,6 +26,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
 target_metadata.naming_convention = NAMING_CONVENTION
+from fractal_server.app import models  # noqa
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
