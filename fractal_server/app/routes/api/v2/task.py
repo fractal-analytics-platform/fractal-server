@@ -12,6 +12,7 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import Task as TaskV1
+from ....models.v2 import TaskGroupV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
@@ -20,6 +21,7 @@ from ....schemas.v2 import TaskReadV2
 from ....schemas.v2 import TaskUpdateV2
 from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions import _get_task_check_owner
+from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -186,7 +188,15 @@ async def create_task(
         )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
-    db.add(db_task)
+    stm = select(LinkUserGroup.group_id).where(
+        LinkUserGroup.user_id == user.id
+    )
+    res = await db.execute(stm)
+    user_group_ids = res.scalars().all()
+    db_task_group = TaskGroupV2(
+        user_id=user.id, user_group_id=user_group_ids[0], task_list=[db_task]
+    )
+    db.add(db_task_group)
     await db.commit()
     await db.refresh(db_task)
     await db.close()
