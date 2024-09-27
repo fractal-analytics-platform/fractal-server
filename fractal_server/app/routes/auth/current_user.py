@@ -123,13 +123,11 @@ async def get_current_user_viewer_paths(
         .where(LinkUserGroup.user_id == current_user.id)
     )
     res = await db.execute(cmd)
-    viewer_paths_list_of_lists = res.scalars().all()
+    viewer_paths_nested = res.scalars().all()
 
-    # Flatten a list of lists and make its element unique
+    # Flatten a nested object and make its elements unique
     all_viewer_paths_set = set(
-        path
-        for _viewer_paths in viewer_paths_list_of_lists
-        for path in _viewer_paths
+        path for _viewer_paths in viewer_paths_nested for path in _viewer_paths
     )
     all_viewer_paths = list(all_viewer_paths_set)
 
