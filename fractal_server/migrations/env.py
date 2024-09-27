@@ -26,6 +26,9 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
 target_metadata.naming_convention = NAMING_CONVENTION
+# Importing `fractal_server.app.models` after defining
+# `SQLModel.metadata.naming_convention` in order to apply the naming convention
+# when autogenerating migrations (see issue #1819).
 from fractal_server.app import models  # noqa
 
 # other values from the config, defined by the needs of env.py,

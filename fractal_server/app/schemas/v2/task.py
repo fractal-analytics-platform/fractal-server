@@ -105,6 +105,8 @@ class TaskReadV2(BaseModel):
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 
+    taskgroupv2_id: Optional[int]
+
 
 class TaskUpdateV2(BaseModel):
 

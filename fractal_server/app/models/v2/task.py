@@ -1,11 +1,16 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
 from pydantic import HttpUrl
 from sqlalchemy import Column
+from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
+from sqlmodel import Relationship
 from sqlmodel import SQLModel
+
+from fractal_server.utils import get_timestamp
 
 
 class TaskV2(SQLModel, table=True):
@@ -39,3 +44,24 @@ class TaskV2(SQLModel, table=True):
 
     input_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
     output_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
+
+    taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
+
+
+class TaskGroupV2(SQLModel, table=True):
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user_oauth.id")
+    user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
+
+    task_list: list[TaskV2] = Relationship(
+        sa_relationship_kwargs=dict(
+            lazy="selectin", cascade="all, delete-orphan"
+        ),
+    )
+
+    timestamp_created: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    placeholder: Optional[str]  # lots of metadata

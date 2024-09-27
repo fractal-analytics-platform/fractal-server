@@ -13,13 +13,16 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
 from fractal_server.app.security import _create_first_user
+from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
-
 
 try:
     import psycopg  # noqa: F401
@@ -228,7 +231,20 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def MockCurrentUser(app, db):
+async def default_user_group(db) -> UserGroup:
+    stm = select(UserGroup).where(UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME)
+    res = await db.execute(stm)
+    default_user_group = res.scalars().one_or_none()
+    if default_user_group is None:
+        default_user_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
+        db.add(default_user_group)
+        await db.commit()
+        await db.refresh(default_user_group)
+    return default_user_group
+
+
+@pytest.fixture
+async def MockCurrentUser(app, db, default_user_group):
     from fractal_server.app.routes.auth import current_active_verified_user
     from fractal_server.app.routes.auth import current_active_user
     from fractal_server.app.routes.auth import current_active_superuser
@@ -290,6 +306,12 @@ async def MockCurrentUser(app, db):
                     await db.commit()
                 await db.refresh(self.user)
 
+                db.add(
+                    LinkUserGroup(
+                        user_id=self.user.id, group_id=default_user_group.id
+                    )
+                )
+                await db.commit()
                 # Removing objects from test db session, so that we can operate
                 # on them from other sessions
                 db.expunge(user_settings)
