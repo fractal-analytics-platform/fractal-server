@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Database
+    * Fix use of naming convention for database schema-migration scripts (\#1819).
+* Testing:
+    * Test `alembic downgrade base` (\#1819).
+
 
 # 2.6.3
 
