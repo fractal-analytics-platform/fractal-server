@@ -46,7 +46,7 @@ class TaskV2(SQLModel, table=True):
     input_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
     output_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
 
-    taskgroupv2_id: int = Field(foreign_key="taskgroupv2.id")
+    taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
 
 
 class TaskGroupV2(SQLModel, table=True):

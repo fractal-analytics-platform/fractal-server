@@ -1,8 +1,8 @@
 """task group v2
 
-Revision ID: eb0ed25f306a
+Revision ID: cb0f81d0773c
 Revises: da2cb2ac4255
-Create Date: 2024-09-27 10:38:18.778652
+Create Date: 2024-09-27 11:03:46.125675
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "eb0ed25f306a"
+revision = "cb0f81d0773c"
 down_revision = "da2cb2ac4255"
 branch_labels = None
 depends_on = None
@@ -42,7 +42,7 @@ def upgrade() -> None:
     )
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
         batch_op.add_column(
-            sa.Column("taskgroupv2_id", sa.Integer(), nullable=False)
+            sa.Column("taskgroupv2_id", sa.Integer(), nullable=True)
         )
         batch_op.create_foreign_key(
             None, "taskgroupv2", ["taskgroupv2_id"], ["id"]
