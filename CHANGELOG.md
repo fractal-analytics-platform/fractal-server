@@ -1,8 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
 
-# 2.6.3 (Unreleased)
+# 2.6.3
 
+* API:
+    * Introduce `GET /auth/current-user/viewer-paths/` endpoint (\#1816).
+    * Add `viewer_paths` attribute to `UserGroup` endpoints (\#1816).
 * Database:
     * Add  `viewer_paths` column to `UserGroup` table (\#1816).
 * Runner:
