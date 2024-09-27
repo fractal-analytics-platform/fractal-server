@@ -14,45 +14,41 @@ from fractal_server.data_migrations.tools import _check_current_version
 logger = logging.getLogger("fix_db")
 
 
-def _check_users(db):
+def _get_users_mapping(db) -> dict[str, int]:
     logger.warning("START _check_users")
+    print()
 
     stm_users = select(UserOAuth).order_by(UserOAuth.id)
     users = db.execute(stm_users).scalars().unique().all()
-    list_username_or_slurm_user = []
+    name_to_user_id = {}
     for user in users:
         logger.warning(f"START handling user {user.id}: '{user.email}'")
+        # Compute "name" attribute
         user_settings = db.get(UserSettings, user.user_settings_id)
-
-        # FIXME: this block is not meant to be there, but it's useful to
-        # debug next steps
-        user.username = f"user_{user.id}"
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        # ------------
-
-        logger.warning(f"{user.username=}, {user_settings.slurm_user=}")
-        list_username_or_slurm_user.append(
-            user.username or user_settings.slurm_user
-        )
+        name = user.username or user_settings.slurm_user
+        logger.warning(f"{name=}")
+        # Check for missing values
+        if name is None:
+            raise ValueError(
+                f"User with {user.id=} and {user.email=} has no "
+                "`username` or `slurm_user` set."
+                "Please fix this issue manually."
+            )
+        # Check for non-unique values
+        existing_user = name_to_user_id.get(name, None)
+        if existing_user is not None:
+            raise ValueError(
+                f"User with {user.id=} and {user.email=} has same "
+                f"`(username or slurm_user)={name}` as another user. "
+                "Please fix this issue manually."
+            )
+        # Update dictionary
+        name_to_user_id[name] = user.id
         logger.warning(f"END handling user {user.id}: '{user.email}'")
-    print(list_username_or_slurm_user)
-
-    if len(list_username_or_slurm_user) != len(
-        set(list_username_or_slurm_user)
-    ):
-        raise ValueError(
-            "Non-unique list of usernames or slurm_users. "
-            "Manually edit database until this check passes."
-        )
-    if None in list_username_or_slurm_user:
-        raise ValueError(
-            "Some user doesn't have either `username` or `slurm_user`."
-            "Manually edit database until this check passes."
-        )
+        print()
     logger.warning("END _check_users")
     print()
+    return name_to_user_id
 
 
 def _default_user_group_id(db):
@@ -67,7 +63,56 @@ def _default_user_group_id(db):
         return default_group_id
 
 
-def _create_task_groups_v0(db, dry_run: bool = True):
+def _find_task_associations(db):
+    user_mapping = _get_users_mapping(db)
+
+    stm_tasks = select(TaskV2).order_by(TaskV2.id)
+    res = db.execute(stm_tasks).scalars().all()
+    task_groups = {}
+    for task in res:
+        print(task.id, task.source)
+        if (
+            task.source.startswith(("pip_remote", "pip_local"))
+            and task.source.count(":") == 5
+        ):
+            source_fields = task.source.split(":")
+            mode, pkg_name, version, extras, py_version, name = source_fields
+            task_group_key = ":".join([pkg_name, version, extras, py_version])
+            if task_group_key in task_groups:
+                task_groups[task_group_key].append(task)
+            else:
+                task_groups[task_group_key] = [task]
+        else:
+            owner = task.owner
+            if owner is None:
+                raise RuntimeError(
+                    "A Something wrong with "
+                    f"{task.id=}, {task.source=}, {task.owner=}"
+                )
+            user_id = user_mapping.get(owner, None)
+            if user_id is None:
+                raise RuntimeError(
+                    "B Something wrong with "
+                    f"{task.id=}, {task.source=}, {task.owner=}"
+                )
+            task_group_key = hash(task)
+            if task_group_key in task_groups:
+                raise RuntimeError(
+                    "C Something wrong with "
+                    f"{task.id=}, {task.source=}, {task.owner=}"
+                )
+            else:
+                task_groups[task_group_key] = [task]
+    for task_group_key, task_group_tasks in sorted(task_groups):
+        print(task_group_key)
+        for task in task_group_tasks:
+            print(f"  {task.source}")
+        print()
+
+    return
+
+
+def _create_task_groups_v0(db, *, dry_run: bool = True):
     stm_tasks = select(TaskV2).order_by(TaskV2.id)
     tasks = db.execute(stm_tasks).scalars().unique().all()
     logger.warning("START _create_task_groups_v0")
@@ -101,19 +146,20 @@ def _create_task_groups_v0(db, dry_run: bool = True):
     print()
 
 
-def _create_task_groups_v1(db, dry_run: bool = True):
+def _create_task_groups_v1(db, *, dry_run: bool = True):
     """
     Finds associations based on source.
     """
     pass
 
 
-def fix_db():
+def fix_db(dry_run: bool = False):
     logger.warning("START execution of fix_db function")
     _check_current_version("2.7.0")
 
     with next(get_sync_db()) as db:
-        _check_users(db)
-        _create_task_groups_v0(db)
+        _get_users_mapping(db)
+        _find_task_associations(db)
+        # _create_task_groups_v0(db, dry_run=dry_run)
 
     logger.warning("END of execution of fix_db function")
