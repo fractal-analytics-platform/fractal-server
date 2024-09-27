@@ -15,6 +15,7 @@ from typing import Optional
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
+from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -125,4 +126,7 @@ class UserGroup(SQLModel, table=True):
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    viewer_paths: list[str] = Field(
+        sa_column=Column(JSON, server_default="[]", nullable=False)
     )
