@@ -1,3 +1,5 @@
+#!/bin/bash
+
 dropdb --if-exists fractal_test_v27
 createdb fractal_test_v27
 
