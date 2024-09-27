@@ -1,4 +1,6 @@
+import pytest
 from devtools import debug
+from sqlalchemy.exc import IntegrityError
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -42,6 +44,27 @@ async def test_task_group_v2(db):
     assert task1.taskgroupv2_id == task_group.id
     assert task2.taskgroupv2_id == task_group.id
     assert task3.taskgroupv2_id == task_group.id
+
+    assert task_group.user_id == user.id
+    assert task_group.user_group_id is None
+
+    task_group.user_group_id = user_group.id
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    assert task_group.user_group_id == user_group.id
+
+    with pytest.raises(IntegrityError):
+        await db.delete(user_group)
+        await db.commit()
+    await db.rollback()
+
+    await db.delete(user_group)
+    task_group.user_group_id = None
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    assert task_group.user_group_id is None
 
     # Consistency check
 
