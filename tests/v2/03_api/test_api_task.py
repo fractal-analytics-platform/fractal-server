@@ -228,6 +228,22 @@ async def test_post_task(client, MockCurrentUser):
     assert "Cannot set" in res.json()["detail"]
 
 
+async def test_post_task_without_default_group(
+    client,
+    MockCurrentUser,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "fractal_server.app.routes.api.v2.task.FRACTAL_DEFAULT_GROUP_NAME",
+        "MONKEY",
+    )
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/", json=dict(name="a", source="b", command_parallel="c")
+        )
+        assert res.status_code == 404
+
+
 async def test_patch_task_auth(
     MockCurrentUser,
     client,
