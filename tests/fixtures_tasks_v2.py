@@ -13,9 +13,11 @@ from sqlalchemy.orm import Session as DBSyncSession
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.tasks.v2.background_operations import _insert_tasks
 from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
+)
+from fractal_server.tasks.v2.database_operations import (
+    create_db_task_group_and_tasks,
 )
 
 
@@ -84,10 +86,14 @@ def fractal_tasks_mock_db(
     fractal_tasks_mock_collection, db_sync: DBSyncSession
 ) -> dict[str, TaskV2]:
 
-    task_list_db: list[TaskV2] = _insert_tasks(
-        fractal_tasks_mock_collection["task_list"], db_sync
+    task_group = create_db_task_group_and_tasks(
+        task_list=fractal_tasks_mock_collection["task_list"],
+        task_group_dict={},
+        user_id=1,  # FIXME
+        user_group_id=None,  # FIXME
+        db=db_sync,
     )
-    return {task.name: task for task in task_list_db}
+    return {task.name: task for task in task_group.task_list}
 
 
 @pytest.fixture(scope="function")
