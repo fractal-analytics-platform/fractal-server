@@ -19,6 +19,7 @@ from ..utils import get_log_path
 from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -42,6 +43,8 @@ def _get_task_type(task: TaskCreateV2) -> str:
 def _insert_tasks(
     task_list: list[TaskCreateV2],
     db: DBSyncSession,
+    user_id: int,
+    user_group_id: int,
     owner: Optional[str] = None,
 ) -> list[TaskV2]:
     """
@@ -54,7 +57,13 @@ def _insert_tasks(
         TaskV2(**t.dict(), **owner_dict, type=_get_task_type(t))
         for t in task_list
     ]
-    db.add_all(task_db_list)
+    task_group_db_list = [
+        TaskGroupV2(
+            user_id=user_id, user_group_id=user_group_id, task_list=[db_task]
+        )
+        for db_task in task_db_list
+    ]
+    db.add_all(task_group_db_list)
     db.commit()
     for t in task_db_list:
         db.refresh(t)
@@ -235,6 +244,8 @@ async def background_collect_pip(
     state_id: int,
     venv_path: Path,
     task_pkg: _TaskCollectPip,
+    user_id: int,
+    user_group_id: int,
 ) -> None:
     """
     Setup venv, install package, collect tasks.
@@ -301,7 +312,12 @@ async def background_collect_pip(
                 python_bin=python_bin,
             )
             _check_task_files_exist(task_list=task_list)
-            tasks = _insert_tasks(task_list=task_list, db=db)
+            tasks = _insert_tasks(
+                task_list=task_list,
+                db=db,
+                user_id=user_id,
+                user_group_id=user_group_id,
+            )
             logger.debug("collecting -  prepare tasks and update db " "- END")
             logger.debug("collecting - END")
 

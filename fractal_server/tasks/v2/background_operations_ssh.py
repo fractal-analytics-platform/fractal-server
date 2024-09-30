@@ -112,6 +112,8 @@ def background_collect_pip_ssh(
     task_pkg: _TaskCollectPip,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
+    user_id: int,
+    user_group_id: int,
 ) -> None:
     """
     Collect a task package over SSH
@@ -310,7 +312,12 @@ def background_collect_pip_ssh(
                     package_root=Path(package_root_remote),
                     python_bin=Path(python_bin),
                 )
-                _insert_tasks(task_list=task_list, db=db)
+                _insert_tasks(
+                    task_list=task_list,
+                    db=db,
+                    user_id=user_id,
+                    user_group_id=user_group_id,
+                )
                 logger.debug("collecting - END")
 
                 # Finalize (write metadata to DB)

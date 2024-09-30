@@ -83,9 +83,37 @@ def fractal_tasks_mock_collection(
 def fractal_tasks_mock_db(
     fractal_tasks_mock_collection, db_sync: DBSyncSession
 ) -> dict[str, TaskV2]:
+    from sqlmodel import select
+    from fractal_server.app.models import UserGroup
+    from fractal_server.app.models import UserOAuth
+    from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+    from fastapi import HTTPException
+    from fastapi import status
+
+    stm = select(UserOAuth.id).where(UserOAuth.is_superuser is True)
+    res = db_sync.execute(stm)
+    all_superusers = res.scalars().all()
+    if all_superusers is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No superuser found"
+        )
+
+    stm = select(UserGroup.id).where(
+        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+    )
+    res = db_sync.execute(stm)
+    user_group_id = res.scalars().one_or_none()
+    if user_group_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Fractal default group not found",
+        )
 
     task_list_db: list[TaskV2] = _insert_tasks(
-        fractal_tasks_mock_collection["task_list"], db_sync
+        fractal_tasks_mock_collection["task_list"],
+        db_sync,
+        user_group_id=user_group_id,
+        user_id=all_superusers[0].id,
     )
     return {task.name: task for task in task_list_db}
 

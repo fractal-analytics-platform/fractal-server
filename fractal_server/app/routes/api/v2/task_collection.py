@@ -19,6 +19,7 @@ from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models import UserGroup
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
@@ -29,6 +30,7 @@ from ...aux.validate_user_settings import validate_user_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
@@ -112,6 +114,17 @@ async def collect_tasks_pip(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 
+    stm = select(UserGroup.id).where(
+        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+    )
+    res = await db.execute(stm)
+    user_group_id = res.scalars().one_or_none()
+    if user_group_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Fractal default group not found",
+        )
+
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
@@ -144,6 +157,8 @@ async def collect_tasks_pip(
             task_pkg,
             fractal_ssh,
             user_settings.ssh_tasks_dir,
+            user_id=user.id,
+            user_group_id=user_group_id,
         )
 
         response.status_code = status.HTTP_201_CREATED
@@ -284,6 +299,8 @@ async def collect_tasks_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=user.id,
+        user_group_id=user_group_id,
     )
     logger.debug(
         "Task-collection endpoint: start background collection "
