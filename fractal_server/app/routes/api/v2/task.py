@@ -19,13 +19,13 @@ from ....models.v2 import WorkflowV2
 from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import TaskReadV2
 from ....schemas.v2 import TaskUpdateV2
+from ...auth._aux_auth import _get_default_user_group_id
+from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions import _get_task_check_owner
-from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 router = APIRouter()
 
@@ -190,16 +190,14 @@ async def create_task(
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
 
-    stm = select(UserGroup.id).where(
-        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+    # Get default-user-group id # FIXME: let the user specify a group
+    user_group_id = await _get_default_user_group_id()
+
+    # Check current user belongs to group
+    await _verify_user_belongs_to_group(
+        user_id=user.id, user_group_id=user_group_id, db=db
     )
-    res = await db.execute(stm)
-    user_group_id = res.scalars().one_or_none()
-    if user_group_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Fractal default group not found",
-        )
+
     db_task_group = TaskGroupV2(
         user_id=user.id, user_group_id=user_group_id, task_list=[db_task]
     )
