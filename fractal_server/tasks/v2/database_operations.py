@@ -21,7 +21,7 @@ def _get_task_type(task: TaskCreateV2) -> str:
 def create_db_task_group_and_tasks(
     *,
     task_list: list[TaskCreateV2],
-    task_group: dict[str, Any],  # FIXME: turn this into a specific schema
+    task_group_dict: dict[str, Any],  # FIXME: turn this into a specific schema
     user_id: int,
     db: DBSyncSession,
     user_group_id: Optional[int] = None,
@@ -43,12 +43,12 @@ def create_db_task_group_and_tasks(
         )
         for task in task_list
     ]
-    db_task_group = TaskGroupV2(
+    task_group = TaskGroupV2(
         user_id=user_id,
         user_group_id=user_group_id,
         task_list=actual_task_list,
     )
-    db.add(db_task_group)
+    db.add(task_group)
     db.commit()
     db.refresh(task_group)
     return task_group
