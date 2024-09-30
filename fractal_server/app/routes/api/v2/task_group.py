@@ -19,32 +19,15 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-async def _task_group_access_control(
-    *, user: UserOAuth, task_group: TaskGroupV2, db: AsyncSession
-):
-    if user.id != task_group.user_id:
-        if task_group.user_group_id is not None:
-            cmd = (
-                select(LinkUserGroup)
-                .where(LinkUserGroup.user_id == user.id)
-                .where(LinkUserGroup.group_id == task_group.user_group_id)
+def _access_control(user: UserOAuth):
+    return or_(
+        TaskGroupV2.user_id == user.id,
+        TaskGroupV2.user_group_id.in_(
+            select(LinkUserGroup.group_id).where(
+                LinkUserGroup.user_id == user.id
             )
-            res = await db.execute(cmd)
-            if res.scalars().all() == []:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=(
-                        f"TaskGroup {task_group.id} "
-                        f"forbidden to user {user.id}"
-                    ),
-                )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"TaskGroup {task_group.id} forbidden to user {user.id}"
-                ),
-            )
+        ),
+    )
 
 
 @router.get("/", response_model=list[TaskGroupReadV2])
@@ -56,18 +39,10 @@ async def get_task_group_list(
     Get all accessible TaskGroups
     """
 
-    cmd = select(TaskGroupV2).where(
-        or_(
-            TaskGroupV2.user_id == user.id,
-            TaskGroupV2.user_group_id.in_(
-                select(LinkUserGroup.group_id).where(
-                    LinkUserGroup.user_id == user.id
-                )
-            ),
-        )
-    )
+    cmd = select(TaskGroupV2).where(_access_control(user))
     res = await db.execute(cmd)
     task_groups = res.scalars().all()
+
     return task_groups
 
 
@@ -80,14 +55,29 @@ async def get_task_group(
     """
     Get single TaskGroup
     """
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    await db.close()
+    cmd = (
+        select(TaskGroupV2)
+        .where(TaskGroupV2.id == task_group_id)
+        .where(_access_control(user))
+    )
+    res = await db.execute(cmd)
+    task_group = res.scalars().one_or_none()
 
-    if not task_group:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found.",
-        )
+    if task_group is None:
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        if task_group is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"TaskGroupV2 {task_group_id} do not exists ornot found."
+                ),
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"TaskGroup {task_group.id} forbidden to user {user.id}"
+                ),
+            )
 
-    await _task_group_access_control(user=user, task_group=task_group, db=db)
     return task_group
