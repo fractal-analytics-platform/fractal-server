@@ -234,7 +234,7 @@ async def test_post_task_without_default_group(
     monkeypatch,
 ):
     monkeypatch.setattr(
-        "fractal_server.app.routes.api.v2.task.FRACTAL_DEFAULT_GROUP_NAME",
+        "fractal_server.app.routes.auth._aux_auth.FRACTAL_DEFAULT_GROUP_NAME",
         "MONKEY",
     )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
