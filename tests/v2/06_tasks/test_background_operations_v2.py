@@ -119,6 +119,8 @@ async def test_logs_failed_collection(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=1,  # FIXME
+        user_group_id=None,
     )
     await db.refresh(state)
     debug(state.data["status"])
@@ -153,6 +155,8 @@ async def test_logs_failed_collection(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=1,  # FIXME
+        user_group_id=None,
     )
     await db.refresh(state)
     debug(state.data["status"])

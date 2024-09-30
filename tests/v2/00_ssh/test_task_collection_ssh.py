@@ -52,6 +52,8 @@ async def test_task_collection_ssh(
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=remote_basedir,
+        user_id=1,  # FIXME
+        user_group_id=None,
     )
     await db.refresh(state)
     debug(state)
