@@ -176,7 +176,7 @@ async def collect_task_custom(
         )
 
     # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id(db=db_sync)
+    user_group_id = await _get_default_user_group_id(db=db)
 
     # Check current user belongs to group
     if user_group_id is not None:
@@ -187,7 +187,7 @@ async def collect_task_custom(
     task_group = create_db_task_group_and_tasks(
         task_list=task_list,
         task_group_dict={},  # FIXME
-        user_id=current_active_verified_user.id,
+        user_id=user.id,
         user_group_id=user_group_id,
         db=db_sync,
     )
