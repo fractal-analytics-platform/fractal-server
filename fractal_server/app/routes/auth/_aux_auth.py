@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session as DBSyncSession
 from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
@@ -119,6 +120,19 @@ async def _get_default_user_group_id(db: AsyncSession) -> UserGroup:
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
     res = await db.execute(stm)
+    user_group_id = res.scalars().one_or_none()
+    if user_group_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
+        )
+
+
+def _get_default_user_group_id_sync(db: DBSyncSession) -> UserGroup:
+    stm = select(UserGroup.id).where(
+        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+    )
+    res = db.execute(stm)
     user_group_id = res.scalars().one_or_none()
     if user_group_id is None:
         raise HTTPException(

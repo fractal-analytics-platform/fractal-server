@@ -18,11 +18,10 @@ from ....models.v2 import TaskV2
 from ....schemas.v2 import TaskCollectCustomV2
 from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import TaskReadV2
+from ...auth._aux_auth import _get_default_user_group_id
 from ...aux.validate_user_settings import verify_user_has_settings
-from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.string_tools import validate_cmd
 from fractal_server.tasks.v2.background_operations import _insert_tasks
 from fractal_server.tasks.v2.background_operations import (
@@ -166,17 +165,7 @@ async def collect_task_custom(
             detail="\n".join(overlapping_tasks_v1_source_and_id),
         )
 
-    stm = select(UserGroup.id).where(
-        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
-    )
-    res = await db.execute(stm)
-    user_group_id = res.scalars().one_or_none()
-    if user_group_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Fractal default group not found",
-        )
-
+    user_group_id = await _get_default_user_group_id(db=db)
     task_list_db: list[TaskV2] = _insert_tasks(
         task_list=task_list,
         owner=owner,
