@@ -82,7 +82,6 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["source"] == f"{TASK_OWNER}:{task.source}"
         assert res.json()["meta_non_parallel"] == {}
         assert res.json()["meta_parallel"] == {}
-        assert res.json()["owner"] == TASK_OWNER
         assert res.json()["version"] is None
         assert res.json()["args_schema_non_parallel"] is None
         assert res.json()["args_schema_parallel"] is None
@@ -158,7 +157,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == USERNAME
     # Case 3: (username, slurm_user) = (None, not None)
     user_kwargs = dict(username=None, is_verified=True)
     user_settings_dict = dict(slurm_user=SLURM_USER)
@@ -168,7 +166,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == SLURM_USER
     # Case 4: (username, slurm_user) = (not None, None)
     user_kwargs = dict(username=USERNAME, is_verified=True)
     user_settings_dict = dict(slurm_user=None)
@@ -178,7 +175,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == USERNAME
 
     # Fail giving "non parallel" args to "parallel" tasks, and vice versa
     res = await client.post(
@@ -273,7 +269,6 @@ async def test_patch_task_auth(
             f"{PREFIX}/", json=task.dict(exclude_unset=True)
         )
         assert res.status_code == 201
-        assert res.json()["owner"] == USER_1
 
         task_id = res.json()["id"]
 
@@ -446,12 +441,7 @@ async def test_patch_task_different_users(
         res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
         debug(res.json())
         assert res.status_code == 200
-        assert res.json()["owner"] == owner
         assert res.json()["name"] == NEW_NAME
-        if username:
-            assert res.json()["owner"] != username
-        if slurm_user:
-            assert res.json()["owner"] != slurm_user
 
 
 async def test_get_task(task_factory_v2, client, MockCurrentUser):
