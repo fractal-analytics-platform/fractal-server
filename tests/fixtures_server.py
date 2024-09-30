@@ -354,7 +354,7 @@ async def MockCurrentUser(app, db, default_user_group):
 
 
 @pytest.fixture(scope="function")
-async def first_user(db: AsyncSession):
+async def first_user(db: AsyncSession, default_user_group: UserGroup):
     """
     Make sure that at least one user exists.
     """
@@ -372,5 +372,8 @@ async def first_user(db: AsyncSession):
         db.add(user)
         await db.commit()
         db.expunge(user)
+
+        db.add(LinkUserGroup(user_id=user.id, group_id=default_user_group.id))
+        await db.commit()
 
     return user
