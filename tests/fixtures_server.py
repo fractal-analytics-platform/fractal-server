@@ -13,11 +13,14 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import UserSettings
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.config import get_settings
@@ -248,7 +251,6 @@ async def MockCurrentUser(app, db, default_user_group):
     from fractal_server.app.routes.auth import current_active_verified_user
     from fractal_server.app.routes.auth import current_active_user
     from fractal_server.app.routes.auth import current_active_superuser
-    from fractal_server.app.models import UserOAuth
     from fractal_server.app.models import UserSettings
 
     def _random_email():
@@ -349,3 +351,26 @@ async def MockCurrentUser(app, db, default_user_group):
                     app.dependency_overrides[dep] = previous_dep
 
     return _MockCurrentUser
+
+
+@pytest.fixture(scope="function")
+async def first_user(db: AsyncSession):
+    """
+    Make sure that at least one user exists.
+    """
+    res = await db.execute(select(UserOAuth).order_by(UserOAuth.id))
+    user = res.scalars().first()
+    if user is None:
+        user = UserOAuth(
+            email="example@example.org",
+            hashed_password="fake_password",
+            is_active=True,
+            is_verified=True,
+        )
+        user_settings = UserSettings()
+        user.settings = user_settings
+        db.add(user)
+        await db.commit()
+        db.expunge(user)
+
+    return user

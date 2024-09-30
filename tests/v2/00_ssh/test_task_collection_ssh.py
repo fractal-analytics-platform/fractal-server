@@ -2,6 +2,7 @@ from pathlib import Path
 
 from devtools import debug
 
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2.collection_state import CollectionStateV2
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
@@ -16,6 +17,7 @@ async def test_task_collection_ssh(
     override_settings_factory,
     tmp777_path: Path,
     current_py_version: str,
+    first_user: UserOAuth,
 ):
 
     remote_basedir = (tmp777_path / "WORKING_BASE_DIR").as_posix()
@@ -52,7 +54,7 @@ async def test_task_collection_ssh(
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=remote_basedir,
-        user_id=1,  # FIXME
+        user_id=first_user.id,
         user_group_id=None,
     )
     await db.refresh(state)
@@ -83,6 +85,8 @@ async def test_task_collection_ssh(
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=remote_basedir,
+        user_id=first_user.id,
+        user_group_id=None,
     )
 
     # Check that the second collection failed, since folder already exists
@@ -103,6 +107,7 @@ async def test_task_collection_ssh_failure(
     override_settings_factory,
     tmp777_path: Path,
     current_py_version: str,
+    first_user: UserOAuth,
 ):
 
     remote_basedir = (tmp777_path / "WORKING_BASE_DIR").as_posix()
@@ -134,6 +139,8 @@ async def test_task_collection_ssh_failure(
         task_pkg=task_pkg,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=remote_basedir,
+        user_id=first_user.id,
+        user_group_id=None,
     )
 
     await db.refresh(state)
