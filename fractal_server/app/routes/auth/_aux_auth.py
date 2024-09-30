@@ -118,7 +118,7 @@ async def _get_default_user_group_id(db: AsyncSession) -> UserGroup:
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
-    res = db.execute(stm)
+    res = await db.execute(stm)
     user_group_id = res.scalars().one_or_none()
     if user_group_id is None:
         raise HTTPException(
