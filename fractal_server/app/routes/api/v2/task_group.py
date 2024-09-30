@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -11,7 +12,6 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
-from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -47,12 +47,36 @@ async def _task_group_access_control(
             )
 
 
+@router.get("/", response_model=list[TaskGroupReadV2])
+async def get_task_group_list(
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupReadV2]:
+    """
+    Get all accessible TaskGroups
+    """
+
+    cmd = select(TaskGroupV2).where(
+        or_(
+            TaskGroupV2.user_id == user.id,
+            TaskGroupV2.user_group_id.in_(
+                select(LinkUserGroup.group_id).where(
+                    LinkUserGroup.user_id == user.id
+                )
+            ),
+        )
+    )
+    res = await db.execute(cmd)
+    task_groups = res.scalars().all()
+    return task_groups
+
+
 @router.get("/{task_group_id}", response_model=TaskGroupReadV2)
 async def get_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskReadV2]:
+) -> TaskGroupReadV2:
     """
     Get single TaskGroup
     """
