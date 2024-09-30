@@ -51,7 +51,7 @@ async def test_failed_API_calls(
         assert "is not the absolute path to a wheel file" in str(res.json())
 
     # Package `asd` exists, but it has no wheel file
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="asd", package_version="1.3.2"),
@@ -63,17 +63,18 @@ async def test_failed_API_calls(
         )
         assert "tar.gz" in str(res.json())
 
-    # Task collection fails if a task with the same source already exists
-    # (see issue 866)
-    settings = Inject(get_settings)
-    default_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-    await task_factory_v2(
-        source=(
-            f"pip_local:fractal_tasks_mock:0.0.1::"
-            f"py{default_version}:create_ome_zarr_compound"
+        # Task collection fails if a task with the same source already exists
+        # (see issue 866)
+        settings = Inject(get_settings)
+        default_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        await task_factory_v2(
+            user_id=user.id,
+            source=(
+                f"pip_local:fractal_tasks_mock:0.0.1::"
+                f"py{default_version}:create_ome_zarr_compound"
+            ),
         )
-    )
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+
         wheel_path = (
             testdata_path.parent
             / "v2/fractal_tasks_mock/dist"

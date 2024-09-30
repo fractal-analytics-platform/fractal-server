@@ -121,7 +121,9 @@ async def test_delete_workflow(
         wf_id = res.json()["id"]
 
         # Create a task
-        task = await task_factory_v2(name="task", source="dummy")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="dummy"
+        )
 
         # Add a dummy task to workflow
         res = await client.post(
@@ -160,7 +162,9 @@ async def test_delete_workflow(
         wf_deletable_1 = await workflow_factory_v2(project_id=project.id)
         wf_deletable_2 = await workflow_factory_v2(project_id=project.id)
         wf_not_deletable_1 = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(name="task", source="source")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         await _workflow_insert_task(
             workflow_id=wf_deletable_1.id, task_id=task.id, db=db
         )
@@ -719,6 +723,7 @@ async def test_patch_workflow_task_with_args_schema(
         assert res.status_code == 201
         wf_id = res.json()["id"]
         task = await task_factory_v2(
+            user_id=user.id,
             name="task with schema",
             source="source0",
             command_non_parallel="cmd",
@@ -1020,7 +1025,7 @@ async def test_delete_workflow_with_job(
 
         # Create a workflow and a job in relationship with it
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(name="1", source="1")
+        task = await task_factory_v2(user_id=user.id, name="1", source="1")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -1083,12 +1088,14 @@ async def test_import_export_workflow(
     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
         workflow_from_file = json.load(f)
 
-    await task_factory_v2(name="task", source="PKG_SOURCE:dummy2")
-    await task_factory(name="task", source="PKG_SOURCE:dummy1")
-
-    # Create project
     async with MockCurrentUser() as user:
+        # Create project
         prj = await project_factory_v2(user)
+        # Add dummy tasks to DB
+        await task_factory_v2(
+            user_id=user.id, name="task", source="PKG_SOURCE:dummy2"
+        )
+        await task_factory(name="task", source="PKG_SOURCE:dummy1")
 
     # Import workflow into project
     payload = WorkflowImportV2(**workflow_from_file).dict(exclude_none=True)
@@ -1158,7 +1165,9 @@ async def test_export_workflow_log(
     # Create project and task
     async with MockCurrentUser() as user:
         TASK_OWNER = "someone"
-        task = await task_factory_v2(owner=TASK_OWNER, source="some-source")
+        task = await task_factory_v2(
+            user_id=user.id, owner=TASK_OWNER, source="some-source"
+        )
         prj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=prj.id)
 

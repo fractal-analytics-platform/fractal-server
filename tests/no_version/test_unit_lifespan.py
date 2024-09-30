@@ -63,7 +63,9 @@ async def test_app_with_lifespan(
         assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
 
-        task = await task_factory_v2(name="task", command="echo")
+        task = await task_factory_v2(
+            user_id=user[0].id, name="task", command="echo"
+        )
         project = await project_factory_v2(user[0])
         workflow = await workflow_factory_v2(project_id=project.id)
         dataset1 = await dataset_factory_v2(project_id=project.id, name="ds-1")

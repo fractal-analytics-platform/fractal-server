@@ -124,12 +124,12 @@ async def test_get_workflow_task_check_owner(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(source="A")
+        task = await task_factory_v2(user_id=user.id, source="A")
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
         other_workflow = await workflow_factory_v2(project_id=project.id)
-        other_task = await task_factory_v2(source="B")
+        other_task = await task_factory_v2(user_id=user.id, source="B")
         other_wftask = await workflowtask_factory_v2(
             workflow_id=other_workflow.id, task_id=other_task.id
         )
@@ -269,7 +269,7 @@ async def test_get_job_check_owner(
         other_project = await project_factory_v2(user, id=2)
 
         workflow = await workflow_factory_v2(project_id=project.id)
-        t = await task_factory_v2()
+        t = await task_factory_v2(user_id=user.id)
 
         with pytest.raises(ValueError):
             await _workflow_insert_task(
@@ -321,8 +321,10 @@ async def test_get_job_check_owner(
 async def test_get_task_check_owner(MockCurrentUser, task_factory_v2, db):
 
     async with MockCurrentUser(user_kwargs={"username": "alice"}) as user:
-        taskA = await task_factory_v2(source="A", owner=user.username)
-        taskB = await task_factory_v2(source="B")
+        taskA = await task_factory_v2(
+            user_id=user.id, source="A", owner=user.username
+        )
+        taskB = await task_factory_v2(user_id=user.id, source="B")
 
         # Test fail 1: 404 NOT FOUND
         with pytest.raises(HTTPException) as err:
