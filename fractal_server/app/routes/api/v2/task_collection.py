@@ -284,6 +284,8 @@ async def collect_tasks_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=user.id,
+        user_group_id=None,  # FIXME
     )
     logger.debug(
         "Task-collection endpoint: start background collection "
