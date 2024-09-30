@@ -149,7 +149,7 @@ async def _verify_user_belongs_to_group(
         .where(LinkUserGroup.user_id == user_id)
         .where(LinkUserGroup.group_id == user_group_id)
     )
-    res = db.execute(stm)
+    res = await db.execute(stm)
     link = res.scalars().one_or_none()
     if link is None:
         raise HTTPException(
