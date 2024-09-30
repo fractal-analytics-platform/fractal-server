@@ -191,7 +191,7 @@ async def create_task(
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
 
     # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id()
+    user_group_id = await _get_default_user_group_id(db=db)
 
     # Check current user belongs to group
     if user_group_id is not None:

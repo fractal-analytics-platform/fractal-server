@@ -6,11 +6,13 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from ...auth._aux_auth import _get_default_user_group_id
 from ...auth._aux_auth import _verify_user_belongs_to_group
 from fractal_server.app.db import DBSyncSession
+from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v1 import Task as TaskV1
@@ -44,7 +46,10 @@ logger = set_logger(__name__)
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
     user: UserOAuth = Depends(current_active_verified_user),
-    db: DBSyncSession = Depends(get_sync_db),
+    db: AsyncSession = Depends(get_async_db),  # FIXME: using both sync/async
+    db_sync: DBSyncSession = Depends(
+        get_sync_db
+    ),  # FIXME: using both sync/async
 ) -> list[TaskReadV2]:
 
     settings = Inject(get_settings)
@@ -146,7 +151,7 @@ async def collect_task_custom(
     # already guaranteed by a constraint in the table definition).
     sources = [task.source for task in task_list]
     stm = select(TaskV2).where(TaskV2.source.in_(sources))
-    res = db.execute(stm)
+    res = db_sync.execute(stm)
     overlapping_sources_v2 = res.scalars().all()
     if overlapping_sources_v2:
         overlapping_tasks_v2_source_and_id = [
@@ -158,7 +163,7 @@ async def collect_task_custom(
             detail="\n".join(overlapping_tasks_v2_source_and_id),
         )
     stm = select(TaskV1).where(TaskV1.source.in_(sources))
-    res = db.execute(stm)
+    res = db_sync.execute(stm)
     overlapping_sources_v1 = res.scalars().all()
     if overlapping_sources_v1:
         overlapping_tasks_v1_source_and_id = [
@@ -171,7 +176,7 @@ async def collect_task_custom(
         )
 
     # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id()
+    user_group_id = await _get_default_user_group_id(db=db_sync)
 
     # Check current user belongs to group
     if user_group_id is not None:
@@ -184,7 +189,7 @@ async def collect_task_custom(
         task_group_dict={},  # FIXME
         user_id=current_active_verified_user.id,
         user_group_id=user_group_id,
-        db=db,
+        db=db_sync,
     )
 
     logger.debug(

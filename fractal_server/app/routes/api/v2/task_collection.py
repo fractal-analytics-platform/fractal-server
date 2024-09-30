@@ -115,7 +115,7 @@ async def collect_tasks_pip(
     )
 
     # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id()
+    user_group_id = await _get_default_user_group_id(db=db)
 
     # Check that current user belongs to group
     if user_group_id is not None:
