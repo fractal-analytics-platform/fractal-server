@@ -8,23 +8,29 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import select
 
-from .....config import get_settings
-from .....logger import set_logger
-from .....syringe import Inject
-from ....db import DBSyncSession
-from ....db import get_sync_db
-from ....models.v1 import Task as TaskV1
-from ....models.v2 import TaskV2
-from ....schemas.v2 import TaskCollectCustomV2
-from ....schemas.v2 import TaskCreateV2
-from ....schemas.v2 import TaskReadV2
-from ...aux.validate_user_settings import verify_user_has_settings
+from ...auth._aux_auth import _get_default_user_group_id
+from ...auth._aux_auth import _verify_user_belongs_to_group
+from fractal_server.app.db import DBSyncSession
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v1 import Task as TaskV1
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.aux.validate_user_settings import (
+    verify_user_has_settings,
+)
+from fractal_server.app.schemas.v2 import TaskCollectCustomV2
+from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
-from fractal_server.tasks.v2.background_operations import _insert_tasks
+from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
+)
+from fractal_server.tasks.v2.database_operations import (
+    create_db_task_group_and_tasks,
 )
 
 router = APIRouter()
@@ -164,8 +170,21 @@ async def collect_task_custom(
             detail="\n".join(overlapping_tasks_v1_source_and_id),
         )
 
-    task_list_db: list[TaskV2] = _insert_tasks(
-        task_list=task_list, owner=owner, db=db
+    # Get default-user-group id # FIXME: let the user specify a group
+    user_group_id = await _get_default_user_group_id()
+
+    # Check current user belongs to group
+    if user_group_id is not None:
+        await _verify_user_belongs_to_group(
+            user_id=user.id, user_group_id=user_group_id, db=db
+        )
+
+    task_group = create_db_task_group_and_tasks(
+        task_list=task_list,
+        task_group_dict={},  # FIXME
+        user_id=current_active_verified_user.id,
+        user_group_id=user_group_id,
+        db=db,
     )
 
     logger.debug(
@@ -173,4 +192,4 @@ async def collect_task_custom(
         f"for package with {source=}"
     )
 
-    return task_list_db
+    return task_group.task_list

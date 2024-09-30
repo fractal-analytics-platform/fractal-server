@@ -25,6 +25,8 @@ from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
+from ...auth._aux_auth import _get_default_user_group_id
+from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import validate_user_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
@@ -112,6 +114,15 @@ async def collect_tasks_pip(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 
+    # Get default-user-group id # FIXME: let the user specify a group
+    user_group_id = await _get_default_user_group_id()
+
+    # Check that current user belongs to group
+    if user_group_id is not None:
+        await _verify_user_belongs_to_group(
+            user_id=user.id, user_group_id=user_group_id, db=db
+        )
+
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
@@ -140,10 +151,12 @@ async def collect_tasks_pip(
 
         background_tasks.add_task(
             background_collect_pip_ssh,
-            state.id,
-            task_pkg,
-            fractal_ssh,
-            user_settings.ssh_tasks_dir,
+            state_id=state.id,
+            task_pkg=task_pkg,
+            fractal_ssh=fractal_ssh,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
+            user_id=user.id,
+            user_group_id=user_group_id,
         )
 
         response.status_code = status.HTTP_201_CREATED
@@ -285,7 +298,7 @@ async def collect_tasks_pip(
         venv_path=venv_path,
         task_pkg=task_pkg,
         user_id=user.id,
-        user_group_id=None,  # FIXME
+        user_group_id=user_group_id,
     )
     logger.debug(
         "Task-collection endpoint: start background collection "

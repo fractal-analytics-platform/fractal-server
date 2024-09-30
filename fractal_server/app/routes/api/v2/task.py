@@ -194,9 +194,10 @@ async def create_task(
     user_group_id = await _get_default_user_group_id()
 
     # Check current user belongs to group
-    await _verify_user_belongs_to_group(
-        user_id=user.id, user_group_id=user_group_id, db=db
-    )
+    if user_group_id is not None:
+        await _verify_user_belongs_to_group(
+            user_id=user.id, user_group_id=user_group_id, db=db
+        )
 
     db_task_group = TaskGroupV2(
         user_id=user.id, user_group_id=user_group_id, task_list=[db_task]

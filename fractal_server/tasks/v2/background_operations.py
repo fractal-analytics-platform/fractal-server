@@ -20,7 +20,6 @@ from ._TaskCollectPip import _TaskCollectPip
 from .database_operations import create_db_task_group_and_tasks
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
-from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
@@ -38,29 +37,6 @@ def _get_task_type(task: TaskCreateV2) -> str:
         return "non_parallel"
     else:
         return "compound"
-
-
-def _insert_tasks(
-    task_list: list[TaskCreateV2],
-    db: DBSyncSession,
-    owner: Optional[str] = None,
-) -> list[TaskV2]:
-    """
-    Insert tasks into database
-    """
-
-    owner_dict = dict(owner=owner) if owner is not None else dict()
-
-    task_db_list = [
-        TaskV2(**t.dict(), **owner_dict, type=_get_task_type(t))
-        for t in task_list
-    ]
-    db.add_all(task_db_list)
-    db.commit()
-    for t in task_db_list:
-        db.refresh(t)
-    db.close()
-    return task_db_list
 
 
 def _set_collection_state_data_status(
