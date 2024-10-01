@@ -99,3 +99,21 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2):
         assert res.status_code == 204
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 404
+
+
+async def test_delete_task_group_fail(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    workflowtask_factory_v2,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id, source="source")
+        await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
+
+        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
+        assert res.status_code == 422
