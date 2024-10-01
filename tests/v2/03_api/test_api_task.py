@@ -246,88 +246,35 @@ async def test_patch_task_auth(
     client,
     task_factory_v2,
 ):
-    """
-    GIVEN a Task `A` with owner Alice and a Task `N` with owner None
-    WHEN Alice, Bob and a Superuser try to patch them
-    THEN Alice can edit `A`, Bob cannot edit anything
-         and the Superuser can edit both A and N.
-    """
-    USER_1 = "Alice"
-    USER_2 = "Bob"
 
-    async with MockCurrentUser(
-        user_kwargs={"username": USER_1, "is_verified": True}
-    ) as user:
-        task_with_no_owner = await task_factory_v2(user_id=user.id)
-        task_with_no_owner_id = task_with_no_owner.id
-        task = TaskCreateV2(
-            name="task_name",
-            source="task_source",
-            command_parallel="task_command",
-        )
+    # POST-task as user_A
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
+        user_A_id = user_A.id
+        payload_obj = TaskCreateV2(name="a", source="b", command_parallel="c")
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 201
-
         task_id = res.json()["id"]
 
-        # Test success: owner == user
-        update = TaskUpdateV2(name="new_name_1")
+    # PATCH-task success as user_A -> success (task belongs to user)
+    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
+        payload_obj = TaskUpdateV2(name="new_name_1")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_1"
 
-    async with MockCurrentUser(
-        user_kwargs={"is_verified": True},
-        user_settings_dict={"slurm_user": USER_2},
-    ):
-        update = TaskUpdateV2(name="new_name_2")
-
-        # Test fail: (not user.is_superuser) and (owner != user)
+    # PATCH-task failure as a different user -> failure (task belongs to user)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # PATCH-task failure (task does not belong to user)
+        payload_obj = TaskUpdateV2(name="new_name_2")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 403
-        assert res.json()["detail"] == (
-            f"Current user ({USER_2}) cannot modify TaskV2 {task_id} "
-            f"with different owner ({USER_1})."
-        )
-
-        # Test fail: (not user.is_superuser) and (owner == None)
-        res = await client.patch(
-            f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
-        )
-        assert res.status_code == 403
-        assert res.json()["detail"] == (
-            "Only a superuser can modify a TaskV2 with `owner=None`."
-        )
-
-    async with MockCurrentUser(
-        user_kwargs={"is_superuser": True, "is_verified": True}
-    ):
-        res = await client.get(f"{PREFIX}/{task_id}/")
-        assert res.json()["name"] == "new_name_1"
-
-        # Test success: (owner != user) but (user.is_superuser)
-        update = TaskUpdateV2(name="new_name_3")
-        res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
-        )
-        assert res.status_code == 200
-        assert res.json()["name"] == "new_name_3"
-
-        # Test success: (owner == None) but (user.is_superuser)
-        update = TaskUpdateV2(name="new_name_4")
-        res = await client.patch(
-            f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
-        )
-        assert res.status_code == 200
-        assert res.json()["name"] == "new_name_4"
+        assert "Current user has no full access" in str(res.json()["detail"])
 
 
 async def test_patch_task(
@@ -338,14 +285,15 @@ async def test_patch_task(
 
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True)
-    ) as user:
+    ) as user_A:
+        user_A_id = user_A.id
         task_parallel = await task_factory_v2(
-            user_id=user.id, index=1, type="parallel"
+            user_id=user_A_id, index=1, type="parallel"
         )
         task_non_parallel = await task_factory_v2(
-            user_id=user.id, index=2, type="non_parallel"
+            user_id=user_A_id, index=2, type="non_parallel"
         )
-        task_compound = await task_factory_v2(user_id=user.id, index=3)
+        task_compound = await task_factory_v2(user_id=user_A_id, index=3)
         # Test successuful patch of task_compound
         update = TaskUpdateV2(
             name="new_name",
@@ -369,9 +317,7 @@ async def test_patch_task(
                 # assert non patched items are still the same
                 assert v == task_compound.model_dump()[k]
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_superuser=True, is_verified=True)
-    ):
+    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)):
         # Fail on updating unsetted commands
         update_non_parallel = TaskUpdateV2(command_non_parallel="xxx")
         res_compound = await client.patch(
