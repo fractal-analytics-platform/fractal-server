@@ -17,7 +17,12 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 
 async def test_get_task(db, task_factory_v2):
 
-    # Create two users
+    # Create the following initial situations:
+    # * User group A, with two users (A1 and A2)
+    # * User B, who is not part of any group
+    # * Task A_no_group, which belongs to user A1 and no group
+    # * Task A_group_A, which belongs to user A1 and group A
+
     user_A1 = UserOAuth(email="a1@a.a", hashed_password="xxx")
     user_A2 = UserOAuth(email="a2@a.a", hashed_password="xxx")
     user_B = UserOAuth(email="b@b.b", hashed_password="xxx")
@@ -31,11 +36,9 @@ async def test_get_task(db, task_factory_v2):
     await db.refresh(user_A2)
     await db.refresh(user_B)
     await db.refresh(group_A)
-
     db.add(LinkUserGroup(user_id=user_A1.id, group_id=group_A.id))
     db.add(LinkUserGroup(user_id=user_A2.id, group_id=group_A.id))
     await db.commit()
-
     task_A_no_group = await task_factory_v2(
         user_id=user_A1.id, user_group_id=None, source="1"
     )
@@ -43,7 +46,11 @@ async def test_get_task(db, task_factory_v2):
         user_id=user_A1.id, user_group_id=group_A.id, source="2"
     )
 
-    # Existence check
+    # Existence check success
+    await _get_task_or_404(task_id=task_A_no_group.id, db=db)
+    await _get_task_or_404(task_id=task_A_group_A.id, db=db)
+
+    # Existence check failure
     with pytest.raises(HTTPException, match="404"):
         await _get_task_or_404(task_id=99999, db=db)
 
