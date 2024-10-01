@@ -176,13 +176,11 @@ async def test_post_worfkflow_task_failures(
         )
         assert res.status_code == 403
 
-        # Test 422
-
+        # Test forbidden request-body attributes
         parallel_task = await post_task(client, label=100, type="parallel")
         non_parallel_task = await post_task(
             client, label=101, type="non_parallel"
         )
-
         for forbidden in ["meta_non_parallel", "args_non_parallel"]:
             res = await client.post(
                 f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
@@ -191,7 +189,6 @@ async def test_post_worfkflow_task_failures(
             )
             assert res.status_code == 422
             assert "Cannot set" in res.json()["detail"]
-
         for forbidden in ["meta_parallel", "args_parallel"]:
             res = await client.post(
                 f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
