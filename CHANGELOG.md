@@ -6,6 +6,7 @@
     * Fix use of naming convention for database schema-migration scripts (\#1819).
 * Testing:
     * Test `alembic downgrade base` (\#1819).
+    * Add `GET /api/v2/task/` to benchmarks (\#1825).
 
 
 # 2.6.3
