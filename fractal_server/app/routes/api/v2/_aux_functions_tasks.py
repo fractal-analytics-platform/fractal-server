@@ -1,0 +1,156 @@
+"""
+Auxiliary functions to get task and task-group object from the database or
+perform simple checks
+"""
+from fastapi import HTTPException
+from fastapi import status
+from sqlmodel import select
+
+from ....db import AsyncSession
+from ....models import LinkUserGroup
+from ....models.v2 import TaskGroupV2
+from ....models.v2 import TaskV2
+from fractal_server.app.models import UserOAuth
+
+
+async def _get_task_group_or_404(
+    *, task_group_id: int, db: AsyncSession
+) -> TaskGroupV2:
+    """
+    Get an existing task group or raise a 404.
+
+    Arguments:
+        task_group_id: The TaskGroupV2 id
+        db: An asynchronous db session
+    """
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    if task_group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupV2 {task_group_id} not found",
+        )
+    return task_group
+
+
+async def _get_task_group_read_access(
+    *,
+    task_group_id: int,
+    user: UserOAuth,
+    db: AsyncSession,
+) -> TaskGroupV2:
+    """
+    Get a task group or raise a 403 if user has no read access.
+
+    Arguments:
+        task_group_id: The TaskGroupV2 id
+        db: An asynchronous db session
+    """
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
+    )
+
+    # Prepare exception to be used below
+    forbidden_exception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"Current user cannot access TaskGroupV2 {task_group_id}.",
+    )
+
+    if task_group.user_id == user.id:
+        return task_group
+    elif task_group.user_group_id is None:
+        raise forbidden_exception
+    else:
+        stm = (
+            select(LinkUserGroup)
+            .where(LinkUserGroup.group_id == task_group.user_group_id)
+            .where(LinkUserGroup.user_id == user.id)
+        )
+        res = await db.execute(stm)
+        link = res.scalar_one_or_none()
+        if link is None:
+            raise forbidden_exception
+        else:
+            return task_group
+
+
+async def _get_task_group_full_access(
+    *,
+    task_group_id: int,
+    user: UserOAuth,
+    db: AsyncSession,
+) -> TaskGroupV2:
+    """
+    Get a task group or raise a 403 if user has no full access.
+
+    Arguments:
+        task_group_id: The TaskGroupV2 id
+        db: An asynchronous db session
+    """
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
+    )
+
+    if task_group.user_id == user.id:
+        return task_group
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Current user cannot access TaskGroupV2 {task_group_id}.",
+        )
+
+
+async def _get_task_or_404(*, task_id: int, db: AsyncSession) -> TaskV2:
+    """
+    Get an existing task or raise a 404.
+
+    Arguments:
+        task_id: The TaskV2 id
+        db: An asynchronous db session
+    """
+    task = await db.get(TaskV2, task_id)
+    if task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskV2 {task_id} not found",
+        )
+    return task
+
+
+async def _get_task_full_access(
+    *,
+    task_id: int,
+    user: UserOAuth,
+    db: AsyncSession,
+) -> TaskV2:
+    """
+    Get an existing task or raise a 404.
+
+    Arguments:
+        task_id: The TaskV2 id
+        db: An asynchronous db session
+    """
+    task = await _get_task_or_404(task_id=task_id, db=db)
+    await _get_task_group_full_access(
+        task_group_id=task.taskgroupv2_id, user=user, db=db
+    )
+    return task
+
+
+async def _get_task_read_access(
+    *,
+    task_id: int,
+    user: UserOAuth,
+    db: AsyncSession,
+) -> TaskV2:
+    """
+    Get an existing task or raise a 404.
+
+    Arguments:
+        task_id: The TaskV2 id
+        db: An asynchronous db session
+    """
+    task = await _get_task_or_404(task_id=task_id, db=db)
+    await _get_task_group_read_access(
+        task_group_id=task.taskgroupv2_id, user=user, db=db
+    )
+    return task
