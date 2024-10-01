@@ -92,8 +92,8 @@ async def apply_workflow(
             detail=f"Workflow {workflow_id} has empty task list",
         )
     else:
-        # Access control to Tasks in `workflow.task_list`
         for task in workflow.task_list:
+            # Access control
             _get_task_read_access(task_id=task.id, require_active=True)
     # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
