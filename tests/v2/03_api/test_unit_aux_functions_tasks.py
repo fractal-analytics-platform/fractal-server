@@ -2,6 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
@@ -105,4 +106,41 @@ async def test_get_task(db, task_factory_v2):
     with pytest.raises(HTTPException, match="403"):
         await _get_task_full_access(
             task_id=task_A_group_A.id, db=db, user_id=user_B.id
+        )
+
+
+async def test_get_task_require_active(db, task_factory_v2):
+
+    user = UserOAuth(email="a@a.a", hashed_password="xxx")
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    task = await task_factory_v2(
+        user_id=user.id, user_group_id=None, source="1"
+    )
+    task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
+
+    task_group.active = True
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+
+    await _get_task_read_access(
+        task_id=task.id, user_id=user.id, db=db, require_active=False
+    )
+    await _get_task_read_access(
+        task_id=task.id, user_id=user.id, db=db, require_active=True
+    )
+
+    task_group.active = False
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+
+    await _get_task_read_access(
+        task_id=task.id, user_id=user.id, db=db, require_active=False
+    )
+    with pytest.raises(HTTPException, match="422"):
+        await _get_task_read_access(
+            task_id=task.id, user_id=user.id, db=db, require_active=True
         )

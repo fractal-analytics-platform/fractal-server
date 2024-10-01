@@ -146,16 +146,25 @@ async def _get_task_read_access(
     task_id: int,
     user_id: int,
     db: AsyncSession,
+    require_active: bool = False,
 ) -> TaskV2:
     """
     Get an existing task or raise a 404.
 
     Arguments:
-        task_id: The TaskV2 id
+        task_id: ID of the required TaskV2
+        user_id: ID of the current user
         db: An asynchronous db session
+        require_active: If set, fail when the task group is not `active`
     """
     task = await _get_task_or_404(task_id=task_id, db=db)
-    await _get_task_group_read_access(
+    task_group = await _get_task_group_read_access(
         task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
+    if require_active:
+        if not task_group.active:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Cannot insert non-active tasks into a workflow.",
+            )
     return task
