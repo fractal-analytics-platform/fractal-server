@@ -14,8 +14,6 @@ from ....db import get_async_db
 from ....models.v1 import Task as TaskV1
 from ....models.v2 import TaskGroupV2
 from ....models.v2 import TaskV2
-from ....models.v2 import WorkflowTaskV2
-from ....models.v2 import WorkflowV2
 from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import TaskReadV2
 from ....schemas.v2 import TaskUpdateV2
@@ -216,56 +214,10 @@ async def delete_task(
     """
     Delete a task
     """
-
-    db_task = await _get_task_full_access(
-        task_id=task_id, user_id=user.id, db=db
+    raise HTTPException(
+        status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+        detail=(
+            "Cannot delete single tasks, "
+            "please operate directly on task groups."
+        ),
     )
-
-    # Check that the TaskV2 is not in relationship with some WorkflowTaskV2
-    stm = select(WorkflowTaskV2).filter(WorkflowTaskV2.task_id == task_id)
-    res = await db.execute(stm)
-    workflow_tasks = res.scalars().all()
-
-    if workflow_tasks:
-        # Find IDs of all affected workflows
-        workflow_ids = set(wftask.workflow_id for wftask in workflow_tasks)
-        # Fetch all affected workflows from DB
-        stm = select(WorkflowV2).where(WorkflowV2.id.in_(workflow_ids))
-        res = await db.execute(stm)
-        workflows = res.scalars().all()
-
-        # Find which workflows are associated to the current user
-        workflows_current_user = [
-            wf for wf in workflows if user in wf.project.user_list
-        ]
-        if workflows_current_user:
-            current_user_msg = (
-                "For the current-user workflows (listed below),"
-                " you can update the task or remove the workflows.\n"
-            )
-            current_user_msg += "\n".join(
-                [
-                    f"* '{wf.name}' (id={wf.id})"
-                    for wf in workflows_current_user
-                ]
-            )
-        else:
-            current_user_msg = ""
-
-        # Count workflows of current users or other users
-        num_workflows_current_user = len(workflows_current_user)
-        num_workflows_other_users = len(workflows) - num_workflows_current_user
-
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Cannot remove Task with id={task_id}: it is currently in "
-                f"use in {num_workflows_current_user} current-user workflows "
-                f"and in {num_workflows_other_users} other-users workflows.\n"
-                f"{current_user_msg}"
-            ),
-        )
-
-    await db.delete(db_task)
-    await db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

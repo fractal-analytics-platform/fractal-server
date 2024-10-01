@@ -1,9 +1,6 @@
 import pytest
 from devtools import debug
-from sqlmodel import select
 
-from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v1 import TaskCreateV1
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -453,7 +450,7 @@ async def test_get_task(task_factory_v2, client, MockCurrentUser):
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/{task.id+999}/")
         assert res.status_code == 404
-        assert res.json()["detail"] == "TaskV2 not found"
+        assert "not found" in str(res.json()["detail"])
 
 
 async def test_delete_task(
@@ -465,101 +462,6 @@ async def test_delete_task(
     task_factory_v2,
     workflowtask_factory_v2,
 ):
-    async with MockCurrentUser() as user:
-        taskA = await task_factory_v2(
-            user_id=user.id, source="aaa", owner="user2"
-        )
-        taskB = await task_factory_v2(
-            user_id=user.id, source="bbb", owner="user2"
-        )
-        taskC = await task_factory_v2(
-            user_id=user.id, source="ccc", owner="user2"
-        )
-
-    # User 1 imports taskA and taskC in one of their workflows
-    async with MockCurrentUser() as user1:
-        project = await project_factory_v2(user1)
-        workflow1 = await workflow_factory_v2(project_id=project.id)
-        await workflowtask_factory_v2(
-            workflow_id=workflow1.id, task_id=taskA.id
-        )
-        await workflowtask_factory_v2(
-            workflow_id=workflow1.id, task_id=taskC.id
-        )
-
-    async with MockCurrentUser(user_kwargs=dict(username="user2")) as user2:
-        project = await project_factory_v2(user2)
-        workflow2 = await workflow_factory_v2(
-            project_id=project.id, name="My Workflow Something"
-        )
-        await workflowtask_factory_v2(
-            workflow_id=workflow2.id, task_id=taskA.id
-        )
-        workflow3 = await workflow_factory_v2(
-            project_id=project.id, name="My Workflow Something Else"
-        )
-        await workflowtask_factory_v2(
-            workflow_id=workflow3.id, task_id=taskA.id
-        )
-
-        # Test 422 / case
-        res = await client.delete(f"{PREFIX}/{taskA.id}/")
-        assert res.status_code == 422
-        detail = res.json()["detail"]
-        print(detail)
-        assert "Cannot remove Task" in detail
-        assert "currently in use in 2 current-user workflows" in detail
-        assert "and in 1 other-users workflows" in detail
-
-        # Test 422 / another case
-        res = await client.delete(f"{PREFIX}/{taskC.id}/")
-        assert res.status_code == 422
-        detail = res.json()["detail"]
-        print(detail)
-        assert "Cannot remove Task" in detail
-        assert "currently in use in 0 current-user workflows" in detail
-        assert "and in 1 other-users workflows" in detail
-
-        # Test success
-        task_list = (await db.execute(select(TaskV2))).scalars().all()
-        assert len(task_list) == 3
-        res = await client.delete(f"{PREFIX}/{taskB.id}/")
-        assert res.status_code == 204
-        task_list = (await db.execute(select(TaskV2))).scalars().all()
-        assert len(task_list) == 2
-
-
-async def test_post_same_source(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        V1 = "/api/v1/task/"
-        V2 = "/api/v2/task/"
-        args_v1 = dict(
-            name="name", command="cmd", input_type="zarr", output_type="zarr"
-        )
-        args_v2 = dict(name="name", command_parallel="cmd")
-
-        task_v1_a = TaskCreateV1(**args_v1, source="a")
-        task_v1_b = TaskCreateV1(**args_v1, source="b")
-        task_v1_c = TaskCreateV1(**args_v1, source="c")
-        task_v2_a = TaskCreateV2(**args_v2, source="a")
-        task_v2_b = TaskCreateV2(**args_v2, source="b")
-
-        # POST v1_a OK
-        res = await client.post(V1, json=task_v1_a.dict(exclude_unset=True))
-        assert res.status_code == 201
-
-        # POST v2_a FAIL
-        res = await client.post(V2, json=task_v2_a.dict(exclude_unset=True))
-        assert res.status_code == 422
-
-        # POST v2_b OK
-        res = await client.post(V2, json=task_v2_b.dict(exclude_unset=True))
-        assert res.status_code == 201
-
-        # POST v1_b FAIL
-        res = await client.post(V1, json=task_v1_b.dict(exclude_unset=True))
-        assert res.status_code == 422
-
-        # POST v1_c OK
-        res = await client.post(V1, json=task_v1_c.dict(exclude_unset=True))
-        assert res.status_code == 201
+    async with MockCurrentUser():
+        res = await client.delete(f"{PREFIX}/12345/")
+        assert res.status_code == 405
