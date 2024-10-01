@@ -11,6 +11,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.logger import set_logger
@@ -28,7 +29,7 @@ async def get_task_group_list(
     """
     Get all accessible TaskGroups
     """
-    cmd = select(TaskGroupV2).where(
+    stm = select(TaskGroupV2).where(
         or_(
             TaskGroupV2.user_id == user.id,
             TaskGroupV2.user_group_id.in_(
@@ -38,7 +39,7 @@ async def get_task_group_list(
             ),
         )
     )
-    res = await db.execute(cmd)
+    res = await db.execute(stm)
     task_groups = res.scalars().all()
 
     return task_groups
@@ -61,12 +62,12 @@ async def get_task_group(
         )
 
     if task_group.user_id != user.id:
-        cmd = (
+        stm = (
             select(LinkUserGroup)
             .where(LinkUserGroup.user_id == user.id)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
         )
-        res = await db.execute(cmd)
+        res = await db.execute(stm)
         if res.scalars().all() == []:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -99,6 +100,16 @@ async def delete_task_group(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"TaskGroup {task_group.id} forbidden to user {user.id}",
         )
+
+    for task in task_group.task_list:
+        stm = select(WorkflowTaskV2).where(WorkflowTaskV2.task_id == task.id)
+        res = await db.execute(stm)
+        workflow_tasks = res.scalars().all()
+        if workflow_tasks != []:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"TaskV2 {task.id} is still in use",
+            )
 
     await db.delete(task_group)
     await db.commit()
