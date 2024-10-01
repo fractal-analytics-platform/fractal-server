@@ -31,7 +31,9 @@ async def test_task_group_v2(db):
         name="task3", type="parallel", command_parallel="cmd", source="zzz"
     )
 
-    task_group = TaskGroupV2(user_id=user.id, task_list=[task1, task2, task3])
+    task_group = TaskGroupV2(
+        user_id=user.id, active=True, task_list=[task1, task2, task3]
+    )
     db.add(task_group)
     await db.commit()
 

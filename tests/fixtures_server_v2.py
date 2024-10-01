@@ -225,7 +225,10 @@ async def task_factory_v2(db: AsyncSession):
         task = TaskV2(**args)
 
         task_group = TaskGroupV2(
-            user_id=user_id, user_group_id=user_group_id, task_list=[task]
+            user_id=user_id,
+            user_group_id=user_group_id,
+            active=True,
+            task_list=[task],
         )
         db.add(task_group)
         await db.commit()
