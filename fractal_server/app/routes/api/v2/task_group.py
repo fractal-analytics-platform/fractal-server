@@ -6,6 +6,8 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
+from ._aux_functions_tasks import _get_task_group_full_access
+from ._aux_functions_tasks import _get_task_group_read_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -55,28 +57,11 @@ async def get_task_group(
     """
     Get single TaskGroup
     """
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found.",
-        )
-
-    if task_group.user_id != user.id:
-        stm = (
-            select(LinkUserGroup)
-            .where(LinkUserGroup.user_id == user.id)
-            .where(LinkUserGroup.group_id == task_group.user_group_id)
-        )
-        res = await db.execute(stm)
-        if res.scalars().all() == []:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"TaskGroup {task_group.id} forbidden to user {user.id}"
-                ),
-            )
-
+    task_group = _get_task_group_read_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
     return task_group
 
 
@@ -89,18 +74,12 @@ async def delete_task_group(
     """
     Delete single TaskGroup
     """
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found.",
-        )
 
-    if task_group.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"TaskGroup {task_group.id} forbidden to user {user.id}",
-        )
+    task_group = _get_task_group_full_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
 
     stm = select(WorkflowTaskV2).where(
         WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
@@ -129,18 +108,11 @@ async def patch_task_group(
     """
     Patch single TaskGroup
     """
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found.",
-        )
-
-    if task_group.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"TaskGroup {task_group.id} forbidden to user {user.id}",
-        )
+    task_group = _get_task_group_full_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
 
     for key, value in task_group_update.dict(exclude_unset=True).items():
         setattr(task_group, key, value)
