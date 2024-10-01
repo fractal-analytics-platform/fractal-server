@@ -6,10 +6,6 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.images.models import Filters
 
 PREFIX = "api/v2"
@@ -743,52 +739,6 @@ async def test_reorder_task_list_fail(
         debug(res.json())
         assert "must be a permutation" in res.json()["detail"]
         assert res.status_code == 422
-
-
-async def test_delete_workflow_with_job(
-    client,
-    MockCurrentUser,
-    project_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    tmp_path,
-    db,
-):
-    """
-    GIVEN a Workflow in a relationship with a Job
-    WHEN we DELETE that Workflow
-    THEN Job.workflow_id is set to None
-    """
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-
-        # Create a workflow and a job in relationship with it
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="1", source="1")
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
-        )
-        dataset = await dataset_factory_v2(project_id=project.id)
-
-        job = await job_factory_v2(
-            project_id=project.id,
-            workflow_id=workflow.id,
-            dataset_id=dataset.id,
-            working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusTypeV2.DONE,
-        )
-
-        assert job.workflow_id == workflow.id
-
-        res = await client.delete(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
-        )
-        assert res.status_code == 204
-
-        await db.refresh(job)
-        assert job.workflow_id is None
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
