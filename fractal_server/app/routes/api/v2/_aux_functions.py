@@ -21,10 +21,7 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
-from fractal_server.app.models import UserOAuth
 from fractal_server.images import Filters
-
-# from ...aux.validate_user_settings import verify_user_has_settings
 
 
 async def _get_project_check_owner(
@@ -319,15 +316,6 @@ async def _get_job_check_owner(
             detail=f"Invalid {project_id=} for {job_id=}",
         )
     return dict(job=job, project=project)
-
-
-async def _get_task_check_owner_deprecated(
-    *,
-    task_id: int,
-    user: UserOAuth,
-    db: AsyncSession,
-) -> TaskV2:
-    raise NotImplementedError("this function is deprecated")
 
 
 def _get_submitted_jobs_statement() -> SelectOfScalar:
