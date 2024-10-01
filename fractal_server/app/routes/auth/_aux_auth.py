@@ -115,7 +115,7 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
     return user
 
 
-async def _get_default_user_group_id(db: AsyncSession) -> UserGroup:
+async def _get_default_user_group_id(db: AsyncSession) -> int:
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
@@ -126,9 +126,10 @@ async def _get_default_user_group_id(db: AsyncSession) -> UserGroup:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
         )
+    return user_group_id
 
 
-def _get_default_user_group_id_sync(db: DBSyncSession) -> UserGroup:
+def _get_default_user_group_id_sync(db: DBSyncSession) -> int:
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
@@ -139,6 +140,7 @@ def _get_default_user_group_id_sync(db: DBSyncSession) -> UserGroup:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
         )
+    return user_group_id
 
 
 async def _verify_user_belongs_to_group(

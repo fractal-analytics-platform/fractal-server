@@ -6,25 +6,27 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import or_
 from sqlmodel import select
 
-from .....logger import set_logger
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v1 import Task as TaskV1
-from ....models.v2 import TaskGroupV2
-from ....models.v2 import TaskV2
-from ....schemas.v2 import TaskCreateV2
-from ....schemas.v2 import TaskReadV2
-from ....schemas.v2 import TaskUpdateV2
 from ...auth._aux_auth import _get_default_user_group_id
 from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
+from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v1 import Task as TaskV1
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskUpdateV2
+from fractal_server.logger import set_logger
 
 router = APIRouter()
 
@@ -41,7 +43,21 @@ async def get_list_task(
     """
     Get list of available tasks
     """
-    stm = select(TaskV2)
+    stm = (
+        select(TaskV2)
+        .join(TaskGroupV2)
+        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(
+            or_(
+                TaskGroupV2.user_id == user.id,
+                TaskGroupV2.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user.id
+                    )
+                ),
+            )
+        )
+    )
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()

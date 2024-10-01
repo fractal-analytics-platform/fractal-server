@@ -1,6 +1,7 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.routes.auth._aux_auth import _get_default_user_group_id
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -22,8 +23,11 @@ async def test_non_verified_user(client, MockCurrentUser):
 
 async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
 
+    default_user_group_id = await _get_default_user_group_id(db=db)
     async with MockCurrentUser() as user:
-        await task_factory_v2(user_id=user.id, index=1)
+        await task_factory_v2(
+            user_id=user.id, user_group_id=default_user_group_id, index=1
+        )
         await task_factory_v2(user_id=user.id, index=2)
         t = await task_factory_v2(
             user_id=user.id,
@@ -53,6 +57,12 @@ async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
         )
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
+
+    async with MockCurrentUser() as user2:
+        await task_factory_v2(user_id=user2.id, index=4)
+        res = await client.get(f"{PREFIX}/")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_post_task(client, MockCurrentUser):
