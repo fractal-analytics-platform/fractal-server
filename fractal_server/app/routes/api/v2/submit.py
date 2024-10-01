@@ -32,6 +32,9 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_task_group_read_access,
+)
 from fractal_server.app.routes.auth import current_active_verified_user
 
 
@@ -83,13 +86,15 @@ async def apply_workflow(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
-
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Workflow {workflow_id} has empty task list",
         )
-
+    else:
+        # Access control to Tasks in `workflow.task_list`
+        for task in workflow.task_list:
+            _get_task_group_read_access(task_group_id=task.taskgroupv2_id)
     # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
     try:
