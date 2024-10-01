@@ -4,6 +4,7 @@ import pytest
 from devtools import debug  # noqa
 from sqlmodel import select
 
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -20,14 +21,14 @@ async def get_workflow(client, p_id, wf_id):
     return res.json()
 
 
-async def add_task(
+async def post_task(
     client,
-    index,
+    label,
     type: Literal["parallel", "non_parallel", "compound"] = "compound",
 ):
     task = dict(
-        name=f"task{index}",
-        source=f"source{index}",
+        name=f"task{label}",
+        source=f"source{label}",
         command_non_parallel="cmd",
         command_parallel="cmd",
     )
@@ -42,7 +43,10 @@ async def add_task(
 
 
 async def test_post_worfkflow_task(
-    client, MockCurrentUser, project_factory_v2
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    workflow_factory_v2,
 ):
     """
     GIVEN a Workflow with a list of WorkflowTasks
@@ -51,17 +55,14 @@ async def test_post_worfkflow_task(
     THEN the new WorkflowTask is inserted in Workflow.task_list
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        project = await project_factory_v2(user)
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/",
-            json=dict(name="My Workflow"),
-        )
-        assert res.status_code == 201
-        wf_id = res.json()["id"]
+        # Create project and workflow
+        proj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=proj.id)
+        wf_id = wf.id
 
         # Test that adding an invalid task fails with 404
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
             "?task_id=99999",
             json=dict(),
         )
@@ -70,38 +71,38 @@ async def test_post_worfkflow_task(
 
         # Add valid tasks
         for index in range(2):
-            t = await add_task(client, index)
+            task = await post_task(client, label=index)
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-                f"?task_id={t['id']}",
-                json=dict(),
+                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={task['id']}",
+                json={dict()},
             )
-            workflow = await get_workflow(client, project.id, wf_id)
+            workflow = await get_workflow(client, proj.id, wf_id)
             assert len(workflow["task_list"]) == index + 1
-            assert workflow["task_list"][-1]["task"] == t
+            assert workflow["task_list"][-1]["task"] == task
 
-        workflow = await get_workflow(client, project.id, wf_id)
+        workflow = await get_workflow(client, proj.id, wf_id)
         assert len(workflow["task_list"]) == 2
 
-        t2 = await add_task(client, 2)
+        t2 = await post_task(client, 2)
         args_payload = {"a": 0, "b": 1}
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
             f"?task_id={t2['id']}",
             json=dict(args_non_parallel=args_payload),
         )
         assert res.status_code == 201
 
-        t0b = await add_task(client, "0b")
+        t0b = await post_task(client, "0b")
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
             f"?task_id={t0b['id']}",
             json=dict(order=1),
         )
         assert res.status_code == 201
 
         # Get back workflow
-        workflow = await get_workflow(client, project.id, wf_id)
+        workflow = await get_workflow(client, proj.id, wf_id)
         task_list = workflow["task_list"]
         assert len(task_list) == 4
         assert task_list[0]["task"]["name"] == "task0"
@@ -110,16 +111,85 @@ async def test_post_worfkflow_task(
         assert task_list[3]["task"]["name"] == "task2"
         assert task_list[3]["args_non_parallel"] == args_payload
 
+
+async def test_post_worfkflow_task_failures(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    db,
+):
+    """
+    Setup these tasks, for use by user A:
+    * task_A_active -> ok
+    * task_A_non_active -> 422 (non active)
+    * task_B -> 403 (forbidden)
+    """
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
+        user_A_id = user_A.id
+        task_A_active = await task_factory_v2(
+            name="a", source="a1", user_id=user_A_id
+        )
+        task_A_non_active = await task_factory_v2(
+            name="a", source="a2", user_id=user_A_id
+        )
+        task_group = await db.get(
+            TaskGroupV2, task_A_non_active.taskgroupv2_id
+        )
+        task_group.active = False
+        db.add(task_group)
+        await db.commit()
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_B:
+        user_B_id = user_B.id
+        task_B = await task_factory_v2(name="a", source="b", user_id=user_B_id)
+
+    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user:
+        # Create project and workflow
+        proj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=proj.id)
+        wf_id = wf.id
+        endpoint_path = f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+
+        # Valid task
+        # Non-active task
+        res = await client.post(
+            f"{endpoint_path}?task_id={task_A_active.id}",
+            json=dict(),
+        )
+        assert res.status_code == 201
+
+        # Missing task
+        res = await client.post(
+            f"{endpoint_path}?task_id=99999",
+            json=dict(),
+        )
+        assert res.status_code == 404
+
+        # Non-active task
+        res = await client.post(
+            f"{endpoint_path}?task_id={task_A_non_active.id}",
+            json=dict(),
+        )
+        assert res.status_code == 422
+
+        # No read access
+        res = await client.post(
+            f"{endpoint_path}?task_id={task_B.id}",
+            json=dict(),
+        )
+        assert res.status_code == 403
+
         # Test 422
 
-        parallel_task = await add_task(client, index=100, type="parallel")
-        non_parallel_task = await add_task(
-            client, index=101, type="non_parallel"
+        parallel_task = await post_task(client, label=100, type="parallel")
+        non_parallel_task = await post_task(
+            client, label=101, type="non_parallel"
         )
 
         for forbidden in ["meta_non_parallel", "args_non_parallel"]:
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
                 f"?task_id={parallel_task['id']}",
                 json={forbidden: {"a": "b"}},
             )
@@ -128,7 +198,7 @@ async def test_post_worfkflow_task(
 
         for forbidden in ["meta_parallel", "args_parallel"]:
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
                 f"?task_id={non_parallel_task['id']}",
                 json={forbidden: {"a": "b"}},
             )
@@ -156,9 +226,9 @@ async def test_delete_workflow_task(
         wf_id = res.json()["id"]
 
         workflow = await get_workflow(client, project.id, wf_id)
-        t0 = await add_task(client, 0)
-        t1 = await add_task(client, 1)
-        t2 = await add_task(client, 2)
+        t0 = await post_task(client, 0)
+        t1 = await post_task(client, 1)
+        t2 = await post_task(client, 2)
 
         wftasks = []
         for t in [t0, t1, t2]:
@@ -207,7 +277,6 @@ async def test_patch_workflow_task(
     THEN the WorkflowTask is updated
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-
         project = await project_factory_v2(user)
         workflow = {"name": "WF"}
         res = await client.post(
@@ -216,7 +285,7 @@ async def test_patch_workflow_task(
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        t = await add_task(client, 0)
+        t = await post_task(client, 0)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
             f"?task_id={t['id']}",
@@ -330,9 +399,9 @@ async def test_patch_workflow_task(
 
         # Test 422
 
-        parallel_task = await add_task(client, index=100, type="parallel")
-        non_parallel_task = await add_task(
-            client, index=101, type="non_parallel"
+        parallel_task = await post_task(client, label=100, type="parallel")
+        non_parallel_task = await post_task(
+            client, label=101, type="non_parallel"
         )
 
         parallel_wftask = await client.post(
@@ -455,7 +524,6 @@ async def test_patch_workflow_task_failures(
     THEN the correct status code is returned
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-
         # Prepare two workflows, with one task each
         project = await project_factory_v2(user)
         workflow1 = {"name": "WF1"}
@@ -469,14 +537,14 @@ async def test_patch_workflow_task_failures(
         )
         wf2_id = res.json()["id"]
 
-        t1 = await add_task(client, 1)
+        t1 = await post_task(client, 1)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf1_id}/wftask/"
             f"?task_id={t1['id']}",
             json=dict(),
         )
 
-        t2 = await add_task(client, 2)
+        t2 = await post_task(client, 2)
 
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf2_id}/wftask/"
@@ -557,7 +625,6 @@ async def test_reorder_task_list(
     num_tasks = len(reordered_workflowtask_ids)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-
         # Create project and empty workflow
         project = await project_factory_v2(user)
         res = await client.post(
@@ -575,7 +642,7 @@ async def test_reorder_task_list(
 
         # Create tasks and insert WorkflowTasksV2
         for i in range(num_tasks):
-            t = await add_task(client, i)
+            t = await post_task(client, i)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
                 f"?task_id={t['id']}",
@@ -640,7 +707,7 @@ async def test_reorder_task_list_fail(
         )
         wf_id = res.json()["id"]
         for i in range(num_tasks):
-            t = await add_task(client, i)
+            t = await post_task(client, i)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
                 json=dict(task_id=t["id"]),
@@ -695,7 +762,6 @@ async def test_delete_workflow_with_job(
     THEN Job.workflow_id is set to None
     """
     async with MockCurrentUser() as user:
-
         project = await project_factory_v2(user)
 
         # Create a workflow and a job in relationship with it
@@ -735,7 +801,7 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        t = await add_task(client, 99)
+        t = await post_task(client, 99)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
             f"?task_id={t['id']}",
