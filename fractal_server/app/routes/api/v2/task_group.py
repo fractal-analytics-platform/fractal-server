@@ -102,7 +102,7 @@ async def delete_task_group(
         )
 
     stm = select(WorkflowTaskV2).where(
-        WorkflowTaskV2.task_id.in_([task.id for task in task_group.task_list])
+        WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
     )
     res = await db.execute(stm)
     workflow_tasks = res.scalars().all()
