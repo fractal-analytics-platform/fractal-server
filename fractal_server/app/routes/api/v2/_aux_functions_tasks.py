@@ -10,7 +10,6 @@ from ....db import AsyncSession
 from ....models import LinkUserGroup
 from ....models.v2 import TaskGroupV2
 from ....models.v2 import TaskV2
-from fractal_server.app.models import UserOAuth
 
 
 async def _get_task_group_or_404(
@@ -35,7 +34,7 @@ async def _get_task_group_or_404(
 async def _get_task_group_read_access(
     *,
     task_group_id: int,
-    user: UserOAuth,
+    user_id: int,
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
@@ -52,10 +51,13 @@ async def _get_task_group_read_access(
     # Prepare exception to be used below
     forbidden_exception = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail=f"Current user cannot access TaskGroupV2 {task_group_id}.",
+        detail=(
+            "Current user has no read access to TaskGroupV2 "
+            f"{task_group_id}.",
+        ),
     )
 
-    if task_group.user_id == user.id:
+    if task_group.user_id == user_id:
         return task_group
     elif task_group.user_group_id is None:
         raise forbidden_exception
@@ -63,7 +65,7 @@ async def _get_task_group_read_access(
         stm = (
             select(LinkUserGroup)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
-            .where(LinkUserGroup.user_id == user.id)
+            .where(LinkUserGroup.user_id == user_id)
         )
         res = await db.execute(stm)
         link = res.scalar_one_or_none()
@@ -76,7 +78,7 @@ async def _get_task_group_read_access(
 async def _get_task_group_full_access(
     *,
     task_group_id: int,
-    user: UserOAuth,
+    user_id: int,
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
@@ -90,12 +92,15 @@ async def _get_task_group_full_access(
         task_group_id=task_group_id, db=db
     )
 
-    if task_group.user_id == user.id:
+    if task_group.user_id == user_id:
         return task_group
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Current user cannot access TaskGroupV2 {task_group_id}.",
+            detail=(
+                "Current user has no full access to "
+                f"TaskGroupV2 {task_group_id}.",
+            ),
         )
 
 
@@ -119,7 +124,7 @@ async def _get_task_or_404(*, task_id: int, db: AsyncSession) -> TaskV2:
 async def _get_task_full_access(
     *,
     task_id: int,
-    user: UserOAuth,
+    user_id: int,
     db: AsyncSession,
 ) -> TaskV2:
     """
@@ -131,7 +136,7 @@ async def _get_task_full_access(
     """
     task = await _get_task_or_404(task_id=task_id, db=db)
     await _get_task_group_full_access(
-        task_group_id=task.taskgroupv2_id, user=user, db=db
+        task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
     return task
 
@@ -139,7 +144,7 @@ async def _get_task_full_access(
 async def _get_task_read_access(
     *,
     task_id: int,
-    user: UserOAuth,
+    user_id: int,
     db: AsyncSession,
 ) -> TaskV2:
     """
@@ -151,6 +156,6 @@ async def _get_task_read_access(
     """
     task = await _get_task_or_404(task_id=task_id, db=db)
     await _get_task_group_read_access(
-        task_group_id=task.taskgroupv2_id, user=user, db=db
+        task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
     return task
