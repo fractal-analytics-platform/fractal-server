@@ -12,3 +12,8 @@ class TaskGroupReadV2(BaseModel):
     user_group_id: Optional[int]
 
     task_list: list[TaskReadV2]
+
+
+class TaskGroupUpdateV2(BaseModel):
+
+    user_group_id: Optional[int]

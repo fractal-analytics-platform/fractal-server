@@ -27,6 +27,7 @@ from .task_collection import CollectionStatusV2  # noqa F401
 from .task_collection import TaskCollectCustomV2  # noqa F401
 from .task_collection import TaskCollectPipV2  # noqa F401
 from .task_group import TaskGroupReadV2  # noqa F401
+from .task_group import TaskGroupUpdateV2  # noqa F401
 from .workflow import WorkflowCreateV2  # noqa F401
 from .workflow import WorkflowExportV2  # noqa F401
 from .workflow import WorkflowImportV2  # noqa F401

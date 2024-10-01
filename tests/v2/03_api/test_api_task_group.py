@@ -1,5 +1,7 @@
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from fractal_server.app.routes.auth._aux_auth import _get_default_user_group_id
+from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 
 PREFIX = "/api/v2/task-group"
@@ -88,3 +90,68 @@ async def test_get_task_group_list(
             *_ids_of_task_list(res.json()[1]["task_list"]),
             *_ids_of_task_list(res.json()[2]["task_list"]),
         } == {task1.id, task2.id, task3.id}
+
+
+async def test_patch_task_group(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    db,
+):
+    async with MockCurrentUser() as user1:
+        task = await task_factory_v2(user_id=user1.id, source="source")
+
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}")
+        assert res.status_code == 200
+        assert res.json()["user_id"] == user1.id
+        assert res.json()["user_group_id"] is None
+
+        default_user_group_id = await _get_default_user_group_id(db=db)
+
+        # Update to `default_user_group_id`
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}",
+            json=TaskGroupUpdateV2(user_group_id=default_user_group_id).dict(),
+        )
+        assert res.status_code == 200
+        assert res.json()["user_id"] == user1.id
+        assert res.json()["user_group_id"] == default_user_group_id
+
+        # Nothing to update
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}",
+            json=TaskGroupUpdateV2().dict(exclude_unset=True),
+        )
+        assert res.status_code == 422
+
+        # TaskGroup does not exist
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id + 1}",
+            json=TaskGroupUpdateV2().dict(),
+        )
+        assert res.status_code == 404
+
+        # UserGroup does not exist
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}",
+            json=TaskGroupUpdateV2(user_group_id=9999).dict(),
+        )
+        assert res.status_code == 404
+
+        # Update to `None`
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}",
+            json=TaskGroupUpdateV2(user_group_id=None).dict(),
+        )
+        assert res.status_code == 200
+        assert res.json()["user_id"] == user1.id
+        assert res.json()["user_group_id"] is None
+
+    async with MockCurrentUser():
+
+        # Unauthorized
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}",
+            json=TaskGroupUpdateV2(user_group_id=default_user_group_id).dict(),
+        )
+        assert res.status_code == 403
