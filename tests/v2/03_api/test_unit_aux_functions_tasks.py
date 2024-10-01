@@ -17,7 +17,6 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 
 
 async def test_get_task(db, task_factory_v2):
-
     # Create the following initial situations:
     # * User group A, with two users (A1 and A2)
     # * User B, who is not part of any group
@@ -110,7 +109,10 @@ async def test_get_task(db, task_factory_v2):
 
 
 async def test_get_task_require_active(db, task_factory_v2):
-
+    """
+    Test the `require_active` argument of `_get_task_read_access`.
+    """
+    # Preliminary setup
     user = UserOAuth(email="a@a.a", hashed_password="xxx")
     db.add(user)
     await db.commit()
@@ -120,6 +122,7 @@ async def test_get_task_require_active(db, task_factory_v2):
     )
     task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
 
+    # Make sure task group is active, and verify access is always OK
     task_group.active = True
     db.add(task_group)
     await db.commit()
@@ -132,11 +135,12 @@ async def test_get_task_require_active(db, task_factory_v2):
         task_id=task.id, user_id=user.id, db=db, require_active=True
     )
 
+    # Make sure task group is not active, and verify access depends on
+    # `require_active`
     task_group.active = False
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-
     await _get_task_read_access(
         task_id=task.id, user_id=user.id, db=db, require_active=False
     )
