@@ -117,3 +117,37 @@ async def test_delete_task_group_fail(
 
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 422
+
+
+async def test_patch_task_group(client, MockCurrentUser, task_factory_v2):
+    async with MockCurrentUser() as user1:
+
+        task = await task_factory_v2(user_id=user1.id, source="source")
+
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
+        assert res.json()["active"] is True
+
+        # Update
+
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(active=False)
+        )
+        assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
+        assert res.json()["active"] is False
+
+        # Non existing TaskGroup
+
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id+1}/", json=dict(active=False)
+        )
+        assert res.status_code == 404
+
+    async with MockCurrentUser():
+
+        # Unauthorized
+
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(active=False)
+        )
+        assert res.status_code == 403

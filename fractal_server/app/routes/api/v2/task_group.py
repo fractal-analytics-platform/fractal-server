@@ -14,6 +14,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
+from fractal_server.app.schemas.v2 import TaskGroupUpdateStrictV2
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -116,3 +117,36 @@ async def delete_task_group(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch("/{task_group_id}/", response_model=TaskGroupReadV2)
+async def patch_task_group(
+    task_group_id: int,
+    task_group_update: TaskGroupUpdateStrictV2,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupReadV2:
+    """
+    Patch single TaskGroup
+    """
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    if task_group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupV2 {task_group_id} not found.",
+        )
+
+    if task_group.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"TaskGroup {task_group.id} forbidden to user {user.id}",
+        )
+
+    for key, value in task_group_update.dict(exclude_unset=True).items():
+        setattr(task_group, key, value)
+
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    await db.close()
+    return task_group
