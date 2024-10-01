@@ -90,7 +90,6 @@ class TaskReadV2(BaseModel):
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
     source: str
-    owner: Optional[str]
     version: Optional[str]
 
     command_non_parallel: Optional[str]

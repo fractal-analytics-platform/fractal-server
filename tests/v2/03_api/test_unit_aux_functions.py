@@ -17,9 +17,6 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_submitted_jobs_statement,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_task_check_owner,
-)
-from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_owner,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -124,12 +121,12 @@ async def test_get_workflow_task_check_owner(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(source="A")
+        task = await task_factory_v2(user_id=user.id, source="A")
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
         other_workflow = await workflow_factory_v2(project_id=project.id)
-        other_task = await task_factory_v2(source="B")
+        other_task = await task_factory_v2(user_id=user.id, source="B")
         other_wftask = await workflowtask_factory_v2(
             workflow_id=other_workflow.id, task_id=other_task.id
         )
@@ -269,7 +266,7 @@ async def test_get_job_check_owner(
         other_project = await project_factory_v2(user, id=2)
 
         workflow = await workflow_factory_v2(project_id=project.id)
-        t = await task_factory_v2()
+        t = await task_factory_v2(user_id=user.id)
 
         with pytest.raises(ValueError):
             await _workflow_insert_task(
@@ -316,56 +313,6 @@ async def test_get_job_check_owner(
         assert err.value.detail == (
             f"Invalid project_id={other_project.id} for job_id={job.id}"
         )
-
-
-async def test_get_task_check_owner(MockCurrentUser, task_factory_v2, db):
-
-    async with MockCurrentUser(user_kwargs={"username": "alice"}) as user:
-        taskA = await task_factory_v2(source="A", owner=user.username)
-        taskB = await task_factory_v2(source="B")
-
-        # Test fail 1: 404 NOT FOUND
-        with pytest.raises(HTTPException) as err:
-            await _get_task_check_owner(
-                task_id=taskA.id + 999, user=user, db=db
-            )
-        assert err.value.status_code == 404
-        assert err.value.detail == f"TaskV2 {taskA.id + 999} not found."
-
-        # Test success
-        _task = await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
-        assert _task.id == taskA.id
-
-        # Test fail 2: 403 FORBIDDEN
-        with pytest.raises(HTTPException) as err:
-            await _get_task_check_owner(task_id=taskB.id, user=user, db=db)
-        assert err.value.status_code == 403
-        assert err.value.detail == (
-            "Only a superuser can modify a TaskV2 with `owner=None`."
-        )
-
-    async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
-        # Test fail 3: 403 FORBIDDEN
-        with pytest.raises(HTTPException) as err:
-            await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
-        assert err.value.status_code == 403
-        assert err.value.detail == (
-            f"Current user ({user.username}) cannot modify TaskV2 {taskA.id} "
-            f"with different owner ({taskA.owner})."
-        )
-
-    async with MockCurrentUser(
-        user_kwargs={"username": "boss", "is_superuser": True}
-    ) as superuser:
-        # Test success
-        _task = await _get_task_check_owner(
-            task_id=taskA.id, user=superuser, db=db
-        )
-        assert _task.id == taskA.id
-        _task = await _get_task_check_owner(
-            task_id=taskB.id, user=superuser, db=db
-        )
-        assert _task.id == taskB.id
 
 
 async def test_get_submitted_jobs_statement():

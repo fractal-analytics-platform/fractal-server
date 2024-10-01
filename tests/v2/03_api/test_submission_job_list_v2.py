@@ -29,7 +29,9 @@ async def test_clean_app_job_list_v2(
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         # Create DB objects
-        task = await task_factory_v2(name="task", command="echo")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", command="echo"
+        )
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         await _workflow_insert_task(

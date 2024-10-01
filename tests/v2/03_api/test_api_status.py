@@ -23,7 +23,9 @@ async def test_workflowtask_status_no_history_no_job(
     """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        task = await task_factory_v2(name="task", source="task1")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="task1"
+        )
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
@@ -54,7 +56,9 @@ async def test_workflowtask_status_history_no_job(
     """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        task = await task_factory_v2(name="task1", source="task1")
+        task = await task_factory_v2(
+            user_id=user.id, name="task1", source="task1"
+        )
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
 
         # CASE 1
@@ -155,7 +159,9 @@ async def test_workflowtask_status_history_job(
         dataset = await dataset_factory_v2(
             project_id=project.id, history=history
         )
-        task = await task_factory_v2(name="task1", source="task1")
+        task = await task_factory_v2(
+            user_id=user.id, name="task1", source="task1"
+        )
 
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         for _ in range(3):
@@ -217,7 +223,9 @@ async def test_workflowtask_status_two_jobs(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, history=[])
-        task = await task_factory_v2(name="task1", source="task1")
+        task = await task_factory_v2(
+            user_id=user.id, name="task1", source="task1"
+        )
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
@@ -260,7 +268,9 @@ async def test_workflowtask_status_modified_workflow(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, history=[])
-        task = await task_factory_v2(name="task1", source="task1")
+        task = await task_factory_v2(
+            user_id=user.id, name="task1", source="task1"
+        )
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         for _ in range(3):
             await _workflow_insert_task(

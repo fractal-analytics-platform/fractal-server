@@ -20,7 +20,7 @@ async def test_fail_submit_workflows_wrong_IDs(
 
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -68,7 +68,7 @@ async def test_fail_submit_workflows_wrong_backend(
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )

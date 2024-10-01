@@ -228,7 +228,7 @@ async def test_delete_project(
     job_factory_v2,
     task_factory_v2,
 ):
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}) as user:
         res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         assert len(data) == 0
@@ -251,7 +251,7 @@ async def test_delete_project(
 
         # Add a workflow to the project
         wf = await workflow_factory_v2(project_id=p["id"])
-        t = await task_factory_v2()
+        t = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
 
         # Add a job to the project
@@ -322,7 +322,9 @@ async def test_delete_project_ongoing_jobs(
             d = await dataset_factory_v2(project_id=p.id)
             w = await workflow_factory_v2(project_id=p.id)
             t = await task_factory_v2(
-                name=f"task_{status}", source=f"source_{status}"
+                user_id=user.id,
+                name=f"task_{status}",
+                source=f"source_{status}",
             )
             await _workflow_insert_task(workflow_id=w.id, task_id=t.id, db=db)
             await job_factory_v2(

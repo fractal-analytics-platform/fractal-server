@@ -24,15 +24,16 @@ async def test_non_verified_user(client, MockCurrentUser):
 
 
 async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
-    await task_factory_v2(index=1)
-    await task_factory_v2(index=2)
-    t = await task_factory_v2(
-        index=3,
-        args_schema_non_parallel=dict(a=1),
-        args_schema_parallel=dict(b=2),
-    )
 
-    async with MockCurrentUser():
+    async with MockCurrentUser() as user:
+        await task_factory_v2(user_id=user.id, index=1)
+        await task_factory_v2(user_id=user.id, index=2)
+        t = await task_factory_v2(
+            user_id=user.id,
+            index=3,
+            args_schema_non_parallel=dict(a=1),
+            args_schema_parallel=dict(b=2),
+        )
         res = await client.get(f"{PREFIX}/")
         data = res.json()
         assert res.status_code == 200
@@ -82,7 +83,6 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["source"] == f"{TASK_OWNER}:{task.source}"
         assert res.json()["meta_non_parallel"] == {}
         assert res.json()["meta_parallel"] == {}
-        assert res.json()["owner"] == TASK_OWNER
         assert res.json()["version"] is None
         assert res.json()["args_schema_non_parallel"] is None
         assert res.json()["args_schema_parallel"] is None
@@ -158,7 +158,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == USERNAME
     # Case 3: (username, slurm_user) = (None, not None)
     user_kwargs = dict(username=None, is_verified=True)
     user_settings_dict = dict(slurm_user=SLURM_USER)
@@ -168,7 +167,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == SLURM_USER
     # Case 4: (username, slurm_user) = (not None, None)
     user_kwargs = dict(username=USERNAME, is_verified=True)
     user_settings_dict = dict(slurm_user=None)
@@ -178,7 +176,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == USERNAME
 
     # Fail giving "non parallel" args to "parallel" tasks, and vice versa
     res = await client.post(
@@ -228,6 +225,22 @@ async def test_post_task(client, MockCurrentUser):
     assert "Cannot set" in res.json()["detail"]
 
 
+async def test_post_task_without_default_group(
+    client,
+    MockCurrentUser,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "fractal_server.app.routes.auth._aux_auth.FRACTAL_DEFAULT_GROUP_NAME",
+        "MONKEY",
+    )
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/", json=dict(name="a", source="b", command_parallel="c")
+        )
+        assert res.status_code == 404
+
+
 async def test_patch_task_auth(
     MockCurrentUser,
     client,
@@ -242,12 +255,11 @@ async def test_patch_task_auth(
     USER_1 = "Alice"
     USER_2 = "Bob"
 
-    task_with_no_owner = await task_factory_v2()
-    task_with_no_owner_id = task_with_no_owner.id
-
     async with MockCurrentUser(
         user_kwargs={"username": USER_1, "is_verified": True}
-    ):
+    ) as user:
+        task_with_no_owner = await task_factory_v2(user_id=user.id)
+        task_with_no_owner_id = task_with_no_owner.id
         task = TaskCreateV2(
             name="task_name",
             source="task_source",
@@ -257,7 +269,6 @@ async def test_patch_task_auth(
             f"{PREFIX}/", json=task.dict(exclude_unset=True)
         )
         assert res.status_code == 201
-        assert res.json()["owner"] == USER_1
 
         task_id = res.json()["id"]
 
@@ -325,13 +336,16 @@ async def test_patch_task(
     client,
 ):
 
-    task_parallel = await task_factory_v2(index=1, type="parallel")
-    task_non_parallel = await task_factory_v2(index=2, type="non_parallel")
-    task_compound = await task_factory_v2(index=3)
-
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True)
-    ):
+    ) as user:
+        task_parallel = await task_factory_v2(
+            user_id=user.id, index=1, type="parallel"
+        )
+        task_non_parallel = await task_factory_v2(
+            user_id=user.id, index=2, type="non_parallel"
+        )
+        task_compound = await task_factory_v2(user_id=user.id, index=3)
         # Test successuful patch of task_compound
         update = TaskUpdateV2(
             name="new_name",
@@ -410,10 +424,6 @@ async def test_patch_task_different_users(
     affect their ability to patch a task. They do raise warnings, but the PATCH
     endpoint returns correctly.
     """
-
-    task = await task_factory_v2(name="task", owner=owner)
-    assert task.owner == owner
-
     # User kwargs
     user_payload = {}
     if username:
@@ -421,26 +431,24 @@ async def test_patch_task_different_users(
     if slurm_user:
         user_payload["slurm_user"] = slurm_user
 
-    # Patch task
-    NEW_NAME = "new name"
-    payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
-    ):
+    ) as user:
+        task = await task_factory_v2(user_id=user.id, name="task", owner=owner)
+        assert task.owner == owner
+
+        # Patch task
+        NEW_NAME = "new name"
+        payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
         res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
         debug(res.json())
         assert res.status_code == 200
-        assert res.json()["owner"] == owner
         assert res.json()["name"] == NEW_NAME
-        if username:
-            assert res.json()["owner"] != username
-        if slurm_user:
-            assert res.json()["owner"] != slurm_user
 
 
 async def test_get_task(task_factory_v2, client, MockCurrentUser):
-    async with MockCurrentUser():
-        task = await task_factory_v2(name="name")
+    async with MockCurrentUser() as user:
+        task = await task_factory_v2(user_id=user.id, name="name")
         res = await client.get(f"{PREFIX}/{task.id}/")
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/{task.id+999}/")
@@ -457,10 +465,16 @@ async def test_delete_task(
     task_factory_v2,
     workflowtask_factory_v2,
 ):
-    async with MockCurrentUser():
-        taskA = await task_factory_v2(source="aaa", owner="user2")
-        taskB = await task_factory_v2(source="bbb", owner="user2")
-        taskC = await task_factory_v2(source="ccc", owner="user2")
+    async with MockCurrentUser() as user:
+        taskA = await task_factory_v2(
+            user_id=user.id, source="aaa", owner="user2"
+        )
+        taskB = await task_factory_v2(
+            user_id=user.id, source="bbb", owner="user2"
+        )
+        taskC = await task_factory_v2(
+            user_id=user.id, source="ccc", owner="user2"
+        )
 
     # User 1 imports taskA and taskC in one of their workflows
     async with MockCurrentUser() as user1:

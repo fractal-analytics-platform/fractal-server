@@ -89,7 +89,9 @@ async def test_view_job(
         workflow1 = await workflow_factory_v2(project_id=project.id)
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task = await task_factory_v2(name="task", source="source")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         dataset = await dataset_factory_v2(project_id=project.id)
 
         await _workflow_insert_task(
@@ -241,7 +243,9 @@ async def test_view_single_job(
         workflow1 = await workflow_factory_v2(project_id=project.id)
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task = await task_factory_v2(name="task", source="source")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         dataset = await dataset_factory_v2(project_id=project.id)
 
         await _workflow_insert_task(
@@ -300,7 +304,9 @@ async def test_patch_job(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(name="task", source="source")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -387,7 +393,9 @@ async def test_stop_job(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(name="task", source="source")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -434,7 +442,7 @@ async def test_download_job_logs(
         prj = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=prj.id, name="dataset")
         workflow = await workflow_factory_v2(project_id=prj.id)
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -499,9 +507,13 @@ async def test_task_query(
         workflow1 = await workflow_factory_v2(project_id=project.id)
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task1 = await task_factory_v2(name="Foo", source="xxx", owner="alice")
-        task2 = await task_factory_v2(name="abcdef", source="yyy", owner="bob")
-        task3 = await task_factory_v2(index=3)
+        task1 = await task_factory_v2(
+            user_id=user.id, name="Foo", source="xxx", owner="alice"
+        )
+        task2 = await task_factory_v2(
+            user_id=user.id, name="abcdef", source="yyy", owner="bob"
+        )
+        task3 = await task_factory_v2(user_id=user.id, index=3)
 
         # task1 to workflow 1 and 2
         await _workflow_insert_task(
@@ -669,7 +681,9 @@ async def test_task_query(
         new_workflow = await workflow_factory_v2(project_id=new_project.id)
 
         for i in range(30):
-            task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
+            task = await task_factory_v2(
+                user_id=user.id, name=f"n{i}", source=f"s{i}"
+            )
             await _workflow_insert_task(
                 workflow_id=new_workflow.id, task_id=task.id, db=db
             )

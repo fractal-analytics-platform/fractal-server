@@ -344,6 +344,7 @@ async def non_executable_task_command(
     ) as user:
         # Create task
         task = await task_factory_v2(
+            user_id=user.id,
             name="invalid-task-command",
             source="some_source",
             type="non_parallel",
@@ -431,7 +432,7 @@ async def failing_workflow_UnknownError(
 
         # Create task
         task = await task_factory_v2(
-            command_non_parallel="echo", type="non_parallel"
+            user_id=user.id, command_non_parallel="echo", type="non_parallel"
         )
 
         res = await client.post(
@@ -541,6 +542,7 @@ async def workflow_with_non_python_task(
 
         # Create task
         task = await task_factory_v2(
+            user_id=user.id,
             name="non-python",
             source="custom-task",
             type="non_parallel",
