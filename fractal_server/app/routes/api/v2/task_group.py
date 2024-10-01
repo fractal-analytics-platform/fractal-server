@@ -57,7 +57,7 @@ async def get_task_group(
     """
     Get single TaskGroup
     """
-    task_group = _get_task_group_read_access(
+    task_group = await _get_task_group_read_access(
         task_group_id=task_group_id,
         user_id=user.id,
         db=db,
@@ -75,7 +75,7 @@ async def delete_task_group(
     Delete single TaskGroup
     """
 
-    task_group = _get_task_group_full_access(
+    task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,
         user_id=user.id,
         db=db,
@@ -108,7 +108,7 @@ async def patch_task_group(
     """
     Patch single TaskGroup
     """
-    task_group = _get_task_group_full_access(
+    task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,
         user_id=user.id,
         db=db,
