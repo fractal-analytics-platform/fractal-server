@@ -320,7 +320,7 @@ async def _get_job_check_owner(
     return dict(job=job, project=project)
 
 
-async def _get_task_check_owner(
+async def _get_task_check_owner_deprecated(
     *,
     task_id: int,
     user: UserOAuth,

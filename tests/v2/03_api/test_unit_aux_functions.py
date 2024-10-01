@@ -17,7 +17,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_submitted_jobs_statement,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_task_check_owner,
+    _get_task_check_owner_deprecated,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_owner,
@@ -328,19 +328,23 @@ async def test_get_task_check_owner(MockCurrentUser, task_factory_v2, db):
 
         # Test fail 1: 404 NOT FOUND
         with pytest.raises(HTTPException) as err:
-            await _get_task_check_owner(
+            await _get_task_check_owner_deprecated(
                 task_id=taskA.id + 999, user=user, db=db
             )
         assert err.value.status_code == 404
         assert err.value.detail == f"TaskV2 {taskA.id + 999} not found."
 
         # Test success
-        _task = await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
+        _task = await _get_task_check_owner_deprecated(
+            task_id=taskA.id, user=user, db=db
+        )
         assert _task.id == taskA.id
 
         # Test fail 2: 403 FORBIDDEN
         with pytest.raises(HTTPException) as err:
-            await _get_task_check_owner(task_id=taskB.id, user=user, db=db)
+            await _get_task_check_owner_deprecated(
+                task_id=taskB.id, user=user, db=db
+            )
         assert err.value.status_code == 403
         assert err.value.detail == (
             "Only a superuser can modify a TaskV2 with `owner=None`."
@@ -349,7 +353,9 @@ async def test_get_task_check_owner(MockCurrentUser, task_factory_v2, db):
     async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
         # Test fail 3: 403 FORBIDDEN
         with pytest.raises(HTTPException) as err:
-            await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
+            await _get_task_check_owner_deprecated(
+                task_id=taskA.id, user=user, db=db
+            )
         assert err.value.status_code == 403
         assert err.value.detail == (
             f"Current user ({user.username}) cannot modify TaskV2 {taskA.id} "
@@ -360,11 +366,11 @@ async def test_get_task_check_owner(MockCurrentUser, task_factory_v2, db):
         user_kwargs={"username": "boss", "is_superuser": True}
     ) as superuser:
         # Test success
-        _task = await _get_task_check_owner(
+        _task = await _get_task_check_owner_deprecated(
             task_id=taskA.id, user=superuser, db=db
         )
         assert _task.id == taskA.id
-        _task = await _get_task_check_owner(
+        _task = await _get_task_check_owner_deprecated(
             task_id=taskB.id, user=superuser, db=db
         )
         assert _task.id == taskB.id

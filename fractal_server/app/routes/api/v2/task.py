@@ -22,7 +22,7 @@ from ....schemas.v2 import TaskUpdateV2
 from ...auth._aux_auth import _get_default_user_group_id
 from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import verify_user_has_settings
-from ._aux_functions import _get_task_check_owner
+from ._aux_functions import _get_task_check_owner_deprecated
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -86,7 +86,9 @@ async def patch_task(
     """
 
     # Retrieve task from database
-    db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
+    db_task = await _get_task_check_owner_deprecated(
+        task_id=task_id, user=user, db=db
+    )
     update = task_update.dict(exclude_unset=True)
 
     # Forbid changes that set a previously unset command
@@ -219,7 +221,9 @@ async def delete_task(
     Delete a task
     """
 
-    db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
+    db_task = await _get_task_check_owner_deprecated(
+        task_id=task_id, user=user, db=db
+    )
 
     # Check that the TaskV2 is not in relationship with some WorkflowTaskV2
     stm = select(WorkflowTaskV2).filter(WorkflowTaskV2.task_id == task_id)
