@@ -202,7 +202,10 @@ async def create_task(
         )
 
     db_task_group = TaskGroupV2(
-        user_id=user.id, user_group_id=user_group_id, task_list=[db_task]
+        user_id=user.id,
+        user_group_id=user_group_id,
+        active=True,
+        task_list=[db_task],
     )
     db.add(db_task_group)
     await db.commit()

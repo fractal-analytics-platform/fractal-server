@@ -47,6 +47,7 @@ def create_db_task_group_and_tasks(
         user_id=user_id,
         user_group_id=user_group_id,
         task_list=actual_task_list,
+        active=True,
     )
     db.add(task_group)
     db.commit()
