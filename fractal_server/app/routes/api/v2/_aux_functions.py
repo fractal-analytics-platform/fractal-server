@@ -21,9 +21,10 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
-from ...aux.validate_user_settings import verify_user_has_settings
 from fractal_server.app.models import UserOAuth
 from fractal_server.images import Filters
+
+# from ...aux.validate_user_settings import verify_user_has_settings
 
 
 async def _get_project_check_owner(
@@ -326,57 +327,7 @@ async def _get_task_check_owner_deprecated(
     user: UserOAuth,
     db: AsyncSession,
 ) -> TaskV2:
-    """
-    Get a task, after access control.
-
-    This check constitutes a preliminary version of access control:
-    if the current user is not a superuser and differs from the task owner
-    (including when `owner is None`), we raise an 403 HTTP Exception.
-
-    Args:
-        task_id:
-        user:
-        db:
-
-    Returns:
-        The task object.
-
-    Raises:
-        HTTPException(status_code=404_NOT_FOUND):
-            If the task does not exist
-        HTTPException(status_code=403_FORBIDDEN):
-            If the user does not have rights to edit this task.
-    """
-    task = await db.get(TaskV2, task_id)
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskV2 {task_id} not found.",
-        )
-
-    if not user.is_superuser:
-        if task.owner is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    "Only a superuser can modify a TaskV2 with `owner=None`."
-                ),
-            )
-        else:
-            if user.username:
-                owner = user.username
-            else:
-                verify_user_has_settings(user)
-                owner = user.settings.slurm_user
-            if owner != task.owner:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=(
-                        f"Current user ({owner}) cannot modify TaskV2 "
-                        f"{task.id} with different owner ({task.owner})."
-                    ),
-                )
-    return task
+    raise NotImplementedError("this function is deprecated")
 
 
 def _get_submitted_jobs_statement() -> SelectOfScalar:
