@@ -33,7 +33,7 @@ from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _get_task_group_read_access,
+    _get_task_read_access,
 )
 from fractal_server.app.routes.auth import current_active_verified_user
 
@@ -94,7 +94,7 @@ async def apply_workflow(
     else:
         # Access control to Tasks in `workflow.task_list`
         for task in workflow.task_list:
-            _get_task_group_read_access(task_group_id=task.taskgroupv2_id)
+            _get_task_read_access(task_id=task.id, require_active=True)
     # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
     try:
