@@ -22,7 +22,8 @@ from ....schemas.v2 import TaskUpdateV2
 from ...auth._aux_auth import _get_default_user_group_id
 from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import verify_user_has_settings
-from ._aux_functions import _get_task_check_owner_deprecated
+from ._aux_functions_tasks import _get_task_full_access
+from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -65,12 +66,7 @@ async def get_task(
     """
     Get info on a specific task
     """
-    task = await db.get(TaskV2, task_id)
-    await db.close()
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="TaskV2 not found"
-        )
+    task = await _get_task_read_access(task_id=task_id, user_id=user.id, db=db)
     return task
 
 
@@ -86,8 +82,8 @@ async def patch_task(
     """
 
     # Retrieve task from database
-    db_task = await _get_task_check_owner_deprecated(
-        task_id=task_id, user=user, db=db
+    db_task = await _get_task_full_access(
+        task_id=task_id, user_id=user.id, db=db
     )
     update = task_update.dict(exclude_unset=True)
 
@@ -224,8 +220,8 @@ async def delete_task(
     Delete a task
     """
 
-    db_task = await _get_task_check_owner_deprecated(
-        task_id=task_id, user=user, db=db
+    db_task = await _get_task_full_access(
+        task_id=task_id, user_id=user.id, db=db
     )
 
     # Check that the TaskV2 is not in relationship with some WorkflowTaskV2
