@@ -101,15 +101,16 @@ async def delete_task_group(
             detail=f"TaskGroup {task_group.id} forbidden to user {user.id}",
         )
 
-    for task in task_group.task_list:
-        stm = select(WorkflowTaskV2).where(WorkflowTaskV2.task_id == task.id)
-        res = await db.execute(stm)
-        workflow_tasks = res.scalars().all()
-        if workflow_tasks != []:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"TaskV2 {task.id} is still in use",
-            )
+    stm = select(WorkflowTaskV2).where(
+        WorkflowTaskV2.task_id.in_([task.id for task in task_group.task_list])
+    )
+    res = await db.execute(stm)
+    workflow_tasks = res.scalars().all()
+    if workflow_tasks != []:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
+        )
 
     await db.delete(task_group)
     await db.commit()
