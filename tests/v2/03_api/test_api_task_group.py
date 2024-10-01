@@ -5,11 +5,7 @@ from fractal_server.app.schemas.v2 import TaskReadV2
 PREFIX = "/api/v2/task-group"
 
 
-async def test_get_single_task_group(
-    client,
-    MockCurrentUser,
-    task_factory_v2,
-):
+async def test_get_single_task_group(client, MockCurrentUser, task_factory_v2):
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
 
@@ -90,12 +86,7 @@ async def test_get_task_group_list(
         } == {task1.id, task2.id, task3.id}
 
 
-async def test_delete_task_group(
-    client,
-    MockCurrentUser,
-    task_factory_v2,
-    db,
-):
+async def test_delete_task_group(client, MockCurrentUser, task_factory_v2):
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
 
@@ -104,7 +95,7 @@ async def test_delete_task_group(
         assert res.status_code == 403
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
-        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id+1}/")
-        assert res.status_code == 404
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 204
+        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
+        assert res.status_code == 404
