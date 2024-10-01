@@ -13,20 +13,20 @@ async def test_get_single_task_group(
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
 
-        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}")
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 200
         assert res.json()["user_id"] == user1.id
         assert len(res.json()["task_list"]) == 1
         assert res.json()["task_list"][0]["id"] == task.id
 
-        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id + 1}")
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id + 1}/")
         assert res.status_code == 404
 
     async with MockCurrentUser():
 
-        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}")
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 403
-        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id + 1}")
+        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id + 1}/")
         assert res.status_code == 404
 
 
@@ -88,3 +88,23 @@ async def test_get_task_group_list(
             *_ids_of_task_list(res.json()[1]["task_list"]),
             *_ids_of_task_list(res.json()[2]["task_list"]),
         } == {task1.id, task2.id, task3.id}
+
+
+async def test_delete_task_group(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    db,
+):
+    async with MockCurrentUser() as user1:
+        task = await task_factory_v2(user_id=user1.id, source="source")
+
+    async with MockCurrentUser():
+        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
+        assert res.status_code == 403
+
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id+1}/")
+        assert res.status_code == 404
+        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
+        assert res.status_code == 204
