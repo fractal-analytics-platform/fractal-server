@@ -1,7 +1,6 @@
 import pytest
 from devtools import debug
 
-from fractal_server.app.routes.auth._aux_auth import _get_default_user_group_id
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -21,12 +20,13 @@ async def test_non_verified_user(client, MockCurrentUser):
         assert res.status_code == 401
 
 
-async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
+async def test_task_get_list(
+    db, client, task_factory_v2, MockCurrentUser, default_user_group
+):
 
-    default_user_group_id = await _get_default_user_group_id(db=db)
     async with MockCurrentUser() as user:
         await task_factory_v2(
-            user_id=user.id, user_group_id=default_user_group_id, index=1
+            user_id=user.id, user_group_id=default_user_group.id, index=1
         )
         await task_factory_v2(user_id=user.id, index=2)
         t = await task_factory_v2(
