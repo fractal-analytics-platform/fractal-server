@@ -32,10 +32,12 @@ from .workflow import WorkflowCreateV2  # noqa F401
 from .workflow import WorkflowExportV2  # noqa F401
 from .workflow import WorkflowImportV2  # noqa F401
 from .workflow import WorkflowReadV2  # noqa F401
+from .workflow import WorkflowReadV2WithWarnings  # noqa F401
 from .workflow import WorkflowUpdateV2  # noqa F401
 from .workflowtask import WorkflowTaskCreateV2  # noqa F401
 from .workflowtask import WorkflowTaskExportV2  # noqa F401
 from .workflowtask import WorkflowTaskImportV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2  # noqa F401
+from .workflowtask import WorkflowTaskReadV2WithWarning  # noqa F401
 from .workflowtask import WorkflowTaskStatusTypeV2  # noqa F401
 from .workflowtask import WorkflowTaskUpdateV2  # noqa F401
