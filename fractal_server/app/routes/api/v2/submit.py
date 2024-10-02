@@ -112,11 +112,14 @@ async def apply_workflow(
                 ),
             )
         # Access control
-        for task in workflow.task_list[
+        for wftask in workflow.task_list[
             first_task_index : last_task_index + 1  # noqa: E203
         ]:
             await _get_task_read_access(
-                user_id=user.id, task_id=task.id, require_active=True, db=db
+                user_id=user.id,
+                task_id=wftask.task_id,
+                require_active=True,
+                db=db,
             )
 
     # Validate user settings
