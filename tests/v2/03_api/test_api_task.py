@@ -312,7 +312,6 @@ async def test_post_task_user_group_id(
 async def test_patch_task_auth(
     MockCurrentUser,
     client,
-    task_factory_v2,
 ):
 
     # POST-task as user_A
@@ -471,13 +470,8 @@ async def test_get_task(task_factory_v2, client, MockCurrentUser):
 
 
 async def test_delete_task(
-    db,
     client,
     MockCurrentUser,
-    workflow_factory_v2,
-    project_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
 ):
     async with MockCurrentUser():
         res = await client.delete(f"{PREFIX}/12345/")
