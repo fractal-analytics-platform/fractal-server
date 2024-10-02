@@ -1,6 +1,7 @@
 import shlex
 import subprocess  # nosec
 from pathlib import Path
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -9,8 +10,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from ...auth._aux_auth import _get_default_user_group_id
-from ...auth._aux_auth import _verify_user_belongs_to_group
+from ._aux_functions_tasks import _get_valid_user_group_id
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
@@ -45,6 +45,8 @@ logger = set_logger(__name__)
 )
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
+    private: bool = False,
+    user_group_id: Optional[int] = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),  # FIXME: using both sync/async
     db_sync: DBSyncSession = Depends(
@@ -53,6 +55,14 @@ async def collect_task_custom(
 ) -> list[TaskReadV2]:
 
     settings = Inject(get_settings)
+
+    # Validate query parameters related to user-group ownership
+    user_group_id = _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         if task_collect.package_root is None:
@@ -173,15 +183,6 @@ async def collect_task_custom(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="\n".join(overlapping_tasks_v1_source_and_id),
-        )
-
-    # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id(db=db)
-
-    # Check current user belongs to group
-    if user_group_id is not None:
-        await _verify_user_belongs_to_group(
-            user_id=user.id, user_group_id=user_group_id, db=db
         )
 
     task_group = create_db_task_group_and_tasks(

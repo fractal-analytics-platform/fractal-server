@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from shutil import copy as shell_copy
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -25,9 +26,8 @@ from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
-from ...auth._aux_auth import _get_default_user_group_id
-from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import validate_user_settings
+from ._aux_functions_tasks import _get_valid_user_group_id
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -71,6 +71,8 @@ async def collect_tasks_pip(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
+    private: bool = False,
+    user_group_id: Optional[int] = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
@@ -114,14 +116,13 @@ async def collect_tasks_pip(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 
-    # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id(db=db)
-
-    # Check that current user belongs to group
-    if user_group_id is not None:
-        await _verify_user_belongs_to_group(
-            user_id=user.id, user_group_id=user_group_id, db=db
-        )
+    # Validate query parameters related to user-group ownership
+    user_group_id = _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
 
     # END of SSH/non-SSH common part
 
