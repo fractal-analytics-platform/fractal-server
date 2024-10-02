@@ -164,7 +164,7 @@ async def _verify_user_belongs_to_group(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=(
-                    f"User {user_id} does not belong"
+                    f"User {user_id} does not belong "
                     f"to UserGroup {user_group_id}"
                 ),
             )
