@@ -4,7 +4,8 @@ import pytest
 from devtools import debug  # noqa
 from sqlmodel import select
 
-from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.images.models import Filters
 
@@ -71,7 +72,7 @@ async def test_post_worfkflow_task(
             res = await client.post(
                 f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
                 f"?task_id={task['id']}",
-                json={dict()},
+                json=dict(),
             )
             workflow = await get_workflow(client, proj.id, wf_id)
             assert len(workflow["task_list"]) == index + 1
@@ -128,17 +129,23 @@ async def test_post_worfkflow_task_failures(
             name="a", source="a1", user_id=user_A_id
         )
         task_A_non_active = await task_factory_v2(
-            name="a", source="a2", user_id=user_A_id
+            name="a", source="a2", user_id=user_A_id, active=False
         )
-        task_group = await db.get(
-            TaskGroupV2, task_A_non_active.taskgroupv2_id
-        )
-        task_group.active = False
-        db.add(task_group)
-        await db.commit()
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_B:
+        # Create a new UserGroup with user_B
+        new_group = UserGroup(name="new_group")
+        db.add(new_group)
+        await db.commit()
+        await db.refresh(new_group)
+        link = LinkUserGroup(user_id=user_B.id, group_id=new_group.id)
+        db.add(link)
+        await db.commit()
+        await db.close()
+
         user_B_id = user_B.id
-        task_B = await task_factory_v2(name="a", source="b", user_id=user_B_id)
+        task_B = await task_factory_v2(
+            name="a", source="b", user_id=user_B_id, user_group_id=new_group.id
+        )
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user:
         # Create project and workflow

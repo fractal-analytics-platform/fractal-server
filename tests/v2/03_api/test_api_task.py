@@ -1,6 +1,8 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -20,13 +22,19 @@ async def test_non_verified_user(client, MockCurrentUser):
         assert res.status_code == 401
 
 
-async def test_task_get_list(
-    db, client, task_factory_v2, MockCurrentUser, default_user_group
-):
+async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
 
     async with MockCurrentUser() as user:
+        new_group = UserGroup(name="new_group")
+        db.add(new_group)
+        await db.commit()
+        await db.refresh(new_group)
+        link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
+        db.add(link)
+        await db.commit()
+
         await task_factory_v2(
-            user_id=user.id, user_group_id=default_user_group.id, index=1
+            user_id=user.id, user_group_id=new_group.id, index=1
         )
         await task_factory_v2(user_id=user.id, index=2)
         t = await task_factory_v2(
@@ -58,8 +66,7 @@ async def test_task_get_list(
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
 
-    async with MockCurrentUser() as user2:
-        await task_factory_v2(user_id=user2.id, index=4)
+    async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 2
