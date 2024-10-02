@@ -197,3 +197,4 @@ async def _get_valid_user_group_id(
         await _verify_user_belongs_to_group(
             user_id=user_id, user_group_id=user_group_id, db=db
         )
+    return user_group_id
