@@ -115,7 +115,9 @@ async def apply_workflow(
         for task in workflow.task_list[
             first_task_index : last_task_index + 1  # noqa: E203
         ]:
-            _get_task_read_access(task_id=task.id, require_active=True)
+            await _get_task_read_access(
+                user_id=user.id, task_id=task.id, require_active=True, db=db
+            )
 
     # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
