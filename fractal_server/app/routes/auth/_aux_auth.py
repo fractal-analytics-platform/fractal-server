@@ -154,7 +154,17 @@ async def _verify_user_belongs_to_group(
     res = await db.execute(stm)
     link = res.scalars().one_or_none()
     if link is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="FIXME",  # FIXME
-        )
+        group = await db.get(UserGroup, user_group_id)
+        if group is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UserGroup {user_group_id} not found",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"User {user_id} does not belong"
+                    f"to UserGroup {user_group_id}"
+                ),
+            )

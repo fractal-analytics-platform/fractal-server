@@ -127,6 +127,8 @@ async def patch_task(
 )
 async def create_task(
     task: TaskCreateV2,
+    user_group_id: Optional[int] = None,
+    private: bool = False,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskReadV2]:
@@ -202,11 +204,16 @@ async def create_task(
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
 
-    # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id(db=db)
-
-    # Check current user belongs to group
-    if user_group_id is not None:
+    if (user_group_id is not None) and (private is True):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot set both {user_group_id=} and {private=}",
+        )
+    elif private is True:
+        user_group_id = None
+    elif user_group_id is None:
+        user_group_id = await _get_default_user_group_id(db=db)
+    else:
         await _verify_user_belongs_to_group(
             user_id=user.id, user_group_id=user_group_id, db=db
         )
