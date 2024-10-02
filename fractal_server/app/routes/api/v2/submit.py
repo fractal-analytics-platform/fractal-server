@@ -92,35 +92,36 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Workflow {workflow_id} has empty task list",
         )
-    else:
-        # Set values of first_task_index and last_task_index
-        try:
-            first_task_index, last_task_index = set_start_and_last_task_index(
-                num_tasks,
-                first_task_index=job_create.first_task_index,
-                last_task_index=job_create.last_task_index,
-            )
-            job_create.first_task_index = first_task_index
-            job_create.last_task_index = last_task_index
-        except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Invalid values for first_task_index or last_task_index "
-                    f"(with {num_tasks=}).\n"
-                    f"Original error: {str(e)}"
-                ),
-            )
-        # Access control
-        for wftask in workflow.task_list[
-            first_task_index : last_task_index + 1  # noqa: E203
-        ]:
-            await _get_task_read_access(
-                user_id=user.id,
-                task_id=wftask.task_id,
-                require_active=True,
-                db=db,
-            )
+
+    # Set values of first_task_index and last_task_index
+    try:
+        first_task_index, last_task_index = set_start_and_last_task_index(
+            num_tasks,
+            first_task_index=job_create.first_task_index,
+            last_task_index=job_create.last_task_index,
+        )
+        job_create.first_task_index = first_task_index
+        job_create.last_task_index = last_task_index
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Invalid values for first_task_index or last_task_index "
+                f"(with {num_tasks=}).\n"
+                f"Original error: {str(e)}"
+            ),
+        )
+
+    # Check that tasks have read-access and are `active`
+    for wftask in workflow.task_list[
+        first_task_index : last_task_index + 1  # noqa: E203
+    ]:
+        await _get_task_read_access(
+            user_id=user.id,
+            task_id=wftask.task_id,
+            require_active=True,
+            db=db,
+        )
 
     # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
