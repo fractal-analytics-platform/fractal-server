@@ -15,8 +15,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
-from fractal_server.app.schemas.v2 import TaskGroupUpdateStrictV2
+from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -101,7 +104,7 @@ async def delete_task_group(
 @router.patch("/{task_group_id}/", response_model=TaskGroupReadV2)
 async def patch_task_group(
     task_group_id: int,
-    task_group_update: TaskGroupUpdateStrictV2,
+    task_group_update: TaskGroupUpdateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
@@ -115,6 +118,10 @@ async def patch_task_group(
     )
 
     for key, value in task_group_update.dict(exclude_unset=True).items():
+        if (key == "user_group_id") and (value is not None):
+            await _verify_user_belongs_to_group(
+                user_id=user.id, user_group_id=value, db=db
+            )
         setattr(task_group, key, value)
 
     db.add(task_group)

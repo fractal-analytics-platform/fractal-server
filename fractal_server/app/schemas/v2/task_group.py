@@ -14,6 +14,6 @@ class TaskGroupReadV2(BaseModel):
     task_list: list[TaskReadV2]
 
 
-class TaskGroupUpdateStrictV2(BaseModel):
-
-    active: bool
+class TaskGroupUpdateV2(BaseModel):
+    user_group_id: Optional[int] = None
+    active: Optional[bool] = None
