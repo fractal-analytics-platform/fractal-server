@@ -9,11 +9,10 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
-from ...auth._aux_auth import _get_default_user_group_id
-from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
+from ._aux_functions_tasks import _get_valid_user_group_id
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -136,6 +135,14 @@ async def create_task(
     Create a new task
     """
 
+    # Validate query parameters related to user-group ownership
+    user_group_id = _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
+
     if task.command_non_parallel is None:
         task_type = "parallel"
     elif task.command_parallel is None:
@@ -165,7 +172,7 @@ async def create_task(
             ),
         )
 
-    # Set task.owner attribute
+    # Set task.owner attribute - FIXME: remove this block
     if user.username:
         owner = user.username
     else:
@@ -203,20 +210,6 @@ async def create_task(
         )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
-
-    if (user_group_id is not None) and (private is True):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Cannot set both {user_group_id=} and {private=}",
-        )
-    elif private is True:
-        user_group_id = None
-    elif user_group_id is None:
-        user_group_id = await _get_default_user_group_id(db=db)
-    else:
-        await _verify_user_belongs_to_group(
-            user_id=user.id, user_group_id=user_group_id, db=db
-        )
 
     db_task_group = TaskGroupV2(
         user_id=user.id,

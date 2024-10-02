@@ -2,6 +2,8 @@
 Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
+from typing import Optional
+
 from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import select
@@ -10,6 +12,8 @@ from ....db import AsyncSession
 from ....models import LinkUserGroup
 from ....models.v2 import TaskGroupV2
 from ....models.v2 import TaskV2
+from ...auth._aux_auth import _get_default_user_group_id
+from ...auth._aux_auth import _verify_user_belongs_to_group
 
 
 async def _get_task_group_or_404(
@@ -168,3 +172,28 @@ async def _get_task_read_access(
                 detail="Cannot insert non-active tasks into a workflow.",
             )
     return task
+
+
+async def _get_valid_user_group_id(
+    *,
+    user_group_id: Optional[int] = None,
+    private: bool,
+    user_id: int,
+    db: AsyncSession,
+) -> Optional[int]:
+    """
+    Validate query parameters for endpoints that create some task(s).
+    """
+    if (user_group_id is not None) and (private is True):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot set both {user_group_id=} and {private=}",
+        )
+    elif private is True:
+        user_group_id = None
+    elif user_group_id is None:
+        user_group_id = await _get_default_user_group_id(db=db)
+    else:
+        await _verify_user_belongs_to_group(
+            user_id=user_id, user_group_id=user_group_id, db=db
+        )
