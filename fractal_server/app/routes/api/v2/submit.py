@@ -86,34 +86,36 @@ async def apply_workflow(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
-    if not workflow.task_list:
+    num_tasks = len(workflow.task_list)
+    if num_tasks == 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Workflow {workflow_id} has empty task list",
         )
     else:
-        for task in workflow.task_list:
-            # Access control
+        # Set values of first_task_index and last_task_index
+        try:
+            first_task_index, last_task_index = set_start_and_last_task_index(
+                num_tasks,
+                first_task_index=job_create.first_task_index,
+                last_task_index=job_create.last_task_index,
+            )
+            job_create.first_task_index = first_task_index
+            job_create.last_task_index = last_task_index
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Invalid values for first_task_index or last_task_index "
+                    f"(with {num_tasks=}).\n"
+                    f"Original error: {str(e)}"
+                ),
+            )
+        # Access control
+        for task in workflow.task_list[
+            first_task_index : last_task_index + 1  # noqa: E203
+        ]:
             _get_task_read_access(task_id=task.id, require_active=True)
-    # Set values of first_task_index and last_task_index
-    num_tasks = len(workflow.task_list)
-    try:
-        first_task_index, last_task_index = set_start_and_last_task_index(
-            num_tasks,
-            first_task_index=job_create.first_task_index,
-            last_task_index=job_create.last_task_index,
-        )
-        job_create.first_task_index = first_task_index
-        job_create.last_task_index = last_task_index
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Invalid values for first_task_index or last_task_index "
-                f"(with {num_tasks=}).\n"
-                f"Original error: {str(e)}"
-            ),
-        )
 
     # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
