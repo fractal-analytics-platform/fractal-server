@@ -117,7 +117,7 @@ async def collect_tasks_pip(
     )
 
     # Validate query parameters related to user-group ownership
-    user_group_id = _get_valid_user_group_id(
+    user_group_id = await _get_valid_user_group_id(
         user_group_id=user_group_id,
         private=private,
         user_id=user.id,
