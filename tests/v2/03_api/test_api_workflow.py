@@ -7,6 +7,7 @@ from typing import Literal
 from devtools import debug  # noqa
 from sqlmodel import select
 
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -215,35 +216,70 @@ async def test_delete_workflow(
         assert res.status_code == 422
 
 
-async def test_get_workflow(client, MockCurrentUser, project_factory_v2):
+async def test_get_workflow(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    workflow_factory_v2,
+    db,
+):
     """
     GIVEN a Workflow in the db
     WHEN the endpoint to GET a Workflow by its id is called
     THEN the Workflow is returned
     """
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+    # Create several kinds of tasks
+    async with MockCurrentUser() as user_A:
+        user_A_id = user_A.id
+        t1 = await task_factory_v2(user_id=user_A_id, source="1")
+        t2 = await task_factory_v2(user_id=user_A_id, source="2")
+    async with MockCurrentUser() as user_B:
+        t3 = await task_factory_v2(user_id=user_B.id, source="3")
+    tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
+    tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
+    tg3.user_group_id = None
+    tg2.active = False
+    db.add(tg2)
+    db.add(tg3)
+    await db.commit()
+
+    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
+
+        project = await project_factory_v2(user_A)
         p_id = project.id
+
         # Create workflow
         WORFKLOW_NAME = "My Workflow"
-        res = await client.post(
-            f"{PREFIX}/project/{p_id}/workflow/", json=dict(name=WORFKLOW_NAME)
-        )
-        assert res.status_code == 201
-        wf_id = res.json()["id"]
+        wf = await workflow_factory_v2(project_id=p_id, name=WORFKLOW_NAME)
+        wf_id = wf.id
+
+        for task in [t1, t2, t3]:
+            await _workflow_insert_task(
+                workflow_id=wf_id, task_id=task.id, db=db
+            )
+
         # Get project (useful to check workflow.project relationship)
         res = await client.get(f"{PREFIX}/project/{p_id}/")
         assert res.status_code == 200
         EXPECTED_PROJECT = res.json()
+
         # Get workflow, and check relationship
         res = await client.get(f"{PREFIX}/project/{p_id}/workflow/{wf_id}/")
         assert res.status_code == 200
-
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
         assert (
             datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
             == timezone.utc
+        )
+
+        # Assert warnings
+        assert res.json()["task_list"][0]["warning"] is None
+        assert res.json()["task_list"][1]["warning"] == "Task is not active."
+        assert (
+            res.json()["task_list"][2]["warning"]
+            == "Current user has no access to this task."
         )
 
         # Get list of project workflows
