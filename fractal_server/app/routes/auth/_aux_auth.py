@@ -147,7 +147,7 @@ async def _verify_user_belongs_to_group(
     *, user_id: int, user_group_id: int, db: AsyncSession
 ):
     stm = (
-        select(LinkUserGroup.id)
+        select(LinkUserGroup)
         .where(LinkUserGroup.user_id == user_id)
         .where(LinkUserGroup.group_id == user_group_id)
     )
