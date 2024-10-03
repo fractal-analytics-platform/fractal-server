@@ -27,7 +27,7 @@ async def test_get_current_user(
 
 
 async def test_patch_current_user_response(registered_client):
-    res = await registered_client.get(f"{PREFIX}?group_names=True")
+    res = await registered_client.get(f"{PREFIX}?group_names_ids=True")
     pre_patch_user = res.json()
 
     # Successful API call with empty payload
