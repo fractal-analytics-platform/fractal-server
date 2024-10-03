@@ -165,11 +165,11 @@ async def patch_user(
         patched_user = user_to_patch
 
     # Enrich user object with `group_names_ids` attribute
-    patched_user_with_group_ids = await _get_single_user_with_groups(
+    patched_user_with_groups = await _get_single_user_with_groups(
         patched_user, db
     )
 
-    return patched_user_with_group_ids
+    return patched_user_with_groups
 
 
 @router_users.get("/users/", response_model=list[UserRead])
