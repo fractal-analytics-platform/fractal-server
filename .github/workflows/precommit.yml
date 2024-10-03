@@ -2,9 +2,9 @@ name: precommit
 
 on:
   push:
-    branches: ["main", "v2.7-new-tasks"]
+    branches: ["main", "1774-introduce-user-settings"]
   pull_request:
-    branches: ["main", "v2.7-new-tasks"]
+    branches: ["main", "1774-introduce-user-settings"]
 
 jobs:
   precommit:
