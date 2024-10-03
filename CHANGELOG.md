@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.0a1
+
+* API:
+    * Replace `group_names` and `group_ids` attributes of `UserRead` with `group_names_ids` mapping (\#1844).
+    * Deprecate `GET /auth/group-names/` (\#1844).
+
 # 2.7.0a0
 
 * API:

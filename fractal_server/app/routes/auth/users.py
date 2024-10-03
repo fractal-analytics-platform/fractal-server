@@ -41,13 +41,14 @@ logger = set_logger(__name__)
 @router_users.get("/users/{user_id}/", response_model=UserRead)
 async def get_user(
     user_id: int,
-    group_ids: bool = True,
+    group_names_ids: bool = True,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
     user = await _user_or_404(user_id, db)
-    if group_ids:
-        user = await _get_single_user_with_groups(user, db)
+    if group_names_ids:
+        user_with_groups = await _get_single_user_with_groups(user, db)
+        return user_with_groups
     return user
 
 
@@ -163,7 +164,7 @@ async def patch_user(
         # Nothing to do, just continue
         patched_user = user_to_patch
 
-    # Enrich user object with `group_ids` attribute
+    # Enrich user object with `group_names_ids` attribute
     patched_user_with_group_ids = await _get_single_user_with_groups(
         patched_user, db
     )
