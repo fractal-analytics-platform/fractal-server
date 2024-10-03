@@ -5,6 +5,10 @@ from pydantic import BaseModel
 from .task import TaskReadV2
 
 
+class TaskGroupCreateV2(BaseModel):
+    active: bool = True
+
+
 class TaskGroupReadV2(BaseModel):
 
     id: int

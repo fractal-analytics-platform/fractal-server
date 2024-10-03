@@ -22,6 +22,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
@@ -284,7 +285,7 @@ async def background_collect_pip(
 
             task_group = create_db_task_group_and_tasks(
                 task_list=task_list,
-                task_group_dict=dict(),  # FIXME
+                task_group_obj=TaskGroupCreateV2(),
                 user_id=user_id,
                 user_group_id=user_group_id,
                 db=db,

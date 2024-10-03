@@ -23,6 +23,7 @@ from fractal_server.app.routes.aux.validate_user_settings import (
 )
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -187,7 +188,7 @@ async def collect_task_custom(
 
     task_group = create_db_task_group_and_tasks(
         task_list=task_list,
-        task_group_dict={},  # FIXME
+        task_group_obj=TaskGroupCreateV2(),
         user_id=user.id,
         user_group_id=user_group_id,
         db=db_sync,
