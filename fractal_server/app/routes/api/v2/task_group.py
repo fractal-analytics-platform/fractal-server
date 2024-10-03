@@ -31,15 +31,16 @@ logger = set_logger(__name__)
 async def get_task_group_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-    owned: bool = True,
-    user_groups: bool = True,
-    exclude_non_active: bool = False,
+    only_active: bool = False,
+    only_owner: bool = False,
 ) -> list[TaskGroupReadV2]:
     """
     Get all accessible TaskGroups
     """
 
-    if owned and user_groups:
+    if only_owner:
+        condition = TaskGroupV2.user_id == user.id
+    else:
         condition = or_(
             TaskGroupV2.user_id == user.id,
             TaskGroupV2.user_group_id.in_(
@@ -48,15 +49,8 @@ async def get_task_group_list(
                 )
             ),
         )
-    elif owned:
-        condition = TaskGroupV2.user_id == user.id
-    elif user_groups:
-        condition = TaskGroupV2.user_id == user.id
-    else:
-        return []
-
     stm = select(TaskGroupV2).where(condition)
-    if exclude_non_active:
+    if only_active:
         stm = stm.where(TaskGroupV2.active is True)
 
     res = await db.execute(stm)
