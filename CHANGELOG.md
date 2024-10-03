@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.7.0 (unreleased)
+# 2.7.0a0
 
 * API:
     * Introduce `/api/v2/task-group/` routes (\#1817).
