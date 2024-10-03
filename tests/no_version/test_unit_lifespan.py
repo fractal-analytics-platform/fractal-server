@@ -4,6 +4,7 @@ import os
 from fastapi import FastAPI
 from sqlmodel import select
 
+from fractal_server.app.models import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v2.job import JobV2
@@ -14,6 +15,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v2,
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.security import _create_first_group
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.main import lifespan
@@ -47,6 +49,8 @@ async def test_app_with_lifespan(
 
     # create first user
     settings = Inject(get_settings)
+
+    _create_first_group()
     await _create_first_user(
         email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
         password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
@@ -55,16 +59,22 @@ async def test_app_with_lifespan(
         is_verified=True,
     )
     res = await db.execute(select(UserOAuth))
-    user = res.scalars().unique().all()
-    assert len(user) == 1
+    user = res.scalars().unique().one()  # assert only one user
+    res = await db.execute(select(UserGroup))
+    res.scalars().unique().one()  # assert only one group
+
+    # db.add(LinkUserGroup(user_id=user.id, group_id=group.id))
+    # await db.commit()
 
     async with lifespan(app):
         # verify shutdown
         assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
 
-        task = await task_factory_v2(name="task", command="echo")
-        project = await project_factory_v2(user[0])
+        task = await task_factory_v2(
+            user_id=user.id, name="task", command="echo"
+        )
+        project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         dataset1 = await dataset_factory_v2(project_id=project.id, name="ds-1")
         await _workflow_insert_task_v2(
@@ -84,7 +94,7 @@ async def test_app_with_lifespan(
         app.state.jobsV2.append(jobv2.id)
 
         # create jobv1
-        projectv1 = await project_factory(user[0])
+        projectv1 = await project_factory(user)
         workflowv1 = await workflow_factory(project_id=projectv1.id)
         taskv1 = await task_factory(name="task", source="task_source")
         await _workflow_insert_task_v1(

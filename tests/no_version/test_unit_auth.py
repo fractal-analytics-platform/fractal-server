@@ -11,6 +11,9 @@ from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 from fractal_server.app.security import _create_first_user
 
 
@@ -40,3 +43,9 @@ async def test_get_single_user_with_groups(db):
     user = await _get_first_user(db)
     res = await _get_single_user_with_groups(user=user, db=db)
     debug(res)
+
+
+async def test_verify_user_belongs_to_group(db):
+    with pytest.raises(HTTPException) as exc_info:
+        await _verify_user_belongs_to_group(user_id=1, user_group_id=42, db=db)
+    debug(exc_info.value)

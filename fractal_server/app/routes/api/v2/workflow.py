@@ -19,6 +19,7 @@ from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowImportV2
 from ....schemas.v2 import WorkflowReadV2
+from ....schemas.v2 import WorkflowReadV2WithWarnings
 from ....schemas.v2 import WorkflowTaskCreateV2
 from ....schemas.v2 import WorkflowUpdateV2
 from ._aux_functions import _check_workflow_exists
@@ -26,6 +27,7 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _workflow_insert_task
+from ._aux_functions_tasks import _get_task_group_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 
@@ -89,14 +91,14 @@ async def create_workflow(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/",
-    response_model=WorkflowReadV2,
+    response_model=WorkflowReadV2WithWarnings,
 )
 async def read_workflow(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2]:
+) -> Optional[WorkflowReadV2WithWarnings]:
     """
     Get info on an existing workflow
     """
@@ -108,7 +110,26 @@ async def read_workflow(
         db=db,
     )
 
-    return workflow
+    workflow_data = dict(
+        **workflow.model_dump(),
+        project=workflow.project,
+    )
+    task_list_with_warnings = []
+    for wftask in workflow.task_list:
+        wftask_data = dict(wftask.model_dump(), task=wftask.task)
+        try:
+            task_group = await _get_task_group_read_access(
+                task_group_id=wftask.task.taskgroupv2_id,
+                user_id=user.id,
+                db=db,
+            )
+            if not task_group.active:
+                wftask_data["warning"] = "Task is not active."
+        except HTTPException:
+            wftask_data["warning"] = "Current user has no access to this task."
+        task_list_with_warnings.append(wftask_data)
+    workflow_data["task_list"] = task_list_with_warnings
+    return workflow_data
 
 
 @router.patch(

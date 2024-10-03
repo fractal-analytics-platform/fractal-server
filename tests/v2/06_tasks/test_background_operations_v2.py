@@ -5,6 +5,7 @@ import pytest
 from devtools import debug
 from pydantic import BaseModel
 
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
@@ -13,10 +14,10 @@ from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     _check_task_files_exist,
 )
-from fractal_server.tasks.v2.background_operations import _get_task_type
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
+from fractal_server.tasks.v2.database_operations import _get_task_type
 from fractal_server.tasks.v2.endpoint_operations import (
     create_package_dir_pip,
 )
@@ -74,6 +75,7 @@ async def test_logs_failed_collection(
     tmp_path: Path,
     testdata_path: Path,
     override_settings_factory: callable,
+    first_user: UserOAuth,
 ):
     """
     GIVEN a package and its installation environment
@@ -119,6 +121,8 @@ async def test_logs_failed_collection(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=first_user.id,
+        user_group_id=None,
     )
     await db.refresh(state)
     debug(state.data["status"])
@@ -153,6 +157,8 @@ async def test_logs_failed_collection(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=first_user.id,
+        user_group_id=None,
     )
     await db.refresh(state)
     debug(state.data["status"])

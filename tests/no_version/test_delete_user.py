@@ -1,6 +1,7 @@
 from sqlmodel import delete
 from sqlmodel import select
 
+from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.security import UserSettings
 from fractal_server.app.models.v1 import LinkUserProject
@@ -42,6 +43,11 @@ async def test_delete_user(
     await db.execute(
         delete(LinkUserProjectV2).where(LinkUserProjectV2.user_id == user.id)
     )
+
+    await db.execute(
+        delete(LinkUserGroup).where(LinkUserGroup.user_id == user.id)
+    )
+
     await db.delete(user)
     await db.commit()
 

@@ -8,6 +8,7 @@ from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
+from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
 async def _get_single_user_with_groups(
@@ -86,3 +87,44 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
         )
     return user
+
+
+async def _get_default_user_group_id(db: AsyncSession) -> int:
+    stm = select(UserGroup.id).where(
+        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+    )
+    res = await db.execute(stm)
+    user_group_id = res.scalars().one_or_none()
+    if user_group_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
+        )
+    return user_group_id
+
+
+async def _verify_user_belongs_to_group(
+    *, user_id: int, user_group_id: int, db: AsyncSession
+):
+    stm = (
+        select(LinkUserGroup)
+        .where(LinkUserGroup.user_id == user_id)
+        .where(LinkUserGroup.group_id == user_group_id)
+    )
+    res = await db.execute(stm)
+    link = res.scalars().one_or_none()
+    if link is None:
+        group = await db.get(UserGroup, user_group_id)
+        if group is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UserGroup {user_group_id} not found",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"User {user_id} does not belong "
+                    f"to UserGroup {user_group_id}"
+                ),
+            )

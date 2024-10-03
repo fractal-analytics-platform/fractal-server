@@ -11,6 +11,7 @@ from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
 from .workflowtask import WorkflowTaskReadV2
+from .workflowtask import WorkflowTaskReadV2WithWarning
 
 
 class WorkflowCreateV2(BaseModel, extra=Extra.forbid):
@@ -33,6 +34,10 @@ class WorkflowReadV2(BaseModel):
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(
         valutc("timestamp_created")
     )
+
+
+class WorkflowReadV2WithWarnings(WorkflowReadV2):
+    task_list: list[WorkflowTaskReadV2WithWarning]
 
 
 class WorkflowUpdateV2(BaseModel):

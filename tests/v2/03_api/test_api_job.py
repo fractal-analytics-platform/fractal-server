@@ -55,7 +55,7 @@ async def test_submit_job_failures(
         workflow2 = await workflow_factory_v2(project_id=project1.id)
         workflow3 = await workflow_factory_v2(project_id=project2.id)
 
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow1.id, task_id=task.id, db=db
         )
@@ -122,7 +122,7 @@ async def test_submit_jobs_with_same_dataset(
         dataset2 = await dataset_factory_v2(
             project_id=project.id, name="dataset2"
         )
-        new_task = await task_factory_v2()
+        new_task = await task_factory_v2(user_id=user.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=new_task.id, db=db
@@ -197,7 +197,7 @@ async def test_project_apply_missing_user_attributes(
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -254,8 +254,8 @@ async def test_project_apply_workflow_subset(
 
         workflow = await workflow_factory_v2(project_id=project.id)
 
-        task12 = await task_factory_v2(source="admin:1to2")
-        task23 = await task_factory_v2(source="admin:2to3")
+        task12 = await task_factory_v2(user_id=user.id, source="admin:1to2")
+        task23 = await task_factory_v2(user_id=user.id, source="admin:2to3")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task12.id, db=db
         )
@@ -378,7 +378,7 @@ async def test_project_apply_slurm_account(
             project_id=project.id, name="ds1", type="type1"
         )
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(source="source")
+        task = await task_factory_v2(user_id=user.id, source="source")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -414,6 +414,7 @@ async def test_project_apply_slurm_account(
         )
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(
+            user_id=user.id,
             input_type="type2",
             output_type="type2",
             source="source2",
@@ -476,7 +477,7 @@ async def test_rate_limit(
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(source="source")
+        task = await task_factory_v2(user_id=user.id, source="source")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -534,7 +535,7 @@ async def test_get_jobs(
         dataset = await dataset_factory_v2(
             project_id=project.id, name="dataset1"
         )
-        new_task = await task_factory_v2()
+        new_task = await task_factory_v2(user_id=user.id)
         workflow1 = await workflow_factory_v2(project_id=project.id)
         workflow2 = await workflow_factory_v2(project_id=project.id)
         await _workflow_insert_task(
@@ -635,7 +636,9 @@ async def test_stop_job(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=project.id)
-        t = await task_factory_v2(name="task", source="source")
+        t = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         ds = await dataset_factory_v2(project_id=project.id)
         await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
         job = await job_factory_v2(

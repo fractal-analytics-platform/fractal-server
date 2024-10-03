@@ -29,7 +29,7 @@ async def test_submit_workflow_failure(
     assert working_dir.exists()
 
     async with MockCurrentUser() as user:
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         project = await project_factory_v2(user=user)
         workflow = await workflow_factory_v2(project_id=project.id)
         await _workflow_insert_task(
@@ -75,7 +75,7 @@ async def test_mkdir_error(
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
         workflow = await workflow_factory_v2(project_id=project.id, name="wf")
-        task = await task_factory_v2()
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )

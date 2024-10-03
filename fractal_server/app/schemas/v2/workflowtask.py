@@ -102,6 +102,10 @@ class WorkflowTaskReadV2(BaseModel):
     task: TaskReadV2
 
 
+class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
+    warning: Optional[str] = None
+
+
 class WorkflowTaskUpdateV2(BaseModel):
 
     meta_non_parallel: Optional[dict[str, Any]]
