@@ -51,7 +51,7 @@ async def get_task_group_list(
         )
     stm = select(TaskGroupV2).where(condition)
     if only_active:
-        stm = stm.where(TaskGroupV2.active is True)
+        stm = stm.where(TaskGroupV2.active)
 
     res = await db.execute(stm)
     task_groups = res.scalars().all()
