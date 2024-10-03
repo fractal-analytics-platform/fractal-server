@@ -5,7 +5,8 @@
 * API:
     * Introduce `/api/v2/task-group/` routes (\#1817).
     * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
-    * Introduce additional checks in workflow API, concerning non-active or non-accessible tasks (\#1817).
+    * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
+    * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
     * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
 * Database:
     * Introduce `TaskGroupV2` table (\#1817).
