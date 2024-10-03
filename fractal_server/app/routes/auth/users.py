@@ -20,7 +20,7 @@ from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateWithNewGroupIds
 from ..aux.validate_user_settings import verify_user_has_settings
-from ._aux_auth import _get_single_user_with_group_ids
+from ._aux_auth import _get_single_user_with_groups
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -41,13 +41,14 @@ logger = set_logger(__name__)
 @router_users.get("/users/{user_id}/", response_model=UserRead)
 async def get_user(
     user_id: int,
-    group_ids: bool = True,
+    group_names_ids: bool = True,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
     user = await _user_or_404(user_id, db)
-    if group_ids:
-        user = await _get_single_user_with_group_ids(user, db)
+    if group_names_ids:
+        user_with_groups = await _get_single_user_with_groups(user, db)
+        return user_with_groups
     return user
 
 
@@ -163,12 +164,12 @@ async def patch_user(
         # Nothing to do, just continue
         patched_user = user_to_patch
 
-    # Enrich user object with `group_ids` attribute
-    patched_user_with_group_ids = await _get_single_user_with_group_ids(
+    # Enrich user object with `group_names_ids` attribute
+    patched_user_with_groups = await _get_single_user_with_groups(
         patched_user, db
     )
 
-    return patched_user_with_group_ids
+    return patched_user_with_groups
 
 
 @router_users.get("/users/", response_model=list[UserRead])

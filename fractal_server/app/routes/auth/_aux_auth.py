@@ -11,56 +11,31 @@ from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
-async def _get_single_user_with_group_names(
+async def _get_single_user_with_groups(
     user: UserOAuth,
     db: AsyncSession,
 ) -> UserRead:
     """
-    Enrich a user object by filling its `group_names` attribute.
+    Enrich a user object by filling its `group_names_ids` attribute.
 
     Arguments:
         user: The current `UserOAuth` object
         db: Async db session
 
     Returns:
-        A `UserRead` object with `group_names` set
+        A `UserRead` object with `group_names_ids` dict
     """
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
-        .where(LinkUserGroup.user_id == UserOAuth.id)
+        .where(LinkUserGroup.user_id == user.id)
     )
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()
-    group_names = [group.name for group in groups]
+    group_names_ids = {group.name: group.id for group in groups}
     return UserRead(
         **user.model_dump(),
-        group_names=group_names,
-        oauth_accounts=user.oauth_accounts,
-    )
-
-
-async def _get_single_user_with_group_ids(
-    user: UserOAuth,
-    db: AsyncSession,
-) -> UserRead:
-    """
-    Enrich a user object by filling its `group_ids` attribute.
-
-    Arguments:
-        user: The current `UserOAuth` object
-        db: Async db session
-
-    Returns:
-        A `UserRead` object with `group_ids` set
-    """
-    stm_links = select(LinkUserGroup).where(LinkUserGroup.user_id == user.id)
-    res = await db.execute(stm_links)
-    links = res.scalars().unique().all()
-    group_ids = [link.group_id for link in links]
-    return UserRead(
-        **user.model_dump(),
-        group_ids=group_ids,
+        group_names_ids=group_names_ids,
         oauth_accounts=user.oauth_accounts,
     )
 
