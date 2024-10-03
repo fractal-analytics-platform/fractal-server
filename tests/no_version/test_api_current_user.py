@@ -34,15 +34,13 @@ async def test_get_current_user_group_ids_names_order(
 
     async with MockCurrentUser() as user:
         group1 = UserGroup(name="group1")
-        db.add(group1)
-        await db.commit()
         group2 = UserGroup(name="group2")
+        db.add(group1)
         db.add(group2)
         await db.commit()
         await db.refresh(group1)
         await db.refresh(group2)
         db.add(LinkUserGroup(user_id=user.id, group_id=group1.id))
-        await db.commit()
         db.add(LinkUserGroup(user_id=user.id, group_id=group2.id))
         await db.commit()
 
