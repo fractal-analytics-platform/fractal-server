@@ -16,6 +16,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
+from sqlalchemy.sql.operators import is_
+from sqlalchemy.sql.operators import is_not
 from sqlmodel import select
 
 from ....config import get_settings
@@ -26,6 +28,7 @@ from ...db import AsyncSession
 from ...db import get_async_db
 from ...models.v2 import JobV2
 from ...models.v2 import ProjectV2
+from ...models.v2 import TaskGroupV2
 from ...models.v2 import TaskV2
 from ...models.v2 import WorkflowTaskV2
 from ...models.v2 import WorkflowV2
@@ -34,6 +37,7 @@ from ...schemas.v2 import JobReadV2
 from ...schemas.v2 import JobStatusTypeV2
 from ...schemas.v2 import JobUpdateV2
 from ...schemas.v2 import ProjectReadV2
+from ...schemas.v2 import TaskGroupReadV2
 from ..aux._job import _write_shutdown_file
 from ..aux._runner import _check_shutdown_is_supported
 from fractal_server.app.models import UserOAuth
@@ -403,3 +407,58 @@ async def query_tasks(
         )
 
     return task_info_list
+
+
+@router_admin_v2.get(
+    "/task-group/{task_group_id}/", response_model=TaskGroupReadV2
+)
+async def query_task_group(
+    task_group_id: int,
+    user: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupReadV2:
+
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    if task_group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroup {task_group_id} not found",
+        )
+    return task_group
+
+
+@router_admin_v2.get("/task-group/", response_model=list[TaskGroupReadV2])
+async def query_task_group_list(
+    user_id: Optional[int] = None,
+    user_group_id: Optional[int] = None,
+    private: Optional[bool] = None,
+    active: Optional[bool] = None,
+    user: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupReadV2]:
+
+    stm = select(TaskGroupV2)
+
+    if user_group_id is not None and private is True:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot set `user_group_id` with {private=}",
+        )
+    if user_id is not None:
+        stm = stm.where(TaskGroupV2.user_id == user_id)
+    if user_group_id is not None:
+        stm = stm.where(TaskGroupV2.user_group_id == user_group_id)
+    if private is not None:
+        if private is True:
+            stm = stm.where(is_(TaskGroupV2.user_group_id, None))
+        else:
+            stm = stm.where(is_not(TaskGroupV2.user_group_id, None))
+    if active is not None:
+        if active is True:
+            stm = stm.where(is_(TaskGroupV2.active, True))
+        else:
+            stm = stm.where(is_(TaskGroupV2.active, False))
+
+    res = await db.execute(stm)
+    task_groups_list = res.scalars().all()
+    return task_groups_list
