@@ -28,7 +28,7 @@ async def _get_single_user_with_groups(
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
-        .where(LinkUserGroup.user_id == UserOAuth.id)
+        .where(LinkUserGroup.user_id == user.id)
     )
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()

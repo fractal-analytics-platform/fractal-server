@@ -192,38 +192,6 @@ async def test_user_group_crud(registered_superuser_client):
     assert "`new_user_ids` list has repetitions'" in str(res.json())
 
 
-async def test_get_user_group_names(
-    client, registered_client, registered_superuser_client
-):
-    """
-    Test the broadly-accessible "GET /auth/group-names/" endpoint.
-    """
-
-    # Preliminary phase: create some group(s)
-    GROUP_NAME = "my group"
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name=GROUP_NAME)
-    )
-    assert res.status_code == 201
-    debug(res.json())
-    EXPECTED_GROUP_NAMES = [GROUP_NAME]
-    debug(EXPECTED_GROUP_NAMES)
-
-    # Anonymous user cannot see group names
-    res = await client.get(f"{PREFIX}/group-names/")
-    assert res.status_code == 401
-
-    # Registered users can see group names
-    res = await registered_client.get(f"{PREFIX}/group-names/")
-    assert res.status_code == 200
-    assert res.json() == EXPECTED_GROUP_NAMES
-
-    # Superusers can see group names
-    res = await registered_superuser_client.get(f"{PREFIX}/group-names/")
-    assert res.status_code == 200
-    assert res.json() == EXPECTED_GROUP_NAMES
-
-
 async def test_create_user_group_same_name(registered_superuser_client):
     """
     Test that you cannot create two groups with the same name.
@@ -261,8 +229,7 @@ async def test_get_user_optional_group_info(
     assert res.status_code == 200
     current_user = res.json()
     current_user_id = current_user["id"]
-    assert current_user["group_names"] is None
-    assert current_user["group_ids"] is None
+    assert current_user["group_names_ids"] is None
 
     # Add current user to group
     res = await registered_superuser_client.patch(
@@ -271,33 +238,29 @@ async def test_get_user_optional_group_info(
     )
     assert res.status_code == 200
 
-    # Registered user can see group names
+    # Registered user can see group name:id maps
     res = await registered_client.get(
-        f"{PREFIX}/current-user/?group_names=True"
+        f"{PREFIX}/current-user/?group_names_ids=True"
     )
     assert res.status_code == 200
     current_user = res.json()
     debug(current_user)
     current_user_id = current_user["id"]
-    assert current_user["group_names"] == [GROUP_NAME]
-    assert current_user["group_ids"] is None
+    assert current_user["group_names_ids"] == {GROUP_NAME: group_id}
 
-    # Superusers can see group IDs
+    # Superusers can see ggroup name:id maps
     res = await registered_superuser_client.get(
         f"{PREFIX}/users/{current_user_id}/"
     )
     assert res.status_code == 200
     user = res.json()
-    debug(user)
-    assert user["group_names"] is None
-    assert user["group_ids"] == [group_id]
+    assert user["group_names_ids"] == {GROUP_NAME: group_id}
 
     # Superusers don't see group IDs, if group_ids=False
     res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{current_user_id}/" "?group_ids=False"
+        f"{PREFIX}/users/{current_user_id}/" "?group_names_ids=False"
     )
     assert res.status_code == 200
     user = res.json()
     debug(user)
-    assert user["group_names"] is None
-    assert user["group_ids"] is None
+    assert user["group_names_ids"] is None
