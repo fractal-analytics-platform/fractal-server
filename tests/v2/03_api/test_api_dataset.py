@@ -280,7 +280,9 @@ async def test_delete_dataset_cascade_jobs(
         # Populate the database with the appropriate objects
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(name="task", source="source")
+        task = await task_factory_v2(
+            user_id=user.id, name="task", source="source"
+        )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )

@@ -186,6 +186,7 @@ async def test_indirect_shutdown_during_process_workflow(
         os.mkdir(tmp_path / "0_task0")
 
         task = await task_factory_v2(
+            user_id=user.id,
             type="non_parallel",
             command_non_parallel=f"bash {tmp_path / 'foo.sh'}",
         )

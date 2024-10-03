@@ -12,6 +12,7 @@ from .submit import router as submit_job_router_v2
 from .task import router as task_router_v2
 from .task_collection import router as task_collection_router_v2
 from .task_collection_custom import router as task_collection_router_v2_custom
+from .task_group import router as task_group_router_v2
 from .workflow import router as workflow_router_v2
 from .workflowtask import router as workflowtask_router_v2
 from fractal_server.config import get_settings
@@ -37,6 +38,9 @@ router_api_v2.include_router(
     tags=["V2 Task Collection"],
 )
 router_api_v2.include_router(task_router_v2, prefix="/task", tags=["V2 Task"])
+router_api_v2.include_router(
+    task_group_router_v2, prefix="/task-group", tags=["V2 TaskGroup"]
+)
 router_api_v2.include_router(workflow_router_v2, tags=["V2 Workflow"])
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])
 router_api_v2.include_router(status_router_v2, tags=["V2 Status"])

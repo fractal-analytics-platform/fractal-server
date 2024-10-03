@@ -9,13 +9,13 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v2 import TaskV2
 from ....schemas.v2 import WorkflowTaskCreateV2
 from ....schemas.v2 import WorkflowTaskReadV2
 from ....schemas.v2 import WorkflowTaskUpdateV2
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
+from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 
@@ -43,12 +43,9 @@ async def create_workflowtask(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    task = await db.get(TaskV2, task_id)
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskV2 {task_id} not found.",
-        )
+    task = await _get_task_read_access(
+        task_id=task_id, user_id=user.id, db=db, require_active=True
+    )
 
     if task.type == "parallel":
         if (

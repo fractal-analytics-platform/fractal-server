@@ -1,9 +1,9 @@
 import pytest
 from devtools import debug
-from sqlmodel import select
 
-from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v1 import TaskCreateV1
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import TaskGroupV2
+from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -24,15 +24,26 @@ async def test_non_verified_user(client, MockCurrentUser):
 
 
 async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
-    await task_factory_v2(index=1)
-    await task_factory_v2(index=2)
-    t = await task_factory_v2(
-        index=3,
-        args_schema_non_parallel=dict(a=1),
-        args_schema_parallel=dict(b=2),
-    )
 
-    async with MockCurrentUser():
+    async with MockCurrentUser() as user:
+        new_group = UserGroup(name="new_group")
+        db.add(new_group)
+        await db.commit()
+        await db.refresh(new_group)
+        link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
+        db.add(link)
+        await db.commit()
+
+        await task_factory_v2(
+            user_id=user.id, user_group_id=new_group.id, index=1
+        )
+        await task_factory_v2(user_id=user.id, index=2)
+        t = await task_factory_v2(
+            user_id=user.id,
+            index=3,
+            args_schema_non_parallel=dict(a=1),
+            args_schema_parallel=dict(b=2),
+        )
         res = await client.get(f"{PREFIX}/")
         data = res.json()
         assert res.status_code == 200
@@ -55,6 +66,11 @@ async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
         )
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
+
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}/")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_post_task(client, MockCurrentUser):
@@ -82,7 +98,6 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["source"] == f"{TASK_OWNER}:{task.source}"
         assert res.json()["meta_non_parallel"] == {}
         assert res.json()["meta_parallel"] == {}
-        assert res.json()["owner"] == TASK_OWNER
         assert res.json()["version"] is None
         assert res.json()["args_schema_non_parallel"] is None
         assert res.json()["args_schema_parallel"] is None
@@ -158,7 +173,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == USERNAME
     # Case 3: (username, slurm_user) = (None, not None)
     user_kwargs = dict(username=None, is_verified=True)
     user_settings_dict = dict(slurm_user=SLURM_USER)
@@ -168,7 +182,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == SLURM_USER
     # Case 4: (username, slurm_user) = (not None, None)
     user_kwargs = dict(username=USERNAME, is_verified=True)
     user_settings_dict = dict(slurm_user=None)
@@ -178,7 +191,6 @@ async def test_post_task(client, MockCurrentUser):
     ):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
-        assert res.json()["owner"] == USERNAME
 
     # Fail giving "non parallel" args to "parallel" tasks, and vice versa
     res = await client.post(
@@ -228,95 +240,108 @@ async def test_post_task(client, MockCurrentUser):
     assert "Cannot set" in res.json()["detail"]
 
 
+async def test_post_task_user_group_id(
+    client,
+    default_user_group,
+    MockCurrentUser,
+    monkeypatch,
+    db,
+):
+
+    # Create a usergroup
+    team1_group = UserGroup(name="team1")
+    db.add(team1_group)
+    await db.commit()
+    await db.refresh(team1_group)
+
+    args = dict(name="a", command_non_parallel="cmd")
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+
+        # No query parameter
+        res = await client.post(f"{PREFIX}/", json=dict(source="1", **args))
+        assert res.status_code == 201
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id == default_user_group.id
+
+        # Private task
+        res = await client.post(
+            f"{PREFIX}/?private=true", json=dict(source="2", **args)
+        )
+        assert res.status_code == 201
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id is None
+
+        # Specific usergroup id / OK
+        res = await client.post(
+            f"{PREFIX}/?user_group_id={default_user_group.id}",
+            json=dict(source="3", **args),
+        )
+        assert res.status_code == 201
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id == default_user_group.id
+
+        # Specific usergroup id / not belonging
+        res = await client.post(
+            f"{PREFIX}/?user_group_id={team1_group.id}",
+            json=dict(source="4", **args),
+        )
+        assert res.status_code == 403
+        debug(res.json())
+
+        # Conflicting query parameters
+        res = await client.post(
+            f"{PREFIX}/?private=true&user_group_id={default_user_group.id}",
+            json=dict(source="5", **args),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+
+        # Default group does not exist
+        monkeypatch.setattr(
+            (
+                "fractal_server.app.routes.auth._aux_auth."
+                "FRACTAL_DEFAULT_GROUP_NAME"
+            ),
+            "MONKEY",
+        )
+        res = await client.post(f"{PREFIX}/", json=dict(source="4", **args))
+        assert res.status_code == 404
+
+
 async def test_patch_task_auth(
     MockCurrentUser,
     client,
-    task_factory_v2,
 ):
-    """
-    GIVEN a Task `A` with owner Alice and a Task `N` with owner None
-    WHEN Alice, Bob and a Superuser try to patch them
-    THEN Alice can edit `A`, Bob cannot edit anything
-         and the Superuser can edit both A and N.
-    """
-    USER_1 = "Alice"
-    USER_2 = "Bob"
 
-    task_with_no_owner = await task_factory_v2()
-    task_with_no_owner_id = task_with_no_owner.id
-
-    async with MockCurrentUser(
-        user_kwargs={"username": USER_1, "is_verified": True}
-    ):
-        task = TaskCreateV2(
-            name="task_name",
-            source="task_source",
-            command_parallel="task_command",
-        )
+    # POST-task as user_A
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
+        user_A_id = user_A.id
+        payload_obj = TaskCreateV2(name="a", source="b", command_parallel="c")
         res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+            f"{PREFIX}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 201
-        assert res.json()["owner"] == USER_1
-
         task_id = res.json()["id"]
 
-        # Test success: owner == user
-        update = TaskUpdateV2(name="new_name_1")
+    # PATCH-task success as user_A -> success (task belongs to user)
+    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
+        payload_obj = TaskUpdateV2(name="new_name_1")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_1"
 
-    async with MockCurrentUser(
-        user_kwargs={"is_verified": True},
-        user_settings_dict={"slurm_user": USER_2},
-    ):
-        update = TaskUpdateV2(name="new_name_2")
-
-        # Test fail: (not user.is_superuser) and (owner != user)
+    # PATCH-task failure as a different user -> failure (task belongs to user)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # PATCH-task failure (task does not belong to user)
+        payload_obj = TaskUpdateV2(name="new_name_2")
         res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 403
-        assert res.json()["detail"] == (
-            f"Current user ({USER_2}) cannot modify TaskV2 {task_id} "
-            f"with different owner ({USER_1})."
-        )
-
-        # Test fail: (not user.is_superuser) and (owner == None)
-        res = await client.patch(
-            f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
-        )
-        assert res.status_code == 403
-        assert res.json()["detail"] == (
-            "Only a superuser can modify a TaskV2 with `owner=None`."
-        )
-
-    async with MockCurrentUser(
-        user_kwargs={"is_superuser": True, "is_verified": True}
-    ):
-        res = await client.get(f"{PREFIX}/{task_id}/")
-        assert res.json()["name"] == "new_name_1"
-
-        # Test success: (owner != user) but (user.is_superuser)
-        update = TaskUpdateV2(name="new_name_3")
-        res = await client.patch(
-            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
-        )
-        assert res.status_code == 200
-        assert res.json()["name"] == "new_name_3"
-
-        # Test success: (owner == None) but (user.is_superuser)
-        update = TaskUpdateV2(name="new_name_4")
-        res = await client.patch(
-            f"{PREFIX}/{task_with_no_owner_id}/",
-            json=update.dict(exclude_unset=True),
-        )
-        assert res.status_code == 200
-        assert res.json()["name"] == "new_name_4"
+        assert "Current user has no full access" in str(res.json()["detail"])
 
 
 async def test_patch_task(
@@ -325,13 +350,17 @@ async def test_patch_task(
     client,
 ):
 
-    task_parallel = await task_factory_v2(index=1, type="parallel")
-    task_non_parallel = await task_factory_v2(index=2, type="non_parallel")
-    task_compound = await task_factory_v2(index=3)
-
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True)
-    ):
+    ) as user_A:
+        user_A_id = user_A.id
+        task_parallel = await task_factory_v2(
+            user_id=user_A_id, index=1, type="parallel"
+        )
+        task_non_parallel = await task_factory_v2(
+            user_id=user_A_id, index=2, type="non_parallel"
+        )
+        task_compound = await task_factory_v2(user_id=user_A_id, index=3)
         # Test successuful patch of task_compound
         update = TaskUpdateV2(
             name="new_name",
@@ -355,9 +384,7 @@ async def test_patch_task(
                 # assert non patched items are still the same
                 assert v == task_compound.model_dump()[k]
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_superuser=True, is_verified=True)
-    ):
+    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)):
         # Fail on updating unsetted commands
         update_non_parallel = TaskUpdateV2(command_non_parallel="xxx")
         res_compound = await client.patch(
@@ -410,10 +437,6 @@ async def test_patch_task_different_users(
     affect their ability to patch a task. They do raise warnings, but the PATCH
     endpoint returns correctly.
     """
-
-    task = await task_factory_v2(name="task", owner=owner)
-    assert task.owner == owner
-
     # User kwargs
     user_payload = {}
     if username:
@@ -421,131 +444,35 @@ async def test_patch_task_different_users(
     if slurm_user:
         user_payload["slurm_user"] = slurm_user
 
-    # Patch task
-    NEW_NAME = "new name"
-    payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
-    ):
+    ) as user:
+        task = await task_factory_v2(user_id=user.id, name="task", owner=owner)
+        assert task.owner == owner
+
+        # Patch task
+        NEW_NAME = "new name"
+        payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
         res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
         debug(res.json())
         assert res.status_code == 200
-        assert res.json()["owner"] == owner
         assert res.json()["name"] == NEW_NAME
-        if username:
-            assert res.json()["owner"] != username
-        if slurm_user:
-            assert res.json()["owner"] != slurm_user
 
 
 async def test_get_task(task_factory_v2, client, MockCurrentUser):
-    async with MockCurrentUser():
-        task = await task_factory_v2(name="name")
+    async with MockCurrentUser() as user:
+        task = await task_factory_v2(user_id=user.id, name="name")
         res = await client.get(f"{PREFIX}/{task.id}/")
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/{task.id+999}/")
         assert res.status_code == 404
-        assert res.json()["detail"] == "TaskV2 not found"
+        assert "not found" in str(res.json()["detail"])
 
 
 async def test_delete_task(
-    db,
     client,
     MockCurrentUser,
-    workflow_factory_v2,
-    project_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
 ):
     async with MockCurrentUser():
-        taskA = await task_factory_v2(source="aaa", owner="user2")
-        taskB = await task_factory_v2(source="bbb", owner="user2")
-        taskC = await task_factory_v2(source="ccc", owner="user2")
-
-    # User 1 imports taskA and taskC in one of their workflows
-    async with MockCurrentUser() as user1:
-        project = await project_factory_v2(user1)
-        workflow1 = await workflow_factory_v2(project_id=project.id)
-        await workflowtask_factory_v2(
-            workflow_id=workflow1.id, task_id=taskA.id
-        )
-        await workflowtask_factory_v2(
-            workflow_id=workflow1.id, task_id=taskC.id
-        )
-
-    async with MockCurrentUser(user_kwargs=dict(username="user2")) as user2:
-        project = await project_factory_v2(user2)
-        workflow2 = await workflow_factory_v2(
-            project_id=project.id, name="My Workflow Something"
-        )
-        await workflowtask_factory_v2(
-            workflow_id=workflow2.id, task_id=taskA.id
-        )
-        workflow3 = await workflow_factory_v2(
-            project_id=project.id, name="My Workflow Something Else"
-        )
-        await workflowtask_factory_v2(
-            workflow_id=workflow3.id, task_id=taskA.id
-        )
-
-        # Test 422 / case
-        res = await client.delete(f"{PREFIX}/{taskA.id}/")
-        assert res.status_code == 422
-        detail = res.json()["detail"]
-        print(detail)
-        assert "Cannot remove Task" in detail
-        assert "currently in use in 2 current-user workflows" in detail
-        assert "and in 1 other-users workflows" in detail
-
-        # Test 422 / another case
-        res = await client.delete(f"{PREFIX}/{taskC.id}/")
-        assert res.status_code == 422
-        detail = res.json()["detail"]
-        print(detail)
-        assert "Cannot remove Task" in detail
-        assert "currently in use in 0 current-user workflows" in detail
-        assert "and in 1 other-users workflows" in detail
-
-        # Test success
-        task_list = (await db.execute(select(TaskV2))).scalars().all()
-        assert len(task_list) == 3
-        res = await client.delete(f"{PREFIX}/{taskB.id}/")
-        assert res.status_code == 204
-        task_list = (await db.execute(select(TaskV2))).scalars().all()
-        assert len(task_list) == 2
-
-
-async def test_post_same_source(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        V1 = "/api/v1/task/"
-        V2 = "/api/v2/task/"
-        args_v1 = dict(
-            name="name", command="cmd", input_type="zarr", output_type="zarr"
-        )
-        args_v2 = dict(name="name", command_parallel="cmd")
-
-        task_v1_a = TaskCreateV1(**args_v1, source="a")
-        task_v1_b = TaskCreateV1(**args_v1, source="b")
-        task_v1_c = TaskCreateV1(**args_v1, source="c")
-        task_v2_a = TaskCreateV2(**args_v2, source="a")
-        task_v2_b = TaskCreateV2(**args_v2, source="b")
-
-        # POST v1_a OK
-        res = await client.post(V1, json=task_v1_a.dict(exclude_unset=True))
-        assert res.status_code == 201
-
-        # POST v2_a FAIL
-        res = await client.post(V2, json=task_v2_a.dict(exclude_unset=True))
-        assert res.status_code == 422
-
-        # POST v2_b OK
-        res = await client.post(V2, json=task_v2_b.dict(exclude_unset=True))
-        assert res.status_code == 201
-
-        # POST v1_b FAIL
-        res = await client.post(V1, json=task_v1_b.dict(exclude_unset=True))
-        assert res.status_code == 422
-
-        # POST v1_c OK
-        res = await client.post(V1, json=task_v1_c.dict(exclude_unset=True))
-        assert res.status_code == 201
+        res = await client.delete(f"{PREFIX}/12345/")
+        assert res.status_code == 405

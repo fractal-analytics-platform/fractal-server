@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from shutil import copy as shell_copy
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -26,6 +27,7 @@ from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
 from ...aux.validate_user_settings import validate_user_settings
+from ._aux_functions_tasks import _get_valid_user_group_id
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -69,6 +71,8 @@ async def collect_tasks_pip(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
+    private: bool = False,
+    user_group_id: Optional[int] = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
@@ -112,6 +116,14 @@ async def collect_tasks_pip(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
     )
 
+    # Validate query parameters related to user-group ownership
+    user_group_id = await _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
+
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
@@ -140,10 +152,12 @@ async def collect_tasks_pip(
 
         background_tasks.add_task(
             background_collect_pip_ssh,
-            state.id,
-            task_pkg,
-            fractal_ssh,
-            user_settings.ssh_tasks_dir,
+            state_id=state.id,
+            task_pkg=task_pkg,
+            fractal_ssh=fractal_ssh,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
+            user_id=user.id,
+            user_group_id=user_group_id,
         )
 
         response.status_code = status.HTTP_201_CREATED
@@ -284,6 +298,8 @@ async def collect_tasks_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
+        user_id=user.id,
+        user_group_id=user_group_id,
     )
     logger.debug(
         "Task-collection endpoint: start background collection "
