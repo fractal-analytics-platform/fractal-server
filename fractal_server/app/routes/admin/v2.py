@@ -20,28 +20,29 @@ from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
 from sqlmodel import select
 
-from ....config import get_settings
-from ....syringe import Inject
-from ....utils import get_timestamp
-from ....zip_tools import _zip_folder_to_byte_stream_iterator
-from ...db import AsyncSession
-from ...db import get_async_db
-from ...models.v2 import JobV2
-from ...models.v2 import ProjectV2
-from ...models.v2 import TaskGroupV2
-from ...models.v2 import TaskV2
-from ...models.v2 import WorkflowTaskV2
-from ...models.v2 import WorkflowV2
-from ...runner.filenames import WORKFLOW_LOG_FILENAME
-from ...schemas.v2 import JobReadV2
-from ...schemas.v2 import JobStatusTypeV2
-from ...schemas.v2 import JobUpdateV2
-from ...schemas.v2 import ProjectReadV2
-from ...schemas.v2 import TaskGroupReadV2
-from ..aux._job import _write_shutdown_file
-from ..aux._runner import _check_shutdown_is_supported
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.aux._job import _write_shutdown_file
+from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.app.schemas.v2 import JobReadV2
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobUpdateV2
+from fractal_server.app.schemas.v2 import ProjectReadV2
+from fractal_server.app.schemas.v2 import TaskGroupReadV2
+from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+from fractal_server.utils import get_timestamp
+from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
 router_admin_v2 = APIRouter()
 
@@ -462,3 +463,40 @@ async def query_task_group_list(
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()
     return task_groups_list
+
+
+@router_admin_v2.patch(
+    "/task-group/{task_group_id}/", response_model=TaskGroupReadV2
+)
+async def patch_task_group(
+    task_group_id: int,
+    task_group_update: TaskGroupUpdateV2,
+    user: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupReadV2]:
+    raise NotImplementedError
+
+
+@router_admin_v2.delete("/task-group/{task_group_id}/", status_code=204)
+async def delete_task_group(
+    task_group_id: int,
+    user: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+):
+    task_group = await db.get(TaskGroupV2, task_group_id)
+
+    stm = select(WorkflowTaskV2).where(
+        WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
+    )
+    res = await db.execute(stm)
+    workflow_tasks = res.scalars().all()
+    if workflow_tasks != []:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
+        )
+
+    await db.delete(task_group)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
