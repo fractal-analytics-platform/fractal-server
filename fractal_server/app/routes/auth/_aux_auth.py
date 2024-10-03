@@ -10,6 +10,9 @@ from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 async def _get_single_user_with_groups(
@@ -35,6 +38,27 @@ async def _get_single_user_with_groups(
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()
     group_ids_names = [(group.id, group.name) for group in groups]
+
+    # Check that Fractal Default Group is the first of the list. If not, fix.
+    index = next(
+        (
+            i
+            for i, group_tuple in enumerate(group_ids_names)
+            if group_tuple[1] == FRACTAL_DEFAULT_GROUP_NAME
+        ),
+        None,
+    )
+    if index is None:
+        logger.warning(
+            f"User {user.id} not in "
+            f"default UserGroup '{FRACTAL_DEFAULT_GROUP_NAME}'"
+        )
+    elif index != 0:
+        default_group = group_ids_names.pop(index)
+        group_ids_names.insert(0, default_group)
+    else:
+        pass
+
     return UserRead(
         **user.model_dump(),
         group_ids_names=group_ids_names,
