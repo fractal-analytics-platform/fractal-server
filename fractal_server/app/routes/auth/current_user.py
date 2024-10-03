@@ -13,7 +13,7 @@ from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateStrict
 from ..aux.validate_user_settings import verify_user_has_settings
-from ._aux_auth import _get_single_user_with_group_names
+from ._aux_auth import _get_single_user_with_groups
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -28,15 +28,15 @@ router_current_user = APIRouter()
 
 @router_current_user.get("/current-user/", response_model=UserRead)
 async def get_current_user(
-    group_names: bool = False,
+    group_names_ids: bool = False,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Return current user
     """
-    if group_names is True:
-        user_with_groups = await _get_single_user_with_group_names(user, db)
+    if group_names_ids is True:
+        user_with_groups = await _get_single_user_with_groups(user, db)
         return user_with_groups
     else:
         return user
@@ -65,7 +65,7 @@ async def patch_current_user(
     patched_user = await db.get(
         UserOAuth, validated_user.id, populate_existing=True
     )
-    patched_user_with_groups = await _get_single_user_with_group_names(
+    patched_user_with_groups = await _get_single_user_with_groups(
         patched_user, db
     )
     return patched_user_with_groups

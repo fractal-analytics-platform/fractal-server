@@ -20,7 +20,7 @@ from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ...schemas.user import UserUpdateWithNewGroupIds
 from ..aux.validate_user_settings import verify_user_has_settings
-from ._aux_auth import _get_single_user_with_group_ids
+from ._aux_auth import _get_single_user_with_groups
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -47,7 +47,7 @@ async def get_user(
 ) -> UserRead:
     user = await _user_or_404(user_id, db)
     if group_ids:
-        user = await _get_single_user_with_group_ids(user, db)
+        user = await _get_single_user_with_groups(user, db)
     return user
 
 
@@ -164,7 +164,7 @@ async def patch_user(
         patched_user = user_to_patch
 
     # Enrich user object with `group_ids` attribute
-    patched_user_with_group_ids = await _get_single_user_with_group_ids(
+    patched_user_with_group_ids = await _get_single_user_with_groups(
         patched_user, db
     )
 
