@@ -1,7 +1,3 @@
-from devtools import debug
-
-# import pytest
-
 PREFIX = "/auth"
 
 
@@ -216,51 +212,55 @@ async def test_get_user_optional_group_info(
     Test that GET-ting a single user may be enriched with group IDs/names.
     """
 
-    # Preliminary phase: create a group and associate a user to it.
-    GROUP_NAME = "my group"
+    # Create two groups
+    GROUP_A_NAME = "my group A"
+    GROUP_B_NAME = "my group B"
     res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name=GROUP_NAME)
+        f"{PREFIX}/group/", json=dict(name=GROUP_A_NAME)
     )
     assert res.status_code == 201
-    group_id = res.json()["id"]
+    GROUP_A_ID = res.json()["id"]
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/", json=dict(name=GROUP_B_NAME)
+    )
+    assert res.status_code == 201
 
     # Get current user and check it has no group names/ID
     res = await registered_client.get(f"{PREFIX}/current-user/")
     assert res.status_code == 200
-    current_user = res.json()
-    current_user_id = current_user["id"]
-    assert current_user["group_names_ids"] is None
+    current_user_id = res.json()["id"]
 
-    # Add current user to group
+    # Add current user to group A
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_id}/",
+        f"{PREFIX}/group/{GROUP_A_ID}/",
         json=dict(new_user_ids=[current_user_id]),
     )
     assert res.status_code == 200
 
-    # Registered user can see group name:id maps
-    res = await registered_client.get(
-        f"{PREFIX}/current-user/?group_names_ids=True"
-    )
-    assert res.status_code == 200
-    current_user = res.json()
-    debug(current_user)
-    current_user_id = current_user["id"]
-    assert current_user["group_names_ids"] == {GROUP_NAME: group_id}
+    # Calls to `/auth/current-users/` may or may not include `group_names_id`,
+    # depending on a query parameter
+    for query_param, expected_attribute in [
+        ("", None),
+        ("?group_names_ids=False", None),
+        ("?group_names_ids=True", {GROUP_A_NAME: GROUP_A_ID}),
+    ]:
+        res = await registered_client.get(
+            f"{PREFIX}/current-user/{query_param}"
+        )
+        assert res.status_code == 200
+        current_user = res.json()
+        assert current_user["group_names_ids"] == expected_attribute
 
-    # Superusers can see ggroup name:id maps
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{current_user_id}/"
-    )
-    assert res.status_code == 200
-    user = res.json()
-    assert user["group_names_ids"] == {GROUP_NAME: group_id}
-
-    # Superusers don't see group IDs, if group_ids=False
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{current_user_id}/" "?group_names_ids=False"
-    )
-    assert res.status_code == 200
-    user = res.json()
-    debug(user)
-    assert user["group_names_ids"] is None
+    # Calls to `/auth/users/{id}/` or may not include `group_names_id`,
+    # depending on a query parameter
+    for query_param, expected_attribute in [
+        ("", {GROUP_A_NAME: GROUP_A_ID}),
+        ("?group_names_ids=False", None),
+        ("?group_names_ids=True", {GROUP_A_NAME: GROUP_A_ID}),
+    ]:
+        res = await registered_superuser_client.get(
+            f"{PREFIX}/users/{current_user_id}/{query_param}"
+        )
+        assert res.status_code == 200
+        user = res.json()
+        assert user["group_names_ids"] == expected_attribute
