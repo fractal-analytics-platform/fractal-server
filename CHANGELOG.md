@@ -3,7 +3,7 @@
 # 2.7.0a1
 
 * API:
-    * Replace `group_names` and `group_ids` attributes of `UserRead` with `group_names_ids` mapping (\#1844).
+    * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_names_ids` mapping (\#1844).
     * Deprecate `GET /auth/group-names/` (\#1844).
 
 # 2.7.0a0
