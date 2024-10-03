@@ -1,8 +1,8 @@
 """task group v2
 
-Revision ID: 8cb94a23831c
+Revision ID: 7cf1baae8fb4
 Revises: da2cb2ac4255
-Create Date: 2024-09-27 12:18:26.315721
+Create Date: 2024-10-01 12:31:46.792037
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "8cb94a23831c"
+revision = "7cf1baae8fb4"
 down_revision = "da2cb2ac4255"
 branch_labels = None
 depends_on = None
@@ -23,6 +23,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
+        sa.Column("active", sa.Boolean(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),

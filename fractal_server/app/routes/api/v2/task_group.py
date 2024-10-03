@@ -6,6 +6,8 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
+from ._aux_functions_tasks import _get_task_group_full_access
+from ._aux_functions_tasks import _get_task_group_read_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -13,7 +15,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
+from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -54,28 +60,11 @@ async def get_task_group(
     """
     Get single TaskGroup
     """
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found.",
-        )
-
-    if task_group.user_id != user.id:
-        stm = (
-            select(LinkUserGroup)
-            .where(LinkUserGroup.user_id == user.id)
-            .where(LinkUserGroup.group_id == task_group.user_group_id)
-        )
-        res = await db.execute(stm)
-        if res.scalars().all() == []:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"TaskGroup {task_group.id} forbidden to user {user.id}"
-                ),
-            )
-
+    task_group = await _get_task_group_read_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
     return task_group
 
 
@@ -88,30 +77,54 @@ async def delete_task_group(
     """
     Delete single TaskGroup
     """
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found.",
-        )
 
-    if task_group.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"TaskGroup {task_group.id} forbidden to user {user.id}",
-        )
+    task_group = await _get_task_group_full_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
 
-    for task in task_group.task_list:
-        stm = select(WorkflowTaskV2).where(WorkflowTaskV2.task_id == task.id)
-        res = await db.execute(stm)
-        workflow_tasks = res.scalars().all()
-        if workflow_tasks != []:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"TaskV2 {task.id} is still in use",
-            )
+    stm = select(WorkflowTaskV2).where(
+        WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
+    )
+    res = await db.execute(stm)
+    workflow_tasks = res.scalars().all()
+    if workflow_tasks != []:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
+        )
 
     await db.delete(task_group)
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch("/{task_group_id}/", response_model=TaskGroupReadV2)
+async def patch_task_group(
+    task_group_id: int,
+    task_group_update: TaskGroupUpdateV2,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupReadV2:
+    """
+    Patch single TaskGroup
+    """
+    task_group = await _get_task_group_full_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    for key, value in task_group_update.dict(exclude_unset=True).items():
+        if (key == "user_group_id") and (value is not None):
+            await _verify_user_belongs_to_group(
+                user_id=user.id, user_group_id=value, db=db
+            )
+        setattr(task_group, key, value)
+
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    return task_group

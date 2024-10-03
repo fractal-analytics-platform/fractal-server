@@ -22,21 +22,13 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2._venv_pip import _create_venv_install_package_pip
-
-
-def _get_task_type(task: TaskCreateV2) -> str:
-    if task.command_non_parallel is None:
-        return "parallel"
-    elif task.command_parallel is None:
-        return "non_parallel"
-    else:
-        return "compound"
 
 
 def _set_collection_state_data_status(
@@ -284,7 +276,7 @@ async def background_collect_pip(
 
             task_group = create_db_task_group_and_tasks(
                 task_list=task_list,
-                task_group_dict=dict(),  # FIXME
+                task_group_obj=TaskGroupCreateV2(),
                 user_id=user_id,
                 user_group_id=user_group_id,
                 db=db,

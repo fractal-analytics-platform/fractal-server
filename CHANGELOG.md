@@ -1,12 +1,23 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.7.0 (unreleased)
+
+* API:
+    * Introduce `/api/v2/task-group/` routes (\#1817).
+    * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
+    * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
+    * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
+    * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
+* Database:
+    * Introduce `TaskGroupV2` table (\#1817).
+
+# 2.6.4
 
 * Database
     * Fix use of naming convention for database schema-migration scripts (\#1819).
 * Testing:
     * Test `alembic downgrade base` (\#1819).
-
+    * Add `GET /api/v2/task/` to benchmarks (\#1825).
 
 # 2.6.3
 

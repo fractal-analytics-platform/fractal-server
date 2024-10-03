@@ -14,6 +14,7 @@ from .background_operations import _set_collection_state_data_status
 from .database_operations import create_db_task_group_and_tasks
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -317,7 +318,7 @@ def background_collect_pip_ssh(
 
                 create_db_task_group_and_tasks(
                     task_list=task_list,
-                    task_group_dict=dict(),  # FIXME
+                    task_group_obj=TaskGroupCreateV2(),
                     user_id=user_id,
                     user_group_id=user_group_id,
                     db=db,

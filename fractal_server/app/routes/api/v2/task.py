@@ -6,25 +6,26 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import or_
 from sqlmodel import select
 
-from .....logger import set_logger
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v1 import Task as TaskV1
-from ....models.v2 import TaskGroupV2
-from ....models.v2 import TaskV2
-from ....schemas.v2 import TaskCreateV2
-from ....schemas.v2 import TaskReadV2
-from ....schemas.v2 import TaskUpdateV2
-from ...auth._aux_auth import _get_default_user_group_id
-from ...auth._aux_auth import _verify_user_belongs_to_group
 from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
+from ._aux_functions_tasks import _get_valid_user_group_id
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
+from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v1 import Task as TaskV1
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskUpdateV2
+from fractal_server.logger import set_logger
 
 router = APIRouter()
 
@@ -41,7 +42,21 @@ async def get_list_task(
     """
     Get list of available tasks
     """
-    stm = select(TaskV2)
+    stm = (
+        select(TaskV2)
+        .join(TaskGroupV2)
+        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(
+            or_(
+                TaskGroupV2.user_id == user.id,
+                TaskGroupV2.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user.id
+                    )
+                ),
+            )
+        )
+    )
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
@@ -111,12 +126,22 @@ async def patch_task(
 )
 async def create_task(
     task: TaskCreateV2,
+    user_group_id: Optional[int] = None,
+    private: bool = False,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskReadV2]:
     """
     Create a new task
     """
+
+    # Validate query parameters related to user-group ownership
+    user_group_id = await _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
 
     if task.command_non_parallel is None:
         task_type = "parallel"
@@ -147,7 +172,7 @@ async def create_task(
             ),
         )
 
-    # Set task.owner attribute
+    # Set task.owner attribute - FIXME: remove this block
     if user.username:
         owner = user.username
     else:
@@ -186,17 +211,11 @@ async def create_task(
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
 
-    # Get default-user-group id # FIXME: let the user specify a group
-    user_group_id = await _get_default_user_group_id(db=db)
-
-    # Check current user belongs to group
-    if user_group_id is not None:
-        await _verify_user_belongs_to_group(
-            user_id=user.id, user_group_id=user_group_id, db=db
-        )
-
     db_task_group = TaskGroupV2(
-        user_id=user.id, user_group_id=user_group_id, task_list=[db_task]
+        user_id=user.id,
+        user_group_id=user_group_id,
+        active=True,
+        task_list=[db_task],
     )
     db.add(db_task_group)
     await db.commit()

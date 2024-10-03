@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session as DBSyncSession
 from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
@@ -115,7 +114,7 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
     return user
 
 
-async def _get_default_user_group_id(db: AsyncSession) -> UserGroup:
+async def _get_default_user_group_id(db: AsyncSession) -> int:
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
@@ -126,33 +125,31 @@ async def _get_default_user_group_id(db: AsyncSession) -> UserGroup:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
         )
-
-
-def _get_default_user_group_id_sync(db: DBSyncSession) -> UserGroup:
-    stm = select(UserGroup.id).where(
-        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
-    )
-    res = db.execute(stm)
-    user_group_id = res.scalars().one_or_none()
-    if user_group_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
-        )
+    return user_group_id
 
 
 async def _verify_user_belongs_to_group(
     *, user_id: int, user_group_id: int, db: AsyncSession
 ):
     stm = (
-        select(LinkUserGroup.id)
+        select(LinkUserGroup)
         .where(LinkUserGroup.user_id == user_id)
         .where(LinkUserGroup.group_id == user_group_id)
     )
     res = await db.execute(stm)
     link = res.scalars().one_or_none()
     if link is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="FIXME",  # FIXME
-        )
+        group = await db.get(UserGroup, user_group_id)
+        if group is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UserGroup {user_group_id} not found",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"User {user_id} does not belong "
+                    f"to UserGroup {user_group_id}"
+                ),
+            )

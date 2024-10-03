@@ -1,6 +1,9 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import TaskGroupV2
+from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -23,7 +26,17 @@ async def test_non_verified_user(client, MockCurrentUser):
 async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
 
     async with MockCurrentUser() as user:
-        await task_factory_v2(user_id=user.id, index=1)
+        new_group = UserGroup(name="new_group")
+        db.add(new_group)
+        await db.commit()
+        await db.refresh(new_group)
+        link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
+        db.add(link)
+        await db.commit()
+
+        await task_factory_v2(
+            user_id=user.id, user_group_id=new_group.id, index=1
+        )
         await task_factory_v2(user_id=user.id, index=2)
         t = await task_factory_v2(
             user_id=user.id,
@@ -53,6 +66,11 @@ async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
         )
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
+
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}/")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_post_task(client, MockCurrentUser):
@@ -222,26 +240,78 @@ async def test_post_task(client, MockCurrentUser):
     assert "Cannot set" in res.json()["detail"]
 
 
-async def test_post_task_without_default_group(
+async def test_post_task_user_group_id(
     client,
+    default_user_group,
     MockCurrentUser,
     monkeypatch,
+    db,
 ):
-    monkeypatch.setattr(
-        "fractal_server.app.routes.auth._aux_auth.FRACTAL_DEFAULT_GROUP_NAME",
-        "MONKEY",
-    )
+
+    # Create a usergroup
+    team1_group = UserGroup(name="team1")
+    db.add(team1_group)
+    await db.commit()
+    await db.refresh(team1_group)
+
+    args = dict(name="a", command_non_parallel="cmd")
+
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+
+        # No query parameter
+        res = await client.post(f"{PREFIX}/", json=dict(source="1", **args))
+        assert res.status_code == 201
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id == default_user_group.id
+
+        # Private task
         res = await client.post(
-            f"{PREFIX}/", json=dict(name="a", source="b", command_parallel="c")
+            f"{PREFIX}/?private=true", json=dict(source="2", **args)
         )
+        assert res.status_code == 201
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id is None
+
+        # Specific usergroup id / OK
+        res = await client.post(
+            f"{PREFIX}/?user_group_id={default_user_group.id}",
+            json=dict(source="3", **args),
+        )
+        assert res.status_code == 201
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id == default_user_group.id
+
+        # Specific usergroup id / not belonging
+        res = await client.post(
+            f"{PREFIX}/?user_group_id={team1_group.id}",
+            json=dict(source="4", **args),
+        )
+        assert res.status_code == 403
+        debug(res.json())
+
+        # Conflicting query parameters
+        res = await client.post(
+            f"{PREFIX}/?private=true&user_group_id={default_user_group.id}",
+            json=dict(source="5", **args),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+
+        # Default group does not exist
+        monkeypatch.setattr(
+            (
+                "fractal_server.app.routes.auth._aux_auth."
+                "FRACTAL_DEFAULT_GROUP_NAME"
+            ),
+            "MONKEY",
+        )
+        res = await client.post(f"{PREFIX}/", json=dict(source="4", **args))
         assert res.status_code == 404
 
 
 async def test_patch_task_auth(
     MockCurrentUser,
     client,
-    task_factory_v2,
 ):
 
     # POST-task as user_A
@@ -400,13 +470,8 @@ async def test_get_task(task_factory_v2, client, MockCurrentUser):
 
 
 async def test_delete_task(
-    db,
     client,
     MockCurrentUser,
-    workflow_factory_v2,
-    project_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
 ):
     async with MockCurrentUser():
         res = await client.delete(f"{PREFIX}/12345/")

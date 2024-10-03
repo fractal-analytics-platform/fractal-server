@@ -2,9 +2,9 @@ name: ci
 
 on:
   push:
-    branches: ["main", "v2.7-new-tasks"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "v2.7-new-tasks"]
+    branches: ["main"]
 
 jobs:
 

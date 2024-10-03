@@ -13,6 +13,10 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2.submit import _encode_as_utc
+from fractal_server.app.routes.auth._aux_auth import _get_default_user_group_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 from fractal_server.app.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
@@ -183,6 +187,7 @@ async def task_factory_v2(db: AsyncSession):
     async def __task_factory(
         user_id: int,
         user_group_id: Optional[int] = None,
+        active: bool = True,
         db: AsyncSession = db,
         index: int = 0,
         type: Literal["parallel", "non_parallel", "compound"] = "compound",
@@ -223,9 +228,18 @@ async def task_factory_v2(db: AsyncSession):
 
         args.update(kwargs)
         task = TaskV2(**args)
+        if user_group_id is None:
+            user_group_id = await _get_default_user_group_id(db=db)
+        else:
+            await _verify_user_belongs_to_group(
+                user_id=user_id, user_group_id=user_group_id, db=db
+            )
 
         task_group = TaskGroupV2(
-            user_id=user_id, user_group_id=user_group_id, task_list=[task]
+            user_id=user_id,
+            user_group_id=user_group_id,
+            active=active,
+            task_list=[task],
         )
         db.add(task_group)
         await db.commit()

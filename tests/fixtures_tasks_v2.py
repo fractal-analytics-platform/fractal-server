@@ -10,10 +10,12 @@ import pytest
 from pytest import TempdirFactory
 from sqlalchemy.orm import Session as DBSyncSession
 
+from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
 )
@@ -87,13 +89,14 @@ def fractal_tasks_mock_db(
     fractal_tasks_mock_collection,
     db_sync: DBSyncSession,
     first_user: UserOAuth,
+    default_user_group: UserGroup,
 ) -> dict[str, TaskV2]:
 
     task_group = create_db_task_group_and_tasks(
         task_list=fractal_tasks_mock_collection["task_list"],
-        task_group_dict={},
+        task_group_obj=TaskGroupCreateV2(),
         user_id=first_user.id,
-        user_group_id=None,  # FIXME
+        user_group_id=default_user_group.id,
         db=db_sync,
     )
     return {task.name: task for task in task_group.task_list}
