@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import desc
+from sqlmodel import asc
 from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
@@ -30,7 +30,7 @@ async def _get_single_user_with_groups(
         select(UserGroup)
         .join(LinkUserGroup)
         .where(LinkUserGroup.user_id == user.id)
-        .order_by(desc(LinkUserGroup.timestamp_created))
+        .order_by(asc(LinkUserGroup.timestamp_created))
     )
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()

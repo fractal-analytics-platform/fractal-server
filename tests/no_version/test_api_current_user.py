@@ -26,6 +26,42 @@ async def test_get_current_user(
     assert res.json()["is_superuser"]
 
 
+async def test_get_current_user_group_ids_names_order(
+    client, MockCurrentUser, db, default_user_group
+):
+    from fractal_server.app.models import UserGroup
+    from fractal_server.app.models import LinkUserGroup
+
+    async with MockCurrentUser() as user:
+        group1 = UserGroup(name="group1")
+        db.add(group1)
+        await db.commit()
+        group2 = UserGroup(name="group2")
+        db.add(group2)
+        await db.commit()
+        await db.refresh(group1)
+        await db.refresh(group2)
+        db.add(LinkUserGroup(user_id=user.id, group_id=group1.id))
+        await db.commit()
+        db.add(LinkUserGroup(user_id=user.id, group_id=group2.id))
+        await db.commit()
+
+        res = await client.get(f"{PREFIX}?group_ids_names=True")
+        assert res.json()["group_ids_names"] == [
+            [default_user_group.id, default_user_group.name],
+            [group1.id, group1.name],
+            [group2.id, group2.name],
+        ]
+
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+        res = await client.get(f"/auth/users/{user.id}/?group_ids_names=True")
+        assert res.json()["group_ids_names"] == [
+            [default_user_group.id, default_user_group.name],
+            [group1.id, group1.name],
+            [group2.id, group2.name],
+        ]
+
+
 async def test_patch_current_user_response(registered_client):
     res = await registered_client.get(f"{PREFIX}?group_ids_names=True")
     pre_patch_user = res.json()
