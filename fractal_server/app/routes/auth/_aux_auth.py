@@ -23,7 +23,7 @@ async def _get_single_user_with_groups(
         db: Async db session
 
     Returns:
-        A `UserRead` object with `group_names` set
+        A `UserRead` object with `group_names_ids` dict
     """
     stm_groups = (
         select(UserGroup)
