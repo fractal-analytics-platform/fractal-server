@@ -1,5 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.0 (unreleased)
+
+* API:
+    * Introduce `/api/v2/task-group/` routes (\#1817).
+    * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
+    * Introduce additional checks in workflow API, concerning non-active or non-accessible tasks (\#1817).
+    * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
+* Database:
+    * Introduce `TaskGroupV2` table (\#1817).
+
 # 2.6.4
 
 * Database
