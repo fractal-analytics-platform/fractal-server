@@ -9,7 +9,6 @@ from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 
 
 def _get_task_type(task: TaskCreateV2) -> str:
-    # FIXME: deduplicate function
     if task.command_non_parallel is None:
         return "parallel"
     elif task.command_parallel is None:

@@ -14,10 +14,10 @@ from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     _check_task_files_exist,
 )
-from fractal_server.tasks.v2.background_operations import _get_task_type
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
+from fractal_server.tasks.v2.database_operations import _get_task_type
 from fractal_server.tasks.v2.endpoint_operations import (
     create_package_dir_pip,
 )

@@ -31,15 +31,6 @@ from fractal_server.logger import set_logger
 from fractal_server.tasks.v2._venv_pip import _create_venv_install_package_pip
 
 
-def _get_task_type(task: TaskCreateV2) -> str:
-    if task.command_non_parallel is None:
-        return "parallel"
-    elif task.command_parallel is None:
-        return "non_parallel"
-    else:
-        return "compound"
-
-
 def _set_collection_state_data_status(
     *,
     state_id: int,
