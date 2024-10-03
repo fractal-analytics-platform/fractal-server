@@ -1,6 +1,9 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
+
 PREFIX = "/auth/current-user/"
 
 
@@ -29,9 +32,6 @@ async def test_get_current_user(
 async def test_get_current_user_group_ids_names_order(
     client, MockCurrentUser, db, default_user_group
 ):
-    from fractal_server.app.models import UserGroup
-    from fractal_server.app.models import LinkUserGroup
-    from sqlmodel import select
 
     async with MockCurrentUser() as user:
         group1 = UserGroup(name="group1")
@@ -45,15 +45,12 @@ async def test_get_current_user_group_ids_names_order(
         db.add(LinkUserGroup(user_id=user.id, group_id=group2.id))
         await db.commit()
 
-        res = await db.execute(
-            select(LinkUserGroup)
-            .where(LinkUserGroup.user_id == user.id)
-            .where(LinkUserGroup.group_id == default_user_group.id)
+        link_to_delete = await db.get(
+            LinkUserGroup, (default_user_group.id, user.id)
         )
-        link_to_delete = res.scalars().one()
         await db.delete(link_to_delete)
         await db.commit()
-        db.add(LinkUserGroup(user_id=user.id, group_id=default_user_group.id))
+        db.add(LinkUserGroup(group_id=default_user_group.id, user_id=user.id))
         await db.commit()
 
         res = await client.get(f"{PREFIX}?group_ids_names=True")
