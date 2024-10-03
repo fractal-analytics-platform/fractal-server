@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import asc
 from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
@@ -9,6 +10,9 @@ from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 async def _get_single_user_with_groups(
@@ -16,26 +20,48 @@ async def _get_single_user_with_groups(
     db: AsyncSession,
 ) -> UserRead:
     """
-    Enrich a user object by filling its `group_names_ids` attribute.
+    Enrich a user object by filling its `group_ids_names` attribute.
 
     Arguments:
         user: The current `UserOAuth` object
         db: Async db session
 
     Returns:
-        A `UserRead` object with `group_names_ids` dict
+        A `UserRead` object with `group_ids_names` dict
     """
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
         .where(LinkUserGroup.user_id == user.id)
+        .order_by(asc(LinkUserGroup.timestamp_created))
     )
     res = await db.execute(stm_groups)
     groups = res.scalars().unique().all()
-    group_names_ids = {group.name: group.id for group in groups}
+    group_ids_names = [(group.id, group.name) for group in groups]
+
+    # Check that Fractal Default Group is the first of the list. If not, fix.
+    index = next(
+        (
+            i
+            for i, group_tuple in enumerate(group_ids_names)
+            if group_tuple[1] == FRACTAL_DEFAULT_GROUP_NAME
+        ),
+        None,
+    )
+    if index is None:
+        logger.warning(
+            f"User {user.id} not in "
+            f"default UserGroup '{FRACTAL_DEFAULT_GROUP_NAME}'"
+        )
+    elif index != 0:
+        default_group = group_ids_names.pop(index)
+        group_ids_names.insert(0, default_group)
+    else:
+        pass
+
     return UserRead(
         **user.model_dump(),
-        group_names_ids=group_names_ids,
+        group_ids_names=group_ids_names,
         oauth_accounts=user.oauth_accounts,
     )
 

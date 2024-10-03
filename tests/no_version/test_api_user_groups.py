@@ -241,26 +241,26 @@ async def test_get_user_optional_group_info(
     # depending on a query parameter
     for query_param, expected_attribute in [
         ("", None),
-        ("?group_names_ids=False", None),
-        ("?group_names_ids=True", {GROUP_A_NAME: GROUP_A_ID}),
+        ("?group_ids_names=False", None),
+        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
     ]:
         res = await registered_client.get(
             f"{PREFIX}/current-user/{query_param}"
         )
         assert res.status_code == 200
         current_user = res.json()
-        assert current_user["group_names_ids"] == expected_attribute
+        assert current_user["group_ids_names"] == expected_attribute
 
     # Calls to `/auth/users/{id}/` or may not include `group_names_id`,
     # depending on a query parameter
     for query_param, expected_attribute in [
-        ("", {GROUP_A_NAME: GROUP_A_ID}),
-        ("?group_names_ids=False", None),
-        ("?group_names_ids=True", {GROUP_A_NAME: GROUP_A_ID}),
+        ("", [[GROUP_A_ID, GROUP_A_NAME]]),
+        ("?group_ids_names=False", None),
+        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
     ]:
         res = await registered_superuser_client.get(
             f"{PREFIX}/users/{current_user_id}/{query_param}"
         )
         assert res.status_code == 200
         user = res.json()
-        assert user["group_names_ids"] == expected_attribute
+        assert user["group_ids_names"] == expected_attribute

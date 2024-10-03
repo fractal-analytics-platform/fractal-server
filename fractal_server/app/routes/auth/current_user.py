@@ -28,14 +28,14 @@ router_current_user = APIRouter()
 
 @router_current_user.get("/current-user/", response_model=UserRead)
 async def get_current_user(
-    group_names_ids: bool = False,
+    group_ids_names: bool = False,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Return current user
     """
-    if group_names_ids is True:
+    if group_ids_names is True:
         user_with_groups = await _get_single_user_with_groups(user, db)
         return user_with_groups
     else:
