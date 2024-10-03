@@ -142,6 +142,13 @@ async def test_patch_task_group(client, MockCurrentUser, task_factory_v2):
         )
         assert res.status_code == 404
 
+        # Non existing UserGroup
+
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(user_group_id=42)
+        )
+        assert res.status_code == 404
+
     async with MockCurrentUser():
 
         # Unauthorized
