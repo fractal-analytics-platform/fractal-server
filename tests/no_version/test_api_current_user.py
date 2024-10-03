@@ -45,6 +45,14 @@ async def test_get_current_user_group_ids_names_order(
         db.add(LinkUserGroup(user_id=user.id, group_id=group2.id))
         await db.commit()
 
+        res = await client.get(f"{PREFIX}?group_ids_names=True")
+        assert res.json()["group_ids_names"] == [
+            [default_user_group.id, default_user_group.name],
+            [group1.id, group1.name],
+            [group2.id, group2.name],
+        ]
+
+        # Delete and reinsert default group
         link_to_delete = await db.get(
             LinkUserGroup, (default_user_group.id, user.id)
         )
@@ -60,6 +68,7 @@ async def test_get_current_user_group_ids_names_order(
             [group2.id, group2.name],
         ]
 
+        # Delete and reinsert group1
         link_to_delete = await db.get(LinkUserGroup, (group1.id, user.id))
         await db.delete(link_to_delete)
         await db.commit()
