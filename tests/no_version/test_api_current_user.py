@@ -60,6 +60,19 @@ async def test_get_current_user_group_ids_names_order(
             [group2.id, group2.name],
         ]
 
+        link_to_delete = await db.get(LinkUserGroup, (group1.id, user.id))
+        await db.delete(link_to_delete)
+        await db.commit()
+        db.add(LinkUserGroup(group_id=group1.id, user_id=user.id))
+        await db.commit()
+
+        res = await client.get(f"{PREFIX}?group_ids_names=True")
+        assert res.json()["group_ids_names"] == [
+            [default_user_group.id, default_user_group.name],
+            [group2.id, group2.name],
+            [group1.id, group1.name],
+        ]
+
 
 async def test_patch_current_user_response(registered_client):
     res = await registered_client.get(f"{PREFIX}?group_ids_names=True")
