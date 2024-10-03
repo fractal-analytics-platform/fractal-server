@@ -31,6 +31,7 @@ async def test_get_current_user_group_ids_names_order(
 ):
     from fractal_server.app.models import UserGroup
     from fractal_server.app.models import LinkUserGroup
+    from sqlmodel import select
 
     async with MockCurrentUser() as user:
         group1 = UserGroup(name="group1")
@@ -42,6 +43,17 @@ async def test_get_current_user_group_ids_names_order(
         await db.refresh(group2)
         db.add(LinkUserGroup(user_id=user.id, group_id=group1.id))
         db.add(LinkUserGroup(user_id=user.id, group_id=group2.id))
+        await db.commit()
+
+        res = await db.execute(
+            select(LinkUserGroup)
+            .where(LinkUserGroup.user_id == user.id)
+            .where(LinkUserGroup.group_id == default_user_group.id)
+        )
+        link_to_delete = res.scalars().one()
+        await db.delete(link_to_delete)
+        await db.commit()
+        db.add(LinkUserGroup(user_id=user.id, group_id=default_user_group.id))
         await db.commit()
 
         res = await client.get(f"{PREFIX}?group_ids_names=True")
