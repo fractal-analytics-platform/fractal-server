@@ -127,5 +127,4 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    await db.close()
     return task_group
