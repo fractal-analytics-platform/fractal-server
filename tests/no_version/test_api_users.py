@@ -245,7 +245,7 @@ async def test_add_groups_to_user_as_superuser(registered_superuser_client):
     assert res.status_code == 200
     user = res.json()
     debug(user)
-    assert user["group_ids_names"] == {}
+    assert user["group_ids_names"] == []
 
     # Create group
     res = await registered_superuser_client.post(
@@ -269,7 +269,7 @@ async def test_add_groups_to_user_as_superuser(registered_superuser_client):
         json=dict(new_group_ids=[group_id]),
     )
     assert res.status_code == 200
-    assert res.json()["group_ids_names"] == {"groupname": group_id}
+    assert res.json()["group_ids_names"] == [[group_id, "groupname"]]
 
     # Create user/group link and fail because it already exists
     res = await registered_superuser_client.patch(

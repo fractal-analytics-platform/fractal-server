@@ -242,7 +242,7 @@ async def test_get_user_optional_group_info(
     for query_param, expected_attribute in [
         ("", None),
         ("?group_ids_names=False", None),
-        ("?group_ids_names=True", {GROUP_A_NAME: GROUP_A_ID}),
+        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
     ]:
         res = await registered_client.get(
             f"{PREFIX}/current-user/{query_param}"
@@ -254,9 +254,9 @@ async def test_get_user_optional_group_info(
     # Calls to `/auth/users/{id}/` or may not include `group_names_id`,
     # depending on a query parameter
     for query_param, expected_attribute in [
-        ("", {GROUP_A_NAME: GROUP_A_ID}),
+        ("", [[GROUP_A_ID, GROUP_A_NAME]]),
         ("?group_ids_names=False", None),
-        ("?group_ids_names=True", {GROUP_A_NAME: GROUP_A_ID}),
+        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
     ]:
         res = await registered_superuser_client.get(
             f"{PREFIX}/users/{current_user_id}/{query_param}"
