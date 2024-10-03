@@ -5,6 +5,7 @@
 * API:
     * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_names_ids` mapping (\#1844).
     * Deprecate `GET /auth/group-names/` (\#1844).
+    * Add `only_owner` and `only_active` options to `GET /api/v2/task-group/` (\#1847).
 
 # 2.7.0a0
 

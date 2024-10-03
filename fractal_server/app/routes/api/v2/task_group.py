@@ -31,12 +31,17 @@ logger = set_logger(__name__)
 async def get_task_group_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
+    only_active: bool = False,
+    only_owner: bool = False,
 ) -> list[TaskGroupReadV2]:
     """
     Get all accessible TaskGroups
     """
-    stm = select(TaskGroupV2).where(
-        or_(
+
+    if only_owner:
+        condition = TaskGroupV2.user_id == user.id
+    else:
+        condition = or_(
             TaskGroupV2.user_id == user.id,
             TaskGroupV2.user_group_id.in_(
                 select(LinkUserGroup.group_id).where(
@@ -44,7 +49,10 @@ async def get_task_group_list(
                 )
             ),
         )
-    )
+    stm = select(TaskGroupV2).where(condition)
+    if only_active:
+        stm = stm.where(TaskGroupV2.active)
+
     res = await db.execute(stm)
     task_groups = res.scalars().all()
 
