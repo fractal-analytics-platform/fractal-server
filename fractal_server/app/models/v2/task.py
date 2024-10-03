@@ -55,7 +55,7 @@ class TaskGroupV2(SQLModel, table=True):
     user_id: int = Field(foreign_key="user_oauth.id")
     user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
 
-    active: bool
+    active: bool = True
     task_list: list[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin", cascade="all, delete-orphan"
