@@ -41,7 +41,7 @@ class UserRead(schemas.BaseUser[int]):
     """
 
     username: Optional[str]
-    group_names_ids: Optional[dict[str, int]] = None
+    group_ids_names: Optional[list[tuple[int, str]]] = None
     oauth_accounts: list[OAuthAccountRead]
 
 
