@@ -24,7 +24,7 @@ from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 router = APIRouter()
 
 
-@router.get("/task-group/{task_group_id}/", response_model=TaskGroupReadV2)
+@router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
 async def query_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(current_active_superuser),
@@ -40,7 +40,7 @@ async def query_task_group(
     return task_group
 
 
-@router.get("/task-group/", response_model=list[TaskGroupReadV2])
+@router.get("/", response_model=list[TaskGroupReadV2])
 async def query_task_group_list(
     user_id: Optional[int] = None,
     user_group_id: Optional[int] = None,
@@ -77,7 +77,7 @@ async def query_task_group_list(
     return task_groups_list
 
 
-@router.patch("/task-group/{task_group_id}/", response_model=TaskGroupReadV2)
+@router.patch("/{task_group_id}/", response_model=TaskGroupReadV2)
 async def patch_task_group(
     task_group_id: int,
     task_group_update: TaskGroupUpdateV2,
@@ -104,7 +104,7 @@ async def patch_task_group(
     return task_group
 
 
-@router.delete("/task-group/{task_group_id}/", status_code=204)
+@router.delete("/{task_group_id}/", status_code=204)
 async def delete_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(current_active_superuser),
