@@ -30,6 +30,9 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -474,7 +477,24 @@ async def patch_task_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
-    raise NotImplementedError
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    if task_group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupV2 {task_group_id} not found",
+        )
+
+    for key, value in task_group_update.dict(exclude_unset=True).items():
+        if (key == "user_group_id") and (value is not None):
+            await _verify_user_belongs_to_group(
+                user_id=user.id, user_group_id=value, db=db
+            )
+        setattr(task_group, key, value)
+
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    return task_group
 
 
 @router_admin_v2.delete("/task-group/{task_group_id}/", status_code=204)
@@ -484,6 +504,11 @@ async def delete_task_group(
     db: AsyncSession = Depends(get_async_db),
 ):
     task_group = await db.get(TaskGroupV2, task_group_id)
+    if task_group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupV2 {task_group_id} not found",
+        )
 
     stm = select(WorkflowTaskV2).where(
         WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
