@@ -49,13 +49,8 @@ class TaskV2(SQLModel, table=True):
 
     category: Optional[str] = None
     modality: Optional[str] = None
-    authors: list[str] = Field(
-        sa_column=Column(JSON, server_default="[]", nullable=False),
-        default_factory=list,
-    )
     tags: list[str] = Field(
-        sa_column=Column(JSON, server_default="[]", nullable=False),
-        default_factory=list,
+        sa_column=Column(JSON, server_default="[]", nullable=False)
     )
 
 
