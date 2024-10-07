@@ -52,6 +52,9 @@ class TaskV2(SQLModel, table=True):
     tags: list[str] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
+    authors: list[str] = Field(
+        sa_column=Column(JSON, server_default="[]", nullable=False)
+    )
 
 
 class TaskGroupV2(SQLModel, table=True):

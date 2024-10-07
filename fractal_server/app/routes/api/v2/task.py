@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -36,6 +37,10 @@ logger = set_logger(__name__)
 async def get_list_task(
     args_schema_parallel: bool = True,
     args_schema_non_parallel: bool = True,
+    category: Optional[str] = None,
+    modality: Optional[str] = None,
+    authors: Optional[list[str]] = None,
+    tags: Optional[list[str]] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
@@ -57,6 +62,10 @@ async def get_list_task(
             )
         )
     )
+    if category is not None:
+        stm = stm.where(func.lower(TaskV2.category) == category.lower())
+    if modality is not None:
+        stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
@@ -66,6 +75,25 @@ async def get_list_task(
     if args_schema_non_parallel is False:
         for task in task_list:
             setattr(task, "args_schema_non_parallel", None)
+    if authors is not None:
+        task_list = [
+            task
+            for task in task_list
+            if all(
+                author.lower()
+                in (t_author.lower() for t_author in task.authors)
+                for author in authors
+            )
+        ]
+    if tags is not None:
+        task_list = [
+            task
+            for task in task_list
+            if all(
+                tag.lower() in (t_tag.lower() for t_tag in task.tags)
+                for tag in tags
+            )
+        ]
 
     return task_list
 
