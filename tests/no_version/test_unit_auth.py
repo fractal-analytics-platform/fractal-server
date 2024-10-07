@@ -8,16 +8,12 @@ from fractal_server.app.routes.auth._aux_auth import (
     _get_single_group_with_user_ids,
 )
 from fractal_server.app.routes.auth._aux_auth import (
-    _get_single_user_with_group_ids,
-)
-from fractal_server.app.routes.auth._aux_auth import (
-    _get_single_user_with_group_names,
+    _get_single_user_with_groups,
 )
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.security import _create_first_group  # noqa
 from fractal_server.app.security import _create_first_user
 
 
@@ -42,17 +38,10 @@ async def test_get_single_group_with_user_ids(db):
     debug(exc_info.value)
 
 
-async def test_get_single_user_with_group_names(db):
+async def test_get_single_user_with_groups(db):
     await _create_first_user(email="test1@fractal.com", password="xxxx")
     user = await _get_first_user(db)
-    res = await _get_single_user_with_group_names(user=user, db=db)
-    debug(res)
-
-
-async def test_get_single_user_with_group_ids(db):
-    await _create_first_user(email="test1@fractal.com", password="xxxx")
-    user = await _get_first_user(db)
-    res = await _get_single_user_with_group_ids(user=user, db=db)
+    res = await _get_single_user_with_groups(user=user, db=db)
     debug(res)
 
 

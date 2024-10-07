@@ -48,7 +48,7 @@ async def test_get_task_group_list(
 ):
     async with MockCurrentUser() as user1:
         await task_factory_v2(user_id=user1.id, source="source1")
-        await task_factory_v2(user_id=user1.id, source="source2")
+        await task_factory_v2(user_id=user1.id, source="source2", active=False)
 
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
@@ -77,6 +77,14 @@ async def test_get_task_group_list(
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 3
+
+        res = await client.get(f"{PREFIX}/?only_owner=true")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/?only_active=true")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
 

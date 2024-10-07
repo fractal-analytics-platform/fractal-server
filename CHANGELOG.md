@@ -1,6 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.7.0 (unreleased)
+# 2.7.0a1
+
+* API:
+    * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
+    * Deprecate `GET /auth/group-names/` (\#1844).
+    * Add `only_owner` and `only_active` options to `GET /api/v2/task-group/` (\#1847).
+* Database:
+    * Add  `timestamp_created` column to `LinkUserGroup` table (\#1850).
+
+# 2.7.0a0
 
 * API:
     * Introduce `/api/v2/task-group/` routes (\#1817).

@@ -1,7 +1,3 @@
-from devtools import debug
-
-# import pytest
-
 PREFIX = "/auth"
 
 
@@ -192,38 +188,6 @@ async def test_user_group_crud(registered_superuser_client):
     assert "`new_user_ids` list has repetitions'" in str(res.json())
 
 
-async def test_get_user_group_names(
-    client, registered_client, registered_superuser_client
-):
-    """
-    Test the broadly-accessible "GET /auth/group-names/" endpoint.
-    """
-
-    # Preliminary phase: create some group(s)
-    GROUP_NAME = "my group"
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name=GROUP_NAME)
-    )
-    assert res.status_code == 201
-    debug(res.json())
-    EXPECTED_GROUP_NAMES = [GROUP_NAME]
-    debug(EXPECTED_GROUP_NAMES)
-
-    # Anonymous user cannot see group names
-    res = await client.get(f"{PREFIX}/group-names/")
-    assert res.status_code == 401
-
-    # Registered users can see group names
-    res = await registered_client.get(f"{PREFIX}/group-names/")
-    assert res.status_code == 200
-    assert res.json() == EXPECTED_GROUP_NAMES
-
-    # Superusers can see group names
-    res = await registered_superuser_client.get(f"{PREFIX}/group-names/")
-    assert res.status_code == 200
-    assert res.json() == EXPECTED_GROUP_NAMES
-
-
 async def test_create_user_group_same_name(registered_superuser_client):
     """
     Test that you cannot create two groups with the same name.
@@ -248,56 +212,55 @@ async def test_get_user_optional_group_info(
     Test that GET-ting a single user may be enriched with group IDs/names.
     """
 
-    # Preliminary phase: create a group and associate a user to it.
-    GROUP_NAME = "my group"
+    # Create two groups
+    GROUP_A_NAME = "my group A"
+    GROUP_B_NAME = "my group B"
     res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name=GROUP_NAME)
+        f"{PREFIX}/group/", json=dict(name=GROUP_A_NAME)
     )
     assert res.status_code == 201
-    group_id = res.json()["id"]
+    GROUP_A_ID = res.json()["id"]
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/", json=dict(name=GROUP_B_NAME)
+    )
+    assert res.status_code == 201
 
     # Get current user and check it has no group names/ID
     res = await registered_client.get(f"{PREFIX}/current-user/")
     assert res.status_code == 200
-    current_user = res.json()
-    current_user_id = current_user["id"]
-    assert current_user["group_names"] is None
-    assert current_user["group_ids"] is None
+    current_user_id = res.json()["id"]
 
-    # Add current user to group
+    # Add current user to group A
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_id}/",
+        f"{PREFIX}/group/{GROUP_A_ID}/",
         json=dict(new_user_ids=[current_user_id]),
     )
     assert res.status_code == 200
 
-    # Registered user can see group names
-    res = await registered_client.get(
-        f"{PREFIX}/current-user/?group_names=True"
-    )
-    assert res.status_code == 200
-    current_user = res.json()
-    debug(current_user)
-    current_user_id = current_user["id"]
-    assert current_user["group_names"] == [GROUP_NAME]
-    assert current_user["group_ids"] is None
+    # Calls to `/auth/current-users/` may or may not include `group_names_id`,
+    # depending on a query parameter
+    for query_param, expected_attribute in [
+        ("", None),
+        ("?group_ids_names=False", None),
+        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
+    ]:
+        res = await registered_client.get(
+            f"{PREFIX}/current-user/{query_param}"
+        )
+        assert res.status_code == 200
+        current_user = res.json()
+        assert current_user["group_ids_names"] == expected_attribute
 
-    # Superusers can see group IDs
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{current_user_id}/"
-    )
-    assert res.status_code == 200
-    user = res.json()
-    debug(user)
-    assert user["group_names"] is None
-    assert user["group_ids"] == [group_id]
-
-    # Superusers don't see group IDs, if group_ids=False
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{current_user_id}/" "?group_ids=False"
-    )
-    assert res.status_code == 200
-    user = res.json()
-    debug(user)
-    assert user["group_names"] is None
-    assert user["group_ids"] is None
+    # Calls to `/auth/users/{id}/` or may not include `group_names_id`,
+    # depending on a query parameter
+    for query_param, expected_attribute in [
+        ("", [[GROUP_A_ID, GROUP_A_NAME]]),
+        ("?group_ids_names=False", None),
+        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
+    ]:
+        res = await registered_superuser_client.get(
+            f"{PREFIX}/users/{current_user_id}/{query_param}"
+        )
+        assert res.status_code == 200
+        user = res.json()
+        assert user["group_ids_names"] == expected_attribute

@@ -89,13 +89,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     assert res.status_code == 201
     pre_patch_user = res.json()
 
-    # FIXME the following workaround won't be necessary when we tackle
-    # https://github.com/fractal-analytics-platform/fractal-server/issues/1737,
-    # so that the register-user POST endpoint will also take care of producing
-    # the appropriate `user_ids` attribute.
-    pre_patch_user["group_ids"] = []
-    debug(pre_patch_user)
-
     # Fail because invalid password
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
@@ -123,8 +116,9 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
     # assert that the attributes we wanted to update have actually changed
     for key, value in user.items():
-        debug(key)
-        if key not in update:
+        if key == "group_ids_names":
+            pass
+        elif key not in update:
             assert value == pre_patch_user[key]
         else:
             assert value != pre_patch_user[key]
@@ -251,7 +245,7 @@ async def test_add_groups_to_user_as_superuser(registered_superuser_client):
     assert res.status_code == 200
     user = res.json()
     debug(user)
-    assert user["group_ids"] == []
+    assert user["group_ids_names"] == []
 
     # Create group
     res = await registered_superuser_client.post(
@@ -275,7 +269,7 @@ async def test_add_groups_to_user_as_superuser(registered_superuser_client):
         json=dict(new_group_ids=[group_id]),
     )
     assert res.status_code == 200
-    assert res.json()["group_ids"] == [group_id]
+    assert res.json()["group_ids_names"] == [[group_id, "groupname"]]
 
     # Create user/group link and fail because it already exists
     res = await registered_superuser_client.patch(
@@ -382,12 +376,12 @@ async def test_oauth_accounts_list(
     # test GET /auth/users/{user_id}/
     res = await registered_superuser_client.get(f"{PREFIX}/users/{u1.id}/")
     assert len(res.json()["oauth_accounts"]) == 2
-    assert res.json()["group_ids"] is not None
+    assert res.json()["group_ids_names"] is not None
     res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{u1.id}/?group_ids=false"
+        f"{PREFIX}/users/{u1.id}/?group_ids_names=false"
     )
     assert len(res.json()["oauth_accounts"]) == 2
-    assert res.json()["group_ids"] is None
+    assert res.json()["group_ids_names"] is None
     res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
     assert len(res.json()["oauth_accounts"]) == 1
 
