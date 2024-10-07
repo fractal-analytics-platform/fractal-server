@@ -16,6 +16,13 @@ async def test_get_package_version_from_pypi(monkeypatch):
     debug(version)
     assert version.count(".") == 2
 
+    # Success: use weirdly-normalized name
+    new_version = await get_package_version_from_pypi(
+        "FrAcTal-__TaSkS-_-_-CoRe"
+    )
+    debug(new_version)
+    assert new_version == version
+
     # Failure 1: not found
 
     with pytest.raises(HTTPException, match="status_code 404"):
