@@ -7,6 +7,8 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import TaskGroupV2
+from fractal_server.app.models import UserGroup
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -690,3 +692,125 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 422
         assert "Please add more query filters" in res.json()["detail"]
+
+
+async def test_task_group_admin(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    task_factory_v2,
+):
+    async with MockCurrentUser() as user1:
+        task1 = await task_factory_v2(user_id=user1.id, source="source1")
+        res = await client.get(f"/api/v2/task-group/{task1.taskgroupv2_id}/")
+        task_group_1 = res.json()
+        task2 = await task_factory_v2(
+            user_id=user1.id, source="source2", active=False
+        )
+        # make task_group_2 private
+        task_group_2 = await db.get(TaskGroupV2, task2.taskgroupv2_id)
+        task_group_2.user_group_id = None
+        db.add(task_group_2)
+        await db.commit()
+        res = await client.get(f"/api/v2/task-group/{task2.taskgroupv2_id}/")
+        task_group_2 = res.json()
+        debug(task_group_2)
+
+    async with MockCurrentUser() as user2:
+        task3 = await task_factory_v2(user_id=user2.id, source="source3")
+        res = await client.get(f"/api/v2/task-group/{task3.taskgroupv2_id}/")
+        task_group_3 = res.json()
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        # GET /{id}/
+        for task_group in [task_group_1, task_group_2, task_group_3]:
+            res = await client.get(f"{PREFIX}/task-group/{task_group['id']}/")
+            assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/task-group/9999/")
+        assert res.status_code == 404
+
+        # GET /
+        res = await client.get(f"{PREFIX}/task-group/")
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+
+        res = await client.get(f"{PREFIX}/task-group/?user_id={user1.id}")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/task-group/?user_id={user2.id}")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task-group/?active=true")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/task-group/?user_id={user1.id}&active=true"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task-group/?private=true")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/task-group/?private=false")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
+        res = await client.get(f"{PREFIX}/task-group/?user_group_id=1")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/task-group/?user_group_id=1&private=true"
+        )
+        assert res.status_code == 422
+
+        # PATCH /{id}/
+        res = await client.patch(
+            f"{PREFIX}/task-group/9999/", json=dict(user_group_id=None)
+        )
+        assert res.status_code == 404
+
+        user_group = UserGroup(name="foo")
+        db.add(user_group)
+        await db.commit()
+        await db.refresh(user_group)
+        res = await client.patch(
+            f"{PREFIX}/task-group/{task_group_1['id']}/",
+            json=dict(user_group_id=user_group.id),
+        )
+        assert res.status_code == 403
+        res = await client.patch(
+            f"{PREFIX}/task-group/{task_group_1['id']}/",
+            json=dict(user_group_id=None, active=False),
+        )
+        assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/task-group/?private=true")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/task-group/?active=true")
+        assert len(res.json()) == 1
+
+    # DELETE
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id, source="source")
+        await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        res = await client.delete(f"{PREFIX}/task-group/{task_group_1['id']}/")
+        assert res.status_code == 204
+        res = await client.delete(f"{PREFIX}/task-group/{task_group_2['id']}/")
+        assert res.status_code == 204
+        res = await client.delete(f"{PREFIX}/task-group/{task_group_3['id']}/")
+        assert res.status_code == 204
+        res = await client.delete(f"{PREFIX}/task-group/9999/")
+        assert res.status_code == 404
+        res = await client.delete(
+            f"{PREFIX}/task-group/{task.taskgroupv2_id}/"
+        )
+        assert res.status_code == 422
