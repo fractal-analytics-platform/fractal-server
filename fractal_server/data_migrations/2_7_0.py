@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -16,8 +17,6 @@ from fractal_server.data_migrations.tools import _check_current_version
 from fractal_server.utils import get_timestamp
 
 logger = logging.getLogger("fix_db")
-
-DEFAULT_USER_EMAIL = "admin@fractal.xy"
 
 
 def _get_unique_value(list_of_objects: list[dict[str, Any]], key: str):
@@ -83,6 +82,15 @@ def get_default_user_group_id(db):
 
 
 def get_default_user_id(db):
+
+    DEFAULT_USER_EMAIL = os.getenv("FRACTAL_V27_DEFAULT_USER_EMAIL")
+    if DEFAULT_USER_EMAIL is None:
+        raise ValueError(
+            "FRACTAL_V27_DEFAULT_USER_EMAIL env variable is not set. "
+            "Please set it to be the email of the user who will own "
+            "all previously-global tasks."
+        )
+
     stm = select(UserOAuth.id).where(UserOAuth.email == DEFAULT_USER_EMAIL)
     res = db.execute(stm)
     default_user_id = res.scalars().one_or_none()
