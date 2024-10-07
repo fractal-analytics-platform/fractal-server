@@ -168,7 +168,7 @@ async def get_package_version_from_pypi(name: str) -> str:
                 )
             version = res.json()["info"]["version"]
             return version
-    except (TypeError, KeyError, TimeoutException) as e:
+    except (KeyError, TimeoutException) as e:
         logger.warning(
             f"An error occurred while getting {url}. Original error: {str(e)}."
         )
