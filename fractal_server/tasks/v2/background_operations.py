@@ -275,9 +275,19 @@ async def background_collect_pip(
             )
             _check_task_files_exist(task_list=task_list)
 
+            # Prepare some task-group attributes
+            task_group_attrs = dict(
+                pkg_name=task_pkg.package_name,
+                version=task_pkg.package_version,
+            )
+            if task_pkg.is_local_package:
+                task_group_attrs["origin"] = "wheel-file"
+            else:
+                task_group_attrs["origin"] = "pypi"
+
             task_group = create_db_task_group_and_tasks(
                 task_list=task_list,
-                task_group_obj=TaskGroupCreateV2(),
+                task_group_obj=TaskGroupCreateV2(**task_group_attrs),
                 user_id=user_id,
                 user_group_id=user_group_id,
                 db=db,

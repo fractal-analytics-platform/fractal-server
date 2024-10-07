@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -19,7 +20,7 @@ class TaskGroupReadV2(BaseModel):
     user_id: int
     user_group_id: Optional[int] = None
 
-    origin: str
+    origin: Literal["pypi", "wheel-file", "other"]
     pkg_name: str
     version: Optional[str] = None
     python_version: Optional[str] = None
