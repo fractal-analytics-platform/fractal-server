@@ -39,6 +39,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
+          FRACTAL_V27_DEFAULT_USER_EMAIL: admin@fractal.xy
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
