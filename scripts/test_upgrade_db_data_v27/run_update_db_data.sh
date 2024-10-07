@@ -18,9 +18,6 @@ echo -e "yes\nyes\nyes\nyes\nyes" | ./venv260/bin/fractalctl update-db-data
 # Apply 2.7.0 schema migrations
 poetry run fractalctl set-db
 
-# Specific fix
-psql -d fractal_test_v27 -c "update user_oauth set username = 'admin_123' where id=21;"
-
 # Apply 2.7.0 data migrations
 export FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.xy
 echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data --dry-run
