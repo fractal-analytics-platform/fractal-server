@@ -753,6 +753,11 @@ async def test_task_group_admin(
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
+        res = await client.get(
+            f"{PREFIX}/task-group/?user_id={user1.id}&active=false"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
 
         res = await client.get(f"{PREFIX}/task-group/?private=true")
         assert res.status_code == 200
