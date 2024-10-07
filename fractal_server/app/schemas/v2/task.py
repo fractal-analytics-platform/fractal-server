@@ -90,14 +90,18 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
         valdictkeys("output_types")
     )
 
-    _category = validator("category", allow_reuse=True)(valstr("category"))
-    _modality = validator("modality", allow_reuse=True)(valstr("modality"))
+    _category = validator("category", allow_reuse=True)(
+        valstr("category", accept_none=True)
+    )
+    _modality = validator("modality", allow_reuse=True)(
+        valstr("modality", accept_none=True)
+    )
 
     @validator("tags")
     def validate_list_of_strings(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(tag)
-        return val_unique_list(value)
+            value[i] = valstr(f"tags[{i}]")(tag)
+        return val_unique_list("tags")(value)
 
 
 class TaskReadV2(BaseModel):
@@ -164,14 +168,18 @@ class TaskUpdateV2(BaseModel):
         valdictkeys("output_types")
     )
 
-    _category = validator("category", allow_reuse=True)(valstr("category"))
-    _modality = validator("modality", allow_reuse=True)(valstr("modality"))
+    _category = validator("category", allow_reuse=True)(
+        valstr("category", accept_none=True)
+    )
+    _modality = validator("modality", allow_reuse=True)(
+        valstr("modality", accept_none=True)
+    )
 
     @validator("tags")
     def validate_tags(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(tag)
-        return val_unique_list(value)
+            value[i] = valstr(f"tags[{i}]")(tag)
+        return val_unique_list("tags")(value)
 
 
 class TaskImportV2(BaseModel):
