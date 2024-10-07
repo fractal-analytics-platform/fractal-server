@@ -57,17 +57,24 @@ class TaskV2(SQLModel, table=True):
 class TaskGroupV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
-
-    user_id: int = Field(foreign_key="user_oauth.id")
-    user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
-
-    active: bool = True
     task_list: list[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin", cascade="all, delete-orphan"
         ),
     )
 
+    user_id: int = Field(foreign_key="user_oauth.id")
+    user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
+
+    origin: str
+    pkg_name: str
+    version: Optional[str] = None
+    python_version: Optional[str] = None
+    path: Optional[str] = None
+    venv_path: Optional[str] = None
+    pip_extras: Optional[str] = None
+
+    active: bool = True
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),

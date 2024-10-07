@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -12,10 +13,21 @@ class TaskGroupCreateV2(BaseModel):
 class TaskGroupReadV2(BaseModel):
 
     id: int
+    task_list: list[TaskReadV2]
+
     user_id: int
     user_group_id: Optional[int] = None
+
+    origin: str
+    pkg_name: str
+    version: Optional[str] = None
+    python_version: Optional[str] = None
+    path: Optional[str] = None
+    venv_path: Optional[str] = None
+    pip_extras: Optional[str] = None
+
     active: bool
-    task_list: list[TaskReadV2]
+    timestamp_created: datetime
 
 
 class TaskGroupUpdateV2(BaseModel):
