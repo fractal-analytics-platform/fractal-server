@@ -168,6 +168,6 @@ class ManifestV2(BaseModel):
 
     @validator("authors")
     def validate_authors(cls, value):
-        for i, tag in enumerate(value):
-            value[i] = valstr(f"authors[{i}]")(tag)
+        for i, author in enumerate(value):
+            value[i] = valstr(f"authors[{i}]")(author)
         return val_unique_list("authors")(value)
