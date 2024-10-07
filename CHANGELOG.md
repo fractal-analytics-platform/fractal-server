@@ -1,15 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.7.0a3
-
-* API:
-    * Add auxiliary function `get_package_version_from_pypi` (\#1858).
 
 # 2.7.0a2
 
 * API:
     * Add validator for `TaskGroupUpdateV2.active` (\#1852).
     * Add GET/PATCH/DELETE endpoints in `/admin/v2/task-group/` (\#1852).
+    * Add auxiliary function `get_package_version_from_pypi` (\#1858).
 
 # 2.7.0a1
 
