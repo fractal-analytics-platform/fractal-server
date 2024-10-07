@@ -794,6 +794,12 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert len(res.json()) == 1
 
+        res = await client.patch(
+            f"{PREFIX}/task-group/{task_group_1['id']}/",
+            json=dict(active=None),
+        )
+        assert res.status_code == 422
+
     # DELETE
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
