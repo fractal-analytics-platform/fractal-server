@@ -239,6 +239,8 @@ async def task_factory_v2(db: AsyncSession):
             user_id=user_id,
             user_group_id=user_group_id,
             active=active,
+            origin="other",
+            pkg_name="task_factory_v2",
             task_list=[task],
         )
         db.add(task_group)

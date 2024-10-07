@@ -228,6 +228,8 @@ async def create_task(
         user_group_id=user_group_id,
         active=True,
         task_list=[db_task],
+        origin="other",
+        pkg_name=task.name,
     )
     db.add(db_task_group)
     await db.commit()
