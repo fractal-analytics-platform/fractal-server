@@ -50,6 +50,10 @@ class TaskManifestV2(BaseModel):
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
 
+    category: Optional[str] = None
+    modality: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+
     @root_validator
     def validate_executable_args_meta(cls, values):
 
