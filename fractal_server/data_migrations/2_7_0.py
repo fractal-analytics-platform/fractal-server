@@ -19,16 +19,19 @@ from fractal_server.utils import get_timestamp
 logger = logging.getLogger("fix_db")
 
 
-def _get_unique_value(list_of_objects: list[dict[str, Any]], key: str):
+def get_unique_value(list_of_objects: list[dict[str, Any]], key: str):
+    """
+    Loop over `list_of_objects` and extract (unique) value for `key`.
+    """
     unique_values = set()
     for this_obj in list_of_objects:
         this_value = this_obj.get(key, None)
         unique_values.add(this_value)
-        if len(unique_values) != 1:
-            raise RuntimeError(
-                f"There must be a single taskgroup `{key}`, "
-                f"but {unique_values=}"
-            )
+    if len(unique_values) != 1:
+        raise RuntimeError(
+            f"There must be a single taskgroup `{key}`, "
+            f"but {unique_values=}"
+        )
     return unique_values.pop()
 
 
@@ -45,14 +48,14 @@ def get_users_mapping(db) -> dict[str, int]:
         user_settings = db.get(UserSettings, user.user_settings_id)
         name = user.username or user_settings.slurm_user
         logger.warning(f"{name=}")
-        # Check for missing values
+        # Fail for missing values
         if name is None:
             raise ValueError(
                 f"User with {user.id=} and {user.email=} has no "
                 "`username` or `slurm_user` set."
                 "Please fix this issue manually."
             )
-        # Check for non-unique values
+        # Fail for non-unique values
         existing_user = name_to_user_id.get(name, None)
         if existing_user is not None:
             raise ValueError(
@@ -95,12 +98,14 @@ def get_default_user_id(db):
     res = db.execute(stm)
     default_user_id = res.scalars().one_or_none()
     if default_user_id is None:
-        raise RuntimeError("Default user is missing.")
+        raise RuntimeError(
+            f"Default user with email {DEFAULT_USER_EMAIL} is missing."
+        )
     else:
         return default_user_id
 
 
-def find_task_associations(
+def prepare_task_groups(
     *,
     user_mapping: dict[str, int],
     default_user_group_id: int,
@@ -154,13 +159,13 @@ def find_task_associations(
             owner = task.owner
             if owner is None:
                 raise RuntimeError(
-                    "A Something wrong with "
-                    f"{task.id=}, {task.source=}, {task.owner=}"
+                    "Error: `owner` is `None` for "
+                    f"{task.id=}, {task.source=}, {task.owner=}."
                 )
             user_id = user_mapping.get(owner, None)
             if user_id is None:
                 raise RuntimeError(
-                    "B Something wrong with "
+                    "Error: `user_id` is `None` for "
                     f"{task.id=}, {task.source=}, {task.owner=}"
                 )
             task_group_key = "-".join(
@@ -174,7 +179,7 @@ def find_task_associations(
             )
             if task_group_key in task_groups:
                 raise RuntimeError(
-                    "C Something wrong with "
+                    f"ERROR: Duplicated {task_group_key=} for "
                     f"{task.id=}, {task.source=}, {task.owner=}"
                 )
             else:
@@ -197,15 +202,15 @@ def find_task_associations(
             print(f"  {task.id=}, {task.source=}")
 
         task_group_attributes = dict(
-            pkg_name=_get_unique_value(task_group_objects, "pkg_name"),
-            version=_get_unique_value(task_group_objects, "version"),
-            origin=_get_unique_value(task_group_objects, "origin"),
-            user_id=_get_unique_value(task_group_objects, "user_id"),
+            pkg_name=get_unique_value(task_group_objects, "pkg_name"),
+            version=get_unique_value(task_group_objects, "version"),
+            origin=get_unique_value(task_group_objects, "origin"),
+            user_id=get_unique_value(task_group_objects, "user_id"),
             user_group_id=default_user_group_id,
-            python_version=_get_unique_value(
+            python_version=get_unique_value(
                 task_group_objects, "python_version"
             ),
-            pip_extras=_get_unique_value(task_group_objects, "pip_extras"),
+            pip_extras=get_unique_value(task_group_objects, "pip_extras"),
             task_list=task_group_task_list,
             active=True,
             timestamp_created=get_timestamp(),
@@ -258,7 +263,7 @@ def fix_db(dry_run: bool = False):
         default_user_id = get_default_user_id(db)
         default_user_group_id = get_default_user_group_id(db)
 
-        find_task_associations(
+        prepare_task_groups(
             user_mapping=user_mapping,
             default_user_id=default_user_id,
             default_user_group_id=default_user_group_id,
