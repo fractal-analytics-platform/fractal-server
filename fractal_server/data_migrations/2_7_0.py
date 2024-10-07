@@ -1,6 +1,9 @@
 import logging
+from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import TaskGroupV2
@@ -10,13 +13,27 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.data_migrations.tools import _check_current_version
+from fractal_server.utils import get_timestamp
 
 logger = logging.getLogger("fix_db")
 
 DEFAULT_USER_EMAIL = "admin@fractal.xy"
 
 
-def _get_users_mapping(db) -> dict[str, int]:
+def _get_unique_value(list_of_objects: list[dict[str, Any]], key: str):
+    unique_values = set()
+    for this_obj in list_of_objects:
+        this_value = this_obj.get(key, None)
+        unique_values.add(this_value)
+        if len(unique_values) != 1:
+            raise RuntimeError(
+                f"There must be a single taskgroup `{key}`, "
+                f"but {unique_values=}"
+            )
+    return unique_values.pop()
+
+
+def get_users_mapping(db) -> dict[str, int]:
     logger.warning("START _check_users")
     print()
 
@@ -75,31 +92,56 @@ def get_default_user_id(db):
         return default_user_id
 
 
-def _find_task_associations(db):
-    user_mapping = _get_users_mapping(db)
-    default_user_id = get_default_user_id(db)
-    default_user_group_id = get_default_user_group_id(db)
-
+def find_task_associations(
+    *,
+    user_mapping: dict[str, int],
+    default_user_group_id: int,
+    default_user_id: int,
+    dry_run: bool,
+    db: Session,
+):
     stm_tasks = select(TaskV2).order_by(TaskV2.id)
     res = db.execute(stm_tasks).scalars().all()
     task_groups = {}
     for task in res:
-        print(task.id, task.source)
         if (
             task.source.startswith(("pip_remote", "pip_local"))
             and task.source.count(":") == 5
         ):
             source_fields = task.source.split(":")
-            mode, pkg_name, version, extras, py_version, name = source_fields
-            task_group_key = ":".join([pkg_name, version, extras, py_version])
-            if task_group_key in task_groups:
-                task_groups[task_group_key].append(
-                    dict(task=task, user_id=default_user_id)
-                )
+            (
+                collection_mode,
+                pkg_name,
+                version,
+                extras,
+                python_version,
+                name,
+            ) = source_fields
+            task_group_key = ":".join(
+                [pkg_name, version, extras, python_version]
+            )
+            if collection_mode == "pip_remote":
+                origin = "pypi"
+            elif collection_mode == "pip_local":
+                origin = "wheel-file"
             else:
-                task_groups[task_group_key] = [
-                    dict(task=task, user_id=default_user_id)
-                ]
+                raise RuntimeError(
+                    f"Invalid {collection_mode=} for {task.source=}."
+                )
+            new_obj = dict(
+                task=task,
+                user_id=default_user_id,
+                origin=origin,
+                pkg_name=pkg_name,
+                version=version,
+                pip_extras=extras,
+                python_version=python_version,
+            )
+
+            if task_group_key in task_groups:
+                task_groups[task_group_key].append(new_obj)
+            else:
+                task_groups[task_group_key] = [new_obj]
         else:
             owner = task.owner
             if owner is None:
@@ -129,40 +171,71 @@ def _find_task_associations(db):
                 )
             else:
                 task_groups[task_group_key] = [
-                    dict(task=task, user_id=user_id)
+                    dict(
+                        task=task,
+                        user_id=user_id,
+                        origin="other",
+                        pkg_name=task.source,
+                        version=task.version,
+                    )
                 ]
 
     for task_group_key, task_group_objects in task_groups.items():
-        print(task_group_key)
-        task_group_tasks = [x["task"] for x in task_group_objects]
-        task_group_user_ids = [x["user_id"] for x in task_group_objects]
-        if len(set(task_group_user_ids)) != 1:
-            raise RuntimeError(f"{task_group_user_ids=}")
-        for task in task_group_tasks:
-            print(f"  {task.source}")
+        print("-" * 80)
+        print(f"Start handling task group with key '{task_group_key}")
+        task_group_task_list = [item["task"] for item in task_group_objects]
+        print("List of tasks to be included")
+        for task in task_group_task_list:
+            print(f"  {task.id=}, {task.source=}")
+
+        task_group_attributes = dict(
+            pkg_name=_get_unique_value(task_group_objects, "pkg_name"),
+            version=_get_unique_value(task_group_objects, "version"),
+            origin=_get_unique_value(task_group_objects, "origin"),
+            user_id=_get_unique_value(task_group_objects, "user_id"),
+            user_group_id=default_user_group_id,
+            python_version=_get_unique_value(
+                task_group_objects, "python_version"
+            ),
+            pip_extras=_get_unique_value(task_group_objects, "pip_extras"),
+            task_list=task_group_task_list,
+            active=True,
+            timestamp_created=get_timestamp(),
+        )
+
         if not task_group_key.startswith("NOT_PIP"):
             cmd = next(
-                getattr(task_group_tasks[0], attr_name)
+                getattr(task_group_task_list[0], attr_name)
                 for attr_name in ["command_non_parallel", "command_parallel"]
-                if getattr(task_group_tasks[0], attr_name) is not None
+                if getattr(task_group_task_list[0], attr_name) is not None
             )
             python_bin = cmd.split()[0]
-        print(f"{python_bin=}")
+            venv_path = Path(python_bin).parents[1].as_posix()
+            path = Path(python_bin).parents[2].as_posix()
+            task_group_attributes["venv_path"] = venv_path
+            task_group_attributes["path"] = path
 
-        # PRINT DRY-RUN VERSION
-        task_group = TaskGroupV2(
-            user_id=task_group_objects[0]["user_id"],
-            user_group_id=default_user_group_id,
-            task_list=task_group_tasks,
-        )
+        print()
+        print("List of task-group attributes")
+        for key, value in task_group_attributes.items():
+            if key != "task_list":
+                print(f"  {key}: {value}")
+
+        print()
+
+        if dry_run:
+            print(
+                "End dry-run of handling task group with key "
+                f"'{task_group_key}"
+            )
+            print("-" * 80)
+            continue
+
+        task_group = TaskGroupV2(**task_group_attributes)
         db.add(task_group)
         db.commit()
         db.refresh(task_group)
         logger.warning(f"Created task group {task_group.id=}")
-        from devtools import debug
-
-        debug(task_group)
-
         print()
 
     return
@@ -173,7 +246,16 @@ def fix_db(dry_run: bool = False):
     _check_current_version("2.7.0")
 
     with next(get_sync_db()) as db:
-        _get_users_mapping(db)
-        _find_task_associations(db)
+        user_mapping = get_users_mapping(db)
+        default_user_id = get_default_user_id(db)
+        default_user_group_id = get_default_user_group_id(db)
+
+        find_task_associations(
+            user_mapping=user_mapping,
+            default_user_id=default_user_id,
+            default_user_group_id=default_user_group_id,
+            db=db,
+            dry_run=dry_run,
+        )
 
     logger.warning("END of execution of fix_db function")
