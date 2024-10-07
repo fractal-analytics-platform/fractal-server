@@ -132,7 +132,8 @@ class ManifestV2(BaseModel):
     manifest_version: str
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str]
+    args_schema_version: Optional[str] = None
+    authors: Optional[list[str]] = None
 
     @root_validator()
     def _check_args_schemas_are_present(cls, values):

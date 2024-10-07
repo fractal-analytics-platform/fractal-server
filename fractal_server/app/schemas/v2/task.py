@@ -39,6 +39,8 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     modality: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
 
+    authors: list[str] = Field(default_factory=list)
+
     # Validators
     @root_validator
     def validate_commands(cls, values):

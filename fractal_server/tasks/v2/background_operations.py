@@ -152,6 +152,8 @@ def _prepare_tasks_metadata(
             task_attributes[
                 "args_schema_version"
             ] = package_manifest.args_schema_version
+        if package_manifest.authors:
+            task_attributes["authors"] = package_manifest.authors
         # Set command attributes
         if _task.executable_non_parallel is not None:
             non_parallel_path = package_root / _task.executable_non_parallel
