@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.0a3
+
+* API:
+    * Add auxiliary function `get_package_version_from_pypi` (\#1858).
+
 # 2.7.0a2
 
 * API:
