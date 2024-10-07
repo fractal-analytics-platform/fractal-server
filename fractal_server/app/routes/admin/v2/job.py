@@ -1,10 +1,6 @@
-"""
-Definition of `/admin` routes.
-"""
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
-from typing import Literal
 from typing import Optional
 
 from fastapi import APIRouter
@@ -13,33 +9,26 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-from pydantic import EmailStr
-from pydantic import Field
 from sqlmodel import select
 
-from ....config import get_settings
-from ....syringe import Inject
-from ....utils import get_timestamp
-from ....zip_tools import _zip_folder_to_byte_stream_iterator
-from ...db import AsyncSession
-from ...db import get_async_db
-from ...models.v2 import JobV2
-from ...models.v2 import ProjectV2
-from ...models.v2 import TaskV2
-from ...models.v2 import WorkflowTaskV2
-from ...models.v2 import WorkflowV2
-from ...runner.filenames import WORKFLOW_LOG_FILENAME
-from ...schemas.v2 import JobReadV2
-from ...schemas.v2 import JobStatusTypeV2
-from ...schemas.v2 import JobUpdateV2
-from ...schemas.v2 import ProjectReadV2
-from ..aux._job import _write_shutdown_file
-from ..aux._runner import _check_shutdown_is_supported
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.aux._job import _write_shutdown_file
+from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.app.schemas.v2 import JobReadV2
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobUpdateV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+from fractal_server.utils import get_timestamp
+from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
-router_admin_v2 = APIRouter()
+router = APIRouter()
 
 
 def _convert_to_db_timestamp(dt: datetime) -> datetime:
@@ -59,36 +48,7 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
     return _dt
 
 
-@router_admin_v2.get("/project/", response_model=list[ProjectReadV2])
-async def view_project(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    user: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectReadV2]:
-    """
-    Query `ProjectV2` table.
-
-    Args:
-        id: If not `None`, select a given `project.id`.
-        user_id: If not `None`, select a given `project.user_id`.
-    """
-
-    stm = select(ProjectV2)
-
-    if id is not None:
-        stm = stm.where(ProjectV2.id == id)
-    if user_id is not None:
-        stm = stm.where(ProjectV2.user_list.any(UserOAuth.id == user_id))
-
-    res = await db.execute(stm)
-    project_list = res.scalars().all()
-    await db.close()
-
-    return project_list
-
-
-@router_admin_v2.get("/job/", response_model=list[JobReadV2])
+@router.get("/", response_model=list[JobReadV2])
 async def view_job(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -164,7 +124,7 @@ async def view_job(
     return job_list
 
 
-@router_admin_v2.get("/job/{job_id}/", response_model=JobReadV2)
+@router.get("/{job_id}/", response_model=JobReadV2)
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
@@ -190,10 +150,7 @@ async def view_single_job(
     return job
 
 
-@router_admin_v2.patch(
-    "/job/{job_id}/",
-    response_model=JobReadV2,
-)
+@router.patch("/{job_id}/", response_model=JobReadV2)
 async def update_job(
     job_update: JobUpdateV2,
     job_id: int,
@@ -227,7 +184,7 @@ async def update_job(
     return job
 
 
-@router_admin_v2.get("/job/{job_id}/stop/", status_code=202)
+@router.get("/{job_id}/stop/", status_code=202)
 async def stop_job(
     job_id: int,
     user: UserOAuth = Depends(current_active_superuser),
@@ -251,10 +208,7 @@ async def stop_job(
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
-@router_admin_v2.get(
-    "/job/{job_id}/download/",
-    response_class=StreamingResponse,
-)
+@router.get("/{job_id}/download/", response_class=StreamingResponse)
 async def download_job_logs(
     job_id: int,
     user: UserOAuth = Depends(current_active_superuser),
@@ -278,128 +232,3 @@ async def download_job_logs(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )
-
-
-class TaskV2Minimal(BaseModel):
-
-    id: int
-    name: str
-    type: str
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
-    source: str
-    owner: Optional[str]
-    version: Optional[str]
-
-
-class ProjectUser(BaseModel):
-
-    id: int
-    email: EmailStr
-
-
-class TaskV2Relationship(BaseModel):
-
-    workflow_id: int
-    workflow_name: str
-    project_id: int
-    project_name: str
-    project_users: list[ProjectUser] = Field(default_factory=list)
-
-
-class TaskV2Info(BaseModel):
-
-    task: TaskV2Minimal
-    relationships: list[TaskV2Relationship]
-
-
-@router_admin_v2.get("/task/", response_model=list[TaskV2Info])
-async def query_tasks(
-    id: Optional[int] = None,
-    source: Optional[str] = None,
-    version: Optional[str] = None,
-    name: Optional[str] = None,
-    owner: Optional[str] = None,
-    kind: Optional[Literal["common", "users"]] = None,
-    max_number_of_results: int = 25,
-    user: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[TaskV2Info]:
-    """
-    Query `TaskV2` table and get informations about related items
-    (WorkflowV2s and ProjectV2s)
-
-    Args:
-        id: If not `None`, query for matching `task.id`.
-        source: If not `None`, query for contained case insensitive
-            `task.source`.
-        version: If not `None`, query for matching `task.version`.
-        name: If not `None`, query for contained case insensitive `task.name`.
-        owner: If not `None`, query for matching `task.owner`.
-        kind: If not `None`, query for TaskV2s that have (`users`) or don't
-            have (`common`) a `task.owner`.
-        max_number_of_results: The maximum length of the response.
-    """
-
-    stm = select(TaskV2)
-
-    if id is not None:
-        stm = stm.where(TaskV2.id == id)
-    if source is not None:
-        stm = stm.where(TaskV2.source.icontains(source))
-    if version is not None:
-        stm = stm.where(TaskV2.version == version)
-    if name is not None:
-        stm = stm.where(TaskV2.name.icontains(name))
-    if owner is not None:
-        stm = stm.where(TaskV2.owner == owner)
-
-    if kind == "common":
-        stm = stm.where(TaskV2.owner == None)  # noqa E711
-    elif kind == "users":
-        stm = stm.where(TaskV2.owner != None)  # noqa E711
-
-    res = await db.execute(stm)
-    task_list = res.scalars().all()
-    if len(task_list) > max_number_of_results:
-        await db.close()
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Too many Tasks ({len(task_list)} > {max_number_of_results})."
-                " Please add more query filters."
-            ),
-        )
-
-    task_info_list = []
-
-    for task in task_list:
-        stm = (
-            select(WorkflowV2)
-            .join(WorkflowTaskV2)
-            .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
-            .where(WorkflowTaskV2.task_id == task.id)
-        )
-        res = await db.execute(stm)
-        wf_list = res.scalars().all()
-
-        task_info_list.append(
-            dict(
-                task=task.model_dump(),
-                relationships=[
-                    dict(
-                        workflow_id=workflow.id,
-                        workflow_name=workflow.name,
-                        project_id=workflow.project.id,
-                        project_name=workflow.project.name,
-                        project_users=[
-                            dict(id=user.id, email=user.email)
-                            for user in workflow.project.user_list
-                        ],
-                    )
-                    for workflow in wf_list
-                ],
-            )
-        )
-
-    return task_info_list

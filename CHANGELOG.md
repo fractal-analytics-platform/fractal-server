@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.0a2
+
+* API:
+    * Add validator for `TaskGroupUpdateV2.active` (\#1852).
+    * Add GET/PATCH/DELETE endpoints in `/admin/v2/task-group/` (\#1852).
+
 # 2.7.0a1
 
 * API:
