@@ -175,7 +175,10 @@ with next(get_sync_db()) as db:
     stm = select(TaskGroupV2)
     task_groups = db.execute(stm).scalars().all()
     for task_group in sorted(task_groups, key=lambda x: x.id):
-        TaskGroupReadV2(**task_group.model_dump())
+        task_list = []
+        for task in task_group.task_list:
+            task_list.append(TaskReadV2(**task.model_dump()))
+        TaskGroupReadV2(**task_group.model_dump(), task_list=task_list)
         print(f"V2 - TaskGroup {task_group.id} validated")
 
     # WORKFLOWS V2
