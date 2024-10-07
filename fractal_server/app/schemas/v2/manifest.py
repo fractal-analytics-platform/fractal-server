@@ -7,6 +7,9 @@ from pydantic import HttpUrl
 from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import val_unique_list
+from .._validators import valstr
+
 
 class TaskManifestV2(BaseModel):
     """
@@ -133,7 +136,7 @@ class ManifestV2(BaseModel):
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
-    authors: Optional[list[str]] = None
+    authors: list[str] = Field(default_factory=list)
 
     @root_validator()
     def _check_args_schemas_are_present(cls, values):
@@ -162,3 +165,9 @@ class ManifestV2(BaseModel):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
         return value
+
+    @validator("authors")
+    def validate_authors(cls, value):
+        for i, tag in enumerate(value):
+            value[i] = valstr(f"authors[{i}]")(tag)
+        return val_unique_list("authors")(value)
