@@ -39,8 +39,7 @@ async def get_list_task(
     args_schema_non_parallel: bool = True,
     category: Optional[str] = None,
     modality: Optional[str] = None,
-    authors: Optional[list[str]] = None,
-    tags: Optional[list[str]] = None,
+    author: Optional[str] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
@@ -66,6 +65,9 @@ async def get_list_task(
         stm = stm.where(func.lower(TaskV2.category) == category.lower())
     if modality is not None:
         stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
+    if author is not None:
+        stm = stm.where(TaskV2.authors.icontains(author))
+
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
@@ -75,25 +77,6 @@ async def get_list_task(
     if args_schema_non_parallel is False:
         for task in task_list:
             setattr(task, "args_schema_non_parallel", None)
-    if authors is not None:
-        task_list = [
-            task
-            for task in task_list
-            if all(
-                author.lower()
-                in (t_author.lower() for t_author in task.authors)
-                for author in authors
-            )
-        ]
-    if tags is not None:
-        task_list = [
-            task
-            for task in task_list
-            if all(
-                tag.lower() in (t_tag.lower() for t_tag in task.tags)
-                for tag in tags
-            )
-        ]
 
     return task_list
 

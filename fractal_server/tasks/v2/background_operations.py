@@ -163,6 +163,10 @@ def _prepare_tasks_metadata(
             task_attributes[
                 "command_parallel"
             ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
+        if package_manifest.authors:
+            authors = "; ".join(package_manifest.authors)
+        else:
+            authors = ""
         # Create object
         task_obj = TaskCreateV2(
             **_task.dict(
@@ -172,7 +176,7 @@ def _prepare_tasks_metadata(
                 }
             ),
             **task_attributes,
-            authors=package_manifest.authors,
+            authors=authors,
         )
         task_list.append(task_obj)
     return task_list

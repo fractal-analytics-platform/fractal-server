@@ -38,8 +38,7 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     category: Optional[str] = None
     modality: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
-
-    authors: list[str] = Field(default_factory=list)
+    authors: str
 
     # Validators
     @root_validator
@@ -128,6 +127,7 @@ class TaskReadV2(BaseModel):
 
     category: Optional[str] = None
     modality: Optional[str] = None
+    authors: str
     tags: list[str]
 
 
