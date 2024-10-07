@@ -135,7 +135,7 @@ class ManifestV2(BaseModel):
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
-    authors: str
+    authors: Optional[str] = None
 
     @root_validator()
     def _check_args_schemas_are_present(cls, values):
@@ -165,4 +165,6 @@ class ManifestV2(BaseModel):
             raise ValueError(f"Wrong manifest version (given {value})")
         return value
 
-    _authors = validator("authors", allow_reuse=True)(valstr("authors"))
+    _authors = validator("authors", allow_reuse=True)(
+        valstr("authors", accept_none=True)
+    )

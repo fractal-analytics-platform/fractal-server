@@ -1,8 +1,8 @@
 """Revamp TaskV2 and TaskGroupV2
 
-Revision ID: 3f23e5409262
+Revision ID: 742b74e1cc6e
 Revises: df7cc3501bf7
-Create Date: 2024-10-07 16:37:28.927940
+Create Date: 2024-10-07 16:56:37.399878
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "3f23e5409262"
+revision = "742b74e1cc6e"
 down_revision = "df7cc3501bf7"
 branch_labels = None
 depends_on = None
@@ -71,7 +71,7 @@ def upgrade() -> None:
         )
         batch_op.add_column(
             sa.Column(
-                "authors", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+                "authors", sqlmodel.sql.sqltypes.AutoString(), nullable=True
             )
         )
         batch_op.add_column(

@@ -38,7 +38,7 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     category: Optional[str] = None
     modality: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
-    authors: str
+    authors: Optional[str] = None
 
     # Validators
     @root_validator
@@ -95,6 +95,9 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     _modality = validator("modality", allow_reuse=True)(
         valstr("modality", accept_none=True)
     )
+    _authors = validator("authors", allow_reuse=True)(
+        valstr("authors", accept_none=True)
+    )
 
     @validator("tags")
     def validate_list_of_strings(cls, value):
@@ -127,7 +130,7 @@ class TaskReadV2(BaseModel):
 
     category: Optional[str] = None
     modality: Optional[str] = None
-    authors: str
+    authors: Optional[str] = None
     tags: list[str]
 
 
