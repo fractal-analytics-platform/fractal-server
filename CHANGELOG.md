@@ -1,12 +1,22 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
 
+# 2.7.0 (unreleased)
+
+This is a placeholder for the 2.7.0 changelog, which is provisionally split
+into pre-release sections below.
+
+> WARNING: This release requires running `fractalctl update-db-data` (after
+> `fractalctl set-db`).
+
 # 2.7.0a2
 
 * API:
     * Add validator for `TaskGroupUpdateV2.active` (\#1852).
     * Add GET/PATCH/DELETE endpoints in `/admin/v2/task-group/` (\#1852).
     * Add auxiliary function `get_package_version_from_pypi` (\#1858).
+* Database lifecycle:
+    * Add `update-db-data` script (\#1820).
 
 # 2.7.0a1
 
