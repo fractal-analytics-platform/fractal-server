@@ -209,12 +209,11 @@ async def _get_valid_user_group_id(
     return user_group_id
 
 
-async def _verify_non_duplication_constraints(
+async def _verify_non_duplication_user_constraint(
     db: AsyncSession,
     pkg_name: str,
     user_id: int,
     version: Optional[str],
-    user_group_id: Optional[int] = None,
 ):
     stm = (
         select(TaskGroupV2)
@@ -233,20 +232,26 @@ async def _verify_non_duplication_constraints(
             ),
         )
 
-    if user_group_id is not None:
-        stm = (
-            select(TaskGroupV2)
-            .where(TaskGroupV2.pkg_name == pkg_name)
-            .where(TaskGroupV2.version == version)
-            .where(TaskGroupV2.user_group_id == user_group_id)
+
+async def _verify_non_duplication_group_constraint(
+    db: AsyncSession,
+    pkg_name: str,
+    version: Optional[str],
+    user_group_id: Optional[int],
+):
+    stm = (
+        select(TaskGroupV2)
+        .where(TaskGroupV2.pkg_name == pkg_name)
+        .where(TaskGroupV2.version == version)
+        .where(TaskGroupV2.user_group_id == user_group_id)
+    )
+    res = await db.execute(stm)
+    duplicate = res.scalars().all()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "There is already a TaskGroupV2 with "
+                f"({pkg_name=}, {version=}, {user_group_id=})."
+            ),
         )
-        res = await db.execute(stm)
-        duplicate = res.scalars().all()
-        if duplicate:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "There is already a TaskGroupV2 with "
-                    f"({pkg_name=}, {version=}, {user_group_id=})."
-                ),
-            )
