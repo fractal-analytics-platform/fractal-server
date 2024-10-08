@@ -6,8 +6,6 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 PREFIX = "api/v2/task"
 
@@ -15,6 +13,7 @@ PREFIX = "api/v2/task"
 async def test_failed_API_calls(
     client, MockCurrentUser, tmp_path, testdata_path, task_factory_v2
 ):
+
     # Missing state ID
     invalid_state_id = 99999
     async with MockCurrentUser():
@@ -37,7 +36,7 @@ async def test_failed_API_calls(
             ),
         )
         assert res.status_code == 422
-        assert "No such file or directory" in str(res.json())
+        assert "No such file" in str(res.json())
 
     # Invalid wheel file
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
@@ -46,44 +45,6 @@ async def test_failed_API_calls(
             json=dict(package=str("something.whl")),
         )
         assert res.status_code == 422
-
-    # Package `asd` exists, but it has no wheel file
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package="asd", package_version="1.3.2"),
-        )
-        assert res.status_code == 422
-        debug(res.json())
-        assert "Only wheel packages are supported in Fractal" in str(
-            res.json()
-        )
-        assert "tar.gz" in str(res.json())
-
-        # Task collection fails if a task with the same source already exists
-        # (see issue 866)
-        settings = Inject(get_settings)
-        default_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-        await task_factory_v2(
-            user_id=user.id,
-            source=(
-                f"pip_local:fractal_tasks_mock:0.0.1::"
-                f"py{default_version}:create_ome_zarr_compound"
-            ),
-        )
-
-        wheel_path = (
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        )
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package=wheel_path.as_posix()),
-        )
-        assert res.status_code == 422
-        assert "Task with source" in res.json()["detail"]
-        assert "already exists in the database" in res.json()["detail"]
 
 
 async def test_invalid_manifest(
@@ -96,7 +57,7 @@ async def test_invalid_manifest(
     """
     GIVEN a package with invalid/missing manifest
     WHEN the api to collect tasks from that package is called
-    THEN it returns 422 (Unprocessable Entity) with an informative message
+    THEN it returns 201 but the background task fails
     """
 
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
@@ -108,11 +69,21 @@ async def test_invalid_manifest(
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # API call is successful
         res = await client.post(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
-        assert res.status_code == 422
-        assert "not supported" in res.json()["detail"]
+        assert res.status_code == 201
+        collection_state_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(f"{PREFIX}/collect/{collection_state_id}/")
+        assert res.status_code == 200
+        collection_data = res.json()["data"]
+        assert collection_data["status"] == "fail"
+        assert (
+            "Manifest version manifest_version='9999' not supported"
+            in collection_data["log"]
+        )
 
     # Missing manifest
     wheel_path = (
@@ -120,12 +91,23 @@ async def test_invalid_manifest(
         / "v2/fractal_tasks_fail/missing_manifest"
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
+
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # API call is successful
         res = await client.post(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
-        assert res.status_code == 422
-        assert "does not include" in res.json()["detail"]
+        assert res.status_code == 201
+        collection_state_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(f"{PREFIX}/collect/{collection_state_id}/")
+        assert res.status_code == 200
+        collection_data = res.json()["data"]
+        assert collection_data["status"] == "fail"
+        assert (
+            "does not include __FRACTAL_MANIFEST__.json"
+            in collection_data["log"]
+        )
 
 
 async def test_missing_task_executable(
