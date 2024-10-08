@@ -233,7 +233,7 @@ async def _download_package(
 
 
 def _load_manifest_from_wheel(
-    wheel_file_path: Path,
+    wheel_file_path: str,
     logger_name: str,
 ) -> ManifestV2:
     """
@@ -242,7 +242,6 @@ def _load_manifest_from_wheel(
     logger = get_logger(logger_name)
 
     with ZipFile(wheel_file_path) as wheel:
-
         namelist = wheel.namelist()
         try:
             manifest = next(
@@ -252,8 +251,7 @@ def _load_manifest_from_wheel(
             )
         except StopIteration:
             msg = (
-                f"{wheel_file_path.as_posix()} does not include "
-                "__FRACTAL_MANIFEST__.json"
+                f"{wheel_file_path} does not include __FRACTAL_MANIFEST__.json"
             )
             logger.error(msg)
             raise ValueError(msg)
@@ -269,25 +267,25 @@ def _load_manifest_from_wheel(
 
 
 async def _get_package_manifest(
-    task_pkg: _TaskCollectPip,
+    *,
+    task_group: TaskGroupV2,
     logger_name: str,
 ) -> ManifestV2:
-    if task_pkg.is_local_package:
-        manifest = _load_manifest_from_wheel(
-            wheel_file_path=task_pkg.package_path,
-            logger_name=logger_name,
-        )
-    else:
+    wheel_file_path = task_group.wheel_path
+    if wheel_file_path is None:
         with TemporaryDirectory() as tmpdir:
             # Copy or download the package wheel file to tmpdir
             wheel_file_path = await _download_package(
-                task_pkg=task_pkg, dest=tmpdir
-            )
-            # Read package manifest from wheel file
-            manifest = _load_manifest_from_wheel(
-                wheel_file_path=wheel_file_path,
-                logger_name=logger_name,
-            )
+                python_version=task_group.python_version,
+                pkg_name=task_group.pkg_name,
+                version=task_group.venv_path,
+                dest=tmpdir,
+            ).as_posix()
+    # Read package manifest from wheel file
+    manifest = _load_manifest_from_wheel(
+        wheel_file_path=wheel_file_path,
+        logger_name=logger_name,
+    )
     return manifest
 
 
@@ -336,17 +334,14 @@ async def background_collect_pip(
 
     # Start
     logger.debug("START")
-    for key, value in task_pkg_to_deprecate.dict(
-        exclude={"package_manifest"}
-    ).items():
-        logger.debug(f"task_pkg.{key}: {value}")
+    for key, value in task_group.model_dump().items():
+        logger.debug(f"task_group.{key}: {value}")
 
     with next(get_sync_db()) as db:
-
         try:
             # Block 1: get and validate manfifest
             pkg_manifest = await _get_package_manifest(
-                task_pkg=task_pkg_to_deprecate,
+                task_group=task_group,
                 logger_name=logger_name,
             )
 
@@ -360,8 +355,6 @@ async def background_collect_pip(
                 db=db,
             )
             python_bin, package_root = await _create_venv_install_package_pip(
-                venv_path=Path(task_group.venv_path),
-                task_pkg_to_deprecate=task_pkg_to_deprecate,
                 task_group=task_group,
                 logger_name=logger_name,
             )
@@ -379,7 +372,7 @@ async def background_collect_pip(
             logger.debug("collecting - prepare tasks and update db " "- START")
             task_list = _prepare_tasks_metadata(
                 package_manifest=pkg_manifest,
-                package_source=task_pkg_to_deprecate.package_source,
+                package_source=task_pkg_to_deprecate.package_source,  # FIXME
                 package_version=task_group.version,
                 package_root=package_root,
                 python_bin=python_bin,

@@ -107,7 +107,8 @@ async def collect_tasks_pip(
     )
     if task_collect.package.endswith(".whl"):
         try:
-            wheel_filename = Path(task_collect.package).name
+            task_group_attrs["wheel_path"] = task_collect.package
+            wheel_filename = Path(task_group_attrs["wheel_path"]).name
             wheel_info = _parse_wheel_filename(wheel_filename)
         except ValueError as e:
             raise HTTPException(
@@ -199,6 +200,15 @@ async def collect_tasks_pip(
                 detail=f"{task_group_path} already exists.",
             )
 
+    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+        wheel_path = task_group_attrs.get("wheel_path", None)
+        if wheel_path is not None:
+            if not Path(wheel_path).exists():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"No such file: {wheel_path}.",
+                )
+
     # Create TaskGroupV2 object
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
@@ -243,41 +253,42 @@ async def collect_tasks_pip(
         response.status_code = status.HTTP_201_CREATED
         return state
 
-    # Actual non-SSH endpoint
+    # Non-SSH endpoint
+    else:
 
-    logger = set_logger(logger_name="collect_tasks_pip")
+        logger = set_logger(logger_name="collect_tasks_pip")
 
-    # All checks are OK, proceed with task collection
-    collection_status = dict(
-        status=CollectionStatusV2.PENDING,
-        venv_path=task_group_attrs["venv_path"],
-        package=task_pkg.package,
-    )
-    state = CollectionStateV2(data=collection_status)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
+        # All checks are OK, proceed with task collection
+        collection_status = dict(
+            status=CollectionStatusV2.PENDING,
+            venv_path=task_group_attrs["venv_path"],
+            package=task_pkg.package,
+        )
+        state = CollectionStateV2(data=collection_status)
+        db.add(state)
+        await db.commit()
+        await db.refresh(state)
 
-    background_tasks.add_task(
-        background_collect_pip,
-        state_id=state.id,
-        task_group=task_group,
-        task_pkg_to_deprecate=task_pkg,  # FIXME: move to task_group
-    )
-    logger.debug(
-        "Task-collection endpoint: start background collection "
-        "and return state"
-    )
-    reset_logger_handlers(logger)
-    info = (
-        "Collecting tasks in the background. "
-        f"GET /task/collect/{state.id} to query collection status"
-    )
-    state.data["info"] = info
-    response.status_code = status.HTTP_201_CREATED
-    await db.close()
+        background_tasks.add_task(
+            background_collect_pip,
+            state_id=state.id,
+            task_group=task_group,
+            task_pkg_to_deprecate=task_pkg,  # FIXME: move to task_group
+        )
+        logger.debug(
+            "Task-collection endpoint: start background collection "
+            "and return state"
+        )
+        reset_logger_handlers(logger)
+        info = (
+            "Collecting tasks in the background. "
+            f"GET /task/collect/{state.id} to query collection status"
+        )
+        state.data["info"] = info
+        response.status_code = status.HTTP_201_CREATED
+        await db.close()
 
-    return state
+        return state
 
 
 @router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)

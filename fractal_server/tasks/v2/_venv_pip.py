@@ -6,14 +6,11 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 from fractal_server.utils import execute_command
 
 
 async def _pip_install(
-    venv_path: Path,
-    task_pkg_to_deprecate: _TaskCollectPip,
     task_group: TaskGroupV2,
     logger_name: str,
 ) -> Path:
@@ -32,20 +29,18 @@ async def _pip_install(
 
     logger = get_logger(logger_name)
 
-    python_bin = venv_path / "bin/python"
+    python_bin = Path(TaskGroupV2.venv_path) / "bin/python"
 
     extras = f"[{task_group.pip_extras}]" if task_group.pip_extras else ""
 
-    if task_pkg_to_deprecate.is_local_package:
-        pip_install_str = (
-            f"{task_pkg_to_deprecate.package_path.as_posix()}{extras}"
-        )
+    if task_group.wheel_path is not None:
+        pip_install_str = f"{task_group.wheel_path}{extras}"
     else:
         version_string = f"=={task_group.version}"
         pip_install_str = f"{task_group.pkg_name}{extras}{version_string}"
 
     await execute_command(
-        cwd=venv_path,
+        cwd=Path(TaskGroupV2.venv_path),
         command=(
             f"{python_bin} -m pip install --upgrade "
             f"'pip<={settings.FRACTAL_MAX_PIP_VERSION}'"
@@ -53,7 +48,7 @@ async def _pip_install(
         logger_name=logger_name,
     )
     await execute_command(
-        cwd=venv_path,
+        cwd=Path(TaskGroupV2.venv_path),
         command=f"{python_bin} -m pip install {pip_install_str}",
         logger_name=logger_name,
     )
@@ -72,7 +67,7 @@ async def _pip_install(
                 f"{pinned_pkg_version} is already installed"
             )
             stdout_show = await execute_command(
-                cwd=venv_path,
+                cwd=Path(TaskGroupV2.venv_path),
                 command=f"{python_bin} -m pip show {pinned_pkg_name}",
                 logger_name=logger_name,
             )
@@ -89,7 +84,7 @@ async def _pip_install(
                     f"install version {pinned_pkg_version}."
                 )
                 await execute_command(
-                    cwd=venv_path,
+                    cwd=Path(TaskGroupV2.venv_path),
                     command=(
                         f"{python_bin} -m pip install "
                         f"{pinned_pkg_name}=={pinned_pkg_version}"
@@ -104,7 +99,7 @@ async def _pip_install(
 
     # Extract package installation path from `pip show`
     stdout_show = await execute_command(
-        cwd=venv_path,
+        cwd=Path(TaskGroupV2.venv_path),
         command=f"{python_bin} -m pip show {task_group.pkg_name}",
         logger_name=logger_name,
     )
@@ -133,11 +128,11 @@ async def _pip_install(
 
     # Run `pip freeze --all` and store its output
     stdout_freeze = await execute_command(
-        cwd=venv_path,
+        cwd=Path(TaskGroupV2.venv_path),
         command=f"{python_bin} -m pip freeze --all",
         logger_name=logger_name,
     )
-    with (venv_path.parent / COLLECTION_FREEZE_FILENAME).open("w") as f:
+    with (Path(TaskGroupV2.path) / COLLECTION_FREEZE_FILENAME).open("w") as f:
         f.write(stdout_freeze)
 
     return package_root
@@ -177,9 +172,7 @@ async def _init_venv_v2(
 
 async def _create_venv_install_package_pip(
     *,
-    task_pkg_to_deprecate: _TaskCollectPip,
     task_group: TaskGroupV2,
-    venv_path: Path,
     logger_name: str,
 ) -> tuple[Path, Path]:
     """
@@ -195,13 +188,11 @@ async def _create_venv_install_package_pip(
         package_root: the location of the package manifest
     """
     python_bin = await _init_venv_v2(
-        venv_path=venv_path,
+        venv_path=Path(task_group.venv_path),
         python_version=task_group.python_version,
         logger_name=logger_name,
     )
     package_root = await _pip_install(
-        venv_path=venv_path,
-        task_pkg_to_deprecate=task_pkg_to_deprecate,
         task_group=task_group,
         logger_name=logger_name,
     )
