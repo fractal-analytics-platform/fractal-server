@@ -1,6 +1,4 @@
 from pathlib import Path
-from shutil import copy as shell_copy
-from tempfile import TemporaryDirectory
 from typing import Optional
 
 from fastapi import APIRouter
@@ -21,7 +19,6 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskGroupV2
-from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
@@ -31,18 +28,15 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.string_tools import slugify_task_name_for_source
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
-from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import (
     get_package_version_from_pypi,
 )
-from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from fractal_server.tasks.v2.utils import _parse_wheel_filename
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
@@ -108,6 +102,8 @@ async def collect_tasks_pip(
     task_group_attrs = dict(
         user_id=user.id,
         python_version=task_collect.python_version,
+        pip_extras=task_collect.package_extras,
+        pinned_package_versions=task_collect.pinned_package_versions,
     )
     if task_collect.package.endswith(".whl"):
         try:
@@ -251,45 +247,6 @@ async def collect_tasks_pip(
 
     logger = set_logger(logger_name="collect_tasks_pip")
 
-    # Read manifest - FIXME: move to background task
-    with TemporaryDirectory() as tmpdir:
-        try:
-            # Copy or download the package wheel file to tmpdir
-            if task_pkg.is_local_package:
-                shell_copy(task_pkg.package_path.as_posix(), tmpdir)
-                wheel_path = Path(tmpdir) / task_pkg.package_path.name
-            else:
-                logger.info(f"Now download {task_pkg}")
-                wheel_path = await download_package(
-                    task_pkg=task_pkg, dest=tmpdir
-                )
-            # Read package info from wheel file, and override the ones coming
-            # from the request body. Note that `package_name` was already set
-            # (and normalized) as part of `_TaskCollectPip` initialization.
-            pkg_info = inspect_package(wheel_path)
-            task_pkg.package_version = pkg_info["pkg_version"]
-            task_pkg.package_manifest = pkg_info["pkg_manifest"]
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid package or manifest. Original error: {e}",
-            )
-
-    # Check that tasks are not already in the DB
-    for new_task in task_pkg.package_manifest.task_list:
-        new_task_name_slug = slugify_task_name_for_source(new_task.name)
-        new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
-        stm = select(TaskV2).where(TaskV2.source == new_task_source)
-        res = await db.execute(stm)
-        if res.scalars().all():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot collect package. Task with source "
-                    f'"{new_task_source}" already exists in the database.'
-                ),
-            )
-
     # All checks are OK, proceed with task collection
     collection_status = dict(
         status=CollectionStatusV2.PENDING,
@@ -305,10 +262,7 @@ async def collect_tasks_pip(
         background_collect_pip,
         state_id=state.id,
         task_group=task_group,
-        venv_path=Path(
-            task_group_attrs["venv_path"]
-        ),  # FIXME: move to task_group if possible
-        task_pkg=task_pkg,  # FIXME: move to task_group if possible
+        task_pkg_to_deprecate=task_pkg,  # FIXME: move to task_group
     )
     logger.debug(
         "Task-collection endpoint: start background collection "

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..utils import COLLECTION_FREEZE_FILENAME
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
@@ -12,7 +13,8 @@ from fractal_server.utils import execute_command
 
 async def _pip_install(
     venv_path: Path,
-    task_pkg: _TaskCollectPip,
+    task_pkg_to_deprecate: _TaskCollectPip,
+    task_group: TaskGroupV2,
     logger_name: str,
 ) -> Path:
     """
@@ -32,15 +34,15 @@ async def _pip_install(
 
     python_bin = venv_path / "bin/python"
 
-    extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
+    extras = f"[{task_group.pip_extras}]" if task_group.pip_extras else ""
 
-    if task_pkg.is_local_package:
-        pip_install_str = f"{task_pkg.package_path.as_posix()}{extras}"
-    else:
-        version_string = (
-            f"=={task_pkg.package_version}" if task_pkg.package_version else ""
+    if task_pkg_to_deprecate.is_local_package:
+        pip_install_str = (
+            f"{task_pkg_to_deprecate.package_path.as_posix()}{extras}"
         )
-        pip_install_str = f"{task_pkg.package_name}{extras}{version_string}"
+    else:
+        version_string = f"=={task_group.version}"
+        pip_install_str = f"{task_group.pkg_name}{extras}{version_string}"
 
     await execute_command(
         cwd=venv_path,
@@ -55,11 +57,11 @@ async def _pip_install(
         command=f"{python_bin} -m pip install {pip_install_str}",
         logger_name=logger_name,
     )
-    if task_pkg.pinned_package_versions:
+    if task_group.pinned_package_versions:
         for (
             pinned_pkg_name,
             pinned_pkg_version,
-        ) in task_pkg.pinned_package_versions.items():
+        ) in task_group.pinned_package_versions.items():
 
             logger.debug(
                 "Specific version required: "
@@ -103,7 +105,7 @@ async def _pip_install(
     # Extract package installation path from `pip show`
     stdout_show = await execute_command(
         cwd=venv_path,
-        command=f"{python_bin} -m pip show {task_pkg.package_name}",
+        command=f"{python_bin} -m pip show {task_group.pkg_name}",
         logger_name=logger_name,
     )
 
@@ -124,9 +126,9 @@ async def _pip_install(
     # characters with underscore (_) characters, so the .dist-info directory
     # always has exactly one dash (-) character in its stem, separating the
     # name and version fields.
-    package_root = location / (task_pkg.package_name.replace("-", "_"))
+    package_root = location / (task_group.pkg_name.replace("-", "_"))
     logger.debug(f"[_pip install] {location=}")
-    logger.debug(f"[_pip install] {task_pkg.package_name=}")
+    logger.debug(f"[_pip install] {task_group.pkg_name=}")
     logger.debug(f"[_pip install] {package_root=}")
 
     # Run `pip freeze --all` and store its output
@@ -175,7 +177,8 @@ async def _init_venv_v2(
 
 async def _create_venv_install_package_pip(
     *,
-    task_pkg: _TaskCollectPip,
+    task_pkg_to_deprecate: _TaskCollectPip,
+    task_group: TaskGroupV2,
     venv_path: Path,
     logger_name: str,
 ) -> tuple[Path, Path]:
@@ -193,10 +196,13 @@ async def _create_venv_install_package_pip(
     """
     python_bin = await _init_venv_v2(
         venv_path=venv_path,
-        python_version=task_pkg.python_version,
+        python_version=task_group.python_version,
         logger_name=logger_name,
     )
     package_root = await _pip_install(
-        venv_path=venv_path, task_pkg=task_pkg, logger_name=logger_name
+        venv_path=venv_path,
+        task_pkg_to_deprecate=task_pkg_to_deprecate,
+        task_group=task_group,
+        logger_name=logger_name,
     )
     return python_bin, package_root

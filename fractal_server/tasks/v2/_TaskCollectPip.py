@@ -120,13 +120,3 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
             )
         )
         return source
-
-    def check(self):
-        """
-        Verify that the package has all attributes that are needed to continue
-        with task collection
-        """
-        if not self.package_version:
-            raise ValueError("`package_version` attribute is not set")
-        if not self.package_manifest:
-            raise ValueError("`package_manifest` attribute is not set")
