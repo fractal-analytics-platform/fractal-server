@@ -15,8 +15,14 @@ into pre-release sections below.
     * Add validator for `TaskGroupUpdateV2.active` (\#1852).
     * Add GET/PATCH/DELETE endpoints in `/admin/v2/task-group/` (\#1852).
     * Add auxiliary function `get_package_version_from_pypi` (\#1858).
-* Database lifecycle:
+    * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
+    * Add task `authors` to manifest schema (\#1856).
+    * Update `/api/v2/task-group/` schemas with new task-group attributes (\#1856).
+* Database:
     * Add `update-db-data` script (\#1820).
+    * Add `TaskV2` attributes `authors`, `tags`, `category` and `modality` (\#1856).
+    * Add `TaskGroupV2` attributes `origin`, `path`, `venv_path`, `pkg_name`, `version` and `pip_extras` (\#1856).
+
 
 # 2.7.0a1
 

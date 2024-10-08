@@ -1,7 +1,6 @@
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -23,26 +22,37 @@ async def test_non_verified_user(client, MockCurrentUser):
         assert res.status_code == 401
 
 
-async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
+async def test_task_get_list(
+    db, client, task_factory_v2, MockCurrentUser, user_group_factory
+):
 
     async with MockCurrentUser() as user:
-        new_group = UserGroup(name="new_group")
-        db.add(new_group)
-        await db.commit()
-        await db.refresh(new_group)
-        link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
-        db.add(link)
-        await db.commit()
+        new_group = await user_group_factory(
+            group_name="new_group", user_id=user.id
+        )
 
         await task_factory_v2(
-            user_id=user.id, user_group_id=new_group.id, index=1
+            user_id=user.id,
+            user_group_id=new_group.id,
+            index=1,
+            category="Conversion",
+            modality="HCS",
+            authors="Name1 Surname1,Name2 Surname2...",
         )
-        await task_factory_v2(user_id=user.id, index=2)
+
+        await task_factory_v2(
+            user_id=user.id,
+            index=2,
+            category="Conversion",
+            modality="EM",
+            authors="NAME1 SURNAME3",
+        )
         t = await task_factory_v2(
             user_id=user.id,
             index=3,
             args_schema_non_parallel=dict(a=1),
             args_schema_parallel=dict(b=2),
+            modality="EM",
         )
         res = await client.get(f"{PREFIX}/")
         data = res.json()
@@ -67,6 +77,16 @@ async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
 
+        # Queries
+        res = await client.get(f"{PREFIX}/?category=CONVERSION")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/?modality=em")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/?category=conversion&modality=em")
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/?author=name1%20sur")
+        assert len(res.json()) == 2
+
     async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
@@ -86,6 +106,10 @@ async def test_post_task(client, MockCurrentUser):
             source=f"{TASK_SOURCE}-compound",
             command_parallel="task_command_parallel",
             command_non_parallel="task_command_non_parallel",
+            category="Conversion",
+            modality="lightsheet",
+            authors="Foo Bar + Fractal Team",
+            tags=["compound", "test", "post", "api"],
         )
         res = await client.post(
             f"{PREFIX}/", json=task.dict(exclude_unset=True)
@@ -106,6 +130,10 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["docs_link"] is None
         assert res.json()["input_types"] == {}
         assert res.json()["output_types"] == {}
+        assert res.json()["category"] == "Conversion"
+        assert res.json()["modality"] == "lightsheet"
+        assert res.json()["authors"] == "Foo Bar + Fractal Team"
+        assert res.json()["tags"] == ["compound", "test", "post", "api"]
 
         task = TaskCreateV2(
             name="task_name",
@@ -369,6 +397,10 @@ async def test_patch_task(
             output_types={"input": False, "output": True},
             command_parallel="new_cmd_parallel",
             command_non_parallel="new_cmd_non_parallel",
+            category="new category",
+            modality="new modality",
+            authors="New Author 1,New Author 1",
+            tags=["new", "tags"],
         )
         payload = update.dict(exclude_unset=True)
         res = await client.patch(
