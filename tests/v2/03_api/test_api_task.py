@@ -37,7 +37,7 @@ async def test_task_get_list(
             index=1,
             category="Conversion",
             modality="HCS",
-            authors="AbCd EFgh,Foo Bar-whatever...",
+            authors="Name1 Surname1,Name2 Surname2...",
         )
 
         await task_factory_v2(
@@ -45,7 +45,7 @@ async def test_task_get_list(
             index=2,
             category="Conversion",
             modality="EM",
-            authors="ABCD EGH",
+            authors="NAME1 SURNAME3",
         )
         t = await task_factory_v2(
             user_id=user.id,
@@ -84,7 +84,7 @@ async def test_task_get_list(
         assert len(res.json()) == 2
         res = await client.get(f"{PREFIX}/?category=conversion&modality=em")
         assert len(res.json()) == 1
-        res = await client.get(f"{PREFIX}/?author=cd e")
+        res = await client.get(f"{PREFIX}/?author=name1%20sur")
         assert len(res.json()) == 2
 
     async with MockCurrentUser():
