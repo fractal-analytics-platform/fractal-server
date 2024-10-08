@@ -2,9 +2,9 @@ name: ci
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "1828-introduce-new-taskv2-attributes"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "1828-introduce-new-taskv2-attributes"]
 
 jobs:
 
