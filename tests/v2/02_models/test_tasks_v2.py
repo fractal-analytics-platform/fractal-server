@@ -32,7 +32,11 @@ async def test_task_group_v2(db):
     )
 
     task_group = TaskGroupV2(
-        user_id=user.id, active=True, task_list=[task1, task2, task3]
+        user_id=user.id,
+        active=True,
+        task_list=[task1, task2, task3],
+        origin="wheel-file",
+        pkg_name="package-name",
     )
     db.add(task_group)
     await db.commit()

@@ -186,9 +186,15 @@ async def collect_task_custom(
             detail="\n".join(overlapping_tasks_v1_source_and_id),
         )
 
+    # Prepare task-group attributes
+    task_group_attrs = dict(
+        origin="other",
+        pkg_name=task_collect.source,  # FIXME
+    )
+
     task_group = create_db_task_group_and_tasks(
         task_list=task_list,
-        task_group_obj=TaskGroupCreateV2(),
+        task_group_obj=TaskGroupCreateV2(**task_group_attrs),
         user_id=user.id,
         user_group_id=user_group_id,
         db=db_sync,

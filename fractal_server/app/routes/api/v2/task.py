@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -36,6 +37,9 @@ logger = set_logger(__name__)
 async def get_list_task(
     args_schema_parallel: bool = True,
     args_schema_non_parallel: bool = True,
+    category: Optional[str] = None,
+    modality: Optional[str] = None,
+    author: Optional[str] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
@@ -57,6 +61,13 @@ async def get_list_task(
             )
         )
     )
+    if category is not None:
+        stm = stm.where(func.lower(TaskV2.category) == category.lower())
+    if modality is not None:
+        stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
+    if author is not None:
+        stm = stm.where(TaskV2.authors.icontains(author))
+
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
@@ -216,6 +227,8 @@ async def create_task(
         user_group_id=user_group_id,
         active=True,
         task_list=[db_task],
+        origin="other",
+        pkg_name=task.name,
     )
     db.add(db_task_group)
     await db.commit()

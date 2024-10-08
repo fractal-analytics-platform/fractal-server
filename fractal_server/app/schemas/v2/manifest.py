@@ -7,6 +7,8 @@ from pydantic import HttpUrl
 from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import valstr
+
 
 class TaskManifestV2(BaseModel):
     """
@@ -49,6 +51,10 @@ class TaskManifestV2(BaseModel):
     args_schema_parallel: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
+
+    category: Optional[str] = None
+    modality: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
 
     @root_validator
     def validate_executable_args_meta(cls, values):
@@ -128,7 +134,8 @@ class ManifestV2(BaseModel):
     manifest_version: str
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str]
+    args_schema_version: Optional[str] = None
+    authors: Optional[str] = None
 
     @root_validator()
     def _check_args_schemas_are_present(cls, values):
@@ -157,3 +164,7 @@ class ManifestV2(BaseModel):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
         return value
+
+    _authors = validator("authors", allow_reuse=True)(
+        valstr("authors", accept_none=True)
+    )

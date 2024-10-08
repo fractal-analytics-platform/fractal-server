@@ -377,3 +377,34 @@ async def first_user(db: AsyncSession, default_user_group: UserGroup):
         await db.commit()
 
     return user
+
+
+@pytest.fixture
+async def user_group_factory(db: AsyncSession):
+    """
+    Insert UserGroup in db and link it to a UserOAuth
+    """
+
+    async def __user_group_factory(
+        group_name: str,
+        user_id: int,
+        *other_users_id: list[int],
+        db: AsyncSession = db,
+    ):
+
+        user_group = UserGroup(name=group_name)
+        db.add(user_group)
+        await db.commit()
+        await db.refresh(user_group)
+
+        db.add(LinkUserGroup(user_id=user_id, group_id=user_group.id))
+        for other_user_id in other_users_id:
+            db.add(
+                LinkUserGroup(user_id=other_user_id, group_id=user_group.id)
+            )
+
+        await db.commit()
+
+        return user_group
+
+    return __user_group_factory

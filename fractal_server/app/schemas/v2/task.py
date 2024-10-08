@@ -9,8 +9,9 @@ from pydantic import HttpUrl
 from pydantic import root_validator
 from pydantic import validator
 
-from .._validators import valdictkeys
-from .._validators import valstr
+from fractal_server.app.schemas._validators import val_unique_list
+from fractal_server.app.schemas._validators import valdictkeys
+from fractal_server.app.schemas._validators import valstr
 from fractal_server.string_tools import validate_cmd
 
 
@@ -18,21 +19,26 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     source: str
 
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
-    version: Optional[str]
-    args_schema_non_parallel: Optional[dict[str, Any]]
-    args_schema_parallel: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    meta_non_parallel: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
+    version: Optional[str] = None
+    args_schema_non_parallel: Optional[dict[str, Any]] = None
+    args_schema_parallel: Optional[dict[str, Any]] = None
+    args_schema_version: Optional[str] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
+
+    category: Optional[str] = None
+    modality: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    authors: Optional[str] = None
 
     # Validators
     @root_validator
@@ -83,6 +89,22 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
         valdictkeys("output_types")
     )
 
+    _category = validator("category", allow_reuse=True)(
+        valstr("category", accept_none=True)
+    )
+    _modality = validator("modality", allow_reuse=True)(
+        valstr("modality", accept_none=True)
+    )
+    _authors = validator("authors", allow_reuse=True)(
+        valstr("authors", accept_none=True)
+    )
+
+    @validator("tags")
+    def validate_list_of_strings(cls, value):
+        for i, tag in enumerate(value):
+            value[i] = valstr(f"tags[{i}]")(tag)
+        return val_unique_list("tags")(value)
+
 
 class TaskReadV2(BaseModel):
 
@@ -90,31 +112,41 @@ class TaskReadV2(BaseModel):
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
     source: str
-    version: Optional[str]
+    version: Optional[str] = None
 
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     meta_parallel: dict[str, Any]
     meta_non_parallel: dict[str, Any]
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    args_schema_version: Optional[str] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 
-    taskgroupv2_id: Optional[int]
+    taskgroupv2_id: Optional[int] = None
+
+    category: Optional[str] = None
+    modality: Optional[str] = None
+    authors: Optional[str] = None
+    tags: list[str]
 
 
 class TaskUpdateV2(BaseModel):
 
-    name: Optional[str]
-    version: Optional[str]
-    command_parallel: Optional[str]
-    command_non_parallel: Optional[str]
-    input_types: Optional[dict[str, bool]]
-    output_types: Optional[dict[str, bool]]
+    name: Optional[str] = None
+    version: Optional[str] = None
+    command_parallel: Optional[str] = None
+    command_non_parallel: Optional[str] = None
+    input_types: Optional[dict[str, bool]] = None
+    output_types: Optional[dict[str, bool]] = None
+
+    category: Optional[str] = None
+    modality: Optional[str] = None
+    authors: Optional[str] = None
+    tags: Optional[list[str]] = None
 
     # Validators
     @validator("input_types", "output_types")
@@ -139,6 +171,22 @@ class TaskUpdateV2(BaseModel):
     _output_types = validator("output_types", allow_reuse=True)(
         valdictkeys("output_types")
     )
+
+    _category = validator("category", allow_reuse=True)(
+        valstr("category", accept_none=True)
+    )
+    _modality = validator("modality", allow_reuse=True)(
+        valstr("modality", accept_none=True)
+    )
+    _authors = validator("authors", allow_reuse=True)(
+        valstr("authors", accept_none=True)
+    )
+
+    @validator("tags")
+    def validate_tags(cls, value):
+        for i, tag in enumerate(value):
+            value[i] = valstr(f"tags[{i}]")(tag)
+        return val_unique_list("tags")(value)
 
 
 class TaskImportV2(BaseModel):

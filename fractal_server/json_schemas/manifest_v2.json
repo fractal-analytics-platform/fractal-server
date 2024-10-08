@@ -22,6 +22,10 @@
         "args_schema_version": {
             "title": "Args Schema Version",
             "type": "string"
+        },
+        "authors": {
+            "title": "Authors",
+            "type": "string"
         }
     },
     "required": [
@@ -86,6 +90,21 @@
                     "maxLength": 2083,
                     "format": "uri",
                     "type": "string"
+                },
+                "category": {
+                    "title": "Category",
+                    "type": "string"
+                },
+                "modality": {
+                    "title": "Modality",
+                    "type": "string"
+                },
+                "tags": {
+                    "title": "Tags",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "required": [

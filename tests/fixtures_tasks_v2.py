@@ -94,7 +94,7 @@ def fractal_tasks_mock_db(
 
     task_group = create_db_task_group_and_tasks(
         task_list=fractal_tasks_mock_collection["task_list"],
-        task_group_obj=TaskGroupCreateV2(),
+        task_group_obj=TaskGroupCreateV2(origin="other", pkg_name="mock"),
         user_id=first_user.id,
         user_group_id=default_user_group.id,
         db=db_sync,
