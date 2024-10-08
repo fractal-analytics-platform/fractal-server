@@ -120,7 +120,7 @@ async def test_logs_failed_collection(
     await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
-        task_pkg=task_pkg,
+        task_pkg_to_deprecate=task_pkg,
         user_id=first_user.id,
         user_group_id=None,
     )
@@ -156,7 +156,7 @@ async def test_logs_failed_collection(
     await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
-        task_pkg=task_pkg,
+        task_pkg_to_deprecate=task_pkg,
         user_id=first_user.id,
         user_group_id=None,
     )

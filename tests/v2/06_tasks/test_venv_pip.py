@@ -73,7 +73,7 @@ async def test_pip_install(local_or_remote, tmp_path, testdata_path):
     debug(task_pkg)
     location = await _pip_install(
         venv_path=venv_path,
-        task_pkg=task_pkg,
+        task_pkg_to_deprecate=task_pkg,
         logger_name=LOGGER_NAME,
     )
     assert location.exists()
@@ -111,7 +111,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
             pin = {}
         await _pip_install(
             venv_path=venv_path,
-            task_pkg=_TaskCollectPip(
+            task_pkg_to_deprecate=_TaskCollectPip(
                 package=PACKAGE,
                 package_version=VERSION,
                 package_extras=EXTRA,
@@ -247,7 +247,9 @@ async def test_create_venv_install_package_pip(
 
     # Collect task package
     python_bin, package_root = await _create_venv_install_package_pip(
-        task_pkg=task_pkg, venv_path=tmp_path, logger_name=LOGGER_NAME
+        task_pkg_to_deprecate=task_pkg,
+        venv_path=tmp_path,
+        logger_name=LOGGER_NAME,
     )
     debug(python_bin)
     debug(package_root)
