@@ -32,14 +32,27 @@ async def test_task_get_list(
         )
 
         await task_factory_v2(
-            user_id=user.id, user_group_id=new_group.id, index=1
+            user_id=user.id,
+            user_group_id=new_group.id,
+            index=1,
+            category="Conversion",
+            modality="HCS",
+            authors="AbCd EFgh,Foo Bar-whatever...",
         )
-        await task_factory_v2(user_id=user.id, index=2)
+
+        await task_factory_v2(
+            user_id=user.id,
+            index=2,
+            category="Conversion",
+            modality="EM",
+            authors="ABCD EGH",
+        )
         t = await task_factory_v2(
             user_id=user.id,
             index=3,
             args_schema_non_parallel=dict(a=1),
             args_schema_parallel=dict(b=2),
+            modality="EM",
         )
         res = await client.get(f"{PREFIX}/")
         data = res.json()
@@ -63,6 +76,16 @@ async def test_task_get_list(
         )
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
+
+        # Queries
+        res = await client.get(f"{PREFIX}/?category=CONVERSION")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/?modality=em")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/?category=conversion&modality=em")
+        assert len(res.json()) == 1
+        res = await client.get(PREFIX + r"/?author=cd\ e")  # raw for precommit
+        assert len(res.json()) == 2
 
     async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/")

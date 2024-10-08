@@ -66,7 +66,6 @@ async def get_list_task(
     if modality is not None:
         stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
     if author is not None:
-        # FIXME test: will it fail with `TaskV2.authors == None`?
         stm = stm.where(TaskV2.authors.icontains(author))
 
     res = await db.execute(stm)
