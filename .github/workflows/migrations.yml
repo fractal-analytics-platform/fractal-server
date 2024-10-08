@@ -19,7 +19,7 @@ env:
   # with the SOURCE_VERSION of fractal-server.
   # Here we test the script that upgrades the DB from SOURCE_VERSION to the
   #current version.
-  SOURCE_VERSION: 2.6.0
+  SOURCE_VERSION: 2.6.4
   ROOTDIR: tests/data/testing_databases
 
 jobs:
@@ -72,6 +72,8 @@ jobs:
         run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${SOURCE_VERSION}.sql.sqlite3 --all
 
       - name: Apply migration and fix-db script (postgres)
+        env:
+          FRACTAL_V27_DEFAULT_USER_EMAIL: admin@fractal.xy
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
@@ -79,6 +81,8 @@ jobs:
           poetry run python scripts/validate_db_data_with_read_schemas.py
 
       - name: Apply migration and fix-db script (sqlite)
+        env:
+          FRACTAL_V27_DEFAULT_USER_EMAIL: admin@fractal.xy
         run: |
           echo -e "DB_ENGINE=sqlite\nSQLITE_PATH=${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql.sqlite3" > .fractal_server.env
           poetry run fractalctl set-db
