@@ -1,7 +1,6 @@
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -23,16 +22,14 @@ async def test_non_verified_user(client, MockCurrentUser):
         assert res.status_code == 401
 
 
-async def test_task_get_list(db, client, task_factory_v2, MockCurrentUser):
+async def test_task_get_list(
+    db, client, task_factory_v2, MockCurrentUser, user_group_factory
+):
 
     async with MockCurrentUser() as user:
-        new_group = UserGroup(name="new_group")
-        db.add(new_group)
-        await db.commit()
-        await db.refresh(new_group)
-        link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
-        db.add(link)
-        await db.commit()
+        new_group = await user_group_factory(
+            group_name="new_group", user_id=user.id
+        )
 
         await task_factory_v2(
             user_id=user.id, user_group_id=new_group.id, index=1
