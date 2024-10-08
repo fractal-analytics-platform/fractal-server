@@ -57,9 +57,15 @@ set_db_parser.add_argument(
 )
 
 # fractalctl update-db-data
-subparsers.add_parser(
+update_db_data_parser = subparsers.add_parser(
     "update-db-data",
     description="Apply data-migration script to an existing database.",
+)
+update_db_data_parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="If set, perform a dry run of the data migration.",
+    default=False,
 )
 
 
@@ -120,7 +126,7 @@ def set_db(skip_init_data: bool = False):
     print()
 
 
-def update_db_data():
+def update_db_data(dry_run: bool = False):
     """
     Apply data migrations.
     """
@@ -185,7 +191,7 @@ def update_db_data():
         sys.exit()
 
     print("OK, now starting data-migration script\n")
-    current_update_db_data_module.fix_db()
+    current_update_db_data_module.fix_db(dry_run=dry_run)
 
 
 def run():
@@ -196,7 +202,7 @@ def run():
     elif args.cmd == "set-db":
         set_db(skip_init_data=args.skip_init_data)
     elif args.cmd == "update-db-data":
-        update_db_data()
+        update_db_data(dry_run=args.dry_run)
     elif args.cmd == "start":
         uvicorn.run(
             "fractal_server.main:app",

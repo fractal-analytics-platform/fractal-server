@@ -15,6 +15,7 @@ from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.user import UserRead
@@ -31,6 +32,7 @@ from fractal_server.app.schemas.v2 import CollectionStateReadV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
+from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
@@ -168,6 +170,16 @@ with next(get_sync_db()) as db:
     for task in sorted(tasks, key=lambda x: x.id):
         TaskReadV2(**task.model_dump())
         print(f"V2 - Task {task.id} validated")
+
+    # TASK GROUPS V2
+    stm = select(TaskGroupV2)
+    task_groups = db.execute(stm).scalars().all()
+    for task_group in sorted(task_groups, key=lambda x: x.id):
+        task_list = []
+        for task in task_group.task_list:
+            task_list.append(TaskReadV2(**task.model_dump()))
+        TaskGroupReadV2(**task_group.model_dump(), task_list=task_list)
+        print(f"V2 - TaskGroup {task_group.id} validated")
 
     # WORKFLOWS V2
     stm = select(WorkflowV2)
