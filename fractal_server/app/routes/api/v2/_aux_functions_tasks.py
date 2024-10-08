@@ -211,15 +211,15 @@ async def _get_valid_user_group_id(
 
 async def _verify_non_duplication_user_constraint(
     db: AsyncSession,
-    pkg_name: str,
     user_id: int,
+    pkg_name: str,
     version: Optional[str],
 ):
     stm = (
         select(TaskGroupV2)
+        .where(TaskGroupV2.user_id == user_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)  # FIXME test with None
-        .where(TaskGroupV2.user_id == user_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()
@@ -235,15 +235,23 @@ async def _verify_non_duplication_user_constraint(
 
 async def _verify_non_duplication_group_constraint(
     db: AsyncSession,
+    user_group_id: int,
     pkg_name: str,
     version: Optional[str],
-    user_group_id: Optional[int],
 ):
+    if user_group_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "`_verify_non_duplication_group_constraint` cannot be called "
+                f"with {user_group_id=}."
+            ),
+        )
     stm = (
         select(TaskGroupV2)
+        .where(TaskGroupV2.user_group_id == user_group_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)
-        .where(TaskGroupV2.user_group_id == user_group_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()

@@ -223,15 +223,16 @@ async def create_task(
         )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
+    pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
-        db=db, pkg_name=task.name, user_id=user.id, version=task.version
+        db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version
     )
     if user_group_id is not None:
         await _verify_non_duplication_group_constraint(
             db=db,
-            pkg_name=task.name,
+            pkg_name=pkg_name,
             user_group_id=user_group_id,
-            version=task.version,
+            version=db_task.version,
         )
     db_task_group = TaskGroupV2(
         user_id=user.id,
@@ -239,8 +240,8 @@ async def create_task(
         active=True,
         task_list=[db_task],
         origin="other",
-        version=task.version,
-        pkg_name=task.name,
+        version=db_task.version,
+        pkg_name=pkg_name,
     )
     db.add(db_task_group)
     await db.commit()
