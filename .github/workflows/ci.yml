@@ -94,6 +94,8 @@ jobs:
         exclude:
           - python-version: "3.11"
             db: "sqlite"
+          - python-version: "3.9"
+            db: "postgres"
           - python-version: "3.11"
             db: "postgres"
 
