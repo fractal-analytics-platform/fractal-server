@@ -106,6 +106,10 @@ async def test_post_task(client, MockCurrentUser):
             source=f"{TASK_SOURCE}-compound",
             command_parallel="task_command_parallel",
             command_non_parallel="task_command_non_parallel",
+            category="Conversion",
+            modality="lightsheet",
+            authors="Foo Bar + Fractal Team",
+            tags=["compound", "test", "post", "api"],
         )
         res = await client.post(
             f"{PREFIX}/", json=task.dict(exclude_unset=True)
@@ -126,6 +130,10 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["docs_link"] is None
         assert res.json()["input_types"] == {}
         assert res.json()["output_types"] == {}
+        assert res.json()["category"] == "Conversion"
+        assert res.json()["modality"] == "lightsheet"
+        assert res.json()["authors"] == "Foo Bar + Fractal Team"
+        assert res.json()["tags"] == ["compound", "test", "post", "api"]
 
         task = TaskCreateV2(
             name="task_name",
@@ -389,6 +397,10 @@ async def test_patch_task(
             output_types={"input": False, "output": True},
             command_parallel="new_cmd_parallel",
             command_non_parallel="new_cmd_non_parallel",
+            category="new category",
+            modality="new modality",
+            authors="New Author 1,New Author 1",
+            tags=["new", "tags"],
         )
         payload = update.dict(exclude_unset=True)
         res = await client.patch(
