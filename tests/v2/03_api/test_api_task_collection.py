@@ -17,6 +17,9 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.endpoint_operations import (
+    get_package_version_from_pypi,
+)
 from tests.execute_command import execute_command
 
 
@@ -242,7 +245,12 @@ async def test_task_collection_from_wheel_non_canonical(
         assert data["status"] == "OK"
 
 
-@pytest.mark.parametrize("package_version", [None, "1.0.2"])
+OLD_FRACTAL_TASKS_CORE_VERSION = "1.0.2"
+
+
+@pytest.mark.parametrize(
+    "package_version", [None, OLD_FRACTAL_TASKS_CORE_VERSION]
+)
 async def test_task_collection_from_pypi(
     db,
     client,
@@ -263,14 +271,21 @@ async def test_task_collection_from_pypi(
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PACKAGE_VERSION = package_version
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     payload = dict(
         package="fractal-tasks-core",
-        package_version=PACKAGE_VERSION,
         python_version=PYTHON_VERSION,
     )
+    if package_version is not None:
+        EXPECTED_PACKAGE_VERSION = package_version
+        payload["package_version"] = package_version
+    else:
+        EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
+            payload["package"]
+        )
+        assert EXPECTED_PACKAGE_VERSION > OLD_FRACTAL_TASKS_CORE_VERSION
     debug(payload)
+    debug(EXPECTED_PACKAGE_VERSION)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # Trigger task collection
@@ -279,6 +294,7 @@ async def test_task_collection_from_pypi(
             json=payload,
         )
         assert res.status_code == 201
+        debug(res.json())
         assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state = res.json()
         state_id = state["id"]
@@ -307,15 +323,9 @@ async def test_task_collection_from_pypi(
         assert PYTHON_VERSION in version
 
         # Check task source
-        if package_version is not None:
-            EXPECTED_SOURCE = (
-                f"pip_remote:fractal_tasks_core:{PACKAGE_VERSION}::"
-                f"py{PYTHON_VERSION}"
-            )
-            debug(EXPECTED_SOURCE)
-            for task in task_list:
-                debug(task["source"])
-                assert task["source"].startswith(EXPECTED_SOURCE)
+        for task in task_list:
+            debug(task["source"])
+            assert task["version"] == EXPECTED_PACKAGE_VERSION
 
         # Check task type
         for task in task_list:
