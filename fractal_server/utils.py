@@ -32,8 +32,8 @@ def get_timestamp() -> datetime:
 
 async def execute_command(
     *,
-    cwd: Path,
     command: str,
+    cwd: Optional[Path] = None,
     logger_name: Optional[str] = None,
 ) -> str:
     """
@@ -60,12 +60,13 @@ async def execute_command(
     cmd, *args = command_split
 
     logger = get_logger(logger_name)
+    cwd_kwarg = dict() if cwd is None else dict(cwd=cwd)
     proc = await asyncio.create_subprocess_exec(
         cmd,
         *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        cwd=cwd,
+        **cwd_kwarg,
     )
     stdout, stderr = await proc.communicate()
     logger.debug(f"Subprocess call to: {command}")

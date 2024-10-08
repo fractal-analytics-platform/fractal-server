@@ -16,6 +16,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v1 import Task as TaskV1
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.routes.aux.validate_user_settings import (
@@ -33,7 +34,7 @@ from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.database_operations import (
-    create_db_task_group_and_tasks,
+    create_db_tasks_and_update_task_group,
 )
 
 router = APIRouter()
@@ -189,14 +190,21 @@ async def collect_task_custom(
     # Prepare task-group attributes
     task_group_attrs = dict(
         origin="other",
-        pkg_name=task_collect.source,  # FIXME
-    )
-
-    task_group = create_db_task_group_and_tasks(
-        task_list=task_list,
-        task_group_obj=TaskGroupCreateV2(**task_group_attrs),
+        pkg_name=task_collect.source,  # FIXME: pick one
         user_id=user.id,
         user_group_id=user_group_id,
+    )
+    TaskGroupCreateV2(**task_group_attrs)
+
+    task_group = TaskGroupV2(**task_group_attrs)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+
+    task_group = create_db_tasks_and_update_task_group(
+        task_list=task_list,
+        task_group_id=task_group.id,
         db=db_sync,
     )
 

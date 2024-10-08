@@ -11,18 +11,17 @@ from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
 from ...string_tools import slugify_task_name_for_source
-from ..utils import get_absolute_venv_path
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
 from ._TaskCollectPip import _TaskCollectPip
-from .database_operations import create_db_task_group_and_tasks
+from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
@@ -82,7 +81,8 @@ def _handle_failure(
     logger_name: str,
     exception: Exception,
     db: DBSyncSession,
-    venv_path: Optional[Path] = None,
+    task_group_id: int,
+    path: Optional[Path] = None,
 ):
     """
     Note: `venv_path` is only required to trigger the folder deletion.
@@ -113,10 +113,15 @@ def _handle_failure(
         db=db,
     )
     # Delete corrupted package dir
-    if venv_path is not None:
-        logger.info(f"Now delete temporary folder {venv_path}")
-        shell_rmtree(venv_path)
+    if path is not None and Path(path).exists():
+        logger.info(f"Now delete temporary folder {path}")
+        shell_rmtree(path)
         logger.info("Temporary folder deleted")
+
+    # Delete TaskGroupV2 object
+    task_group = db.get(TaskGroupV2, task_group_id)
+    db.delete(task_group)
+    db.commit()
 
     reset_logger_handlers(logger)
     return
@@ -206,8 +211,7 @@ async def background_collect_pip(
     state_id: int,
     venv_path: Path,
     task_pkg: _TaskCollectPip,
-    user_id: int,
-    user_group_id: Optional[int],
+    task_group: TaskGroupV2,
 ) -> None:
     """
     Setup venv, install package, collect tasks.
@@ -221,10 +225,29 @@ async def background_collect_pip(
     5. Handle failures by copying the log into the state and deleting the
        package directory.
     """
-    logger_name = task_pkg.package.replace("/", "_")
+    logger_name = (
+        f"{task_group.user_id}-{task_group.pkg_name}-{task_group.version}"
+    )
+
+    try:
+        Path(task_group.path).mkdir(parents=True, exist_ok=False)
+    except FileExistsError as e:
+        logfile_path = get_log_path(Path(task_group.path))
+        with next(get_sync_db()) as db:
+            _handle_failure(
+                state_id=state_id,
+                log_file_path=logfile_path,
+                logger_name=logger_name,
+                exception=e,
+                db=db,
+                path=None,  # Do not remove an existing path
+                task_group_id=task_group.id,
+            )
+            return
+
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=get_log_path(venv_path),
+        log_file_path=get_log_path(Path(task_group.path)),
     )
 
     # Start
@@ -250,7 +273,7 @@ async def background_collect_pip(
                 db=db,
             )
             python_bin, package_root = await _create_venv_install_package_pip(
-                path=venv_path,
+                venv_path=Path(task_group.venv_path),
                 task_pkg=task_pkg,
                 logger_name=logger_name,
             )
@@ -276,20 +299,9 @@ async def background_collect_pip(
             _check_task_files_exist(task_list=task_list)
 
             # Prepare some task-group attributes
-            task_group_attrs = dict(
-                pkg_name=task_pkg.package_name,
-                version=task_pkg.package_version,
-            )
-            if task_pkg.is_local_package:
-                task_group_attrs["origin"] = "wheel-file"
-            else:
-                task_group_attrs["origin"] = "pypi"
-
-            task_group = create_db_task_group_and_tasks(
+            task_group = create_db_tasks_and_update_task_group(
                 task_list=task_list,
-                task_group_obj=TaskGroupCreateV2(**task_group_attrs),
-                user_id=user_id,
-                user_group_id=user_group_id,
+                task_group_id=task_group.id,
                 db=db,
             )
 
@@ -298,15 +310,19 @@ async def background_collect_pip(
 
             # Block 4: finalize (write collection files, write metadata to DB)
             logger.debug("finalising - START")
-            collection_path = get_collection_path(venv_path)
+            collection_path = get_collection_path(Path(task_group.path))
             collection_state = db.get(CollectionStateV2, state_id)
             task_read_list = [
                 TaskReadV2(**task.model_dump()).dict()
                 for task in task_group.task_list
             ]
             collection_state.data["task_list"] = task_read_list
-            collection_state.data["log"] = get_collection_log(venv_path)
-            collection_state.data["freeze"] = get_collection_freeze(venv_path)
+            collection_state.data["log"] = get_collection_log(
+                Path(task_group.path)
+            )
+            collection_state.data["freeze"] = get_collection_freeze(
+                Path(task_group.path)
+            )
             with collection_path.open("w") as f:
                 json.dump(collection_state.data, f, indent=2)
 
@@ -315,14 +331,15 @@ async def background_collect_pip(
             logger.debug("finalising - END")
 
         except Exception as e:
-            logfile_path = get_log_path(get_absolute_venv_path(venv_path))
+            logfile_path = get_log_path(Path(task_group.path))
             _handle_failure(
                 state_id=state_id,
                 log_file_path=logfile_path,
                 logger_name=logger_name,
                 exception=e,
                 db=db,
-                venv_path=venv_path,
+                path=task_group.path,
+                task_group_id=task_group.id,
             )
             return
 

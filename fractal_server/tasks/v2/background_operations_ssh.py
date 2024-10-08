@@ -11,7 +11,7 @@ from ._TaskCollectPip import _TaskCollectPip
 from .background_operations import _handle_failure
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
-from .database_operations import create_db_task_group_and_tasks
+from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
@@ -326,7 +326,7 @@ def background_collect_pip_ssh(
                 else:
                     task_group_attrs["origin"] = "pypi"
 
-                create_db_task_group_and_tasks(
+                create_db_tasks_and_update_task_group(
                     task_list=task_list,
                     task_group_obj=TaskGroupCreateV2(**task_group_attrs),
                     user_id=user_id,

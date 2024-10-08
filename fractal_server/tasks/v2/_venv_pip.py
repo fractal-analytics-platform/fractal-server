@@ -30,7 +30,7 @@ async def _pip_install(
 
     logger = get_logger(logger_name)
 
-    pip = venv_path / "venv/bin/pip"
+    python_bin = venv_path / "bin/python"
 
     extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
 
@@ -45,14 +45,14 @@ async def _pip_install(
     await execute_command(
         cwd=venv_path,
         command=(
-            f"{pip} install --upgrade "
+            f"{python_bin} -m pip install --upgrade "
             f"'pip<={settings.FRACTAL_MAX_PIP_VERSION}'"
         ),
         logger_name=logger_name,
     )
     await execute_command(
         cwd=venv_path,
-        command=f"{pip} install {pip_install_str}",
+        command=f"{python_bin} -m pip install {pip_install_str}",
         logger_name=logger_name,
     )
     if task_pkg.pinned_package_versions:
@@ -71,7 +71,7 @@ async def _pip_install(
             )
             stdout_show = await execute_command(
                 cwd=venv_path,
-                command=f"{pip} show {pinned_pkg_name}",
+                command=f"{python_bin} -m pip show {pinned_pkg_name}",
                 logger_name=logger_name,
             )
             current_version = next(
@@ -89,7 +89,7 @@ async def _pip_install(
                 await execute_command(
                     cwd=venv_path,
                     command=(
-                        f"{pip} install "
+                        f"{python_bin} -m pip install "
                         f"{pinned_pkg_name}=={pinned_pkg_version}"
                     ),
                     logger_name=logger_name,
@@ -103,7 +103,7 @@ async def _pip_install(
     # Extract package installation path from `pip show`
     stdout_show = await execute_command(
         cwd=venv_path,
-        command=f"{pip} show {task_pkg.package_name}",
+        command=f"{python_bin} -m pip show {task_pkg.package_name}",
         logger_name=logger_name,
     )
 
@@ -131,9 +131,11 @@ async def _pip_install(
 
     # Run `pip freeze --all` and store its output
     stdout_freeze = await execute_command(
-        cwd=venv_path, command=f"{pip} freeze --all", logger_name=logger_name
+        cwd=venv_path,
+        command=f"{python_bin} -m pip freeze --all",
+        logger_name=logger_name,
     )
-    with (venv_path / COLLECTION_FREEZE_FILENAME).open("w") as f:
+    with (venv_path.parent / COLLECTION_FREEZE_FILENAME).open("w") as f:
         f.write(stdout_freeze)
 
     return package_root
@@ -141,7 +143,7 @@ async def _pip_install(
 
 async def _init_venv_v2(
     *,
-    path: Path,
+    venv_path: Path,
     python_version: Optional[str] = None,
     logger_name: str,
 ) -> Path:
@@ -150,7 +152,7 @@ async def _init_venv_v2(
 
     Args:
         path : Path
-            path to directory in which to set up the virtual environment
+            path to the venv actual directory (not its parent).
         python_version : default=None
             Python version the virtual environment will be based upon
 
@@ -159,23 +161,22 @@ async def _init_venv_v2(
             path to python interpreter
     """
     logger = get_logger(logger_name)
-    logger.debug(f"[_init_venv] {path=}")
+    logger.debug(f"[_init_venv_v2] {venv_path=}")
     interpreter = get_python_interpreter_v2(python_version=python_version)
-    logger.debug(f"[_init_venv] {interpreter=}")
+    logger.debug(f"[_init_venv_v2] {interpreter=}")
     await execute_command(
-        cwd=path,
-        command=f"{interpreter} -m venv venv",
+        command=f"{interpreter} -m venv {venv_path}",
         logger_name=logger_name,
     )
-    python_bin = path / "venv/bin/python"
-    logger.debug(f"[_init_venv] {python_bin=}")
+    python_bin = venv_path / "bin/python"
+    logger.debug(f"[_init_venv_v2] {python_bin=}")
     return python_bin
 
 
 async def _create_venv_install_package_pip(
     *,
     task_pkg: _TaskCollectPip,
-    path: Path,
+    venv_path: Path,
     logger_name: str,
 ) -> tuple[Path, Path]:
     """
@@ -191,11 +192,11 @@ async def _create_venv_install_package_pip(
         package_root: the location of the package manifest
     """
     python_bin = await _init_venv_v2(
-        path=path,
+        venv_path=venv_path,
         python_version=task_pkg.python_version,
         logger_name=logger_name,
     )
     package_root = await _pip_install(
-        venv_path=path, task_pkg=task_pkg, logger_name=logger_name
+        venv_path=venv_path, task_pkg=task_pkg, logger_name=logger_name
     )
     return python_bin, package_root
