@@ -32,6 +32,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.string_tools import slugify_task_name_for_source
+from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import get_collection_path
@@ -41,7 +42,11 @@ from fractal_server.tasks.v2.background_operations import (
 )
 from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
+from fractal_server.tasks.v2.endpoint_operations import (
+    get_package_version_from_pypi,
+)
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.utils import _parse_wheel_filename
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 router = APIRouter()
@@ -101,6 +106,28 @@ async def collect_tasks_pip(
                 "not available for Fractal task collection."
             ),
         )
+
+    # Populate fields
+    task_group_attrs = dict(
+        python_version=task_collect.python_version,
+    )
+    if task_collect.package.startswith("/") and task_collect.package.endswith(
+        ".whl"
+    ):
+        wheel_info = _parse_wheel_filename(task_collect.package)
+        task_group_attrs["pkg_name"] = wheel_info["distribution"]
+        task_group_attrs["version"] = wheel_info["version"]
+    else:
+        pkg_name = task_collect.package
+        task_group_attrs["pkg_name"] = _normalize_package_name(pkg_name)
+        if task_collect.package_version is None:
+            latest_version = await get_package_version_from_pypi(
+                task_collect.package
+            )
+            task_group_attrs["version"] = latest_version
+            task_collect.package_version = latest_version
+        else:
+            task_group_attrs["version"] = task_collect.package_version
 
     # Validate payload
     try:
