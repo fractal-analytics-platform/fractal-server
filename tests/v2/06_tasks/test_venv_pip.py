@@ -64,7 +64,9 @@ async def test_pip_install(local_or_remote, tmp_path, testdata_path):
     venv_path = tmp_path / "pkg_folder"
     venv_path.mkdir(exist_ok=True, parents=True)
     await _init_venv_v2(
-        path=venv_path, python_version=PYTHON_VERSION, logger_name=LOGGER_NAME
+        venv_path=venv_path,
+        python_version=PYTHON_VERSION,
+        logger_name=LOGGER_NAME,
     )
 
     # Pip install
@@ -99,7 +101,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     venv_path.mkdir(exist_ok=True, parents=True)
     pip = venv_path / "venv/bin/pip"
     await _init_venv_v2(
-        path=venv_path, logger_name=LOG, python_version=PYTHON_VERSION
+        venv_path=venv_path, logger_name=LOG, python_version=PYTHON_VERSION
     )
 
     async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
@@ -192,7 +194,7 @@ async def test_init_venv(
 
     try:
         python_bin = await _init_venv_v2(
-            path=venv_path,
+            venv_path=venv_path,
             logger_name=logger_name,
             python_version=python_version,
         )
@@ -245,7 +247,7 @@ async def test_create_venv_install_package_pip(
 
     # Collect task package
     python_bin, package_root = await _create_venv_install_package_pip(
-        task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
+        task_pkg=task_pkg, venv_path=tmp_path, logger_name=LOGGER_NAME
     )
     debug(python_bin)
     debug(package_root)

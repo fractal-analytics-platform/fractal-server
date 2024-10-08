@@ -20,7 +20,7 @@ from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.database_operations import (
-    create_db_task_group_and_tasks,
+    create_db_tasks_and_update_task_group,
 )
 
 
@@ -92,7 +92,7 @@ def fractal_tasks_mock_db(
     default_user_group: UserGroup,
 ) -> dict[str, TaskV2]:
 
-    task_group = create_db_task_group_and_tasks(
+    task_group = create_db_tasks_and_update_task_group(
         task_list=fractal_tasks_mock_collection["task_list"],
         task_group_obj=TaskGroupCreateV2(origin="other", pkg_name="mock"),
         user_id=first_user.id,

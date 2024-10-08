@@ -1,10 +1,10 @@
-import json
 import logging
-import os
 from pathlib import Path
 
 from devtools import debug  # noqa
+from sqlmodel import select
 
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
@@ -46,9 +46,6 @@ async def test_failed_API_calls(
             json=dict(package=str("something.whl")),
         )
         assert res.status_code == 422
-        debug(res.json())
-        assert "ends with '.whl'" in str(res.json())
-        assert "is not the absolute path to a wheel file" in str(res.json())
 
     # Package `asd` exists, but it has no wheel file
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
@@ -169,69 +166,40 @@ async def test_missing_task_executable(
         assert "fail" in data["log"]
 
 
-async def test_collection_validation_error(
-    client,
+async def test_folder_already_exists(
     MockCurrentUser,
+    client,
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
 ):
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
-    payload = dict(
-        package=(
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        ).as_posix()
-    )
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        # Create the folder in advance
+        expected_path = tmp_path / f"{user.id}/fractal-tasks-mock/0.0.1"
+        expected_path.mkdir(parents=True, exist_ok=True)
+        assert expected_path.exists()
 
-    file_dir = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
-    os.makedirs(file_dir, exist_ok=True)
-
-    # Folder exists, but there is no collection.json file
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Fail because folder already exists
+        payload = dict(
+            package=(
+                testdata_path.parent
+                / "v2/fractal_tasks_mock/dist"
+                / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            ).as_posix()
+        )
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
         assert res.status_code == 422
-        assert "FileNotFoundError" in res.json()["detail"]
+        assert "already exists" in res.json()["detail"]
 
-    # Write an invalid collection.json file
-    file_path = file_dir / "collection.json"
-    # case 1
-    with open(file_path, "w") as f:
-        json.dump([1, 2, 3], f)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=payload,
-        )
-        assert res.status_code == 422
-        assert "it's not a Python dictionary" in res.json()["detail"]
-    # case 2
-    with open(file_path, "w") as f:
-        json.dump(dict(foo="bar"), f)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=payload,
-        )
-        assert res.status_code == 422
-        assert "it has no key 'task_list'" in res.json()["detail"]
-    # case 3
-    with open(file_path, "w") as f:
-        json.dump(dict(task_list="foo"), f)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=payload,
-        )
-        assert res.status_code == 422
-        assert "'task_list' is not a Python list" in res.json()["detail"]
+    # Failed task collection did not remove an existing folder
+    assert expected_path.exists()
 
 
-async def test_remove_directory(
+async def test_failure_cleanup(
     db,
     client,
     MockCurrentUser,
@@ -240,17 +208,15 @@ async def test_remove_directory(
     testdata_path: Path,
 ):
     """
-    This test tries (without success) to reproduce this error
-    https://github.com/fractal-analytics-platform/fractal-server/issues/1234
+    Verify that a failed collection cleans up its folder and TaskGroupV2.
     """
+
     override_settings_factory(
         FRACTAL_TASKS_DIR=tmp_path,
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
     )
 
-    DIRECTORY = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
-    assert os.path.isdir(DIRECTORY) is False
-
+    # Valid part of the payload
     payload = dict(
         package=(
             testdata_path.parent
@@ -260,8 +226,12 @@ async def test_remove_directory(
         package_extras="my_extra",
     )
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
+        TASK_GROUP_PATH = tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
+        assert not TASK_GROUP_PATH.exists()
+
+        # Endpoint returns correctly, despite invalid `pinned_package_versions`
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
@@ -269,23 +239,19 @@ async def test_remove_directory(
             ),
         )
         assert res.status_code == 201
-        assert os.path.isdir(DIRECTORY) is False
+        collection_id = res.json()["id"]
 
-        res = await client.get(f"{PREFIX}/collect/1/")
+        # Background task actually failed
+        res = await client.get(f"{PREFIX}/collect/{collection_id}/")
         assert (
             "No matching distribution found for devtools==99.99.99"
             in res.json()["data"]["log"]
         )
-        assert os.path.isdir(DIRECTORY) is False
 
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                **payload, pinned_package_versions={"devtools": "0.0.1"}
-            ),
-        )
-        assert res.status_code == 201
-        assert os.path.isdir(DIRECTORY) is True
+        # Cleanup was performed correctly
+        assert not TASK_GROUP_PATH.exists()
+        res = await db.execute(select(TaskGroupV2))
+        assert len(res.scalars().all()) == 0
 
 
 async def test_invalid_python_version(
