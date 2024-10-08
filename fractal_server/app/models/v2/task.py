@@ -74,6 +74,14 @@ class TaskGroupV2(SQLModel, table=True):
     path: Optional[str] = None
     venv_path: Optional[str] = None
     pip_extras: Optional[str] = None
+    pinned_package_versions: dict[str, str] = Field(
+        sa_column=Column(
+            JSON,
+            server_default="{}",
+            default={},
+            nullable=True,
+        ),
+    )
 
     active: bool = True
     timestamp_created: datetime = Field(
