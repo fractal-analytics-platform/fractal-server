@@ -242,6 +242,7 @@ async def test_task_collection_from_wheel_non_canonical(
         assert data["status"] == "OK"
 
 
+@pytest.mark.parametrize("package_version", [None, "1.0.2"])
 async def test_task_collection_from_pypi(
     db,
     client,
@@ -249,6 +250,7 @@ async def test_task_collection_from_pypi(
     override_settings_factory,
     tmp_path: Path,
     current_py_version,
+    package_version,
 ):
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
@@ -261,7 +263,7 @@ async def test_task_collection_from_pypi(
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PACKAGE_VERSION = "1.0.2"
+    PACKAGE_VERSION = package_version
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     payload = dict(
         package="fractal-tasks-core",
@@ -305,14 +307,15 @@ async def test_task_collection_from_pypi(
         assert PYTHON_VERSION in version
 
         # Check task source
-        EXPECTED_SOURCE = (
-            f"pip_remote:fractal_tasks_core:{PACKAGE_VERSION}::"
-            f"py{PYTHON_VERSION}"
-        )
-        debug(EXPECTED_SOURCE)
-        for task in task_list:
-            debug(task["source"])
-            assert task["source"].startswith(EXPECTED_SOURCE)
+        if package_version is not None:
+            EXPECTED_SOURCE = (
+                f"pip_remote:fractal_tasks_core:{PACKAGE_VERSION}::"
+                f"py{PYTHON_VERSION}"
+            )
+            debug(EXPECTED_SOURCE)
+            for task in task_list:
+                debug(task["source"])
+                assert task["source"].startswith(EXPECTED_SOURCE)
 
         # Check task type
         for task in task_list:

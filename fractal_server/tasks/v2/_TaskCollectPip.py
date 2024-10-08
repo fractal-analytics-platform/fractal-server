@@ -37,7 +37,7 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
     python_version: str
     package_extras: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
-    package_version: Optional[str] = None
+    package_version: str
     package_path: Optional[Path] = None
     package_manifest: Optional[ManifestV2] = None
 
