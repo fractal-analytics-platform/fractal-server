@@ -84,7 +84,7 @@ async def test_task_get_list(
         assert len(res.json()) == 2
         res = await client.get(f"{PREFIX}/?category=conversion&modality=em")
         assert len(res.json()) == 1
-        res = await client.get(PREFIX + r"/?author=cd\ e")  # raw for precommit
+        res = await client.get(f"{PREFIX}/?author=cd e")
         assert len(res.json()) == 2
 
     async with MockCurrentUser():
