@@ -145,6 +145,7 @@ class TaskUpdateV2(BaseModel):
 
     category: Optional[str] = None
     modality: Optional[str] = None
+    authors: Optional[str] = None
     tags: Optional[list[str]] = None
 
     # Validators
@@ -176,6 +177,9 @@ class TaskUpdateV2(BaseModel):
     )
     _modality = validator("modality", allow_reuse=True)(
         valstr("modality", accept_none=True)
+    )
+    _authors = validator("authors", allow_reuse=True)(
+        valstr("authors", accept_none=True)
     )
 
     @validator("tags")
