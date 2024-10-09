@@ -1,5 +1,6 @@
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models.v2 import CollectionStateV2
 
 PREFIX = "/api/v2/task-group"
 
@@ -93,9 +94,15 @@ async def test_get_task_group_list(
         assert len(res.json()) == 2
 
 
-async def test_delete_task_group(client, MockCurrentUser, task_factory_v2):
+async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
+
+    state = CollectionStateV2(taskgroupv2_id=task.taskgroupv2_id)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    assert state.taskgroupv2_id == task.taskgroupv2_id
 
     async with MockCurrentUser():
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
@@ -106,6 +113,9 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2):
         assert res.status_code == 204
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 404
+
+    await db.refresh(state)
+    assert state.taskgroupv2_id is None
 
 
 async def test_delete_task_group_fail(
