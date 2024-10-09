@@ -21,7 +21,7 @@ class TaskV2(SQLModel, table=True):
     type: str
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
-    source: str = Field(unique=True)
+    source: str
 
     meta_non_parallel: dict[str, Any] = Field(
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
