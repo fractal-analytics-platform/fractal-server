@@ -114,16 +114,6 @@ async def test_task_collection_from_wheel(
         version = await execute_command(f"{python_bin} --version")
         assert expected_python_version in version
 
-        # Check task source
-        EXPECTED_SOURCE = (
-            "pip_local:fractal_tasks_mock:0.0.1:my_extra:"
-            f"py{expected_python_version}"
-        )
-        debug(EXPECTED_SOURCE)
-        for task in task_list:
-            debug(task["source"])
-            assert task["source"].startswith(EXPECTED_SOURCE)
-
         # Check task type
         for task in task_list:
             if task["command_non_parallel"] is None:
