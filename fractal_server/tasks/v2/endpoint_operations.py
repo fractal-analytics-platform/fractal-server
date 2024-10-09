@@ -6,7 +6,6 @@ from httpx import TimeoutException
 from fractal_server.logger import set_logger
 
 
-FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 logger = set_logger(__name__)
 
 
