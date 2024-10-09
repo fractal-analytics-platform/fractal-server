@@ -1,4 +1,3 @@
-import pytest
 from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
@@ -94,16 +93,12 @@ async def test_task_get_list(
 
 
 async def test_post_task(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-
-        TASK_OWNER = user.username or user.settings.slurm_user
-        TASK_SOURCE = "some_source"
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
 
         # Successful task creations
         task = TaskCreateV2(
             name="task_name",
             # Compound
-            source=f"{TASK_SOURCE}-compound",
             command_parallel="task_command_parallel",
             command_non_parallel="task_command_non_parallel",
             category="Conversion",
@@ -119,7 +114,6 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["type"] == "compound"
         assert res.json()["command_non_parallel"] == task.command_non_parallel
         assert res.json()["command_parallel"] == task.command_parallel
-        assert res.json()["source"] == f"{TASK_OWNER}:{task.source}"
         assert res.json()["meta_non_parallel"] == {}
         assert res.json()["meta_parallel"] == {}
         assert res.json()["version"] is None
@@ -137,7 +131,6 @@ async def test_post_task(client, MockCurrentUser):
 
         task = TaskCreateV2(
             name="task_name",
-            source=f"{TASK_SOURCE}-parallel",
             command_parallel="task_command_parallel",
         )
         res = await client.post(
@@ -149,7 +142,6 @@ async def test_post_task(client, MockCurrentUser):
         task = TaskCreateV2(
             name="task_name2",
             # Parallel
-            source=f"{TASK_SOURCE}-parallel",
             command_parallel="task_command_parallel",
         )
         res = await client.post(
@@ -160,7 +152,6 @@ async def test_post_task(client, MockCurrentUser):
         task = TaskCreateV2(
             name="task_name3",
             # Non Parallel
-            source=f"{TASK_SOURCE}-non_parallel",
             command_non_parallel="task_command_non_parallel",
         )
         res = await client.post(
@@ -169,76 +160,16 @@ async def test_post_task(client, MockCurrentUser):
         assert res.status_code == 201
         assert res.json()["type"] == "non_parallel"
 
-        # Fail for repeated task.source
-        task = TaskCreateV2(
-            name="new_task_name",
-            source=f"{TASK_SOURCE}-compound",
-            command_parallel="new_task_command",
-        )
-        res = await client.post(
-            f"{PREFIX}/", json=task.dict(exclude_unset=True)
-        )
-        assert res.status_code == 422
-
         # Fail for wrong payload
         res = await client.post(f"{PREFIX}/")  # request without body
         debug(res.json())
         assert res.status_code == 422
-
-    # Test multiple combinations of (username, slurm_user)
-    SLURM_USER = "some_slurm_user"
-    USERNAME = "some_username"
-    # Case 1: (username, slurm_user) = (None, None)
-    user_kwargs = dict(username=None, is_verified=True)
-    user_settings_dict = dict(slurm_user=None)
-    payload = dict(command_parallel="cmd")
-    payload["source"] = "source_x"
-    payload["name"] = "x"
-    async with MockCurrentUser(
-        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
-    ):
-        res = await client.post(f"{PREFIX}/", json=payload)
-        assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "Cannot add a new task because current user does not have "
-            "`username` or `slurm_user` attributes."
-        )
-    # Case 2: (username, slurm_user) = (not None, not None)
-    user_kwargs = dict(username=USERNAME, is_verified=True)
-    user_settings_dict = dict(slurm_user=SLURM_USER)
-    payload["source"] = "source_y"
-    async with MockCurrentUser(
-        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
-    ):
-        res = await client.post(f"{PREFIX}/", json=payload)
-        assert res.status_code == 201
-    # Case 3: (username, slurm_user) = (None, not None)
-    user_kwargs = dict(username=None, is_verified=True)
-    user_settings_dict = dict(slurm_user=SLURM_USER)
-    payload["source"] = "source_z"
-    payload["name"] = "z"
-    async with MockCurrentUser(
-        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
-    ):
-        res = await client.post(f"{PREFIX}/", json=payload)
-        assert res.status_code == 201
-    # Case 4: (username, slurm_user) = (not None, None)
-    user_kwargs = dict(username=USERNAME, is_verified=True)
-    user_settings_dict = dict(slurm_user=None)
-    payload["source"] = "source_xyz"
-    payload["name"] = "xyz"
-    async with MockCurrentUser(
-        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
-    ):
-        res = await client.post(f"{PREFIX}/", json=payload)
-        assert res.status_code == 201
 
     # Fail giving "non parallel" args to "parallel" tasks, and vice versa
     res = await client.post(
         f"{PREFIX}/",
         json=dict(
             name="name",
-            source="xxx",
             command_parallel="cmd",
             args_schema_non_parallel={"a": "b"},
         ),
@@ -249,7 +180,6 @@ async def test_post_task(client, MockCurrentUser):
         f"{PREFIX}/",
         json=dict(
             name="name",
-            source="xxx",
             command_parallel="cmd",
             meta_non_parallel={"a": "b"},
         ),
@@ -261,7 +191,6 @@ async def test_post_task(client, MockCurrentUser):
         f"{PREFIX}/",
         json=dict(
             name="name",
-            source="xxx",
             command_non_parallel="cmd",
             args_schema_parallel={"a": "b"},
         ),
@@ -272,7 +201,6 @@ async def test_post_task(client, MockCurrentUser):
         f"{PREFIX}/",
         json=dict(
             name="name",
-            source="xxx",
             command_non_parallel="cmd",
             meta_parallel={"a": "b"},
         ),
@@ -300,16 +228,14 @@ async def test_post_task_user_group_id(
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
 
         # No query parameter
-        res = await client.post(
-            f"{PREFIX}/", json=dict(name="a", source="1", **args)
-        )
+        res = await client.post(f"{PREFIX}/", json=dict(name="a", **args))
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
         assert taskgroup.user_group_id == default_user_group.id
 
         # Private task
         res = await client.post(
-            f"{PREFIX}/?private=true", json=dict(name="b", source="2", **args)
+            f"{PREFIX}/?private=true", json=dict(name="b", **args)
         )
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
@@ -318,7 +244,7 @@ async def test_post_task_user_group_id(
         # Specific usergroup id / OK
         res = await client.post(
             f"{PREFIX}/?user_group_id={default_user_group.id}",
-            json=dict(name="c", source="3", **args),
+            json=dict(name="c", **args),
         )
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
@@ -327,7 +253,7 @@ async def test_post_task_user_group_id(
         # Specific usergroup id / not belonging
         res = await client.post(
             f"{PREFIX}/?user_group_id={team1_group.id}",
-            json=dict(name="d", source="4", **args),
+            json=dict(name="d", **args),
         )
         assert res.status_code == 403
         debug(res.json())
@@ -335,7 +261,7 @@ async def test_post_task_user_group_id(
         # Conflicting query parameters
         res = await client.post(
             f"{PREFIX}/?private=true&user_group_id={default_user_group.id}",
-            json=dict(name="e", source="5", **args),
+            json=dict(name="e", **args),
         )
         assert res.status_code == 422
         debug(res.json())
@@ -348,9 +274,7 @@ async def test_post_task_user_group_id(
             ),
             "MONKEY",
         )
-        res = await client.post(
-            f"{PREFIX}/", json=dict(name="f", source="4", **args)
-        )
+        res = await client.post(f"{PREFIX}/", json=dict(name="f", **args))
         assert res.status_code == 404
 
 
@@ -362,7 +286,7 @@ async def test_patch_task_auth(
     # POST-task as user_A
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
         user_A_id = user_A.id
-        payload_obj = TaskCreateV2(name="a", source="b", command_parallel="c")
+        payload_obj = TaskCreateV2(name="a", command_parallel="c")
         res = await client.post(
             f"{PREFIX}/", json=payload_obj.dict(exclude_unset=True)
         )
@@ -468,44 +392,6 @@ async def test_patch_task(
         assert res_compound.status_code == 200
         assert res_non_parallel.status_code == 422
         assert res_parallel.status_code == 200
-
-
-@pytest.mark.parametrize("username", (None, "myself"))
-@pytest.mark.parametrize("slurm_user", (None, "myself_slurm"))
-@pytest.mark.parametrize("owner", (None, "another_owner"))
-async def test_patch_task_different_users(
-    MockCurrentUser,
-    client,
-    task_factory_v2,
-    username,
-    slurm_user,
-    owner,
-):
-    """
-    Test that the `username` or `slurm_user` attributes of a (super)user do not
-    affect their ability to patch a task. They do raise warnings, but the PATCH
-    endpoint returns correctly.
-    """
-    # User kwargs
-    user_payload = {}
-    if username:
-        user_payload["username"] = username
-    if slurm_user:
-        user_payload["slurm_user"] = slurm_user
-
-    async with MockCurrentUser(
-        user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
-    ) as user:
-        task = await task_factory_v2(user_id=user.id, name="task", owner=owner)
-        assert task.owner == owner
-
-        # Patch task
-        NEW_NAME = "new name"
-        payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
-        res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 200
-        assert res.json()["name"] == NEW_NAME
 
 
 async def test_get_task(task_factory_v2, client, MockCurrentUser):
