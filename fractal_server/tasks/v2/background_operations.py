@@ -274,7 +274,8 @@ async def _get_package_manifest(
                 pkg_name=task_group.pkg_name,
                 version=task_group.venv_path,
                 dest=tmpdir,
-            ).as_posix()
+            )
+            wheel_file_path = wheel_file_path.as_posix()
     # Read package manifest from wheel file
     manifest = _load_manifest_from_wheel(
         wheel_file_path=wheel_file_path,
