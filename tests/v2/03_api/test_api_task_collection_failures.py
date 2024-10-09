@@ -217,7 +217,7 @@ async def test_failure_cleanup(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
-                **payload, pinned_package_versions={"devtools": "99.99.99"}
+                **payload, pinned_package_versions={"pydantic": "99.99.99"}
             ),
         )
         assert res.status_code == 201
@@ -226,7 +226,7 @@ async def test_failure_cleanup(
         # Background task actually failed
         res = await client.get(f"{PREFIX}/collect/{collection_id}/")
         assert (
-            "No matching distribution found for devtools==99.99.99"
+            "No matching distribution found for pydantic==99.99.99"
             in res.json()["data"]["log"]
         )
 
