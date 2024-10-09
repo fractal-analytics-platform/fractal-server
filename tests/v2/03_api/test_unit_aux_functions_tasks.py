@@ -14,6 +14,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_group_constraint,
+)
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
@@ -149,4 +152,15 @@ async def test_get_task_require_active(db, task_factory_v2):
     with pytest.raises(HTTPException, match="422"):
         await _get_task_read_access(
             task_id=task.id, user_id=user.id, db=db, require_active=True
+        )
+
+
+async def test_unit_verify_non_duplication_group_constraint(db):
+    with pytest.raises(HTTPException):
+        # fail because `user_group_id=None`
+        await _verify_non_duplication_group_constraint(
+            db=db,
+            user_group_id=None,
+            pkg_name="foo",
+            version=None,
         )

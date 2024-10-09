@@ -136,6 +136,17 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["tags"] == ["compound", "test", "post", "api"]
 
         task = TaskCreateV2(
+            name="task_name",
+            source=f"{TASK_SOURCE}-parallel",
+            command_parallel="task_command_parallel",
+        )
+        res = await client.post(
+            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+        )
+        # TaskGroupV2 with same (pkg_name, version, user_id)
+        assert res.status_code == 422
+
+        task = TaskCreateV2(
             name="task_name2",
             # Parallel
             source=f"{TASK_SOURCE}-parallel",
