@@ -235,18 +235,13 @@ async def _verify_non_duplication_user_constraint(
 
 async def _verify_non_duplication_group_constraint(
     db: AsyncSession,
-    user_group_id: int,
+    user_group_id: Optional[int],
     pkg_name: str,
     version: Optional[str],
 ):
     if user_group_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "`_verify_non_duplication_group_constraint` cannot be called "
-                f"with {user_group_id=}."
-            ),
-        )
+        return
+
     stm = (
         select(TaskGroupV2)
         .where(TaskGroupV2.user_group_id == user_group_id)

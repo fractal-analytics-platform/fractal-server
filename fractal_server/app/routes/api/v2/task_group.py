@@ -125,13 +125,12 @@ async def patch_task_group(
         user_id=user.id,
         db=db,
     )
-    if task_group_update.user_group_id is not None:
-        await _verify_non_duplication_group_constraint(
-            db=db,
-            pkg_name=task_group.pkg_name,
-            version=task_group.version,
-            user_group_id=task_group_update.user_group_id,
-        )
+    await _verify_non_duplication_group_constraint(
+        db=db,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        user_group_id=task_group_update.user_group_id,
+    )
     for key, value in task_group_update.dict(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
             await _verify_user_belongs_to_group(

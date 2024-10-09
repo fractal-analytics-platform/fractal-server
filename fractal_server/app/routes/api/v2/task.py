@@ -227,13 +227,12 @@ async def create_task(
     await _verify_non_duplication_user_constraint(
         db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version
     )
-    if user_group_id is not None:
-        await _verify_non_duplication_group_constraint(
-            db=db,
-            pkg_name=pkg_name,
-            user_group_id=user_group_id,
-            version=db_task.version,
-        )
+    await _verify_non_duplication_group_constraint(
+        db=db,
+        pkg_name=pkg_name,
+        user_group_id=user_group_id,
+        version=db_task.version,
+    )
     db_task_group = TaskGroupV2(
         user_id=user.id,
         user_group_id=user_group_id,
