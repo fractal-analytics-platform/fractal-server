@@ -14,7 +14,6 @@ from fractal_server.utils import get_timestamp
 
 
 class TaskV2(SQLModel, table=True):
-
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
@@ -56,7 +55,6 @@ class TaskV2(SQLModel, table=True):
 
 
 class TaskGroupV2(SQLModel, table=True):
-
     id: Optional[int] = Field(default=None, primary_key=True)
     task_list: list[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(
@@ -89,3 +87,21 @@ class TaskGroupV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+
+    @property
+    def pip_install_string(self) -> str:
+        """
+        Prepare string to be used in `python -m pip install`.
+        """
+        if self.version is None:
+            raise ValueError(
+                f"Cannot run `pip_install_string` (version={self.version=})."
+            )
+        else:
+            _extras = ""
+        if self.wheel_path is not None:
+            return f"{self.wheel_path}{_extras}"
+        else:
+            if self.pip_extras is not None:
+                _extras = f"[{self.pip_extras}]"
+            return f"{self.pkg_name}{_extras}=={self.version}"
