@@ -15,7 +15,6 @@ async def test_task_collection_ssh_from_pypi(
     client,
     MockCurrentUser,
     override_settings_factory,
-    tmp_path: Path,
     tmp777_path: Path,
     fractal_ssh_list: FractalSSHList,
     current_py_version: str,
