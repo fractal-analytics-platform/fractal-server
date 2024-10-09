@@ -1,12 +1,16 @@
+from pathlib import Path
 from typing import Optional
 
 import pytest
+from devtools import debug
 from pydantic import BaseModel
 
 from fractal_server.tasks.v2.background_operations import (
     _check_task_files_exist,
 )
+from fractal_server.tasks.v2.background_operations import _download_package
 from fractal_server.tasks.v2.database_operations import _get_task_type
+from fractal_server.tasks.v2.utils import _parse_wheel_filename
 
 
 class _MockTaskCreateV2(BaseModel):
@@ -53,3 +57,18 @@ def test_check_task_files_exist(tmp_path):
             ]
         )
     assert "missing file" in str(e.value)
+
+
+async def test_download_package(tmp_path: Path, current_py_version: str):
+    PACKAGE_VERSION = "1.0.1"
+    PACKAGE_NAME = "fractal_tasks_core"
+    wheel_path = await _download_package(
+        python_version=current_py_version,
+        pkg_name=PACKAGE_NAME,
+        version=PACKAGE_VERSION,
+        dest=(tmp_path / "wheel1"),
+    )
+    debug(wheel_path)
+    assert wheel_path.exists()
+    info = _parse_wheel_filename(wheel_filename=wheel_path.name)
+    assert info == dict(distribution=PACKAGE_NAME, version=PACKAGE_VERSION)
