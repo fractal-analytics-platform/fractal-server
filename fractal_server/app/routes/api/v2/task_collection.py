@@ -49,13 +49,6 @@ logger = set_logger(__name__)
 @router.post(
     "/collect/pip/",
     response_model=CollectionStateReadV2,
-    responses={
-        201: dict(
-            description=(
-                "Task collection successfully started in the background"
-            )
-        ),
-    },
 )
 async def collect_tasks_pip(
     task_collect: TaskCollectPipV2,
@@ -226,22 +219,27 @@ async def collect_tasks_pip(
 
     debug(task_group)  # FIXME
 
+    # All checks are OK, proceed with task collection
+    collection_status = dict(
+        status=CollectionStatusV2.PENDING,
+        venv_path=task_group_attrs["venv_path"],
+        package=task_collect.package,
+    )
+    state = CollectionStateV2(data=collection_status)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+
+    logger = set_logger(logger_name="collect_tasks_pip")
+
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # SSH task collection
 
         from fractal_server.tasks.v2.background_operations_ssh import (
             background_collect_pip_ssh,
         )
-
-        # Construct and return state
-        state = CollectionStateV2(
-            data=dict(
-                status=CollectionStatusV2.PENDING, package=task_collect.package
-            )
-        )
-        db.add(state)
-        await db.commit()
 
         # User appropriate FractalSSH object
         ssh_credentials = dict(
@@ -259,44 +257,26 @@ async def collect_tasks_pip(
             fractal_ssh=fractal_ssh,
         )
 
-        response.status_code = status.HTTP_201_CREATED
-        return state
-
-    # Non-SSH endpoint
     else:
-
-        logger = set_logger(logger_name="collect_tasks_pip")
-
-        # All checks are OK, proceed with task collection
-        collection_status = dict(
-            status=CollectionStatusV2.PENDING,
-            venv_path=task_group_attrs["venv_path"],
-            package=task_collect.package,
-        )
-        state = CollectionStateV2(data=collection_status)
-        db.add(state)
-        await db.commit()
-        await db.refresh(state)
-
+        # Local task collection
         background_tasks.add_task(
             background_collect_pip,
             state_id=state.id,
             task_group=task_group,
         )
-        logger.debug(
-            "Task-collection endpoint: start background collection "
-            "and return state"
-        )
-        reset_logger_handlers(logger)
-        info = (
-            "Collecting tasks in the background. "
-            f"GET /task/collect/{state.id} to query collection status"
-        )
-        state.data["info"] = info
-        response.status_code = status.HTTP_201_CREATED
-        await db.close()
+    logger.debug(
+        "Task-collection endpoint: start background collection "
+        "and return state"
+    )
+    reset_logger_handlers(logger)
+    info = (
+        "Collecting tasks in the background. "
+        f"GET /task/collect/{state.id} to query collection status"
+    )
+    state.data["info"] = info
+    response.status_code = status.HTTP_201_CREATED
 
-        return state
+    return state
 
 
 @router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
