@@ -111,7 +111,7 @@ class TaskReadV2(BaseModel):
     id: int
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
-    source: str
+    source: Optional[str] = None
     version: Optional[str] = None
 
     command_non_parallel: Optional[str] = None
