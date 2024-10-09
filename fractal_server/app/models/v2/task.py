@@ -93,15 +93,14 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
-        if self.version is None:
-            raise ValueError(
-                f"Cannot run `pip_install_string` (version={self.version=})."
-            )
-        else:
-            _extras = ""
+        extras = f"[{self.pip_extras}]" if self.pip_extras is not None else ""
+
         if self.wheel_path is not None:
-            return f"{self.wheel_path}{_extras}"
+            return f"{self.wheel_path}{extras}"
         else:
-            if self.pip_extras is not None:
-                _extras = f"[{self.pip_extras}]"
-            return f"{self.pkg_name}{_extras}=={self.version}"
+            if self.version is None:
+                raise ValueError(
+                    "Cannot run `pip_install_string` with "
+                    f"{self.pkg_name=}, {self.wheel_path=}, {self.version=}."
+                )
+            return f"{self.pkg_name}{extras}=={self.version}"
