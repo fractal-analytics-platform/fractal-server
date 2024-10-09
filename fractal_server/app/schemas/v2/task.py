@@ -21,7 +21,7 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
 
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
-    source: str
+    source: Optional[str] = None
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
