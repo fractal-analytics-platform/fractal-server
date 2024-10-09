@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import validator
 
 from .task import TaskReadV2
@@ -16,7 +17,9 @@ class TaskGroupCreateV2(BaseModel):
     python_version: Optional[str] = None
     path: Optional[str] = None
     venv_path: Optional[str] = None
+    wheel_path: Optional[str] = None
     pip_extras: Optional[str] = None
+    pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
 
 class TaskGroupReadV2(BaseModel):
@@ -33,7 +36,9 @@ class TaskGroupReadV2(BaseModel):
     python_version: Optional[str] = None
     path: Optional[str] = None
     venv_path: Optional[str] = None
+    wheel_path: Optional[str] = None
     pip_extras: Optional[str] = None
+    pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     active: bool
     timestamp_created: datetime
