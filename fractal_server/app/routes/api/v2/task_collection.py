@@ -255,6 +255,7 @@ async def collect_tasks_pip(
             state_id=state.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
         )
 
     else:
