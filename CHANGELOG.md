@@ -9,6 +9,16 @@ into pre-release sections below.
 > WARNING: This release requires running `fractalctl update-db-data` (after
 > `fractalctl set-db`).
 
+# 2.7.0a4 (unreleased)
+
+* API:
+    * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
+
+# 2.7.0a3
+
+* API:
+    * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
+
 # 2.7.0a2
 
 * API:

@@ -14,6 +14,8 @@ from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
 from ._aux_functions_tasks import _get_valid_user_group_id
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -221,14 +223,24 @@ async def create_task(
         )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
-
+    pkg_name = db_task.name
+    await _verify_non_duplication_user_constraint(
+        db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version
+    )
+    await _verify_non_duplication_group_constraint(
+        db=db,
+        pkg_name=pkg_name,
+        user_group_id=user_group_id,
+        version=db_task.version,
+    )
     db_task_group = TaskGroupV2(
         user_id=user.id,
         user_group_id=user_group_id,
         active=True,
         task_list=[db_task],
         origin="other",
-        pkg_name=task.name,
+        version=db_task.version,
+        pkg_name=pkg_name,
     )
     db.add(db_task_group)
     await db.commit()

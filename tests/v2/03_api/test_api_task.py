@@ -137,6 +137,17 @@ async def test_post_task(client, MockCurrentUser):
 
         task = TaskCreateV2(
             name="task_name",
+            source=f"{TASK_SOURCE}-parallel",
+            command_parallel="task_command_parallel",
+        )
+        res = await client.post(
+            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+        )
+        # TaskGroupV2 with same (pkg_name, version, user_id)
+        assert res.status_code == 422
+
+        task = TaskCreateV2(
+            name="task_name2",
             # Parallel
             source=f"{TASK_SOURCE}-parallel",
             command_parallel="task_command_parallel",
@@ -147,7 +158,7 @@ async def test_post_task(client, MockCurrentUser):
         assert res.status_code == 201
         assert res.json()["type"] == "parallel"
         task = TaskCreateV2(
-            name="task_name",
+            name="task_name3",
             # Non Parallel
             source=f"{TASK_SOURCE}-non_parallel",
             command_non_parallel="task_command_non_parallel",
@@ -155,7 +166,6 @@ async def test_post_task(client, MockCurrentUser):
         res = await client.post(
             f"{PREFIX}/", json=task.dict(exclude_unset=True)
         )
-        debug(res.json())
         assert res.status_code == 201
         assert res.json()["type"] == "non_parallel"
 
@@ -181,8 +191,9 @@ async def test_post_task(client, MockCurrentUser):
     # Case 1: (username, slurm_user) = (None, None)
     user_kwargs = dict(username=None, is_verified=True)
     user_settings_dict = dict(slurm_user=None)
-    payload = dict(name="task", command_parallel="cmd")
+    payload = dict(command_parallel="cmd")
     payload["source"] = "source_x"
+    payload["name"] = "x"
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
     ):
@@ -205,6 +216,7 @@ async def test_post_task(client, MockCurrentUser):
     user_kwargs = dict(username=None, is_verified=True)
     user_settings_dict = dict(slurm_user=SLURM_USER)
     payload["source"] = "source_z"
+    payload["name"] = "z"
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
     ):
@@ -214,6 +226,7 @@ async def test_post_task(client, MockCurrentUser):
     user_kwargs = dict(username=USERNAME, is_verified=True)
     user_settings_dict = dict(slurm_user=None)
     payload["source"] = "source_xyz"
+    payload["name"] = "xyz"
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
     ):
@@ -282,19 +295,21 @@ async def test_post_task_user_group_id(
     await db.commit()
     await db.refresh(team1_group)
 
-    args = dict(name="a", command_non_parallel="cmd")
+    args = dict(command_non_parallel="cmd")
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
 
         # No query parameter
-        res = await client.post(f"{PREFIX}/", json=dict(source="1", **args))
+        res = await client.post(
+            f"{PREFIX}/", json=dict(name="a", source="1", **args)
+        )
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
         assert taskgroup.user_group_id == default_user_group.id
 
         # Private task
         res = await client.post(
-            f"{PREFIX}/?private=true", json=dict(source="2", **args)
+            f"{PREFIX}/?private=true", json=dict(name="b", source="2", **args)
         )
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
@@ -303,7 +318,7 @@ async def test_post_task_user_group_id(
         # Specific usergroup id / OK
         res = await client.post(
             f"{PREFIX}/?user_group_id={default_user_group.id}",
-            json=dict(source="3", **args),
+            json=dict(name="c", source="3", **args),
         )
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
@@ -312,7 +327,7 @@ async def test_post_task_user_group_id(
         # Specific usergroup id / not belonging
         res = await client.post(
             f"{PREFIX}/?user_group_id={team1_group.id}",
-            json=dict(source="4", **args),
+            json=dict(name="d", source="4", **args),
         )
         assert res.status_code == 403
         debug(res.json())
@@ -320,7 +335,7 @@ async def test_post_task_user_group_id(
         # Conflicting query parameters
         res = await client.post(
             f"{PREFIX}/?private=true&user_group_id={default_user_group.id}",
-            json=dict(source="5", **args),
+            json=dict(name="e", source="5", **args),
         )
         assert res.status_code == 422
         debug(res.json())
@@ -333,7 +348,9 @@ async def test_post_task_user_group_id(
             ),
             "MONKEY",
         )
-        res = await client.post(f"{PREFIX}/", json=dict(source="4", **args))
+        res = await client.post(
+            f"{PREFIX}/", json=dict(name="f", source="4", **args)
+        )
         assert res.status_code == 404
 
 
