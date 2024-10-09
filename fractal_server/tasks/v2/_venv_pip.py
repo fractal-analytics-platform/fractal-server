@@ -89,7 +89,7 @@ async def _pip_install(
             )
             logger.debug(
                 "Preliminary check: verify that "
-                f"{pinned_pkg_version} is already installed"
+                f"{pinned_pkg_name} is already installed"
             )
             stdout_show = await execute_command(
                 cwd=Path(task_group.venv_path),
