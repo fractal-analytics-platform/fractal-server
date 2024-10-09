@@ -272,7 +272,7 @@ async def _get_package_manifest(
             wheel_file_path = await _download_package(
                 python_version=task_group.python_version,
                 pkg_name=task_group.pkg_name,
-                version=task_group.venv_path,
+                version=task_group.version,
                 dest=tmpdir,
             )
             wheel_file_path = wheel_file_path.as_posix()

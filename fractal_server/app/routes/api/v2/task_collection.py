@@ -222,6 +222,10 @@ async def collect_tasks_pip(
     await db.refresh(task_group)
     db.expunge(task_group)
 
+    from devtools import debug
+
+    debug(task_group)  # FIXME
+
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
