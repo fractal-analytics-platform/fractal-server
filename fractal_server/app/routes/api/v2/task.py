@@ -20,7 +20,6 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
@@ -204,23 +203,6 @@ async def create_task(
     # Prepend owner to task.source
     task.source = f"{owner}:{task.source}"
 
-    # Verify that source is not already in use (note: this check is only useful
-    # to provide a user-friendly error message, but `task.source` uniqueness is
-    # already guaranteed by a constraint in the table definition).
-    stm = select(TaskV2).where(TaskV2.source == task.source)
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Source '{task.source}' already used by some TaskV2",
-        )
-    stm = select(TaskV1).where(TaskV1.source == task.source)
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Source '{task.source}' already used by some TaskV1",
-        )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
     pkg_name = db_task.name
