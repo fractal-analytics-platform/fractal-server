@@ -63,6 +63,7 @@ async def _pip_install(
 
     python_bin = Path(task_group.venv_path) / "bin/python"
     pip_install_str = task_group.pip_install_string
+    logger.info(f"{pip_install_str=}")
 
     await execute_command(
         cwd=Path(task_group.venv_path),
