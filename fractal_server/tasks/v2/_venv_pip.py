@@ -61,21 +61,8 @@ async def _pip_install(
 
     logger = get_logger(logger_name)
 
-    from devtools import debug
-
-    debug(task_group)
-
     python_bin = Path(task_group.venv_path) / "bin/python"
-
-    extras = f"[{task_group.pip_extras}]" if task_group.pip_extras else ""
-
-    if task_group.wheel_path is not None:
-        pip_install_str = f"{task_group.wheel_path}{extras}"
-    else:
-        version_string = f"=={task_group.version}"
-        pip_install_str = f"{task_group.pkg_name}{extras}{version_string}"
-
-    debug(pip_install_str)
+    pip_install_str = task_group.pip_install_string
 
     await execute_command(
         cwd=Path(task_group.venv_path),
