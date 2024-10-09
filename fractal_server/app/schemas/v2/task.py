@@ -197,5 +197,5 @@ class TaskImportV2(BaseModel):
 
 class TaskExportV2(BaseModel):
 
-    source: str
+    source: Optional[str] = None
     _source = validator("source", allow_reuse=True)(valstr("source"))
