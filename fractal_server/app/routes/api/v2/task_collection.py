@@ -277,7 +277,6 @@ async def collect_tasks_pip(
             background_collect_pip,
             state_id=state.id,
             task_group=task_group,
-            task_pkg_to_deprecate=task_pkg,  # FIXME: move to task_group
         )
         logger.debug(
             "Task-collection endpoint: start background collection "

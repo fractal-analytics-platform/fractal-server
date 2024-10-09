@@ -13,12 +13,10 @@ from zipfile import ZipFile
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
-from ...string_tools import slugify_task_name_for_source
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ._TaskCollectPip import _TaskCollectPip_to_deprecate
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
@@ -135,7 +133,6 @@ def _handle_failure(
 def _prepare_tasks_metadata(
     *,
     package_manifest: ManifestV2,
-    package_source: str,
     python_bin: Path,
     package_root: Path,
     package_version: Optional[str] = None,
@@ -145,7 +142,6 @@ def _prepare_tasks_metadata(
 
     Args:
         package_manifest:
-        package_source:
         python_bin:
         package_root:
         package_version:
@@ -156,8 +152,6 @@ def _prepare_tasks_metadata(
         task_attributes = {}
         if package_version is not None:
             task_attributes["version"] = package_version
-        task_name_slug = slugify_task_name_for_source(_task.name)
-        task_attributes["source"] = f"{package_source}:{task_name_slug}"
         if package_manifest.has_args_schemas:
             task_attributes[
                 "args_schema_version"
@@ -292,7 +286,6 @@ async def _get_package_manifest(
 async def background_collect_pip(
     *,
     state_id: int,
-    task_pkg_to_deprecate: _TaskCollectPip_to_deprecate,
     task_group: TaskGroupV2,
 ) -> None:
     """
@@ -372,7 +365,6 @@ async def background_collect_pip(
             logger.debug("collecting - prepare tasks and update db " "- START")
             task_list = _prepare_tasks_metadata(
                 package_manifest=pkg_manifest,
-                package_source=task_pkg_to_deprecate.package_source,  # FIXME
                 package_version=task_group.version,
                 package_root=package_root,
                 python_bin=python_bin,
