@@ -134,7 +134,7 @@ async def read_workflow(
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}/",
-    response_model=WorkflowReadV2,
+    response_model=WorkflowReadV2WithWarnings,
 )
 async def update_workflow(
     project_id: int,
@@ -142,7 +142,7 @@ async def update_workflow(
     patch: WorkflowUpdateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2]:
+) -> Optional[WorkflowReadV2WithWarnings]:
     """
     Edit a workflow
     """
