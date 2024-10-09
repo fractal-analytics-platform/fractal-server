@@ -104,6 +104,8 @@ async def delete_task_group(
             detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
         )
 
+    # Cascade operations: set foreign-keys to null for CollectionStateV2 which
+    # are in relationship with the current TaskGroupV2
     stm = select(CollectionStateV2).where(
         CollectionStateV2.taskgroupv2_id == task_group_id
     )
