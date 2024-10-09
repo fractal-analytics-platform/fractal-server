@@ -198,8 +198,7 @@ async def test_task_collection_from_wheel_non_canonical(
         data = state["data"]
         task_list = data["task_list"]
 
-        # Verify how package name is used in source and folders
-        assert "fractal_tasks_non_canonical" in task_list[0]["source"]
+        # Verify how package name is used in relevant folders
         python_path, task_path = task_list[0]["command_non_parallel"].split()
         assert "/fractal-tasks-non-canonical/0.0.1" in python_path
         assert "/fractal-tasks-non-canonical/0.0.1" in task_path
@@ -288,11 +287,6 @@ async def test_task_collection_from_pypi(
         python_bin = task_list[0]["command_non_parallel"].split()[0]
         version = await execute_command(f"{python_bin} --version")
         assert PYTHON_VERSION in version
-
-        # Check task source
-        for task in task_list:
-            debug(task["source"])
-            assert task["version"] == EXPECTED_PACKAGE_VERSION
 
         # Check task type
         for task in task_list:
@@ -418,24 +412,6 @@ async def test_task_collection_custom(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
         )
         assert res.status_code == 201
-
-        # Fail because same 'source'
-        # V2
-        res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
-        )
-        assert res.status_code == 422
-        assert "TaskV2" in res.json()["detail"]
-        assert "already has source" in res.json()["detail"]
-        # V1
-        payload_root.source = "source4"
-        await task_factory(source="test01:source4:create_ome_zarr_compound")
-        res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
-        )
-        assert res.status_code == 422
-        assert "TaskV1" in res.json()["detail"]
-        assert "already has source" in res.json()["detail"]
 
         # Fail because python_interpreter does not exist
         payload_root.python_interpreter = "/foo/bar"
