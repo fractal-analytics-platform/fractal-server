@@ -155,7 +155,6 @@ async def collect_task_custom(
 
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
-        package_source=source,
         python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,
         package_version=task_collect.version,

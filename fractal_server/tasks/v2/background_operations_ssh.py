@@ -311,7 +311,6 @@ def background_collect_pip_ssh(
                 task_list = _prepare_tasks_metadata(
                     package_manifest=new_pkg.package_manifest,
                     package_version=new_pkg.package_version,
-                    package_source=new_pkg.package_source,
                     package_root=Path(package_root_remote),
                     python_bin=Path(python_bin),
                 )
