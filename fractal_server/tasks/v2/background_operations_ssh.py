@@ -2,19 +2,17 @@ import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 
-from ...app.models.v2 import CollectionStateV2
-from ._TaskCollectPip import _TaskCollectPip_to_deprecate
 from .background_operations import _handle_failure
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -112,11 +110,9 @@ def _customize_and_run_template(
 def background_collect_pip_ssh(
     *,
     state_id: int,
-    task_pkg: _TaskCollectPip_to_deprecate,
+    task_group: TaskGroupV2,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
-    user_id: int,
-    user_group_id: Optional[int],
 ) -> None:
     """
     Collect a task package over SSH
@@ -131,7 +127,7 @@ def background_collect_pip_ssh(
 
     Arguments:
         state_id:
-        task_pkg:
+        task_group:
         fractal_ssh:
         tasks_base_dir:
     """
@@ -144,47 +140,22 @@ def background_collect_pip_ssh(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-
         logger.debug("START")
-        for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
-            logger.debug(f"task_pkg.{key}: {value}")
+        for key, value in task_group.model_dump().items():
+            logger.debug(f"task_group.{key}: {value}")
 
         # Open a DB session soon, since it is needed for updating `state`
         with next(get_sync_db()) as db:
             try:
                 # Prepare replacements for task-collection scripts
                 python_bin = get_python_interpreter_v2(
-                    python_version=task_pkg.python_version
+                    python_version=task_group.python_version
                 )
-                package_version = (
-                    ""
-                    if task_pkg.package_version is None
-                    else task_pkg.package_version
-                )
-
-                install_string = task_pkg.package
-                if task_pkg.package_extras is not None:
-                    install_string = (
-                        f"{install_string}[{task_pkg.package_extras}]"
-                    )
-                if (
-                    task_pkg.package_version is not None
-                    and not task_pkg.is_local_package
-                ):
-                    install_string = (
-                        f"{install_string}=={task_pkg.package_version}"
-                    )
-                package_env_dir = (
-                    Path(tasks_base_dir)
-                    / ".fractal"
-                    / f"{task_pkg.package_name}{package_version}"
-                ).as_posix()
-                logger.debug(f"{package_env_dir=}")
+                install_string = task_group.pip_install_string
                 settings = Inject(get_settings)
                 replacements = [
-                    ("__PACKAGE_NAME__", task_pkg.package_name),
-                    ("__PACKAGE_ENV_DIR__", package_env_dir),
-                    ("__PACKAGE__", task_pkg.package),
+                    ("__PACKAGE_NAME__", task_group.pkg_name),
+                    ("__PACKAGE_ENV_DIR__", task_group.venv_path),
                     ("__PYTHON__", python_bin),
                     ("__INSTALL_STRING__", install_string),
                     (
@@ -262,10 +233,10 @@ def background_collect_pip_ssh(
                     logger.debug(
                         f"collecting - parsed from pip-show: {key}={value}"
                     )
-                # Check package_name match
+                # Check package_name match # FIXME is this still relevant?
                 # FIXME SSH: Does this work for non-canonical `package_name`?
                 package_name_pip_show = pkg_attrs.get("package_name")
-                package_name_task_pkg = task_pkg.package_name
+                package_name_task_pkg = task_group.pkg_name
                 if package_name_pip_show != package_name_task_pkg:
                     error_msg = (
                         f"`package_name` mismatch: "
@@ -292,45 +263,31 @@ def background_collect_pip_ssh(
 
                 # Read and validate remote manifest file
                 with fractal_ssh.sftp().open(manifest_path_remote, "r") as f:
-                    manifest = json.load(f)
+                    pkg_manifest_dict = json.load(f)
                 logger.info(f"collecting - loaded {manifest_path_remote=}")
-                ManifestV2(**manifest)
+                pkg_manifest = ManifestV2(**pkg_manifest_dict)
                 logger.info("collecting - manifest is a valid ManifestV2")
 
-                # Create new _TaskCollectPip object
-                new_pkg = _TaskCollectPip_to_deprecate(
-                    **task_pkg.dict(
-                        exclude={"package_version", "package_name"},
-                        exclude_unset=True,
-                        exclude_none=True,
-                    ),
-                    package_manifest=manifest,
-                    **pkg_attrs,
-                )
-
+                logger.info("collecting - _prepare_tasks_metadata - start")
                 task_list = _prepare_tasks_metadata(
-                    package_manifest=new_pkg.package_manifest,
-                    package_version=new_pkg.package_version,
+                    package_manifest=pkg_manifest,
+                    package_version=task_group.version,
                     package_root=Path(package_root_remote),
                     python_bin=Path(python_bin),
                 )
+                logger.info("collecting - _prepare_tasks_metadata - end")
 
-                # Prepare some task-group attributes
-                task_group_attrs = dict(
-                    pkg_name=task_pkg.package_name,
-                    version=task_pkg.package_version,
+                logger.info(
+                    "collecting - create_db_tasks_and_update_task_group - "
+                    "start"
                 )
-                if task_pkg.is_local_package:
-                    task_group_attrs["origin"] = "wheel-file"
-                else:
-                    task_group_attrs["origin"] = "pypi"
-
                 create_db_tasks_and_update_task_group(
                     task_list=task_list,
-                    task_group_obj=TaskGroupCreateV2(**task_group_attrs),
-                    user_id=user_id,
-                    user_group_id=user_group_id,
+                    task_group_id=task_group.id,
                     db=db,
+                )
+                logger.info(
+                    "collecting - create_db_tasks_and_update_task_group - end"
                 )
 
                 logger.debug("collecting - END")
@@ -355,18 +312,19 @@ def background_collect_pip_ssh(
                     logger_name=LOGGER_NAME,
                     exception=e,
                     db=db,
+                    task_group_id=task_group.id,
                 )
                 if remove_venv_folder_upon_failure:
                     try:
                         logger.info(
-                            f"Now delete remote folder {package_env_dir}"
+                            f"Now delete remote folder {task_group.path}"
                         )
                         fractal_ssh.remove_folder(
-                            folder=package_env_dir,
+                            folder=task_group.path,
                             safe_root=tasks_base_dir,
                         )
                         logger.info(
-                            f"Deleted remoted folder {package_env_dir}"
+                            f"Deleted remoted folder {task_group.path}"
                         )
                     except Exception as e:
                         logger.error(
@@ -376,6 +334,6 @@ def background_collect_pip_ssh(
                     else:
                         logger.info(
                             "Not trying to remove remote folder "
-                            f"{package_env_dir}."
+                            f"{task_group.path}."
                         )
                 return
