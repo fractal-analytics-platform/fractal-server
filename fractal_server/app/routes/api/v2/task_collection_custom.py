@@ -8,7 +8,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -17,9 +16,7 @@ from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.routes.aux.validate_user_settings import (
     verify_user_has_settings,
@@ -159,34 +156,6 @@ async def collect_task_custom(
         package_root=package_root,
         package_version=task_collect.version,
     )
-    # Verify that source is not already in use (note: this check is only useful
-    # to provide a user-friendly error message, but `task.source` uniqueness is
-    # already guaranteed by a constraint in the table definition).
-    sources = [task.source for task in task_list]
-    stm = select(TaskV2).where(TaskV2.source.in_(sources))
-    res = db_sync.execute(stm)
-    overlapping_sources_v2 = res.scalars().all()
-    if overlapping_sources_v2:
-        overlapping_tasks_v2_source_and_id = [
-            f"TaskV2 with ID {task.id} already has source='{task.source}'"
-            for task in overlapping_sources_v2
-        ]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="\n".join(overlapping_tasks_v2_source_and_id),
-        )
-    stm = select(TaskV1).where(TaskV1.source.in_(sources))
-    res = db_sync.execute(stm)
-    overlapping_sources_v1 = res.scalars().all()
-    if overlapping_sources_v1:
-        overlapping_tasks_v1_source_and_id = [
-            f"TaskV1 with ID {task.id} already has source='{task.source}'\n"
-            for task in overlapping_sources_v1
-        ]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="\n".join(overlapping_tasks_v1_source_and_id),
-        )
 
     # Prepare task-group attributes
     task_group_attrs = dict(
