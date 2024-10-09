@@ -353,12 +353,29 @@ async def test_get_project_workflows(
         assert len((await db.execute(select(WorkflowV2))).scalars().all()) == 4
 
 
-async def test_patch_workflow(client, MockCurrentUser, project_factory_v2):
+async def test_patch_workflow(
+    client, MockCurrentUser, project_factory_v2, db, task_factory_v2
+):
     """
     GIVEN a Workflow
     WHEN the endpoint to PATCH a Workflow is called
     THEN the Workflow is updated
     """
+    # Create several kinds of tasks
+    async with MockCurrentUser() as user_A:
+        user_A_id = user_A.id
+        t1 = await task_factory_v2(user_id=user_A_id, source="1")
+        t2 = await task_factory_v2(user_id=user_A_id, source="2")
+    async with MockCurrentUser() as user_B:
+        t3 = await task_factory_v2(user_id=user_B.id, source="3")
+    tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
+    tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
+    tg3.user_group_id = None
+    tg2.active = False
+    db.add(tg2)
+    db.add(tg3)
+    await db.commit()
+
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -366,8 +383,14 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory_v2):
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/", json=dict(name="WF")
         )
-        wf_id = res.json()["id"]
         assert res.json()["name"] == "WF"
+        wf_id = res.json()["id"]
+
+        for task in [t1, t2, t3]:
+            await _workflow_insert_task(
+                workflow_id=wf_id, task_id=task.id, db=db
+            )
+
         res = await client.get(f"{PREFIX}/project/{project.id}/workflow/")
         assert len(res.json()) == 1
         assert res.status_code == 200
@@ -391,10 +414,17 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory_v2):
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/", json=patch
         )
+        assert res.status_code == 200
+        # Assert warnings
+        assert res.json()["task_list"][0]["warning"] is None
+        assert res.json()["task_list"][1]["warning"] == "Task is not active."
+        assert (
+            res.json()["task_list"][2]["warning"]
+            == "Current user has no access to this task."
+        )
 
         new_workflow = await get_workflow(client, project.id, wf_id)
         assert new_workflow["name"] == "new_WF"
-        assert res.status_code == 200
 
         res = await client.get(f"{PREFIX}/project/{project.id}/workflow/")
         assert len(res.json()) == 2
