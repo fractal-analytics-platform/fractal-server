@@ -276,11 +276,17 @@ async def _get_package_manifest(
                 dest=tmpdir,
             )
             wheel_file_path = wheel_file_path.as_posix()
-    # Read package manifest from wheel file
-    manifest = _load_manifest_from_wheel(
-        wheel_file_path=wheel_file_path,
-        logger_name=logger_name,
-    )
+            # Read package manifest from temporary wheel file
+            manifest = _load_manifest_from_wheel(
+                wheel_file_path=wheel_file_path,
+                logger_name=logger_name,
+            )
+    else:
+        # Read package manifest from wheel file
+        manifest = _load_manifest_from_wheel(
+            wheel_file_path=wheel_file_path,
+            logger_name=logger_name,
+        )
     return manifest
 
 
