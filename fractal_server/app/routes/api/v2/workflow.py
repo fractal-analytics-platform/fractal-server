@@ -184,7 +184,26 @@ async def update_workflow(
     await db.refresh(workflow)
     await db.close()
 
-    return workflow
+    workflow_data = dict(
+        **workflow.model_dump(),
+        project=workflow.project,
+    )
+    task_list_with_warnings = []
+    for wftask in workflow.task_list:
+        wftask_data = dict(wftask.model_dump(), task=wftask.task)
+        try:
+            task_group = await _get_task_group_read_access(
+                task_group_id=wftask.task.taskgroupv2_id,
+                user_id=user.id,
+                db=db,
+            )
+            if not task_group.active:
+                wftask_data["warning"] = "Task is not active."
+        except HTTPException:
+            wftask_data["warning"] = "Current user has no access to this task."
+        task_list_with_warnings.append(wftask_data)
+    workflow_data["task_list"] = task_list_with_warnings
+    return workflow_data
 
 
 @router.delete(
