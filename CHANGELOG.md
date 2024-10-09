@@ -13,6 +13,7 @@ into pre-release sections below.
 
 * API:
     * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
+    * Add cascade operations to `DELETE /api/v2/task-group/{task_group_id}/` and to `DELETE /admin/v2/task-group/{task_group_id}/` (\#1867).
 * Database:
     * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
 

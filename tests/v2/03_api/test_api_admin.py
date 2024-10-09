@@ -9,6 +9,7 @@ from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -812,6 +813,12 @@ async def test_task_group_admin(
         task = await task_factory_v2(user_id=user.id, source="source")
         await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
 
+    state = CollectionStateV2(taskgroupv2_id=task_group_1["id"])
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    assert state.taskgroupv2_id == task_group_1["id"]
+
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.delete(f"{PREFIX}/task-group/{task_group_1['id']}/")
         assert res.status_code == 204
@@ -825,3 +832,6 @@ async def test_task_group_admin(
             f"{PREFIX}/task-group/{task.taskgroupv2_id}/"
         )
         assert res.status_code == 422
+
+    await db.refresh(state)
+    assert state.taskgroupv2_id is None
