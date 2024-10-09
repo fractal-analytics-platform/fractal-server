@@ -97,8 +97,9 @@ async def collect_tasks_pip(
     task_group_attrs = dict(
         user_id=user.id,
         python_version=task_collect.python_version,
-        pip_extras=task_collect.package_extras,
     )
+    if task_collect.package_extras is not None:
+        task_group_attrs["pip_extras"] = (task_collect.package_extras,)
     if task_collect.pinned_package_versions is not None:
         task_group_attrs["pinned_package_versions"] = (
             task_collect.pinned_package_versions,
