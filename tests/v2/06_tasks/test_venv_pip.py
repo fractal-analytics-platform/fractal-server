@@ -9,7 +9,9 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import COLLECTION_FREEZE_FILENAME
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2._TaskCollectPip import (
+    _TaskCollectPip_to_deprecate,
+)
 from fractal_server.tasks.v2._venv_pip import (
     _create_venv_install_package_pip,
 )
@@ -25,14 +27,14 @@ def _get_task_pkg(
     package: str,
     package_version: Optional[str] = None,
     python_version: Optional[str] = None,
-) -> _TaskCollectPip:
+) -> _TaskCollectPip_to_deprecate:
     if python_version is None:
         settings = Inject(get_settings)
         python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     attributes = dict(package=package, python_version=python_version)
     if package_version is not None:
         attributes["package_version"] = package_version
-    return _TaskCollectPip(**attributes)
+    return _TaskCollectPip_to_deprecate(**attributes)
 
 
 async def _run_pip_install_from_task_group(task_group: TaskGroupV2):

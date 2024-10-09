@@ -5,7 +5,9 @@ from devtools import debug
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2.collection_state import CollectionStateV2
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2._TaskCollectPip import (
+    _TaskCollectPip_to_deprecate,
+)
 from fractal_server.tasks.v2.background_operations_ssh import (
     background_collect_pip_ssh,
 )
@@ -44,7 +46,7 @@ async def test_task_collection_ssh(
     db.add(state)
     await db.commit()
     await db.refresh(state)
-    task_pkg = _TaskCollectPip(
+    task_pkg = _TaskCollectPip_to_deprecate(
         package="fractal_tasks_core",
         package_version="1.0.2",
         python_version=current_py_version,
@@ -128,7 +130,7 @@ async def test_task_collection_ssh_failure(
     await db.commit()
     await db.refresh(state)
 
-    task_pkg = _TaskCollectPip(
+    task_pkg = _TaskCollectPip_to_deprecate(
         package="fractal_tasks_core",
         package_version="99.99.99",
         python_version=current_py_version,

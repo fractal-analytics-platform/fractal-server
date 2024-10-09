@@ -18,7 +18,7 @@ from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ._TaskCollectPip import _TaskCollectPip
+from ._TaskCollectPip import _TaskCollectPip_to_deprecate
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
@@ -292,7 +292,7 @@ async def _get_package_manifest(
 async def background_collect_pip(
     *,
     state_id: int,
-    task_pkg_to_deprecate: _TaskCollectPip,
+    task_pkg_to_deprecate: _TaskCollectPip_to_deprecate,
     task_group: TaskGroupV2,
 ) -> None:
     """

@@ -15,7 +15,7 @@ from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.v2.utils import _parse_wheel_filename
 
 
-class _TaskCollectPip(BaseModel, extra=Extra.forbid):
+class _TaskCollectPip_to_deprecate(BaseModel, extra=Extra.forbid):
     """
     Internal task-collection model.
 

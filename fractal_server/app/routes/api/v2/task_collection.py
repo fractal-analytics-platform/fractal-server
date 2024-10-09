@@ -30,7 +30,9 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_collection_log
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2._TaskCollectPip import (
+    _TaskCollectPip_to_deprecate,
+)
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
@@ -138,7 +140,9 @@ async def collect_tasks_pip(
 
     # Validate payload
     try:
-        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
+        task_pkg = _TaskCollectPip_to_deprecate(
+            **task_collect.dict(exclude_unset=True)
+        )
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

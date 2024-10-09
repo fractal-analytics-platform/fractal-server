@@ -5,7 +5,9 @@ from pydantic.error_wrappers import ValidationError
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2._TaskCollectPip import (
+    _TaskCollectPip_to_deprecate,
+)
 
 
 def test_TaskCollectPip_model(tmp_path, dummy_task_package):
@@ -14,14 +16,18 @@ def test_TaskCollectPip_model(tmp_path, dummy_task_package):
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
 
     # package_name is set correctly, for remote package
-    task_pkg = _TaskCollectPip(
-        package="my-package", python_version=PYTHON_VERSION
+    task_pkg = _TaskCollectPip_to_deprecate(
+        package="my-package",
+        python_version=PYTHON_VERSION,
+        package_version="1",
     )
     assert task_pkg.package_name == "my-package"
 
     # package_name is set correctly (and normalized), for remote package
-    task_pkg = _TaskCollectPip(
-        package="my____PACKAGE", python_version=PYTHON_VERSION
+    task_pkg = _TaskCollectPip_to_deprecate(
+        package="my____PACKAGE",
+        python_version=PYTHON_VERSION,
+        package_version="1",
     )
     debug(task_pkg)
     assert task_pkg.package_name == "my-package"
@@ -29,26 +35,36 @@ def test_TaskCollectPip_model(tmp_path, dummy_task_package):
     # package_name and package_path are set correctly, for local wheelfile
     wheel_path = tmp_path / "dummy_pkg_xy-0.0.1-py3-none-any.whl"
     wheel_path.touch()
-    task_pkg = _TaskCollectPip(
-        package=wheel_path.as_posix(), python_version=PYTHON_VERSION
+    task_pkg = _TaskCollectPip_to_deprecate(
+        package=wheel_path.as_posix(),
+        python_version=PYTHON_VERSION,
+        package_version="1",
     )
     assert task_pkg.package_name == "dummy-pkg-xy"
     assert task_pkg.package_path == wheel_path
 
     # failure for non-absolute wheel path
     with pytest.raises(ValidationError) as e:
-        _TaskCollectPip(
-            package="non-absolute/path", python_version=PYTHON_VERSION
+        _TaskCollectPip_to_deprecate(
+            package="non-absolute/path",
+            python_version=PYTHON_VERSION,
+            package_version="1",
         )
     assert "must be absolute" in str(e.value)
 
     # failure for package name ending in .whl
     with pytest.raises(ValidationError) as e:
-        _TaskCollectPip(package="x.whl", python_version=PYTHON_VERSION)
+        _TaskCollectPip_to_deprecate(
+            package="x.whl", python_version=PYTHON_VERSION, package_version="1"
+        )
     assert "is not the absolute path to a wheel file" in str(e.value)
 
     # When `package_version` is unset, some methods should fail
-    tc = _TaskCollectPip(package="my-package", python_version=PYTHON_VERSION)
+    tc = _TaskCollectPip_to_deprecate(
+        package="my-package",
+        python_version=PYTHON_VERSION,
+        package_version="1",
+    )
     assert tc.package_version is None
     with pytest.raises(ValueError):
         tc.check()
@@ -116,5 +132,5 @@ def test_unit_source_resolution(
         args["package_extras"] = package_extras
     if python_version:
         args["python_version"] = python_version
-    tc = _TaskCollectPip(**args)
+    tc = _TaskCollectPip_to_deprecate(**args)
     assert tc.package_source == expected_source

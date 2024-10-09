@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy.orm.attributes import flag_modified
 
 from ...app.models.v2 import CollectionStateV2
-from ._TaskCollectPip import _TaskCollectPip
+from ._TaskCollectPip import _TaskCollectPip_to_deprecate
 from .background_operations import _handle_failure
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
@@ -112,7 +112,7 @@ def _customize_and_run_template(
 def background_collect_pip_ssh(
     *,
     state_id: int,
-    task_pkg: _TaskCollectPip,
+    task_pkg: _TaskCollectPip_to_deprecate,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
     user_id: int,
@@ -298,7 +298,7 @@ def background_collect_pip_ssh(
                 logger.info("collecting - manifest is a valid ManifestV2")
 
                 # Create new _TaskCollectPip object
-                new_pkg = _TaskCollectPip(
+                new_pkg = _TaskCollectPip_to_deprecate(
                     **task_pkg.dict(
                         exclude={"package_version", "package_name"},
                         exclude_unset=True,
