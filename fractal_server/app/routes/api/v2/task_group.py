@@ -12,6 +12,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
@@ -102,6 +103,15 @@ async def delete_task_group(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
         )
+
+    stm = select(CollectionStateV2).where(
+        CollectionStateV2.taskgroupv2_id == task_group_id
+    )
+    res = await db.execute(stm)
+    collection_states = res.scalars().all()
+    for collection_state in collection_states:
+        collection_state.taskgroupv2_id = None
+        db.add(collection_state)
 
     await db.delete(task_group)
     await db.commit()
