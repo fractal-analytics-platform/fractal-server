@@ -1,5 +1,6 @@
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models.v2 import CollectionStateV2
 
 PREFIX = "/api/v2/task-group"
 
@@ -96,8 +97,6 @@ async def test_get_task_group_list(
 async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
-
-    from fractal_server.app.models.v2 import CollectionStateV2
 
     state = CollectionStateV2(taskgroupv2_id=task.taskgroupv2_id)
     db.add(state)
