@@ -13,6 +13,8 @@ from .task import TaskReadV2
 
 
 class TaskGroupCreateV2(BaseModel):
+    user_id: int
+    user_group_id: Optional[int] = None
     active: bool = True
     origin: Literal["pypi", "wheel-file", "other"]
     pkg_name: str
