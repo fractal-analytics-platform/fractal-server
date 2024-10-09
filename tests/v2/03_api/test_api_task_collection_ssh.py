@@ -60,7 +60,7 @@ async def test_task_collection_ssh_from_pypi(
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
-    ):
+    ) as user:
 
         # CASE 1: successful collection
 
@@ -86,8 +86,9 @@ async def test_task_collection_ssh_from_pypi(
         assert f"fractal-tasks-core=={PACKAGE_VERSION}" in data["freeze"]
         remote_folder = (
             Path(TASKS_BASE_DIR)
-            / ".fractal"
-            / f"fractal-tasks-core{PACKAGE_VERSION}"
+            / str(user.id)
+            / "fractal-tasks-core"
+            / f"{PACKAGE_VERSION}"
         ).as_posix()
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
 
@@ -116,8 +117,9 @@ async def test_task_collection_ssh_from_pypi(
         assert f"fractal-tasks-core=={PACKAGE_VERSION}" in data["log"]
         remote_folder = (
             Path(TASKS_BASE_DIR)
-            / ".fractal"
-            / f"fractal-tasks-core{PACKAGE_VERSION}"
+            / str(user.id)
+            / "fractal-tasks-core"
+            / f"{PACKAGE_VERSION}"
         ).as_posix()
         # Check that folder was removed
         with pytest.raises(RuntimeError, match="No such file or directory"):
