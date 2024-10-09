@@ -99,11 +99,11 @@ async def collect_tasks_pip(
         python_version=task_collect.python_version,
     )
     if task_collect.package_extras is not None:
-        task_group_attrs["pip_extras"] = (task_collect.package_extras,)
+        task_group_attrs["pip_extras"] = task_collect.package_extras
     if task_collect.pinned_package_versions is not None:
-        task_group_attrs["pinned_package_versions"] = (
-            task_collect.pinned_package_versions,
-        )
+        task_group_attrs[
+            "pinned_package_versions"
+        ] = task_collect.pinned_package_versions
     if task_collect.package.endswith(".whl"):
         try:
             task_group_attrs["wheel_path"] = task_collect.package
