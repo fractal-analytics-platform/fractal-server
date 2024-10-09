@@ -219,7 +219,7 @@ async def _verify_non_duplication_user_constraint(
         select(TaskGroupV2)
         .where(TaskGroupV2.user_id == user_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
-        .where(TaskGroupV2.version == version)  # FIXME test with None
+        .where(TaskGroupV2.version == version)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()
