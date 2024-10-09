@@ -14,6 +14,9 @@ from ....utils import get_timestamp
 class CollectionStateV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    taskgroupv2_id: Optional[int] = Field(
+        foreign_key="taskgroupv2.id", unique=True
+    )
     data: dict[str, Any] = Field(sa_column=Column(JSON), default={})
     timestamp: datetime = Field(
         default_factory=get_timestamp,
