@@ -25,6 +25,8 @@ from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_tasks import _get_valid_user_group_id
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -166,8 +168,17 @@ async def collect_tasks_pip(
             detail=f"Invalid task-group object. Original error: {e}",
         )
 
-    # FIXME: verify non-duplication constraint
-    pass
+    # Verify non-duplication constraints
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group_attrs["user_group_id"],
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+    )
 
     # Verify that task-group path is unique
     stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
