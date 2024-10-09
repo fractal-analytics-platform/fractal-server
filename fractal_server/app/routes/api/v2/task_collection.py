@@ -98,8 +98,11 @@ async def collect_tasks_pip(
         user_id=user.id,
         python_version=task_collect.python_version,
         pip_extras=task_collect.package_extras,
-        pinned_package_versions=task_collect.pinned_package_versions,
     )
+    if task_collect.pinned_package_versions is not None:
+        task_group_attrs["pinned_package_versions"] = (
+            task_collect.pinned_package_versions,
+        )
     if task_collect.package.endswith(".whl"):
         try:
             task_group_attrs["wheel_path"] = task_collect.package
@@ -173,11 +176,13 @@ async def collect_tasks_pip(
         user_id=user.id,
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
+        db=db,
     )
     await _verify_non_duplication_group_constraint(
         user_group_id=task_group_attrs["user_group_id"],
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
+        db=db,
     )
 
     # Verify that task-group path is unique
