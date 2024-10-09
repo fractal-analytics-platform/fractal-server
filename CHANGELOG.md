@@ -13,6 +13,8 @@ into pre-release sections below.
 
 * API:
     * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
+* Database:
+    * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
 
 # 2.7.0a3
 
