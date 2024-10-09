@@ -139,7 +139,13 @@ async def test_collection_state(db):
     assert state.taskgroupv2_id == task_group.id
 
     await db.delete(task_group)
-    await db.commit()
 
-    await db.refresh(state)
-    assert state.taskgroupv2_id is None
+    settings = Inject(get_settings)
+    if settings.DB_ENGINE == "sqlite":
+        await db.commit()
+        await db.refresh(state)
+        assert state.taskgroupv2_id is not None
+    else:
+        with pytest.raises(IntegrityError):
+            await db.commit()
+        await db.rollback()
