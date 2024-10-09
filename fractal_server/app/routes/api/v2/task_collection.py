@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 from sqlmodel import select
 
 from .....config import get_settings
@@ -30,9 +30,6 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_collection_log
-from fractal_server.tasks.v2._TaskCollectPip import (
-    _TaskCollectPip_to_deprecate,
-)
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
@@ -54,12 +51,6 @@ logger = set_logger(__name__)
         201: dict(
             description=(
                 "Task collection successfully started in the background"
-            )
-        ),
-        200: dict(
-            description=(
-                "Package already collected. Returning info on already "
-                "available tasks"
             )
         ),
     },
@@ -138,17 +129,6 @@ async def collect_tasks_pip(
         else:
             task_group_attrs["version"] = task_collect.package_version
 
-    # Validate payload
-    try:
-        task_pkg = _TaskCollectPip_to_deprecate(
-            **task_collect.dict(exclude_unset=True)
-        )
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid task-collection object. Original error: {e}",
-        )
-
     # Validate user settings (backend-specific)
     user_settings = await validate_user_settings(
         user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
@@ -178,8 +158,13 @@ async def collect_tasks_pip(
     task_group_attrs["venv_path"] = Path(task_group_path, "venv").as_posix()
 
     # Validate TaskGroupV2 attributes
-    # FIXME: add try/except?
-    TaskGroupCreateV2(**task_group_attrs)
+    try:
+        TaskGroupCreateV2(**task_group_attrs)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid task-group object. Original error: {e}",
+        )
 
     # FIXME: verify non-duplication constraint
     pass
@@ -251,7 +236,6 @@ async def collect_tasks_pip(
             state_id=state.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
-            task_pkg=task_pkg,  # FIXME: move to task_group if possible
         )
 
         response.status_code = status.HTTP_201_CREATED
@@ -266,7 +250,7 @@ async def collect_tasks_pip(
         collection_status = dict(
             status=CollectionStatusV2.PENDING,
             venv_path=task_group_attrs["venv_path"],
-            package=task_pkg.package,
+            package=task_collect.package,
         )
         state = CollectionStateV2(data=collection_status)
         db.add(state)
