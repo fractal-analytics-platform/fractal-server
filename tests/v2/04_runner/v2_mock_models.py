@@ -32,7 +32,7 @@ class DatasetV2Mock(BaseModel):
 class TaskV2Mock(BaseModel):
     id: int
     name: str
-    source: str
+    source: Optional[str] = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
 

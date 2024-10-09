@@ -71,7 +71,6 @@ def fractal_tasks_mock_collection(
     manifest = ManifestV2(**manifest_dict)
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=manifest,
-        package_source="pytest",
         python_bin=venv_python,
         package_root=package_root,
     )
