@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from ._aux_functions_tasks import _get_valid_user_group_id
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
@@ -195,6 +197,18 @@ async def collect_task_custom(
         user_group_id=user_group_id,
     )
     TaskGroupCreateV2(**task_group_attrs)
+
+    # Verify non-duplication constraints
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group_attrs["pkg_name"],
+        version=None,
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group_attrs["user_group_id"],
+        pkg_name=task_group_attrs["pkg_name"],
+        version=None,
+    )
 
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
