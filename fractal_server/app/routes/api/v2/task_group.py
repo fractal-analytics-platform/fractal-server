@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -136,7 +137,12 @@ async def patch_task_group(
         user_id=user.id,
         db=db,
     )
-
+    await _verify_non_duplication_group_constraint(
+        db=db,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        user_group_id=task_group_update.user_group_id,
+    )
     for key, value in task_group_update.dict(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
             await _verify_user_belongs_to_group(

@@ -136,7 +136,9 @@ async def test_delete_task_group_fail(
         assert res.status_code == 422
 
 
-async def test_patch_task_group(client, MockCurrentUser, task_factory_v2):
+async def test_patch_task_group(
+    client, MockCurrentUser, task_factory_v2, default_user_group
+):
     async with MockCurrentUser() as user1:
 
         task = await task_factory_v2(user_id=user1.id, source="source")
@@ -166,6 +168,14 @@ async def test_patch_task_group(client, MockCurrentUser, task_factory_v2):
             f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(user_group_id=42)
         )
         assert res.status_code == 404
+
+        # Already linked UserGroup
+
+        res = await client.patch(
+            f"{PREFIX}/{task.taskgroupv2_id}/",
+            json=dict(user_group_id=default_user_group.id),
+        )
+        assert res.status_code == 422
 
     async with MockCurrentUser():
 
