@@ -107,14 +107,20 @@ async def delete_task_group(
 
     # Cascade operations: set foreign-keys to null for CollectionStateV2 which
     # are in relationship with the current TaskGroupV2
+    logger.info("Start of cascade operations on CollectionStateV2.")
     stm = select(CollectionStateV2).where(
         CollectionStateV2.taskgroupv2_id == task_group_id
     )
     res = await db.execute(stm)
     collection_states = res.scalars().all()
     for collection_state in collection_states:
+        logger.info(
+            f"Setting CollectionStateV2[{collection_state.id}].taskgroupv2_id "
+            "to None."
+        )
         collection_state.taskgroupv2_id = None
         db.add(collection_state)
+    logger.info("End of cascade operations on CollectionStateV2.")
 
     await db.delete(task_group)
     await db.commit()

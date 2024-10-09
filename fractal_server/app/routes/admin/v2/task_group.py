@@ -21,8 +21,11 @@ from fractal_server.app.routes.auth._aux_auth import (
 )
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
+from fractal_server.logger import set_logger
 
 router = APIRouter()
+
+logger = set_logger(__name__)
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
@@ -129,16 +132,20 @@ async def delete_task_group(
             detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
         )
 
-    # Cascade operations: set foreign-keys to null for CollectionStateV2 which
-    # are in relationship with the current TaskGroupV2
+    logger.info("Start of cascade operations on CollectionStateV2.")
     stm = select(CollectionStateV2).where(
         CollectionStateV2.taskgroupv2_id == task_group_id
     )
     res = await db.execute(stm)
     collection_states = res.scalars().all()
     for collection_state in collection_states:
+        logger.info(
+            f"Setting CollectionStateV2[{collection_state.id}].taskgroupv2_id "
+            "to None."
+        )
         collection_state.taskgroupv2_id = None
         db.add(collection_state)
+    logger.info("End of cascade operations on CollectionStateV2.")
 
     await db.delete(task_group)
     await db.commit()
