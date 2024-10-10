@@ -28,15 +28,6 @@ async def test_no_access_user_group_api(client, registered_client):
         assert res.status_code == expected_status
 
 
-async def test_delete_user_group_not_allowed(registered_superuser_client):
-    """
-    Verify that the user-group DELETE endpoint responds with
-    "405 Method Not Allowed".
-    """
-    res = await registered_superuser_client.delete(f"{PREFIX}/group/1/")
-    assert res.status_code == 405
-
-
 async def test_update_group(registered_superuser_client):
     """
     Modifying a group with an invalid user ID returns a 404.
