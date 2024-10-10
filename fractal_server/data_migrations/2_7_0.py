@@ -110,7 +110,6 @@ def prepare_task_groups(
     user_mapping: dict[str, int],
     default_user_group_id: int,
     default_user_id: int,
-    dry_run: bool,
     db: Session,
 ):
     stm_tasks = select(TaskV2).order_by(TaskV2.id)
@@ -236,14 +235,6 @@ def prepare_task_groups(
 
         print()
 
-        if dry_run:
-            print(
-                "End dry-run of handling task group with key "
-                f"'{task_group_key}"
-            )
-            print("-" * 80)
-            continue
-
         task_group = TaskGroupV2(**task_group_attributes)
         db.add(task_group)
         db.commit()
@@ -254,7 +245,7 @@ def prepare_task_groups(
     return
 
 
-def fix_db(dry_run: bool = False):
+def fix_db():
     logger.warning("START execution of fix_db function")
     _check_current_version("2.7.0")
 
@@ -268,7 +259,6 @@ def fix_db(dry_run: bool = False):
             default_user_id=default_user_id,
             default_user_group_id=default_user_group_id,
             db=db,
-            dry_run=dry_run,
         )
 
     logger.warning("END of execution of fix_db function")
