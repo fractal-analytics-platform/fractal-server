@@ -4,6 +4,7 @@ Definition of `/auth/group/` routes
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,14 +13,17 @@ from sqlmodel import func
 from sqlmodel import select
 
 from . import current_active_superuser
-from ...db import get_async_db
-from ...schemas.user_group import UserGroupCreate
-from ...schemas.user_group import UserGroupRead
-from ...schemas.user_group import UserGroupUpdate
-from ._aux_auth import _get_single_group_with_user_ids
+from ._aux_auth import _get_single_usergroup_with_user_ids
+from ._aux_auth import _usergroup_or_404
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.user_group import UserGroupCreate
+from fractal_server.app.schemas.user_group import UserGroupRead
+from fractal_server.app.schemas.user_group import UserGroupUpdate
+from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -70,7 +74,7 @@ async def get_single_user_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    group = await _get_single_group_with_user_ids(group_id=group_id, db=db)
+    group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
     return group
 
 
@@ -118,12 +122,7 @@ async def update_single_group(
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
 
-    group = await db.get(UserGroup, group_id)
-    if group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"UserGroup {group_id} not found.",
-        )
+    group = await _usergroup_or_404(group_id, db)
 
     # Check that all required users exist
     # Note: The reason for introducing `col` is as in
@@ -167,25 +166,49 @@ async def update_single_group(
         db.add(group)
         await db.commit()
 
-    updated_group = await _get_single_group_with_user_ids(
+    updated_group = await _get_single_usergroup_with_user_ids(
         group_id=group_id, db=db
     )
 
     return updated_group
 
 
-@router_group.delete(
-    "/group/{group_id}/", status_code=status.HTTP_405_METHOD_NOT_ALLOWED
-)
+@router_group.delete("/group/{group_id}/", status_code=204)
 async def delete_single_group(
     group_id: int,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> UserGroupRead:
-    raise HTTPException(
-        status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-        detail=(
-            "Deleting a user group is not allowed, as it may restrict "
-            "previously-granted access.",
-        ),
+) -> Response:
+
+    group = await _usergroup_or_404(group_id, db)
+
+    if group.name == FRACTAL_DEFAULT_GROUP_NAME:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot delete default UserGroup "
+                f"'{FRACTAL_DEFAULT_GROUP_NAME}'."
+            ),
+        )
+
+    # Cascade operations
+
+    res = await db.execute(
+        select(LinkUserGroup).where(LinkUserGroup.group_id == group_id)
     )
+    for link in res.scalars().all():
+        await db.delete(link)
+
+    res = await db.execute(
+        select(TaskGroupV2).where(TaskGroupV2.user_group_id == group_id)
+    )
+    for task_group in res.scalars().all():
+        task_group.user_group_id = None
+        db.add(task_group)
+
+    # Delete
+
+    await db.delete(group)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

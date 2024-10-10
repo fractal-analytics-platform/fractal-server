@@ -5,10 +5,10 @@ from sqlmodel import select
 
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth._aux_auth import (
-    _get_single_group_with_user_ids,
+    _get_single_user_with_groups,
 )
 from fractal_server.app.routes.auth._aux_auth import (
-    _get_single_user_with_groups,
+    _get_single_usergroup_with_user_ids,
 )
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.auth._aux_auth import (
@@ -34,7 +34,7 @@ async def test_user_or_404(db):
 
 async def test_get_single_group_with_user_ids(db):
     with pytest.raises(HTTPException) as exc_info:
-        await _get_single_group_with_user_ids(group_id=9999, db=db)
+        await _get_single_usergroup_with_user_ids(group_id=9999, db=db)
     debug(exc_info.value)
 
 
