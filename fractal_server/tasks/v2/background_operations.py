@@ -337,9 +337,6 @@ async def background_collect_pip(
         Path(task_group.path).mkdir(parents=True, exist_ok=False)
     except FileExistsError as e:
         logfile_path = get_log_path(Path(task_group.path))
-        from devtools import debug
-
-        debug(logfile_path)
         with next(get_sync_db()) as db:
             _handle_failure(
                 state_id=state_id,

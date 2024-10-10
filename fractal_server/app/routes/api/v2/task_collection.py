@@ -215,10 +215,6 @@ async def collect_tasks_pip(
     await db.refresh(task_group)
     db.expunge(task_group)
 
-    from devtools import debug
-
-    debug(task_group)  # FIXME
-
     # All checks are OK, proceed with task collection
     collection_status = dict(
         status=CollectionStatusV2.PENDING,
