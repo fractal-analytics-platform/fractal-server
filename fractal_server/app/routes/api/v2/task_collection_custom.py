@@ -8,15 +8,15 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from ._aux_functions_tasks import _get_valid_user_group_id
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v1 import Task as TaskV1
-from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.routes.aux.validate_user_settings import (
     verify_user_has_settings,
@@ -33,7 +33,7 @@ from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.database_operations import (
-    create_db_task_group_and_tasks,
+    create_db_tasks_and_update_task_group,
 )
 
 router = APIRouter()
@@ -152,51 +152,43 @@ async def collect_task_custom(
 
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
-        package_source=source,
         python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,
         package_version=task_collect.version,
     )
-    # Verify that source is not already in use (note: this check is only useful
-    # to provide a user-friendly error message, but `task.source` uniqueness is
-    # already guaranteed by a constraint in the table definition).
-    sources = [task.source for task in task_list]
-    stm = select(TaskV2).where(TaskV2.source.in_(sources))
-    res = db_sync.execute(stm)
-    overlapping_sources_v2 = res.scalars().all()
-    if overlapping_sources_v2:
-        overlapping_tasks_v2_source_and_id = [
-            f"TaskV2 with ID {task.id} already has source='{task.source}'"
-            for task in overlapping_sources_v2
-        ]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="\n".join(overlapping_tasks_v2_source_and_id),
-        )
-    stm = select(TaskV1).where(TaskV1.source.in_(sources))
-    res = db_sync.execute(stm)
-    overlapping_sources_v1 = res.scalars().all()
-    if overlapping_sources_v1:
-        overlapping_tasks_v1_source_and_id = [
-            f"TaskV1 with ID {task.id} already has source='{task.source}'\n"
-            for task in overlapping_sources_v1
-        ]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="\n".join(overlapping_tasks_v1_source_and_id),
-        )
 
     # Prepare task-group attributes
     task_group_attrs = dict(
         origin="other",
-        pkg_name=task_collect.source,  # FIXME
-    )
-
-    task_group = create_db_task_group_and_tasks(
-        task_list=task_list,
-        task_group_obj=TaskGroupCreateV2(**task_group_attrs),
+        pkg_name=task_collect.source,  # FIXME: pick one
         user_id=user.id,
         user_group_id=user_group_id,
+    )
+    TaskGroupCreateV2(**task_group_attrs)
+
+    # Verify non-duplication constraints
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group_attrs["pkg_name"],
+        version=None,
+        db=db,
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group_attrs["user_group_id"],
+        pkg_name=task_group_attrs["pkg_name"],
+        version=None,
+        db=db,
+    )
+
+    task_group = TaskGroupV2(**task_group_attrs)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+
+    task_group = create_db_tasks_and_update_task_group(
+        task_list=task_list,
+        task_group_id=task_group.id,
         db=db_sync,
     )
 

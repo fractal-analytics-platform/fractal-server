@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -20,7 +21,7 @@ from fractal_server.tasks.v2.background_operations import (
     _prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.database_operations import (
-    create_db_task_group_and_tasks,
+    create_db_tasks_and_update_task_group,
 )
 
 
@@ -71,7 +72,6 @@ def fractal_tasks_mock_collection(
     manifest = ManifestV2(**manifest_dict)
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=manifest,
-        package_source="pytest",
         python_bin=venv_python,
         package_root=package_root,
     )
@@ -92,11 +92,21 @@ def fractal_tasks_mock_db(
     default_user_group: UserGroup,
 ) -> dict[str, TaskV2]:
 
-    task_group = create_db_task_group_and_tasks(
-        task_list=fractal_tasks_mock_collection["task_list"],
-        task_group_obj=TaskGroupCreateV2(origin="other", pkg_name="mock"),
+    task_group_obj = TaskGroupCreateV2(
+        origin="other",
+        pkg_name="fractal_tasks_mock",
         user_id=first_user.id,
         user_group_id=default_user_group.id,
+    )
+    task_group = TaskGroupV2(**task_group_obj.dict())
+    db_sync.add(task_group)
+    db_sync.commit()
+    db_sync.refresh(task_group)
+    db_sync.expunge(task_group)
+
+    task_group = create_db_tasks_and_update_task_group(
+        task_group_id=task_group.id,
+        task_list=fractal_tasks_mock_collection["task_list"],
         db=db_sync,
     )
     return {task.name: task for task in task_group.task_list}

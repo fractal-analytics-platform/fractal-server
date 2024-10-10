@@ -8,7 +8,6 @@ from devtools import debug  # noqa
 from packaging.version import Version
 
 from fractal_server.app.models.v2 import CollectionStateV2
-from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
@@ -17,6 +16,9 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.endpoint_operations import (
+    get_package_version_from_pypi,
+)
 from tests.execute_command import execute_command
 
 
@@ -104,24 +106,13 @@ async def test_task_collection_from_wheel(
         assert ".whl[my_extra]" in log
 
         # Check on-disk files
-        full_path = settings.FRACTAL_TASKS_DIR / venv_path
-        assert get_collection_path(full_path).exists()
-        assert get_log_path(full_path).exists()
+        assert get_collection_path(Path(venv_path).parent).exists()
+        assert get_log_path(Path(venv_path).parent).exists()
 
         # Check actual Python version
         python_bin = task_list[0]["command_non_parallel"].split()[0]
         version = await execute_command(f"{python_bin} --version")
         assert expected_python_version in version
-
-        # Check task source
-        EXPECTED_SOURCE = (
-            "pip_local:fractal_tasks_mock:0.0.1:my_extra:"
-            f"py{expected_python_version}"
-        )
-        debug(EXPECTED_SOURCE)
-        for task in task_list:
-            debug(task["source"])
-            assert task["source"].startswith(EXPECTED_SOURCE)
 
         # Check task type
         for task in task_list:
@@ -140,28 +131,14 @@ async def test_task_collection_from_wheel(
             if task["command_parallel"] is not None:
                 assert task["args_schema_parallel"] is not None
 
-        # Collect again (already installed)
+        # A second identical collection fails
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-        assert data["info"] == "Already installed"
+        assert res.status_code == 422
 
         # Check that *verbose* collection info contains logs
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
         assert res.status_code == 200
         assert res.json()["data"]["log"] is not None
-
-        # Modify a task source (via DB, since endpoint cannot modify source)
-        db_task = await db.get(TaskV2, task_list[0]["id"])
-        db_task.source = "EDITED_SOURCE"
-        await db.commit()
-        await db.close()
-
-        # Collect again, and check that collection fails
-        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        debug(res.json())
-        assert res.status_code == 422
 
 
 async def test_task_collection_from_wheel_non_canonical(
@@ -221,18 +198,11 @@ async def test_task_collection_from_wheel_non_canonical(
         data = state["data"]
         task_list = data["task_list"]
 
-        # Verify how package name is used in source and folders
-        assert "fractal_tasks_non_canonical" in task_list[0]["source"]
+        # Verify how package name is used in relevant folders
         python_path, task_path = task_list[0]["command_non_parallel"].split()
-        assert (
-            "FRACTAL_TASKS_DIR/.fractal/fractal-tasks-non-canonical0.0.1"
-            in python_path
-        )
-        assert (
-            "FRACTAL_TASKS_DIR/.fractal/fractal-tasks-non-canonical0.0.1"
-            in task_path
-        )
-        assert "fractal_tasks_non_canonical" in task_path
+        assert "/fractal-tasks-non-canonical/0.0.1" in python_path
+        assert "/fractal-tasks-non-canonical/0.0.1" in task_path
+        assert "fractal-tasks-non-canonical" in task_path
 
         # Check that log were written, even with CRITICAL logging level
         log = data["log"]
@@ -242,6 +212,12 @@ async def test_task_collection_from_wheel_non_canonical(
         assert data["status"] == "OK"
 
 
+OLD_FRACTAL_TASKS_CORE_VERSION = "1.0.2"
+
+
+@pytest.mark.parametrize(
+    "package_version", [None, OLD_FRACTAL_TASKS_CORE_VERSION]
+)
 async def test_task_collection_from_pypi(
     db,
     client,
@@ -249,6 +225,7 @@ async def test_task_collection_from_pypi(
     override_settings_factory,
     tmp_path: Path,
     current_py_version,
+    package_version,
 ):
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
@@ -261,14 +238,21 @@ async def test_task_collection_from_pypi(
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PACKAGE_VERSION = "1.0.2"
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     payload = dict(
         package="fractal-tasks-core",
-        package_version=PACKAGE_VERSION,
         python_version=PYTHON_VERSION,
     )
+    if package_version is not None:
+        EXPECTED_PACKAGE_VERSION = package_version
+        payload["package_version"] = package_version
+    else:
+        EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
+            payload["package"]
+        )
+        assert EXPECTED_PACKAGE_VERSION > OLD_FRACTAL_TASKS_CORE_VERSION
     debug(payload)
+    debug(EXPECTED_PACKAGE_VERSION)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # Trigger task collection
@@ -288,6 +272,7 @@ async def test_task_collection_from_pypi(
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state = res.json()
+        debug(state)
         data = state["data"]
         task_list = data["task_list"]
         # Check that log were written, even with CRITICAL logging level
@@ -295,24 +280,13 @@ async def test_task_collection_from_pypi(
         assert log is not None
 
         # Check on-disk files
-        full_path = settings.FRACTAL_TASKS_DIR / venv_path
-        assert get_collection_path(full_path).exists()
-        assert get_log_path(full_path).exists()
+        assert get_collection_path(Path(venv_path).parent).exists()
+        assert get_log_path(Path(venv_path).parent).exists()
 
         # Check actual Python version
         python_bin = task_list[0]["command_non_parallel"].split()[0]
         version = await execute_command(f"{python_bin} --version")
         assert PYTHON_VERSION in version
-
-        # Check task source
-        EXPECTED_SOURCE = (
-            f"pip_remote:fractal_tasks_core:{PACKAGE_VERSION}::"
-            f"py{PYTHON_VERSION}"
-        )
-        debug(EXPECTED_SOURCE)
-        for task in task_list:
-            debug(task["source"])
-            assert task["source"].startswith(EXPECTED_SOURCE)
 
         # Check task type
         for task in task_list:
@@ -331,28 +305,16 @@ async def test_task_collection_from_pypi(
             if task["command_parallel"] is not None:
                 assert task["args_schema_parallel"] is not None
 
-        # Collect again (already installed)
+        # Collect again and fail
+        # FIXME: this currently fails because of an existing folder, but it
+        # should fail due to task-group non-duplication contraints
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-        assert data["info"] == "Already installed"
+        assert res.status_code == 422
 
         # Check that *verbose* collection info contains logs
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
         assert res.status_code == 200
         assert res.json()["data"]["log"] is not None
-
-        # Modify a task source (via DB, since endpoint cannot modify source)
-        db_task = await db.get(TaskV2, task_list[0]["id"])
-        db_task.source = "EDITED_SOURCE"
-        await db.commit()
-        await db.close()
-
-        # Collect again, and check that collection fails
-        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        debug(res.json())
-        assert res.status_code == 422
 
 
 async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
@@ -385,8 +347,6 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
 async def test_task_collection_custom(
     client,
     MockCurrentUser,
-    tmp_path: Path,
-    testdata_path,
     task_factory,
     fractal_tasks_mock_collection,
 ):
@@ -452,24 +412,6 @@ async def test_task_collection_custom(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
         )
         assert res.status_code == 201
-
-        # Fail because same 'source'
-        # V2
-        res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
-        )
-        assert res.status_code == 422
-        assert "TaskV2" in res.json()["detail"]
-        assert "already has source" in res.json()["detail"]
-        # V1
-        payload_root.source = "source4"
-        await task_factory(source="test01:source4:create_ome_zarr_compound")
-        res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
-        )
-        assert res.status_code == 422
-        assert "TaskV1" in res.json()["detail"]
-        assert "already has source" in res.json()["detail"]
 
         # Fail because python_interpreter does not exist
         payload_root.python_interpreter = "/foo/bar"

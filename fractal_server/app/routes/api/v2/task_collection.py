@@ -1,7 +1,4 @@
-import json
 from pathlib import Path
-from shutil import copy as shell_copy
-from tempfile import TemporaryDirectory
 from typing import Optional
 
 from fastapi import APIRouter
@@ -11,7 +8,7 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 from sqlmodel import select
 
 from .....config import get_settings
@@ -21,27 +18,27 @@ from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
-from ....models.v2 import TaskV2
+from ....models.v2 import TaskGroupV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
-from ....schemas.v2 import TaskReadV2
+from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_tasks import _get_valid_user_group_id
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.string_tools import slugify_task_name_for_source
-from fractal_server.tasks.utils import get_absolute_venv_path
+from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_collection_log
-from fractal_server.tasks.utils import get_collection_path
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
-from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.v2.endpoint_operations import download_package
-from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.endpoint_operations import (
+    get_package_version_from_pypi,
+)
+from fractal_server.tasks.v2.utils import _parse_wheel_filename
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 router = APIRouter()
@@ -52,19 +49,6 @@ logger = set_logger(__name__)
 @router.post(
     "/collect/pip/",
     response_model=CollectionStateReadV2,
-    responses={
-        201: dict(
-            description=(
-                "Task collection successfully started in the background"
-            )
-        ),
-        200: dict(
-            description=(
-                "Package already collected. Returning info on already "
-                "available tasks"
-            )
-        ),
-    },
 )
 async def collect_tasks_pip(
     task_collect: TaskCollectPipV2,
@@ -102,14 +86,47 @@ async def collect_tasks_pip(
             ),
         )
 
-    # Validate payload
-    try:
-        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid task-collection object. Original error: {e}",
+    # Populate task-group attributes
+    task_group_attrs = dict(
+        user_id=user.id,
+        python_version=task_collect.python_version,
+    )
+    if task_collect.package_extras is not None:
+        task_group_attrs["pip_extras"] = task_collect.package_extras
+    if task_collect.pinned_package_versions is not None:
+        task_group_attrs[
+            "pinned_package_versions"
+        ] = task_collect.pinned_package_versions
+    if task_collect.package.endswith(".whl"):
+        try:
+            task_group_attrs["wheel_path"] = task_collect.package
+            wheel_filename = Path(task_group_attrs["wheel_path"]).name
+            wheel_info = _parse_wheel_filename(wheel_filename)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Invalid wheel-file name {wheel_filename}. "
+                    f"Original error: {str(e)}",
+                ),
+            )
+        task_group_attrs["pkg_name"] = _normalize_package_name(
+            wheel_info["distribution"]
         )
+        task_group_attrs["version"] = wheel_info["version"]
+        task_group_attrs["origin"] = "wheel-file"
+    else:
+        pkg_name = task_collect.package
+        task_group_attrs["pkg_name"] = _normalize_package_name(pkg_name)
+        task_group_attrs["origin"] = "pypi"
+        if task_collect.package_version is None:
+            latest_version = await get_package_version_from_pypi(
+                task_collect.package
+            )
+            task_group_attrs["version"] = latest_version
+            task_collect.package_version = latest_version
+        else:
+            task_group_attrs["version"] = task_collect.package_version
 
     # Validate user settings (backend-specific)
     user_settings = await validate_user_settings(
@@ -123,23 +140,106 @@ async def collect_tasks_pip(
         user_id=user.id,
         db=db,
     )
+    task_group_attrs["user_group_id"] = user_group_id
+
+    # Construct task_group.path
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        base_tasks_path = user_settings.ssh_tasks_dir
+    else:
+        base_tasks_path = settings.FRACTAL_TASKS_DIR.as_posix()
+    task_group_path = (
+        Path(base_tasks_path)
+        / str(user.id)
+        / task_group_attrs["pkg_name"]
+        / task_group_attrs["version"]
+    ).as_posix()
+    task_group_attrs["path"] = task_group_path
+    task_group_attrs["venv_path"] = Path(task_group_path, "venv").as_posix()
+
+    # Validate TaskGroupV2 attributes
+    try:
+        TaskGroupCreateV2(**task_group_attrs)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid task-group object. Original error: {e}",
+        )
+
+    # Verify non-duplication constraints
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+        db=db,
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group_attrs["user_group_id"],
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+        db=db,
+    )
+
+    # Verify that task-group path is unique
+    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
+    res = await db.execute(stm)
+    for conflicting_task_group in res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Another task-group already has path={task_group_path}.\n"
+                f"{conflicting_task_group=}"
+            ),
+        )
+
+    # Verify that folder does not exist (for local collection)
+    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+        if Path(task_group_path).exists():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"{task_group_path} already exists.",
+            )
+
+    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+        wheel_path = task_group_attrs.get("wheel_path", None)
+        if wheel_path is not None:
+            if not Path(wheel_path).exists():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"No such file: {wheel_path}.",
+                )
+
+    # Create TaskGroupV2 object
+    task_group = TaskGroupV2(**task_group_attrs)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+
+    from devtools import debug
+
+    debug(task_group)  # FIXME
+
+    # All checks are OK, proceed with task collection
+    collection_status = dict(
+        status=CollectionStatusV2.PENDING,
+        venv_path=task_group_attrs["venv_path"],
+        package=task_collect.package,
+    )
+    state = CollectionStateV2(data=collection_status)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+
+    logger = set_logger(logger_name="collect_tasks_pip")
 
     # END of SSH/non-SSH common part
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # SSH task collection
 
         from fractal_server.tasks.v2.background_operations_ssh import (
             background_collect_pip_ssh,
         )
-
-        # Construct and return state
-        state = CollectionStateV2(
-            data=dict(
-                status=CollectionStatusV2.PENDING, package=task_collect.package
-            )
-        )
-        db.add(state)
-        await db.commit()
 
         # User appropriate FractalSSH object
         ssh_credentials = dict(
@@ -153,154 +253,18 @@ async def collect_tasks_pip(
         background_tasks.add_task(
             background_collect_pip_ssh,
             state_id=state.id,
-            task_pkg=task_pkg,
+            task_group=task_group,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
-            user_id=user.id,
-            user_group_id=user_group_id,
         )
 
-        response.status_code = status.HTTP_201_CREATED
-        return state
-
-    # Actual non-SSH endpoint
-
-    logger = set_logger(logger_name="collect_tasks_pip")
-
-    with TemporaryDirectory() as tmpdir:
-        try:
-            # Copy or download the package wheel file to tmpdir
-            if task_pkg.is_local_package:
-                shell_copy(task_pkg.package_path.as_posix(), tmpdir)
-                wheel_path = Path(tmpdir) / task_pkg.package_path.name
-            else:
-                logger.info(f"Now download {task_pkg}")
-                wheel_path = await download_package(
-                    task_pkg=task_pkg, dest=tmpdir
-                )
-            # Read package info from wheel file, and override the ones coming
-            # from the request body. Note that `package_name` was already set
-            # (and normalized) as part of `_TaskCollectPip` initialization.
-            pkg_info = inspect_package(wheel_path)
-            task_pkg.package_version = pkg_info["pkg_version"]
-            task_pkg.package_manifest = pkg_info["pkg_manifest"]
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid package or manifest. Original error: {e}",
-            )
-
-    try:
-        venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    except FileExistsError:
-        venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
-        try:
-            package_path = get_absolute_venv_path(venv_path)
-            collection_path = get_collection_path(package_path)
-            with collection_path.open("r") as f:
-                task_collect_data = json.load(f)
-
-            err_msg = (
-                "Cannot collect package, possible reason: an old version of "
-                "the same package has already been collected.\n"
-                f"{str(collection_path)} has invalid content: "
-            )
-            if not isinstance(task_collect_data, dict):
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"{err_msg} it's not a Python dictionary.",
-                )
-            if "task_list" not in task_collect_data.keys():
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"{err_msg} it has no key 'task_list'.",
-                )
-            if not isinstance(task_collect_data["task_list"], list):
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"{err_msg} 'task_list' is not a Python list.",
-                )
-
-            for task_dict in task_collect_data["task_list"]:
-
-                task = TaskReadV2(**task_dict)
-                db_task = await db.get(TaskV2, task.id)
-                if (
-                    (not db_task)
-                    or db_task.source != task.source
-                    or db_task.name != task.name
-                ):
-                    await db.close()
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=(
-                            "Cannot collect package. Folder already exists, "
-                            f"but task {task.id} does not exists or it does "
-                            f"not have the expected source ({task.source}) or "
-                            f"name ({task.name})."
-                        ),
-                    )
-        except FileNotFoundError as e:
-            await db.close()
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot collect package. Possible reason: another "
-                    "collection of the same package is in progress. "
-                    f"Original FileNotFoundError: {e}"
-                ),
-            )
-        except ValidationError as e:
-            await db.close()
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot collect package. Possible reason: an old version "
-                    "of the same package has already been collected. "
-                    f"Original ValidationError: {e}"
-                ),
-            )
-        task_collect_data["info"] = "Already installed"
-        state = CollectionStateV2(data=task_collect_data)
-        response.status_code == status.HTTP_200_OK
-        await db.close()
-        return state
-    settings = Inject(get_settings)
-
-    # Check that tasks are not already in the DB
-    for new_task in task_pkg.package_manifest.task_list:
-        new_task_name_slug = slugify_task_name_for_source(new_task.name)
-        new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
-        stm = select(TaskV2).where(TaskV2.source == new_task_source)
-        res = await db.execute(stm)
-        if res.scalars().all():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot collect package. Task with source "
-                    f'"{new_task_source}" already exists in the database.'
-                ),
-            )
-
-    # All checks are OK, proceed with task collection
-    collection_status = dict(
-        status=CollectionStatusV2.PENDING,
-        venv_path=venv_path.relative_to(settings.FRACTAL_TASKS_DIR).as_posix(),
-        package=task_pkg.package,
-    )
-    state = CollectionStateV2(data=collection_status)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-
-    background_tasks.add_task(
-        background_collect_pip,
-        state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-        user_id=user.id,
-        user_group_id=user_group_id,
-    )
+    else:
+        # Local task collection
+        background_tasks.add_task(
+            background_collect_pip,
+            state_id=state.id,
+            task_group=task_group,
+        )
     logger.debug(
         "Task-collection endpoint: start background collection "
         "and return state"
@@ -312,7 +276,6 @@ async def collect_tasks_pip(
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
-    await db.close()
 
     return state
 

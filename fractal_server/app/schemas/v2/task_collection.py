@@ -70,7 +70,7 @@ class TaskCollectPipV2(BaseModel):
 
     @validator("package")
     def package_validator(cls, value):
-        if "/" in value:
+        if "/" in value or value.endswith(".whl"):
             if not value.endswith(".whl"):
                 raise ValueError(
                     "Local-package path must be a wheel file "
