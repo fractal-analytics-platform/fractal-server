@@ -5,23 +5,17 @@ import pytest
 from devtools import debug
 from pydantic import BaseModel
 
-from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import CollectionStateV2
-from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.tasks.v2.background_operations import (
     _check_task_files_exist,
 )
+from fractal_server.tasks.v2.background_operations import _download_package
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
 from fractal_server.tasks.v2.database_operations import _get_task_type
-from fractal_server.tasks.v2.endpoint_operations import (
-    create_package_dir_pip,
-)
-from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.utils import _parse_wheel_filename
 
 
 class _MockTaskCreateV2(BaseModel):
@@ -70,100 +64,59 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
 
 
-async def test_logs_failed_collection(
-    db,
-    tmp_path: Path,
-    testdata_path: Path,
-    override_settings_factory: callable,
-    first_user: UserOAuth,
-):
-    """
-    GIVEN a package and its installation environment
-    WHEN the background collection is called on it and it fails
-    THEN
-        * the log of the collection is saved to the state
-        * the installation directory is removed
-    """
+def test_parse_wheel_filename():
+    with pytest.raises(
+        ValueError,
+        match="Input must be a filename, not a full path",
+    ):
+        _parse_wheel_filename(wheel_filename="/tmp/something.whl")
 
-    # Use temporary tasks folder to avoid conflicts with other tests
-    override_settings_factory(FRACTAL_TASKS_DIR=(tmp_path / "TASKS"))
-    settings = Inject(get_settings)
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-    task_package = (
-        testdata_path
-        / "../v2/fractal_tasks_mock/dist"
-        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
 
-    # FAILURE 1: corrupted `package_path`
+async def test_download_package(tmp_path: Path, current_py_version: str):
+    PACKAGE_VERSION = "1.0.1"
+    PACKAGE_NAME = "fractal_tasks_core"
+    wheel_path = await _download_package(
+        python_version=current_py_version,
+        pkg_name=PACKAGE_NAME,
+        version=PACKAGE_VERSION,
+        dest=(tmp_path / "wheel1"),
+    )
+    debug(wheel_path)
+    assert wheel_path.exists()
+    info = _parse_wheel_filename(wheel_filename=wheel_path.name)
+    assert info == dict(distribution=PACKAGE_NAME, version=PACKAGE_VERSION)
 
-    # Preliminary steps
-    task_pkg = _TaskCollectPip(
-        package=task_package.as_posix(), python_version=PYTHON_VERSION
+
+async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
+    # Prepare db objects
+    path = tmp_path / "something"
+    task_group = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        origin="pypi",
+        path=path.as_posix(),
+        user_id=first_user.id,
     )
-    pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = dict(
-        status=CollectionStatusV2.PENDING,
-        venv_path=str(venv_path),
-        package=task_pkg.package,
-    )
-    state = CollectionStateV2(data=collection_status)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+    state = CollectionStateV2(taskgroupv2_id=task_group.id)
     db.add(state)
     await db.commit()
     await db.refresh(state)
-    # Introduce failure (corrupt package_path)
-    task_pkg.package_path = tmp_path / "something-wrong.whl"
-    # Run background collection and check that failure was recorded
+    db.expunge(state)
+    # Create task_group.path
+    path.mkdir()
+    # Run background task
     await background_collect_pip(
+        task_group=task_group,
         state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-        user_id=first_user.id,
-        user_group_id=None,
     )
-    await db.refresh(state)
-    debug(state.data["status"])
-    assert state.data["log"]
+    # Verify that collection failed
+    state = await db.get(CollectionStateV2, state.id)
+    debug(state)
     assert state.data["status"] == "fail"
-    assert state.data["info"].startswith("Original error")
-    assert not venv_path.exists()
-    assert "is not a valid wheel filename" in state.data["log"]
-
-    # FAILURE 2: corrupted `package_version` and failure of `check()`
-
-    # Preliminary steps
-    task_pkg = _TaskCollectPip(
-        package=task_package.as_posix(), python_version=PYTHON_VERSION
-    )
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = dict(
-        status=CollectionStatusV2.PENDING,
-        venv_path=str(venv_path),
-        package=task_pkg.package,
-    )
-    state = CollectionStateV2(data=collection_status)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-    # Introduce failure (corrupt package_path)
-    task_pkg.package_version = None
-    # Run background collection and check that failure was recorded
-    await background_collect_pip(
-        state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-        user_id=first_user.id,
-        user_group_id=None,
-    )
-    await db.refresh(state)
-    debug(state.data["status"])
-    assert state.data["log"]
-    assert state.data["status"] == "fail"
-    assert state.data["info"].startswith("Original error")
-    assert not venv_path.exists()
-    assert "`package_version` attribute is not set" in state.data["log"]
+    assert "File exists" in state.data["log"]
+    # Verify that foreign key was set to None
+    assert state.taskgroupv2_id is None

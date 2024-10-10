@@ -45,6 +45,11 @@ def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
     Note that we transform exceptions in `ValueError`s, since this function is
     also used within Pydantic validators.
     """
+    if "/" in wheel_filename:
+        raise ValueError(
+            "[_parse_wheel_filename] Input must be a filename, not a full "
+            f"path (given: {wheel_filename})."
+        )
     try:
         parts = wheel_filename.split("-")
         return dict(distribution=parts[0], version=parts[1])

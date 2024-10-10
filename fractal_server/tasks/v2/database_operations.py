@@ -1,11 +1,8 @@
-from typing import Optional
-
 from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 
 
 def _get_task_type(task: TaskCreateV2) -> str:
@@ -17,22 +14,18 @@ def _get_task_type(task: TaskCreateV2) -> str:
         return "compound"
 
 
-def create_db_task_group_and_tasks(
+def create_db_tasks_and_update_task_group(
     *,
+    task_group_id: int,
     task_list: list[TaskCreateV2],
-    task_group_obj: TaskGroupCreateV2,
-    user_id: int,
     db: DBSyncSession,
-    user_group_id: Optional[int] = None,
 ) -> TaskGroupV2:
     """
     Create a `TaskGroupV2` with N `TaskV2`s, and insert them into the database.
 
     Arguments:
-        task_group:
-        task_list:
-        user_id:
-        user_group_id: Can be `None`
+        task_group: ID of an existing TaskGroupV2 object.
+        task_list: A list of TaskCreateV2 objects to be inserted into the db.
         db: A synchronous database session
     """
     actual_task_list = [
@@ -42,13 +35,10 @@ def create_db_task_group_and_tasks(
         )
         for task in task_list
     ]
-    task_group = TaskGroupV2(
-        user_id=user_id,
-        user_group_id=user_group_id,
-        task_list=actual_task_list,
-        **task_group_obj.dict(),
-    )
+    task_group = db.get(TaskGroupV2, task_group_id)
+    task_group.task_list = actual_task_list
     db.add(task_group)
     db.commit()
     db.refresh(task_group)
+
     return task_group

@@ -2,6 +2,7 @@
 Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
+from typing import Any
 from typing import Optional
 
 from fastapi import HTTPException
@@ -12,6 +13,7 @@ from ....db import AsyncSession
 from ....models import LinkUserGroup
 from ....models.v2 import TaskGroupV2
 from ....models.v2 import TaskV2
+from ....models.v2 import WorkflowTaskV2
 from ...auth._aux_auth import _get_default_user_group_id
 from ...auth._aux_auth import _verify_user_belongs_to_group
 
@@ -258,3 +260,23 @@ async def _verify_non_duplication_group_constraint(
                 f"({pkg_name=}, {version=}, {user_group_id=})."
             ),
         )
+
+
+async def _add_warnings_to_workflow_tasks(
+    wftask_list: list[WorkflowTaskV2], user_id: int, db: AsyncSession
+) -> list[dict[str, Any]]:
+    wftask_list_with_warnings = []
+    for wftask in wftask_list:
+        wftask_data = dict(wftask.model_dump(), task=wftask.task)
+        try:
+            task_group = await _get_task_group_read_access(
+                task_group_id=wftask.task.taskgroupv2_id,
+                user_id=user_id,
+                db=db,
+            )
+            if not task_group.active:
+                wftask_data["warning"] = "Task is not active."
+        except HTTPException:
+            wftask_data["warning"] = "Current user has no access to this task."
+        wftask_list_with_warnings.append(wftask_data)
+    return wftask_list_with_warnings
