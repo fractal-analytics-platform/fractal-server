@@ -27,7 +27,7 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _workflow_insert_task
-from ._aux_functions_tasks import _get_task_group_read_access
+from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 
@@ -110,25 +110,15 @@ async def read_workflow(
         db=db,
     )
 
+    wftask_list_with_warnings = await _add_warnings_to_workflow_tasks(
+        wftask_list=workflow.task_list, user_id=user.id, db=db
+    )
     workflow_data = dict(
         **workflow.model_dump(),
         project=workflow.project,
+        task_list=wftask_list_with_warnings,
     )
-    task_list_with_warnings = []
-    for wftask in workflow.task_list:
-        wftask_data = dict(wftask.model_dump(), task=wftask.task)
-        try:
-            task_group = await _get_task_group_read_access(
-                task_group_id=wftask.task.taskgroupv2_id,
-                user_id=user.id,
-                db=db,
-            )
-            if not task_group.active:
-                wftask_data["warning"] = "Task is not active."
-        except HTTPException:
-            wftask_data["warning"] = "Current user has no access to this task."
-        task_list_with_warnings.append(wftask_data)
-    workflow_data["task_list"] = task_list_with_warnings
+
     return workflow_data
 
 
@@ -184,25 +174,15 @@ async def update_workflow(
     await db.refresh(workflow)
     await db.close()
 
+    wftask_list_with_warnings = await _add_warnings_to_workflow_tasks(
+        wftask_list=workflow.task_list, user_id=user.id, db=db
+    )
     workflow_data = dict(
         **workflow.model_dump(),
         project=workflow.project,
+        task_list=wftask_list_with_warnings,
     )
-    task_list_with_warnings = []
-    for wftask in workflow.task_list:
-        wftask_data = dict(wftask.model_dump(), task=wftask.task)
-        try:
-            task_group = await _get_task_group_read_access(
-                task_group_id=wftask.task.taskgroupv2_id,
-                user_id=user.id,
-                db=db,
-            )
-            if not task_group.active:
-                wftask_data["warning"] = "Task is not active."
-        except HTTPException:
-            wftask_data["warning"] = "Current user has no access to this task."
-        task_list_with_warnings.append(wftask_data)
-    workflow_data["task_list"] = task_list_with_warnings
+
     return workflow_data
 
 

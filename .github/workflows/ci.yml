@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
-        db: ["postgres"]
+        db: ["postgres-psycopg"]
 
     services:
       postgres:
@@ -92,6 +92,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11"]
         db: ["sqlite", "postgres", "postgres-psycopg"]
         exclude:
+
           - python-version: "3.9"
             db: "postgres"
           - python-version: "3.9"
@@ -100,7 +101,7 @@ jobs:
             db: "postgres"
           - python-version: "3.11"
             db: "sqlite"
-            
+
     services:
       postgres:
         # Disable postgres service when using sqlite, through the workaround

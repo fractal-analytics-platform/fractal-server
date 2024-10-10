@@ -10,7 +10,6 @@ from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
-from ...aux.validate_user_settings import verify_user_has_settings
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -20,7 +19,6 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
@@ -185,44 +183,8 @@ async def create_task(
             ),
         )
 
-    # Set task.owner attribute - FIXME: remove this block
-    if user.username:
-        owner = user.username
-    else:
-        verify_user_has_settings(user)
-        if user.settings.slurm_user:
-            owner = user.settings.slurm_user
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot add a new task because current user does not "
-                    "have `username` or `slurm_user` attributes."
-                ),
-            )
-
-    # Prepend owner to task.source
-    task.source = f"{owner}:{task.source}"
-
-    # Verify that source is not already in use (note: this check is only useful
-    # to provide a user-friendly error message, but `task.source` uniqueness is
-    # already guaranteed by a constraint in the table definition).
-    stm = select(TaskV2).where(TaskV2.source == task.source)
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Source '{task.source}' already used by some TaskV2",
-        )
-    stm = select(TaskV1).where(TaskV1.source == task.source)
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Source '{task.source}' already used by some TaskV1",
-        )
     # Add task
-    db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
+    db_task = TaskV2(**task.dict(), type=task_type)
     pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
         db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version

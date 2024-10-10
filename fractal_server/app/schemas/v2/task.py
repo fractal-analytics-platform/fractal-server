@@ -21,7 +21,7 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
 
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
-    source: str
+    source: Optional[str] = None
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
@@ -111,7 +111,7 @@ class TaskReadV2(BaseModel):
     id: int
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
-    source: str
+    source: Optional[str] = None
     version: Optional[str] = None
 
     command_non_parallel: Optional[str] = None
@@ -197,5 +197,5 @@ class TaskImportV2(BaseModel):
 
 class TaskExportV2(BaseModel):
 
-    source: str
+    source: Optional[str] = None
     _source = validator("source", allow_reuse=True)(valstr("source"))

@@ -1,126 +1,133 @@
-import logging
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from devtools import debug
 
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import COLLECTION_FREEZE_FILENAME
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2._venv_pip import (
     _create_venv_install_package_pip,
 )
 from fractal_server.tasks.v2._venv_pip import _init_venv_v2
 from fractal_server.tasks.v2._venv_pip import _pip_install
-from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
 LOGGER_NAME = "__logger__"
 
 
-def _get_task_pkg(
-    *,
-    package: str,
-    package_version: Optional[str] = None,
-    python_version: Optional[str] = None,
-) -> _TaskCollectPip:
-    if python_version is None:
-        settings = Inject(get_settings)
-        python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-    attributes = dict(package=package, python_version=python_version)
-    if package_version is not None:
-        attributes["package_version"] = package_version
-    return _TaskCollectPip(**attributes)
-
-
-@pytest.mark.parametrize("local_or_remote", ("local", "remote"))
-async def test_pip_install(local_or_remote, tmp_path, testdata_path):
-    settings = Inject(get_settings)
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-
-    # Prepare package
-    if local_or_remote == "local":
-        PACKAGE = (
-            testdata_path
-            / "../v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        ).as_posix()
-        task_pkg = _get_task_pkg(
-            package=PACKAGE,
-            python_version=PYTHON_VERSION,
-        )
-    else:
-        PACKAGE = "devtools"
-        VERSION = "0.8.0"
-        task_pkg = _get_task_pkg(
-            package=PACKAGE,
-            package_version=VERSION,
-            python_version=PYTHON_VERSION,
-        )
+async def _run_pip_install_from_task_group(task_group: TaskGroupV2):
+    debug(task_group)
 
     # Prepare venv
-    venv_path = tmp_path / "pkg_folder"
-    venv_path.mkdir(exist_ok=True, parents=True)
+    Path(task_group.venv_path).mkdir(exist_ok=True, parents=True)
     await _init_venv_v2(
-        path=venv_path, python_version=PYTHON_VERSION, logger_name=LOGGER_NAME
+        venv_path=Path(task_group.venv_path),
+        python_version=task_group.python_version,
+        logger_name=LOGGER_NAME,
     )
-
     # Pip install
-    debug(task_pkg)
     location = await _pip_install(
-        venv_path=venv_path,
-        task_pkg=task_pkg,
+        task_group=task_group,
         logger_name=LOGGER_NAME,
     )
     assert location.exists()
 
     # Check freeze file
-    freeze_file = venv_path / COLLECTION_FREEZE_FILENAME
+    freeze_file = Path(task_group.path) / COLLECTION_FREEZE_FILENAME
     assert freeze_file.exists()
     with freeze_file.open("r") as f:
         freeze_data = f.read()
-    assert task_pkg.package_name in freeze_data
+    assert task_group.pkg_name in freeze_data
 
 
-async def test_pip_install_pinned(tmp_path, caplog):
-
-    caplog.set_level(logging.DEBUG)
-
+async def test_pip_install_from_wheel(tmp_path, testdata_path):
     settings = Inject(get_settings)
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
 
-    LOG = "fractal_pinned_version"
-    PACKAGE = "devtools"
-    VERSION = "0.8.0"
+    PACKAGE = (
+        testdata_path
+        / "../v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    ).as_posix()
+    pkg_path = tmp_path / "fractal-tasks-mock/0.0.1/"
+    task_group = TaskGroupV2(
+        pkg_name="fractal-tasks-mock",
+        wheel_path=PACKAGE,
+        python_version=PYTHON_VERSION,
+        user_id=0,
+        origin="wheel-file",
+        path=pkg_path.as_posix(),
+        venv_path=(pkg_path / "venv").as_posix(),
+    )
+    await _run_pip_install_from_task_group(task_group=task_group)
+
+
+async def test_pip_install_from_pypi(tmp_path):
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    pkg_path = tmp_path / "devtools/0.8.0/"
+
+    task_group = TaskGroupV2(
+        pkg_name="devtools",
+        version="0.8.0",
+        wheel_path=None,
+        python_version=PYTHON_VERSION,
+        user_id=0,
+        origin="pypi",
+        path=pkg_path.as_posix(),
+        venv_path=(pkg_path / "venv").as_posix(),
+    )
+    await _run_pip_install_from_task_group(task_group=task_group)
+
+
+async def test_pip_install_with_pinned_dependencies(tmp_path, caplog):
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    pkg_path = tmp_path / "devtools/0.8.0/"
     EXTRA = "pygments"
-    venv_path = tmp_path / "fractal_test"
-    venv_path.mkdir(exist_ok=True, parents=True)
-    pip = venv_path / "venv/bin/pip"
+
+    LOGGER_NAME = "pinned_dependencies"
+    logger = set_logger(LOGGER_NAME)
+    logger.propagate = True
+
+    # Create TaskGroupCreateV2 (to mimic TaskGroupV2 object)
+    common_attrs = dict(
+        pkg_name="devtools",
+        version="0.8.0",
+        wheel_path=None,
+        python_version=PYTHON_VERSION,
+        user_id=0,
+        origin="pypi",
+        path=pkg_path.as_posix(),
+        venv_path=(pkg_path / "venv").as_posix(),
+        pip_extras=EXTRA,
+    )
+    task_group = TaskGroupV2(**common_attrs)
+
+    # Prepare venv
+    Path(task_group.venv_path).mkdir(exist_ok=True, parents=True)
     await _init_venv_v2(
-        path=venv_path, logger_name=LOG, python_version=PYTHON_VERSION
+        venv_path=Path(task_group.venv_path),
+        python_version=task_group.python_version,
+        logger_name=LOGGER_NAME,
     )
 
-    async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
+    async def _aux(_task_group) -> str:
         """pip install with pin and return version for EXTRA package"""
-        # Pip install
-        if pin is None:
-            pin = {}
         await _pip_install(
-            venv_path=venv_path,
-            task_pkg=_TaskCollectPip(
-                package=PACKAGE,
-                package_version=VERSION,
-                package_extras=EXTRA,
-                pinned_package_versions=pin,
-                python_version=PYTHON_VERSION,
-            ),
-            logger_name=LOG,
+            task_group=_task_group,
+            logger_name=LOGGER_NAME,
         )
-        # Find version of EXTRA in pip-freeze output
-        with (venv_path / COLLECTION_FREEZE_FILENAME).open("r") as f:
+
+        # Check freeze file
+        freeze_file = Path(_task_group.path) / COLLECTION_FREEZE_FILENAME
+        assert freeze_file.exists()
+        with freeze_file.open("r") as f:
             freeze_data = f.read().splitlines()
+        debug(freeze_data)
         extra_version = next(
             line.split("==")[1]
             for line in freeze_data
@@ -128,15 +135,20 @@ async def test_pip_install_pinned(tmp_path, caplog):
         )
         debug(extra_version)
         # Clean up
-        await execute_command(f"{pip} uninstall {PACKAGE} {EXTRA} -y")
+        python_bin = (Path(task_group.venv_path) / "bin/python").as_posix()
+        await execute_command(
+            f"{python_bin} -m pip uninstall {task_group.pkg_name} {EXTRA} -y"
+        )
         return extra_version
 
     # Case 0:
     #   get default version of EXTRA, and then use it as a pin
-    DEFAULT_VERSION = await _aux()
+    DEFAULT_VERSION = await _aux(TaskGroupV2(**common_attrs))
     caplog.clear()
     pin = {EXTRA: DEFAULT_VERSION}
-    new_version = await _aux(pin=pin)
+    new_version = await _aux(
+        TaskGroupV2(**common_attrs, pinned_package_versions=pin)
+    )
     assert new_version == DEFAULT_VERSION
     assert "Specific version required" in caplog.text
     assert "already matches the pinned version" in caplog.text
@@ -146,7 +158,10 @@ async def test_pip_install_pinned(tmp_path, caplog):
     PIN_VERSION = "2.0"
     assert PIN_VERSION != DEFAULT_VERSION
     pin = {EXTRA: PIN_VERSION}
-    new_version = await _aux(pin=pin)
+    new_version = await _aux(
+        TaskGroupV2(**common_attrs, pinned_package_versions=pin)
+    )
+
     assert new_version == PIN_VERSION
     assert "differs from pinned version" in caplog.text
     assert f"pip install {EXTRA}" in caplog.text
@@ -156,7 +171,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     INVALID_EXTRA_VERSION = "123456789"
     pin = {EXTRA: INVALID_EXTRA_VERSION}
     with pytest.raises(RuntimeError) as error_info:
-        await _aux(pin=pin)
+        await _aux(TaskGroupV2(**common_attrs, pinned_package_versions=pin))
     assert f"pip install {EXTRA}=={INVALID_EXTRA_VERSION}" in caplog.text
     assert (
         "Could not find a version that satisfies the requirement "
@@ -167,16 +182,14 @@ async def test_pip_install_pinned(tmp_path, caplog):
     # Case 3: bad pin with package which was not already installed
     pin = {"pydantic": "1.0.0"}
     with pytest.raises(RuntimeError) as error_info:
-        await _aux(pin=pin)
+        await _aux(TaskGroupV2(**common_attrs, pinned_package_versions=pin))
     assert "pip show pydantic" in caplog.text
     assert "Package(s) not found: pydantic" in str(error_info.value)
     caplog.clear()
 
 
-@pytest.mark.parametrize("use_current_python", [True, False])
 async def test_init_venv(
     tmp_path,
-    use_current_python,
     current_py_version: str,
 ):
     """
@@ -186,28 +199,18 @@ async def test_init_venv(
     """
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
-    logger_name = "fractal"
-
-    python_version = current_py_version if use_current_python else None
-
-    try:
-        python_bin = await _init_venv_v2(
-            path=venv_path,
-            logger_name=logger_name,
-            python_version=python_version,
-        )
-    except ValueError as e:
-        pytest.xfail(reason=str(e))
-
+    python_bin = await _init_venv_v2(
+        venv_path=venv_path,
+        python_version=current_py_version,
+        logger_name="logger",
+    )
     assert venv_path.exists()
-    assert (venv_path / "venv").exists()
-    assert (venv_path / "venv/bin/python").exists()
-    assert (venv_path / "venv/bin/pip").exists()
+    assert (venv_path / "bin/python").exists()
+    assert (venv_path / "bin/pip").exists()
     assert python_bin.exists()
-    assert python_bin == venv_path / "venv/bin/python"
-    if python_version:
-        version = await execute_command(f"{python_bin} --version")
-        assert python_version in version
+    assert python_bin == venv_path / "bin/python"
+    version = await execute_command(f"{python_bin} --version")
+    assert current_py_version in version
 
 
 async def test_create_venv_install_package_pip(
@@ -215,37 +218,30 @@ async def test_create_venv_install_package_pip(
     tmp_path: Path,
 ):
     """
-    This unit test for `_create_venv_install_package` collects tasks from a
-    local wheel file.
+    Unit test for `_create_venv_install_package`.
     """
-
-    from fractal_server.logger import set_logger
-
-    LOGGER_NAME = "LOGGER"
-    set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
-
-    task_package = (
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    PACKAGE = (
         testdata_path
         / "../v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    ).as_posix()
+    pkg_path = tmp_path / "fractal-tasks-mock/0.0.1/"
+    task_group = TaskGroupV2(
+        pkg_name="fractal-tasks-mock",
+        wheel_path=PACKAGE,
+        python_version=PYTHON_VERSION,
+        user_id=0,
+        origin="wheel-file",
+        path=pkg_path.as_posix(),
+        venv_path=(pkg_path / "venv").as_posix(),
     )
-
-    settings = Inject(get_settings)
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-    task_pkg = _TaskCollectPip(
-        package=task_package.as_posix(), python_version=PYTHON_VERSION
-    )
-
-    # Extract info form the wheel package (this is part of the endpoint)
-    pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    task_pkg.check()
-    debug(task_pkg)
 
     # Collect task package
     python_bin, package_root = await _create_venv_install_package_pip(
-        task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
+        task_group=task_group,
+        logger_name="some_logger",
     )
-    debug(python_bin)
-    debug(package_root)
+    assert python_bin.exists()
+    assert package_root.exists()
