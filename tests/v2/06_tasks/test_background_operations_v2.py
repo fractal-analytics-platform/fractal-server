@@ -59,6 +59,14 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
 
 
+def test_parse_wheel_filename():
+    with pytest.raises(
+        ValueError,
+        match="Input must be a filename, not a full path",
+    ):
+        _parse_wheel_filename(wheel_filename="/tmp/something.whl")
+
+
 async def test_download_package(tmp_path: Path, current_py_version: str):
     PACKAGE_VERSION = "1.0.1"
     PACKAGE_NAME = "fractal_tasks_core"
