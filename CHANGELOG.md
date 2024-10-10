@@ -37,45 +37,32 @@ into pre-release sections below.
     * Refactor split between task-collection endpoints and background tasks (\#1861).
     * Deprecate internal `_TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
 
-# 2.7.0a3
+# Up to 2.7.0a3
 
 * API:
-    * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
-
-# 2.7.0a2
-
-* API:
-    * Add validator for `TaskGroupUpdateV2.active` (\#1852).
-    * Add GET/PATCH/DELETE endpoints in `/admin/v2/task-group/` (\#1852).
-    * Add auxiliary function `get_package_version_from_pypi` (\#1858).
-    * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
-    * Add task `authors` to manifest schema (\#1856).
-    * Update `/api/v2/task-group/` schemas with new task-group attributes (\#1856).
+    * User groups
+        * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
+        * Deprecate `GET /auth/group-names/` (\#1844).
+    * Task groups:
+        * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856).
+    * Task collection:
+        * Add auxiliary function `get_package_version_from_pypi` (\#1858).
+    * Tasks
+        * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
+        * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
+        * Add task `authors` to manifest schema (\#1856).
+    * Workflows
+        * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
+        * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
+        * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
+    * Jobs
+        * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
 * Database:
-    * Add `update-db-data` script (\#1820).
-    * Add `TaskV2` attributes `authors`, `tags`, `category` and `modality` (\#1856).
-    * Add `TaskGroupV2` attributes `origin`, `path`, `venv_path`, `pkg_name`, `version` and `pip_extras` (\#1856).
-
-
-# 2.7.0a1
-
-* API:
-    * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
-    * Deprecate `GET /auth/group-names/` (\#1844).
-    * Add `only_owner` and `only_active` options to `GET /api/v2/task-group/` (\#1847).
-* Database:
+    * Introduce `TaskGroupV2` table (\#1817, \#1856).
     * Add  `timestamp_created` column to `LinkUserGroup` table (\#1850).
+    * Add `TaskV2` attributes `authors`, `tags`, `category` and `modality` (\#1856).
+    * Add `update-db-data` script (\#1820).
 
-# 2.7.0a0
-
-* API:
-    * Introduce `/api/v2/task-group/` routes (\#1817).
-    * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
-    * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
-    * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
-    * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
-* Database:
-    * Introduce `TaskGroupV2` table (\#1817).
 
 # 2.6.4
 
