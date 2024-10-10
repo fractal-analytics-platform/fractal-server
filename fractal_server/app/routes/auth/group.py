@@ -14,6 +14,7 @@ from sqlmodel import select
 
 from . import current_active_superuser
 from ._aux_auth import _get_single_usergroup_with_user_ids
+from ._aux_auth import _usergroup_or_404
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -121,12 +122,7 @@ async def update_single_group(
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
 
-    group = await db.get(UserGroup, group_id)
-    if group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"UserGroup {group_id} not found.",
-        )
+    group = await _usergroup_or_404(group_id, db)
 
     # Check that all required users exist
     # Note: The reason for introducing `col` is as in
@@ -184,15 +180,8 @@ async def delete_single_group(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
 
-    group = await db.get(UserGroup, group_id)
+    group = await _usergroup_or_404(group_id, db)
 
-    # Preliminary checks
-
-    if group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"UserGroup {group_id} not found.",
-        )
     if group.name == FRACTAL_DEFAULT_GROUP_NAME:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
