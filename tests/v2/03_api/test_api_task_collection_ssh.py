@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import pytest
+from devtools import debug
 
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.ssh._fabric import FractalSSHList
@@ -21,7 +21,7 @@ async def test_task_collection_ssh_from_pypi(
     slurmlogin_ip,
     ssh_keys,
 ):
-
+    CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
     credentials = dict(
         host=slurmlogin_ip,
         user=SLURM_USER,
@@ -45,6 +45,7 @@ async def test_task_collection_ssh_from_pypi(
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
+        "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
     }
     override_settings_factory(**settings_overrides)
 
@@ -60,66 +61,119 @@ async def test_task_collection_ssh_from_pypi(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
     ) as user:
-
-        # CASE 1: successful collection
-
-        # Trigger task collection
-        PACKAGE_VERSION = "1.0.2"
+        # SUCCESS
+        package_version = "1.0.2"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
                 package="fractal-tasks-core",
-                package_version=PACKAGE_VERSION,
+                package_version=package_version,
                 python_version=current_py_version,
             ),
         )
         assert res.status_code == 201
         assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
-
         # Get collection info
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
-        data = res.json()["data"]
-        assert data["status"] == CollectionStatusV2.OK
-        assert f"fractal-tasks-core=={PACKAGE_VERSION}" in data["freeze"]
-        remote_folder = (
-            Path(TASKS_BASE_DIR)
-            / str(user.id)
-            / "fractal-tasks-core"
-            / f"{PACKAGE_VERSION}"
-        ).as_posix()
+        state_data = res.json()["data"]
+        assert state_data["status"] == CollectionStatusV2.OK
+        # Check fractal-tasks-core version in freeze data
+        assert f"fractal-tasks-core=={package_version}" in state_data["freeze"]
+        # Check pip version constraint in freeze data
+        pip_version = next(
+            line
+            for line in state_data["freeze"].split("\n")
+            if line.startswith("pip")
+        ).split("==")[1]
+        assert pip_version == CURRENT_FRACTAL_MAX_PIP_VERSION
+        # Check remote venv folder exists
+        remote_folder = state_data["venv_path"]
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
 
-        # CASE 2: Failure due to invalid version
-
-        # Trigger task collection
-        PACKAGE_VERSION = "9.9.9"
+        # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
                 package="fractal-tasks-core",
-                package_version=PACKAGE_VERSION,
+                package_version=package_version,
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 422
+        assert "There is already a TaskGroupV2 with" in str(
+            res.json()["detail"]
+        )
+
+        # API FAILURE 2: invalid package name and no version
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core-invalid",
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        expected_error = (
+            "Could not get https://pypi.org/pypi/"
+            "fractal-tasks-core-invalid/json"
+        )
+        assert expected_error in str(res.json()["detail"])
+
+        # BACKGROUND FAILURE 1: existing folder
+        package_version = "a.b.c"
+        remote_folder = (
+            Path(TASKS_BASE_DIR)
+            / str(user.id)
+            / "fractal-tasks-core"
+            / f"{package_version}"
+        ).as_posix()
+        # Create remore folder
+        fractal_ssh.mkdir(folder=remote_folder, parents=True)
+        fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        # Run task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core",
+                package_version=package_version,
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 201
+        state_id = res.json()["id"]
+        # Get collection info
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 200
+        state_data = res.json()["data"]
+        assert state_data["status"] == CollectionStatusV2.FAIL
+        assert "already exists" in state_data["log"]
+        # Check that existing folder was _not_ removed
+        fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+
+        # BACKGROUND FAILURE 2: invalid version
+        package_version = "9.9.9"
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core",
+                package_version=package_version,
                 python_version=current_py_version,
             ),
         )
         assert res.status_code == 201
         assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
-
-        # Get collection info
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
-        data = res.json()["data"]
-        assert data["status"] == CollectionStatusV2.FAIL
-        assert "No matching distribution found" in data["log"]
-        assert f"fractal-tasks-core=={PACKAGE_VERSION}" in data["log"]
-        remote_folder = (
-            Path(TASKS_BASE_DIR)
-            / str(user.id)
-            / "fractal-tasks-core"
-            / f"{PACKAGE_VERSION}"
-        ).as_posix()
-        # Check that folder was removed
-        with pytest.raises(RuntimeError, match="No such file or directory"):
-            fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        state_data = res.json()["data"]
+        assert state_data["status"] == CollectionStatusV2.FAIL
+        assert "No matching distribution found" in state_data["log"]
+        assert f"fractal-tasks-core=={package_version}" in state_data["log"]
+        # Check that folder was removed (we can do it locally because /tmp is
+        # also mounted on the host machine)
+        venv_path = Path(state_data["venv_path"])
+        assert not venv_path.exists()
+        assert not venv_path.parent.exists()
