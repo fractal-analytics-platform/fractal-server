@@ -38,13 +38,23 @@ async def test_failed_API_calls(
         assert res.status_code == 422
         assert "No such file" in str(res.json())
 
-    # Invalid wheel file
+    # Non-absolute wheel file
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package=str("something.whl")),
         )
         assert res.status_code == 422
+        assert "must be absolute" in str(res.json()["detail"])
+
+    # Invalid wheel file
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str("/something/something.whl")),
+        )
+        assert res.status_code == 422
+        assert "Invalid wheel-file name" in str(res.json()["detail"])
 
 
 async def test_invalid_manifest(
