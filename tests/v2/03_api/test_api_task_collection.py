@@ -400,7 +400,6 @@ async def test_task_collection_custom(
             source="source1",
             package_root=None,
             package_name=package_name,
-            version=None,
         )
 
         # Fail because no package is installed in sys.executable
@@ -442,7 +441,6 @@ async def test_task_collection_custom(
             source="source3",
             package_root=package_root,
             package_name=None,
-            version=None,
         )
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
