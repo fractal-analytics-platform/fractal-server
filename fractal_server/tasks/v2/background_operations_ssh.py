@@ -237,11 +237,11 @@ def background_collect_pip_ssh(
                 # Check package_name match # FIXME is this still relevant?
                 # FIXME SSH: Does this work for non-canonical `package_name`?
                 package_name_pip_show = pkg_attrs.get("package_name")
-                package_name_task_pkg = task_group.pkg_name
-                if package_name_pip_show != package_name_task_pkg:
+                package_name_task_group = task_group.pkg_name
+                if package_name_pip_show != package_name_task_group:
                     error_msg = (
                         f"`package_name` mismatch: "
-                        f"{package_name_task_pkg=} but "
+                        f"{package_name_task_group=} but "
                         f"{package_name_pip_show=}"
                     )
                     logger.error(error_msg)
