@@ -66,7 +66,7 @@ async def _get_single_user_with_groups(
     )
 
 
-async def _get_single_group_with_user_ids(
+async def _get_single_usergroup_with_user_ids(
     group_id: int, db: AsyncSession
 ) -> UserGroupRead:
     """
@@ -115,7 +115,7 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
     return user
 
 
-async def _get_default_user_group_id(db: AsyncSession) -> int:
+async def _get_default_usergroup_id(db: AsyncSession) -> int:
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )

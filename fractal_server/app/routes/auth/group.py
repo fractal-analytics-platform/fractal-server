@@ -13,7 +13,7 @@ from sqlmodel import func
 from sqlmodel import select
 
 from . import current_active_superuser
-from ._aux_auth import _get_single_group_with_user_ids
+from ._aux_auth import _get_single_usergroup_with_user_ids
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -73,7 +73,7 @@ async def get_single_user_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    group = await _get_single_group_with_user_ids(group_id=group_id, db=db)
+    group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
     return group
 
 
@@ -170,7 +170,7 @@ async def update_single_group(
         db.add(group)
         await db.commit()
 
-    updated_group = await _get_single_group_with_user_ids(
+    updated_group = await _get_single_usergroup_with_user_ids(
         group_id=group_id, db=db
     )
 
