@@ -12,6 +12,7 @@ from zipfile import ZipFile
 
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import select
 
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
@@ -121,10 +122,26 @@ def _handle_failure(
         shell_rmtree(path)
         logger.info("Temporary folder deleted")
 
-    # Delete TaskGroupV2 object
+    # Delete TaskGroupV2 object / and apply cascade operation to FKs
+    logger.info(f"Now delete TaskGroupV2 with {task_group_id=}")
+    logger.info("Start of CollectionStateV2 cascade operations.")
+    stm = select(CollectionStateV2).where(
+        CollectionStateV2.taskgroupv2_id == task_group_id
+    )
+    res = db.execute(stm)
+    collection_states = res.scalars().all()
+    for collection_state in collection_states:
+        logger.info(
+            f"Setting CollectionStateV2[{collection_state.id}].taskgroupv2_id "
+            "to None."
+        )
+        collection_state.taskgroupv2_id = None
+        db.add(collection_state)
+    logger.info("End of CollectionStateV2 cascade operations.")
     task_group = db.get(TaskGroupV2, task_group_id)
     db.delete(task_group)
     db.commit()
+    logger.info(f"TaskGroupV2 with {task_group_id=} deleted")
 
     reset_logger_handlers(logger)
     return
@@ -311,10 +328,18 @@ async def background_collect_pip(
         f"{task_group.user_id}-{task_group.pkg_name}-{task_group.version}"
     )
 
+    logger = set_logger(
+        logger_name=logger_name,
+        log_file_path=get_log_path(Path(task_group.path)),
+    )
+
     try:
         Path(task_group.path).mkdir(parents=True, exist_ok=False)
     except FileExistsError as e:
         logfile_path = get_log_path(Path(task_group.path))
+        from devtools import debug
+
+        debug(logfile_path)
         with next(get_sync_db()) as db:
             _handle_failure(
                 state_id=state_id,
@@ -326,11 +351,6 @@ async def background_collect_pip(
                 task_group_id=task_group.id,
             )
             return
-
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=get_log_path(Path(task_group.path)),
-    )
 
     # Start
     logger.debug("START")
