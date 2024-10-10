@@ -1,3 +1,8 @@
+from sqlmodel import select
+
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models.v2 import TaskGroupV2
+
 PREFIX = "/auth"
 
 
@@ -192,9 +197,6 @@ async def test_user_group_crud(
     assert "`new_user_ids` list has repetitions'" in str(res.json())
 
     # DELETE (and cascade operations)
-    from sqlmodel import select
-    from fractal_server.app.models import LinkUserGroup
-    from fractal_server.app.models.v2 import TaskGroupV2
 
     task_group = TaskGroupV2(
         user_id=user_A_id,
