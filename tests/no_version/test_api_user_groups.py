@@ -93,7 +93,9 @@ async def test_update_group(registered_superuser_client):
     assert res.json()["viewer_paths"] == ["/new"]
 
 
-async def test_user_group_crud(registered_superuser_client):
+async def test_user_group_crud(
+    registered_superuser_client, db, default_user_group
+):
     """
     Test basic working of POST/GET/PATCH for user groups.
     """
@@ -127,7 +129,7 @@ async def test_user_group_crud(registered_superuser_client):
     assert res.status_code == 201
     group_2_id = res.json()["id"]
 
-    # Add user A to group 1
+    # Add user A and B to group 1
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{group_1_id}/",
         json=dict(new_user_ids=[user_A_id, user_B_id]),
@@ -145,12 +147,14 @@ async def test_user_group_crud(registered_superuser_client):
     )
     assert res.status_code == 200
     groups_data = res.json()
-    assert len(groups_data) == 2
+    assert len(groups_data) == 3
     for group in groups_data:
         if group["name"] == "group 1":
             assert set(group["user_ids"]) == {user_A_id, user_B_id}
         elif group["name"] == "group 2":
             assert group["user_ids"] == [user_B_id]
+        elif group["name"] == default_user_group.name:
+            pass
         else:
             raise RuntimeError("Wrong branch.")
 
@@ -158,7 +162,7 @@ async def test_user_group_crud(registered_superuser_client):
     res = await registered_superuser_client.get(f"{PREFIX}/group/")
     assert res.status_code == 200
     groups_data = res.json()
-    assert len(groups_data) == 2
+    assert len(groups_data) == 3
     for group in groups_data:
         assert group["user_ids"] is None
 
@@ -186,6 +190,44 @@ async def test_user_group_crud(registered_superuser_client):
     )
     assert res.status_code == 422
     assert "`new_user_ids` list has repetitions'" in str(res.json())
+
+    # DELETE (and cascade operations)
+    from sqlmodel import select
+    from fractal_server.app.models import LinkUserGroup
+    from fractal_server.app.models.v2 import TaskGroupV2
+
+    task_group = TaskGroupV2(
+        user_id=user_A_id,
+        user_group_id=group_1_id,
+        origin="pypi",
+        pkg_name="fractal-tasks-core",
+    )
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    assert task_group.user_group_id == group_1_id
+
+    res = await registered_superuser_client.delete(  # actual DELETE
+        f"{PREFIX}/group/{group_1_id}/"
+    )
+    assert res.status_code == 204
+    res = await registered_superuser_client.delete(
+        f"{PREFIX}/group/{group_1_id}/"
+    )
+    assert res.status_code == 404
+    res = await registered_superuser_client.delete(
+        f"{PREFIX}/group/{default_user_group.id}/"
+    )
+    assert res.status_code == 422
+
+    # test cascade operations
+    res = await db.execute(
+        select(LinkUserGroup).where(LinkUserGroup.group_id == group_1_id)
+    )
+    links = res.scalars().all()
+    assert links == []
+    await db.refresh(task_group)
+    assert task_group.user_group_id is None
 
 
 async def test_create_user_group_same_name(registered_superuser_client):
