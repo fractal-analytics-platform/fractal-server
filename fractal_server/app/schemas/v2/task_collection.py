@@ -6,6 +6,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import root_validator
 from pydantic import validator
 
@@ -24,7 +25,7 @@ class CollectionStatusV2(str, Enum):
     OK = "OK"
 
 
-class TaskCollectPipV2(BaseModel):
+class TaskCollectPipV2(BaseModel, extras=Extra.forbid):
     """
     TaskCollectPipV2 class
 

@@ -270,9 +270,12 @@ async def test_task_collection_ssh_from_wheel(
             f"{PREFIX}/collect/pip/",
             json=dict(
                 package=remote_wheel_path,
-                version="1.2.3",
+                package_version="1.2.3",
                 python_version=current_py_version,
             ),
         )
         assert res.status_code == 422
-        debug(res.json())
+        error_msg = (
+            "Cannot provide package version when package " "is a wheel file."
+        )
+        assert error_msg in str(res.json()["detail"])
