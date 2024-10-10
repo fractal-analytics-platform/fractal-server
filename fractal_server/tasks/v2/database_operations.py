@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session as DBSyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
@@ -37,6 +38,7 @@ def create_db_tasks_and_update_task_group(
     ]
     task_group = db.get(TaskGroupV2, task_group_id)
     task_group.task_list = actual_task_list
+    flag_modified(task_group, "task_list")  # FIXME: is this needed?
     db.add(task_group)
     db.commit()
     db.refresh(task_group)
