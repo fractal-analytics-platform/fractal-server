@@ -328,18 +328,15 @@ async def background_collect_pip(
         f"{task_group.user_id}-{task_group.pkg_name}-{task_group.version}"
     )
 
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=get_log_path(Path(task_group.path)),
-    )
-
     try:
         Path(task_group.path).mkdir(parents=True, exist_ok=False)
     except FileExistsError as e:
-        logfile_path = get_log_path(Path(task_group.path))
-        from devtools import debug
+        logger = set_logger(
+            logger_name=logger_name,
+            log_file_path=get_log_path(Path(task_group.path)),
+        )
 
-        debug(logfile_path)
+        logfile_path = get_log_path(Path(task_group.path))
         with next(get_sync_db()) as db:
             _handle_failure(
                 state_id=state_id,
@@ -351,6 +348,11 @@ async def background_collect_pip(
                 task_group_id=task_group.id,
             )
             return
+
+    logger = set_logger(
+        logger_name=logger_name,
+        log_file_path=get_log_path(Path(task_group.path)),
+    )
 
     # Start
     logger.debug("START")

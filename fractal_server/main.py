@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .app.routes.aux._runner import _backend_supports_shutdown  # FIXME: change
+from .app.routes.aux._runner import _backend_supports_shutdown
 from .app.runner.shutdown import cleanup_after_shutdown
 from .config import get_settings
 from .logger import config_uvicorn_loggers
