@@ -8,6 +8,7 @@ from devtools import debug  # noqa
 from packaging.version import Version
 
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
@@ -163,7 +164,6 @@ async def test_task_collection_from_wheel_non_canonical(
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
         FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
     )
-    # settings = Inject(get_settings)
 
     # Prepare absolute path to wheel file
     wheel_path = (
@@ -305,16 +305,51 @@ async def test_task_collection_from_pypi(
             if task["command_parallel"] is not None:
                 assert task["args_schema_parallel"] is not None
 
-        # Collect again and fail
-        # FIXME: this currently fails because of an existing folder, but it
-        # should fail due to task-group non-duplication contraints
-        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 422
-
         # Check that *verbose* collection info contains logs
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
         assert res.status_code == 200
         assert res.json()["data"]["log"] is not None
+
+        # Collect again and fail due to non-duplication constraint
+        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
+        assert res.status_code == 422
+
+
+async def test_task_collection_failure_due_to_existing_path(
+    tmp_path, db, client, MockCurrentUser
+):
+    settings = Inject(get_settings)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        path = (
+            settings.FRACTAL_TASKS_DIR / f"{user.id}/pkg/1.2.3/"
+        ).as_posix()
+        venv_path = (
+            settings.FRACTAL_TASKS_DIR / f"{user.id}/pkg/1.2.3/venv/"
+        ).as_posix()
+
+        # Collect again and fail due to another task group with the same path
+        tg = TaskGroupV2(
+            origin="other",
+            path=path,
+            venv_path=venv_path,
+            pkg_name="pkg-FAKE",
+            version="1.2.3",
+            user_id=user.id,
+        )
+        db.add(tg)
+        await db.commit()
+        await db.refresh(tg)
+        db.expunge(tg)
+        await db.close()
+
+        # Collect again and fail due to non-duplication constraint
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="pkg", package_version="1.2.3"),
+        )
+        assert res.status_code == 422
+        assert "Another task-group already has path" in res.json()["detail"]
 
 
 async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
