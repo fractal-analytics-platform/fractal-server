@@ -9,13 +9,33 @@ into pre-release sections below.
 > WARNING: This release requires running `fractalctl update-db-data` (after
 > `fractalctl set-db`).
 
+> WARNING: when running `fractalctl update-db-data`, the environment variable
+> `FRACTAL_V27_DEFAULT_USER_EMAIL` must be set, e.g. as in
+> ```
+> FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.yx fractalctl update-db-data
+> ```
+> This user must exist, and they will own all previously-common
+> tasks/task-groups.
+
 # 2.7.0a4 (unreleased)
 
 * API:
     * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
     * Add cascade operations to `DELETE /api/v2/task-group/{task_group_id}/` and to `DELETE /admin/v2/task-group/{task_group_id}/` (\#1867).
+    * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
+    * Automatically discover PyPI package version if missing (\#1861).
+    * Improve preliminary checks in task-collection endpoints (\#1861).
+    * Create `TaskGroupV2` object within task-collection endpoints (\#1861).
+    * Do not process task sources in task/task-group CRUD operations (\#1861).
+    * Do not process task owners in task/task-group CRUD operations (\#1861).
+    * Expand use and validators for `TaskGroupCreateV2` schema (\#1861).
 * Database:
     * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
+    * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
+    * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
+* Task collection:
+    * Refactor split between task-collection endpoints and background tasks (\#1861).
+    * Deprecate internal `_TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
 
 # 2.7.0a3
 
