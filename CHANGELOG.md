@@ -35,7 +35,7 @@ into pre-release sections below.
     * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
 * Task collection:
     * Refactor split between task-collection endpoints and background tasks (\#1861).
-    * Deprecate internal `_TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
+    * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
 
 # Up to 2.7.0a3
 
@@ -61,7 +61,7 @@ into pre-release sections below.
     * Introduce `TaskGroupV2` table (\#1817, \#1856).
     * Add  `timestamp_created` column to `LinkUserGroup` table (\#1850).
     * Add `TaskV2` attributes `authors`, `tags`, `category` and `modality` (\#1856).
-    * Add `update-db-data` script (\#1820).
+    * Add `update-db-data` script (\#1820, \#1888).
 
 
 # 2.6.4
