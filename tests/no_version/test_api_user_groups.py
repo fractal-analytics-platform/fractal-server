@@ -154,7 +154,7 @@ async def test_user_group_crud(
         elif group["name"] == "group 2":
             assert group["user_ids"] == [user_B_id]
         elif group["name"] == default_user_group.name:
-            pass
+            assert set(group["user_ids"]) == {user_A_id, user_B_id}
         else:
             raise RuntimeError("Wrong branch.")
 
