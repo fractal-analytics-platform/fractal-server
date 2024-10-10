@@ -25,7 +25,7 @@ class CollectionStatusV2(str, Enum):
     OK = "OK"
 
 
-class TaskCollectPipV2(BaseModel, extras=Extra.forbid):
+class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     """
     TaskCollectPipV2 class
 
