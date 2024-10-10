@@ -264,7 +264,7 @@ async def _verify_non_duplication_group_constraint(
 
 async def _add_warnings_to_workflow_tasks(
     wftask_list: list[WorkflowTaskV2], user_id: int, db: AsyncSession
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
     wftask_list_with_warnings = []
     for wftask in wftask_list:
         wftask_data = dict(wftask.model_dump(), task=wftask.task)
