@@ -66,7 +66,7 @@ async def _get_single_user_with_groups(
     )
 
 
-async def _get_single_group_with_user_ids(
+async def _get_single_usergroup_with_user_ids(
     group_id: int, db: AsyncSession
 ) -> UserGroupRead:
     """
@@ -80,15 +80,7 @@ async def _get_single_group_with_user_ids(
         `UserGroupRead` object, with `user_ids` attribute populated
         from database.
     """
-    # Get the UserGroup object from the database
-    stm_group = select(UserGroup).where(UserGroup.id == group_id)
-    res = await db.execute(stm_group)
-    group = res.scalars().one_or_none()
-    if group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Group {group_id} not found.",
-        )
+    group = await _usergroup_or_404(group_id, db)
 
     # Get all user/group links
     stm_links = select(LinkUserGroup).where(LinkUserGroup.group_id == group_id)
@@ -110,12 +102,23 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
     user = await db.get(UserOAuth, user_id, populate_existing=True)
     if user is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {user_id} not found.",
         )
     return user
 
 
-async def _get_default_user_group_id(db: AsyncSession) -> int:
+async def _usergroup_or_404(usergroup_id: int, db: AsyncSession) -> UserGroup:
+    user = await db.get(UserGroup, usergroup_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"UserGroup {usergroup_id} not found.",
+        )
+    return user
+
+
+async def _get_default_usergroup_id(db: AsyncSession) -> int:
     stm = select(UserGroup.id).where(
         UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
     )
