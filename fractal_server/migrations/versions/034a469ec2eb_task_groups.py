@@ -5,6 +5,9 @@ Revises: da2cb2ac4255
 Create Date: 2024-10-10 16:14:13.976231
 
 """
+from datetime import datetime
+from datetime import timezone
+
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
@@ -82,9 +85,15 @@ def upgrade() -> None:
     with op.batch_alter_table("linkusergroup", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "timestamp_created", sa.DateTime(timezone=True), nullable=False
+                "timestamp_created",
+                sa.DateTime(timezone=True),
+                nullable=False,
+                server_default=str(datetime(2000, 1, 1, tzinfo=timezone.utc)),
             )
         )
+
+    with op.batch_alter_table("project", schema=None) as batch_op:
+        batch_op.alter_column("timestamp_created", server_default=None)
 
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
         batch_op.add_column(
