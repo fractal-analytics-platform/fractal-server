@@ -26,11 +26,12 @@ class TaskV2Minimal(BaseModel):
     id: int
     name: str
     type: str
-    command_non_parallel: Optional[str]
+    taskgroupv2_id: int
+    command_non_parallel: Optional[str] = None
     command_parallel: Optional[str]
-    source: str
-    owner: Optional[str]
-    version: Optional[str]
+    source: Optional[str] = None
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
 
 class ProjectUser(BaseModel):
