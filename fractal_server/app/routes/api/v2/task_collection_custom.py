@@ -18,9 +18,6 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.app.routes.aux.validate_user_settings import (
-    verify_user_has_settings,
-)
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
@@ -134,22 +131,6 @@ async def collect_task_custom(
     else:
         package_root = Path(task_collect.package_root)
 
-    # Set task.owner attribute
-    if user.username:
-        owner = user.username
-    else:
-        verify_user_has_settings(user)
-        owner = user.settings.slurm_user
-    if owner is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Cannot add a new task because current user does not "
-                "have `username` or `slurm_user` attributes."
-            ),
-        )
-    source = f"{owner}:{task_collect.source}"
-
     task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
         python_bin=Path(task_collect.python_interpreter),
@@ -194,7 +175,7 @@ async def collect_task_custom(
 
     logger.debug(
         f"Custom-environment task collection by user {user.email} completed, "
-        f"for package with {source=}"
+        f"for package {task_collect}"
     )
 
     return task_group.task_list
