@@ -91,9 +91,6 @@ def upgrade() -> None:
             )
         )
 
-    with op.batch_alter_table("project", schema=None) as batch_op:
-        batch_op.alter_column("timestamp_created", server_default=None)
-
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column("taskgroupv2_id", sa.Integer(), nullable=True)
