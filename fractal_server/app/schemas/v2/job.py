@@ -109,6 +109,6 @@ class JobReadV2(BaseModel):
     )
 
 
-class JobUpdateV2(BaseModel):
+class JobUpdateV2(BaseModel, extra=Extra.forbid):
 
     status: JobStatusTypeV2

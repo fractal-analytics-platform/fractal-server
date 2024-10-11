@@ -23,7 +23,7 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
     timestamp_created: str
 
 
-class TaskDumpV2(BaseModel):
+class TaskDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     type: str
@@ -38,7 +38,7 @@ class TaskDumpV2(BaseModel):
     output_types: dict[str, bool]
 
 
-class WorkflowTaskDumpV2(BaseModel):
+class WorkflowTaskDumpV2(BaseModel, extra=Extra.forbid):
     """
     Before v2.5.0, WorkflowTaskV2 could have `task_id=task=None` and
     non-`None` `task_legacy_id` and `task_legacy`. Since these objects

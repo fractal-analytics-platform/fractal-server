@@ -3,6 +3,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
@@ -109,12 +110,9 @@ class SingleImageUpdate(BaseModel):
     _types = validator("types", allow_reuse=True)(valdictkeys("types"))
 
 
-class Filters(BaseModel):
+class Filters(BaseModel, extra=Extra.forbid):
     attributes: dict[str, Any] = Field(default_factory=dict)
     types: dict[str, bool] = Field(default_factory=dict)
-
-    class Config:
-        extra = "forbid"
 
     # Validators
     _attributes = validator("attributes", allow_reuse=True)(

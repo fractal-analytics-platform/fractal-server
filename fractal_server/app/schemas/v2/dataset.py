@@ -66,9 +66,7 @@ class DatasetReadV2(BaseModel):
     )
 
 
-class DatasetUpdateV2(BaseModel):
-    class Config:
-        extra = "forbid"
+class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
     name: Optional[str]
     zarr_dir: Optional[str]
@@ -84,7 +82,7 @@ class DatasetUpdateV2(BaseModel):
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
-class DatasetImportV2(BaseModel):
+class DatasetImportV2(BaseModel, extra=Extra.forbid):
     """
     Class for `Dataset` import.
 
@@ -94,9 +92,6 @@ class DatasetImportV2(BaseModel):
         images:
         filters:
     """
-
-    class Config:
-        extra = "forbid"
 
     name: str
     zarr_dir: str
