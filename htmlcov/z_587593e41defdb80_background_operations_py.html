@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_587593e41defdb80_endpoint_operations_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.1">coverage.py v7.6.1</a>,
-            created at 2024-10-11 08:28 +0000
+            created at 2024-10-11 12:40 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -92,7 +92,7 @@
     <p class="pln"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">string_tools</span> <span class="key">import</span> <span class="nam">slugify_task_name_for_source_v1</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">_normalize_package_name</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">get_collection_log</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">get_collection_log_v1</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">get_collection_path</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">get_log_path</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_TaskCollectPip</span> <span class="key">import</span> <span class="nam">_TaskCollectPip</span>&nbsp;</span><span class="r"></span></p>
@@ -405,7 +405,7 @@
     <p class="pln"><span class="n"><a id="t321" href="#t321">321</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t322" href="#t322">322</a></span><span class="t">            <span class="com"># Update DB</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t323" href="#t323">323</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">status</span> <span class="op">=</span> <span class="str">"OK"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t324" href="#t324">324</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="nam">get_collection_log</span><span class="op">(</span><span class="nam">venv_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t324" href="#t324">324</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="nam">get_collection_log_v1</span><span class="op">(</span><span class="nam">venv_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t325" href="#t325">325</a></span><span class="t">            <span class="nam">state</span><span class="op">.</span><span class="nam">data</span> <span class="op">=</span> <span class="nam">data</span><span class="op">.</span><span class="nam">sanitised_dict</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t326" href="#t326">326</a></span><span class="t">            <span class="nam">db</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">state</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t327" href="#t327">327</a></span><span class="t">            <span class="nam">db</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">state</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -426,7 +426,7 @@
     <p class="pln"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t">            <span class="com"># Update db</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">status</span> <span class="op">=</span> <span class="str">"fail"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">info</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">Original error: </span><span class="op">{</span><span class="nam">e</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="nam">get_collection_log</span><span class="op">(</span><span class="nam">venv_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">            <span class="nam">data</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="nam">get_collection_log_v1</span><span class="op">(</span><span class="nam">venv_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">            <span class="nam">state</span><span class="op">.</span><span class="nam">data</span> <span class="op">=</span> <span class="nam">data</span><span class="op">.</span><span class="nam">sanitised_dict</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t">            <span class="nam">db</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">state</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">            <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -443,7 +443,7 @@
             <a class="nav" href="z_587593e41defdb80_endpoint_operations_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.1">coverage.py v7.6.1</a>,
-            created at 2024-10-11 08:28 +0000
+            created at 2024-10-11 12:40 +0000
         </p>
     </div>
 </footer>
