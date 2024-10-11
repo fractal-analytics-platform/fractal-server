@@ -100,7 +100,8 @@ class TaskCollectCustomV2(BaseModel):
             content of `__FRACTAL_MANIFEST__.json`).
         python_interpreter: Absolute path to the Python interpreter to be used
             for running tasks.
-        source: A common label identifying this package.
+        name: A name identifying this package, that will fill the
+            `TaskGrouoV2.pkg_name` column.
         package_root: The folder where the package is installed.
             If not provided, it will be extracted via `pip show`
             (requires `package_name` to be set).
@@ -112,7 +113,7 @@ class TaskCollectCustomV2(BaseModel):
 
     manifest: ManifestV2
     python_interpreter: str
-    source: str
+    name: str
     package_root: Optional[str]
     package_name: Optional[str]
     version: Optional[str]
