@@ -27,7 +27,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.string_tools import slugify_task_name_for_source_v1
-from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import get_collection_log_v1
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import (
     background_collect_pip,
@@ -232,7 +232,7 @@ async def check_collection_status(
     # In some cases (i.e. a successful or ongoing task collection), data.log is
     # not set; if so, we collect the current logs
     if verbose and not data.log:
-        data.log = get_collection_log(data.venv_path)
+        data.log = get_collection_log_v1(data.venv_path)
         state.data = data.sanitised_dict()
     close_logger(logger)
     await db.close()
