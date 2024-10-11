@@ -17,6 +17,14 @@ into pre-release sections below.
 > This user must exist, and they will own all previously-common
 > tasks/task-groups.
 
+# 2.7.0a5
+
+* API
+    * Tasks, task groups, task collection
+        * Fixed response of task-collection endpoint (\#1902).
+        * Always query PyPI to find correct package version (\#1902).
+        * Use appropriate log-file path in collection-status endpoint (\#1902).
+
 # 2.7.0a4 (unreleased)
 
 * API:

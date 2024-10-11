@@ -71,6 +71,7 @@ async def test_task_collection_ssh_from_pypi(
                 python_version=current_py_version,
             ),
         )
+        debug(res.json())
         assert res.status_code == 201
         assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
@@ -123,14 +124,14 @@ async def test_task_collection_ssh_from_pypi(
         assert expected_error in str(res.json()["detail"])
 
         # BACKGROUND FAILURE 1: existing folder
-        package_version = "a.b.c"
+        package_version = "1.2.0"
         remote_folder = (
             Path(TASKS_BASE_DIR)
             / str(user.id)
             / "fractal-tasks-core"
             / f"{package_version}"
         ).as_posix()
-        # Create remore folder
+        # Create remote folder
         fractal_ssh.mkdir(folder=remote_folder, parents=True)
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
         # Run task collection
@@ -163,20 +164,9 @@ async def test_task_collection_ssh_from_pypi(
                 python_version=current_py_version,
             ),
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state_id = res.json()["id"]
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
-        assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        assert "No matching distribution found" in state_data["log"]
-        assert f"fractal-tasks-core=={package_version}" in state_data["log"]
-        # Check that folder was removed (we can do it locally because /tmp is
-        # also mounted on the host machine)
-        venv_path = Path(state_data["venv_path"])
-        assert not venv_path.exists()
-        assert not venv_path.parent.exists()
+        assert res.status_code == 422
+        assert "No version starting with 9.9.9 found" in res.json()["detail"]
+        debug(res.json())
 
 
 async def test_task_collection_ssh_from_wheel(

@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 
-from ..utils import get_collection_freeze
-from ..utils import get_collection_log
+from ..utils import get_collection_freeze_v2
+from ..utils import get_collection_log_v2
 from ..utils import get_collection_path
 from ..utils import get_log_path
 from .database_operations import create_db_tasks_and_update_task_group
@@ -419,10 +419,10 @@ async def background_collect_pip(
                 for task in task_group.task_list
             ]
             collection_state.data["task_list"] = task_read_list
-            collection_state.data["log"] = get_collection_log(
+            collection_state.data["log"] = get_collection_log_v2(
                 Path(task_group.path)
             )
-            collection_state.data["freeze"] = get_collection_freeze(
+            collection_state.data["freeze"] = get_collection_freeze_v2(
                 Path(task_group.path)
             )
             with collection_path.open("w") as f:
