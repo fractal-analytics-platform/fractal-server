@@ -29,6 +29,12 @@ into pre-release sections below.
     * Do not process task sources in task/task-group CRUD operations (\#1861).
     * Do not process task owners in task/task-group CRUD operations (\#1861).
     * Expand use and validators for `TaskGroupCreateV2` schema (\#1861).
+    * Task collection:
+        * Do not use `source` for custom task collection (\#1893).
+    * Workflows:
+        * Stop logging warnings for non-common tasks in workflow export (\#1893).
+    * Admin:
+        * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
 * Database:
     * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
     * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
