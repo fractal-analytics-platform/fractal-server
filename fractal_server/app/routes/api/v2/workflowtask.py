@@ -77,7 +77,6 @@ async def create_workflowtask(
     workflow_task = await _workflow_insert_task(
         workflow_id=workflow.id,
         task_id=task_id,
-        order=new_task.order,
         meta_non_parallel=new_task.meta_non_parallel,
         meta_parallel=new_task.meta_parallel,
         args_non_parallel=new_task.args_non_parallel,

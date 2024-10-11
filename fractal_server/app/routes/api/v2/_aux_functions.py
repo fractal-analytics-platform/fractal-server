@@ -332,7 +332,6 @@ async def _workflow_insert_task(
     *,
     workflow_id: int,
     task_id: int,
-    order: Optional[int] = None,
     meta_parallel: Optional[dict[str, Any]] = None,
     meta_non_parallel: Optional[dict[str, Any]] = None,
     args_non_parallel: Optional[dict[str, Any]] = None,
@@ -347,7 +346,6 @@ async def _workflow_insert_task(
         workflow_id:
         task_id:
 
-        order:
         meta_parallel:
         meta_non_parallel:
         args_non_parallel:
@@ -358,9 +356,6 @@ async def _workflow_insert_task(
     db_workflow = await db.get(WorkflowV2, workflow_id)
     if db_workflow is None:
         raise ValueError(f"Workflow {workflow_id} does not exist")
-
-    if order is None:
-        order = len(db_workflow.task_list)
 
     # Get task from db
     db_task = await db.get(TaskV2, task_id)
@@ -397,8 +392,7 @@ async def _workflow_insert_task(
         meta_non_parallel=final_meta_non_parallel,
         **input_filters_kwarg,
     )
-    db_workflow.task_list.insert(order, wf_task)
-    db_workflow.task_list.reorder()  # type: ignore
+    db_workflow.task_list.append(wf_task)
     flag_modified(db_workflow, "task_list")
     await db.commit()
 
