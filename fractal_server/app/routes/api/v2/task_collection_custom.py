@@ -141,7 +141,7 @@ async def collect_task_custom(
     # Prepare task-group attributes
     task_group_attrs = dict(
         origin="other",
-        pkg_name=task_collect.name,  # FIXME: pick one
+        pkg_name=task_collect.label,
         user_id=user.id,
         user_group_id=user_group_id,
     )

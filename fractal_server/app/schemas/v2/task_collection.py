@@ -101,7 +101,7 @@ class TaskCollectCustomV2(BaseModel):
         python_interpreter: Absolute path to the Python interpreter to be used
             for running tasks.
         name: A name identifying this package, that will fill the
-            `TaskGrouoV2.pkg_name` column.
+            `TaskGroupV2.pkg_name` column.
         package_root: The folder where the package is installed.
             If not provided, it will be extracted via `pip show`
             (requires `package_name` to be set).
@@ -113,7 +113,7 @@ class TaskCollectCustomV2(BaseModel):
 
     manifest: ManifestV2
     python_interpreter: str
-    name: str
+    label: str
     package_root: Optional[str]
     package_name: Optional[str]
     version: Optional[str]
@@ -122,7 +122,7 @@ class TaskCollectCustomV2(BaseModel):
     _python_interpreter = validator("python_interpreter", allow_reuse=True)(
         valstr("python_interpreter")
     )
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    _label = validator("label", allow_reuse=True)(valstr("label"))
     _package_root = validator("package_root", allow_reuse=True)(
         valstr("package_root", accept_none=True)
     )

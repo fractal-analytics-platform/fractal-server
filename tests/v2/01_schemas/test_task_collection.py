@@ -39,7 +39,7 @@ async def test_TaskCollectCustomV2(testdata_path):
         TaskCollectCustomV2(
             manifest=ManifestV2(**manifest_dict),
             python_interpreter="/a",
-            name="b",
+            label="b",
             package_root=None,
             package_name="inject;code",
         )
@@ -49,7 +49,7 @@ async def test_TaskCollectCustomV2(testdata_path):
         TaskCollectCustomV2(
             manifest=ManifestV2(**manifest_dict),
             python_interpreter="a",
-            name="b",
+            label="name",
             package_root=None,
             package_name="name",
         )
@@ -62,7 +62,7 @@ async def test_TaskCollectCustomV2(testdata_path):
         TaskCollectCustomV2(
             manifest=ManifestV2(**manifest_dict),
             python_interpreter="/a",
-            name="b",
+            label="name",
             package_root="non_absolute_path",
             package_name=None,
         )
@@ -73,7 +73,7 @@ async def test_TaskCollectCustomV2(testdata_path):
         TaskCollectCustomV2(
             manifest=ManifestV2(**manifest_dict),
             python_interpreter="/a",
-            name="source",
+            label="name",
             package_root=None,
             package_name=None,
             version=None,
@@ -84,7 +84,7 @@ async def test_TaskCollectCustomV2(testdata_path):
     collection = TaskCollectCustomV2(
         manifest=ManifestV2(**manifest_dict),
         python_interpreter="  /some/python                  ",
-        name="b",
+        label="b",
         package_root="  /somewhere  ",
         package_name=None,
     )

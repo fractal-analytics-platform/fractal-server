@@ -397,7 +397,7 @@ async def test_task_collection_custom(
         payload_name = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
-            name="source1",
+            label="source1",
             package_root=None,
             package_name=package_name,
         )
@@ -438,7 +438,7 @@ async def test_task_collection_custom(
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
-            name="source3",
+            label="source3",
             package_root=package_root,
             package_name=None,
         )
@@ -487,7 +487,7 @@ async def test_task_collection_custom_fail_with_ssh(
             json=TaskCollectCustomV2(
                 manifest=ManifestV2(**manifest_dict),
                 python_interpreter="/may/not/exist",
-                name="b",
+                label="b",
                 package_root=None,
                 package_name="c",
             ).dict(),
