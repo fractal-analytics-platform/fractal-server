@@ -333,7 +333,6 @@ async def test_patch_task(
         # Test successuful patch of task_compound
         update = TaskUpdateV2(
             name="new_name",
-            version="new_version",
             input_types={"input": True, "output": False},
             output_types={"input": False, "output": True},
             command_parallel="new_cmd_parallel",
