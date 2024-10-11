@@ -33,13 +33,17 @@ def sanitize_string(value: str) -> str:
     return new_value
 
 
-def slugify_task_name_for_source(task_name: str) -> str:
+def slugify_task_name_for_source_v1(task_name: str) -> str:
     """
     NOTE: this function is used upon creation of tasks' sources, therefore
     for the moment we cannot replace it with its more comprehensive version
     from `fractal_server.string_tools.sanitize_string`, nor we can remove it.
-    As 2.3.1, we are renaming it to `slugify_task_name_for_source`, to make
+
+    As of 2.3.1, we are renaming it to `slugify_task_name_for_source`, to make
     it clear that it should not be used for other purposes.
+
+    As of 2.7.0, we are renaming it to `slugify_task_name_for_source_v1`, to
+    make it clear that it is not used for v2.
 
     Args:
         task_name:

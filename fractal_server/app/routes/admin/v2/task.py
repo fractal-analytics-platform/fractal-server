@@ -1,4 +1,3 @@
-from typing import Literal
 from typing import Optional
 
 from fastapi import APIRouter
@@ -26,11 +25,12 @@ class TaskV2Minimal(BaseModel):
     id: int
     name: str
     type: str
-    command_non_parallel: Optional[str]
+    taskgroupv2_id: int
+    command_non_parallel: Optional[str] = None
     command_parallel: Optional[str]
-    source: str
-    owner: Optional[str]
-    version: Optional[str]
+    source: Optional[str] = None
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
 
 class ProjectUser(BaseModel):
@@ -61,7 +61,6 @@ async def query_tasks(
     version: Optional[str] = None,
     name: Optional[str] = None,
     owner: Optional[str] = None,
-    kind: Optional[Literal["common", "users"]] = None,
     max_number_of_results: int = 25,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
@@ -77,8 +76,6 @@ async def query_tasks(
         version: If not `None`, query for matching `task.version`.
         name: If not `None`, query for contained case insensitive `task.name`.
         owner: If not `None`, query for matching `task.owner`.
-        kind: If not `None`, query for TaskV2s that have (`users`) or don't
-            have (`common`) a `task.owner`.
         max_number_of_results: The maximum length of the response.
     """
 
@@ -94,11 +91,6 @@ async def query_tasks(
         stm = stm.where(TaskV2.name.icontains(name))
     if owner is not None:
         stm = stm.where(TaskV2.owner == owner)
-
-    if kind == "common":
-        stm = stm.where(TaskV2.owner == None)  # noqa E711
-    elif kind == "users":
-        stm = stm.where(TaskV2.owner != None)  # noqa E711
 
     res = await db.execute(stm)
     task_list = res.scalars().all()

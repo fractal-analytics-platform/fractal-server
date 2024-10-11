@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import datetime
 from datetime import timezone
 from typing import Literal
@@ -557,7 +556,6 @@ async def test_export_workflow_log(
     task_factory_v2,
     project_factory_v2,
     workflow_factory_v2,
-    caplog,
 ):
     """
     WHEN exporting a workflow with custom tasks
@@ -584,14 +582,10 @@ async def test_export_workflow_log(
     assert res.status_code == 201
 
     # Export workflow
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
     res = await client.get(
         f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
     )
     assert res.status_code == 200
-    debug(caplog.text)
-    assert "not meant to be portable" in caplog.text
 
 
 async def test_import_export_workflow_fail(

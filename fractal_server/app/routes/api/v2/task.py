@@ -102,7 +102,7 @@ async def patch_task(
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskReadV2]:
     """
-    Edit a specific task (restricted to superusers and task owner)
+    Edit a specific task (restricted to task owner)
     """
 
     # Retrieve task from database
