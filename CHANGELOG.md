@@ -27,6 +27,8 @@ into pre-release sections below.
         * Drop `TaskUpdateV2.version` (\#1905).
     * Workflows and workflow tasks:
         * Drop `WorkflowTaskCreateV2.order` (\#1906).
+    * Admin:
+         * Remove owner from `GET admin/v2/task/` (\#1909).
 
 
 # 2.7.0a4 (unreleased)
