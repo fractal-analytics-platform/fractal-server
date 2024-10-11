@@ -24,6 +24,9 @@ into pre-release sections below.
         * Fixed response of task-collection endpoint (\#1902).
         * Always query PyPI to find correct package version (\#1902).
         * Use appropriate log-file path in collection-status endpoint (\#1902).
+    * Workflows and workflow tasks:
+        * Drop WorkflowTaskCreateV2.order (\#1906).
+
 
 # 2.7.0a4 (unreleased)
 
