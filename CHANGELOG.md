@@ -25,6 +25,7 @@ into pre-release sections below.
         * Always query PyPI to find correct package version (\#1902).
         * Use appropriate log-file path in collection-status endpoint (\#1902).
         * Drop `TaskUpdateV2.version` (\#1905).
+        * Drop `TaskCreateV2.source` (\#1909).
     * Dataset:
         * Remove `TaskDumpV2.owner` attribute (\#1909).
     * Workflows and workflow tasks:
