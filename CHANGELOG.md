@@ -34,6 +34,7 @@ into pre-release sections below.
         * Expand use and validators for `TaskGroupCreateV2` schema (\#1861).
         * Do not process task sources in task/task-group CRUD operations (\#1861).
         * Do not process task owners in task/task-group CRUD operations (\#1861).
+        * Rename custom-task-collection request-body field from `source` to `label` (\#1896).
     * Workflows:
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
     * Admin:
