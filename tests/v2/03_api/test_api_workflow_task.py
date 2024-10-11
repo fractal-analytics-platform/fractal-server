@@ -25,7 +25,6 @@ async def post_task(
 ):
     task = dict(
         name=f"task{label}",
-        source=f"source{label}",
         command_non_parallel="cmd",
         command_parallel="cmd",
     )
@@ -116,11 +115,9 @@ async def test_post_worfkflow_task_failures(
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
         user_A_id = user_A.id
-        task_A_active = await task_factory_v2(
-            name="a", source="a1", user_id=user_A_id
-        )
+        task_A_active = await task_factory_v2(name="a", user_id=user_A_id)
         task_A_non_active = await task_factory_v2(
-            name="a", source="a2", user_id=user_A_id, active=False
+            name="a", user_id=user_A_id, active=False
         )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_B:
         # Create a new UserGroup with user_B
@@ -135,7 +132,7 @@ async def test_post_worfkflow_task_failures(
 
         user_B_id = user_B.id
         task_B = await task_factory_v2(
-            name="a", source="b", user_id=user_B_id, user_group_id=new_group.id
+            name="a", user_id=user_B_id, user_group_id=new_group.id
         )
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user:
@@ -460,7 +457,6 @@ async def test_patch_workflow_task_with_args_schema(
         task = await task_factory_v2(
             user_id=user.id,
             name="task with schema",
-            source="source0",
             command_non_parallel="cmd",
             args_schema_version="X.Y",
             args_schema_non_parallel=args_schema,
