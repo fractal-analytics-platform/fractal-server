@@ -182,7 +182,6 @@ class FractalClient:
     def add_working_task(self):
         task = TaskCreateV2(
             name="Echo Task",
-            source="echo-task",
             command_non_parallel="echo",
             command_parallel="echo",
         )
@@ -196,7 +195,6 @@ class FractalClient:
 
     def add_failing_task(self):
         task = TaskCreateV2(
-            source="ls-task",
             name="Ls Task",
             command_non_parallel="ls",
         )

@@ -21,7 +21,6 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
 
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
-    source: Optional[str] = None
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
@@ -64,7 +63,6 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     _command_parallel = validator("command_parallel", allow_reuse=True)(
         valstr("command_parallel")
     )
-    _source = validator("source", allow_reuse=True)(valstr("source"))
     _version = validator("version", allow_reuse=True)(valstr("version"))
 
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
