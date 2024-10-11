@@ -123,7 +123,7 @@ async def test_task_collection_ssh_from_pypi(
         assert expected_error in str(res.json()["detail"])
 
         # BACKGROUND FAILURE 1: existing folder
-        package_version = "1.2.3"
+        package_version = "1.2.0"
         remote_folder = (
             Path(TASKS_BASE_DIR)
             / str(user.id)
