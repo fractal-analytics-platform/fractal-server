@@ -25,6 +25,7 @@ into pre-release sections below.
         * Always query PyPI to find correct package version (\#1902).
         * Use appropriate log-file path in collection-status endpoint (\#1902).
         * Drop `TaskUpdateV2.version` (\#1905).
+        * Fix non-duplication check in `PATCH /api/v2/task-group/{id}/` (\#1911).
     * Workflows and workflow tasks:
         * Drop `WorkflowTaskCreateV2.order` (\#1906).
 
