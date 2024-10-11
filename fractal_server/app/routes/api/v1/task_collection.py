@@ -26,7 +26,7 @@ from ._aux_functions import _raise_if_v1_is_read_only
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.string_tools import slugify_task_name_for_source
+from fractal_server.string_tools import slugify_task_name_for_source_v1
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import (
@@ -160,7 +160,7 @@ async def collect_tasks_pip(
 
     # Check that tasks are not already in the DB
     for new_task in task_pkg.package_manifest.task_list:
-        new_task_name_slug = slugify_task_name_for_source(new_task.name)
+        new_task_name_slug = slugify_task_name_for_source_v1(new_task.name)
         new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
         stm = select(Task).where(Task.source == new_task_source)
         res = await db.execute(stm)
