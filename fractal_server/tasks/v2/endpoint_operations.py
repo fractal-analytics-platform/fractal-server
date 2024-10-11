@@ -35,17 +35,42 @@ async def get_package_version_from_pypi(
 
     url = f"https://pypi.org/pypi/{name}/json"
     hint = f"Hint: specify the required version for '{name}'."
+
+    # Make request to PyPI
     try:
         async with AsyncClient(timeout=5.0) as client:
             res = await client.get(url)
-            if res.status_code != 200:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Could not get {url} (status_code {res.status_code})."
-                        f"\n{hint}"
-                    ),
-                )
+    except TimeoutException as e:
+        error_msg = (
+            f"A TimeoutException occurred while getting {url}.\n"
+            f"Original error: {str(e)}."
+        )
+        logger.error(error_msg)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_msg,
+        )
+    except BaseException as e:
+        error_msg = (
+            f"An unknown error occurred while getting {url}. "
+            f"Original error: {str(e)}."
+        )
+        logger.error(error_msg)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_msg,
+        )
+
+    # Parse response
+    if res.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Could not get {url} (status_code {res.status_code})."
+                f"\n{hint}"
+            ),
+        )
+    try:
         response_data = res.json()
         latest_version = response_data["info"]["version"]
         available_releases = response_data["releases"].keys()
@@ -57,30 +82,6 @@ async def get_package_version_from_pypi(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"A KeyError error occurred while getting {url}.\n{hint}",
-        )
-    except TimeoutException as e:
-        logger.error(
-            f"A TimeoutException occurred while getting {url}. "
-            f"Original error: {str(e)}."
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"A TimeoutException occurred while getting {url}. "
-                f"Original error: {str(e)}."
-            ),
-        )
-    except BaseException as e:
-        logger.error(
-            f"An unknown error occurred while getting {url}. "
-            f"Original error: {str(e)}."
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"An unknown error occurred while getting {url}. "
-                f"Original error: {str(e)}."
-            ),
         )
 
     logger.info(
