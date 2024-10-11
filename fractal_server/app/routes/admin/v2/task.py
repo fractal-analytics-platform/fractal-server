@@ -29,7 +29,6 @@ class TaskV2Minimal(BaseModel):
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str]
     source: Optional[str] = None
-    owner: Optional[str] = None
     version: Optional[str] = None
 
 
@@ -60,7 +59,6 @@ async def query_tasks(
     source: Optional[str] = None,
     version: Optional[str] = None,
     name: Optional[str] = None,
-    owner: Optional[str] = None,
     max_number_of_results: int = 25,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
@@ -75,7 +73,6 @@ async def query_tasks(
             `task.source`.
         version: If not `None`, query for matching `task.version`.
         name: If not `None`, query for contained case insensitive `task.name`.
-        owner: If not `None`, query for matching `task.owner`.
         max_number_of_results: The maximum length of the response.
     """
 
@@ -89,8 +86,6 @@ async def query_tasks(
         stm = stm.where(TaskV2.version == version)
     if name is not None:
         stm = stm.where(TaskV2.name.icontains(name))
-    if owner is not None:
-        stm = stm.where(TaskV2.owner == owner)
 
     res = await db.execute(stm)
     task_list = res.scalars().all()

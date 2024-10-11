@@ -31,7 +31,6 @@ class TaskDumpV2(BaseModel):
     command_non_parallel: Optional[str]
     command_parallel: Optional[str]
     source: Optional[str] = None
-    owner: Optional[str]
     version: Optional[str]
 
     input_types: dict[str, bool]
