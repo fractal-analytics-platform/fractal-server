@@ -26,7 +26,7 @@ async def test_task_collection_custom(
         payload_name = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
-            label="source1",
+            label="label",
             package_root=None,
             package_name=package_name,
         )
@@ -55,7 +55,7 @@ async def test_task_collection_custom(
                 payload_name.dict()
                 | dict(
                     package_name=package_name.replace("_", "-"),
-                    source="source2",
+                    label="label2",
                 )
             ),
         )
@@ -67,7 +67,7 @@ async def test_task_collection_custom(
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
-            label="source3",
+            label="label3",
             package_root=package_root,
             package_name=None,
         )
@@ -116,7 +116,7 @@ async def test_task_collection_custom_fail_with_ssh(
             json=TaskCollectCustomV2(
                 manifest=ManifestV2(**manifest_dict),
                 python_interpreter="/may/not/exist",
-                label="b",
+                label="label",
                 package_root=None,
                 package_name="c",
             ).dict(),
