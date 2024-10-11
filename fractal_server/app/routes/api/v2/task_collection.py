@@ -171,6 +171,34 @@ async def collect_tasks_pip(
             detail=f"Invalid task-group object. Original error: {e}",
         )
 
+    # Database checks
+
+    # Verify non-duplication constraints
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+        db=db,
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group_attrs["user_group_id"],
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+        db=db,
+    )
+
+    # Verify that task-group path is unique
+    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
+    res = await db.execute(stm)
+    for conflicting_task_group in res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Another task-group already has path={task_group_path}.\n"
+                f"{conflicting_task_group=}"
+            ),
+        )
+
     # On-disk checks
 
     if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
@@ -190,34 +218,6 @@ async def collect_tasks_pip(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"No such file: {wheel_path}.",
                 )
-
-    # Database checks
-
-    # Verify that task-group path is unique
-    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
-    res = await db.execute(stm)
-    for conflicting_task_group in res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Another task-group already has path={task_group_path}.\n"
-                f"{conflicting_task_group=}"
-            ),
-        )
-
-    # Verify non-duplication constraints
-    await _verify_non_duplication_user_constraint(
-        user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
-        db=db,
-    )
-    await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
-        db=db,
-    )
 
     # Create TaskGroupV2 object
     task_group = TaskGroupV2(**task_group_attrs)
