@@ -137,51 +137,95 @@ async def test_delete_task_group_fail(
 
 
 async def test_patch_task_group(
-    client, MockCurrentUser, task_factory_v2, default_user_group
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    default_user_group,
+    user_group_factory,
+    first_user,
 ):
     async with MockCurrentUser() as user1:
+        taskA = await task_factory_v2(
+            name="asd", user_id=user1.id, user_group_id=default_user_group.id
+        )
+        group2 = await user_group_factory("team2", user1.id, first_user.id)
+        taskB = await task_factory_v2(
+            name="asd", user_id=first_user.id, user_group_id=group2.id
+        )
 
-        task = await task_factory_v2(user_id=user1.id, source="source")
-
-        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
+        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
         assert res.json()["active"] is True
+        assert res.json()["user_group_id"] == default_user_group.id
 
-        # Update
-
+        # Update 1: change `active`
         res = await client.patch(
-            f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(active=False)
+            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=False)
         )
         assert res.status_code == 200
-        res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
+        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
         assert res.json()["active"] is False
+        assert res.json()["user_group_id"] == default_user_group.id
+
+        # Update 2: change `active`
+        res = await client.patch(
+            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=True)
+        )
+        assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
+        assert res.json()["active"] is True
+        assert res.json()["user_group_id"] == default_user_group.id
+
+        # Update 3: change both `user_group_id` and `active`
+        res = await client.patch(
+            f"{PREFIX}/{taskA.taskgroupv2_id}/",
+            json=dict(user_group_id=None, active=True),
+        )
+        assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
+        assert res.json()["active"] is True
+        assert res.json()["user_group_id"] is None
+
+        # Update 4: change both `user_group_id` and `active`
+        res = await client.patch(
+            f"{PREFIX}/{taskA.taskgroupv2_id}/",
+            json=dict(user_group_id=default_user_group.id, active=False),
+        )
+        assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
+        assert res.json()["active"] is False
+        assert res.json()["user_group_id"] == default_user_group.id
 
         # Non existing TaskGroup
-
-        res = await client.patch(
-            f"{PREFIX}/{task.taskgroupv2_id+1}/", json=dict(active=False)
-        )
+        res = await client.patch(f"{PREFIX}/9999999/", json=dict(active=False))
         assert res.status_code == 404
 
         # Non existing UserGroup
-
         res = await client.patch(
-            f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(user_group_id=42)
+            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(user_group_id=42)
         )
         assert res.status_code == 404
 
-        # Already linked UserGroup
-
+        # Re-link the task-group to its current usergroup
         res = await client.patch(
-            f"{PREFIX}/{task.taskgroupv2_id}/",
+            f"{PREFIX}/{taskA.taskgroupv2_id}/",
+            json=dict(user_group_id=default_user_group.id),
+        )
+        assert res.status_code == 200
+
+    async with MockCurrentUser(user_kwargs=dict(id=first_user.id)):
+        # Link the task-group to another usergroup and fail due to
+        # non-duplication constraint
+        res = await client.patch(
+            f"{PREFIX}/{taskB.taskgroupv2_id}/",
             json=dict(user_group_id=default_user_group.id),
         )
         assert res.status_code == 422
+        assert "There is already a TaskGroupV2" in res.json()["detail"]
 
     async with MockCurrentUser():
 
         # Unauthorized
-
         res = await client.patch(
-            f"{PREFIX}/{task.taskgroupv2_id}/", json=dict(active=False)
+            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=False)
         )
         assert res.status_code == 403
