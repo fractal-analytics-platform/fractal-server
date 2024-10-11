@@ -8,7 +8,6 @@ from pydantic import Field
 from pydantic import validator
 
 from .._validators import valdictkeys
-from .._validators import valint
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
@@ -42,7 +41,6 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
-    order: Optional[int]
     input_filters: Filters = Field(default_factory=Filters)
 
     # Validators
@@ -52,7 +50,6 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdictkeys("meta_parallel")
     )
-    _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
 
     @validator("args_non_parallel")
     def validate_args_non_parallel(cls, value):

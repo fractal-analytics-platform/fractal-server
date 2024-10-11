@@ -90,23 +90,14 @@ async def test_post_worfkflow_task(
         )
         assert res.status_code == 201
 
-        t0b = await post_task(client, "0b")
-        res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={t0b['id']}",
-            json=dict(order=1),
-        )
-        assert res.status_code == 201
-
         # Get back workflow
         workflow = await get_workflow(client, proj.id, wf_id)
         task_list = workflow["task_list"]
-        assert len(task_list) == 4
+        assert len(task_list) == 3
         assert task_list[0]["task"]["name"] == "task0"
-        assert task_list[1]["task"]["name"] == "task0b"
-        assert task_list[2]["task"]["name"] == "task1"
-        assert task_list[3]["task"]["name"] == "task2"
-        assert task_list[3]["args_non_parallel"] == args_payload
+        assert task_list[1]["task"]["name"] == "task1"
+        assert task_list[2]["task"]["name"] == "task2"
+        assert task_list[2]["args_non_parallel"] == args_payload
 
 
 async def test_post_worfkflow_task_failures(
