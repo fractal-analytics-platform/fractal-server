@@ -14,7 +14,7 @@ from ....models import LinkUserGroup
 from ....models.v2 import TaskGroupV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
-from ...auth._aux_auth import _get_default_user_group_id
+from ...auth._aux_auth import _get_default_usergroup_id
 from ...auth._aux_auth import _verify_user_belongs_to_group
 
 
@@ -203,7 +203,7 @@ async def _get_valid_user_group_id(
     elif private is True:
         user_group_id = None
     elif user_group_id is None:
-        user_group_id = await _get_default_user_group_id(db=db)
+        user_group_id = await _get_default_usergroup_id(db=db)
     else:
         await _verify_user_belongs_to_group(
             user_id=user_id, user_group_id=user_group_id, db=db

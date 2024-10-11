@@ -1,3 +1,5 @@
+import pytest
+
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -7,7 +9,9 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 
 
+@pytest.mark.parametrize("remove", ("user_from_group", "group"))
 async def test_loss_of_access_to_task(
+    remove,
     MockCurrentUser,
     task_factory_v2,
     project_factory_v2,
@@ -85,6 +89,7 @@ async def test_loss_of_access_to_task(
         assert res.status_code == 200
         assert res.json()["status"] == "done"
 
+    if remove == "user_from_group":
         # Remove user_A from team group
         link = await db.get(LinkUserGroup, (team_group.id, user_A.id))
         assert link is not None
@@ -92,6 +97,15 @@ async def test_loss_of_access_to_task(
         await db.commit()
         link = await db.get(LinkUserGroup, (team_group.id, user_A.id))
         assert link is None
+    elif remove == "group":
+        # Remove the team group
+        async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+            res = await client.delete(f"/auth/group/{team_group.id}/")
+            assert res.status_code == 204
+    else:
+        raise RuntimeError("Wrong branch.")
+
+    async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
 
         # User A cannot get task_B any more
         res = await client.get(f"/api/v2/task/{task_B.id}/")

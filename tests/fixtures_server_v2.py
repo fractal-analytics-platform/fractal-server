@@ -13,7 +13,7 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2.submit import _encode_as_utc
-from fractal_server.app.routes.auth._aux_auth import _get_default_user_group_id
+from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -229,7 +229,7 @@ async def task_factory_v2(db: AsyncSession):
         args.update(kwargs)
         task = TaskV2(**args)
         if user_group_id is None:
-            user_group_id = await _get_default_user_group_id(db=db)
+            user_group_id = await _get_default_usergroup_id(db=db)
         else:
             await _verify_user_belongs_to_group(
                 user_id=user_id, user_group_id=user_group_id, db=db
