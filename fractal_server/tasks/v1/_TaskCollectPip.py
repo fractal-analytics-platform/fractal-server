@@ -77,7 +77,7 @@ class _TaskCollectPip(TaskCollectPipV1):
         if self.python_version:
             python_version = f"py{self.python_version}"
         else:
-            python_version = ""  # FIXME: can we allow this?
+            python_version = ""
 
         source = ":".join(
             (
