@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
@@ -12,7 +13,7 @@ from .._validators import valstr
 from .task import TaskReadV2
 
 
-class TaskGroupCreateV2(BaseModel):
+class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     user_id: int
     user_group_id: Optional[int] = None
     active: bool = True
@@ -66,7 +67,7 @@ class TaskGroupReadV2(BaseModel):
     timestamp_created: datetime
 
 
-class TaskGroupUpdateV2(BaseModel):
+class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
     user_group_id: Optional[int] = None
     active: Optional[bool] = None
 

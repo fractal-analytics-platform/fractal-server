@@ -39,6 +39,8 @@ into pre-release sections below.
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
     * Admin:
         * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
+    * Schemas:
+        * Forbid extras in all Create/Update/Import schemas (\#1895).
 * Database:
     * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
     * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).

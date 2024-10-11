@@ -12,7 +12,6 @@
             },
             "meta_parallel": {"key1": "value1"},
             "meta_non_parallel": {"key2": "value2"},
-            "order": 0,
             "task": {
                 "source": "PKG_SOURCE:dummy2"
             }

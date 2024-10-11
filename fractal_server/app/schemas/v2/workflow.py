@@ -40,7 +40,7 @@ class WorkflowReadV2WithWarnings(WorkflowReadV2):
     task_list: list[WorkflowTaskReadV2WithWarning]
 
 
-class WorkflowUpdateV2(BaseModel):
+class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
 
     name: Optional[str]
     reordered_workflowtask_ids: Optional[list[int]]
@@ -57,7 +57,7 @@ class WorkflowUpdateV2(BaseModel):
         return value
 
 
-class WorkflowImportV2(BaseModel):
+class WorkflowImportV2(BaseModel, extra=Extra.forbid):
     """
     Class for `Workflow` import.
 

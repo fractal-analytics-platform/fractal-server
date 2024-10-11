@@ -106,7 +106,7 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
     warning: Optional[str] = None
 
 
-class WorkflowTaskUpdateV2(BaseModel):
+class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
     meta_non_parallel: Optional[dict[str, Any]]
     meta_parallel: Optional[dict[str, Any]]
@@ -151,7 +151,7 @@ class WorkflowTaskUpdateV2(BaseModel):
         return value
 
 
-class WorkflowTaskImportV2(BaseModel):
+class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None

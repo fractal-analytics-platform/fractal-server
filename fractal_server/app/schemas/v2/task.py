@@ -134,7 +134,7 @@ class TaskReadV2(BaseModel):
     tags: list[str]
 
 
-class TaskUpdateV2(BaseModel):
+class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 
     name: Optional[str] = None
     version: Optional[str] = None
@@ -189,7 +189,7 @@ class TaskUpdateV2(BaseModel):
         return val_unique_list("tags")(value)
 
 
-class TaskImportV2(BaseModel):
+class TaskImportV2(BaseModel, extra=Extra.forbid):
 
     source: str
     _source = validator("source", allow_reuse=True)(valstr("source"))

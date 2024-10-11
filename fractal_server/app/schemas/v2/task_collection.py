@@ -93,7 +93,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
         return v
 
 
-class TaskCollectCustomV2(BaseModel):
+class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
     """
     Attributes:
         manifest: Manifest of a Fractal task package (this is typically the
