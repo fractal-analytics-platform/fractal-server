@@ -511,10 +511,10 @@ async def test_task_query(
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
         task1 = await task_factory_v2(
-            user_id=user.id, name="Foo", source="xxx", owner="alice"
+            user_id=user.id, name="Foo", source="xxx"
         )
         task2 = await task_factory_v2(
-            user_id=user.id, name="abcdef", source="yyy", owner="bob"
+            user_id=user.id, name="abcdef", source="yyy"
         )
         task3 = await task_factory_v2(user_id=user.id, index=3)
 
@@ -628,17 +628,6 @@ async def test_task_query(
 
         res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
         assert len(res.json()) == 2
-
-        # Query by OWNER
-
-        res = await client.get(f"{PREFIX}/task/?owner={task1.owner}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?owner={task2.owner}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?owner=foo")
-        assert len(res.json()) == 0
 
         # --------------------------
         # Relationships after deleting the Project
