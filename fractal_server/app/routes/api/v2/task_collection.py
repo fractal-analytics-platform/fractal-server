@@ -31,7 +31,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import get_collection_log_v2
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
@@ -218,6 +218,7 @@ async def collect_tasks_pip(
     # All checks are OK, proceed with task collection
     collection_status = dict(
         status=CollectionStatusV2.PENDING,
+        path=task_group_attrs["path"],
         venv_path=task_group_attrs["venv_path"],
         package=task_collect.package,
     )
@@ -306,20 +307,17 @@ async def check_collection_status(
     else:
         # Non-SSH mode
         # In some cases (i.e. a successful or ongoing task collection),
-        # state.data.log is not set; if so, we collect the current logs.
+        # state.data["log"] is not set; if so, we collect the current logs.
         if verbose and not state.data.get("log"):
-            if "venv_path" not in state.data.keys():
+            if "path" not in state.data.keys():
                 await db.close()
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
-                        f"No 'venv_path' in CollectionStateV2[{state_id}].data"
+                        f"No 'path' in CollectionStateV2[{state_id}].data"
                     ),
                 )
-            state.data["log"] = get_collection_log(
-                Path(state.data["venv_path"])
-            )
-            state.data["venv_path"] = str(state.data["venv_path"])
+            state.data["log"] = get_collection_log_v2(Path(state.data["path"]))
 
     reset_logger_handlers(logger)
     await db.close()

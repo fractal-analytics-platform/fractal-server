@@ -1,9 +1,6 @@
-from pathlib import Path
-
 import pytest
 
 from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
@@ -61,14 +58,3 @@ def test_normalize_package_name():
     )
     outputs = list(map(_normalize_package_name, inputs))
     assert len(set(outputs)) == 1
-
-
-def test_get_absolute_venv_path(tmp_path, override_settings_factory):
-    FRACTAL_TASKS_DIR = tmp_path / "TASKS"
-    override_settings_factory(FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR)
-    absolute_path = tmp_path
-    relative_path = Path("somewhere/else/")
-    assert get_absolute_venv_path(absolute_path) == absolute_path
-    assert get_absolute_venv_path(relative_path) == (
-        FRACTAL_TASKS_DIR / relative_path
-    )
