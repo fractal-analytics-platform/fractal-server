@@ -230,7 +230,7 @@ async def collect_tasks_pip(
     collection_state_data = dict(
         status=CollectionStatusV2.PENDING,
         package=task_group.pkg_name,
-        version=task_group.version,
+        package_version=task_group.version,
         path=task_group.path,
         venv_path=task_group.venv_path,
     )
