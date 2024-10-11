@@ -20,21 +20,29 @@ into pre-release sections below.
 # 2.7.0a4 (unreleased)
 
 * API:
-    * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
-    * Add cascade operations to `DELETE /api/v2/task-group/{task_group_id}/` and to `DELETE /admin/v2/task-group/{task_group_id}/` (\#1867).
-    * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
-    * Automatically discover PyPI package version if missing (\#1861).
-    * Improve preliminary checks in task-collection endpoints (\#1861).
-    * Create `TaskGroupV2` object within task-collection endpoints (\#1861).
-    * Do not process task sources in task/task-group CRUD operations (\#1861).
-    * Do not process task owners in task/task-group CRUD operations (\#1861).
-    * Expand use and validators for `TaskGroupCreateV2` schema (\#1861).
-    * Add `DELETE /auth/group/{id}` endpoint (\#1885).
-    * Forbid extras in `TaskCollectPipV2` (\#1891).
+    * Users and user groups:
+        * Add `DELETE /auth/group/{id}` endpoint (\#1885).
+    * Tasks, task groups, task collection:
+        * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
+        * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
+        * Add cascade operations to `DELETE /api/v2/task-group/{task_group_id}/` and to `DELETE /admin/v2/task-group/{task_group_id}/` (\#1867).
+        * Create `TaskGroupV2` object within task-collection endpoints (\#1861).
+        * Automatically discover PyPI package version if missing (\#1861).
+        * Improve preliminary checks in task-collection endpoints (\#1861).
+        * Do not use `source` for custom task collection (\#1893).
+        * Forbid extras in `TaskCollectPipV2` (\#1891).
+        * Expand use and validators for `TaskGroupCreateV2` schema (\#1861).
+        * Do not process task sources in task/task-group CRUD operations (\#1861).
+        * Do not process task owners in task/task-group CRUD operations (\#1861).
+    * Workflows:
+        * Stop logging warnings for non-common tasks in workflow export (\#1893).
+    * Admin:
+        * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
 * Database:
     * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
     * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
     * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
+    * Clean up `alembic` migration scripts (\#1894).
 * Task collection:
     * Refactor split between task-collection endpoints and background tasks (\#1861).
     * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).

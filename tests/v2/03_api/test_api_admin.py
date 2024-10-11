@@ -640,15 +640,6 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/?owner=foo")
         assert len(res.json()) == 0
 
-        # Query by KIND
-
-        res = await client.get(f"{PREFIX}/task/?kind=users")
-        assert len(res.json()) == 2
-
-        assert task3.owner is None
-        res = await client.get(f"{PREFIX}/task/?kind=common")
-        assert len(res.json()) == 1
-
         # --------------------------
         # Relationships after deleting the Project
 
