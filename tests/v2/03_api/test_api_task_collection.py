@@ -355,7 +355,7 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
     LOG = "fractal is awesome"
     with open(tmp_path / COLLECTION_LOG_FILENAME, "w") as f:
         f.write(LOG)
-    state = CollectionStateV2(data=dict(venv_path=tmp_path.as_posix()))
+    state = CollectionStateV2(data=dict(path=tmp_path.as_posix()))
     db.add(state)
     await db.commit()
     await db.refresh(state)
@@ -373,5 +373,5 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
         res = await client.get(f"{PREFIX}/collect/{state2.id}/?verbose=true")
     assert res.status_code == 422
     assert res.json()["detail"] == (
-        f"No 'venv_path' in CollectionStateV2[{state2.id}].data"
+        f"No 'path' in CollectionStateV2[{state2.id}].data"
     )
