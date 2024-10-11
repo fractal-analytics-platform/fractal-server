@@ -24,21 +24,25 @@ into pre-release sections below.
         * Fixed response of task-collection endpoint (\#1902).
         * Always query PyPI to find correct package version (\#1902).
         * Use appropriate log-file path in collection-status endpoint (\#1902).
+        * Drop `TaskUpdateV2.version` (\#1905).
     * Workflows and workflow tasks:
-        * Drop WorkflowTaskCreateV2.order (\#1906).
+        * Drop `WorkflowTaskCreateV2.order` (\#1906).
 
 
 # 2.7.0a4 (unreleased)
 
 * API:
     * Users and user groups:
-        * Add `DELETE /auth/group/{id}` endpoint (\#1885).
+        * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
+        * Deprecate `GET /auth/group-names/` (\#1844).
+        * Add `DELETE /auth/group/{id}/` endpoint (\#1885).
     * Tasks, task groups, task collection:
+        * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856).
         * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
         * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
         * Add cascade operations to `DELETE /api/v2/task-group/{task_group_id}/` and to `DELETE /admin/v2/task-group/{task_group_id}/` (\#1867).
         * Create `TaskGroupV2` object within task-collection endpoints (\#1861).
-        * Automatically discover PyPI package version if missing (\#1861).
+        * Automatically discover PyPI package version if missing (\#1858, \#1861).
         * Improve preliminary checks in task-collection endpoints (\#1861).
         * Do not use `source` for custom task collection (\#1893).
         * Forbid extras in `TaskCollectPipV2` (\#1891).
@@ -46,46 +50,33 @@ into pre-release sections below.
         * Do not process task sources in task/task-group CRUD operations (\#1861).
         * Do not process task owners in task/task-group CRUD operations (\#1861).
         * Rename custom-task-collection request-body field from `source` to `label` (\#1896).
+        * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
+        * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
+        * Add task `authors` to manifest schema (\#1856).
+    * Refactor split between task-collection endpoints and background tasks (\#1861).
+    * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
     * Workflows:
+        * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
+        * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
+        * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
+    * Jobs
+        * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
     * Admin:
         * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
     * Schemas:
         * Forbid extras in all Create/Update/Import schemas (\#1895).
-* Database:
-    * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
-    * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
-    * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
-    * Clean up `alembic` migration scripts (\#1894).
-* Task collection:
-    * Refactor split between task-collection endpoints and background tasks (\#1861).
-    * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
 
-# Up to 2.7.0a3
-
-* API:
-    * User groups
-        * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
-        * Deprecate `GET /auth/group-names/` (\#1844).
-    * Task groups:
-        * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856).
-    * Task collection:
-        * Add auxiliary function `get_package_version_from_pypi` (\#1858).
-    * Tasks
-        * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
-        * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
-        * Add task `authors` to manifest schema (\#1856).
-    * Workflows
-        * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
-        * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
-        * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
-    * Jobs
-        * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
 * Database:
     * Introduce `TaskGroupV2` table (\#1817, \#1856).
     * Add  `timestamp_created` column to `LinkUserGroup` table (\#1850).
     * Add `TaskV2` attributes `authors`, `tags`, `category` and `modality` (\#1856).
     * Add `update-db-data` script (\#1820, \#1888).
+    * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
+    * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
+    * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
+    * Clean up `alembic` migration scripts (\#1894).
+
 
 
 # 2.6.4
