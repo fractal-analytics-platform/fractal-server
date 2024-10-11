@@ -31,7 +31,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import get_collection_log_v2
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
@@ -70,33 +70,40 @@ async def collect_tasks_pip(
     # Get settings
     settings = Inject(get_settings)
 
+    # Initialize task-group attributes
+    task_group_attrs = dict(user_id=user.id)
+
     # Set/check python version
     if task_collect.python_version is None:
-        task_collect.python_version = (
-            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-        )
+        task_group_attrs[
+            "python_version"
+        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    else:
+        task_group_attrs["python_version"] = task_collect.python_version
     try:
-        get_python_interpreter_v2(python_version=task_collect.python_version)
+        get_python_interpreter_v2(
+            python_version=task_group_attrs["python_version"]
+        )
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Python version {task_collect.python_version} is "
+                f"Python version {task_group_attrs['python_version']} is "
                 "not available for Fractal task collection."
             ),
         )
 
-    # Populate task-group attributes
-    task_group_attrs = dict(
-        user_id=user.id,
-        python_version=task_collect.python_version,
-    )
+    # Set pip_extras
     if task_collect.package_extras is not None:
         task_group_attrs["pip_extras"] = task_collect.package_extras
+
+    # Set pinned_package_versions
     if task_collect.pinned_package_versions is not None:
         task_group_attrs[
             "pinned_package_versions"
         ] = task_collect.pinned_package_versions
+
+    # Set pkg_name, version, origin and wheel_path
     if task_collect.package.endswith(".whl"):
         try:
             task_group_attrs["wheel_path"] = task_collect.package
@@ -119,19 +126,11 @@ async def collect_tasks_pip(
         pkg_name = task_collect.package
         task_group_attrs["pkg_name"] = _normalize_package_name(pkg_name)
         task_group_attrs["origin"] = "pypi"
-        if task_collect.package_version is None:
-            latest_version = await get_package_version_from_pypi(
-                task_collect.package
-            )
-            task_group_attrs["version"] = latest_version
-            task_collect.package_version = latest_version
-        else:
-            task_group_attrs["version"] = task_collect.package_version
-
-    # Validate user settings (backend-specific)
-    user_settings = await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
-    )
+        latest_version = await get_package_version_from_pypi(
+            task_collect.package,
+            task_collect.package_version,
+        )
+        task_group_attrs["version"] = latest_version
 
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
@@ -140,9 +139,16 @@ async def collect_tasks_pip(
         user_id=user.id,
         db=db,
     )
+
+    # Set user_group_id
     task_group_attrs["user_group_id"] = user_group_id
 
-    # Construct task_group.path
+    # Validate user settings (backend-specific)
+    user_settings = await validate_user_settings(
+        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+    )
+
+    # Set path and venv_path
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
@@ -164,6 +170,8 @@ async def collect_tasks_pip(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid task-group object. Original error: {e}",
         )
+
+    # Database checks
 
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(
@@ -191,15 +199,18 @@ async def collect_tasks_pip(
             ),
         )
 
-    # Verify that folder does not exist (for local collection)
+    # On-disk checks
+
     if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+
+        # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"{task_group_path} already exists.",
             )
 
-    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+        # Verify that wheel file exists
         wheel_path = task_group_attrs.get("wheel_path", None)
         if wheel_path is not None:
             if not Path(wheel_path).exists():
@@ -216,13 +227,15 @@ async def collect_tasks_pip(
     db.expunge(task_group)
 
     # All checks are OK, proceed with task collection
-    collection_status = dict(
+    collection_state_data = dict(
         status=CollectionStatusV2.PENDING,
-        venv_path=task_group_attrs["venv_path"],
-        package=task_collect.package,
+        package=task_group.pkg_name,
+        version=task_group.version,
+        path=task_group.path,
+        venv_path=task_group.venv_path,
     )
     state = CollectionStateV2(
-        data=collection_status, taskgroupv2_id=task_group.id
+        data=collection_state_data, taskgroupv2_id=task_group.id
     )
     db.add(state)
     await db.commit()
@@ -270,7 +283,7 @@ async def collect_tasks_pip(
     reset_logger_handlers(logger)
     info = (
         "Collecting tasks in the background. "
-        f"GET /task/collect/{state.id} to query collection status"
+        f"GET /task/collect/{state.id}/ to query collection status"
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
@@ -306,20 +319,17 @@ async def check_collection_status(
     else:
         # Non-SSH mode
         # In some cases (i.e. a successful or ongoing task collection),
-        # state.data.log is not set; if so, we collect the current logs.
+        # state.data["log"] is not set; if so, we collect the current logs.
         if verbose and not state.data.get("log"):
-            if "venv_path" not in state.data.keys():
+            if "path" not in state.data.keys():
                 await db.close()
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
-                        f"No 'venv_path' in CollectionStateV2[{state_id}].data"
+                        f"No 'path' in CollectionStateV2[{state_id}].data"
                     ),
                 )
-            state.data["log"] = get_collection_log(
-                Path(state.data["venv_path"])
-            )
-            state.data["venv_path"] = str(state.data["venv_path"])
+            state.data["log"] = get_collection_log_v2(Path(state.data["path"]))
 
     reset_logger_handlers(logger)
     await db.close()

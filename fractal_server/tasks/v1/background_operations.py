@@ -8,7 +8,7 @@ from shutil import rmtree as shell_rmtree
 
 from ...string_tools import slugify_task_name_for_source_v1
 from ..utils import _normalize_package_name
-from ..utils import get_collection_log
+from ..utils import get_collection_log_v1
 from ..utils import get_collection_path
 from ..utils import get_log_path
 from ._TaskCollectPip import _TaskCollectPip
@@ -321,7 +321,7 @@ async def background_collect_pip(
 
             # Update DB
             data.status = "OK"
-            data.log = get_collection_log(venv_path)
+            data.log = get_collection_log_v1(venv_path)
             state.data = data.sanitised_dict()
             db.add(state)
             db.merge(state)
@@ -342,7 +342,7 @@ async def background_collect_pip(
             # Update db
             data.status = "fail"
             data.info = f"Original error: {e}"
-            data.log = get_collection_log(venv_path)
+            data.log = get_collection_log_v1(venv_path)
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()

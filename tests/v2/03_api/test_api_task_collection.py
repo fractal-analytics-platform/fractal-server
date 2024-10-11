@@ -319,19 +319,20 @@ async def test_task_collection_failure_due_to_existing_path(
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         path = (
-            settings.FRACTAL_TASKS_DIR / f"{user.id}/pkg/1.2.3/"
+            settings.FRACTAL_TASKS_DIR / f"{user.id}/fractal-tasks-core/1.2.0/"
         ).as_posix()
         venv_path = (
-            settings.FRACTAL_TASKS_DIR / f"{user.id}/pkg/1.2.3/venv/"
+            settings.FRACTAL_TASKS_DIR
+            / f"{user.id}/fractal-tasks-core/1.2.0/venv/"
         ).as_posix()
 
-        # Collect again and fail due to another task group with the same path
+        # Create fake task group
         tg = TaskGroupV2(
             origin="other",
             path=path,
             venv_path=venv_path,
-            pkg_name="pkg-FAKE",
-            version="1.2.3",
+            pkg_name="fractal-tasks-core-FAKE",
+            version="1.2.0",
             user_id=user.id,
         )
         db.add(tg)
@@ -340,10 +341,10 @@ async def test_task_collection_failure_due_to_existing_path(
         db.expunge(tg)
         await db.close()
 
-        # Collect again and fail due to non-duplication constraint
+        # Collect again and fail due to another group having the same path set
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(package="pkg", package_version="1.2.3"),
+            json=dict(package="fractal-tasks-core", package_version="1.2.0"),
         )
         assert res.status_code == 422
         assert "Another task-group already has path" in res.json()["detail"]
@@ -354,7 +355,7 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
     LOG = "fractal is awesome"
     with open(tmp_path / COLLECTION_LOG_FILENAME, "w") as f:
         f.write(LOG)
-    state = CollectionStateV2(data=dict(venv_path=tmp_path.as_posix()))
+    state = CollectionStateV2(data=dict(path=tmp_path.as_posix()))
     db.add(state)
     await db.commit()
     await db.refresh(state)
@@ -372,5 +373,5 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
         res = await client.get(f"{PREFIX}/collect/{state2.id}/?verbose=true")
     assert res.status_code == 422
     assert res.json()["detail"] == (
-        f"No 'venv_path' in CollectionStateV2[{state2.id}].data"
+        f"No 'path' in CollectionStateV2[{state2.id}].data"
     )
