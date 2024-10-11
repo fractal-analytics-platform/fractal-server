@@ -564,7 +564,7 @@ async def test_patch_workflow_task_failures(
                 f"{PREFIX}/project/{project.id}/workflow/{WORKFLOW_ID}/"
                 f"wftask/{WORKFLOW_TASK_ID}/"
             ),
-            json={"args": {"a": 123, "d": 321}},
+            json={"args_parallel": {"a": 123, "d": 321}},
         )
         debug(res.content)
         assert res.status_code == 404
@@ -577,7 +577,7 @@ async def test_patch_workflow_task_failures(
                 f"{PREFIX}/project/{project.id}/workflow/{WORKFLOW_ID}/"
                 f"wftask/{WORKFLOW_TASK_ID}/"
             ),
-            json={"args": {"a": 123, "d": 321}},
+            json={"args_parallel": {"a": 123, "d": 321}},
         )
         debug(res.content)
         assert res.status_code == 404

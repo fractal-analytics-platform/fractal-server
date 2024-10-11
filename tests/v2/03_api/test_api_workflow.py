@@ -606,9 +606,7 @@ async def test_import_export_workflow_fail(
     await task_factory(name="valid", source="test_source")
     payload = {
         "name": "MyWorkflow",
-        "task_list": [
-            {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
-        ],
+        "task_list": [{"task": {"source": "xyz"}}],
     }
     res = await client.post(
         f"/api/v2/project/{prj.id}/workflow/import/", json=payload
