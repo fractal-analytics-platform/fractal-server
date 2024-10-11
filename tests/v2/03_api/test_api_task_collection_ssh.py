@@ -165,7 +165,7 @@ async def test_task_collection_ssh_from_pypi(
             ),
         )
         assert res.status_code == 422
-        assert "xx" in res.json()["detail"]
+        assert "No version starting with 9.9.9 found" in res.json()["detail"]
         debug(res.json())
 
 
