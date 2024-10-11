@@ -32,11 +32,9 @@ def test_extra_on_create_models():
         ProjectCreateV2(name="name", foo="bar")
 
     # Task
-    TaskCreateV2(name="name", source="source", command_parallel="cmd")
+    TaskCreateV2(name="name", command_parallel="cmd")
     with pytest.raises(ValidationError):
-        TaskCreateV2(
-            name="name", source="source", command_parallel="cmd", foo="bar"
-        )
+        TaskCreateV2(name="name", command_parallel="cmd", foo="bar")
 
     # Workflow
     WorkflowCreateV2(name="name")
@@ -52,7 +50,6 @@ def test_extra_on_create_models():
 def test_dictionary_keys_validation():
     args = dict(
         name="name",
-        source="source",
         command_non_parallel="cmd",
     )
     with pytest.raises(ValidationError):
@@ -73,7 +70,7 @@ def test_dictionary_keys_validation():
     with pytest.raises(
         ValidationError, match="Task must have at least one valid command"
     ):
-        TaskCreateV2(name="name", source="source")
+        TaskCreateV2(name="name")
 
 
 def test_task_collect_pip():
@@ -121,7 +118,6 @@ def test_workflow_task_dump():
             id=1,
             name="name",
             type="type",
-            source="source",
             input_types={},
             output_types={},
         ),
