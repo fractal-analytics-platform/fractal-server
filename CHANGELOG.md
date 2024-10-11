@@ -42,6 +42,7 @@ into pre-release sections below.
     * Add `taskgroupv2_id` foreign key to `CollectionStateV2` (\#1867).
     * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
     * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
+    * Clean up `alembic` migration scripts (\#1894).
 * Task collection:
     * Refactor split between task-collection endpoints and background tasks (\#1861).
     * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
