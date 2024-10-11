@@ -218,9 +218,10 @@ async def collect_tasks_pip(
     # All checks are OK, proceed with task collection
     collection_status = dict(
         status=CollectionStatusV2.PENDING,
-        path=task_group_attrs["path"],
+        package=task_group.pkg_name,
+        version=task_group.version,
         venv_path=task_group_attrs["venv_path"],
-        package=task_collect.package,
+        path=task_group_attrs["path"],
     )
     state = CollectionStateV2(
         data=collection_status, taskgroupv2_id=task_group.id
