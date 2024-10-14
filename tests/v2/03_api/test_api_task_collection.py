@@ -309,7 +309,7 @@ async def test_task_collection_from_pypi(
         # Collect again and fail due to non-duplication constraint
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         assert res.status_code == 422
-        assert "There is already a TaskGroupV2" in res.json()["detail"]
+        assert "already owns a task group" in res.json()["detail"]
 
 
 async def test_task_collection_failure_due_to_existing_path(

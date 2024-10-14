@@ -103,9 +103,7 @@ async def test_task_collection_ssh_from_pypi(
             ),
         )
         assert res.status_code == 422
-        assert "There is already a TaskGroupV2 with" in str(
-            res.json()["detail"]
-        )
+        assert "already owns a task group" in str(res.json()["detail"])
 
         # API FAILURE 2: invalid package name and no version
         res = await client.post(
