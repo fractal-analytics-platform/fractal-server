@@ -21,6 +21,10 @@ from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 async def _get_task_group_or_404(
@@ -216,6 +220,26 @@ async def _get_valid_user_group_id(
     return user_group_id
 
 
+async def _get_collection_status_message(
+    task_group_dict: dict[str, Any], db: AsyncSession
+) -> str:
+    res = await db.execute(
+        select(CollectionStateV2).where(
+            CollectionStateV2.taskgroupv2_id == task_group_dict[0].get("id")
+        )
+    )
+    state = res.scalars().one_or_none()
+    if state is not None and state.data.get("status") in [
+        CollectionStatusV2.COLLECTING,
+        CollectionStatusV2.INSTALLING,
+        CollectionStatusV2.PENDING,
+    ]:
+        msg = f"\nStatus of the task collection: {state.data['status']}."
+    else:
+        msg = ""
+    return msg
+
+
 async def _verify_non_duplication_user_constraint(
     db: AsyncSession,
     user_id: int,
@@ -231,22 +255,18 @@ async def _verify_non_duplication_user_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
-        res = await db.execute(
-            select(CollectionStateV2).where(
-                CollectionStateV2.taskgroupv2_id == duplicate[0].id
+        if len(duplicate) > 1:
+            logger.error(
+                "Found more then one TaskGroupV2 with "
+                f"({user_id=}, {pkg_name=}, {version=})."
             )
-        )
-        state = res.scalars().one_or_none()
-        if (state is not None) and (state.data["status"] != "OK"):
-            msg = f"\nStatus of the task collection: {state.data['status']}."
-        else:
-            msg = ""
+        state_msg = await _get_collection_status_message(duplicate[0], db)
         user = await db.get(UserOAuth, user_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"User '{user.email}' already owns a task group "
-                f"with {pkg_name=} and {version=}.{msg}"
+                f"with {pkg_name=} and {version=}.{state_msg}"
             ),
         )
 
@@ -269,22 +289,18 @@ async def _verify_non_duplication_group_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
-        user_group = await db.get(UserGroup, user_group_id)
-        res = await db.execute(
-            select(CollectionStateV2).where(
-                CollectionStateV2.taskgroupv2_id == duplicate[0].id
+        if len(duplicate) > 1:
+            logger.error(
+                "Found more then one TaskGroupV2 with "
+                f"({user_group_id=}, {pkg_name=}, {version=})."
             )
-        )
-        state = res.scalars().one_or_none()
-        if (state is not None) and (state.data["status"] != "OK"):
-            msg = f"\nStatus of the task collection: {state.data['status']}."
-        else:
-            msg = ""
+        state_msg = await _get_collection_status_message(duplicate[0], db)
+        user_group = await db.get(UserGroup, user_group_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"UserGroup {user_group.name} already owns a task group "
-                f"with {pkg_name=} and {version=}.{msg}"
+                f"with {pkg_name=} and {version=}.{state_msg}"
             ),
         )
 
