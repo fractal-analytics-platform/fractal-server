@@ -13,6 +13,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -230,12 +231,22 @@ async def _verify_non_duplication_user_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        res = await db.execute(
+            select(CollectionStateV2).where(
+                CollectionStateV2.taskgroupv2_id == duplicate[0].id
+            )
+        )
+        state = res.scalars().one_or_none()
+        if (state is not None) and (state.data["status"] != "OK"):
+            msg = f"\nStatus of the task collection: {state.data['status']}"
+        else:
+            msg = ""
         user = await db.get(UserOAuth, user_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"User '{user.email}' already owns a task group "
-                f"with {pkg_name=} and {version=}."
+                f"with {pkg_name=} and {version=}.{msg}"
             ),
         )
 
@@ -259,11 +270,21 @@ async def _verify_non_duplication_group_constraint(
     duplicate = res.scalars().all()
     if duplicate:
         user_group = await db.get(UserGroup, user_group_id)
+        res = await db.execute(
+            select(CollectionStateV2).where(
+                CollectionStateV2.taskgroupv2_id == duplicate[0].id
+            )
+        )
+        state = res.scalars().one_or_none()
+        if (state is not None) and (state.data["status"] != "OK"):
+            msg = f"\nStatus of the task collection: {state.data['status']}"
+        else:
+            msg = ""
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"UserGroup {user_group.name} already owns a task group "
-                f"with {pkg_name=} and {version=}."
+                f"with {pkg_name=} and {version=}.{msg}"
             ),
         )
 
