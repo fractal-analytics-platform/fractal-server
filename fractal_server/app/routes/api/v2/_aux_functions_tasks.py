@@ -9,13 +9,17 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import select
 
-from ....db import AsyncSession
-from ....models import LinkUserGroup
-from ....models.v2 import TaskGroupV2
-from ....models.v2 import TaskV2
-from ....models.v2 import WorkflowTaskV2
-from ...auth._aux_auth import _get_default_usergroup_id
-from ...auth._aux_auth import _verify_user_belongs_to_group
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 
 
 async def _get_task_group_or_404(
@@ -226,11 +230,12 @@ async def _verify_non_duplication_user_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        user = await db.get(UserOAuth, user_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "There is already a TaskGroupV2 with "
-                f"({pkg_name=}, {version=}, {user_id=})."
+                f"User '{user.email}' already owns a task group "
+                f"with {pkg_name=} and {version=}."
             ),
         )
 
@@ -253,11 +258,12 @@ async def _verify_non_duplication_group_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        user_group = await db.get(UserGroup, user_group_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "There is already a TaskGroupV2 with "
-                f"({pkg_name=}, {version=}, {user_group_id=})."
+                f"UserGroup {user_group.name} already owns a task group "
+                f"with {pkg_name=} and {version=}."
             ),
         )
 
