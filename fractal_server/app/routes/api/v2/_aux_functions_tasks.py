@@ -221,11 +221,11 @@ async def _get_valid_user_group_id(
 
 
 async def _get_collection_status_message(
-    task_group_dict: dict[str, Any], db: AsyncSession
+    task_group: TaskGroupV2, db: AsyncSession
 ) -> str:
     res = await db.execute(
         select(CollectionStateV2).where(
-            CollectionStateV2.taskgroupv2_id == task_group_dict[0].get("id")
+            CollectionStateV2.taskgroupv2_id == task_group.id
         )
     )
     state = res.scalars().one_or_none()
