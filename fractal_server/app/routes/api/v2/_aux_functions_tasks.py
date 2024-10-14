@@ -238,7 +238,7 @@ async def _verify_non_duplication_user_constraint(
         )
         state = res.scalars().one_or_none()
         if (state is not None) and (state.data["status"] != "OK"):
-            msg = f"\nStatus of the task collection: {state.data['status']}"
+            msg = f"\nStatus of the task collection: {state.data['status']}."
         else:
             msg = ""
         user = await db.get(UserOAuth, user_id)
@@ -277,7 +277,7 @@ async def _verify_non_duplication_group_constraint(
         )
         state = res.scalars().one_or_none()
         if (state is not None) and (state.data["status"] != "OK"):
-            msg = f"\nStatus of the task collection: {state.data['status']}"
+            msg = f"\nStatus of the task collection: {state.data['status']}."
         else:
             msg = ""
         raise HTTPException(
