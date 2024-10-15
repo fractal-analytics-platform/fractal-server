@@ -21,6 +21,7 @@ into pre-release sections below.
 
 * Database:
     * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
+    * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
 * Runner:
     * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
 * Testing:
