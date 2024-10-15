@@ -285,6 +285,10 @@ def prepare_task_groups(
                 version=task_group_attributes["version"],
             )
         )
+        logger.warning(
+            "Non-duplication-constraint check is OK, "
+            "proceed and create TaskGroupV2."
+        )
 
         # Create the TaskGroupV2 object and commit it
         task_group = TaskGroupV2(**task_group_attributes)
