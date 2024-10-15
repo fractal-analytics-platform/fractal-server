@@ -469,7 +469,7 @@ async def test_rate_limit(
     tmp_path,
 ):
     override_settings_factory(
-        FRACTAL_API_SUBMIT_RATE_LIMIT=1,
+        FRACTAL_API_SUBMIT_RATE_LIMIT=0.5,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp_path / "artifacts",
     )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
@@ -488,14 +488,6 @@ async def test_rate_limit(
             json={},
         )
         assert res.status_code == 202
-        time.sleep(1)
-        # Call 2: OK
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
-            json={},
-        )
-        assert res.status_code == 202
         # Call 2: too early!
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
@@ -503,8 +495,8 @@ async def test_rate_limit(
             json={},
         )
         assert res.status_code == 429
-        assert "less than 1 second" in res.json()["detail"]
-        time.sleep(1)
+        assert "less than 0.5 second" in res.json()["detail"]
+        time.sleep(0.5)
         # Call 3: OK
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
