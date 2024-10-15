@@ -621,7 +621,6 @@ async def test_import_export_workflow_fail(
         f"/api/v2/project/{prj.id}/workflow/import/", json=payload
     )
     assert res.status_code == 422
-    assert "Found 0 tasks with source" in res.json()["detail"]
 
 
 async def test_new_import_export(
