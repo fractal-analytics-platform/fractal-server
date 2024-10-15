@@ -10,15 +10,15 @@ createdb fractal_test_v27
 PGPASSWORD=postgres psql -U postgres -h localhost -d fractal_test_v27 -f "$1"
 
 # When running with "old" database, this is needed:
-# ./venv260/bin/fractalctl set-db
-#echo -e "yes\nyes\nyes\nyes\nyes" | ./venv260/bin/fractalctl update-db-data
+./venv260/bin/fractalctl set-db
+echo -e "yes\nyes\nyes\nyes\nyes" | ./venv260/bin/fractalctl update-db-data
 
 # Apply 2.7.0 schema migrations
 poetry run fractalctl set-db
 
 # Apply 2.7.0 data migrations
 export FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.xy
-echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data --dry-run
+echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
 
 # Reset all passwords to a given value
 # Raw: 1234
