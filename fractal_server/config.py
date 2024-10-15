@@ -512,7 +512,7 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
-    FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
+    FRACTAL_API_SUBMIT_RATE_LIMIT: float = 2.0
     """
     Interval to wait (in seconds) to be allowed to call again
     `POST api/v1/{project_id}/workflow/{workflow_id}/apply/`
