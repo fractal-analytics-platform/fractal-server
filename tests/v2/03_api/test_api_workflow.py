@@ -609,7 +609,6 @@ async def test_import_export_workflow_fail(
     assert "Found 0 tasks with source" in res.json()["detail"]
 
 
-
 async def test_new_import_export(
     client,
     MockCurrentUser,
@@ -618,33 +617,36 @@ async def test_new_import_export(
     workflow_factory_v2,
     workflowtask_factory_v2,
     tmp_path,
-    testdata_path):
+    testdata_path,
+):
 
     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
         workflow_from_file = json.load(f)
-    
+
+    # Aux function
     def wf_modify(task_import: dict):
-        wf_from_file = workflow_from_file.copy() 
-        wf_from_file["task_list"][0]["task"] = task_import 
+        wf_from_file = workflow_from_file.copy()
+        wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
-    
+
     wf_from_file_task = workflow_from_file["task_list"][0]["task"]["source"]
 
     async with MockCurrentUser() as user:
         task = await task_factory_v2(user_id=user.id, source=wf_from_file_task)
         prj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=prj.id)
-        wft = await workflowtask_factory_v2(workflow_id=wf.id, task_id=task.id)
+        await workflowtask_factory_v2(workflow_id=wf.id, task_id=task.id)
 
         # Export workflow
         res = await client.get(
             f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
         )
         assert res.status_code == 200
+        debug(res.json())
 
         res = await client.post(
-          f"{PREFIX}/project/{prj.id}/workflow/import/",
-          json=workflow_from_file
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=workflow_from_file,
         )
         assert res.status_code == 201
 
@@ -652,33 +654,49 @@ async def test_new_import_export(
         # WorkflowReadV2(**workflow_imported)
 
         # Case source and the others
-        invalid_payload = wf_modify({
-         "source": "fractal-tasks-core-1.2.3-cellpose",
-         "pkg_name": "fractal-tasks-core",
-         "version": "1.2.3",
-         "name": "cellpose_segmentation"
-        })
+        invalid_payload = wf_modify(
+            {
+                "source": "fractal-tasks-core-1.2.3-cellpose",
+                "pkg_name": "fractal-tasks-core",
+                "version": "1.2.3",
+                "name": "cellpose_segmentation",
+            }
+        )
 
         # No casting to WorkflowImportV2
         res = await client.post(
-          f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
+            f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
         assert res.json()["detail"][0]["msg"] == (
-                "As source is not None, pkg_name, version, name must be None"
-                )
+            "As source is not None, pkg_name, name must be None"
+        )
 
         # Case no source and missing one of the others
-        invalid_payload = wf_modify({
-         "pkg_name": "fractal-tasks-core",
-         "version": "1.2.3",
-        })
+        invalid_payload = wf_modify(
+            {
+                "pkg_name": "fractal-tasks-core",
+                "version": "1.2.3",
+            }
+        )
 
         # No casting to WorkflowImportV2
         res = await client.post(
-          f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
+            f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
         assert res.json()["detail"][0]["msg"] == (
-                "pkg_name, version, name, must all be not None"
-                )
+            "pkg_name, name, must all be not None"
+        )
+
+        # Case empty dict
+        invalid_payload = wf_modify({})
+
+        # No casting to WorkflowImportV2
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Cannot have pkg_name, name and source None"
+        )

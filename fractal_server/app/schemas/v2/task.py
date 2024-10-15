@@ -190,32 +190,47 @@ class TaskImportV2(BaseModel, extra=Extra.forbid):
     pkg_name: Optional[str] = None
     version: Optional[str] = None
     name: Optional[str] = None
-    _source = validator("source", allow_reuse=True)(valstr("source", accept_none=True))
-    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name", accept_none=True))
-    _version = validator("version", allow_reuse=True)(valstr("version", accept_none=True))
-    _name = validator("name", allow_reuse=True)(valstr("name", accept_none=True))
+    _source = validator("source", allow_reuse=True)(
+        valstr("source", accept_none=True)
+    )
+    _pkg_name = validator("pkg_name", allow_reuse=True)(
+        valstr("pkg_name", accept_none=True)
+    )
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
+    _name = validator("name", allow_reuse=True)(
+        valstr("name", accept_none=True)
+    )
 
     @root_validator
     def validate_import_model(cls, values):
-        if values.get("source") is None:
-            if not (
-             values.get("pkg_name") and
-             values.get("version") and
-             values.get("name")
-             ):
-                raise ValueError("pkg_name, version, name, must all be not None")
-        else:
-            if (
-             values.get("pkg_name") or
-             values.get("version") or
-             values.get("name")
-             ):
-                raise ValueError("As source is not None, pkg_name, version, name must be None")
-        return values
+        pkg_name = values.get("pkg_name")
+        name = values.get("name")
+        source = values.get("source")
 
+        if pkg_name is None and name is None and source is None:
+            raise ValueError("Cannot have pkg_name, name and source None")
+        elif source is None:
+            if not (pkg_name and name):
+                raise ValueError("pkg_name, name, must all be not None")
+        else:
+            if pkg_name or name:
+                raise ValueError(
+                    "As source is not None, pkg_name, name must be None"
+                )
+
+        return values
 
 
 class TaskExportV2(BaseModel):
 
-    source: Optional[str] = None
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    pkg_name: str
+    version: Optional[str] = None
+    name: str
+
+    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
+    _name = validator("name", allow_reuse=True)(valstr("name"))

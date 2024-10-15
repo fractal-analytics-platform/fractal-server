@@ -27,6 +27,7 @@ from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2.task import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
 
 
@@ -256,7 +257,21 @@ async def export_worfklow(
         user_id=user.id,
         db=db,
     )
-    return workflow
+    wf_task_list = []
+    for wftask in workflow.task_list:
+        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        wf_task_list.append(wftask.dict())
+        wf_task_list[-1]["task"] = wftask.task.dict()
+        wf_task_list[-1]["task"]["pkg_name"] = task_group.pkg_name
+
+    wf = WorkflowExportV2(
+        **workflow.model_dump(),
+        task_list=wf_task_list,
+    )
+    from devtools import debug
+
+    debug(wf)
+    return wf
 
 
 @router.post(
