@@ -1,22 +1,65 @@
+import asyncio
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Any
+from typing import Optional
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_group_constraint,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_user_constraint,
+)
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.data_migrations.tools import _check_current_version
 from fractal_server.utils import get_timestamp
 
 logger = logging.getLogger("fix_db")
+
+
+async def check_non_duplication_constraints(
+    *,
+    user_id: int,
+    pkg_name: str,
+    version: Optional[str] = None,
+    user_group_id: Optional[int] = None,
+):
+    try:
+        async for db_async in get_async_db():
+            await _verify_non_duplication_user_constraint(
+                user_id=user_id,
+                pkg_name=pkg_name,
+                version=version,
+                db=db_async,
+            )
+            await _verify_non_duplication_group_constraint(
+                user_group_id=user_group_id,
+                pkg_name=pkg_name,
+                version=version,
+                db=db_async,
+            )
+    except HTTPException as e:
+        logger.error(
+            "Adding a `TaskGroupV2` with "
+            f"{user_id=}, {pkg_name=}, {version=} and {user_group_id=} "
+            "would break the non-duplication constraint."
+        )
+        logger.error(f"Original error: {str(e)}")
+
+        sys.exit("ERROR")
 
 
 def get_unique_value(list_of_objects: list[dict[str, Any]], key: str):
@@ -29,8 +72,7 @@ def get_unique_value(list_of_objects: list[dict[str, Any]], key: str):
         unique_values.add(this_value)
     if len(unique_values) != 1:
         raise RuntimeError(
-            f"There must be a single taskgroup `{key}`, "
-            f"but {unique_values=}"
+            f"There must be a single taskgroup `{key}`, but {unique_values=}"
         )
     return unique_values.pop()
 
@@ -85,7 +127,6 @@ def get_default_user_group_id(db):
 
 
 def get_default_user_id(db):
-
     DEFAULT_USER_EMAIL = os.getenv("FRACTAL_V27_DEFAULT_USER_EMAIL")
     if DEFAULT_USER_EMAIL is None:
         raise ValueError(
@@ -235,6 +276,21 @@ def prepare_task_groups(
 
         print()
 
+        # Verify non-duplication constraints
+        asyncio.run(
+            check_non_duplication_constraints(
+                user_id=task_group_attributes["user_id"],
+                user_group_id=task_group_attributes["user_group_id"],
+                pkg_name=task_group_attributes["pkg_name"],
+                version=task_group_attributes["version"],
+            )
+        )
+        logger.warning(
+            "Non-duplication-constraint check is OK, "
+            "proceed and create TaskGroupV2."
+        )
+
+        # Create the TaskGroupV2 object and commit it
         task_group = TaskGroupV2(**task_group_attributes)
         db.add(task_group)
         db.commit()
@@ -262,3 +318,4 @@ def fix_db():
         )
 
     logger.warning("END of execution of fix_db function")
+    print()
