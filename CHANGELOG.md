@@ -17,8 +17,10 @@ into pre-release sections below.
 > This user must exist, and they will own all previously-common
 > tasks/task-groups.
 
-# 2.7.0a6 (unrleased)
+# 2.7.0a6 (unreleased)
 
+* Runner:
+    * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
 * Testing:
     *  Benchmark `GET /api/v2/task-group/` (\#1922).
 
