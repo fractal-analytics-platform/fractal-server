@@ -261,8 +261,9 @@ async def export_worfklow(
     for wftask in workflow.task_list:
         task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
         wf_task_list.append(wftask.dict())
-        wf_task_list[-1]["task"] = wftask.task.dict()
+        wf_task_list[-1]["task"] = wftask.task
         wf_task_list[-1]["task"]["pkg_name"] = task_group.pkg_name
+        wf_task_list[-1]["task"]["version"] = task_group.version
 
     wf = WorkflowExportV2(
         **workflow.model_dump(),

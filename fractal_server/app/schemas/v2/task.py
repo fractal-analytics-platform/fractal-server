@@ -208,6 +208,7 @@ class TaskImportV2(BaseModel, extra=Extra.forbid):
         pkg_name = values.get("pkg_name")
         name = values.get("name")
         source = values.get("source")
+        version = values.get("version")
 
         if pkg_name is None and name is None and source is None:
             raise ValueError("Cannot have pkg_name, name and source None")
@@ -215,7 +216,7 @@ class TaskImportV2(BaseModel, extra=Extra.forbid):
             if not (pkg_name and name):
                 raise ValueError("pkg_name, name, must all be not None")
         else:
-            if pkg_name or name:
+            if pkg_name or name or version:
                 raise ValueError(
                     "As source is not None, pkg_name, name must be None"
                 )
