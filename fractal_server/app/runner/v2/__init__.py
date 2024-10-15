@@ -216,15 +216,19 @@ async def submit_workflow(
                     order=order,
                     task_name=task_name,
                 )
-                original_umask = os.umask(0)
-                (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
-                os.umask(original_umask)
                 if FRACTAL_RUNNER_BACKEND == "slurm":
+                    # Create local subfolder (with 755) and remote one
+                    # (via `sudo -u`)
+                    original_umask = os.umask(0)
+                    (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+                    os.umask(original_umask)
                     _mkdir_as_user(
                         folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
                         user=slurm_user,
                     )
                 else:
+                    # Create local subfolder (with standard permission set)
+                    (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir()
                     logger.info("Skip remote-subfolder creation")
         except Exception as e:
             error_type = type(e).__name__
