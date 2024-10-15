@@ -32,7 +32,7 @@ async def test_task_get_list(
 
         await task_factory_v2(
             user_id=user.id,
-            user_group_id=new_group.id,
+            task_group_kwargs=dict(user_group_id=new_group.id),
             index=1,
             category="Conversion",
             modality="HCS",

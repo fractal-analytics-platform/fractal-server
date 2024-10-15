@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from datetime import timezone
 from typing import Literal
+from typing import Optional
 
 from devtools import debug  # noqa
 from sqlmodel import select
@@ -638,17 +639,19 @@ async def test_new_import_export(
         workflow_from_file = json.load(f)
 
     # Aux function
-    def wf_modify(task_import: dict):
+    def wf_modify(task_import: dict, new_name: Optional[str] = None):
         wf_from_file = workflow_from_file.copy()
+        wf_from_file["name"] = new_name
         wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
 
     wf_from_file_task = workflow_from_file["task_list"][0]["task"]["source"]
 
     async with MockCurrentUser() as user:
-        task = await task_factory_v2(user_id=user.id, source=wf_from_file_task)
         prj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=prj.id)
+
+        task = await task_factory_v2(user_id=user.id, source=wf_from_file_task)
         await workflowtask_factory_v2(workflow_id=wf.id, task_id=task.id)
 
         # Export workflow
@@ -705,3 +708,25 @@ async def test_new_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
+
+        await task_factory_v2(
+            user_id=user.id,
+            name="cellpose_segmentation",
+            task_group_kwargs=dict(
+                pkg_name="fractal-tasks-core", version="1.2.3"
+            ),
+        )
+        # await workflowtask_factory_v2(workflow_id=wf.id, task_id=task2.id)
+        valid_payload = wf_modify(
+            new_name="foo",
+            task_import={
+                "pkg_name": "fractal-tasks-core",
+                "version": "1.2.3",
+                "name": "cellpose_segmentation",
+            },
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/", json=valid_payload
+        )
+        debug(res.json())
+        assert res.status_code == 201

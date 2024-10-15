@@ -13,6 +13,7 @@ from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
+from ....schemas.v2 import TaskImportV2Legacy
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowImportV2
@@ -306,25 +307,6 @@ async def import_workflow(
         name=workflow.name, project_id=project_id, db=db
     )
 
-    # Check that all required tasks are available
-    source_to_id = {}
-
-    for wf_task in workflow.task_list:
-
-        source = wf_task.task.source
-        if source not in source_to_id.keys():
-            stm = select(TaskV2).where(TaskV2.source == source)
-            tasks_by_source = (await db.execute(stm)).scalars().all()
-            if len(tasks_by_source) != 1:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Found {len(tasks_by_source)} tasks "
-                        f"with {source=}."
-                    ),
-                )
-            source_to_id[source] = tasks_by_source[0].id
-
     # Create new Workflow (with empty task_list)
     db_workflow = WorkflowV2(
         project_id=project_id,
@@ -337,9 +319,26 @@ async def import_workflow(
     # Insert tasks
 
     for wf_task in workflow.task_list:
-        source = wf_task.task.source
-        task_id = source_to_id[source]
-
+        if isinstance(wf_task.task, TaskImportV2Legacy):
+            stm = select(TaskV2).where(TaskV2.source == wf_task.task.source)
+        else:
+            stm = (
+                select(TaskV2)
+                .join(TaskGroupV2)
+                .where(TaskGroupV2.pkg_name == wf_task.task.pkg_name)
+                .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+                .where(TaskV2.name == wf_task.task.name)
+            )
+            if wf_task.task.version is not None:
+                stm = stm.where(TaskGroupV2.version == wf_task.task.version)
+        res = await db.execute(stm)
+        task = res.scalars().one_or_none()
+        if task is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Expected one TaskV2 to match the imported one.",
+            )
+        task_id = task.id
         new_wf_task = WorkflowTaskCreateV2(
             **wf_task.dict(exclude_none=True, exclude={"task"})
         )
