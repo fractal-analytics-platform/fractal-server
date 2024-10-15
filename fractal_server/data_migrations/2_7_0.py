@@ -30,7 +30,7 @@ from fractal_server.utils import get_timestamp
 logger = logging.getLogger("fix_db")
 
 
-async def preliminary_check_non_duplication_constraints(
+async def check_non_duplication_constraints(
     *,
     user_id: int,
     pkg_name: str,
@@ -276,9 +276,9 @@ def prepare_task_groups(
 
         print()
 
-        # Verify non-duplication constraint
+        # Verify non-duplication constraints
         asyncio.run(
-            preliminary_check_non_duplication_constraints(
+            check_non_duplication_constraints(
                 user_id=task_group_attributes["user_id"],
                 user_group_id=task_group_attributes["user_group_id"],
                 pkg_name=task_group_attributes["pkg_name"],
@@ -286,6 +286,7 @@ def prepare_task_groups(
             )
         )
 
+        # Create the TaskGroupV2 object and commit it
         task_group = TaskGroupV2(**task_group_attributes)
         db.add(task_group)
         db.commit()
