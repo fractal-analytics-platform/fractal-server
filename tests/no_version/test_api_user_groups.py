@@ -305,19 +305,23 @@ async def test_get_user_optional_group_info(
 async def test_patch_user_settings_bulk(
     MockCurrentUser, registered_superuser_client, default_user_group, db
 ):
-    # Register three users to default user group
+
+    # Register 4 users
     async with MockCurrentUser() as user1:
         pass
     async with MockCurrentUser() as user2:
         pass
     async with MockCurrentUser() as user3:
         pass
+    async with MockCurrentUser() as user4:
+        pass
 
     user1 = await db.get(UserOAuth, user1.id)
     user2 = await db.get(UserOAuth, user2.id)
     user3 = await db.get(UserOAuth, user3.id)
+    user4 = await db.get(UserOAuth, user4.id)
 
-    for user in [user1, user2, user3]:
+    for user in [user1, user2, user3, user4]:
         assert (
             dict(
                 ssh_host=None,
@@ -332,13 +336,22 @@ async def test_patch_user_settings_bulk(
             <= user.settings.dict().items()
         )
 
+    # remove user4 from default user group
+    res = await db.execute(
+        select(LinkUserGroup).where(LinkUserGroup.user_id == user4.id)
+    )
+    link = res.scalars().one()
+    await db.delete(link)
+    await db.commit()
+
+    # patch user-settings of default user group
     patch = dict(
         ssh_host="127.0.0.1",
         ssh_username="fractal",
         ssh_private_key_path="/tmp/fractal",
         ssh_tasks_dir="/tmp/tasks",
         ssh_jobs_dir="/tmp/job",
-        # missing slurm_user
+        # missing `slurm_user`
         slurm_accounts=["foo", "bar"],
         cache_dir="/tmp/cache",
     )
@@ -346,7 +359,24 @@ async def test_patch_user_settings_bulk(
         f"{PREFIX}/group/{default_user_group.id}/user-settings/", json=patch
     )
     assert res.status_code == 200
+
+    # assert user1, user2 and user3 has been updated
     for user in [user1, user2, user3]:
         await db.refresh(user)
         assert patch.items() <= user.settings.dict().items()
-        assert user.settings.slurm_user == "test01"
+        assert user.settings.slurm_user == "test01"  # `slurm_user` not patched
+    # assert user4 has old settings
+    await db.refresh(user4)
+    assert (
+        dict(
+            ssh_host=None,
+            ssh_username=None,
+            ssh_private_key_path=None,
+            ssh_tasks_dir=None,
+            ssh_jobs_dir=None,
+            slurm_user="test01",
+            slurm_accounts=[],
+            cache_dir=None,
+        ).items()
+        <= user4.settings.dict().items()
+    )
