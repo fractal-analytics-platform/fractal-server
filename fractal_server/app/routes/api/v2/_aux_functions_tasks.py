@@ -229,7 +229,7 @@ async def _get_collection_status_message(
         )
     )
     state = res.scalars().all()
-    if len(state) != 1:
+    if len(state) > 1:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
@@ -237,7 +237,7 @@ async def _get_collection_status_message(
                 f"TaskGroup {task_group.id}, found {len(state)}."
             ),
         )
-    if state is not None and state.data.get("status") in [
+    elif len(state) == 1 and state[0].data.get("status") in [
         CollectionStatusV2.COLLECTING,
         CollectionStatusV2.INSTALLING,
         CollectionStatusV2.PENDING,
