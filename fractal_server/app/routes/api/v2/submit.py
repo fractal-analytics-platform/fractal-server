@@ -194,7 +194,10 @@ async def apply_workflow(
     res = await db.execute(stm)
     db_jobs = res.scalars().all()
     if db_jobs and any(
-        abs(job.start_timestamp - db_job.start_timestamp)
+        abs(
+            job.start_timestamp
+            - db_job.start_timestamp.replace(tzinfo=timezone.utc)
+        )
         < timedelta(seconds=settings.FRACTAL_API_SUBMIT_RATE_LIMIT)
         for db_job in db_jobs
     ):
