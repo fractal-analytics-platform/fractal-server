@@ -380,11 +380,13 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
 async def test_contact_an_admin_message(
     MockCurrentUser, client, db, default_user_group
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    # Create identical multiple (> 1) TaskGroups associated to userA and to the
+    # default UserGroup (this is NOT ALLOWED using the API).
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as userA:
         for _ in range(2):
             db.add(
                 TaskGroupV2(
-                    user_id=user.id,
+                    user_id=userA.id,
                     user_group_id=default_user_group.id,
                     pkg_name="fractal-tasks-core",
                     version="1.0.0",
@@ -393,8 +395,9 @@ async def test_contact_an_admin_message(
             )
         await db.commit()
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as userB:
 
+        # Fail inside `_verify_non_duplication_group_constraint`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.0.0"),
@@ -403,10 +406,12 @@ async def test_contact_an_admin_message(
         assert "UserGroup " in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
 
+        # Create identical multiple (> 1) TaskGroups associated to userB
+        # (this is NOT ALLOWED using the API).
         for _ in range(2):
             db.add(
                 TaskGroupV2(
-                    user_id=user.id,
+                    user_id=userB.id,
                     user_group_id=None,
                     pkg_name="fractal-tasks-core",
                     version="1.0.0",
@@ -415,6 +420,7 @@ async def test_contact_an_admin_message(
             )
         await db.commit()
 
+        # Fail inside `_verify_non_duplication_user_constraint`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.0.0"),
@@ -423,8 +429,9 @@ async def test_contact_an_admin_message(
         assert "User " in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
 
+        # Create a new TaskGroupV2 associated to userB.
         task_group = TaskGroupV2(
-            user_id=user.id,
+            user_id=userB.id,
             pkg_name="fractal-tasks-core",
             version="1.1.0",
             origin="pypi",
@@ -432,20 +439,25 @@ async def test_contact_an_admin_message(
         db.add(task_group)
         await db.commit()
         await db.refresh(task_group)
-
+        # Create a CollectionState associated to the new TaskGroup.
         db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
         await db.commit()
 
+        # Fail inside `_verify_non_duplication_user_constraint`, but get a
+        # richer message from `_get_collection_status_message`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
         assert res.status_code == 422
-        assert "exists a task collection state" in res.json()["detail"]
+        assert "There exists a task collection state" in res.json()["detail"]
 
+        # Crete a new CollectionState associated to the same TaskGroup
+        # (this is NOT ALLOWED using the API).
         db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
         await db.commit()
 
+        # Fail inside `_get_collection_status_message`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
