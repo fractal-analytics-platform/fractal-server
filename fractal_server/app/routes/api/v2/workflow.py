@@ -347,7 +347,7 @@ async def import_workflow(
 
         elif len(task) != 1:
             # Option: task that belong to the current user has highest priority
-            stm = stm.where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+            stm = stm.where(TaskGroupV2.user_id == user.id)
             res = await db.execute(stm)
             task = res.scalars().one_or_none()
             if task is None:

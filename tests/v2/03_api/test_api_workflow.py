@@ -7,6 +7,8 @@ from typing import Optional
 from devtools import debug  # noqa
 from sqlmodel import select
 
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -16,6 +18,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import WorkflowImportV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
+
 
 PREFIX = "api/v2"
 
@@ -629,9 +632,8 @@ async def test_new_import_export(
     task_factory_v2,
     project_factory_v2,
     workflow_factory_v2,
-    workflowtask_factory_v2,
-    tmp_path,
     testdata_path,
+    db,
 ):
 
     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
@@ -650,8 +652,7 @@ async def test_new_import_export(
         prj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=prj.id)
 
-        task = await task_factory_v2(user_id=user.id, source=wf_from_file_task)
-        await workflowtask_factory_v2(workflow_id=wf.id, task_id=task.id)
+        await task_factory_v2(user_id=user.id, source=wf_from_file_task)
 
         # Export workflow
         res = await client.get(
@@ -715,8 +716,8 @@ async def test_new_import_export(
                 pkg_name="fractal-tasks-core", version="1.2.3"
             ),
         )
-        # await workflowtask_factory_v2(workflow_id=wf.id, task_id=task2.id)
-        valid_payload = wf_modify(
+
+        valid_payload_full = wf_modify(
             new_name="foo",
             task_import={
                 "pkg_name": "fractal-tasks-core",
@@ -725,7 +726,63 @@ async def test_new_import_export(
             },
         )
         res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/", json=valid_payload
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=valid_payload_full,
         )
         debug(res.json())
         assert res.status_code == 201
+
+        valid_payload_miss_version = wf_modify(
+            new_name="foo2",
+            task_import={
+                "pkg_name": "fractal-tasks-core",
+                "name": "cellpose_segmentation",
+            },
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=valid_payload_miss_version,
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # Add task no version latest group
+        new_group = UserGroup(name="new_group")
+        db.add(new_group)
+        await db.commit()
+        await db.refresh(new_group)
+        debug(new_group)
+        link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
+        db.add(link)
+        await db.commit()
+        await db.close()
+
+        task = await task_factory_v2(
+            user_id=user.id,
+            name="cellpose_segmentation",
+            task_group_kwargs=dict(
+                user_id=user.id,
+                version=None,
+                user_group_id=new_group.id,
+                pkg_name="fractal-tasks-core",
+            ),
+        )
+
+        valid_payload_miss_version_latest_group = wf_modify(
+            new_name="foo3",
+            task_import={
+                "pkg_name": "fractal-tasks-core",
+                "name": "cellpose_segmentation",
+            },
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=valid_payload_miss_version_latest_group,
+        )
+        assert res.status_code == 201
+        assert res.json()["task_list"][0]["task"]["id"] == task.id
+        task_group_id = res.json()["task_list"][0]["task"]["taskgroupv2_id"]
+        res = await client.get(f"{PREFIX}/task-group/{task_group_id}/")
+        debug(res.json())
+        assert res.json()["user_id"] == user.id
+        assert res.json()["user_group_id"] == new_group.id
