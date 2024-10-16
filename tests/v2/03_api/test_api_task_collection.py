@@ -375,3 +375,47 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
     assert res.json()["detail"] == (
         f"No 'path' in CollectionStateV2[{state2.id}].data"
     )
+
+
+async def test_duplications_in_user_and_group_constraints(
+    MockCurrentUser, client, db, default_user_group
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        for _ in range(2):
+            db.add(
+                TaskGroupV2(
+                    user_id=user.id,
+                    user_group_id=default_user_group.id,
+                    pkg_name="fractal-tasks-core",
+                    version="1.0.0",
+                    origin="pip",
+                )
+            )
+        await db.commit()
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="fractal-tasks-core", package_version="1.0.0"),
+        )
+        assert res.status_code == 422
+        assert "UserGroup " in res.json()["detail"]
+        assert "contact an admin" in res.json()["detail"]
+        for _ in range(2):
+            db.add(
+                TaskGroupV2(
+                    user_id=user.id,
+                    user_group_id=default_user_group.id,
+                    pkg_name="fractal-tasks-core",
+                    version="1.0.0",
+                    origin="pip",
+                )
+            )
+        await db.commit()
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="fractal-tasks-core", package_version="1.0.0"),
+        )
+        assert res.status_code == 422
+        assert "User " in res.json()["detail"]
+        assert "contact an admin" in res.json()["detail"]
