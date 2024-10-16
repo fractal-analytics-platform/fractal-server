@@ -388,7 +388,7 @@ async def test_contact_an_admin_message(
                     user_group_id=default_user_group.id,
                     pkg_name="fractal-tasks-core",
                     version="1.0.0",
-                    origin="pip",
+                    origin="pypi",
                 )
             )
         await db.commit()
@@ -407,10 +407,10 @@ async def test_contact_an_admin_message(
             db.add(
                 TaskGroupV2(
                     user_id=user.id,
-                    user_group_id=default_user_group.id,
+                    user_group_id=None,
                     pkg_name="fractal-tasks-core",
                     version="1.0.0",
-                    origin="pip",
+                    origin="pypi",
                 )
             )
         await db.commit()
@@ -423,6 +423,27 @@ async def test_contact_an_admin_message(
         assert "User " in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
 
+        task_group = TaskGroupV2(
+            user_id=user.id,
+            pkg_name="fractal-tasks-core",
+            version="1.1.0",
+            origin="pypi",
+        )
+        db.add(task_group)
+        await db.commit()
+        await db.refresh(task_group)
+        for _ in range(2):
+            db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
+        await db.commit()
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="fractal-tasks-core", package_version="1.1.0"),
+        )
+        assert res.status_code == 422
+        assert "CollectionStateV2 " in res.json()["detail"]
+        assert "contact an admin" in res.json()["detail"]
+
 
 async def test_get_collection_status_message(MockCurrentUser, client, db):
 
@@ -431,7 +452,7 @@ async def test_get_collection_status_message(MockCurrentUser, client, db):
             user_id=user.id,
             pkg_name="fractal-tasks-core",
             version="1.0.0",
-            origin="pip",
+            origin="pypi",
         )
         db.add(task_group)
         await db.commit()

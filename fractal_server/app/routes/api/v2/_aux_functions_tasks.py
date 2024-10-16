@@ -233,8 +233,11 @@ async def _get_collection_status_message(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "Invalid state: expected one CollectionStateV2 associated to "
-                f"TaskGroup {task_group.id}, found {len(state)}."
+                "Expected one CollectionStateV2 associated to TaskGroup "
+                f"{task_group.id}, found {len(state)} "
+                f"(IDs: {[s.id for s in state]}).\n"
+                "Warning: this should have not happened, please contact an"
+                " admin."
             ),
         )
     elif len(state) == 1 and state[0].data.get("status") in [
