@@ -229,7 +229,6 @@ async def patch_user_settings_bulk(
     await _usergroup_or_404(group_id, db)
     res = await db.execute(
         select(UserOAuth)
-        .join(LinkUserGroup)
         .where(LinkUserGroup.user_id == UserOAuth.id)
         .where(LinkUserGroup.group_id == group_id)
     )
