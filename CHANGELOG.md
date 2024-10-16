@@ -17,62 +17,64 @@ into pre-release sections below.
 > This user must exist, and they will own all previously-common
 > tasks/task-groups.
 
-# 2.7.0a5
+# 2.7.0a6 (unreleased)
 
-* API
-    * Tasks, task groups, task collection
-        * Fixed response of task-collection endpoint (\#1902).
-        * Always query PyPI to find correct package version (\#1902).
-        * Use appropriate log-file path in collection-status endpoint (\#1902).
-        * Drop `TaskUpdateV2.version` (\#1905).
-        * Fix non-duplication check in `PATCH /api/v2/task-group/{id}/` (\#1911).
-        * Drop `TaskCreateV2.source` (\#1909).
-    * Dataset:
-        * Remove `TaskDumpV2.owner` attribute (\#1909).
-    * Workflows and workflow tasks:
-        * Drop `WorkflowTaskCreateV2.order` (\#1906).
-    * Admin:
-         * Remove owner from `GET admin/v2/task/` (\#1909).
+* Database:
+    * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
+    * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
+* Runner:
+    * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
+* Testing:
+    *  Benchmark `GET /api/v2/task-group/` (\#1922).
 
-
-# 2.7.0a4 (unreleased)
+# Up to 2.7.0a5
 
 * API:
     * Users and user groups:
         * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
         * Deprecate `GET /auth/group-names/` (\#1844).
         * Add `DELETE /auth/group/{id}/` endpoint (\#1885).
-    * Tasks, task groups, task collection:
+    * Task groups:
         * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856).
         * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
         * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
+        * Fix non-duplication check in `PATCH /api/v2/task-group/{id}/` (\#1911).
         * Add cascade operations to `DELETE /api/v2/task-group/{task_group_id}/` and to `DELETE /admin/v2/task-group/{task_group_id}/` (\#1867).
-        * Create `TaskGroupV2` object within task-collection endpoints (\#1861).
-        * Automatically discover PyPI package version if missing (\#1858, \#1861).
-        * Improve preliminary checks in task-collection endpoints (\#1861).
-        * Do not use `source` for custom task collection (\#1893).
-        * Forbid extras in `TaskCollectPipV2` (\#1891).
         * Expand use and validators for `TaskGroupCreateV2` schema (\#1861).
-        * Do not process task sources in task/task-group CRUD operations (\#1861).
-        * Do not process task owners in task/task-group CRUD operations (\#1861).
-        * Rename custom-task-collection request-body field from `source` to `label` (\#1896).
+        * Do not process task `source`s in task/task-group CRUD operations (\#1861).
+        * Do not process task `owner`s in task/task-group CRUD operations (\#1861).
+    * Tasks:
+        * Drop `TaskCreateV2.source` (\#1909).
+        * Drop `TaskUpdateV2.version` (\#1905).
         * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
         * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
+    * Task collection:
+        * Improve preliminary checks in task-collection endpoints (\#1861).
+        * Refactor split between task-collection endpoints and background tasks (\#1861).
+        * Create `TaskGroupV2` object within task-collection endpoints (\#1861).
+        * Fix response of task-collection endpoint (\#1902).
+        * Automatically discover PyPI package version if missing or invalid (\#1858, \#1861, \#1902).
+        * Use appropriate log-file path in collection-status endpoint (\#1902).
         * Add task `authors` to manifest schema (\#1856).
-    * Refactor split between task-collection endpoints and background tasks (\#1861).
-    * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
-    * Workflows:
+        * Do not use `source` for custom task collection (\#1893).
+        * Rename custom-task-collection request-body field from `source` to `label` (\#1896).
+    * Workflows and workflow tasks:
         * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
         * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
         * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
+        * Drop `WorkflowTaskCreateV2.order` (\#1906).
+    * Datasets
+        * Remove `TaskDumpV2.owner` attribute (\#1909).
     * Jobs
         * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
     * Admin:
+        * Remove `owner` from `GET admin/v2/task/` (\#1909).
         * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
     * Schemas:
+        * Forbid extras in `TaskCollectPipV2` (\#1891).
         * Forbid extras in all Create/Update/Import schemas (\#1895).
-
+        * Deprecate internal `TaskCollectPip` schema in favor of `TaskGroupV2` (\#1861).
 * Database:
     * Introduce `TaskGroupV2` table (\#1817, \#1856).
     * Add  `timestamp_created` column to `LinkUserGroup` table (\#1850).
