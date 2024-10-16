@@ -220,7 +220,7 @@ async def test_patch_task_group(
             json=dict(user_group_id=default_user_group.id),
         )
         assert res.status_code == 422
-        assert "There is already a TaskGroupV2" in res.json()["detail"]
+        assert "already owns a task group" in res.json()["detail"]
 
     async with MockCurrentUser():
 

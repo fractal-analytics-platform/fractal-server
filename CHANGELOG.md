@@ -19,6 +19,8 @@ into pre-release sections below.
 
 # 2.7.0a6 (unreleased)
 
+* API
+    * Improve error messages from task collection (\#1913).
 * Database:
     * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
     * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
