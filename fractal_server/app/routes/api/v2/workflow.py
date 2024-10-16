@@ -11,26 +11,20 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
-from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
-from ....schemas.v2 import TaskImportV2Legacy
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
-from ....schemas.v2 import WorkflowImportV2
 from ....schemas.v2 import WorkflowReadV2
 from ....schemas.v2 import WorkflowReadV2WithWarnings
-from ....schemas.v2 import WorkflowTaskCreateV2
 from ....schemas.v2 import WorkflowUpdateV2
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2.task import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
-
 
 router = APIRouter()
 
@@ -276,100 +270,6 @@ async def export_worfklow(
 
     debug(wf)
     return wf
-
-
-@router.post(
-    "/project/{project_id}/workflow/import/",
-    response_model=WorkflowReadV2,
-    status_code=status.HTTP_201_CREATED,
-)
-async def import_workflow(
-    project_id: int,
-    workflow: WorkflowImportV2,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2]:
-    """
-    Import an existing workflow into a project
-
-    Also create all required objects (i.e. Workflow and WorkflowTask's) along
-    the way.
-    """
-
-    # Preliminary checks
-    await _get_project_check_owner(
-        project_id=project_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    await _check_workflow_exists(
-        name=workflow.name, project_id=project_id, db=db
-    )
-
-    # Create new Workflow (with empty task_list)
-    db_workflow = WorkflowV2(
-        project_id=project_id,
-        **workflow.dict(exclude_none=True, exclude={"task_list"}),
-    )
-    db.add(db_workflow)
-    await db.commit()
-    await db.refresh(db_workflow)
-
-    # Insert tasks
-
-    for wf_task in workflow.task_list:
-        if isinstance(wf_task.task, TaskImportV2Legacy):
-            stm = select(TaskV2).where(TaskV2.source == wf_task.task.source)
-        else:
-            stm = (
-                select(TaskV2)
-                .join(TaskGroupV2)
-                .where(TaskGroupV2.pkg_name == wf_task.task.pkg_name)
-                .where(TaskV2.name == wf_task.task.name)
-            )
-            if wf_task.task.version is not None:
-                stm = stm.where(TaskGroupV2.version == wf_task.task.version)
-            else:
-                stm = stm.order_by(TaskGroupV2.timestamp_created.desc()).limit(
-                    1
-                )
-
-        res = await db.execute(stm)
-        task = res.scalars().all()
-        if task is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Expected one TaskV2 to match the imported one.",
-            )
-        elif len(task) == 1:
-            task_id = task[0].id
-
-        elif len(task) != 1:
-            # Option: task that belong to the current user has highest priority
-            stm = stm.where(TaskGroupV2.user_id == user.id)
-            res = await db.execute(stm)
-            task = res.scalars().one_or_none()
-            if task is None:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail="Expected one TaskV2 to match the imported one.",
-                )
-            task_id = task.id
-
-        new_wf_task = WorkflowTaskCreateV2(
-            **wf_task.dict(exclude_none=True, exclude={"task"})
-        )
-        # Insert task
-        await _workflow_insert_task(
-            **new_wf_task.dict(),
-            workflow_id=db_workflow.id,
-            task_id=task_id,
-            db=db,
-        )
-
-    await db.close()
-    return db_workflow
 
 
 @router.get("/workflow/", response_model=list[WorkflowReadV2])

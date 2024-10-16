@@ -712,16 +712,14 @@ async def test_new_import_export(
         await task_factory_v2(
             user_id=user.id,
             name="cellpose_segmentation",
-            task_group_kwargs=dict(
-                pkg_name="fractal-tasks-core", version="1.2.3"
-            ),
+            task_group_kwargs=dict(pkg_name="fractal-tasks-core", version="0"),
         )
 
         valid_payload_full = wf_modify(
             new_name="foo",
             task_import={
                 "pkg_name": "fractal-tasks-core",
-                "version": "1.2.3",
+                "version": "0",
                 "name": "cellpose_segmentation",
             },
         )
@@ -729,9 +727,8 @@ async def test_new_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
             json=valid_payload_full,
         )
-        debug(res.json())
-        assert res.status_code == 201
 
+        assert res.status_code == 201
         valid_payload_miss_version = wf_modify(
             new_name="foo2",
             task_import={
