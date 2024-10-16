@@ -234,7 +234,7 @@ async def patch_user_settings_bulk(
     for settings in settings_list:
         for k, v in settings_update.dict(exclude_unset=True).items():
             setattr(settings, k, v)
-            db.add(settings)
+        db.add(settings)
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
