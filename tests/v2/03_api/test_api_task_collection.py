@@ -444,7 +444,8 @@ async def test_contact_an_admin_message(
         await db.commit()
 
         # Fail inside `_verify_non_duplication_user_constraint`, but get a
-        # richer message from `_get_collection_status_message`.
+        # richer message from `_get_collection_status_message`
+        # (case `len(states) == 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
@@ -457,7 +458,9 @@ async def test_contact_an_admin_message(
         db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
         await db.commit()
 
-        # Fail inside `_get_collection_status_message`.
+        # Fail inside `_verify_non_duplication_user_constraint`, but get a
+        # richer message from `_get_collection_status_message`
+        # (case `len(states) > 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),

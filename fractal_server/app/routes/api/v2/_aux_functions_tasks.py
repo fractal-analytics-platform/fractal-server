@@ -229,15 +229,11 @@ async def _get_collection_status_message(
     )
     states = res.scalars().all()
     if len(states) > 1:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Expected one CollectionStateV2 associated to TaskGroup "
-                f"{task_group.id}, found {len(states)} "
-                f"(IDs: {[state.id for state in states]}).\n"
-                "Warning: this should have not happened, please contact an"
-                " admin."
-            ),
+        msg = (
+            "Expected one CollectionStateV2 associated to TaskGroup "
+            f"{task_group.id}, found {len(states)} "
+            f"(IDs: {[state.id for state in states]}).\n"
+            "Warning: this should have not happened, please contact an admin."
         )
     elif len(states) == 1:
         msg = (
