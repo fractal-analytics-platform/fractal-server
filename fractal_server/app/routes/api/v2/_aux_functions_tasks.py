@@ -228,13 +228,24 @@ async def _get_collection_status_message(
             CollectionStateV2.taskgroupv2_id == task_group.id
         )
     )
-    state = res.scalars().one_or_none()
+    state = res.scalars().all()
+    if len(state) != 1:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Invalid state: expected one CollectionStateV2 associated to "
+                f"TaskGroup {task_group.id}, found {len(state)}."
+            ),
+        )
     if state is not None and state.data.get("status") in [
         CollectionStatusV2.COLLECTING,
         CollectionStatusV2.INSTALLING,
         CollectionStatusV2.PENDING,
     ]:
-        msg = f"\nStatus of the task collection: {state.data['status']}."
+        msg = (
+            f"\nTask collection is ongoing for this Task Group {task_group.id}"
+            f", with status {state.data['status']}"
+        )
     else:
         msg = ""
     return msg
@@ -255,18 +266,23 @@ async def _verify_non_duplication_user_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        user = await db.get(UserOAuth, user_id)
         if len(duplicate) > 1:
-            logger.error(
-                "Found more then one TaskGroupV2 with "
-                f"({user_id=}, {pkg_name=}, {version=})."
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"User '{user.email}' already owns {len(duplicate)} task "
+                    f"groups with name='{pkg_name}' and {version=}.\n"
+                    "Warning: this should have not happened, please contact an"
+                    " admin."
+                ),
             )
         state_msg = await _get_collection_status_message(duplicate[0], db)
-        user = await db.get(UserOAuth, user_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"User '{user.email}' already owns a task group "
-                f"with {pkg_name=} and {version=}.{state_msg}"
+                f"with name='{pkg_name}' and {version=}.{state_msg}"
             ),
         )
 
@@ -289,13 +305,19 @@ async def _verify_non_duplication_group_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        user_group = await db.get(UserGroup, user_group_id)
         if len(duplicate) > 1:
-            logger.error(
-                "Found more then one TaskGroupV2 with "
-                f"({user_group_id=}, {pkg_name=}, {version=})."
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"UserGroup '{user_group.name}' already owns "
+                    f"{len(duplicate)} task groups with name='{pkg_name}' and "
+                    f"{version=}.\n"
+                    "Warning: this should have not happened, please contact an"
+                    " admin."
+                ),
             )
         state_msg = await _get_collection_status_message(duplicate[0], db)
-        user_group = await db.get(UserGroup, user_group_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
