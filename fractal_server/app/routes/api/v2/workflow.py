@@ -326,19 +326,37 @@ async def import_workflow(
                 select(TaskV2)
                 .join(TaskGroupV2)
                 .where(TaskGroupV2.pkg_name == wf_task.task.pkg_name)
-                .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
                 .where(TaskV2.name == wf_task.task.name)
             )
             if wf_task.task.version is not None:
                 stm = stm.where(TaskGroupV2.version == wf_task.task.version)
+            else:
+                stm = stm.order_by(TaskGroupV2.timestamp_created.desc()).limit(
+                    1
+                )
+
         res = await db.execute(stm)
-        task = res.scalars().one_or_none()
+        task = res.scalars().all()
         if task is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Expected one TaskV2 to match the imported one.",
             )
-        task_id = task.id
+        elif len(task) == 1:
+            task_id = task[0].id
+
+        elif len(task) != 1:
+            # Option: task that belong to the current user has highest priority
+            stm = stm.where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+            res = await db.execute(stm)
+            task = res.scalars().one_or_none()
+            if task is None:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Expected one TaskV2 to match the imported one.",
+                )
+            task_id = task.id
+
         new_wf_task = WorkflowTaskCreateV2(
             **wf_task.dict(exclude_none=True, exclude={"task"})
         )
