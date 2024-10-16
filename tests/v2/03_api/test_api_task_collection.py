@@ -432,8 +432,8 @@ async def test_contact_an_admin_message(
         db.add(task_group)
         await db.commit()
         await db.refresh(task_group)
-        for _ in range(2):
-            db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
+
+        db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
         await db.commit()
 
         res = await client.post(
@@ -441,43 +441,14 @@ async def test_contact_an_admin_message(
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
         assert res.status_code == 422
-        assert "CollectionStateV2 " in res.json()["detail"]
-        assert "contact an admin" in res.json()["detail"]
-
-
-async def test_get_collection_status_message(MockCurrentUser, client, db):
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        task_group = TaskGroupV2(
-            user_id=user.id,
-            pkg_name="fractal-tasks-core",
-            version="1.0.0",
-            origin="pypi",
-        )
-        db.add(task_group)
-        await db.commit()
-        await db.refresh(task_group)
-
-        db.add(
-            CollectionStateV2(
-                taskgroupv2_id=task_group.id, data=dict(status="collecting")
-            )
-        )
-        await db.commit()
-
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package="fractal-tasks-core", package_version="1.0.0"),
-        )
-        assert res.status_code == 422
-        assert "ongoing" in res.json()["detail"]
+        assert "exists a task collection state" in res.json()["detail"]
 
         db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
         await db.commit()
 
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(package="fractal-tasks-core", package_version="1.0.0"),
+            json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
-        assert res.status_code == 422
-        assert "expected one" in res.json()["detail"]
+        assert "CollectionStateV2 " in res.json()["detail"]
+        assert "contact an admin" in res.json()["detail"]

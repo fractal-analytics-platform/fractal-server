@@ -21,7 +21,6 @@ from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -240,14 +239,11 @@ async def _get_collection_status_message(
                 " admin."
             ),
         )
-    elif len(state) == 1 and state[0].data.get("status") in [
-        CollectionStatusV2.COLLECTING,
-        CollectionStatusV2.INSTALLING,
-        CollectionStatusV2.PENDING,
-    ]:
+    elif len(state) == 1:
         msg = (
-            f"\nTask collection is ongoing for this Task Group {task_group.id}"
-            f", with status {state[0].data['status']}"
+            f"\nThere exists a task collection state (ID={state[0].id}) for "
+            f"this task group (ID={task_group.id}), with status "
+            f"{state[0].data.get('status')}."
         )
     else:
         msg = ""
@@ -274,10 +270,11 @@ async def _verify_non_duplication_user_constraint(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
+                    "Invalid state:\n"
                     f"User '{user.email}' already owns {len(duplicate)} task "
-                    f"groups with name='{pkg_name}' and {version=}.\n"
-                    "Warning: this should have not happened, please contact an"
-                    " admin."
+                    f"groups with name='{pkg_name}' and {version=} "
+                    f"(IDs: {[group.id for group in duplicate]}).\n"
+                    "This should have not happened: please contact an admin."
                 ),
             )
         state_msg = await _get_collection_status_message(duplicate[0], db)
@@ -313,11 +310,11 @@ async def _verify_non_duplication_group_constraint(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
+                    "Invalid state:\n"
                     f"UserGroup '{user_group.name}' already owns "
                     f"{len(duplicate)} task groups with name='{pkg_name}' and "
-                    f"{version=}.\n"
-                    "Warning: this should have not happened, please contact an"
-                    " admin."
+                    f"{version=} (IDs: {[group.id for group in duplicate]}).\n"
+                    "This should have not happened: please contact an admin."
                 ),
             )
         state_msg = await _get_collection_status_message(duplicate[0], db)
