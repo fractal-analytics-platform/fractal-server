@@ -227,23 +227,23 @@ async def _get_collection_status_message(
             CollectionStateV2.taskgroupv2_id == task_group.id
         )
     )
-    state = res.scalars().all()
-    if len(state) > 1:
+    states = res.scalars().all()
+    if len(states) > 1:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Expected one CollectionStateV2 associated to TaskGroup "
-                f"{task_group.id}, found {len(state)} "
-                f"(IDs: {[s.id for s in state]}).\n"
+                f"{task_group.id}, found {len(states)} "
+                f"(IDs: {[state.id for state in states]}).\n"
                 "Warning: this should have not happened, please contact an"
                 " admin."
             ),
         )
-    elif len(state) == 1:
+    elif len(states) == 1:
         msg = (
-            f"\nThere exists a task collection state (ID={state[0].id}) for "
+            f"\nThere exists a task collection state (ID={states[0].id}) for "
             f"this task group (ID={task_group.id}), with status "
-            f"{state[0].data.get('status')}."
+            f"{states[0].data.get('status')}."
         )
     else:
         msg = ""
