@@ -244,7 +244,7 @@ async def _get_collection_status_message(
     ]:
         msg = (
             f"\nTask collection is ongoing for this Task Group {task_group.id}"
-            f", with status {state.data['status']}"
+            f", with status {state[0].data['status']}"
         )
     else:
         msg = ""
