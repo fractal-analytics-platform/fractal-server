@@ -21,9 +21,6 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.aux.validate_user_settings import (
-    verify_user_has_settings,
-)
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
@@ -228,17 +225,16 @@ async def patch_user_settings_bulk(
 ):
     await _usergroup_or_404(group_id, db)
     res = await db.execute(
-        select(UserOAuth)
+        select(UserSettings)
+        .join(UserOAuth)
         .where(LinkUserGroup.user_id == UserOAuth.id)
         .where(LinkUserGroup.group_id == group_id)
     )
-    users_in_group = res.scalars().unique().all()
-    for user in users_in_group:
-        verify_user_has_settings(user)
-        user_settings = await db.get(UserSettings, user.user_settings_id)
+    settings_list = res.scalars().all()
+    for settings in settings_list:
         for k, v in settings_update.dict(exclude_unset=True).items():
-            setattr(user_settings, k, v)
-            db.add(user_settings)
+            setattr(settings, k, v)
+            db.add(settings)
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
