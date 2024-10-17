@@ -9,13 +9,21 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import select
 
-from ....db import AsyncSession
-from ....models import LinkUserGroup
-from ....models.v2 import TaskGroupV2
-from ....models.v2 import TaskV2
-from ....models.v2 import WorkflowTaskV2
-from ...auth._aux_auth import _get_default_usergroup_id
-from ...auth._aux_auth import _verify_user_belongs_to_group
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import UserGroup
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 async def _get_task_group_or_404(
@@ -211,6 +219,33 @@ async def _get_valid_user_group_id(
     return user_group_id
 
 
+async def _get_collection_status_message(
+    task_group: TaskGroupV2, db: AsyncSession
+) -> str:
+    res = await db.execute(
+        select(CollectionStateV2).where(
+            CollectionStateV2.taskgroupv2_id == task_group.id
+        )
+    )
+    states = res.scalars().all()
+    if len(states) > 1:
+        msg = (
+            "Expected one CollectionStateV2 associated to TaskGroup "
+            f"{task_group.id}, found {len(states)} "
+            f"(IDs: {[state.id for state in states]}).\n"
+            "Warning: this should have not happened, please contact an admin."
+        )
+    elif len(states) == 1:
+        msg = (
+            f"\nThere exists a task collection state (ID={states[0].id}) for "
+            f"this task group (ID={task_group.id}), with status "
+            f"{states[0].data.get('status')}."
+        )
+    else:
+        msg = ""
+    return msg
+
+
 async def _verify_non_duplication_user_constraint(
     db: AsyncSession,
     user_id: int,
@@ -226,11 +261,24 @@ async def _verify_non_duplication_user_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        user = await db.get(UserOAuth, user_id)
+        if len(duplicate) > 1:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Invalid state:\n"
+                    f"User '{user.email}' already owns {len(duplicate)} task "
+                    f"groups with name='{pkg_name}' and {version=} "
+                    f"(IDs: {[group.id for group in duplicate]}).\n"
+                    "This should have not happened: please contact an admin."
+                ),
+            )
+        state_msg = await _get_collection_status_message(duplicate[0], db)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "There is already a TaskGroupV2 with "
-                f"({pkg_name=}, {version=}, {user_id=})."
+                f"User '{user.email}' already owns a task group "
+                f"with name='{pkg_name}' and {version=}.{state_msg}"
             ),
         )
 
@@ -253,11 +301,24 @@ async def _verify_non_duplication_group_constraint(
     res = await db.execute(stm)
     duplicate = res.scalars().all()
     if duplicate:
+        user_group = await db.get(UserGroup, user_group_id)
+        if len(duplicate) > 1:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Invalid state:\n"
+                    f"UserGroup '{user_group.name}' already owns "
+                    f"{len(duplicate)} task groups with name='{pkg_name}' and "
+                    f"{version=} (IDs: {[group.id for group in duplicate]}).\n"
+                    "This should have not happened: please contact an admin."
+                ),
+            )
+        state_msg = await _get_collection_status_message(duplicate[0], db)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "There is already a TaskGroupV2 with "
-                f"({pkg_name=}, {version=}, {user_group_id=})."
+                f"UserGroup {user_group.name} already owns a task group "
+                f"with {pkg_name=} and {version=}.{state_msg}"
             ),
         )
 
