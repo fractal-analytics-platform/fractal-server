@@ -1,7 +1,6 @@
 from typing import Optional
 from typing import Union
 
-from devtools import debug
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -46,7 +45,6 @@ async def _get_user_accessible_taskgroups(
     )
     res = await db.execute(stm)
     accessible_task_groups = res.scalars().all()
-    debug(accessible_task_groups)
     return accessible_task_groups
 
 
