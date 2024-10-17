@@ -209,7 +209,11 @@ async def test_new_import_export(
         first_task_no_source = await task_factory_v2(
             user_id=user.id,
             name="cellpose_segmentation",
-            task_group_kwargs=dict(pkg_name="fractal-tasks-core", version="0"),
+            task_group_kwargs=dict(
+                pkg_name="fractal-tasks-core",
+                version="0",
+                active=False,
+            ),
         )
 
         valid_payload_full = wf_modify(
@@ -230,6 +234,8 @@ async def test_new_import_export(
             res.json()["task_list"][0]["task"]["taskgroupv2_id"]
             == first_task_no_source.id
         )
+        assert res.json()["task_list"][0]["warning"] is not None
+
         valid_payload_miss_version = wf_modify(
             new_name="foo2",
             task_import={
