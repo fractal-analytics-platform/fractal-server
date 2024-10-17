@@ -41,17 +41,27 @@ async def test_import_export(
 
         await task_factory_v2(user_id=user.id, source=wf_file_task_source)
 
-        # Export workflow
-        res = await client.get(
-            f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
-        )
-        assert res.status_code == 200
-
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
             json=workflow_from_file,
         )
         assert res.status_code == 201
+
+        # Export workflow
+        res = await client.get(
+            f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
+        )
+        workflow_exported = res.json()
+        debug(workflow_exported)
+
+        assert "id" not in workflow_exported
+        assert "project_id" not in workflow_exported
+        for wftask in workflow_exported["task_list"]:
+            assert "id" not in wftask
+            assert "task_id" not in wftask
+            assert "workflow_id" not in wftask
+            assert "id" not in wftask["task"]
+        assert res.status_code == 200
 
         # Check that output can be cast to WorkflowRead
         # WorkflowReadV2(**workflow_imported)
