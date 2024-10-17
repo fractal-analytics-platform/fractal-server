@@ -404,6 +404,19 @@ async def test_unit_get_task_by_taskimport():
     )
     assert task_id is None
 
+    # Test with non-matching name
+    task_id = await _get_task_by_taskimport(
+        task_import=TaskImportV2(
+            name="invalid",
+            pkg_name="pkg",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    )
+    assert task_id is None
+
 
 async def test_unit_disambiguate_task_groups(
     MockCurrentUser,
