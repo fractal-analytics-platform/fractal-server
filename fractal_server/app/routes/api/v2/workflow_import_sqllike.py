@@ -56,9 +56,13 @@ async def _get_task_by_source(
     db: AsyncSession,
 ) -> Optional[int]:
 
-    stm = select(TaskV2.id).where(
-        TaskV2.source == source,
-        TaskGroupV2.id.in_([tg.id for tg in task_groups_list]),
+    stm = (
+        select(TaskV2.id)
+        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(
+            TaskV2.source == source,
+            TaskGroupV2.id.in_([tg.id for tg in task_groups_list]),
+        )
     )
     res = await db.execute(stm)
     task_id = res.scalar()
