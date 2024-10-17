@@ -163,7 +163,6 @@ async def _disambiguate_task_groups(
     for task_group in matching_task_groups:
         if task_group.user_group_id == oldest_user_group_id:
             return task_group
-
     return None
 
 

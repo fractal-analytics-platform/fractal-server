@@ -10,15 +10,16 @@ from sqlmodel import select
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import TaskImportV2
 from fractal_server.app.schemas.v2 import WorkflowImportV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
-
 
 PREFIX = "api/v2"
 
@@ -787,3 +788,98 @@ async def test_new_import_export(
             res.json()["task_list"][0]["task"]["taskgroupv2_id"]
             == first_task_no_source.taskgroupv2_id
         )
+
+
+async def test_get_task_by_source():
+    from fractal_server.app.routes.api.v2.workflow_import import (
+        _get_task_by_source,
+    )
+
+    task1 = TaskV2(id=1, name="task1", source="source1")
+    task2 = TaskV2(id=2, name="task2", source="source2")
+    task_group = [
+        TaskGroupV2(
+            task_list=[task1, task2],
+            user_id=1,
+            user_group_id=1,
+            pkg_name="pkg1",
+            version="1.0",
+        )
+    ]
+
+    # Test matching source
+    task_id = await _get_task_by_source("source1", task_group)
+    assert task_id == 1
+
+    # Test non-matching source
+    task_id = await _get_task_by_source("nonexistent_source", task_group)
+    assert task_id is None
+
+
+async def test_get_task_by_version():
+    from fractal_server.app.routes.api.v2.workflow_import import (
+        _get_task_by_version,
+    )
+
+    task1 = TaskV2(id=1, name="task1")
+    task2 = TaskV2(id=2, name="task2")
+    task_group1 = TaskGroupV2(
+        task_list=[task1],
+        user_id=1,
+        user_group_id=1,
+        pkg_name="pkg1",
+        version="1.0",
+    )
+    task_group2 = TaskGroupV2(
+        task_list=[task2],
+        user_id=2,
+        user_group_id=2,
+        pkg_name="pkg1",
+        version="2.0",
+    )
+    task_groups = [task_group1, task_group2]
+    task_import = TaskImportV2(name="task1", pkg_name="pkg1")
+
+    # Test with matching version
+    task_id = await _get_task_by_version(task_import, 1, None, task_groups, 1)
+    assert task_id == 1
+
+    # Test with non-matching version
+    task_import.version = "3.0"
+    task_id = await _get_task_by_version(task_import, 1, None, task_groups, 1)
+    assert task_id is None
+
+
+async def test_disambiguate_task_groups(MockCurrentUser, task_factory_v2, db):
+    from fractal_server.app.routes.api.v2.workflow_import import (
+        _disambiguate_task_groups,
+    )
+
+    task1 = TaskV2(id=1, name="task1")
+    task2 = TaskV2(id=2, name="task2")
+    task_group1 = TaskGroupV2(
+        task_list=[task1],
+        user_id=1,
+        user_group_id=1,
+        pkg_name="pkg1",
+        version="1.0",
+    )
+    task_group2 = TaskGroupV2(
+        task_list=[task2],
+        user_id=2,
+        user_group_id=2,
+        pkg_name="pkg1",
+        version="2.0",
+    )
+
+    matching_task_groups = [task_group1, task_group2]
+    default_group_id = 1
+
+    async with MockCurrentUser() as user:
+        await task_factory_v2(user_id=user.id)
+
+        result = await _disambiguate_task_groups(
+            matching_task_groups, user.id, db, default_group_id
+        )
+        debug(result)
+        assert result == task_group1
