@@ -13,7 +13,7 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import TaskImportV2Legacy
 from ....schemas.v2 import WorkflowImportV2
-from ....schemas.v2 import WorkflowReadV2
+from ....schemas.v2 import WorkflowReadV2WithWarnings
 from ....schemas.v2 import WorkflowTaskCreateV2
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
@@ -205,7 +205,7 @@ async def _get_task_by_taskimport(
 
 @router.post(
     "/project/{project_id}/workflow/import/",
-    response_model=WorkflowReadV2,
+    response_model=WorkflowReadV2WithWarnings,
     status_code=status.HTTP_201_CREATED,
 )
 async def import_workflow(
@@ -213,7 +213,7 @@ async def import_workflow(
     workflow_import: WorkflowImportV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadV2:
+) -> WorkflowReadV2WithWarnings:
     """
     Import an existing workflow into a project and create required objects.
     """
