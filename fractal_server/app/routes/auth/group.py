@@ -231,8 +231,9 @@ async def patch_user_settings_bulk(
         .where(LinkUserGroup.group_id == group_id)
     )
     settings_list = res.scalars().all()
+    update = settings_update.dict(exclude_unset=True)
     for settings in settings_list:
-        for k, v in settings_update.dict(exclude_unset=True).items():
+        for k, v in update.items():
             setattr(settings, k, v)
         db.add(settings)
     await db.commit()
