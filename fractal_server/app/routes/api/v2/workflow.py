@@ -11,24 +11,20 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
-from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
-from ....schemas.v2 import WorkflowImportV2
 from ....schemas.v2 import WorkflowReadV2
 from ....schemas.v2 import WorkflowReadV2WithWarnings
-from ....schemas.v2 import WorkflowTaskCreateV2
 from ....schemas.v2 import WorkflowUpdateV2
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2.task import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
-
 
 router = APIRouter()
 
@@ -256,85 +252,21 @@ async def export_worfklow(
         user_id=user.id,
         db=db,
     )
-    return workflow
-
-
-@router.post(
-    "/project/{project_id}/workflow/import/",
-    response_model=WorkflowReadV2,
-    status_code=status.HTTP_201_CREATED,
-)
-async def import_workflow(
-    project_id: int,
-    workflow: WorkflowImportV2,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2]:
-    """
-    Import an existing workflow into a project
-
-    Also create all required objects (i.e. Workflow and WorkflowTask's) along
-    the way.
-    """
-
-    # Preliminary checks
-    await _get_project_check_owner(
-        project_id=project_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    await _check_workflow_exists(
-        name=workflow.name, project_id=project_id, db=db
-    )
-
-    # Check that all required tasks are available
-    source_to_id = {}
-
-    for wf_task in workflow.task_list:
-
-        source = wf_task.task.source
-        if source not in source_to_id.keys():
-            stm = select(TaskV2).where(TaskV2.source == source)
-            tasks_by_source = (await db.execute(stm)).scalars().all()
-            if len(tasks_by_source) != 1:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Found {len(tasks_by_source)} tasks "
-                        f"with {source=}."
-                    ),
-                )
-            source_to_id[source] = tasks_by_source[0].id
-
-    # Create new Workflow (with empty task_list)
-    db_workflow = WorkflowV2(
-        project_id=project_id,
-        **workflow.dict(exclude_none=True, exclude={"task_list"}),
-    )
-    db.add(db_workflow)
-    await db.commit()
-    await db.refresh(db_workflow)
-
-    # Insert tasks
-
-    for wf_task in workflow.task_list:
-        source = wf_task.task.source
-        task_id = source_to_id[source]
-
-        new_wf_task = WorkflowTaskCreateV2(
-            **wf_task.dict(exclude_none=True, exclude={"task"})
-        )
-        # Insert task
-        await _workflow_insert_task(
-            **new_wf_task.dict(),
-            workflow_id=db_workflow.id,
-            task_id=task_id,
-            db=db,
+    wf_task_list = []
+    for wftask in workflow.task_list:
+        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        wf_task_list.append(wftask.dict())
+        wf_task_list[-1]["task"] = dict(
+            pkg_name=task_group.pkg_name,
+            version=task_group.version,
+            name=wftask.task.name,
         )
 
-    await db.close()
-    return db_workflow
+    wf = WorkflowExportV2(
+        **workflow.model_dump(),
+        task_list=wf_task_list,
+    )
+    return wf
 
 
 @router.get("/workflow/", response_model=list[WorkflowReadV2])

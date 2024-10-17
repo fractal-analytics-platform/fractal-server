@@ -58,7 +58,7 @@ async def test_loss_of_access_to_task(
         command_non_parallel="echo",
         source="2",
         user_id=user_B.id,
-        user_group_id=team_group.id,
+        task_group_kwargs=dict(user_group_id=team_group.id),
     )
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:

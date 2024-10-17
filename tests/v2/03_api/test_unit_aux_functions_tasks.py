@@ -48,7 +48,9 @@ async def test_get_task(db, task_factory_v2):
 
     task_A_no_group = await task_factory_v2(user_id=user_A1.id, source="1")
     task_A_group_A = await task_factory_v2(
-        user_id=user_A1.id, user_group_id=group_A.id, source="2"
+        user_id=user_A1.id,
+        task_group_kwargs=dict(user_group_id=group_A.id),
+        source="2",
     )
 
     # Existence check success

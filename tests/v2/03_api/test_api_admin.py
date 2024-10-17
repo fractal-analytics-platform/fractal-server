@@ -689,7 +689,9 @@ async def test_task_group_admin(
         res = await client.get(f"/api/v2/task-group/{task1.taskgroupv2_id}/")
         task_group_1 = res.json()
         task2 = await task_factory_v2(
-            user_id=user1.id, source="source2", active=False
+            user_id=user1.id,
+            source="source2",
+            task_group_kwargs=dict(active=False),
         )
         # make task_group_2 private
         task_group_2 = await db.get(TaskGroupV2, task2.taskgroupv2_id)
