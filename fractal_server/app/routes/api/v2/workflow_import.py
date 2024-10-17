@@ -71,12 +71,12 @@ async def _get_task_by_source(
         `id` of the matching task, or `None`.
     """
     task_id = next(
-        [
+        iter(
             task.id
             for task_group in task_groups_list
             for task in task_group.task_list
             if task.source == source
-        ],
+        ),
         None,
     )
     return task_id
@@ -114,11 +114,11 @@ async def _disambiguate_task_groups(
     res = await db.execute(stm)
     oldest_user_group_id = res.scalars().one()
     task_group = next(
-        [
+        iter(
             task_group
             for task_group in matching_task_groups
             if task_group.user_group_id == oldest_user_group_id
-        ],
+        ),
         None,
     )
     return task_group
