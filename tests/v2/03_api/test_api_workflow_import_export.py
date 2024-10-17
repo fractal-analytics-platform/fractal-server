@@ -8,121 +8,120 @@ from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskImportV2
-
-# from fractal_server.app.schemas.v2 import WorkflowImportV2
-# from fractal_server.app.schemas.v2 import WorkflowReadV2
+from fractal_server.app.schemas.v2 import WorkflowImportV2
+from fractal_server.app.schemas.v2 import WorkflowReadV2
 
 
 PREFIX = "api/v2"
 
 
-# async def test_import_export_workflow(
-#     client,
-#     MockCurrentUser,
-#     project_factory_v2,
-#     task_factory,
-#     task_factory_v2,
-#     testdata_path,
-# ):
+async def test_import_export_workflow(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory,
+    task_factory_v2,
+    testdata_path,
+):
 
-#     # Load workflow to be imported into DB
-#     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
-#         workflow_from_file = json.load(f)
+    # Load workflow to be imported into DB
+    with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
+        workflow_from_file = json.load(f)
 
-#     async with MockCurrentUser() as user:
-#         # Create project
-#         prj = await project_factory_v2(user)
-#         # Add dummy tasks to DB
-#         await task_factory_v2(
-#             user_id=user.id, name="task", source="PKG_SOURCE:dummy2"
-#         )
-#         await task_factory(name="task", source="PKG_SOURCE:dummy1")
+    async with MockCurrentUser() as user:
+        # Create project
+        prj = await project_factory_v2(user)
+        # Add dummy tasks to DB
+        await task_factory_v2(
+            user_id=user.id, name="task", source="PKG_SOURCE:dummy2"
+        )
+        await task_factory(name="task", source="PKG_SOURCE:dummy1")
 
-#     # Import workflow into project
-#     payload = WorkflowImportV2(**workflow_from_file).dict(exclude_none=True)
+    # Import workflow into project
+    payload = WorkflowImportV2(**workflow_from_file).dict(exclude_none=True)
 
-#     res = await client.post(
-#         f"{PREFIX}/project/{prj.id}/workflow/import/", json=payload
-#     )
-#     assert res.status_code == 201
-#     workflow_imported = res.json()
+    res = await client.post(
+        f"{PREFIX}/project/{prj.id}/workflow/import/", json=payload
+    )
+    assert res.status_code == 201
+    workflow_imported = res.json()
 
-#     # Check that output can be cast to WorkflowRead
-#     WorkflowReadV2(**workflow_imported)
+    # Check that output can be cast to WorkflowRead
+    WorkflowReadV2(**workflow_imported)
 
-#     # Export workflow
-#     workflow_id = workflow_imported["id"]
-#     res = await client.get(
-#         f"{PREFIX}/project/{prj.id}/workflow/{workflow_id}/export/"
-#     )
-#     debug(res)
-#     debug(res.status_code)
-#     workflow_exported = res.json()
-#     debug(workflow_exported)
+    # Export workflow
+    workflow_id = workflow_imported["id"]
+    res = await client.get(
+        f"{PREFIX}/project/{prj.id}/workflow/{workflow_id}/export/"
+    )
+    debug(res)
+    debug(res.status_code)
+    workflow_exported = res.json()
+    debug(workflow_exported)
 
-#     assert "id" not in workflow_exported
-#     assert "project_id" not in workflow_exported
-#     for wftask in workflow_exported["task_list"]:
-#         assert "id" not in wftask
-#         assert "task_id" not in wftask
-#         assert "workflow_id" not in wftask
-#         assert "id" not in wftask["task"]
-#     assert res.status_code == 200
+    assert "id" not in workflow_exported
+    assert "project_id" not in workflow_exported
+    for wftask in workflow_exported["task_list"]:
+        assert "id" not in wftask
+        assert "task_id" not in wftask
+        assert "workflow_id" not in wftask
+        assert "id" not in wftask["task"]
+    assert res.status_code == 200
 
-#     # Check that the exported workflow is an extension of the one in the
-#     # original JSON file
+    # Check that the exported workflow is an extension of the one in the
+    # original JSON file
 
-#     # FIXME: we must check that workflow from file is correctly translated in
-#     # workflow new
+    # FIXME: we must check that workflow from file is correctly translated in
+    # workflow new
 
-#     assert len(workflow_from_file["task_list"]) == len(
-#         workflow_exported["task_list"]
-#     )
+    assert len(workflow_from_file["task_list"]) == len(
+        workflow_exported["task_list"]
+    )
 
-#     for task_old, task_new in zip(
-#         workflow_from_file["task_list"], workflow_exported["task_list"]
-#     ):
-#         assert task_old.keys() <= task_new.keys()
-#         for meta in ["meta_parallel", "meta_non_parallel"]:
-#             if task_old.get(meta):
-#                 # then 'meta' is also in task_new
-#                 debug(meta)
-#                 assert task_old[meta].items() <= task_new[meta].items()
-#                 task_old.pop(meta)
-#                 task_new.pop(meta)
-#             elif task_new.get(meta):  # but not in task_old
-#                 task_new.pop(meta)
-#         debug(task_old, task_new)
-#         # remove task from task_list item
-#         # cause task_new.task is a TaskExportV2
-#         # task_old.task is a TaskExportV2Legacy
-#         # we remove also import filters because
-#         # in the wf_old it would be added by the
-#         # WorkflowExportV2
-#         task_old.pop("task")
-#         task_new.pop("task")
-#         task_new.pop("input_filters")
-#         assert task_old == task_new
+    for task_old, task_new in zip(
+        workflow_from_file["task_list"], workflow_exported["task_list"]
+    ):
+        assert task_old.keys() <= task_new.keys()
+        for meta in ["meta_parallel", "meta_non_parallel"]:
+            if task_old.get(meta):
+                # then 'meta' is also in task_new
+                debug(meta)
+                assert task_old[meta].items() <= task_new[meta].items()
+                task_old.pop(meta)
+                task_new.pop(meta)
+            elif task_new.get(meta):  # but not in task_old
+                task_new.pop(meta)
+        debug(task_old, task_new)
+        # remove task from task_list item
+        # cause task_new.task is a TaskExportV2
+        # task_old.task is a TaskExportV2Legacy
+        # we remove also import filters because
+        # in the wf_old it would be added by the
+        # WorkflowExportV2
+        task_old.pop("task")
+        task_new.pop("task")
+        task_new.pop("input_filters")
+        assert task_old == task_new
 
 
-# async def test_import_export_workflow_fail(
-#     client,
-#     MockCurrentUser,
-#     project_factory_v2,
-#     task_factory,
-# ):
-#     async with MockCurrentUser() as user:
-#         prj = await project_factory_v2(user)
+async def test_import_export_workflow_fail(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
 
-#     await task_factory(name="valid", source="test_source")
-#     payload = {
-#         "name": "MyWorkflow",
-#         "task_list": [{"task": {"source": "xyz"}}],
-#     }
-#     res = await client.post(
-#         f"/api/v2/project/{prj.id}/workflow/import/", json=payload
-#     )
-#     assert res.status_code == 422
+    await task_factory(name="valid", source="test_source")
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [{"task": {"source": "xyz"}}],
+    }
+    res = await client.post(
+        f"/api/v2/project/{prj.id}/workflow/import/", json=payload
+    )
+    assert res.status_code == 422
 
 
 async def test_new_import_export(
