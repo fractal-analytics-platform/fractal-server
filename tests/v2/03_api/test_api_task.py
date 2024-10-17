@@ -286,7 +286,9 @@ async def test_patch_task_auth(
     # POST-task as user_A
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
         user_A_id = user_A.id
-        payload_obj = TaskCreateV2(name="a", command_parallel="c")
+        payload_obj = TaskCreateV2(
+            name="a", category="my-cat", command_parallel="c"
+        )
         res = await client.post(
             f"{PREFIX}/", json=payload_obj.dict(exclude_unset=True)
         )
@@ -295,17 +297,17 @@ async def test_patch_task_auth(
 
     # PATCH-task success as user_A -> success (task belongs to user)
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
-        payload_obj = TaskUpdateV2(name="new_name_1")
+        payload_obj = TaskUpdateV2(category="new-cat-1")
         res = await client.patch(
             f"{PREFIX}/{task_id}/", json=payload_obj.dict(exclude_unset=True)
         )
         assert res.status_code == 200
-        assert res.json()["name"] == "new_name_1"
+        assert res.json()["category"] == "new-cat-1"
 
     # PATCH-task failure as a different user -> failure (task belongs to user)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # PATCH-task failure (task does not belong to user)
-        payload_obj = TaskUpdateV2(name="new_name_2")
+        payload_obj = TaskUpdateV2(category="new-cat-2")
         res = await client.patch(
             f"{PREFIX}/{task_id}/", json=payload_obj.dict(exclude_unset=True)
         )
@@ -332,7 +334,6 @@ async def test_patch_task(
         task_compound = await task_factory_v2(user_id=user_A_id, index=3)
         # Test successuful patch of task_compound
         update = TaskUpdateV2(
-            name="new_name",
             input_types={"input": True, "output": False},
             output_types={"input": False, "output": True},
             command_parallel="new_cmd_parallel",

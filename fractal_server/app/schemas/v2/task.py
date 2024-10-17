@@ -134,7 +134,6 @@ class TaskReadV2(BaseModel):
 
 class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str] = None
     command_parallel: Optional[str] = None
     command_non_parallel: Optional[str] = None
     input_types: Optional[dict[str, bool]] = None
@@ -151,8 +150,6 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
         if not isinstance(v, dict):
             raise ValueError
         return v
-
-    _name = validator("name", allow_reuse=True)(valstr("name"))
 
     _command_parallel = validator("command_parallel", allow_reuse=True)(
         valstr("command_parallel")
