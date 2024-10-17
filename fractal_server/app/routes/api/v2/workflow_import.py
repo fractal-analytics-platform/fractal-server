@@ -83,6 +83,7 @@ async def _get_task_by_source(
 
 
 async def _disambiguate_task_groups(
+    *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
     db: AsyncSession,
@@ -108,11 +109,13 @@ async def _disambiguate_task_groups(
     ]
     stm = (
         select(LinkUserGroup.group_id)
+        .where(LinkUserGroup.user_id == user_id)
         .where(LinkUserGroup.group_id.in_(user_group_ids))
-        .order_by(LinkUserGroup.timestamp_created.asc().limit(1))
+        .order_by(LinkUserGroup.timestamp_created.asc())
     )
     res = await db.execute(stm)
-    oldest_user_group_id = res.scalars().one()
+
+    oldest_user_group_id = res.scalars().first()
     task_group = next(
         iter(
             task_group
