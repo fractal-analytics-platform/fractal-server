@@ -191,7 +191,7 @@ async def task_factory_v2(db: AsyncSession):
         index: int = 0,
         type: Literal["parallel", "non_parallel", "compound"] = "compound",
         **kwargs,
-    ):
+    ) -> TaskV2:
         args = dict(
             type=type,
             name=f"task{index}",

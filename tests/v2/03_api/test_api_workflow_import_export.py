@@ -325,21 +325,25 @@ async def test_new_import_export(
         )
 
 
-async def test_get_task_by_source():
+async def test_unit_get_task_by_source():
     from fractal_server.app.routes.api.v2.workflow_import import (
         _get_task_by_source,
     )
 
     task1 = TaskV2(id=1, name="task1", source="source1")
     task2 = TaskV2(id=2, name="task2", source="source2")
+    task3 = TaskV2(id=3, name="task3", source="source3")
     task_group = [
         TaskGroupV2(
             task_list=[task1, task2],
             user_id=1,
-            user_group_id=1,
-            pkg_name="pkg1",
-            version="1.0",
-        )
+            pkg_name="pkgA",
+        ),
+        TaskGroupV2(
+            task_list=[task3],
+            user_id=1,
+            pkg_name="pkgB",
+        ),
     ]
 
     # Test matching source
@@ -351,9 +355,9 @@ async def test_get_task_by_source():
     assert task_id is None
 
 
-async def test_get_task_by_version():
+async def test_unit_get_task_by_taskimport():
     from fractal_server.app.routes.api.v2.workflow_import import (
-        _get_task_by_version,
+        _get_task_by_taskimport,
     )
 
     task1 = TaskV2(id=1, name="task1")
@@ -362,59 +366,178 @@ async def test_get_task_by_version():
         task_list=[task1],
         user_id=1,
         user_group_id=1,
-        pkg_name="pkg1",
+        pkg_name="pkg",
         version="1.0",
     )
     task_group2 = TaskGroupV2(
         task_list=[task2],
         user_id=2,
         user_group_id=2,
-        pkg_name="pkg1",
+        pkg_name="pkg",
         version="2.0",
     )
     task_groups = [task_group1, task_group2]
-    task_import = TaskImportV2(name="task1", pkg_name="pkg1")
 
     # Test with matching version
-    task_id = await _get_task_by_version(task_import, 1, None, task_groups, 1)
+    task_import = TaskImportV2(name="task1", pkg_name="pkg")
+    task_id = await _get_task_by_taskimport(
+        task_import=task_import,
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    )
     assert task_id == 1
 
     # Test with non-matching version
-    task_import.version = "3.0"
-    task_id = await _get_task_by_version(task_import, 1, None, task_groups, 1)
+    task_import = TaskImportV2(
+        name="task1",
+        pkg_name="pkg",
+        version="3.0",
+    )
+    task_id = await _get_task_by_taskimport(
+        task_import=task_import,
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    )
     assert task_id is None
 
 
-async def test_disambiguate_task_groups(MockCurrentUser, task_factory_v2, db):
+async def test_unit_disambiguate_task_groups_no_db():
     from fractal_server.app.routes.api.v2.workflow_import import (
         _disambiguate_task_groups,
     )
 
-    task1 = TaskV2(id=1, name="task1")
-    task2 = TaskV2(id=2, name="task2")
+    task1 = TaskV2(id=1, name="task")
+    task2 = TaskV2(id=2, name="task")
     task_group1 = TaskGroupV2(
+        id=100,
         task_list=[task1],
         user_id=1,
-        user_group_id=1,
-        pkg_name="pkg1",
+        user_group_id=10,
+        pkg_name="pkg",
         version="1.0",
     )
     task_group2 = TaskGroupV2(
+        id=200,
         task_list=[task2],
         user_id=2,
-        user_group_id=2,
-        pkg_name="pkg1",
-        version="2.0",
+        user_group_id=20,
+        pkg_name="pkg",
+        version="1.0",
     )
 
     matching_task_groups = [task_group1, task_group2]
-    default_group_id = 1
+    default_group_id = 10
 
-    async with MockCurrentUser() as user:
-        await task_factory_v2(user_id=user.id)
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=matching_task_groups,
+        user_id=1,
+        default_group_id=default_group_id,
+        db=None,
+    )
+    assert task_group.id == 100
 
-        result = await _disambiguate_task_groups(
-            matching_task_groups, user.id, db, default_group_id
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=matching_task_groups,
+        user_id=3,
+        default_group_id=default_group_id,
+        db=None,
+    )
+    assert task_group.id == 100
+
+
+async def test_unit_disambiguate_task_groups_with_db(
+    MockCurrentUser,
+    task_factory_v2,
+    db,
+    default_user_group,
+):
+    import time
+    from fractal_server.app.routes.api.v2.workflow_import import (
+        _disambiguate_task_groups,
+    )
+
+    async with MockCurrentUser() as user1:
+        user1_id = user1.id
+        task_A = await task_factory_v2(
+            name="task",
+            user_id=user1_id,
+            task_group_kwargs=dict(
+                pkg_name="pkg",
+                version="1.0.0",
+                user_group_id=default_user_group.id,
+            ),
         )
-        debug(result)
-        assert result == task_group1
+
+    async with MockCurrentUser() as user2:
+        user2_id = user2.id
+
+        old_group = UserGroup(name="Old group")
+        recent_group = UserGroup(name="Recent group")
+        db.add(old_group)
+        db.add(recent_group)
+        await db.commit()
+        await db.refresh(old_group)
+        await db.refresh(recent_group)
+
+        db.add(LinkUserGroup(user_id=user2.id, group_id=old_group.id))
+        db.add(LinkUserGroup(user_id=user1.id, group_id=old_group.id))
+        await db.commit()
+        time.sleep(0.1)
+        db.add(LinkUserGroup(user_id=user1.id, group_id=recent_group.id))
+        db.add(LinkUserGroup(user_id=user2.id, group_id=recent_group.id))
+        await db.commit()
+        await db.close()
+
+        task_B = await task_factory_v2(
+            name="task",
+            user_id=user1_id,
+            task_group_kwargs=dict(
+                pkg_name="pkg",
+                version="1.0.0",
+                user_group_id=old_group.id,
+            ),
+        )
+        task_C = await task_factory_v2(
+            name="task",
+            user_id=user1_id,
+            task_group_kwargs=dict(
+                pkg_name="pkg",
+                version="1.0.0",
+                user_group_id=recent_group.id,
+            ),
+        )
+
+    task_group_A = await db.get(TaskGroupV2, task_A.taskgroupv2_id)
+    task_group_B = await db.get(TaskGroupV2, task_B.taskgroupv2_id)
+    task_group_C = await db.get(TaskGroupV2, task_C.taskgroupv2_id)
+
+    await db.close()
+
+    # Pick task-group related to "All" user group
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=[task_group_A, task_group_B, task_group_C],
+        user_id=user2_id,
+        default_group_id=default_user_group.id,
+        db=db,
+    )
+    debug(task_group)
+    assert task_group.id == task_group_A.id
+    user_group = await db.get(UserGroup, task_group.user_group_id)
+    assert user_group.name == "All"
+
+    # Out of non-"All" user groups, pick task group corresponding to
+    # oldest link
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=[task_group_B, task_group_C],
+        user_id=user2_id,
+        default_group_id=default_user_group.id,
+        db=db,
+    )
+    debug(task_group)
+    assert task_group.id == task_group_B.id
+    user_group = await db.get(UserGroup, task_group.user_group_id)
+    assert user_group.name == "Old group"
