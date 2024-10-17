@@ -1,5 +1,4 @@
 from typing import Optional
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -193,48 +192,14 @@ async def _get_task_by_taskimport(
 
     # Find task with given name
     task_id = next(
-        task.id
-        for task in final_task_group.task_list
-        if task.name == task_import.name
+        iter(
+            task.id
+            for task in final_task_group.task_list
+            if task.name == task_import.name
+        ),
+        None,
     )
 
-    return task_id
-
-
-async def _get_task_id_or_none(
-    *,
-    task_import: Union[TaskImportV2, TaskImportV2Legacy],
-    user_id: int,
-    default_group_id: int,
-    task_groups_list: list[TaskGroupV2],
-    db: AsyncSession,
-) -> Optional[int]:
-    """
-    Find a task by source or version.
-
-    Args:
-        task_import: Info on task to be imported.
-        user_id: ID of current user.
-        default_group_id: ID of default user group.
-        task_group_list: Current list of valid task groups.
-        db: Asynchronous db session
-
-    Return:
-        `id` of the matching task, or `None`.
-    """
-    if isinstance(task_import, TaskImportV2Legacy):
-        task_id = await _get_task_by_source(
-            source=task_import.source,
-            task_groups_list=task_groups_list,
-        )
-    else:
-        task_id = await _get_task_by_taskimport(
-            task_import=task_import,
-            user_id=user_id,
-            default_group_id=default_group_id,
-            task_groups_list=task_groups_list,
-            db=db,
-        )
     return task_id
 
 
@@ -273,13 +238,20 @@ async def import_workflow(
 
     list_wf_tasks = []
     for wf_task in workflow_import.task_list:
-        task_id = await _get_task_id_or_none(
-            task_import=wf_task.task,
-            task_groups_list=task_group_list,
-            user_id=user.id,
-            default_group_id=default_group_id,
-            db=db,
-        )
+        task_import = wf_task.task
+        if isinstance(task_import, TaskImportV2Legacy):
+            task_id = await _get_task_by_source(
+                source=task_import.source,
+                task_groups_list=task_group_list,
+            )
+        else:
+            task_id = await _get_task_by_taskimport(
+                task_import=task_import,
+                user_id=user.id,
+                default_group_id=default_group_id,
+                task_groups_list=task_group_list,
+                db=db,
+            )
         if task_id is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
