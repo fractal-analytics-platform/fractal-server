@@ -1,6 +1,5 @@
 from typing import Optional
 
-from devtools import debug
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -31,7 +30,6 @@ router = APIRouter()
 
 async def _get_user_tasks(user_id: int, db: AsyncSession) -> list[TaskV2]:
     """Retrieve tasks that belong to the user."""
-    debug("user task")
     stm = (
         select(TaskV2)
         .join(TaskGroupV2)
@@ -39,15 +37,16 @@ async def _get_user_tasks(user_id: int, db: AsyncSession) -> list[TaskV2]:
         .where(TaskGroupV2.user_id == user_id)
     )
     res = await db.execute(stm)
-    return res.scalars().all()
+    task_user_list = res.scalars().all()
+    return task_user_list
 
 
 async def _get_default_group_id(db: AsyncSession) -> int:
     """Get the default user group ID."""
-    debug("group id")
     stm = select(UserGroup).where(UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME)
     res = await db.execute(stm)
-    return res.scalars().one().id
+    default_group_id = res.scalars().one().id
+    return default_group_id
 
 
 async def _find_task_by_source_or_version(
@@ -56,15 +55,11 @@ async def _find_task_by_source_or_version(
     """Find a task by source or version."""
     if isinstance(wf_task.task, TaskImportV2Legacy):
         task = await _get_task_by_source(wf_task, user, db)
-        debug("legacy with source")
     else:
-        debug("new with version")
         task = await _get_task_by_version(
             wf_task, user, db, task_user_list, default_group_id
         )
-
     if not task:
-        debug("noooooo")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Expected one TaskV2 to match the imported one.",
@@ -95,14 +90,14 @@ async def _get_task_by_source(wf_task, user, db) -> Optional[TaskV2]:
         )
     )
     res = await db.execute(stm_source)
-    return res.scalars().one_or_none()
+    task = res.scalars().one_or_none()
+    return task
 
 
 async def _get_task_by_version(
     wf_task, user, db, task_user_list, default_group_id
 ) -> Optional[TaskV2]:
     """Find a task by version."""
-    debug("into new with version")
     if wf_task.task.version is None:
         return await _get_latest_user_task(task_user_list, db, wf_task)
 
@@ -125,17 +120,18 @@ async def _get_task_by_version(
         )
     )
     res = await db.execute(stm)
-    task = res.scalars().one_or_none()
-
-    if not task:
+    task = res.scalars().all()
+    if len(task) > 1:
         return await _resolve_task_conflict(task, user, db, default_group_id)
-    return task
+    elif len(task) == 1:
+        return task[0]
+    else:
+        return None
 
 
 async def _get_latest_user_task(task_user_list, db, wf_task) -> TaskV2:
     """Retrieve the latest task for the user."""
     if not task_user_list:
-        debug("NO USERLIST????")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Expected one TaskV2 to match the imported one.",
@@ -150,34 +146,33 @@ async def _get_latest_user_task(task_user_list, db, wf_task) -> TaskV2:
         .where(TaskV2.name == wf_task.task.name)
         .where(TaskGroupV2.version == latest_task.version)
     )
-    debug(latest_task.version, wf_task.task.pkg_name, wf_task.task.name)
-    debug("before query latest task")
     res = await db.execute(stm)
-    debug(res.scalars().all())
-    return res.scalars().one_or_none()
+    task = res.scalars().one_or_none()
+    return task
 
 
 async def _resolve_task_conflict(
     task_list, user, db, default_group_id
 ) -> TaskV2:
     """Resolve conflicts when multiple tasks match."""
-    debug("into resolve?")
     for task in task_list:
-        if task.user_id == user.id or task.user_group_id == default_group_id:
+        if task.taskgroupv2_id == default_group_id:
             return task
-
+    task = task_list[0]
     stm = (
         select(TaskV2)
         .join(TaskGroupV2)
         .join(LinkUserGroup)
         .where(LinkUserGroup.group_id == TaskGroupV2.user_group_id)
         .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(TaskV2.name == task.name)
         .where(TaskGroupV2.user_group_id == task.user_group_id)
         .where(LinkUserGroup.user_id == user.id)
         .order_by(LinkUserGroup.timestamp_created.asc().limit(1))
     )
     res = await db.execute(stm)
-    return res.scalars().one_or_none()
+    task = res.scalars().one_or_none()
+    return task
 
 
 @router.post(
@@ -208,13 +203,11 @@ async def import_workflow(
         project_id=project_id,
         **workflow.dict(exclude_none=True, exclude={"task_list"})
     )
-    debug(db_workflow)
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
 
     task_user_list = await _get_user_tasks(user.id, db)
-    debug(task_user_list)
     default_group_id = await _get_default_group_id(db)
 
     for wf_task in workflow.task_list:

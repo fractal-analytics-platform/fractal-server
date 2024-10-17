@@ -646,20 +646,19 @@ async def test_new_import_export(
         wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
 
-    wf_from_file_task = workflow_from_file["task_list"][0]["task"]["source"]
+    wf_file_task_source = workflow_from_file["task_list"][0]["task"]["source"]
 
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=prj.id)
 
-        await task_factory_v2(user_id=user.id, source=wf_from_file_task)
+        await task_factory_v2(user_id=user.id, source=wf_file_task_source)
 
         # Export workflow
         res = await client.get(
             f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
         )
         assert res.status_code == 200
-        debug(res.json())
 
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
@@ -709,7 +708,7 @@ async def test_new_import_export(
         )
         assert res.status_code == 422
 
-        await task_factory_v2(
+        first_task_no_source = await task_factory_v2(
             user_id=user.id,
             name="cellpose_segmentation",
             task_group_kwargs=dict(pkg_name="fractal-tasks-core", version="0"),
@@ -729,6 +728,10 @@ async def test_new_import_export(
         )
 
         assert res.status_code == 201
+        assert (
+            res.json()["task_list"][0]["task"]["taskgroupv2_id"]
+            == first_task_no_source.id
+        )
         valid_payload_miss_version = wf_modify(
             new_name="foo2",
             task_import={
@@ -740,21 +743,23 @@ async def test_new_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
             json=valid_payload_miss_version,
         )
-        debug(res.json())
         assert res.status_code == 201
 
         # Add task no version latest group
+        # Test the disambiguation based on the oldest UserGroup
+        # add a new group and a new task associated with that user group
+        # check that during the import phase will be choosen the oldest
+        # not the latest task
         new_group = UserGroup(name="new_group")
         db.add(new_group)
         await db.commit()
         await db.refresh(new_group)
-        debug(new_group)
         link = LinkUserGroup(user_id=user.id, group_id=new_group.id)
         db.add(link)
         await db.commit()
         await db.close()
 
-        task = await task_factory_v2(
+        await task_factory_v2(
             user_id=user.id,
             name="cellpose_segmentation",
             task_group_kwargs=dict(
@@ -777,9 +782,8 @@ async def test_new_import_export(
             json=valid_payload_miss_version_latest_group,
         )
         assert res.status_code == 201
-        assert res.json()["task_list"][0]["task"]["id"] == task.id
-        task_group_id = res.json()["task_list"][0]["task"]["taskgroupv2_id"]
-        res = await client.get(f"{PREFIX}/task-group/{task_group_id}/")
-        debug(res.json())
-        assert res.json()["user_id"] == user.id
-        assert res.json()["user_group_id"] == new_group.id
+
+        assert (
+            res.json()["task_list"][0]["task"]["taskgroupv2_id"]
+            == first_task_no_source.taskgroupv2_id
+        )
