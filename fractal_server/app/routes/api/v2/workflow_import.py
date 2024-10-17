@@ -31,6 +31,7 @@ router = APIRouter()
 
 
 async def _get_user_accessible_taskgroups(
+    *,
     user_id: int,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
@@ -58,12 +59,27 @@ async def _get_task_by_source(
 ) -> Optional[int]:
     """
     Find task with a given source.
+
+    Args:
+        task_import: Info on task to be imported.
+        user_id: ID of current user.
+        default_group_id: ID of default user group.
+        task_group_list: Current list of valid task groups.
+        db: Asynchronous db session
+
+    Return:
+        `id` of the matching task, or `None`.
     """
-    for task_group in task_groups_list:
-        for task in task_group.task_list:
-            if task.source == source:
-                return task.id
-    return None
+    task_id = next(
+        [
+            task.id
+            for task_group in task_groups_list
+            for task in task_group.task_list
+            if task.source == source
+        ],
+        None,
+    )
+    return task_id
 
 
 async def _disambiguate_task_groups(
@@ -87,37 +103,47 @@ async def _disambiguate_task_groups(
 
     # Lowest priority: task groups owned by other groups, sorted
     # according to age of the user/usergroup link
+    user_group_ids = [
+        task_group.user_group_id for task_group in matching_task_groups
+    ]
     stm = (
         select(LinkUserGroup.group_id)
-        .where(
-            LinkUserGroup.group_id.in_(
-                [
-                    task_group.user_group_id
-                    for task_group in matching_task_groups
-                ]
-            )
-        )
+        .where(LinkUserGroup.group_id.in_(user_group_ids))
         .order_by(LinkUserGroup.timestamp_created.asc().limit(1))
     )
     res = await db.execute(stm)
     oldest_user_group_id = res.scalars().one()
-    for task_group in matching_task_groups:
-        if task_group.user_group_id == oldest_user_group_id:
-            return task_group
+    task_group = next(
+        [
+            task_group
+            for task_group in matching_task_groups
+            if task_group.user_group_id == oldest_user_group_id
+        ],
+        None,
+    )
+    return task_group
 
-    # This should be unreachable by construction:
-    return None
 
-
-async def _get_task_by_version(
+async def _get_task_by_taskimport(
+    *,
     task_import: TaskImportV2,
-    user_id: int,
-    db: AsyncSession,
     task_groups_list: list[TaskGroupV2],
+    user_id: int,
     default_group_id: int,
+    db: AsyncSession,
 ) -> Optional[int]:
     """
     Find a task based on `task_import`.
+
+    Args:
+        task_import: Info on task to be imported.
+        user_id: ID of current user.
+        default_group_id: ID of default user group.
+        task_group_list: Current list of valid task groups.
+        db: Asynchronous db session
+
+    Return:
+        `id` of the matching task, or `None`.
     """
 
     # Filter by `pkg_name` and by presence of a task with given `name`.
@@ -172,28 +198,40 @@ async def _get_task_by_version(
     return task_id
 
 
-async def _find_task_by_source_or_version(
+async def _get_task_id_or_none(
+    *,
     task_import: Union[TaskImportV2, TaskImportV2Legacy],
     user_id: int,
-    db: AsyncSession,
-    task_groups_list: list[TaskGroupV2],
     default_group_id: int,
-) -> int:
-    """Find a task by source or version."""
+    task_groups_list: list[TaskGroupV2],
+    db: AsyncSession,
+) -> Optional[int]:
+    """
+    Find a task by source or version.
+
+    Args:
+        task_import: Info on task to be imported.
+        user_id: ID of current user.
+        default_group_id: ID of default user group.
+        task_group_list: Current list of valid task groups.
+        db: Asynchronous db session
+
+    Return:
+        `id` of the matching task, or `None`.
+    """
     if isinstance(task_import, TaskImportV2Legacy):
         task_id = await _get_task_by_source(
-            task_import.source, task_groups_list
+            source=task_import.source,
+            task_groups_list=task_groups_list,
         )
     else:
-        task_id = await _get_task_by_version(
-            task_import, user_id, db, task_groups_list, default_group_id
+        task_id = await _get_task_by_taskimport(
+            task_import=task_import,
+            user_id=user_id,
+            default_group_id=default_group_id,
+            task_groups_list=task_groups_list,
+            db=db,
         )
-    if not task_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Expected one TaskV2 to match the imported one.",
-        )
-
     return task_id
 
 
@@ -214,20 +252,36 @@ async def import_workflow(
 
     # Preliminary checks
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        db=db,
     )
     await _check_workflow_exists(
-        name=workflow_import.name, project_id=project_id, db=db
+        name=workflow_import.name,
+        project_id=project_id,
+        db=db,
     )
 
-    task_group_list = await _get_user_accessible_taskgroups(user.id, db)
+    task_group_list = await _get_user_accessible_taskgroups(
+        user_id=user.id,
+        db=db,
+    )
     default_group_id = await _get_default_usergroup_id(db)
 
     list_wf_tasks = []
     for wf_task in workflow_import.task_list:
-        task_id = await _find_task_by_source_or_version(
-            wf_task.task, user.id, db, task_group_list, default_group_id
+        task_id = await _get_task_id_or_none(
+            task_import=wf_task.task,
+            task_groups_list=task_group_list,
+            user_id=user.id,
+            default_group_id=default_group_id,
+            db=db,
         )
+        if task_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Could not find a task matching with {wf_task.task}.",
+            )
         new_wf_task = WorkflowTaskCreateV2(
             **wf_task.dict(exclude_none=True, exclude={"task"})
         )
