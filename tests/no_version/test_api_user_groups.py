@@ -322,19 +322,16 @@ async def test_patch_user_settings_bulk(
     user4 = await db.get(UserOAuth, user4.id)
 
     for user in [user1, user2, user3, user4]:
-        assert (
-            dict(
-                ssh_host=None,
-                ssh_username=None,
-                ssh_private_key_path=None,
-                ssh_tasks_dir=None,
-                ssh_jobs_dir=None,
-                slurm_user="test01",
-                slurm_accounts=[],
-                cache_dir=None,
-            ).items()
-            <= user.settings.dict().items()
-        )
+        assert dict(
+            ssh_host=None,
+            ssh_username=None,
+            ssh_private_key_path=None,
+            ssh_tasks_dir=None,
+            ssh_jobs_dir=None,
+            slurm_user="test01",
+            slurm_accounts=[],
+            cache_dir=None,
+        ) == user.settings.dict(exclude={"id"})
 
     # remove user4 from default user group
     res = await db.execute(
@@ -363,20 +360,17 @@ async def test_patch_user_settings_bulk(
     # assert user1, user2 and user3 has been updated
     for user in [user1, user2, user3]:
         await db.refresh(user)
-        assert patch.items() <= user.settings.dict().items()
+        assert patch == user.settings.dict(exclude={"id", "slurm_user"})
         assert user.settings.slurm_user == "test01"  # `slurm_user` not patched
     # assert user4 has old settings
     await db.refresh(user4)
-    assert (
-        dict(
-            ssh_host=None,
-            ssh_username=None,
-            ssh_private_key_path=None,
-            ssh_tasks_dir=None,
-            ssh_jobs_dir=None,
-            slurm_user="test01",
-            slurm_accounts=[],
-            cache_dir=None,
-        ).items()
-        <= user4.settings.dict().items()
-    )
+    assert dict(
+        ssh_host=None,
+        ssh_username=None,
+        ssh_private_key_path=None,
+        ssh_tasks_dir=None,
+        ssh_jobs_dir=None,
+        slurm_user="test01",
+        slurm_accounts=[],
+        cache_dir=None,
+    ) == user4.settings.dict(exclude={"id"})
