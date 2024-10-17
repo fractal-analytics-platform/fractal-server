@@ -360,8 +360,9 @@ async def test_unit_get_task_by_taskimport():
         _get_task_by_taskimport,
     )
 
-    task1 = TaskV2(id=1, name="task1")
-    task2 = TaskV2(id=2, name="task2")
+    task1 = TaskV2(id=1, name="task")
+    task2 = TaskV2(id=2, name="task")
+    task3 = TaskV2(id=3, name="task")
     task_group1 = TaskGroupV2(
         task_list=[task1],
         user_id=1,
@@ -371,32 +372,63 @@ async def test_unit_get_task_by_taskimport():
     )
     task_group2 = TaskGroupV2(
         task_list=[task2],
-        user_id=2,
+        user_id=1,
         user_group_id=2,
         pkg_name="pkg",
         version="2.0",
     )
-    task_groups = [task_group1, task_group2]
+    task_group3 = TaskGroupV2(
+        task_list=[task3],
+        user_id=1,
+        user_group_id=2,
+        pkg_name="pkg",
+        version=None,
+    )
+    task_groups = [task_group1, task_group2, task_group3]
 
     # Test with matching version
-    task_import = TaskImportV2(name="task1", pkg_name="pkg")
     task_id = await _get_task_by_taskimport(
-        task_import=task_import,
+        task_import=TaskImportV2(name="task", pkg_name="pkg", version="1.0.0"),
         user_id=1,
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
     )
-    assert task_id == 1
+    assert task_id == task1.id
+
+    # Test with latest version
+    task_id = await _get_task_by_taskimport(
+        task_import=TaskImportV2(
+            name="task",
+            pkg_name="pkg",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    )
+    assert task_id == task2.id
 
     # Test with non-matching version
-    task_import = TaskImportV2(
-        name="task1",
-        pkg_name="pkg",
-        version="3.0",
-    )
     task_id = await _get_task_by_taskimport(
-        task_import=task_import,
+        task_import=TaskImportV2(
+            name="task",
+            pkg_name="pkg",
+            version="invalid",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    )
+    assert task_id is None
+
+    # Test with non-matching pkg_name
+    task_id = await _get_task_by_taskimport(
+        task_import=TaskImportV2(
+            name="task",
+            pkg_name="invalid",
+        ),
         user_id=1,
         task_groups_list=task_groups,
         default_group_id=1,
@@ -405,51 +437,7 @@ async def test_unit_get_task_by_taskimport():
     assert task_id is None
 
 
-async def test_unit_disambiguate_task_groups_no_db():
-    from fractal_server.app.routes.api.v2.workflow_import import (
-        _disambiguate_task_groups,
-    )
-
-    task1 = TaskV2(id=1, name="task")
-    task2 = TaskV2(id=2, name="task")
-    task_group1 = TaskGroupV2(
-        id=100,
-        task_list=[task1],
-        user_id=1,
-        user_group_id=10,
-        pkg_name="pkg",
-        version="1.0",
-    )
-    task_group2 = TaskGroupV2(
-        id=200,
-        task_list=[task2],
-        user_id=2,
-        user_group_id=20,
-        pkg_name="pkg",
-        version="1.0",
-    )
-
-    matching_task_groups = [task_group1, task_group2]
-    default_group_id = 10
-
-    task_group = await _disambiguate_task_groups(
-        matching_task_groups=matching_task_groups,
-        user_id=1,
-        default_group_id=default_group_id,
-        db=None,
-    )
-    assert task_group.id == 100
-
-    task_group = await _disambiguate_task_groups(
-        matching_task_groups=matching_task_groups,
-        user_id=3,
-        default_group_id=default_group_id,
-        db=None,
-    )
-    assert task_group.id == 100
-
-
-async def test_unit_disambiguate_task_groups_with_db(
+async def test_unit_disambiguate_task_groups(
     MockCurrentUser,
     task_factory_v2,
     db,
@@ -517,6 +505,16 @@ async def test_unit_disambiguate_task_groups_with_db(
 
     await db.close()
 
+    # Pick task-group owned by user
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=[task_group_A, task_group_B, task_group_C],
+        user_id=user1_id,
+        default_group_id=default_user_group.id,
+        db=db,
+    )
+    debug(task_group)
+    assert task_group.id == task_group_A.id
+
     # Pick task-group related to "All" user group
     task_group = await _disambiguate_task_groups(
         matching_task_groups=[task_group_A, task_group_B, task_group_C],
@@ -541,3 +539,13 @@ async def test_unit_disambiguate_task_groups_with_db(
     assert task_group.id == task_group_B.id
     user_group = await db.get(UserGroup, task_group.user_group_id)
     assert user_group.name == "Old group"
+
+    # Unreachable edge case with []
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=[],
+        user_id=user2_id,
+        default_group_id=default_user_group.id,
+        db=db,
+    )
+    debug(task_group)
+    assert task_group is None
