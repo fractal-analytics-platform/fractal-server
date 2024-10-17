@@ -98,6 +98,8 @@ def test_task_update():
         TaskUpdateV2(input_types=None)
     with pytest.raises(ValidationError):
         TaskUpdateV2(output_types=None)
+    with pytest.raises(ValidationError):
+        TaskUpdateV2(name="cannot set name")
 
 
 def test_job_create():
