@@ -21,6 +21,7 @@ into pre-release sections below.
 
 * API
     * Improve error messages from task collection (\#1913).
+    * Add `PATCH auth/group/{group_id}/user-settings/` bulk endpoint (\#1936).
 * Database:
     * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
     * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
