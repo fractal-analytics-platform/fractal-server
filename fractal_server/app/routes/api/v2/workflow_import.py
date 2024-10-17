@@ -1,5 +1,7 @@
 from typing import Optional
+from typing import Union
 
+from devtools import debug
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -20,159 +22,151 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _workflow_insert_task
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.v2.task import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.schemas.v2.task import TaskImportV2
 
 router = APIRouter()
 
 
-async def _get_user_tasks(user_id: int, db: AsyncSession) -> list[TaskV2]:
+async def _get_user_accessible_taskgroups(
+    user_id: int, db: AsyncSession
+) -> list[TaskGroupV2]:
     """Retrieve tasks that belong to the user."""
-    stm = (
-        select(TaskV2)
-        .join(TaskGroupV2)
-        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        .where(TaskGroupV2.user_id == user_id)
+    stm = select(TaskGroupV2).where(
+        or_(
+            TaskGroupV2.user_id == user_id,
+            TaskGroupV2.user_group_id.in_(
+                select(LinkUserGroup.group_id).where(
+                    LinkUserGroup.user_id == user_id
+                )
+            ),
+        )
     )
     res = await db.execute(stm)
-    task_user_list = res.scalars().all()
-    return task_user_list
-
-
-async def _get_default_group_id(db: AsyncSession) -> int:
-    """Get the default user group ID."""
-    stm = select(UserGroup).where(UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME)
-    res = await db.execute(stm)
-    default_group_id = res.scalars().one().id
-    return default_group_id
+    accessible_task_groups = res.scalars().all()
+    debug(accessible_task_groups)
+    return accessible_task_groups
 
 
 async def _find_task_by_source_or_version(
-    wf_task, user, db, task_user_list, default_group_id
-) -> Optional[int]:
+    task_import: Union[TaskImportV2, TaskImportV2Legacy],
+    user_id: int,
+    db: AsyncSession,
+    task_groups_list: list[TaskGroupV2],
+    default_group_id: int,
+) -> int:
     """Find a task by source or version."""
-    if isinstance(wf_task.task, TaskImportV2Legacy):
-        task = await _get_task_by_source(wf_task, user, db)
-    else:
-        task = await _get_task_by_version(
-            wf_task, user, db, task_user_list, default_group_id
+    if isinstance(task_import, TaskImportV2Legacy):
+        task_id = await _get_task_by_source(
+            task_import.source, task_groups_list
         )
-    if not task:
+    else:
+        task_id = await _get_task_by_version(
+            task_import, user_id, db, task_groups_list, default_group_id
+        )
+    if not task_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Expected one TaskV2 to match the imported one.",
         )
 
-    return task.id
+    return task_id
 
 
-async def _get_task_by_source(wf_task, user, db) -> Optional[TaskV2]:
+async def _get_task_by_source(source: str, task_groups_list) -> Optional[int]:
     """Find a task by its source."""
-    if wf_task.task.source is None:
-        return None
 
-    stm_source = (
-        select(TaskV2)
-        .join(TaskGroupV2)
-        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        .where(TaskV2.source == wf_task.task.source)
-        .where(
-            or_(
-                TaskGroupV2.user_id == user.id,
-                TaskGroupV2.user_group_id.in_(
-                    select(LinkUserGroup.group_id).where(
-                        LinkUserGroup.user_id == user.id
-                    )
-                ),
-            )
-        )
-    )
-    res = await db.execute(stm_source)
-    task = res.scalars().one_or_none()
-    return task
+    for task_group in task_groups_list:
+        for task in task_group.task_list:
+            if task.source == source:
+                return task.id
+    return None
 
 
 async def _get_task_by_version(
-    wf_task, user, db, task_user_list, default_group_id
-) -> Optional[TaskV2]:
+    task_import, user_id, db, task_groups_list, default_group_id
+) -> Optional[int]:
     """Find a task by version."""
-    if wf_task.task.version is None:
-        return await _get_latest_user_task(task_user_list, db, wf_task)
 
-    stm = (
-        select(TaskV2)
-        .join(TaskGroupV2)
-        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        .where(TaskGroupV2.pkg_name == wf_task.task.pkg_name)
-        .where(TaskV2.name == wf_task.task.name)
-        .where(TaskGroupV2.version == wf_task.task.version)
-        .where(
-            or_(
-                TaskGroupV2.user_id == user.id,
-                TaskGroupV2.user_group_id.in_(
-                    select(LinkUserGroup.group_id).where(
-                        LinkUserGroup.user_id == user.id
-                    )
-                ),
-            )
+    matching_task_groups = [
+        task_group
+        for task_group in task_groups_list
+        if (
+            task_group.pkg_name == task_import.pkg_name
+            and task_import.name
+            in [task.name for task in task_group.task_list]
         )
-    )
-    res = await db.execute(stm)
-    task = res.scalars().all()
-    if len(task) > 1:
-        return await _resolve_task_conflict(task, user, db, default_group_id)
-    elif len(task) == 1:
-        return task[0]
-    else:
+    ]
+    if len(matching_task_groups) < 1:
         return None
 
-
-async def _get_latest_user_task(task_user_list, db, wf_task) -> TaskV2:
-    """Retrieve the latest task for the user."""
-    if not task_user_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Expected one TaskV2 to match the imported one.",
+    if task_import.version is None:
+        latest_task = max(
+            matching_task_groups, key=lambda tg: tg.version or ""
         )
-    latest_task = max(task_user_list, key=lambda t: t.version)
+        version = latest_task.version
+        if version == "":
+            version = None
+    else:
+        version = task_import.version
 
-    stm = (
-        select(TaskV2)
-        .join(TaskGroupV2)
-        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        .where(TaskGroupV2.pkg_name == wf_task.task.pkg_name)
-        .where(TaskV2.name == wf_task.task.name)
-        .where(TaskGroupV2.version == latest_task.version)
+    final_matching_task_groups = list(
+        filter(lambda tg: tg.version == version, task_groups_list)
     )
-    res = await db.execute(stm)
-    task = res.scalars().one_or_none()
-    return task
+
+    if len(final_matching_task_groups) < 1:
+        return None
+
+    elif len(final_matching_task_groups) > 1:
+        final_task_group = await _disambiguate_task_groups(
+            matching_task_groups, user_id, db, default_group_id
+        )
+
+    else:
+        final_task_group = final_matching_task_groups[0]
+
+    task_id = next(
+        task.id
+        for task in final_task_group.task_list
+        if task.name == task_import.name
+    )
+    # return if a list is empty
+    return task_id
 
 
-async def _resolve_task_conflict(
-    task_list, user, db, default_group_id
-) -> TaskV2:
+async def _disambiguate_task_groups(
+    matching_task_groups, user_id, db, default_group_id
+) -> Optional[TaskV2]:
     """Resolve conflicts when multiple tasks match."""
-    for task in task_list:
-        if task.taskgroupv2_id == default_group_id:
-            return task
-    task = task_list[0]
+    for task_group in matching_task_groups:
+        if task_group.user_id == user_id:
+            return task_group
+    for task_group in matching_task_groups:
+        if task_group.user_group_id == default_group_id:
+            return task_group
+
     stm = (
-        select(TaskV2)
-        .join(TaskGroupV2)
-        .join(LinkUserGroup)
-        .where(LinkUserGroup.group_id == TaskGroupV2.user_group_id)
-        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        .where(TaskV2.name == task.name)
-        .where(TaskGroupV2.user_group_id == task.user_group_id)
-        .where(LinkUserGroup.user_id == user.id)
+        select(LinkUserGroup.group_id)
+        .where(
+            LinkUserGroup.group_id.in_(
+                [
+                    task_group.user_group_id
+                    for task_group in matching_task_groups
+                ]
+            )
+        )
         .order_by(LinkUserGroup.timestamp_created.asc().limit(1))
     )
     res = await db.execute(stm)
-    task = res.scalars().one_or_none()
-    return task
+    oldest_user_group_id = res.scalars().one()
+
+    for task_group in matching_task_groups:
+        if task_group.user_group_id == oldest_user_group_id:
+            return task_group
+
+    return None
 
 
 @router.post(
@@ -198,6 +192,19 @@ async def import_workflow(
         name=workflow.name, project_id=project_id, db=db
     )
 
+    task_group_list = await _get_user_accessible_taskgroups(user.id, db)
+    default_group_id = await _get_default_usergroup_id(db)
+
+    list_wf_tasks = []
+    for wf_task in workflow.task_list:
+        task_id = await _find_task_by_source_or_version(
+            wf_task.task, user.id, db, task_group_list, default_group_id
+        )
+        new_wf_task = WorkflowTaskCreateV2(
+            **wf_task.dict(exclude_none=True, exclude={"task"})
+        )
+        list_wf_tasks.append(new_wf_task)
+
     # Create new Workflow
     db_workflow = WorkflowV2(
         project_id=project_id,
@@ -207,18 +214,8 @@ async def import_workflow(
     await db.commit()
     await db.refresh(db_workflow)
 
-    task_user_list = await _get_user_tasks(user.id, db)
-    default_group_id = await _get_default_group_id(db)
-
-    for wf_task in workflow.task_list:
-        task_id = await _find_task_by_source_or_version(
-            wf_task, user, db, task_user_list, default_group_id
-        )
-        new_wf_task = WorkflowTaskCreateV2(
-            **wf_task.dict(exclude_none=True, exclude={"task"})
-        )
-
-        # Insert task into the workflow
+    # Insert task into the workflow
+    for new_wf_task in list_wf_tasks:
         await _workflow_insert_task(
             **new_wf_task.dict(),
             workflow_id=db_workflow.id,
@@ -226,5 +223,4 @@ async def import_workflow(
             db=db
         )
 
-    await db.close()
     return db_workflow

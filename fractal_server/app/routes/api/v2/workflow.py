@@ -266,9 +266,6 @@ async def export_worfklow(
         **workflow.model_dump(),
         task_list=wf_task_list,
     )
-    from devtools import debug
-
-    debug(wf)
     return wf
 
 
