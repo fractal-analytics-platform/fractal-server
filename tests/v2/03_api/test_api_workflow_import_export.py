@@ -336,14 +336,14 @@ async def test_unit_get_task_by_taskimport():
         user_id=1,
         user_group_id=1,
         pkg_name="pkg",
-        version="1.0",
+        version="1.0.0",
     )
     task_group2 = TaskGroupV2(
         task_list=[task2],
         user_id=1,
         user_group_id=2,
         pkg_name="pkg",
-        version="2.0",
+        version="2.0.0",
     )
     task_group3 = TaskGroupV2(
         task_list=[task3],
