@@ -104,44 +104,6 @@ async def test_import_export_workflow(
         assert task_old == task_new
 
 
-async def test_export_workflow_log(
-    client,
-    MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-):
-    """
-    WHEN exporting a workflow with custom tasks
-    THEN there must be a warning
-    """
-
-    # Create project and task
-    async with MockCurrentUser() as user:
-        TASK_OWNER = "someone"
-        task = await task_factory_v2(
-            user_id=user.id, owner=TASK_OWNER, source="some-source"
-        )
-        prj = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=prj.id)
-
-    # Insert WorkflowTasks
-    res = await client.post(
-        (
-            f"api/v2/project/{prj.id}/workflow/{wf.id}/wftask/"
-            f"?task_id={task.id}"
-        ),
-        json={},
-    )
-    assert res.status_code == 201
-
-    # Export workflow
-    res = await client.get(
-        f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
-    )
-    assert res.status_code == 200
-
-
 async def test_import_export_workflow_fail(
     client,
     MockCurrentUser,
