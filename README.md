@@ -63,7 +63,7 @@
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                                |       23 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/\_aux\_auth.py                                 |       59 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/current\_user.py                               |       58 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/app/routes/auth/group.py                                       |       90 |        0 |       18 |        0 |    100% |           |
+| fractal\_server/app/routes/auth/group.py                                       |      104 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/login.py                                       |       10 |        0 |        4 |        1 |     93% |    24->23 |
 | fractal\_server/app/routes/auth/oauth.py                                       |       21 |       12 |       10 |        2 |     35% |24-47, 62-63 |
 | fractal\_server/app/routes/auth/register.py                                    |       11 |        0 |        4 |        1 |     93% |    22->21 |
@@ -188,7 +188,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       22 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **10473** |  **476** | **2208** |  **195** | **94%** |           |
+|                                                                      **TOTAL** | **10487** |  **476** | **2212** |  **195** | **94%** |           |
 
 
 ## Setup coverage badge
