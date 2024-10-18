@@ -451,7 +451,7 @@ async def test_contact_an_admin_message(
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
         assert res.status_code == 422
-        assert "There exists a task collection state" in res.json()["detail"]
+        assert "There exists a task-collection state" in res.json()["detail"]
 
         # Crete a new CollectionState associated to the same TaskGroup
         # (this is NOT ALLOWED using the API).

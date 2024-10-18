@@ -237,9 +237,9 @@ async def _get_collection_status_message(
         )
     elif len(states) == 1:
         msg = (
-            f"\nThere exists a task collection state (ID={states[0].id}) for "
-            f"this task group (ID={task_group.id}), with status "
-            f"{states[0].data.get('status')}."
+            f"\nThere exists a task-collection state (ID={states[0].id}) for "
+            f"such task group (ID={task_group.id}), with status "
+            f"'{states[0].data.get('status')}'."
         )
     else:
         msg = ""
