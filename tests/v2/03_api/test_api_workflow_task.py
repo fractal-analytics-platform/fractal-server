@@ -117,7 +117,7 @@ async def test_post_worfkflow_task_failures(
         user_A_id = user_A.id
         task_A_active = await task_factory_v2(name="a", user_id=user_A_id)
         task_A_non_active = await task_factory_v2(
-            name="a", user_id=user_A_id, active=False
+            name="a", user_id=user_A_id, task_group_kwargs=dict(active=False)
         )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_B:
         # Create a new UserGroup with user_B
@@ -132,7 +132,9 @@ async def test_post_worfkflow_task_failures(
 
         user_B_id = user_B.id
         task_B = await task_factory_v2(
-            name="a", user_id=user_B_id, user_group_id=new_group.id
+            name="a",
+            user_id=user_B_id,
+            task_group_kwargs=dict(user_group_id=new_group.id),
         )
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user:

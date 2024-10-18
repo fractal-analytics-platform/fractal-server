@@ -134,7 +134,6 @@ class TaskReadV2(BaseModel):
 
 class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str] = None
     command_parallel: Optional[str] = None
     command_non_parallel: Optional[str] = None
     input_types: Optional[dict[str, bool]] = None
@@ -151,8 +150,6 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
         if not isinstance(v, dict):
             raise ValueError
         return v
-
-    _name = validator("name", allow_reuse=True)(valstr("name"))
 
     _command_parallel = validator("command_parallel", allow_reuse=True)(
         valstr("command_parallel")
@@ -186,11 +183,29 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 
 class TaskImportV2(BaseModel, extra=Extra.forbid):
 
+    pkg_name: str
+    version: Optional[str] = None
+    name: str
+    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
+    _name = validator("name", allow_reuse=True)(valstr("name"))
+
+
+class TaskImportV2Legacy(BaseModel):
     source: str
     _source = validator("source", allow_reuse=True)(valstr("source"))
 
 
 class TaskExportV2(BaseModel):
 
-    source: Optional[str] = None
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    pkg_name: str
+    version: Optional[str] = None
+    name: str
+
+    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
+    _name = validator("name", allow_reuse=True)(valstr("name"))

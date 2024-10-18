@@ -186,13 +186,12 @@ async def task_factory_v2(db: AsyncSession):
 
     async def __task_factory(
         user_id: int,
-        user_group_id: Optional[int] = None,
-        active: bool = True,
+        task_group_kwargs: Optional[dict[str, str]] = None,
         db: AsyncSession = db,
         index: int = 0,
         type: Literal["parallel", "non_parallel", "compound"] = "compound",
         **kwargs,
-    ):
+    ) -> TaskV2:
         args = dict(
             type=type,
             name=f"task{index}",
@@ -228,6 +227,12 @@ async def task_factory_v2(db: AsyncSession):
 
         args.update(kwargs)
         task = TaskV2(**args)
+
+        # Task Group
+        if task_group_kwargs is None:
+            task_group_kwargs = dict()
+
+        user_group_id = task_group_kwargs.get("user_group_id")
         if user_group_id is None:
             user_group_id = await _get_default_usergroup_id(db=db)
         else:
@@ -238,9 +243,10 @@ async def task_factory_v2(db: AsyncSession):
         task_group = TaskGroupV2(
             user_id=user_id,
             user_group_id=user_group_id,
-            active=active,
-            origin="other",
-            pkg_name=task.name,
+            active=task_group_kwargs.get("active", True),
+            version=task_group_kwargs.get("version"),
+            origin=task_group_kwargs.get("origin", "other"),
+            pkg_name=task_group_kwargs.get("pkg_name", "task.name"),
             task_list=[task],
         )
         db.add(task_group)

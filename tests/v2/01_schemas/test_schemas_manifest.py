@@ -63,44 +63,46 @@ def test_ManifestV2():
     assert ManifestV2(manifest_version="2", task_list=[])
 
     compound_both_schemas = TaskManifestV2(
-        name="task",
+        name="task1",
         executable_parallel="exec",
         args_schema_parallel={"a": "b"},
         executable_non_parallel="exec",
         args_schema_non_parallel={"a": "b"},
     )
     compound_just_parallel_schemas = TaskManifestV2(
-        name="task",
+        name="task2",
         executable_parallel="exec",
         args_schema_parallel={"a": "b"},
         executable_non_parallel="exec",
     )
     compound_just_non_parallel_schemas = TaskManifestV2(
-        name="task",
+        name="task3",
         executable_parallel="exec",
         executable_non_parallel="exec",
         args_schema_non_parallel={"a": "b"},
     )
     compound_no_schemas = TaskManifestV2(
-        name="task", executable_parallel="exec", executable_non_parallel="exec"
+        name="task4",
+        executable_parallel="exec",
+        executable_non_parallel="exec",
     )
 
     parallel_schema = TaskManifestV2(
-        name="task",
+        name="task5",
         executable_parallel="exec",
         args_schema_parallel={"a": "b"},
     )
     parallel_no_schema = TaskManifestV2(
-        name="task", executable_parallel="exec"
+        name="task6", executable_parallel="exec"
     )
 
     non_parallel_schema = TaskManifestV2(
-        name="task",
+        name="task7",
         executable_non_parallel="exec",
         args_schema_non_parallel={"a": "b"},
     )
     non_parallel_no_schema = TaskManifestV2(
-        name="task", executable_non_parallel="exec"
+        name="task8", executable_non_parallel="exec"
     )
 
     assert ManifestV2(
@@ -131,7 +133,7 @@ def test_ManifestV2():
         )
     assert "Manifest has has_args_schemas=True" in msg(e)
 
-    # 2: compound_just_parallel_schemas
+    # 3: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:
         ManifestV2(
             manifest_version="2",
@@ -144,7 +146,7 @@ def test_ManifestV2():
         )
     assert "Manifest has has_args_schemas=True" in msg(e)
 
-    # 3: compound_no_schemas
+    # 4: compound_no_schemas
     with pytest.raises(ValidationError) as e:
         ManifestV2(
             manifest_version="2",
@@ -157,7 +159,7 @@ def test_ManifestV2():
         )
     assert "Manifest has has_args_schemas=True" in msg(e)
 
-    # 4: parallel_no_schema
+    # 5: parallel_no_schema
     with pytest.raises(ValidationError) as e:
         ManifestV2(
             manifest_version="2",
@@ -170,7 +172,7 @@ def test_ManifestV2():
         )
     assert "Manifest has has_args_schemas=True" in msg(e)
 
-    # 4: non_parallel_no_schema
+    # 6: non_parallel_no_schema
     with pytest.raises(ValidationError) as e:
         ManifestV2(
             manifest_version="2",
@@ -182,3 +184,15 @@ def test_ManifestV2():
             ],
         )
     assert "Manifest has has_args_schemas=True" in msg(e)
+
+    # 7: Non-unique task names
+    with pytest.raises(ValidationError) as e:
+        ManifestV2(
+            manifest_version="2",
+            has_args_schemas=True,
+            task_list=[
+                parallel_schema,
+                parallel_schema,
+            ],
+        )
+    assert "Task names in manifest must be unique" in msg(e)

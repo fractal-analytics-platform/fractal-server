@@ -20,7 +20,9 @@ async def test_get_single_task_group(
         await db.close()
 
         task = await task_factory_v2(
-            user_id=user1.id, user_group_id=new_group.id, source="source"
+            user_id=user1.id,
+            task_group_kwargs=dict(user_group_id=new_group.id),
+            source="source",
         )
 
         res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
@@ -49,7 +51,11 @@ async def test_get_task_group_list(
 ):
     async with MockCurrentUser() as user1:
         await task_factory_v2(user_id=user1.id, source="source1")
-        await task_factory_v2(user_id=user1.id, source="source2", active=False)
+        await task_factory_v2(
+            user_id=user1.id,
+            source="source2",
+            task_group_kwargs=dict(active=False),
+        )
 
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
@@ -72,7 +78,9 @@ async def test_get_task_group_list(
         await db.close()
 
         await task_factory_v2(
-            user_id=user2.id, user_group_id=new_group.id, source="source3"
+            user_id=user2.id,
+            task_group_kwargs=dict(user_group_id=new_group.id),
+            source="source3",
         )
 
         res = await client.get(f"{PREFIX}/")
@@ -146,11 +154,15 @@ async def test_patch_task_group(
 ):
     async with MockCurrentUser() as user1:
         taskA = await task_factory_v2(
-            name="asd", user_id=user1.id, user_group_id=default_user_group.id
+            name="asd",
+            user_id=user1.id,
+            task_group_kwargs=dict(user_group_id=default_user_group.id),
         )
         group2 = await user_group_factory("team2", user1.id, first_user.id)
         taskB = await task_factory_v2(
-            name="asd", user_id=first_user.id, user_group_id=group2.id
+            name="asd",
+            user_id=first_user.id,
+            task_group_kwargs=dict(user_group_id=group2.id),
         )
 
         res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")

@@ -11,7 +11,7 @@ PREFIX = "api/v2/task"
 
 
 async def test_failed_API_calls(
-    client, MockCurrentUser, tmp_path, testdata_path, task_factory_v2
+    client, MockCurrentUser, tmp_path, testdata_path
 ):
 
     # Missing state ID

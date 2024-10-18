@@ -159,6 +159,19 @@ class ManifestV2(BaseModel):
                         )
         return values
 
+    @root_validator()
+    def _unique_task_names(cls, values):
+        task_list = values["task_list"]
+        task_list_names = [t.name for t in task_list]
+        if len(set(task_list_names)) != len(task_list_names):
+            raise ValueError(
+                (
+                    "Task names in manifest must be unique.\n",
+                    f"Given: {task_list_names}.",
+                )
+            )
+        return values
+
     @validator("manifest_version")
     def manifest_version_2(cls, value):
         if value != "2":

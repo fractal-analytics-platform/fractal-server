@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -10,6 +11,7 @@ from pydantic import validator
 from .._validators import valdictkeys
 from .task import TaskExportV2
 from .task import TaskImportV2
+from .task import TaskImportV2Legacy
 from .task import TaskReadV2
 from fractal_server.images import Filters
 
@@ -157,7 +159,7 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
     input_filters: Optional[Filters] = None
 
-    task: TaskImportV2
+    task: Union[TaskImportV2, TaskImportV2Legacy]
 
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdictkeys("meta_non_parallel")
