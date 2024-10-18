@@ -37,8 +37,6 @@ async def test_import_export(
 
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=prj.id)
-
         await task_factory_v2(user_id=user.id, source=wf_file_task_source)
 
         res = await client.post(
@@ -46,13 +44,21 @@ async def test_import_export(
             json=workflow_from_file,
         )
         assert res.status_code == 201
+        workflow_imported = res.json()
+        workflow_imported_id = workflow_imported["id"]
+        assert len(workflow_imported["task_list"]) == len(
+            workflow_from_file["task_list"]
+        )
 
         # Export workflow
         res = await client.get(
-            f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
+            f"/api/v2/project/{prj.id}/workflow/"
+            f"{workflow_imported_id}/export/"
         )
         workflow_exported = res.json()
-        debug(workflow_exported)
+        assert len(workflow_exported["task_list"]) == len(
+            workflow_from_file["task_list"]
+        )
 
         assert "id" not in workflow_exported
         assert "project_id" not in workflow_exported
