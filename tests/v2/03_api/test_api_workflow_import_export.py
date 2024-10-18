@@ -53,10 +53,6 @@ async def test_import_export(
         )
         workflow_exported = res.json()
         debug(workflow_exported)
-        assert len(workflow_from_file["task_list"]) == len(
-            workflow_exported["task_list"]
-        )
-        return
 
         assert "id" not in workflow_exported
         assert "project_id" not in workflow_exported
