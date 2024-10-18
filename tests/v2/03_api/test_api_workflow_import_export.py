@@ -369,6 +369,15 @@ async def test_unit_disambiguate_task_groups(
                 user_group_id=default_user_group.id,
             ),
         )
+        task_D = await task_factory_v2(
+            name="task",
+            user_id=user1_id,
+            task_group_kwargs=dict(
+                pkg_name="pkg",
+                version=None,
+                user_group_id=default_user_group.id,
+            ),
+        )
 
     async with MockCurrentUser() as user2:
         user2_id = user2.id
@@ -412,6 +421,7 @@ async def test_unit_disambiguate_task_groups(
     task_group_A = await db.get(TaskGroupV2, task_A.taskgroupv2_id)
     task_group_B = await db.get(TaskGroupV2, task_B.taskgroupv2_id)
     task_group_C = await db.get(TaskGroupV2, task_C.taskgroupv2_id)
+    task_group_D = await db.get(TaskGroupV2, task_D.taskgroupv2_id)
 
     await db.close()
 
@@ -459,3 +469,13 @@ async def test_unit_disambiguate_task_groups(
     )
     debug(task_group)
     assert task_group is None
+
+    # Pick task-group when latest version is actually None
+    task_group = await _disambiguate_task_groups(
+        matching_task_groups=[task_group_D],
+        user_id=user1_id,
+        default_group_id=default_user_group.id,
+        db=db,
+    )
+    debug(task_group)
+    assert task_group.id == task_group_D.id
