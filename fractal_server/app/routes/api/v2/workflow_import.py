@@ -212,9 +212,6 @@ async def _get_task_by_taskimport(
             matching_task_groups, key=lambda tg: tg.version or ""
         )
         version = latest_task.version
-        if version == "":
-            raise
-            version = None
         logger.info(
             f"[_get_task_by_taskimport] Latest version set to {version}."
         )
