@@ -102,26 +102,37 @@ async def _disambiguate_task_groups(
     # Highest priority: task groups created by user
     for task_group in matching_task_groups:
         if task_group.user_id == user_id:
+            logger.info(
+                "[_disambiguate_task_groups] "
+                f"Found task group {task_group.id} with {user_id=}, return."
+            )
             return task_group
-    from devtools import debug
-
-    debug("LOGGING")
-    logger.info(f"No task group found with {user_id=}, continue.")
-    logger.critical(f"No task group found with {user_id=}, continue.")
-    debug("LOGGING / end")
+    logger.info(
+        "[_disambiguate_task_groups] "
+        f"No task group found with {user_id=}, continue."
+    )
 
     # Medium priority: task groups owned by default user group
     for task_group in matching_task_groups:
         if task_group.user_group_id == default_group_id:
+            logger.info(
+                "[_disambiguate_task_groups] "
+                f"Found task group {task_group.id} with user_group_id="
+                f"{default_group_id}, return."
+            )
             return task_group
     logger.info(
+        "[_disambiguate_task_groups] "
         "No task group found with user_group_id="
         f"{default_group_id}, continue."
     )
 
     # Lowest priority: task groups owned by other groups, sorted
     # according to age of the user/usergroup link
-    logger.info("Now sorting remaining task groups by oldest-user-link.")
+    logger.info(
+        "[_disambiguate_task_groups] "
+        "Now sorting remaining task groups by oldest-user-link."
+    )
     user_group_ids = [
         task_group.user_group_id for task_group in matching_task_groups
     ]
@@ -133,7 +144,10 @@ async def _disambiguate_task_groups(
     )
     res = await db.execute(stm)
     oldest_user_group_id = res.scalars().first()
-    logger.info(f"Result of sorting: {oldest_user_group_id=}.")
+    logger.info(
+        "[_disambiguate_task_groups] "
+        f"Result of sorting: {oldest_user_group_id=}."
+    )
     task_group = next(
         iter(
             task_group
