@@ -3,9 +3,6 @@
 
 # 2.7.0 (unreleased)
 
-This is a placeholder for the 2.7.0 changelog, which is provisionally split
-into pre-release sections below.
-
 > WARNING: This release requires running `fractalctl update-db-data` (after
 > `fractalctl set-db`).
 
@@ -17,29 +14,12 @@ into pre-release sections below.
 > This user must exist, and they will own all previously-common
 > tasks/task-groups.
 
-# 2.7.0a6
-
-* API
-    * Improve error messages from task collection (\#1913).
-    * Add `PATCH auth/group/{group_id}/user-settings/` bulk endpoint (\#1936).
-    * Update endpoints for workflow import/export  (\#1925).
-    * Forbid changing `TaskV2.name` (\#1925).
-    * Forbid non-unique task names in `ManifestV2` (\#1925).
-* Database:
-    * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
-    * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
-* Runner:
-    * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
-* Testing:
-    *  Benchmark `GET /api/v2/task-group/` (\#1922).
-
-# Up to 2.7.0a5
-
 * API:
     * Users and user groups:
         * Replace `UserRead.group_names` and `UserRead.group_ids` with `UserRead.group_ids_names` ordered list (\#1844, \#1850).
         * Deprecate `GET /auth/group-names/` (\#1844).
         * Add `DELETE /auth/group/{id}/` endpoint (\#1885).
+        * Add `PATCH auth/group/{group_id}/user-settings/` bulk endpoint (\#1936).
     * Task groups:
         * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856).
         * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
@@ -54,6 +34,7 @@ into pre-release sections below.
         * Drop `TaskUpdateV2.version` (\#1905).
         * Revamp access-control for `/api/v2/task/` endpoints, based on task-group attributes (\#1817).
         * Update `/api/v2/task/` endpoints and schemas with new task attributes (\#1856).
+        * Forbid changing `TaskV2.name` (\#1925).
     * Task collection:
         * Improve preliminary checks in task-collection endpoints (\#1861).
         * Refactor split between task-collection endpoints and background tasks (\#1861).
@@ -64,12 +45,15 @@ into pre-release sections below.
         * Add task `authors` to manifest schema (\#1856).
         * Do not use `source` for custom task collection (\#1893).
         * Rename custom-task-collection request-body field from `source` to `label` (\#1896).
+        * Improve error messages from task collection (\#1913).
+        * Forbid non-unique task names in `ManifestV2` (\#1925).
     * Workflows and workflow tasks:
         * Introduce additional checks in POST-workflowtask endpoint, concerning non-active or non-accessible tasks (\#1817).
         * Introduce additional intormation in GET-workflow endpoint, concerning non-active or non-accessible tasks (\#1817).
         * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
         * Drop `WorkflowTaskCreateV2.order` (\#1906).
+        * Update endpoints for workflow import/export  (\#1925).
     * Datasets
         * Remove `TaskDumpV2.owner` attribute (\#1909).
     * Jobs
@@ -90,8 +74,12 @@ into pre-release sections below.
     * Make `TaskV2.source` nullable and drop its uniqueness constraint (\#1861).
     * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
     * Clean up `alembic` migration scripts (\#1894).
-
-
+    * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
+    * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
+* Runner:
+    * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
+* Testing:
+    *  Benchmark `GET /api/v2/task-group/` (\#1922).
 
 # 2.6.4
 
