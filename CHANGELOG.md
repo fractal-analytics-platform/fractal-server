@@ -17,7 +17,7 @@ into pre-release sections below.
 > This user must exist, and they will own all previously-common
 > tasks/task-groups.
 
-# 2.7.0a6 (unreleased)
+# 2.7.0a6
 
 * API
     * Improve error messages from task collection (\#1913).
