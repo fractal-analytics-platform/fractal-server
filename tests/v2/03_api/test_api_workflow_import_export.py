@@ -37,7 +37,9 @@ async def test_import_export(
 
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
-        await task_factory_v2(user_id=user.id, source=wf_file_task_source)
+        task_with_source = await task_factory_v2(
+            user_id=user.id, source=wf_file_task_source
+        )
 
         # Import workflow
         res = await client.post(
@@ -71,7 +73,7 @@ async def test_import_export(
             assert "taskgroupv2_id" not in wftask["task"]
         assert res.status_code == 200
 
-        # Case source and the others
+        # Invalid request: both source and the other attributes
         invalid_payload = wf_modify(
             {
                 "source": "fractal-tasks-core-1.2.3-cellpose",
@@ -80,35 +82,58 @@ async def test_import_export(
                 "name": "cellpose_segmentation",
             }
         )
-
-        # No casting to WorkflowImportV2
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
 
-        # Case no source and missing one of the others
+        # Invalid request: no source, and missing pkg_name
         invalid_payload = wf_modify(
             {
                 "pkg_name": "fractal-tasks-core",
                 "version": "1.2.3",
             }
         )
-
-        # No casting to WorkflowImportV2
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
 
-        # Case empty dict
+        # Invalid request: empty dictionary
         invalid_payload = wf_modify({})
-
-        # No casting to WorkflowImportV2
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
+
+        # Valid request: source-based
+        valid_payload_full = wf_modify(
+            new_name="new_name_source_1",
+            task_import={
+                "source": wf_file_task_source,
+            },
+        )
+        debug(valid_payload_full)
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=valid_payload_full,
+        )
+        debug(res.json())
+        assert res.status_code == 201
+        assert res.json()["task_list"][0]["task"]["id"] == task_with_source.id
+
+        # Valid request: source-based, but invalid source
+        valid_payload_full = wf_modify(
+            new_name="new_name_source_2",
+            task_import={"source": "INVALID"},
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=valid_payload_full,
+        )
+        assert res.status_code == 422
+        error_msg = "Could not find a task matching with source='INVALID'."
+        assert error_msg in res.json()["detail"]
 
         first_task_no_source = await task_factory_v2(
             user_id=user.id,
@@ -120,6 +145,7 @@ async def test_import_export(
             ),
         )
 
+        # Valid request: task-import based
         valid_payload_full = wf_modify(
             new_name="foo",
             task_import={
@@ -132,7 +158,6 @@ async def test_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
             json=valid_payload_full,
         )
-
         assert res.status_code == 201
         assert (
             res.json()["task_list"][0]["task"]["taskgroupv2_id"]
