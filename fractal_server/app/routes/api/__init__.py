@@ -1,6 +1,8 @@
 """
 `api` module
 """
+import os
+
 from fastapi import APIRouter
 from fastapi import Depends
 
@@ -15,11 +17,8 @@ router_api = APIRouter()
 
 @router_api.get("/alive/")
 async def alive():
-    settings = Inject(get_settings)
-    return dict(
-        alive=True,
-        version=settings.PROJECT_VERSION,
-    )
+    pid = os.getpid()
+    return {"pid": pid}
 
 
 @router_api.get("/settings/")
