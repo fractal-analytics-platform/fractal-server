@@ -39,18 +39,19 @@ async def test_import_export(
         prj = await project_factory_v2(user)
         await task_factory_v2(user_id=user.id, source=wf_file_task_source)
 
+        # Import workflow
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
             json=workflow_from_file,
         )
         assert res.status_code == 201
         workflow_imported = res.json()
-        workflow_imported_id = workflow_imported["id"]
         assert len(workflow_imported["task_list"]) == len(
             workflow_from_file["task_list"]
         )
+        workflow_imported_id = workflow_imported["id"]
 
-        # Export workflow
+        # Export the workflow we just imported
         res = await client.get(
             f"/api/v2/project/{prj.id}/workflow/"
             f"{workflow_imported_id}/export/"
@@ -59,7 +60,7 @@ async def test_import_export(
         assert len(workflow_exported["task_list"]) == len(
             workflow_from_file["task_list"]
         )
-
+        # Exported workflow has no database IDs
         assert "id" not in workflow_exported
         assert "project_id" not in workflow_exported
         for wftask in workflow_exported["task_list"]:
@@ -67,10 +68,8 @@ async def test_import_export(
             assert "task_id" not in wftask
             assert "workflow_id" not in wftask
             assert "id" not in wftask["task"]
+            assert "taskgroupv2_id" not in wftask["task"]
         assert res.status_code == 200
-
-        # Check that output can be cast to WorkflowRead
-        # WorkflowReadV2(**workflow_imported)
 
         # Case source and the others
         invalid_payload = wf_modify(
