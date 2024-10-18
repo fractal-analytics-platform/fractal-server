@@ -260,6 +260,7 @@ async def test_unit_get_task_by_taskimport():
     task1 = TaskV2(id=1, name="task")
     task2 = TaskV2(id=2, name="task")
     task3 = TaskV2(id=3, name="task")
+
     task_group1 = TaskGroupV2(
         task_list=[task1],
         user_id=1,
@@ -305,6 +306,19 @@ async def test_unit_get_task_by_taskimport():
         db=None,
     )
     assert task_id == task2.id
+
+    # Test with latest version equal to None
+    task_id = await _get_task_by_taskimport(
+        task_import=TaskImportV2(
+            name="task",
+            pkg_name="pkg",
+        ),
+        user_id=1,
+        task_groups_list=[task_group3],
+        default_group_id=1,
+        db=None,
+    )
+    assert task_id == task3.id
 
     # Test with non-matching version
     task_id = await _get_task_by_taskimport(
@@ -369,15 +383,6 @@ async def test_unit_disambiguate_task_groups(
                 user_group_id=default_user_group.id,
             ),
         )
-        task_D = await task_factory_v2(
-            name="task",
-            user_id=user1_id,
-            task_group_kwargs=dict(
-                pkg_name="pkg",
-                version=None,
-                user_group_id=default_user_group.id,
-            ),
-        )
 
     async with MockCurrentUser() as user2:
         user2_id = user2.id
@@ -421,7 +426,6 @@ async def test_unit_disambiguate_task_groups(
     task_group_A = await db.get(TaskGroupV2, task_A.taskgroupv2_id)
     task_group_B = await db.get(TaskGroupV2, task_B.taskgroupv2_id)
     task_group_C = await db.get(TaskGroupV2, task_C.taskgroupv2_id)
-    task_group_D = await db.get(TaskGroupV2, task_D.taskgroupv2_id)
 
     await db.close()
 
@@ -469,13 +473,3 @@ async def test_unit_disambiguate_task_groups(
     )
     debug(task_group)
     assert task_group is None
-
-    # Pick task-group when latest version is actually None
-    task_group = await _disambiguate_task_groups(
-        matching_task_groups=[task_group_D],
-        user_id=user1_id,
-        default_group_id=default_user_group.id,
-        db=db,
-    )
-    debug(task_group)
-    assert task_group.id == task_group_D.id
