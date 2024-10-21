@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 from typing import Optional
@@ -180,37 +179,6 @@ async def apply_workflow(
         ),
         **job_create.dict(),
     )
-
-    # Rate Limiting:
-    # raise `429 TOO MANY REQUESTS` if this endpoint has been called with the
-    # same database keys (Project, Workflow and Datasets) during the last
-    # `settings.FRACTAL_API_SUBMIT_RATE_LIMIT` seconds.
-    stm = (
-        select(JobV2)
-        .where(JobV2.project_id == project_id)
-        .where(JobV2.workflow_id == workflow_id)
-        .where(JobV2.dataset_id == dataset_id)
-    )
-    res = await db.execute(stm)
-    db_jobs = res.scalars().all()
-    if db_jobs and any(
-        abs(
-            job.start_timestamp
-            - db_job.start_timestamp.replace(tzinfo=timezone.utc)
-        )
-        < timedelta(seconds=settings.FRACTAL_API_SUBMIT_RATE_LIMIT)
-        for db_job in db_jobs
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=(
-                f"The endpoint 'POST /api/v2/project/{project_id}/job/submit/'"
-                " was called several times within an interval of less "
-                f"than {settings.FRACTAL_API_SUBMIT_RATE_LIMIT} seconds, using"
-                " the same foreign keys. If it was intentional, please wait "
-                "and try again."
-            ),
-        )
 
     db.add(job)
     await db.commit()
