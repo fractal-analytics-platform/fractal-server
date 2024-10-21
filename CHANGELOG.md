@@ -21,7 +21,7 @@
         * Add `DELETE /auth/group/{id}/` endpoint (\#1885).
         * Add `PATCH auth/group/{group_id}/user-settings/` bulk endpoint (\#1936).
     * Task groups:
-        * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856).
+        * Introduce `/api/v2/task-group/` routes (\#1817, \#1847, \#1852, \#1856, \#1943).
         * Respond with 422 error when any task-creating endpoint would break a non-duplication constraint (\#1861).
         * Enforce non-duplication constraints on `TaskGroupV2` (\#1865).
         * Fix non-duplication check in `PATCH /api/v2/task-group/{id}/` (\#1911).

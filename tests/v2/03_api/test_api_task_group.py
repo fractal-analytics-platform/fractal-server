@@ -50,16 +50,34 @@ async def test_get_task_group_list(
     db,
 ):
     async with MockCurrentUser() as user1:
-        await task_factory_v2(user_id=user1.id, source="source1")
+        await task_factory_v2(
+            user_id=user1.id,
+            source="source1",
+            args_schema_non_parallel={"foo": 0, "bar": 1},
+            args_schema_parallel={"xxx": 2, "yyy": 3},
+        )
         await task_factory_v2(
             user_id=user1.id,
             source="source2",
             task_group_kwargs=dict(active=False),
+            args_schema_non_parallel={"foo": 4, "bar": 5},
+            args_schema_parallel={"xxx": 6, "yyy": 7},
         )
 
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 2
+        for group in res.json():
+            for task in group["task_list"]:
+                assert task["args_schema_non_parallel"] is not None
+                assert task["args_schema_parallel"] is not None
+        res = await client.get(f"{PREFIX}/?args_schema=false")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        for group in res.json():
+            for task in group["task_list"]:
+                assert task["args_schema_non_parallel"] is None
+                assert task["args_schema_parallel"] is None
 
     async with MockCurrentUser() as user2:
 

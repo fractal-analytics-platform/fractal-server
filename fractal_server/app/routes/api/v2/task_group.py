@@ -35,6 +35,7 @@ async def get_task_group_list(
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
+    args_schema: bool = True,
 ) -> list[TaskGroupReadV2]:
     """
     Get all accessible TaskGroups
@@ -57,6 +58,12 @@ async def get_task_group_list(
 
     res = await db.execute(stm)
     task_groups = res.scalars().all()
+
+    if args_schema is False:
+        for taskgroup in task_groups:
+            for task in taskgroup.task_list:
+                setattr(task, "args_schema_non_parallel", None)
+                setattr(task, "args_schema_parallel", None)
 
     return task_groups
 
