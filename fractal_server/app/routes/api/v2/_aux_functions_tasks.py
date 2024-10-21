@@ -182,7 +182,7 @@ async def _get_task_read_access(
         if not task_group.active:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Cannot insert non-active tasks into a workflow.",
+                detail=f"Error: task {task_id} ({task.name}) is not active.",
             )
     return task
 
