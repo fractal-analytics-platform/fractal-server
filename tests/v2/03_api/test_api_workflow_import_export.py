@@ -18,7 +18,6 @@ async def test_import_export(
     MockCurrentUser,
     task_factory_v2,
     project_factory_v2,
-    workflow_factory_v2,
     testdata_path,
     db,
 ):
@@ -33,12 +32,20 @@ async def test_import_export(
         wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
 
-    wf_file_task_source = workflow_from_file["task_list"][0]["task"]["source"]
+    wf_file_task_source_0 = workflow_from_file["task_list"][0]["task"][
+        "source"
+    ]
+    wf_file_task_source_1 = workflow_from_file["task_list"][1]["task"][
+        "source"
+    ]
 
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
-        task_with_source = await task_factory_v2(
-            user_id=user.id, source=wf_file_task_source
+        task_with_source0 = await task_factory_v2(
+            user_id=user.id, source=wf_file_task_source_0
+        )
+        task_with_source1 = await task_factory_v2(
+            user_id=user.id, source=wf_file_task_source_1
         )
 
         # Import workflow
@@ -52,6 +59,14 @@ async def test_import_export(
             workflow_from_file["task_list"]
         )
         workflow_imported_id = workflow_imported["id"]
+        assert (
+            workflow_imported["task_list"][0]["task"]["id"]
+            == task_with_source0.id
+        )
+        assert (
+            workflow_imported["task_list"][1]["task"]["id"]
+            == task_with_source1.id
+        )
 
         # Export the workflow we just imported
         res = await client.get(
@@ -62,6 +77,7 @@ async def test_import_export(
         assert len(workflow_exported["task_list"]) == len(
             workflow_from_file["task_list"]
         )
+
         # Exported workflow has no database IDs
         assert "id" not in workflow_exported
         assert "project_id" not in workflow_exported
@@ -110,7 +126,7 @@ async def test_import_export(
         valid_payload_full = wf_modify(
             new_name="new_name_source_1",
             task_import={
-                "source": wf_file_task_source,
+                "source": wf_file_task_source_0,
             },
         )
         debug(valid_payload_full)
@@ -120,7 +136,7 @@ async def test_import_export(
         )
         debug(res.json())
         assert res.status_code == 201
-        assert res.json()["task_list"][0]["task"]["id"] == task_with_source.id
+        assert res.json()["task_list"][0]["task"]["id"] == task_with_source0.id
 
         # Valid request: source-based, but invalid source
         valid_payload_full = wf_modify(
