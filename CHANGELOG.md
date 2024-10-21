@@ -58,6 +58,7 @@
         * Remove `TaskDumpV2.owner` attribute (\#1909).
     * Jobs
         * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
+        * Remove rate limit for `POST /project/{project_id}/job/submit/` (\#1944).
     * Admin:
         * Remove `owner` from `GET admin/v2/task/` (\#1909).
         * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
