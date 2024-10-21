@@ -53,7 +53,7 @@
         * Introduce additional intormation in PATCH-workflow endpoint, concerning non-active or non-accessible tasks (\#1868, \#1869).
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
         * Drop `WorkflowTaskCreateV2.order` (\#1906).
-        * Update endpoints for workflow import/export  (\#1925).
+        * Update endpoints for workflow import/export  (\#1925, \#1939).
     * Datasets
         * Remove `TaskDumpV2.owner` attribute (\#1909).
     * Jobs

@@ -13,7 +13,12 @@
             "meta_parallel": {"key1": "value1"},
             "meta_non_parallel": {"key2": "value2"},
             "task": {
-                "source": "PKG_SOURCE:dummy2"
+                "source": "PKG_SOURCE:dummy0"
+            }
+        },
+        {
+           "task": {
+                "source": "PKG_SOURCE:dummy1"
             }
         }
     ]
