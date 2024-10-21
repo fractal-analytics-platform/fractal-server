@@ -298,6 +298,7 @@ async def import_workflow(
     default_group_id = await _get_default_usergroup_id(db)
 
     list_wf_tasks = []
+    list_task_ids = []
     for wf_task in workflow_import.task_list:
         task_import = wf_task.task
         if isinstance(task_import, TaskImportV2Legacy):
@@ -322,6 +323,7 @@ async def import_workflow(
             **wf_task.dict(exclude_none=True, exclude={"task"})
         )
         list_wf_tasks.append(new_wf_task)
+        list_task_ids.append(task_id)
 
     # Create new Workflow
     db_workflow = WorkflowV2(
@@ -333,11 +335,11 @@ async def import_workflow(
     await db.refresh(db_workflow)
 
     # Insert task into the workflow
-    for new_wf_task in list_wf_tasks:
+    for ind, new_wf_task in enumerate(list_wf_tasks):
         await _workflow_insert_task(
             **new_wf_task.dict(),
             workflow_id=db_workflow.id,
-            task_id=task_id,
+            task_id=list_task_ids[ind],
             db=db,
         )
 
