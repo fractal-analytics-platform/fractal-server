@@ -1261,9 +1261,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Remove remote tarfile - FIXME SSH: is this needed?
         rm_command = f"rm {tarfile_path_remote}"
-        self.fractal_ssh.run_command(
-            cmd=rm_command, fractal_ssh=self.fractal_ssh
-        )
+        self.fractal_ssh.run_command(cmd=rm_command)
         # logger.warning(f"Unlink {tarfile_path_remote=} - START")
         # self.fractal_ssh._sftp().unlink(tarfile_path_remote)
         # logger.warning(f"Unlink {tarfile_path_remote=} - STOP")
