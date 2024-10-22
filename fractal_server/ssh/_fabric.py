@@ -38,6 +38,15 @@ def _acquire_lock_with_timeout(
     timeout: float,
     logger_name: str = __name__,
 ) -> Generator[Literal[True], Any, None]:
+    """
+    Given a `threading.Lock` object, try to acquire it within a given timeout.
+
+    Arguments:
+        lock:
+        label:
+        timeout:
+        logger_name:
+    """
     logger = get_logger(logger_name)
     logger.info(f"Trying to acquire lock for '{label}', with {timeout=}")
     result = lock.acquire(timeout=timeout)
