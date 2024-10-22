@@ -284,6 +284,39 @@ class FractalSSH(object):
             )
             raise e
 
+    def fetch_file(
+        self,
+        *,
+        local: str,
+        remote: str,
+        logger_name: Optional[str] = None,
+        lock_timeout: Optional[float] = None,
+    ) -> None:
+        """
+        Transfer a file via SSH
+
+        Args:
+            local: Local path to file
+            remote: Target path on remote host
+            fractal_ssh: FractalSSH connection object with custom lock
+            logger_name: Name of the logger
+
+        """
+        try:
+            self._get(
+                local=local,
+                remote=remote,
+                lock_timeout=lock_timeout,
+                label=f"fetch_file {local=} {remote=}",
+            )
+        except Exception as e:
+            logger = get_logger(logger_name=logger_name)
+            logger.error(
+                f"Transferring {remote=} to {local=} over SSH failed.\n"
+                f"Original Error:\n{str(e)}."
+            )
+            raise e
+
     def mkdir(self, *, folder: str, parents: bool = True) -> None:
         """
         Create a folder remotely via SSH.
