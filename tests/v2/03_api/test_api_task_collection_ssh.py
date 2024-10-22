@@ -43,7 +43,7 @@ async def test_task_collection_ssh_from_pypi(
     PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
     settings_overrides = {
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
-        PY_KEY: f"/usr/bin/python{current_py_version}",
+        PY_KEY: f"/.venv{current_py_version}/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
         "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
     }

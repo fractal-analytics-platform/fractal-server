@@ -80,7 +80,9 @@ def test_errors_failed_init_2(
     is handled correctly.
     """
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
     threads_pre = threading.enumerate()
     with pytest.raises(RuntimeError, match="SLURM account must be set"):
@@ -109,7 +111,9 @@ def test_errors_failed_init_3(
     is handled correctly.
     """
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
 
     key_path = (tmp_path / "my.key").as_posix()
@@ -143,7 +147,9 @@ def test_slurm_ssh_executor_submit(
     current_py_version: str,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
 
     with MockFractalSSHSlurmExecutor(
@@ -165,7 +171,9 @@ def test_slurm_ssh_executor_map(
     current_py_version: str,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
 
     with MockFractalSSHSlurmExecutor(
@@ -187,7 +195,9 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
     current_py_version: str,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
     from fractal_server.app.runner.executors.slurm._slurm_config import (
         get_default_slurm_config,
@@ -223,7 +233,9 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
     """
 
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
 
     with MockFractalSSHSlurmExecutor(
