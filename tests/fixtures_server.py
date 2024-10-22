@@ -70,7 +70,7 @@ def get_patched_settings(temp_path: Path):
 
     INFO = sys.version_info
     CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
-    PYTHON_BIN = f"/usr/bin/python{CURRENT_PY_VERSION}"
+    PYTHON_BIN = f"/.venv{CURRENT_PY_VERSION}/bin/python{CURRENT_PY_VERSION}"
     settings.FRACTAL_SLURM_WORKER_PYTHON = PYTHON_BIN
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
