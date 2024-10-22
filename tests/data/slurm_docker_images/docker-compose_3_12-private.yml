@@ -6,10 +6,10 @@ services:
       context: ./slurm
       dockerfile: Dockerfile
       args:
-        - PYTHON_NAME=python3.9
+        - PYTHON_NAME=python3.12
     hostname: slurm
     volumes:
-      - '/tmp:/tmp:rw'
+      - /private:/private:rw
     environment:
       - SLURM_CPUS_ON_NODE=1
     ports:
