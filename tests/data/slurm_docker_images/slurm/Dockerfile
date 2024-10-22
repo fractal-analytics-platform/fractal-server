@@ -15,7 +15,7 @@ ARG PYTHON_PATH
 
 # Update pip and install devtools
 RUN $PYTHON_PATH -m pip install --upgrade pip
-RUN $PYTHON_PATH -m pip devtools
+RUN $PYTHON_PATH -m pip install devtools
 
 # Install fractal-server
 ADD fractal_server_local.tar.gz .
