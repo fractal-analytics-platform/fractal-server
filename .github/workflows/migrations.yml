@@ -67,7 +67,7 @@ jobs:
       - name: Install fractal-server
         run: |
           poetry install --without dev --without docs --no-interaction -E postgres-psycopg-binary
-          poetry install setuptools # required for py3.12
+          poetry add setuptools # required for py3.12
 
       - name: Convert postgres database into sqlite
         run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${SOURCE_VERSION}.sql.sqlite3 --all
