@@ -95,22 +95,34 @@ class FractalSSH(object):
         return get_logger(self.logger_name)
 
     def _put(
-        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
+        self,
+        *,
+        local: str,
+        remote: str,
+        label: str,
+        lock_timeout: Optional[float] = None,
     ) -> Result:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
-            return self._connection.put(*args, **kwargs)
+            return self.sftp.put(local, remote)
 
     def _get(
-        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
+        self,
+        *,
+        local: str,
+        remote: str,
+        label: str,
+        lock_timeout: Optional[float] = None,
     ) -> Result:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
-            return self._connection.get(*args, **kwargs)
+            # prefetch=True,
+            # max_concurrent_prefetch_requests=None,
+            return self.sftp.get(remote, local)
 
     def run(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
@@ -303,6 +315,8 @@ class FractalSSH(object):
 
         """
         try:
+            prefix = "[fetch_file] "
+            self.logger.info(f"{prefix} START fetching '{remote}' over SSH.")
             self._get(
                 local=local,
                 remote=remote,
