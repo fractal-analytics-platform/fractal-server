@@ -30,8 +30,8 @@ class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
 
         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
         mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
-        res = self.fractal_ssh.run_command(cmd=mkdir_command)
-        assert res.exited == 0
+        stdout = self.fractal_ssh.run_command(cmd=mkdir_command)
+        debug(stdout)
         logging.info(f"Now done creating {remote_subfolder.as_posix()}")
 
     def __init__(self, *args, **kwargs):
