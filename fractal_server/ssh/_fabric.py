@@ -24,10 +24,6 @@ class FractalSSHTimeoutError(RuntimeError):
     pass
 
 
-class FractalSSHListTimeoutError(RuntimeError):
-    pass
-
-
 logger = set_logger(__name__)
 
 
