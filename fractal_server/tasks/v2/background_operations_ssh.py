@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -263,8 +262,9 @@ def background_collect_pip_ssh(
                 ).as_posix()
 
                 # Read and validate remote manifest file
-                with fractal_ssh._sftp().open(manifest_path_remote, "r") as f:
-                    pkg_manifest_dict = json.load(f)
+                pkg_manifest_dict = fractal_ssh.read_remote_json_file(
+                    manifest_path_remote
+                )
                 logger.info(f"collecting - loaded {manifest_path_remote=}")
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
                 logger.info("collecting - manifest is a valid ManifestV2")
