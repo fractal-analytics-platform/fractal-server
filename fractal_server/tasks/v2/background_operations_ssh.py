@@ -263,7 +263,7 @@ def background_collect_pip_ssh(
                 ).as_posix()
 
                 # Read and validate remote manifest file
-                with fractal_ssh.sftp().open(manifest_path_remote, "r") as f:
+                with fractal_ssh._sftp().open(manifest_path_remote, "r") as f:
                     pkg_manifest_dict = json.load(f)
                 logger.info(f"collecting - loaded {manifest_path_remote=}")
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
