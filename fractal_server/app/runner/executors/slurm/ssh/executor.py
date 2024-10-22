@@ -861,9 +861,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Transfer archive
         t_0_put = time.perf_counter()
-        self.fractal_ssh.put(
+        self.fractal_ssh._put(
             local=tarfile_path_local,
             remote=tarfile_path_remote,
+            label=f"_put {tarfile_path_local=} {tarfile_path_remote=}",
         )
         t_1_put = time.perf_counter()
         logger.info(
@@ -1278,7 +1279,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Fetch tarfile
         t_0_get = time.perf_counter()
-        self.fractal_ssh.get(
+        self.fractal_ssh._get(
             remote=tarfile_path_remote,
             local=tarfile_path_local,
         )

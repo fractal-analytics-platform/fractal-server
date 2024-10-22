@@ -94,7 +94,7 @@ class FractalSSH(object):
     def logger(self) -> logging.Logger:
         return get_logger(self.logger_name)
 
-    def put(
+    def _put(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
     ) -> Result:
         actual_lock_timeout = self.default_lock_timeout
@@ -103,7 +103,7 @@ class FractalSSH(object):
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             return self._connection.put(*args, **kwargs)
 
-    def get(
+    def _get(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
     ) -> Result:
         actual_lock_timeout = self.default_lock_timeout
@@ -270,7 +270,7 @@ class FractalSSH(object):
 
         """
         try:
-            self.put(
+            self._put(
                 local=local,
                 remote=remote,
                 lock_timeout=lock_timeout,

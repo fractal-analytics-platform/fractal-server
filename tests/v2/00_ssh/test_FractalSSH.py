@@ -132,7 +132,7 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
 
     # Get back file (note: we include the `lock_timeout` argument only
     # for coverage of the corresponding conditional branch)
-    fractal_ssh.get(
+    fractal_ssh._get(
         remote="remote_file", local=local_file_new, lock_timeout=1.0
     )
     assert Path(local_file_new).is_file()
