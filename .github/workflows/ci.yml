@@ -98,6 +98,10 @@ jobs:
             db: "postgres"
           - python-version: "3.11"
             db: "sqlite"
+          - python-version: "3.12"
+            db: "postgres"
+          - python-version: "3.12"
+            db: "sqlite"
 
     services:
       postgres:
