@@ -1279,10 +1279,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Fetch tarfile
         t_0_get = time.perf_counter()
-        self.fractal_ssh._get(
+        self.fractal_ssh.fetch_file(
             remote=tarfile_path_remote,
             local=tarfile_path_local,
-            label=f"_get {tarfile_path_remote=} {tarfile_path_local=}",
         )
         t_1_get = time.perf_counter()
         logger.info(
