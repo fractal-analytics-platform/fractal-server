@@ -106,7 +106,7 @@ class FractalSSH(object):
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
-            return self.sftp.put(local, remote)
+            return self.sftp().put(local, remote)
 
     def _get(
         self,
@@ -122,7 +122,7 @@ class FractalSSH(object):
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             # prefetch=True,
             # max_concurrent_prefetch_requests=None,
-            return self.sftp.get(remote, local)
+            return self.sftp().get(remote, local)
 
     def run(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
