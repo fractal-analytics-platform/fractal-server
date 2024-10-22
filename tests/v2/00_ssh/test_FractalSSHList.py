@@ -1,7 +1,7 @@
 import pytest
 
 from fractal_server.ssh._fabric import FractalSSHList
-from fractal_server.ssh._fabric import FractalSSHListTimeoutError
+from fractal_server.ssh._fabric import FractalSSHTimeoutError
 
 
 def test_unit_FractalSSHList():
@@ -107,9 +107,10 @@ def test_lock_FractalSSHList():
 
     # When lock is taken, observe timeout error
     collection._lock.acquire()
-    with pytest.raises(FractalSSHListTimeoutError):
+    with pytest.raises(FractalSSHTimeoutError):
         collection.get(host="host", user="user", key_path="/key_path")
 
     # After lock is released, the same operation goes through
     collection._lock.release()
+    assert not collection._lock.locked()
     collection.get(host="host", user="user", key_path="/key_path")
