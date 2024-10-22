@@ -15,7 +15,6 @@ jobs:
 
     strategy:
       matrix:
-        # FIXME: just 3.10?
         python-version: ["3.10"]
         db: ["postgres-psycopg"]
 
