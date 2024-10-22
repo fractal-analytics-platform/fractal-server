@@ -51,7 +51,7 @@ class FractalSSH(object):
     def __init__(
         self,
         connection: Connection,
-        default_timeout: float = 250,
+        default_timeout: float = 10,
         default_max_attempts: int = 5,
         default_base_interval: float = 3.0,
         logger_name: str = __name__,
@@ -66,22 +66,25 @@ class FractalSSH(object):
 
     @contextmanager
     def acquire_timeout(
-        self, timeout: float
+        self, label: str, timeout: float
     ) -> Generator[Literal[True], Any, None]:
-        self.logger.debug(f"Trying to acquire lock, with {timeout=}")
+        self.logger.debug(
+            f"Trying to acquire lock for '{label}', with {timeout=}"
+        )
         result = self._lock.acquire(timeout=timeout)
         try:
             if not result:
-                self.logger.error("Lock was *NOT* acquired.")
+                self.logger.error(f"Lock for '{label}' was *NOT* acquired.")
                 raise FractalSSHTimeoutError(
-                    f"Failed to acquire lock within {timeout} seconds"
+                    f"Failed to acquire lock for '{label}' within "
+                    f"{timeout} seconds"
                 )
-            self.logger.debug("Lock was acquired.")
+            self.logger.debug(f"Lock for '{label}' was acquired.")
             yield result
         finally:
             if result:
                 self._lock.release()
-                self.logger.debug("Lock was released")
+                self.logger.debug(f"Lock for '{label}' was released.")
 
     @property
     def is_connected(self) -> bool:
@@ -92,30 +95,30 @@ class FractalSSH(object):
         return get_logger(self.logger_name)
 
     def put(
-        self, *args, lock_timeout: Optional[float] = None, **kwargs
+        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
     ) -> Result:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
-        with self.acquire_timeout(timeout=actual_lock_timeout):
+        with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             return self._connection.put(*args, **kwargs)
 
     def get(
-        self, *args, lock_timeout: Optional[float] = None, **kwargs
+        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
     ) -> Result:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
-        with self.acquire_timeout(timeout=actual_lock_timeout):
+        with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             return self._connection.get(*args, **kwargs)
 
     def run(
-        self, *args, lock_timeout: Optional[float] = None, **kwargs
+        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
     ) -> Any:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
-        with self.acquire_timeout(timeout=actual_lock_timeout):
+        with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             return self._connection.run(*args, **kwargs)
 
     def sftp(self) -> paramiko.sftp_client.SFTPClient:
@@ -198,7 +201,10 @@ class FractalSSH(object):
             try:
                 # Case 1: Command runs successfully
                 res = self.run(
-                    cmd, lock_timeout=actual_lock_timeout, hide=True
+                    cmd,
+                    label=f"run {cmd}",
+                    lock_timeout=actual_lock_timeout,
+                    hide=True,
                 )
                 t_1 = time.perf_counter()
                 self.logger.info(
@@ -264,7 +270,12 @@ class FractalSSH(object):
 
         """
         try:
-            self.put(local=local, remote=remote, lock_timeout=lock_timeout)
+            self.put(
+                local=local,
+                remote=remote,
+                lock_timeout=lock_timeout,
+                label=f"send_file {local=} {remote=}",
+            )
         except Exception as e:
             logger = get_logger(logger_name=logger_name)
             logger.error(
@@ -342,7 +353,9 @@ class FractalSSH(object):
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
-        with self.acquire_timeout(timeout=actual_lock_timeout):
+        with self.acquire_timeout(
+            label=f"write_remote_file {path=}", timeout=actual_lock_timeout
+        ):
             with self.sftp().open(filename=path, mode="w") as f:
                 f.write(content)
 
