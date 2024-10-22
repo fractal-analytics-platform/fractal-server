@@ -106,7 +106,7 @@ class FractalSSH(object):
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
-            return self.sftp().put(local, remote)
+            return self._sftp().put(local, remote)
 
     def _get(
         self,
@@ -122,7 +122,7 @@ class FractalSSH(object):
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             # prefetch=True,
             # max_concurrent_prefetch_requests=None,
-            return self.sftp().get(remote, local)
+            return self._sftp().get(remote, local)
 
     def run(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
@@ -133,7 +133,7 @@ class FractalSSH(object):
         with self.acquire_timeout(label=label, timeout=actual_lock_timeout):
             return self._connection.run(*args, **kwargs)
 
-    def sftp(self) -> paramiko.sftp_client.SFTPClient:
+    def _sftp(self) -> paramiko.sftp_client.SFTPClient:
         return self._connection.sftp()
 
     def check_connection(self) -> None:
@@ -403,7 +403,7 @@ class FractalSSH(object):
         with self.acquire_timeout(
             label=f"write_remote_file {path=}", timeout=actual_lock_timeout
         ):
-            with self.sftp().open(filename=path, mode="w") as f:
+            with self._sftp().open(filename=path, mode="w") as f:
                 f.write(content)
 
 
