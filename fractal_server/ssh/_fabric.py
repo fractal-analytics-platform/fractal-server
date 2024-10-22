@@ -51,7 +51,7 @@ class FractalSSH(object):
     def __init__(
         self,
         connection: Connection,
-        default_timeout: float = 10,
+        default_timeout: float = 250,
         default_max_attempts: int = 5,
         default_base_interval: float = 3.0,
         logger_name: str = __name__,
