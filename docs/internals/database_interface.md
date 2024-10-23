@@ -47,7 +47,7 @@ To use PostgreSQL as a database, Fractal Server must be installed with the
 ```console
 $ pip install "fractal-server[postgres-psycopg-binary]"
 ```
-which will install an additional Python library (`psycopg2[binary]`).
+which will install an additional Python library (`psycopg[binary]`).
 
 
 ### Setup
