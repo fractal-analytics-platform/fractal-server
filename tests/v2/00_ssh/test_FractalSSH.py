@@ -6,6 +6,7 @@ from fabric import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 
@@ -21,7 +22,11 @@ def test_acquire_lock():
         fake_fractal_ssh = FractalSSH(connection=connection)
         fake_fractal_ssh._lock.acquire(timeout=0)
         with pytest.raises(FractalSSHTimeoutError) as e:
-            with fake_fractal_ssh.acquire_timeout(timeout=0.1):
+            with _acquire_lock_with_timeout(
+                lock=fake_fractal_ssh._lock,
+                timeout=0.1,
+                label="fail",
+            ):
                 pass
         print(e)
 
@@ -92,7 +97,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
             super().__init__(*args, **kwargs)
             self.please_raise = True
 
-        def run(self, *args, **kwargs):
+        def _run(self, *args, **kwargs):
             if self.please_raise:
                 # Set `please_raise=False`, so that next call will go through
                 self.please_raise = False
@@ -101,7 +106,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
                 # meaningful content
                 errors = {("str", 1): ("str", 1, 1, 1)}
                 raise NoValidConnectionsError(errors=errors)
-            return super().run(*args, **kwargs)
+            return super()._run(*args, **kwargs)
 
     mocked_fractal_ssh = MockFractalSSH(connection=fractal_ssh._connection)
 
@@ -120,7 +125,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
 
 def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
     """
-    Test basic working of `send_file` and `get` methods.
+    Test basic working of `send_file` and `fetch_file` methods.
     """
     local_file_old = (tmp_path / "local_old").as_posix()
     local_file_new = (tmp_path / "local_new").as_posix()
@@ -132,10 +137,18 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
 
     # Get back file (note: we include the `lock_timeout` argument only
     # for coverage of the corresponding conditional branch)
-    fractal_ssh.get(
+    fractal_ssh.fetch_file(
         remote="remote_file", local=local_file_new, lock_timeout=1.0
     )
     assert Path(local_file_new).is_file()
+
+    # Fail in fetching file
+    with pytest.raises(FileNotFoundError):
+        fractal_ssh.fetch_file(
+            remote="missing_remote_file",
+            local=(tmp_path / "local_version").as_posix(),
+            lock_timeout=1.0,
+        )
 
 
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):

@@ -861,7 +861,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Transfer archive
         t_0_put = time.perf_counter()
-        self.fractal_ssh.put(
+        self.fractal_ssh.send_file(
             local=tarfile_path_local,
             remote=tarfile_path_remote,
         )
@@ -1255,16 +1255,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.workflow_dir_remote / f"{subfolder_name}.tar.gz"
         ).as_posix()
 
-        # Remove local tarfile - FIXME SSH: is this needed?
-        logger.warning(f"In principle I just removed {tarfile_path_local}")
-        logger.warning(f"{Path(tarfile_path_local).exists()=}")
-
-        # Remove remote tarfile - FIXME SSH: is this needed?
-        # rm_command = f"rm {tarfile_path_remote}"
-        # _run_command_over_ssh(cmd=rm_command, fractal_ssh=self.fractal_ssh)
-        logger.warning(f"Unlink {tarfile_path_remote=} - START")
-        self.fractal_ssh.sftp().unlink(tarfile_path_remote)
-        logger.warning(f"Unlink {tarfile_path_remote=} - STOP")
+        # Remove remote tarfile
+        rm_command = f"rm {tarfile_path_remote}"
+        self.fractal_ssh.run_command(cmd=rm_command)
 
         # Create remote tarfile
         tar_command = (
@@ -1278,7 +1271,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Fetch tarfile
         t_0_get = time.perf_counter()
-        self.fractal_ssh.get(
+        self.fractal_ssh.fetch_file(
             remote=tarfile_path_remote,
             local=tarfile_path_local,
         )
@@ -1290,6 +1283,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Extract tarfile locally
         extract_archive(Path(tarfile_path_local))
+
+        # Remove local tarfile
+        if Path(tarfile_path_local).exists():
+            logger.warning(f"Remove existing file {tarfile_path_local}.")
+            Path(tarfile_path_local).unlink()
 
         t_1 = time.perf_counter()
         logger.info("[_get_subfolder_sftp] End - " f"elapsed: {t_1-t_0:.3f} s")
