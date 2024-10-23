@@ -79,6 +79,16 @@
     * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
 * Runner:
     * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
+    * Fix bug of SSH/SFTP commands not acquiring lock (\#1949).
+    * Always remove task-subfolder compressed archive (\#1949).
+* Task collection:
+    * Create base directory (in SSH mode), if missing (\#1949).
+    * Fix bug of SSH/SFTP commands not acquiring lock (\#1949).
+* SSH:
+    * Improve logging for SSH-connection-locking flow (\#1949).
+    * Introduce `FractalSSH.fetch_file` and `FractalSSH.read_remote_json_file` (\#1949).
+    * Use `paramiko.sftp_client.SFTPClient` methods directly rathen than `fabric` wrappers (\#1949).
+    * Set prefetching options for `SFTPClient.get` (\#1949).
 * Dependencies:
     * Bump fastapi to `0.115` (\#1942).
 * Testing:
