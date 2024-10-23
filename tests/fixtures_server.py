@@ -31,15 +31,8 @@ try:
     import psycopg  # noqa: F401
 
     DB_ENGINE = "postgres-psycopg"
-
 except ModuleNotFoundError:
-    try:
-        import psycopg2  # noqa: F401
-        import asyncpg  # noqa: F401
-
-        DB_ENGINE = "postgres"
-    except ModuleNotFoundError:
-        DB_ENGINE = "sqlite"
+    DB_ENGINE = "sqlite"
 
 
 def get_patched_settings(temp_path: Path):
@@ -51,7 +44,7 @@ def get_patched_settings(temp_path: Path):
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
-    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    elif DB_ENGINE == "postgres-psycopg":
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
         settings.POSTGRES_DB = "fractal_test"

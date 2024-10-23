@@ -42,19 +42,12 @@ set-db`.
 ### Requirements
 
 To use PostgreSQL as a database, Fractal Server must be installed with the
-`postgres` extra:
+`postgres-psycopg-binary` extra:
 
 ```console
-$ pip install "fractal-server[postgres]"
+$ pip install "fractal-server[postgres-psycopg-binary]"
 ```
-which will install two additional Python libraries (`asyncpg` and `psycopg2`).
-
-**NOTE**: the following system libraries are required:
-
-- `postgresql`,
-- `postgresql-contrib`,
-- `libpq-dev`,
-- `gcc`.
+which will install an additional Python library (`psycopg2[binary]`).
 
 
 ### Setup
@@ -91,7 +84,7 @@ is done by setting the following configuration variables (before running
 - Required:
 
     ```
-    DB_ENGINE=postgres
+    DB_ENGINE=postgres-psycopg
     POSTGRES_DB=fractal_db
     ```
 
@@ -110,7 +103,7 @@ from `SQLalchemy` to generate the appropriate URL to connect to:
 
 ```python
 URL.create(
-    drivername="postgresql+asyncpg",
+    drivername="postgresql+psycopg",
     username=self.POSTGRES_USER,
     password=self.POSTGRES_PASSWORD,
     host=self.POSTGRES_HOST,
