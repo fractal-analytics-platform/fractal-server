@@ -62,7 +62,7 @@ async def test_task_collection_ssh_from_pypi(
         user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
-        package_version = "1.0.2"
+        package_version = "1.3.2"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
