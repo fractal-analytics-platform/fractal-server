@@ -8,6 +8,8 @@ from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
 
+CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
+
 
 async def test_task_collection_ssh_from_pypi(
     db,
@@ -21,7 +23,6 @@ async def test_task_collection_ssh_from_pypi(
     slurmlogin_ip,
     ssh_keys,
 ):
-    CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
     credentials = dict(
         host=slurmlogin_ip,
         user=SLURM_USER,
@@ -179,7 +180,6 @@ async def test_task_collection_ssh_from_wheel(
     ssh_keys,
     testdata_path: Path,
 ):
-    CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
     credentials = dict(
         host=slurmlogin_ip,
         user=SLURM_USER,
