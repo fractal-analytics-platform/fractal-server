@@ -156,6 +156,11 @@ def test_slurm_ssh_executor_submit(
         debug(fut)
         debug(fut.result())
 
+    # Assert that no .tar.gz is left in the job directory, see
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/1715
+    assert len(list((tmp_path / "job_dir").glob("*"))) > 0
+    assert len(list((tmp_path / "job_dir").glob("*.tar.gz"))) == 0
+
 
 def test_slurm_ssh_executor_map(
     fractal_ssh: FractalSSH,
