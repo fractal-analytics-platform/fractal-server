@@ -534,6 +534,12 @@ class Settings(BaseSettings):
         Checks that db environment variables are properly set.
         """
         if self.DB_ENGINE == "postgres-psycopg":
+            if not self.POSTGRES_DB:
+                raise FractalConfigurationError(
+                    "POSTGRES_DB cannot be None when DB_ENGINE="
+                    "postgres-psycopg."
+                )
+
             try:
                 import psycopg  # noqa: F401
             except ModuleNotFoundError:
