@@ -179,6 +179,7 @@ class FractalSSH(object):
         return self._connection.sftp()
 
     def read_remote_json_file(self, filepath: str) -> dict[str, Any]:
+        self.logger.info(f"START reading remote JSON file {filepath}.")
         with _acquire_lock_with_timeout(
             lock=self._lock,
             label="read_remote_json_file",
@@ -186,6 +187,7 @@ class FractalSSH(object):
         ):
             with self._sftp_unsafe().open(filepath, "r") as f:
                 data = json.load(f)
+        self.logger.info(f"END reading remote JSON file {filepath}.")
         return data
 
     def check_connection(self) -> None:
