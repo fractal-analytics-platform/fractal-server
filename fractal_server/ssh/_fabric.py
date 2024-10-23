@@ -456,7 +456,7 @@ class FractalSSH(object):
             contents: File contents
             lock_timeout:
         """
-        self.logger(f"START writing to remote file {path}.")
+        self.logger.info(f"START writing to remote file {path}.")
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
@@ -467,7 +467,7 @@ class FractalSSH(object):
         ):
             with self._sftp_unsafe().open(filename=path, mode="w") as f:
                 f.write(content)
-        self.logger(f"END writing to remote file {path}.")
+        self.logger.info(f"END writing to remote file {path}.")
 
 
 class FractalSSHList(object):
