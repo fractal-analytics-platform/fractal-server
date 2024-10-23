@@ -88,7 +88,7 @@
     * Improve logging for SSH-connection-locking flow (\#1949).
     * Introduce `FractalSSH.fetch_file` and `FractalSSH.read_remote_json_file` (\#1949).
     * Use `paramiko.sftp_client.SFTPClient` methods directly rathen than `fabric` wrappers (\#1949).
-    * Set prefetching options for `SFTPClient.get` (\#1949).
+    * Disable prefetching for `SFTPClient.get` (\#1949).
 * Dependencies:
     * Bump fastapi to `0.115` (\#1942).
 * Testing:

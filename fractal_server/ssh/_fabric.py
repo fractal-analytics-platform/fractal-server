@@ -74,7 +74,8 @@ class FractalSSH(object):
         default_lock_timeout:
         default_max_attempts:
         default_base_interval:
-        max_concurrent_prefetch_requests:
+        sftp_get_prefetch:
+        sftp_get_max_requests:
         logger_name:
     """
 
@@ -83,7 +84,8 @@ class FractalSSH(object):
     default_lock_timeout: float
     default_max_attempts: int
     default_base_interval: float
-    max_concurrent_prefetch_requests: int
+    sftp_get_prefetch: bool
+    sftp_get_max_requests: int
     logger_name: str
 
     def __init__(
@@ -92,7 +94,8 @@ class FractalSSH(object):
         default_timeout: float = 250,
         default_max_attempts: int = 5,
         default_base_interval: float = 3.0,
-        max_concurrent_prefetch_requests: int = 64,
+        sftp_get_prefetch: bool = False,
+        sftp_get_max_requests: int = 64,
         logger_name: str = __name__,
     ):
         self._lock = Lock()
@@ -100,9 +103,8 @@ class FractalSSH(object):
         self.default_lock_timeout = default_timeout
         self.default_base_interval = default_base_interval
         self.default_max_attempts = default_max_attempts
-        self.max_concurrent_prefetch_requests = (
-            max_concurrent_prefetch_requests
-        )
+        self.sftp_get_prefetch = sftp_get_prefetch
+        self.sftp_get_max_requests = sftp_get_max_requests
         self.logger_name = logger_name
         set_logger(self.logger_name)
 
@@ -154,8 +156,8 @@ class FractalSSH(object):
             return self._sftp_unsafe().get(
                 remote,
                 local,
-                prefetch=True,
-                max_concurrent_prefetch_requests=self.max_concurrent_prefetch_requests,  # noqa
+                prefetch=self.sftp_get_prefetch,
+                max_concurrent_prefetch_requests=self.sftp_get_max_requests,
             )
 
     def _run(
