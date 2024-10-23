@@ -36,11 +36,12 @@ async def test_task_collection_from_wheel(
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
+    FRACTAL_MAX_PIP_VERSION = "22.0" if current_py_version < "3.12" else "24.2"
     override_settings_factory(
         FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
         FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
-        FRACTAL_MAX_PIP_VERSION="20.0",
+        FRACTAL_MAX_PIP_VERSION=FRACTAL_MAX_PIP_VERSION,
     )
     settings = Inject(get_settings)
 
@@ -79,6 +80,7 @@ async def test_task_collection_from_wheel(
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state = res.json()
+        # debug(state); return
         pip_version = next(
             line
             for line in state["data"]["freeze"].split("\n")
