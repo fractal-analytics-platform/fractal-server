@@ -8,7 +8,7 @@ from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
 
-CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
+CURRENT_FRACTAL_MAX_PIP_VERSION = "24.0"
 
 
 async def test_task_collection_ssh_from_pypi(
