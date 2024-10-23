@@ -158,7 +158,7 @@ class FractalSSH(object):
                 max_concurrent_prefetch_requests=self.max_concurrent_prefetch_requests,  # noqa
             )
 
-    def run(
+    def _run(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
     ) -> Any:
         actual_lock_timeout = self.default_lock_timeout
@@ -275,7 +275,7 @@ class FractalSSH(object):
             self.logger.info(f"{prefix} START running '{cmd}' over SSH.")
             try:
                 # Case 1: Command runs successfully
-                res = self.run(
+                res = self._run(
                     cmd,
                     label=f"run {cmd}",
                     lock_timeout=actual_lock_timeout,
