@@ -1255,13 +1255,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.workflow_dir_remote / f"{subfolder_name}.tar.gz"
         ).as_posix()
 
-        # Remove local tarfile
-        if Path(tarfile_path_local).exists():
-            logger.warning(f"Remove existing file {tarfile_path_local}.")
-            Path(tarfile_path_local).unlink()
-        else:
-            logger.warning(f"Skip remove missing file {tarfile_path_local}.")
-
         # Remove remote tarfile
         rm_command = f"rm {tarfile_path_remote}"
         self.fractal_ssh.run_command(cmd=rm_command)
@@ -1295,8 +1288,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if Path(tarfile_path_local).exists():
             logger.warning(f"Remove existing file {tarfile_path_local}.")
             Path(tarfile_path_local).unlink()
-        else:
-            logger.warning(f"Skip remove missing file {tarfile_path_local}.")
 
         t_1 = time.perf_counter()
         logger.info("[_get_subfolder_sftp] End - " f"elapsed: {t_1-t_0:.3f} s")
