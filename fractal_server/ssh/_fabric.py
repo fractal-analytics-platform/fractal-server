@@ -331,7 +331,6 @@ class FractalSSH(object):
         *,
         local: str,
         remote: str,
-        logger_name: Optional[str] = None,
         lock_timeout: Optional[float] = None,
     ) -> None:
         """
@@ -344,15 +343,17 @@ class FractalSSH(object):
             logger_name: Name of the logger
         """
         try:
+            prefix = "[send_file]"
+            self.logger.info(f"{prefix} START transfer of '{local}' over SSH.")
             self._put(
                 local=local,
                 remote=remote,
                 lock_timeout=lock_timeout,
                 label=f"send_file {local=} {remote=}",
             )
+            self.logger.info(f"{prefix} END transfer of '{local}' over SSH.")
         except Exception as e:
-            logger = get_logger(logger_name=logger_name)
-            logger.error(
+            self.logger.error(
                 f"Transferring {local=} to {remote=} over SSH failed.\n"
                 f"Original Error:\n{str(e)}."
             )
@@ -363,7 +364,6 @@ class FractalSSH(object):
         *,
         local: str,
         remote: str,
-        logger_name: Optional[str] = None,
         lock_timeout: Optional[float] = None,
     ) -> None:
         """
@@ -384,9 +384,9 @@ class FractalSSH(object):
                 lock_timeout=lock_timeout,
                 label=f"fetch_file {local=} {remote=}",
             )
+            self.logger.info(f"{prefix} END fetching '{remote}' over SSH.")
         except Exception as e:
-            logger = get_logger(logger_name=logger_name)
-            logger.error(
+            self.logger.error(
                 f"Transferring {remote=} to {local=} over SSH failed.\n"
                 f"Original Error:\n{str(e)}."
             )
