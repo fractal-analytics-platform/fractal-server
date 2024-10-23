@@ -13,8 +13,10 @@ RUN chmod 600 /home/fractal/.ssh/authorized_keys
 
 ARG PYTHON_PATH
 
-# Update pip and install devtools
-# RUN $PYTHON_PATH -m pip install --upgrade pip
+# Only useful for python3.12: install setuptools
+RUN $PYTHON_PATH -m pip install setuptools
+
+# Install devtools
 RUN $PYTHON_PATH -m pip install devtools
 
 # Install fractal-server
