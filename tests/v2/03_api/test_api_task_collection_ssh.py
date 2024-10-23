@@ -33,7 +33,7 @@ async def test_task_collection_ssh_from_pypi(
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
     # Define and create remote working directory
-    TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
+    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
@@ -53,7 +53,7 @@ async def test_task_collection_ssh_from_pypi(
         ssh_host=slurmlogin_ip,
         ssh_username=SLURM_USER,
         ssh_private_key_path=ssh_keys["private"],
-        ssh_tasks_dir=TASKS_BASE_DIR,
+        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
         ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
     )
 
@@ -79,6 +79,7 @@ async def test_task_collection_ssh_from_pypi(
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state_data = res.json()["data"]
+        debug(state_data)
         assert state_data["status"] == CollectionStatusV2.OK
         # Check fractal-tasks-core version in freeze data
         assert f"fractal-tasks-core=={package_version}" in state_data["freeze"]
@@ -124,7 +125,7 @@ async def test_task_collection_ssh_from_pypi(
         # BACKGROUND FAILURE 1: existing folder
         package_version = "1.2.0"
         remote_folder = (
-            Path(TASKS_BASE_DIR)
+            Path(REMOTE_TASKS_BASE_DIR)
             / str(user.id)
             / "fractal-tasks-core"
             / f"{package_version}"
@@ -151,6 +152,11 @@ async def test_task_collection_ssh_from_pypi(
         assert "already exists" in state_data["log"]
         # Check that existing folder was _not_ removed
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        # Cleanup: remove folder
+        fractal_ssh.remove_folder(
+            folder=remote_folder,
+            safe_root=REMOTE_TASKS_BASE_DIR,
+        )
 
         # BACKGROUND FAILURE 2: invalid version
         package_version = "9.9.9"
