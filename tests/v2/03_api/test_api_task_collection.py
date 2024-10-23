@@ -225,6 +225,20 @@ async def test_task_collection_from_pypi(
     current_py_version,
     package_version,
 ):
+
+    if (
+        current_py_version == "3.12"
+        and package_version == OLD_FRACTAL_TASKS_CORE_VERSION
+    ):
+        logging.warning(
+            f"SKIP test_task_collection_from_pypi with {current_py_version=}. "
+            "This is because fractal-tasks-core has a single version (1.3.2) "
+            "which works with python3.12 (due to pandas required version). "
+            "This means we cannot test the install of an old version like "
+            "1.0.2."
+        )
+        return
+
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
@@ -241,14 +255,15 @@ async def test_task_collection_from_pypi(
         package="fractal-tasks-core",
         python_version=PYTHON_VERSION,
     )
-    if package_version is not None:
-        EXPECTED_PACKAGE_VERSION = package_version
-        payload["package_version"] = package_version
-    else:
+    if package_version is None:
         EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
             payload["package"]
         )
         assert EXPECTED_PACKAGE_VERSION > OLD_FRACTAL_TASKS_CORE_VERSION
+    else:
+        EXPECTED_PACKAGE_VERSION = package_version
+        payload["package_version"] = package_version
+
     debug(payload)
     debug(EXPECTED_PACKAGE_VERSION)
 
