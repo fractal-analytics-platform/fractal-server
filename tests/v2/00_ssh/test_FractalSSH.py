@@ -142,6 +142,14 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
     )
     assert Path(local_file_new).is_file()
 
+    # Fail in fetching file
+    with pytest.raises(FileNotFoundError):
+        fractal_ssh.fetch_file(
+            remote="missing_remote_file",
+            local=(tmp_path / "local_version").as_posix(),
+            lock_timeout=1.0,
+        )
+
 
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
     local_file = (tmp_path / "local").as_posix()
