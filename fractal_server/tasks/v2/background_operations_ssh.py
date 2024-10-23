@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -144,6 +143,13 @@ def background_collect_pip_ssh(
         for key, value in task_group.model_dump().items():
             logger.debug(f"task_group.{key}: {value}")
 
+        # `remove_venv_folder_upon_failure` is set to True only if
+        # script 1 goes through, which means that the remote folder
+        # `package_env_dir` did not already exist. If this remote
+        # folder already existed, then script 1 fails and the boolean
+        # flag `remove_venv_folder_upon_failure` remains false.
+        remove_venv_folder_upon_failure = False
+
         # Open a DB session soon, since it is needed for updating `state`
         with next(get_sync_db()) as db:
             try:
@@ -187,12 +193,11 @@ def background_collect_pip_ssh(
                 # long operations that do not use the db
                 db.close()
 
-                # `remove_venv_folder_upon_failure` is set to True only if
-                # script 1 goes through, which means that the remote folder
-                # `package_env_dir` did not already exist. If this remote
-                # folder already existed, then script 1 fails and the boolean
-                # flag `remove_venv_folder_upon_failure` remains false.
-                remove_venv_folder_upon_failure = False
+                # Create remote folder (note that because of `parents=True` we
+                # are in the `no error if existing, make parent directories as
+                # needed` scenario)
+                fractal_ssh.mkdir(folder=tasks_base_dir, parents=True)
+
                 stdout = _customize_and_run_template(
                     script_filename="_1_create_venv.sh",
                     **common_args,
@@ -263,8 +268,9 @@ def background_collect_pip_ssh(
                 ).as_posix()
 
                 # Read and validate remote manifest file
-                with fractal_ssh.sftp().open(manifest_path_remote, "r") as f:
-                    pkg_manifest_dict = json.load(f)
+                pkg_manifest_dict = fractal_ssh.read_remote_json_file(
+                    manifest_path_remote
+                )
                 logger.info(f"collecting - loaded {manifest_path_remote=}")
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
                 logger.info("collecting - manifest is a valid ManifestV2")

@@ -30,8 +30,8 @@ class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
 
         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
         mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
-        res = self.fractal_ssh.run(mkdir_command, hide=True)
-        assert res.exited == 0
+        stdout = self.fractal_ssh.run_command(cmd=mkdir_command)
+        debug(stdout)
         logging.info(f"Now done creating {remote_subfolder.as_posix()}")
 
     def __init__(self, *args, **kwargs):
@@ -161,6 +161,11 @@ def test_slurm_ssh_executor_submit(
         fut = executor.submit(lambda: 1)
         debug(fut)
         debug(fut.result())
+
+    # Assert that no .tar.gz is left in the job directory, see
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/1715
+    assert len(list((tmp_path / "job_dir").glob("*"))) > 0
+    assert len(list((tmp_path / "job_dir").glob("*.tar.gz"))) == 0
 
 
 def test_slurm_ssh_executor_map(
