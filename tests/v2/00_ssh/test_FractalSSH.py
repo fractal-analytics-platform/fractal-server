@@ -97,7 +97,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
             super().__init__(*args, **kwargs)
             self.please_raise = True
 
-        def run(self, *args, **kwargs):
+        def _run(self, *args, **kwargs):
             if self.please_raise:
                 # Set `please_raise=False`, so that next call will go through
                 self.please_raise = False
@@ -106,7 +106,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
                 # meaningful content
                 errors = {("str", 1): ("str", 1, 1, 1)}
                 raise NoValidConnectionsError(errors=errors)
-            return super().run(*args, **kwargs)
+            return super()._run(*args, **kwargs)
 
     mocked_fractal_ssh = MockFractalSSH(connection=fractal_ssh._connection)
 
