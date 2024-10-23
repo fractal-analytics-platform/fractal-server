@@ -1,14 +1,25 @@
+import logging
 from pathlib import Path
 
 from devtools import debug
 
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
 
 CURRENT_FRACTAL_MAX_PIP_VERSION = "24.0"
+
+
+def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    logging.warning(f"[_reset_permissions] {remote_folder=}")
+    fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
 async def test_task_collection_ssh_from_pypi(
@@ -172,6 +183,8 @@ async def test_task_collection_ssh_from_pypi(
         assert "No version starting with 9.9.9 found" in res.json()["detail"]
         debug(res.json())
 
+        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+
 
 async def test_task_collection_ssh_from_wheel(
     db,
@@ -196,7 +209,7 @@ async def test_task_collection_ssh_from_wheel(
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
     # Define and create remote working directory
-    TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
+    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
@@ -216,7 +229,7 @@ async def test_task_collection_ssh_from_wheel(
         ssh_host=slurmlogin_ip,
         ssh_username=SLURM_USER,
         ssh_private_key_path=ssh_keys["private"],
-        ssh_tasks_dir=TASKS_BASE_DIR,
+        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
         ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
     )
 
@@ -271,3 +284,5 @@ async def test_task_collection_ssh_from_wheel(
             "Cannot provide package version when package " "is a wheel file."
         )
         assert error_msg in str(res.json()["detail"])
+
+        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
