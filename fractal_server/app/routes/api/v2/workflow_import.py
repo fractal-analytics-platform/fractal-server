@@ -241,7 +241,10 @@ async def _get_task_by_taskimport(
             "Found many task groups, after filtering by version."
         )
         final_task_group = await _disambiguate_task_groups(
-            matching_task_groups, user_id, db, default_group_id
+            matching_task_groups=matching_task_groups,
+            user_id=user_id,
+            db=db,
+            default_group_id=default_group_id,
         )
         if final_task_group is None:
             logger.info(
