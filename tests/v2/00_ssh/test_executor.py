@@ -297,7 +297,7 @@ def test_slurm_ssh_executor_error_in_calllback(
         )
 
     monkeypatch.setattr(
-        "MockFractalSSHSlurmExecutor",
+        MockFractalSSHSlurmExecutor,
         "_get_subfolder_sftp",
         _get_subfolder_sftp_patched,
     )
