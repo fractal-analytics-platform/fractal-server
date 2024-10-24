@@ -1057,6 +1057,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
         # Handle all uncaught exceptions in this broad try/except block
         try:
+            logger.info(
+                f"[FractalSlurmSSHExecutor._completion] START, for {job_ids=}."
+            )
 
             # Loop over all job_ids, and fetch future and job objects
             futures: list[Future] = []
@@ -1129,6 +1132,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                                 remaining_futures=remaining_futures,
                                 remaining_job_ids=remaining_job_ids,
                             )
+                            logger.info(
+                                "[FractalSlurmSSHExecutor._completion] END, "
+                                f"for {job_ids=}, with JobExecutionError due "
+                                f"to missing {out_path.as_posix()}."
+                            )
                             return
                         except InvalidStateError:
                             logger.warning(
@@ -1141,6 +1149,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                             self._handle_remaining_jobs(
                                 remaining_futures=remaining_futures,
                                 remaining_job_ids=remaining_job_ids,
+                            )
+                            logger.info(
+                                "[FractalSlurmSSHExecutor._completion] END, "
+                                f"for {job_ids=}, with JobExecutionError/"
+                                "InvalidStateError due to "
+                                f"missing {out_path.as_posix()}."
                             )
                             return
 
@@ -1219,15 +1233,21 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                     future.set_result(outputs)
 
         except Exception as e:
-            try:
-                future.set_exception(e)
-                return
-            except InvalidStateError:
-                logger.warning(
-                    f"Future {future} (SLURM job ID: {job_id}) was already"
-                    " cancelled, exit from"
-                    " FractalSlurmSSHExecutor._completion."
-                )
+            logger.warning(
+                "[FractalSlurmSSHExecutor._completion] "
+                f"An exception took place: {str(e)}."
+            )
+            for future in futures:
+                try:
+                    logger.info(f"Set exception for {future=}")
+                    future.set_exception(e)
+                except InvalidStateError:
+                    logger.info(f"Future {future} was already cancelled.")
+            logger.info(
+                f"[FractalSlurmSSHExecutor._completion] END, for {job_ids=}, "
+                "from within exception handling."
+            )
+            return
 
     def _get_subfolder_sftp(self, jobs: list[SlurmJob]) -> None:
         """
