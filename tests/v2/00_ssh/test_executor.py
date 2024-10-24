@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -288,3 +289,47 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
         with pytest.raises(JobExecutionError) as exc_info:
             executor._submit_job(None)
         debug(exc_info.value)
+
+
+def test_slurm_ssh_executor_error_in_calllback(
+    fractal_ssh,
+    tmp_path: Path,
+    tmp777_path: Path,
+    override_settings_factory,
+    current_py_version: str,
+    monkeypatch,
+):
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+    )
+
+    def _get_subfolder_sftp_patched(*args, **kwargs):
+        debug("NOW RUNNING _get_subfolder_sftp_patched")
+        raise RuntimeError(
+            "This is an error from `_get_subfolder_sftp_patched`"
+        )
+
+    monkeypatch.setattr(
+        MockFractalSSHSlurmExecutor,
+        "_get_subfolder_sftp",
+        _get_subfolder_sftp_patched,
+    )
+
+    with MockFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+        slurm_poll_interval=1,
+        fractal_ssh=fractal_ssh,
+    ) as executor:
+        fut = executor.submit(lambda: 1)
+        debug(fut)
+
+        TIMEOUT = 5
+        t0 = time.perf_counter()
+        while time.perf_counter() - t0 < TIMEOUT:
+            time.sleep(0.4)
+            debug(fut._state)
+            if fut._state != "PENDING":
+                return
+
+        raise RuntimeError(f"Future still pending, {fut}")
