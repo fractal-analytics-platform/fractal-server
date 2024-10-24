@@ -10,6 +10,6 @@ Some are optional and sensible defaults are provided.
 > FRACTAL_RUNNER_WORKING_BASE_DIR
 > ```
 >
-> together with the database-specific variables: `SQLITE_PATH` for SQLite, or `DB_ENGINE=postgres` and `POSTGRES_DB` for Postgres.
+> together with the database-specific variables: `SQLITE_PATH` for SQLite, or `DB_ENGINE=postgres-psycopg` and `POSTGRES_DB` for Postgres.
 
 ::: fractal_server.config

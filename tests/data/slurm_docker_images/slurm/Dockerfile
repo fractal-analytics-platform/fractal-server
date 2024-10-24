@@ -11,15 +11,18 @@ RUN chown fractal:fractal /home/fractal/.ssh/authorized_keys
 RUN chmod 600 /home/test01/.ssh/authorized_keys
 RUN chmod 600 /home/fractal/.ssh/authorized_keys
 
-ARG PYTHON_NAME
+ARG PYTHON_PATH
 
-# Update pip and install devtools
-RUN $PYTHON_NAME -m pip install --upgrade pip devtools
+# Only useful for python3.12: install setuptools
+RUN $PYTHON_PATH -m pip install setuptools
+
+# Install devtools
+RUN $PYTHON_PATH -m pip install devtools
 
 # Install fractal-server
 ADD fractal_server_local.tar.gz .
 WORKDIR ./fractal-server
-RUN $PYTHON_NAME -m pip install -e .
+RUN $PYTHON_PATH -m pip install -e .
 
 EXPOSE 22 6817 6818
 

@@ -1,3 +1,4 @@
+import logging
 import shlex
 import subprocess
 
@@ -8,10 +9,26 @@ from common_functions import non_executable_task_command
 from common_functions import PREFIX
 from devtools import debug
 
+from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa
+    _run_command_as_user,
+)
 from tests.fixtures_slurm import SLURM_USER
 
 
 FRACTAL_RUNNER_BACKEND = "slurm"
+
+
+def _reset_permissions_for_user_folder(folder):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    logging.warning(f"[_reset_permissions_for_user_folder] {folder=}")
+    _run_command_as_user(
+        cmd=f"chmod -R 777 {folder}",
+        user=SLURM_USER,
+        check=True,
+    )
 
 
 async def test_full_workflow_slurm(
@@ -36,13 +53,14 @@ async def test_full_workflow_slurm(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
+    cache_dir = str(tmp777_path / "user_cache_dir-slurm")
+
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
         user_settings_dict=dict(
             slurm_user=SLURM_USER,
             slurm_accounts=[],
-            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+            cache_dir=cache_dir,
         ),
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
@@ -50,6 +68,7 @@ async def test_full_workflow_slurm(
         client=client,
         tasks=fractal_tasks_mock_db,
     )
+    _reset_permissions_for_user_folder(cache_dir)
 
 
 async def test_full_workflow_TaskExecutionError_slurm(
@@ -77,13 +96,15 @@ async def test_full_workflow_TaskExecutionError_slurm(
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
+
+    cache_dir = str(tmp777_path / "user_cache_dir-slurm")
+
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
         user_settings_dict=dict(
             slurm_user=SLURM_USER,
             slurm_accounts=[],
-            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+            cache_dir=cache_dir,
         ),
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
@@ -91,6 +112,8 @@ async def test_full_workflow_TaskExecutionError_slurm(
         client=client,
         tasks=fractal_tasks_mock_db,
     )
+
+    _reset_permissions_for_user_folder(cache_dir)
 
 
 # Tested with 'slurm' backend only.
@@ -117,14 +140,14 @@ async def test_failing_workflow_JobExecutionError(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
-    user_cache_dir = str(tmp777_path / "user_cache_dir-slurm")
-    user_kwargs = dict(cache_dir=user_cache_dir, is_verified=True)
+    cache_dir = str(tmp777_path / "user_cache_dir-slurm")
+    user_kwargs = dict(is_verified=True)
     async with MockCurrentUser(
         user_kwargs=user_kwargs,
         user_settings_dict=dict(
             slurm_user=SLURM_USER,
             slurm_accounts=[],
-            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+            cache_dir=cache_dir,
         ),
     ) as user:
         project = await project_factory_v2(user)
@@ -233,6 +256,8 @@ async def test_failing_workflow_JobExecutionError(
         tmp_stdout.close()
         tmp_stderr.close()
 
+    _reset_permissions_for_user_folder(cache_dir)
+
 
 async def test_non_executable_task_command_slurm(
     client,
@@ -258,13 +283,14 @@ async def test_non_executable_task_command_slurm(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
+    cache_dir = str(tmp777_path / "user_cache_dir-slurm")
+
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
         user_settings_dict=dict(
             slurm_user=SLURM_USER,
             slurm_accounts=[],
-            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+            cache_dir=cache_dir,
         ),
         client=client,
         testdata_path=testdata_path,
@@ -273,6 +299,8 @@ async def test_non_executable_task_command_slurm(
         dataset_factory_v2=dataset_factory_v2,
         task_factory_v2=task_factory_v2,
     )
+
+    _reset_permissions_for_user_folder(cache_dir)
 
 
 async def test_failing_workflow_UnknownError_slurm(
@@ -302,13 +330,14 @@ async def test_failing_workflow_UnknownError_slurm(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
+    cache_dir = str(tmp777_path / "user_cache_dir-slurm")
+
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
         user_settings_dict=dict(
             slurm_user=SLURM_USER,
             slurm_accounts=[],
-            cache_dir=str(tmp777_path / "user_cache_dir-slurm"),
+            cache_dir=cache_dir,
         ),
         client=client,
         monkeypatch=monkeypatch,
@@ -318,3 +347,5 @@ async def test_failing_workflow_UnknownError_slurm(
         task_factory=task_factory,
         task_factory_v2=task_factory_v2,
     )
+
+    _reset_permissions_for_user_folder(cache_dir)

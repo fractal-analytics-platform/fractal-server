@@ -84,7 +84,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="postgres",
+                DB_ENGINE="postgres-psycopg",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
             ),
@@ -94,7 +94,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="postgres",
+                DB_ENGINE="postgres-psycopg",
                 POSTGRES_DB="fractal",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
@@ -208,7 +208,7 @@ def test_settings_check(
     # Create a Settings instance
     settings = Settings(**settings_dict)
 
-    if settings.DB_ENGINE in ["postgres", "postgres-psycopg"] and (
+    if settings.DB_ENGINE == "postgres-psycopg" and (
         DB_ENGINE != settings.DB_ENGINE
     ):
         raises = True

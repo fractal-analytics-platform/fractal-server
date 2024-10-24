@@ -204,7 +204,9 @@ def relink_python_interpreter_v1(collect_packages, current_py_version: str):
     orig_python = os.readlink(task_python)
     logger.warning(f"RELINK: Original status: {task_python=} -> {orig_python}")
     task_python.unlink()
-    task_python.symlink_to(f"/usr/bin/python{current_py_version}")
+    task_python.symlink_to(
+        f"/.venv{current_py_version}/bin/python{current_py_version}"
+    )
     logger.warning(
         f"RELINK: Updated status: {task_python=} -> "
         f"{os.readlink(task_python.as_posix())}"

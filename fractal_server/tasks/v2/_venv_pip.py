@@ -75,6 +75,11 @@ async def _pip_install(
     )
     await execute_command(
         cwd=Path(task_group.venv_path),
+        command=f"{python_bin} -m pip install setuptools",
+        logger_name=logger_name,
+    )
+    await execute_command(
+        cwd=Path(task_group.venv_path),
         command=f"{python_bin} -m pip install {pip_install_str}",
         logger_name=logger_name,
     )

@@ -24,7 +24,7 @@ def test_versions(fractal_ssh: FractalSSH, current_py_version: str):
     Check the Python and fractal-server versions available on the cluster.
     """
 
-    python_bin = f"/usr/bin/python{current_py_version}"
+    python_bin = f"/.venv{current_py_version}/bin/python{current_py_version}"
     command = f"{python_bin} --version"
     print(f"COMMAND:\n{command}")
     stdout = fractal_ssh.run_command(cmd=command)

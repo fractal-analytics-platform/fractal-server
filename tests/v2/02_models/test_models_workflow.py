@@ -68,7 +68,7 @@ async def test_project_and_workflows(db):
     await db.delete(db_project)
 
     DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    if DB_ENGINE == "postgres-psycopg":
         with pytest.raises(IntegrityError):
             # WorkflowV2.project_id violates fk-contraint in Postgres
             await db.commit()

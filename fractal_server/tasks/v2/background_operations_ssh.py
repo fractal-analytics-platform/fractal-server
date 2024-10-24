@@ -205,7 +205,7 @@ def background_collect_pip_ssh(
                 remove_venv_folder_upon_failure = True
 
                 stdout = _customize_and_run_template(
-                    script_filename="_2_upgrade_pip.sh",
+                    script_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
                 )
                 stdout = _customize_and_run_template(

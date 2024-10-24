@@ -30,7 +30,7 @@ async def set_test_db(tmp_path):
     ]
 
     # DB_ENGINE-specific config
-    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    if DB_ENGINE == "postgres-psycopg":
         config_lines.extend(
             [
                 "POSTGRES_USER=postgres",
@@ -68,7 +68,7 @@ async def set_test_db(tmp_path):
 
     yield
 
-    if DB_ENGINE == "postgres":
+    if DB_ENGINE == "postgres-psycopg":
         # Apply migrations on reverse until database is dropped, in order to
         # keep tests stateless:
         # https://alembic.sqlalchemy.org/en/latest/tutorial.html#downgrading
