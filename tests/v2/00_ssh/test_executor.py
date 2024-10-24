@@ -300,7 +300,9 @@ def test_slurm_ssh_executor_error_in_calllback(
     monkeypatch,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}"
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
     )
 
     def _get_subfolder_sftp_patched(*args, **kwargs):
