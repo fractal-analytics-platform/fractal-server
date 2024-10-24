@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -310,4 +311,13 @@ def test_slurm_ssh_executor_error_in_calllback(
     ) as executor:
         fut = executor.submit(lambda: 1)
         debug(fut)
-        debug(fut.result())
+
+        TIMEOUT = 5
+        t0 = time.perf_counter()
+        while time.perf_counter() - t0 < TIMEOUT:
+            time.sleep(0.4)
+            debug(fut._state)
+            if fut._state != "PENDING":
+                return
+
+        raise RuntimeError(f"Future still pending, {fut}")
