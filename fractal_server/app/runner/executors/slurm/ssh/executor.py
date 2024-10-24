@@ -1055,55 +1055,59 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Arguments:
             jobid: ID of the SLURM job
         """
-
-        # Loop over all job_ids, and fetch future and job objects
-        futures: list[Future] = []
-        jobs: list[SlurmJob] = []
-        with self.jobs_lock:
-            for job_id in job_ids:
-                future, job = self.jobs.pop(job_id)
-                futures.append(future)
-                jobs.append(job)
-            if not self.jobs:
-                self.jobs_empty_cond.notify_all()
-
-        # Fetch subfolder from remote host
+        # Handle all uncaught exceptions in this broad try/except block
         try:
-            self._get_subfolder_sftp(jobs=jobs)
-        except NoValidConnectionsError as e:
-            logger.error("NoValidConnectionError")
-            logger.error(f"{str(e)=}")
-            logger.error(f"{e.errors=}")
-            for err in e.errors:
-                logger.error(f"{str(err)}")
-
-            raise e
-
-        # First round of checking whether all output files exist
-        missing_out_paths = []
-        for job in jobs:
-            for ind_out_path, out_path in enumerate(
-                job.output_pickle_files_local
-            ):
-                if not out_path.exists():
-                    missing_out_paths.append(out_path)
-        num_missing = len(missing_out_paths)
-        if num_missing > 0:
-            # Output pickle files may be missing e.g. because of some slow
-            # filesystem operation; wait some time before re-trying
-            settings = Inject(get_settings)
-            sleep_time = settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL
             logger.info(
-                f"{num_missing} output pickle files are missing; "
-                f"sleep {sleep_time} seconds."
+                f"[FractalSlurmSSHExecutor._completion] START, for {job_ids=}."
             )
-            for missing_file in missing_out_paths:
-                logger.debug(f"Missing output pickle file: {missing_file}")
-            time.sleep(sleep_time)
 
-        # Handle all jobs
-        for ind_job, job_id in enumerate(job_ids):
+            # Loop over all job_ids, and fetch future and job objects
+            futures: list[Future] = []
+            jobs: list[SlurmJob] = []
+            with self.jobs_lock:
+                for job_id in job_ids:
+                    future, job = self.jobs.pop(job_id)
+                    futures.append(future)
+                    jobs.append(job)
+                if not self.jobs:
+                    self.jobs_empty_cond.notify_all()
+
+            # Fetch subfolder from remote host
             try:
+                self._get_subfolder_sftp(jobs=jobs)
+            except NoValidConnectionsError as e:
+                logger.error("NoValidConnectionError")
+                logger.error(f"{str(e)=}")
+                logger.error(f"{e.errors=}")
+                for err in e.errors:
+                    logger.error(f"{str(err)}")
+
+                raise e
+
+            # First round of checking whether all output files exist
+            missing_out_paths = []
+            for job in jobs:
+                for ind_out_path, out_path in enumerate(
+                    job.output_pickle_files_local
+                ):
+                    if not out_path.exists():
+                        missing_out_paths.append(out_path)
+            num_missing = len(missing_out_paths)
+            if num_missing > 0:
+                # Output pickle files may be missing e.g. because of some slow
+                # filesystem operation; wait some time before re-trying
+                settings = Inject(get_settings)
+                sleep_time = settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL
+                logger.info(
+                    f"{num_missing} output pickle files are missing; "
+                    f"sleep {sleep_time} seconds."
+                )
+                for missing_file in missing_out_paths:
+                    logger.debug(f"Missing output pickle file: {missing_file}")
+                time.sleep(sleep_time)
+
+            # Handle all jobs
+            for ind_job, job_id in enumerate(job_ids):
                 # Retrieve job and future objects
                 job = jobs[ind_job]
                 future = futures[ind_job]
@@ -1128,6 +1132,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                                 remaining_futures=remaining_futures,
                                 remaining_job_ids=remaining_job_ids,
                             )
+                            logger.info(
+                                "[FractalSlurmSSHExecutor._completion] END, "
+                                f"for {job_ids=}, with JobExecutionError due "
+                                f"to missing {out_path.as_posix()}."
+                            )
                             return
                         except InvalidStateError:
                             logger.warning(
@@ -1140,6 +1149,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                             self._handle_remaining_jobs(
                                 remaining_futures=remaining_futures,
                                 remaining_job_ids=remaining_job_ids,
+                            )
+                            logger.info(
+                                "[FractalSlurmSSHExecutor._completion] END, "
+                                f"for {job_ids=}, with JobExecutionError/"
+                                "InvalidStateError due to "
+                                f"missing {out_path.as_posix()}."
                             )
                             return
 
@@ -1217,16 +1232,22 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 else:
                     future.set_result(outputs)
 
-            except Exception as e:
+        except Exception as e:
+            logger.warning(
+                "[FractalSlurmSSHExecutor._completion] "
+                f"An exception took place: {str(e)}."
+            )
+            for future in futures:
                 try:
+                    logger.info(f"Set exception for {future=}")
                     future.set_exception(e)
-                    return
                 except InvalidStateError:
-                    logger.warning(
-                        f"Future {future} (SLURM job ID: {job_id}) was already"
-                        " cancelled, exit from"
-                        " FractalSlurmSSHExecutor._completion."
-                    )
+                    logger.info(f"Future {future} was already cancelled.")
+            logger.info(
+                f"[FractalSlurmSSHExecutor._completion] END, for {job_ids=}, "
+                "from within exception handling."
+            )
+            return
 
     def _get_subfolder_sftp(self, jobs: list[SlurmJob]) -> None:
         """
