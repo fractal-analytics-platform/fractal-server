@@ -91,7 +91,7 @@
     * Use `paramiko.sftp_client.SFTPClient` methods directly rathen than `fabric` wrappers (\#1949).
     * Disable prefetching for `SFTPClient.get` (\#1949).
 * Internal:
-    * Update `_create_first_group` so that it only search for `UserGroups` with a given name (\#1964).
+    * Update `_create_first_group` so that it only searches for `UserGroups` with a given name (\#1964).
 * Dependencies:
     * Bump fastapi to `0.115` (\#1942).
 * Testing:
