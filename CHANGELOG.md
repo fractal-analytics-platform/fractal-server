@@ -90,6 +90,8 @@
     * Introduce `FractalSSH.fetch_file` and `FractalSSH.read_remote_json_file` (\#1949).
     * Use `paramiko.sftp_client.SFTPClient` methods directly rathen than `fabric` wrappers (\#1949).
     * Disable prefetching for `SFTPClient.get` (\#1949).
+* Internal:
+    * Update `_create_first_group` so that it only searches for `UserGroups` with a given name (\#1964).
 * Dependencies:
     * Bump fastapi to `0.115` (\#1942).
 * Testing:

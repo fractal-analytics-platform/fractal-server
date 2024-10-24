@@ -315,13 +315,20 @@ async def _create_first_user(
 
 
 def _create_first_group():
+    """
+    Create a `UserGroup` with `name=FRACTAL_DEFAULT_GROUP_NAME`, if missing.
+    """
     function_logger = set_logger("fractal_server.create_first_group")
 
     function_logger.info(
         f"START _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
     )
     with next(get_sync_db()) as db:
-        group_all = db.execute(select(UserGroup))
+        group_all = db.execute(
+            select(UserGroup).where(
+                UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+            )
+        )
         if group_all.scalars().one_or_none() is None:
             first_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
             db.add(first_group)
