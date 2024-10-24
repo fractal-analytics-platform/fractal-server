@@ -80,6 +80,7 @@
 * Runner:
     * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
     * Fix bug of SSH/SFTP commands not acquiring lock (\#1949).
+    * Fix bug of unhandled exception in SSH/SLURM executor (\#1963).
     * Always remove task-subfolder compressed archive (\#1949).
 * Task collection:
     * Create base directory (in SSH mode), if missing (\#1949).
