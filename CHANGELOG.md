@@ -3,16 +3,17 @@
 
 # 2.7.0 (unreleased)
 
-> WARNING: This release requires running `fractalctl update-db-data` (after
-> `fractalctl set-db`).
-
-> WARNING: when running `fractalctl update-db-data`, the environment variable
-> `FRACTAL_V27_DEFAULT_USER_EMAIL` must be set, e.g. as in
-> ```
-> FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.yx fractalctl update-db-data
-> ```
-> This user must exist, and they will own all previously-common
-> tasks/task-groups.
+> WARNING: This release comes with several specific notes:
+>
+> 1. It requires running `fractalctl update-db-data` (after `fractalctl set-db`).
+> 2. When running `fractalctl update-db-data`, the environment variable
+>    `FRACTAL_V27_DEFAULT_USER_EMAIL` must be set, e.g. as in
+>    `FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.yx fractalctl
+>    update-db-data`. This user must exist, and they will own all
+>    previously-common tasks/task-groups.
+> 3. The pip extra `postgres` is deprecated, in favor og `postgres-psycopg-binary`.
+> 4. The configuration variable `DB_ENGINE="postgres"` is deprecated, in favor of `DB_ENGINE="postgres-psycopg"`.
+> 5. Python3.9 is deprecated.
 
 * API:
     * Users and user groups:
@@ -76,7 +77,8 @@
     * Add `TaskGroupV2` columns `wheel_path`, `pinned_package_versions` (\#1861).
     * Clean up `alembic` migration scripts (\#1894).
     * Verify task-group non-duplication constraint in `2.7.0` data-migration script (\#1927).
-    * Normalize pkg_name in `2.7.0` data-migration script (\#1930).
+    * Normalize `pkg_name` in `2.7.0` data-migration script (\#1930).
+    * Deprecate `DB_ENGINE="postgres"` configuration variable (\#1946).
 * Runner:
     * Do not create local folders with 755 permissions unless `FRACTAL_BACKEND_RUNNER="slurm"` (\#1923).
     * Fix bug of SSH/SFTP commands not acquiring lock (\#1949).
@@ -92,8 +94,11 @@
     * Disable prefetching for `SFTPClient.get` (\#1949).
 * Dependencies:
     * Bump fastapi to `0.115` (\#1942).
+    * Remove pip extra `postgres`, corresponding to `psycopg2+asyncpg` (\#1946).
+    * Deprecate python3.9 (\#1946).
 * Testing:
-    *  Benchmark `GET /api/v2/task-group/` (\#1922).
+    * Benchmark `GET /api/v2/task-group/` (\#1922).
+    * Use new `ubuntu22-slurm-multipy` image, with Python3.12 and with Python-version specific venvs (\#1946).
 
 # 2.6.4
 
@@ -1014,7 +1019,7 @@ Warning: updating to this version requires changes to the configuration variable
 
 # 1.2.4
 
-* Review setup for database URLs, especially to allow using UNIX-socket connections for postgresl (\#657).
+* Review setup for database URLs, especially to allow using UNIX-socket connections for postgresql (\#657).
 
 # 1.2.3
 
