@@ -8,7 +8,6 @@ from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
-from tests.fixtures_server import DB_ENGINE
 
 
 def test_settings_injection(override_settings):
@@ -28,6 +27,7 @@ def test_settings_injection(override_settings):
         # valid
         (
             dict(
+                DB_ENGINE="sqlite",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
@@ -38,9 +38,9 @@ def test_settings_injection(override_settings):
         ),
         (
             dict(
+                DB_ENGINE="postgres-psycopg",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="postgres-psycopg",
                 POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
@@ -207,11 +207,6 @@ def test_settings_check(
 
     # Create a Settings instance
     settings = Settings(**settings_dict)
-
-    if settings.DB_ENGINE == "postgres-psycopg" and (
-        DB_ENGINE != settings.DB_ENGINE
-    ):
-        raises = True
 
     # Run Settings.check method
     if raises:

@@ -1,4 +1,5 @@
 import logging
+import os
 import random
 import sys
 from dataclasses import dataclass
@@ -27,12 +28,7 @@ from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
-try:
-    import psycopg  # noqa: F401
-
-    DB_ENGINE = "postgres-psycopg"
-except ModuleNotFoundError:
-    DB_ENGINE = "sqlite"
+DB_ENGINE = os.environ.get("DB_ENGINE", "postgres-psycopg")
 
 
 def get_patched_settings(temp_path: Path):
