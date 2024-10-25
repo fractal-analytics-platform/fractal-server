@@ -6,7 +6,7 @@ services:
       context: ./slurm
       dockerfile: Dockerfile
       args:
-        - PYTHON_PATH=/.venv3.10/bin/python3.10
+        - PYTHON_PATH=/.venv3.12/bin/python3.12
     hostname: slurm
     volumes:
       - '/tmp:/tmp:rw'
