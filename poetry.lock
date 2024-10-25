@@ -1617,7 +1617,7 @@ test = ["enum34", "ipaddress", "mock", "pywin32", "wmi"]
 name = "psycopg"
 version = "3.2.3"
 description = "PostgreSQL database adapter for Python"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "psycopg-3.2.3-py3-none-any.whl", hash = "sha256:644d3973fe26908c73d4be746074f6e5224b03c1101d302d9a53bf565ad64907"},
@@ -1641,7 +1641,7 @@ test = ["anyio (>=4.0)", "mypy (>=1.11)", "pproxy (>=2.7)", "pytest (>=6.2.5)", 
 name = "psycopg-binary"
 version = "3.2.3"
 description = "PostgreSQL database adapter for Python -- C optimisation distribution"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "psycopg_binary-3.2.3-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:965455eac8547f32b3181d5ec9ad8b9be500c10fe06193543efaaebe3e4ce70c"},
@@ -2401,7 +2401,7 @@ files = [
 name = "tzdata"
 version = "2024.2"
 description = "Provider of IANA time zone data"
-optional = true
+optional = false
 python-versions = ">=2"
 files = [
     {file = "tzdata-2024.2-py2.py3-none-any.whl", hash = "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd"},
@@ -2602,9 +2602,8 @@ files = [
 
 [extras]
 gunicorn = ["gunicorn"]
-postgres-psycopg-binary = ["psycopg"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "8b64af7546b561366952fe8201877d48178aaa17c31c0d4e586136df30f5f67f"
+content-hash = "ad448ba092202b775cbddcd5b77ac00e1e7c9f315b65b90f8cfe29088efb61f0"
