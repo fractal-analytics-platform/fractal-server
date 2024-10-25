@@ -154,7 +154,7 @@ async def test_project_and_workflows(db):
     await db.delete(db_project)
 
     DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    if DB_ENGINE == "postgres-psycopg":
         with pytest.raises(IntegrityError):
             # Workflow.project_id violates fk-contraint in Postgres
             await db.commit()
@@ -309,7 +309,7 @@ async def test_project_and_datasets(db):
     await db.delete(db_project)
 
     DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    if DB_ENGINE == "postgres-psycopg":
         with pytest.raises(IntegrityError):
             # Dataset.project_id violates fk-contraint in Postgres
             await db.commit()
@@ -491,7 +491,7 @@ async def test_jobs(db):
 
     # Failed deletions
     for db_object in (db_workflow, db_input_dataset, db_output_dataset):
-        if DB_ENGINE == "postgres":
+        if DB_ENGINE == "postgres-psycopg":
             with pytest.raises(IntegrityError):
                 await db.delete(db_object)
                 await db.commit()
@@ -530,7 +530,7 @@ async def test_jobs(db):
     # Failed project deletion
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
-    if DB_ENGINE == "postgres":
+    if DB_ENGINE == "postgres-psycopg":
         with pytest.raises(IntegrityError):
             await db.delete(db_project)
             await db.commit()
@@ -960,7 +960,7 @@ async def test_timestamp(db):
     if DB_ENGINE == "sqlite":
         assert project.timestamp_created.tzinfo is None
         assert project.timestamp_created.tzname() is None
-    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    elif DB_ENGINE == "postgres-psycopg":
         assert project.timestamp_created.tzinfo is not None
         assert (
             project.timestamp_created.astimezone(tz=datetime.timezone.utc)

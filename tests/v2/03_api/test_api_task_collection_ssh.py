@@ -1,12 +1,25 @@
+import logging
 from pathlib import Path
 
 from devtools import debug
 
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
+
+CURRENT_FRACTAL_MAX_PIP_VERSION = "24.0"
+
+
+def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    logging.warning(f"[_reset_permissions] {remote_folder=}")
+    fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
 async def test_task_collection_ssh_from_pypi(
@@ -21,7 +34,6 @@ async def test_task_collection_ssh_from_pypi(
     slurmlogin_ip,
     ssh_keys,
 ):
-    CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
     credentials = dict(
         host=slurmlogin_ip,
         user=SLURM_USER,
@@ -32,7 +44,7 @@ async def test_task_collection_ssh_from_pypi(
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
     # Define and create remote working directory
-    TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
+    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
@@ -42,7 +54,7 @@ async def test_task_collection_ssh_from_pypi(
     PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
     settings_overrides = {
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
-        PY_KEY: f"/usr/bin/python{current_py_version}",
+        PY_KEY: f"/.venv{current_py_version}/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
         "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
     }
@@ -52,7 +64,7 @@ async def test_task_collection_ssh_from_pypi(
         ssh_host=slurmlogin_ip,
         ssh_username=SLURM_USER,
         ssh_private_key_path=ssh_keys["private"],
-        ssh_tasks_dir=TASKS_BASE_DIR,
+        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
         ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
     )
 
@@ -61,7 +73,7 @@ async def test_task_collection_ssh_from_pypi(
         user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
-        package_version = "1.0.2"
+        package_version = "1.3.2"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
@@ -78,6 +90,7 @@ async def test_task_collection_ssh_from_pypi(
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state_data = res.json()["data"]
+        debug(state_data)
         assert state_data["status"] == CollectionStatusV2.OK
         # Check fractal-tasks-core version in freeze data
         assert f"fractal-tasks-core=={package_version}" in state_data["freeze"]
@@ -123,7 +136,7 @@ async def test_task_collection_ssh_from_pypi(
         # BACKGROUND FAILURE 1: existing folder
         package_version = "1.2.0"
         remote_folder = (
-            Path(TASKS_BASE_DIR)
+            Path(REMOTE_TASKS_BASE_DIR)
             / str(user.id)
             / "fractal-tasks-core"
             / f"{package_version}"
@@ -150,6 +163,11 @@ async def test_task_collection_ssh_from_pypi(
         assert "already exists" in state_data["log"]
         # Check that existing folder was _not_ removed
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        # Cleanup: remove folder
+        fractal_ssh.remove_folder(
+            folder=remote_folder,
+            safe_root=REMOTE_TASKS_BASE_DIR,
+        )
 
         # BACKGROUND FAILURE 2: invalid version
         package_version = "9.9.9"
@@ -165,6 +183,8 @@ async def test_task_collection_ssh_from_pypi(
         assert "No version starting with 9.9.9 found" in res.json()["detail"]
         debug(res.json())
 
+        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+
 
 async def test_task_collection_ssh_from_wheel(
     db,
@@ -179,7 +199,6 @@ async def test_task_collection_ssh_from_wheel(
     ssh_keys,
     testdata_path: Path,
 ):
-    CURRENT_FRACTAL_MAX_PIP_VERSION = "21.0"
     credentials = dict(
         host=slurmlogin_ip,
         user=SLURM_USER,
@@ -190,7 +209,7 @@ async def test_task_collection_ssh_from_wheel(
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
     # Define and create remote working directory
-    TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
+    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
@@ -210,7 +229,7 @@ async def test_task_collection_ssh_from_wheel(
         ssh_host=slurmlogin_ip,
         ssh_username=SLURM_USER,
         ssh_private_key_path=ssh_keys["private"],
-        ssh_tasks_dir=TASKS_BASE_DIR,
+        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
         ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
     )
 
@@ -265,3 +284,5 @@ async def test_task_collection_ssh_from_wheel(
             "Cannot provide package version when package " "is a wheel file."
         )
         assert error_msg in str(res.json()["detail"])
+
+        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)

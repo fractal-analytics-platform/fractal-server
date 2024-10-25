@@ -40,7 +40,7 @@ def get_patched_settings(temp_path: Path):
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
-    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
+    elif DB_ENGINE == "postgres-psycopg":
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
         settings.POSTGRES_DB = "fractal_test"
@@ -59,7 +59,7 @@ def get_patched_settings(temp_path: Path):
 
     INFO = sys.version_info
     CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
-    PYTHON_BIN = f"/usr/bin/python{CURRENT_PY_VERSION}"
+    PYTHON_BIN = f"/.venv{CURRENT_PY_VERSION}/bin/python{CURRENT_PY_VERSION}"
     settings.FRACTAL_SLURM_WORKER_PYTHON = PYTHON_BIN
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
