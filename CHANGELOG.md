@@ -11,7 +11,7 @@
 >    `FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.yx fractalctl
 >    update-db-data`. This user must exist, and they will own all
 >    previously-common tasks/task-groups.
-> 3. The pip extra `postgres` is deprecated, in favor og `postgres-psycopg-binary`.
+> 3. The pip extra `postgres` is deprecated, in favor of `postgres-psycopg-binary`.
 > 4. The configuration variable `DB_ENGINE="postgres"` is deprecated, in favor of `DB_ENGINE="postgres-psycopg"`.
 > 5. Python3.9 is deprecated.
 
