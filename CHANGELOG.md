@@ -101,6 +101,7 @@
 * Testing:
     * Benchmark `GET /api/v2/task-group/` (\#1922).
     * Use new `ubuntu22-slurm-multipy` image, with Python3.12 and with Python-version specific venvs (\#1946).
+    * Get `DB_ENGINE` variable from `os.environ` rather than from installed packages (\#1968).
 
 # 2.6.4
 
