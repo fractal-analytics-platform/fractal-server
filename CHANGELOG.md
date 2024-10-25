@@ -100,7 +100,7 @@
     * Deprecate python3.9 (\#1946).
 * Testing:
     * Benchmark `GET /api/v2/task-group/` (\#1922).
-    * Use new `ubuntu22-slurm-multipy` image, with Python3.12 and with Python-version specific venvs (\#1946).
+    * Use new `ubuntu22-slurm-multipy` image, with Python3.12 and with Python-version specific venvs (\#1946, #1969).
 
 # 2.6.4
 
