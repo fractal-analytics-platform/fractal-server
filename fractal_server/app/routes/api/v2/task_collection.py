@@ -32,8 +32,8 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_collection_log_v2
-from fractal_server.tasks.v2.background_operations import (
-    background_collect_pip,
+from fractal_server.tasks.v2.backgroud_operations_local import (
+    background_collect_pip_local,
 )
 from fractal_server.tasks.v2.endpoint_operations import (
     get_package_version_from_pypi,
@@ -272,7 +272,7 @@ async def collect_tasks_pip(
     else:
         # Local task collection
         background_tasks.add_task(
-            background_collect_pip,
+            background_collect_pip_local,
             state_id=state.id,
             task_group=task_group,
         )
