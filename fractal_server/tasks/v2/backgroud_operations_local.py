@@ -14,6 +14,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -289,7 +290,7 @@ async def background_collect_pip_local(
                     "collecting - create_db_tasks_and_update_task_group - "
                     "start"
                 )
-                create_db_tasks_and_update_task_group(
+                task_group = create_db_tasks_and_update_task_group(
                     task_list=task_list,
                     task_group_id=task_group.id,
                     db=db,
@@ -307,6 +308,13 @@ async def background_collect_pip_local(
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze.stdout
                 collection_state.data["status"] = CollectionStatusV2.OK
+                # FIXME: The `task_list` key is likely not used by any client,
+                # we should consider dropping it
+                task_read_list = [
+                    TaskReadV2(**task.model_dump()).dict()
+                    for task in task_group.task_list
+                ]
+                collection_state.data["task_list"] = task_read_list
                 flag_modified(collection_state, "data")
                 db.commit()
                 logger.debug("finalising - END")
