@@ -1,0 +1,9 @@
+{
+  "manifest_version": "2",
+  "task_list": [
+    {
+      "executable_non_parallel": "easy_task.py",
+      "name": "easy_task"
+    }
+  ]
+}
