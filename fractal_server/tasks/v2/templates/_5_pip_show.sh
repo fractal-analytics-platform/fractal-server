@@ -26,16 +26,16 @@ write_log "START pip show"
 $VENVPYTHON -m pip show ${PACKAGE_NAME}
 write_log "END   pip show"
 echo
-PACKAGE_NAME=$($VENVPYTHON -m pip show ${PACKAGE_NAME} | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_NAME=$($VENVPYTHON -m pip show "$PACKAGE_NAME" | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package name: $PACKAGE_NAME"
 echo
-PACKAGE_VERSION=$($VENVPYTHON -m pip show ${PACKAGE_NAME} | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_VERSION=$($VENVPYTHON -m pip show "$PACKAGE_NAME" | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package version: $PACKAGE_VERSION"
 echo
-PACKAGE_PARENT_FOLDER=$($VENVPYTHON -m pip show "${PACKAGE_NAME}" | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_PARENT_FOLDER=$($VENVPYTHON -m pip show "$PACKAGE_NAME" | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package parent folder: $PACKAGE_PARENT_FOLDER"
 echo
-MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show "${PACKAGE_NAME}" --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
+MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show "$PACKAGE_NAME" --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
 write_log "Manifest relative path: $MANIFEST_RELATIVE_PATH"
 echo
 MANIFEST_ABSOLUTE_PATH="${PACKAGE_PARENT_FOLDER}/${MANIFEST_RELATIVE_PATH}"
