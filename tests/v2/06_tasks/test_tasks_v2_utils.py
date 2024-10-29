@@ -1,6 +1,6 @@
 import pytest
 
-from fractal_server.tasks.utils import _normalize_package_name
+from fractal_server.tasks.utils import normalize_package_name
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
@@ -56,5 +56,5 @@ def test_normalize_package_name():
         "friendly--bard",
         "FrIeNdLy-._.-bArD",
     )
-    outputs = list(map(_normalize_package_name, inputs))
+    outputs = list(map(normalize_package_name, inputs))
     assert len(set(outputs)) == 1
