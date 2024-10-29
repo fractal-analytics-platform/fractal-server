@@ -41,7 +41,7 @@ async def test_background_collect_pip_existing_file(
     task_group = TaskGroupV2(
         pkg_name="fractal-tasks-mock",
         version="0.0.1",
-        python_version="3.10",
+        python_version=current_py_version,
         wheel_path=(
             f"{testdata_path.parent}/v2/fractal_tasks_valid/valid_tasks/dist"
             "/fractal_tasks_mock-0.0.1-py3-none-any.whl"
