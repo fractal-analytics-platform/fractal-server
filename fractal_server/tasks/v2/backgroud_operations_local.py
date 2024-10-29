@@ -18,7 +18,6 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-from fractal_server.string_tools import validate_cmd
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
@@ -278,9 +277,9 @@ async def background_collect_pip_local(
             )
             try:
                 logger.info(f"Now delete folder {task_group.path}")
-                cmd = f"rm -r {task_group.path}"
-                validate_cmd(cmd)
-                stdout = execute_command_sync(command=cmd)
+                import shutil
+
+                shutil.rmtree(task_group.path)
                 logger.info(f"Deleted folder {task_group.path}")
             except Exception as e:
                 logger.error(
