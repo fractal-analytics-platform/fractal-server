@@ -10,8 +10,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
-from fractal_server.tasks.utils import get_collection_path
+from fractal_server.tasks.utils import get_collection_log_v2
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.endpoint_operations import (
     get_package_version_from_pypi,
@@ -104,8 +103,7 @@ async def test_task_collection_from_wheel(
         assert ".whl[my_extra]" in log
 
         # Check on-disk files
-        assert get_collection_path(Path(venv_path).parent).exists()
-        assert get_log_path(Path(venv_path).parent).exists()
+        assert get_collection_log_v2(Path(venv_path).parent).exists()
 
         # Check actual Python version
         python_bin = task_list[0]["command_non_parallel"].split()[0]
@@ -292,7 +290,6 @@ async def test_task_collection_from_pypi(
         assert log is not None
 
         # Check on-disk files
-        assert get_collection_path(Path(venv_path).parent).exists()
         assert get_log_path(Path(venv_path).parent).exists()
 
         # Check actual Python version
@@ -369,7 +366,7 @@ async def test_task_collection_failure_due_to_existing_path(
 async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
 
     LOG = "fractal is awesome"
-    with open(tmp_path / COLLECTION_LOG_FILENAME, "w") as f:
+    with open(get_collection_log_v2(tmp_path), "w") as f:
         f.write(LOG)
     state = CollectionStateV2(data=dict(path=tmp_path.as_posix()))
     db.add(state)
