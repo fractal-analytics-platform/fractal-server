@@ -1,6 +1,8 @@
 from typing import Literal
 
+from ..utils import normalize_package_name
 from fractal_server.config import get_settings
+from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
 
 
@@ -57,3 +59,33 @@ def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
         raise ValueError(
             f"Invalid {wheel_filename=}. Original error: {str(e)}."
         )
+
+
+def compare_package_names(
+    *,
+    pkg_name_pip_show: str,
+    pkg_name_task_group: str,
+    logger_name: str,
+) -> None:
+    """
+    Compare the package names from `pip show` and from the db.
+    """
+    logger = get_logger(logger_name)
+
+    if pkg_name_pip_show == pkg_name_task_group:
+        return
+
+    logger.warning(
+        f"Package name mismatch: "
+        f"{pkg_name_task_group=}, {pkg_name_pip_show=}."
+    )
+    normalized_pkg_name_pip = normalize_package_name(pkg_name_pip_show)
+    normalized_pkg_name_taskgroup = normalize_package_name(pkg_name_task_group)
+    if normalized_pkg_name_pip != normalized_pkg_name_taskgroup:
+        error_msg = (
+            f"Package name mismatch persists, after normalization: "
+            f"{pkg_name_task_group=}, "
+            f"{pkg_name_pip_show=}."
+        )
+        logger.error(error_msg)
+        raise ValueError(error_msg)

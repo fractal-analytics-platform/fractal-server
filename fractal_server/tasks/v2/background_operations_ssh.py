@@ -20,6 +20,7 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.template_utils import customize_template
 from fractal_server.tasks.v2.template_utils import parse_script_5_stdout
+from fractal_server.tasks.v2.utils import compare_package_names
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
@@ -210,12 +211,12 @@ def background_collect_pip_ssh(
                 # Check package_name match between pip show and task-group
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
-                if package_name_pip_show != package_name_task_group:
-                    logger.warning(
-                        f"`package_name` mismatch: "
-                        f"{package_name_task_group=} but "
-                        f"{package_name_pip_show=}"
-                    )
+                compare_package_names(
+                    pkg_name_pip_show=package_name_pip_show,
+                    pkg_name_task_group=package_name_task_group,
+                    logger_name=LOGGER_NAME,
+                )
+
                 # Extract/drop parsed attributes
                 package_name = package_name_task_group
                 python_bin = pkg_attrs.pop("python_bin")
