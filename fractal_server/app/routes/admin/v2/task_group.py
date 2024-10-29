@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth._aux_auth import (
 )
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -50,6 +51,8 @@ async def query_task_group_list(
     user_group_id: Optional[int] = None,
     private: Optional[bool] = None,
     active: Optional[bool] = None,
+    pkg_name: Optional[str] = None,
+    origin: Optional[TaskGroupV2OriginEnum] = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
@@ -75,6 +78,10 @@ async def query_task_group_list(
             stm = stm.where(is_(TaskGroupV2.active, True))
         else:
             stm = stm.where(is_(TaskGroupV2.active, False))
+    if origin is not None:
+        stm = stm.where(TaskGroupV2.origin == origin)
+    if pkg_name is not None:
+        stm = stm.where(TaskGroupV2.pkg_name.icontains(pkg_name))
 
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()

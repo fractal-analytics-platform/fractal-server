@@ -24,6 +24,7 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 from fractal_server.logger import set_logger
@@ -200,7 +201,7 @@ async def create_task(
         user_group_id=user_group_id,
         active=True,
         task_list=[db_task],
-        origin="other",
+        origin=TaskGroupV2OriginEnum.OTHER,
         version=db_task.version,
         pkg_name=pkg_name,
     )
