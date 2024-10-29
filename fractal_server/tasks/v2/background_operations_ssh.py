@@ -18,42 +18,16 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
+from fractal_server.tasks.v2.template_utils import customize_template
+from fractal_server.tasks.v2.template_utils import parse_script_5_stdout
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
-
-TEMPLATES_DIR = Path(__file__).parent / "templates"
-
-
-def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
-    searches = [
-        ("Python interpreter:", "python_bin"),
-        ("Package name:", "package_name"),
-        ("Package version:", "package_version"),
-        ("Package parent folder:", "package_root_parent_remote"),
-        ("Manifest absolute path:", "manifest_path_remote"),
-    ]
-    stdout_lines = stdout.splitlines()
-    attributes = dict()
-    for search, attribute_name in searches:
-        matching_lines = [_line for _line in stdout_lines if search in _line]
-        if len(matching_lines) == 0:
-            raise ValueError(f"String '{search}' not found in stdout.")
-        elif len(matching_lines) > 1:
-            raise ValueError(
-                f"String '{search}' found too many times "
-                f"({len(matching_lines)})."
-            )
-        else:
-            actual_line = matching_lines[0]
-            attribute_value = actual_line.split(search)[-1].strip(" ")
-            attributes[attribute_name] = attribute_value
-    return attributes
 
 
 def _customize_and_run_template(
-    script_filename: str,
-    templates_folder: Path,
+    *,
+    template_name: str,
     replacements: list[tuple[str, str]],
-    tmpdir: str,
+    script_dir: str,
     logger_name: str,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
@@ -71,24 +45,20 @@ def _customize_and_run_template(
         fractal_ssh:
     """
     logger = get_logger(logger_name)
-    logger.debug(f"_customize_and_run_template {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {template_name} - START")
 
-    # Read template
-    template_path = templates_folder / script_filename
-    with template_path.open("r") as f:
-        script_contents = f.read()
-    # Customize template
-    for old_new in replacements:
-        script_contents = script_contents.replace(old_new[0], old_new[1])
-    # Write script locally
-    script_path_local = (Path(tmpdir) / script_filename).as_posix()
-    with open(script_path_local, "w") as f:
-        f.write(script_contents)
+    script_path_local = Path(script_dir) / template_name
+
+    customize_template(
+        template_name=template_name,
+        replacements=replacements,
+        script_path=script_path_local,
+    )
 
     # Transfer script to remote host
     script_path_remote = os.path.join(
         tasks_base_dir,
-        f"script_{abs(hash(tmpdir))}{script_filename}",
+        f"script_{abs(hash(script_dir))}{template_name}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
     fractal_ssh.send_file(
@@ -102,7 +72,7 @@ def _customize_and_run_template(
     stdout = fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
-    logger.debug(f"_customize_and_run_template {script_filename} - END")
+    logger.debug(f"_customize_and_run_template {template_name} - END")
     return stdout
 
 
@@ -172,9 +142,8 @@ def background_collect_pip_ssh(
                 ]
 
                 common_args = dict(
-                    templates_folder=TEMPLATES_DIR,
                     replacements=replacements,
-                    tmpdir=tmpdir,
+                    script_dir=tmpdir,
                     logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
                     tasks_base_dir=tasks_base_dir,
@@ -199,21 +168,21 @@ def background_collect_pip_ssh(
                 fractal_ssh.mkdir(folder=tasks_base_dir, parents=True)
 
                 stdout = _customize_and_run_template(
-                    script_filename="_1_create_venv.sh",
+                    template_name="_1_create_venv.sh",
                     **common_args,
                 )
                 remove_venv_folder_upon_failure = True
 
                 stdout = _customize_and_run_template(
-                    script_filename="_2_preliminary_pip_operations.sh",
+                    template_name="_2_preliminary_pip_operations.sh",
                     **common_args,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_3_pip_install.sh",
+                    template_name="_3_pip_install.sh",
                     **common_args,
                 )
                 stdout_pip_freeze = _customize_and_run_template(
-                    script_filename="_4_pip_freeze.sh",
+                    template_name="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("installing - END")
@@ -230,11 +199,11 @@ def background_collect_pip_ssh(
                 db.close()
 
                 stdout = _customize_and_run_template(
-                    script_filename="_5_pip_show.sh",
+                    template_name="_5_pip_show.sh",
                     **common_args,
                 )
 
-                pkg_attrs = _parse_script_5_stdout(stdout)
+                pkg_attrs = parse_script_5_stdout(stdout)
                 for key, value in pkg_attrs.items():
                     logger.debug(
                         f"collecting - parsed from pip-show: {key}={value}"
