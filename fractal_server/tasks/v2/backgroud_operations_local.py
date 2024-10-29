@@ -24,8 +24,6 @@ from fractal_server.tasks.v2.utils import compare_package_names
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 from fractal_server.utils import execute_command_sync
 
-TEMPLATES_DIR = Path(__file__).parent / "templates"
-
 
 def _customize_and_run_template(
     script_filename: str,
@@ -38,7 +36,6 @@ def _customize_and_run_template(
 
     Args:
         script_filename:
-        templates_folder:
         replacements:
         script_dir:
         logger_name:
@@ -123,7 +120,6 @@ async def background_collect_pip_local(
             ]
 
             common_args = dict(
-                templates_folder=TEMPLATES_DIR,
                 replacements=replacements,
                 script_dir=task_group.path,
                 logger_name=LOGGER_NAME,
