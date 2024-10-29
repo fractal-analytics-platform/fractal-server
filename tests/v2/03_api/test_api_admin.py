@@ -685,12 +685,15 @@ async def test_task_group_admin(
     task_factory_v2,
 ):
     async with MockCurrentUser() as user1:
-        task1 = await task_factory_v2(user_id=user1.id, source="source1")
+        task1 = await task_factory_v2(
+            user_id=user1.id,
+            name="AaAa",
+        )
         res = await client.get(f"/api/v2/task-group/{task1.taskgroupv2_id}/")
         task_group_1 = res.json()
         task2 = await task_factory_v2(
+            name="BBB",
             user_id=user1.id,
-            source="source2",
             task_group_kwargs=dict(active=False),
         )
         # make task_group_2 private
@@ -703,7 +706,7 @@ async def test_task_group_admin(
         debug(task_group_2)
 
     async with MockCurrentUser() as user2:
-        task3 = await task_factory_v2(user_id=user2.id, source="source3")
+        task3 = await task_factory_v2(user_id=user2.id, name="bbbbbbbb")
         res = await client.get(f"/api/v2/task-group/{task3.taskgroupv2_id}/")
         task_group_3 = res.json()
 
@@ -728,6 +731,19 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
+        # Include `origin`
+        res = await client.get(f"{PREFIX}/task-group/?origin=other")
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+        res = await client.get(f"{PREFIX}/task-group/?origin=INVALID")
+        assert res.status_code == 422
+
+        # Include `pkg_name`
+        res = await client.get(f"{PREFIX}/task-group/?pkg_name=bb")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
+        # Include `active`
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -742,6 +758,7 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
+        # Include `private`
         res = await client.get(f"{PREFIX}/task-group/?private=true")
         assert res.status_code == 200
         assert len(res.json()) == 1
@@ -749,6 +766,7 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()) == 2
 
+        # Include `user_group_id` and/or `private`
         res = await client.get(f"{PREFIX}/task-group/?user_group_id=1")
         assert res.status_code == 200
         assert len(res.json()) == 2
