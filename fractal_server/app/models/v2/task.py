@@ -29,7 +29,6 @@ class TaskV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
-    owner: Optional[str] = None
     version: Optional[str] = None
     args_schema_non_parallel: Optional[dict[str, Any]] = Field(
         sa_column=Column(JSON), default=None
