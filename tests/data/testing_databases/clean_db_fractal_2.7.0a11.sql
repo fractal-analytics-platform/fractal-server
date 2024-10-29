@@ -90,7 +90,8 @@ ALTER SEQUENCE public.applyworkflow_id_seq OWNED BY public.applyworkflow.id;
 CREATE TABLE public.collectionstatev2 (
     id integer NOT NULL,
     data json,
-    "timestamp" timestamp with time zone
+    "timestamp" timestamp with time zone,
+    taskgroupv2_id integer
 );
 
 
@@ -254,7 +255,8 @@ ALTER SEQUENCE public.jobv2_id_seq OWNED BY public.jobv2.id;
 
 CREATE TABLE public.linkusergroup (
     group_id integer NOT NULL,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    timestamp_created timestamp with time zone DEFAULT '2000-01-01 01:00:00+01'::timestamp with time zone NOT NULL
 );
 
 
@@ -511,6 +513,52 @@ ALTER SEQUENCE public.task_id_seq OWNED BY public.task.id;
 
 
 --
+-- Name: taskgroupv2; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.taskgroupv2 (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    user_group_id integer,
+    origin character varying NOT NULL,
+    pkg_name character varying NOT NULL,
+    version character varying,
+    python_version character varying,
+    path character varying,
+    venv_path character varying,
+    wheel_path character varying,
+    pip_extras character varying,
+    pinned_package_versions json DEFAULT '{}'::json,
+    active boolean NOT NULL,
+    timestamp_created timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.taskgroupv2 OWNER TO postgres;
+
+--
+-- Name: taskgroupv2_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.taskgroupv2_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.taskgroupv2_id_seq OWNER TO postgres;
+
+--
+-- Name: taskgroupv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.taskgroupv2_id_seq OWNED BY public.taskgroupv2.id;
+
+
+--
 -- Name: taskv2; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -520,7 +568,7 @@ CREATE TABLE public.taskv2 (
     type character varying NOT NULL,
     command_non_parallel character varying,
     command_parallel character varying,
-    source character varying NOT NULL,
+    source character varying,
     meta_non_parallel json DEFAULT '{}'::json NOT NULL,
     meta_parallel json DEFAULT '{}'::json NOT NULL,
     owner character varying,
@@ -531,7 +579,12 @@ CREATE TABLE public.taskv2 (
     docs_info character varying,
     docs_link character varying,
     input_types json,
-    output_types json
+    output_types json,
+    taskgroupv2_id integer,
+    category character varying,
+    modality character varying,
+    authors character varying,
+    tags json DEFAULT '[]'::json NOT NULL
 );
 
 
@@ -570,10 +623,7 @@ CREATE TABLE public.user_oauth (
     is_active boolean NOT NULL,
     is_superuser boolean NOT NULL,
     is_verified boolean NOT NULL,
-    slurm_user character varying,
-    cache_dir character varying,
     username character varying,
-    slurm_accounts json DEFAULT '[]'::json NOT NULL,
     user_settings_id integer
 );
 
@@ -650,7 +700,8 @@ ALTER SEQUENCE public.user_settings_id_seq OWNED BY public.user_settings.id;
 CREATE TABLE public.usergroup (
     id integer NOT NULL,
     name character varying NOT NULL,
-    timestamp_created timestamp with time zone NOT NULL
+    timestamp_created timestamp with time zone NOT NULL,
+    viewer_paths json DEFAULT '[]'::json NOT NULL
 );
 
 
@@ -908,6 +959,13 @@ ALTER TABLE ONLY public.task ALTER COLUMN id SET DEFAULT nextval('public.task_id
 
 
 --
+-- Name: taskgroupv2 id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.taskgroupv2 ALTER COLUMN id SET DEFAULT nextval('public.taskgroupv2_id_seq'::regclass);
+
+
+--
 -- Name: taskv2 id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -968,7 +1026,7 @@ ALTER TABLE ONLY public.workflowv2 ALTER COLUMN id SET DEFAULT nextval('public.w
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-9c5ae74c9b98
+034a469ec2eb
 \.
 
 
@@ -1055,7 +1113,7 @@ COPY public.applyworkflow (start_timestamp, end_timestamp, worker_init, id, proj
 -- Data for Name: collectionstatev2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.collectionstatev2 (id, data, "timestamp") FROM stdin;
+COPY public.collectionstatev2 (id, data, "timestamp", taskgroupv2_id) FROM stdin;
 \.
 
 
@@ -1162,11 +1220,11 @@ COPY public.jobv2 (id, project_id, workflow_id, dataset_id, user_email, slurm_ac
 -- Data for Name: linkusergroup; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.linkusergroup (group_id, user_id) FROM stdin;
-1	1
-1	6
-1	27
-1	28
+COPY public.linkusergroup (group_id, user_id, timestamp_created) FROM stdin;
+1	1	2000-01-01 01:00:00+01
+1	6	2000-01-01 01:00:00+01
+1	27	2000-01-01 01:00:00+01
+1	28	2000-01-01 01:00:00+01
 \.
 
 
@@ -1495,12 +1553,22 @@ COPY public.task (meta, source, id, name, command, input_type, output_type, owne
 
 
 --
+-- Data for Name: taskgroupv2; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, wheel_path, pip_extras, pinned_package_versions, active, timestamp_created) FROM stdin;
+1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01
+2	1	1	other	admin:ls-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01
+\.
+
+
+--
 -- Data for Name: taskv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, source, meta_non_parallel, meta_parallel, owner, version, args_schema_non_parallel, args_schema_parallel, args_schema_version, docs_info, docs_link, input_types, output_types) FROM stdin;
-1	Echo Task	compound	echo	echo	admin:echo-task	{}	{}	admin	\N	null	null	\N	\N	\N	{}	{}
-2	Ls Task	non_parallel	ls	\N	admin:ls-task	{}	{}	admin	\N	null	null	\N	\N	\N	{}	{}
+COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, source, meta_non_parallel, meta_parallel, owner, version, args_schema_non_parallel, args_schema_parallel, args_schema_version, docs_info, docs_link, input_types, output_types, taskgroupv2_id, category, modality, authors, tags) FROM stdin;
+1	Echo Task	compound	echo	echo	admin:echo-task	{}	{}	admin	\N	null	null	\N	\N	\N	{}	{}	1	\N	\N	\N	[]
+2	Ls Task	non_parallel	ls	\N	admin:ls-task	{}	{}	admin	\N	null	null	\N	\N	\N	{}	{}	2	\N	\N	\N	[]
 \.
 
 
@@ -1508,11 +1576,11 @@ COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, sour
 -- Data for Name: user_oauth; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, slurm_user, cache_dir, username, slurm_accounts, user_settings_id) FROM stdin;
-1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	\N	/tmp/__REDACTED_CACHE_DIR__	admin	[]	1
-6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	__REDACTED_SLURM_USER_	/tmp/__REDACTED_CACHE_DIR__	__REDACTED_OWNER__	[]	2
-28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	vanilla-slurm	\N	\N	[]	4
-27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	slurm	\N	admin_123	[]	3
+COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, username, user_settings_id) FROM stdin;
+1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	admin	1
+6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	__REDACTED_OWNER__	2
+28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	\N	4
+27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	admin_123	3
 \.
 
 
@@ -1532,8 +1600,8 @@ COPY public.user_settings (id, slurm_accounts, ssh_host, ssh_username, ssh_priva
 -- Data for Name: usergroup; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.usergroup (id, name, timestamp_created) FROM stdin;
-1	All	2024-09-12 12:52:48.441196+02
+COPY public.usergroup (id, name, timestamp_created, viewer_paths) FROM stdin;
+1	All	2024-09-12 12:52:48.441196+02	[]
 \.
 
 
@@ -1926,6 +1994,13 @@ SELECT pg_catalog.setval('public.task_id_seq', 97, true);
 
 
 --
+-- Name: taskgroupv2_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.taskgroupv2_id_seq', 2, true);
+
+
+--
 -- Name: taskv2_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -2070,6 +2145,14 @@ ALTER TABLE ONLY public.projectv2
 
 
 --
+-- Name: taskgroupv2 pk_taskgroupv2; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.taskgroupv2
+    ADD CONSTRAINT pk_taskgroupv2 PRIMARY KEY (id);
+
+
+--
 -- Name: taskv2 pk_taskv2; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2147,14 +2230,6 @@ ALTER TABLE ONLY public.task
 
 ALTER TABLE ONLY public.task
     ADD CONSTRAINT task_source_key UNIQUE (source);
-
-
---
--- Name: taskv2 uq_taskv2_source; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.taskv2
-    ADD CONSTRAINT uq_taskv2_source UNIQUE (source);
 
 
 --
@@ -2251,6 +2326,14 @@ ALTER TABLE ONLY public.dataset
 
 
 --
+-- Name: collectionstatev2 fk_collectionstatev2_taskgroupv2_id_taskgroupv2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.collectionstatev2
+    ADD CONSTRAINT fk_collectionstatev2_taskgroupv2_id_taskgroupv2 FOREIGN KEY (taskgroupv2_id) REFERENCES public.taskgroupv2(id);
+
+
+--
 -- Name: datasetv2 fk_datasetv2_project_id_projectv2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2312,6 +2395,30 @@ ALTER TABLE ONLY public.linkuserprojectv2
 
 ALTER TABLE ONLY public.linkuserprojectv2
     ADD CONSTRAINT fk_linkuserprojectv2_user_id_user_oauth FOREIGN KEY (user_id) REFERENCES public.user_oauth(id);
+
+
+--
+-- Name: taskgroupv2 fk_taskgroupv2_user_group_id_usergroup; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.taskgroupv2
+    ADD CONSTRAINT fk_taskgroupv2_user_group_id_usergroup FOREIGN KEY (user_group_id) REFERENCES public.usergroup(id);
+
+
+--
+-- Name: taskgroupv2 fk_taskgroupv2_user_id_user_oauth; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.taskgroupv2
+    ADD CONSTRAINT fk_taskgroupv2_user_id_user_oauth FOREIGN KEY (user_id) REFERENCES public.user_oauth(id);
+
+
+--
+-- Name: taskv2 fk_taskv2_taskgroupv2_id_taskgroupv2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.taskv2
+    ADD CONSTRAINT fk_taskv2_taskgroupv2_id_taskgroupv2 FOREIGN KEY (taskgroupv2_id) REFERENCES public.taskgroupv2(id);
 
 
 --
