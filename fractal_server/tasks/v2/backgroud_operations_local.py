@@ -198,7 +198,6 @@ async def background_collect_pip_local(
             package_name = package_name_task_group
             python_bin = pkg_attrs.pop("python_bin")
             package_root_parent = pkg_attrs.pop("package_root_parent")
-            manifest_path = pkg_attrs.pop("manifest_path")
 
             # FIXME SSH: Use more robust logic to determine `package_root`.
             # Examples: use `importlib.util.find_spec`, or parse the output
@@ -209,12 +208,20 @@ async def background_collect_pip_local(
             ).as_posix()
 
             # Read and validate manifest file
+            manifest_path = pkg_attrs.pop("manifest_path")
+            logger.info(f"collecting - now loading {manifest_path=}")
+            if not Path(manifest_path).exists():
+                raise FileNotFoundError(
+                    f"{manifest_path=} not found.\n"
+                    "Hint: the manifest file must be at the root "
+                    "level of the package directory."
+                )
             with open(manifest_path) as json_data:
                 pkg_manifest_dict = json.load(json_data)
-
             logger.info(f"collecting - loaded {manifest_path=}")
+            logger.info("collecting - now validating manifest content")
             pkg_manifest = ManifestV2(**pkg_manifest_dict)
-            logger.info("collecting - manifest is a valid ManifestV2")
+            logger.info("collecting - validated manifest content")
 
             logger.info("collecting - _prepare_tasks_metadata - start")
             task_list = _prepare_tasks_metadata(
