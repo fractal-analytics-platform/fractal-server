@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -140,7 +141,7 @@ async def collect_task_custom(
 
     # Prepare task-group attributes
     task_group_attrs = dict(
-        origin="other",
+        origin=TaskGroupV2OriginEnum.OTHER,
         pkg_name=task_collect.label,
         user_id=user.id,
         user_group_id=user_group_id,

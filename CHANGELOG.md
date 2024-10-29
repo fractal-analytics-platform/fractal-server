@@ -63,6 +63,7 @@
     * Admin:
         * Remove `owner` from `GET admin/v2/task/` (\#1909).
         * Deprecate `kind` query parameter for `/admin/v2/task/` (\#1893).
+        * Add `origin` and `pkg_name` query parameters to `GET /admin/v2/task-group/` (\#1979).
     * Schemas:
         * Forbid extras in `TaskCollectPipV2` (\#1891).
         * Forbid extras in all Create/Update/Import schemas (\#1895).

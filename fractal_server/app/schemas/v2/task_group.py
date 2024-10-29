@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Literal
 from typing import Optional
 
@@ -13,11 +14,17 @@ from .._validators import valstr
 from .task import TaskReadV2
 
 
+class TaskGroupV2OriginEnum(str, Enum):
+    PYPI = "pypi"
+    WHEELFILE = "wheel-file"
+    OTHER = "other"
+
+
 class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     user_id: int
     user_group_id: Optional[int] = None
     active: bool = True
-    origin: Literal["pypi", "wheel-file", "other"]
+    origin: TaskGroupV2OriginEnum
     pkg_name: str
     version: Optional[str] = None
     python_version: Optional[str] = None
