@@ -61,7 +61,7 @@ def get_collection_freeze_v2(path: Path) -> str:
     return freeze
 
 
-def _normalize_package_name(name: str) -> str:
+def normalize_package_name(name: str) -> str:
     """
     Implement PyPa specifications for package-name normalization
 
