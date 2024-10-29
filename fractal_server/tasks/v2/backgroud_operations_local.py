@@ -7,6 +7,8 @@ from .background_operations import _handle_failure
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
 from .database_operations import create_db_tasks_and_update_task_group
+from .template_utils import customize_template
+from .template_utils import parse_script_5_stdout
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -25,35 +27,8 @@ from fractal_server.utils import execute_command_sync
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
-def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
-    searches = [
-        ("Python interpreter:", "python_bin"),
-        ("Package name:", "package_name"),
-        ("Package version:", "package_version"),
-        ("Package parent folder:", "package_root_parent"),
-        ("Manifest absolute path:", "manifest_path"),
-    ]
-    stdout_lines = stdout.splitlines()
-    attributes = dict()
-    for search, attribute_name in searches:
-        matching_lines = [_line for _line in stdout_lines if search in _line]
-        if len(matching_lines) == 0:
-            raise ValueError(f"String '{search}' not found in stdout.")
-        elif len(matching_lines) > 1:
-            raise ValueError(
-                f"String '{search}' found too many times "
-                f"({len(matching_lines)})."
-            )
-        else:
-            actual_line = matching_lines[0]
-            attribute_value = actual_line.split(search)[-1].strip(" ")
-            attributes[attribute_name] = attribute_value
-    return attributes
-
-
 def _customize_and_run_template(
     script_filename: str,
-    templates_folder: Path,
     replacements: list[tuple[str, str]],
     script_dir: str,
     logger_name: str,
@@ -71,20 +46,14 @@ def _customize_and_run_template(
     logger = get_logger(logger_name)
     logger.debug(f"_customize_and_run_template {script_filename} - START")
 
+    script_path_local = Path(script_dir) / script_filename
     # Read template
-    template_path = templates_folder / script_filename
-    with template_path.open("r") as f:
-        script_contents = f.read()
-    # Customize template
-    for old_new in replacements:
-        script_contents = script_contents.replace(old_new[0], old_new[1])
+    customize_template(
+        template_name=script_filename,
+        replacements=replacements,
+        script_path=script_path_local,
+    )
 
-    # Write script locally
-    script_path_local = (Path(script_dir) / script_filename).as_posix()
-    with open(script_path_local, "w") as f:
-        f.write(script_contents)
-
-    # Execute script
     cmd = f"bash {script_path_local}"
     logger.debug(f"Now run '{cmd}' ")
 
@@ -216,7 +185,7 @@ async def background_collect_pip_local(
                 **common_args,
             )
 
-            pkg_attrs = _parse_script_5_stdout(stdout)
+            pkg_attrs = parse_script_5_stdout(stdout)
             for key, value in pkg_attrs.items():
                 logger.debug(
                     f"collecting - parsed from pip-show: {key}={value}"
