@@ -22,6 +22,7 @@ from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
+from fractal_server.utils import execute_command_sync
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -34,7 +35,7 @@ def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
         ("Package parent folder:", "package_root_parent"),
         ("Manifest absolute path:", "manifest_path"),
     ]
-    stdout_lines = stdout.stdout.splitlines()
+    stdout_lines = stdout.splitlines()
     attributes = dict()
     for search, attribute_name in searches:
         matching_lines = [_line for _line in stdout_lines if search in _line]
@@ -79,9 +80,7 @@ def _customize_and_run_template(
     # Customize template
     for old_new in replacements:
         script_contents = script_contents.replace(old_new[0], old_new[1])
-    from devtools import debug
 
-    debug(script_contents)
     # Write script locally
     script_path_local = (Path(tmpdir) / script_filename).as_posix()
     with open(script_path_local, "w") as f:
@@ -89,15 +88,13 @@ def _customize_and_run_template(
 
     # Execute script
     cmd = f"bash {script_path_local}"
-    validate_cmd(cmd)
     logger.debug(f"Now run '{cmd}' ")
-    stdout = subprocess.run(  # nosec
-        shlex.split(cmd), capture_output=True, encoding="utf8"
-    )
+
+    stdout = execute_command_sync(command=cmd)
 
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-
     logger.debug(f"_customize_and_run_template {script_filename} - END")
+
     return stdout
 
 
@@ -202,11 +199,26 @@ async def background_collect_pip_local(
 
                         return
 
-                stdout = _customize_and_run_template(
-                    script_filename="_1_create_venv.sh",
-                    **common_args,
+                logger.debug(
+                    (f"START - Create task group folder {task_group.path}")
                 )
-                remove_venv_folder_upon_failure = True
+                Path(task_group.path).mkdir()
+                logger.debug(
+                    (f"END - Create task group folder {task_group.path}")
+                )
+                logger.debug(
+                    (f"START - Create python venv {task_group.venv_path}")
+                )
+                cmd = (
+                    f"python{task_group.python_version} -m venv "
+                    f"{task_group.venv_path} --copies"
+                )
+
+                stdout = execute_command_sync(command=cmd)
+
+                logger.debug(
+                    (f"END - Create python venv folder {task_group.venv_path}")
+                )
 
                 stdout = _customize_and_run_template(
                     script_filename="_2_preliminary_pip_operations.sh",
@@ -306,7 +318,7 @@ async def background_collect_pip_local(
 
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
-                collection_state.data["freeze"] = stdout_pip_freeze.stdout
+                collection_state.data["freeze"] = stdout_pip_freeze
                 collection_state.data["status"] = CollectionStatusV2.OK
                 # FIXME: The `task_list` key is likely not used by any client,
                 # we should consider dropping it

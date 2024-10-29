@@ -80,7 +80,7 @@ async def test_background_collect_pip_existing_file(
         import shlex
 
         subprocess.run(
-            shlex.split(f"python{current_py_version} " "-m venv {venv_dir}")
+            shlex.split(f"python{current_py_version} -m venv {venv_dir}")
         )
 
     debug(base_dir)
