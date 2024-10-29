@@ -31,7 +31,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2._venv_pip import _create_venv_install_package_pip
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 def _set_collection_state_data_status(
@@ -236,7 +236,7 @@ async def _download_package(
     pip = f"{python_bin} -m pip"
     package_and_version = f"{pkg_name}=={version}"
     cmd = f"{pip} download --no-deps {package_and_version} -d {dest}"
-    stdout = await execute_command(command=cmd)
+    stdout = await execute_command_async(command=cmd)
     pkg_file = next(
         line.split()[-1] for line in stdout.split("\n") if "Saved" in line
     )

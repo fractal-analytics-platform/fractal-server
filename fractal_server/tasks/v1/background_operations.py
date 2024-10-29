@@ -23,7 +23,7 @@ from fractal_server.app.schemas.v1 import TaskReadV1
 from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 async def _pip_install(
@@ -60,12 +60,12 @@ async def _pip_install(
     cmd_install = f"{pip} install {pip_install_str}"
     cmd_inspect = f"{pip} show {task_pkg.package}"
 
-    await execute_command(
+    await execute_command_async(
         cwd=venv_path,
         command=f"{pip} install --upgrade pip",
         logger_name=logger_name,
     )
-    await execute_command(
+    await execute_command_async(
         cwd=venv_path, command=cmd_install, logger_name=logger_name
     )
     if task_pkg.pinned_package_versions:
@@ -82,7 +82,7 @@ async def _pip_install(
                 "Preliminary check: verify that "
                 f"{pinned_pkg_version} is already installed"
             )
-            stdout_inspect = await execute_command(
+            stdout_inspect = await execute_command_async(
                 cwd=venv_path,
                 command=f"{pip} show {pinned_pkg_name}",
                 logger_name=logger_name,
@@ -99,7 +99,7 @@ async def _pip_install(
                     f"({pinned_pkg_version}); "
                     f"install version {pinned_pkg_version}."
                 )
-                await execute_command(
+                await execute_command_async(
                     cwd=venv_path,
                     command=(
                         f"{pip} install "
@@ -114,7 +114,7 @@ async def _pip_install(
                 )
 
     # Extract package installation path from `pip show`
-    stdout_inspect = await execute_command(
+    stdout_inspect = await execute_command_async(
         cwd=venv_path, command=cmd_inspect, logger_name=logger_name
     )
 

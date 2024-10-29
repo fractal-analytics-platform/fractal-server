@@ -7,7 +7,7 @@ from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 async def _init_venv_v2(
@@ -33,7 +33,7 @@ async def _init_venv_v2(
     logger.debug(f"[_init_venv_v2] {venv_path=}")
     interpreter = get_python_interpreter_v2(python_version=python_version)
     logger.debug(f"[_init_venv_v2] {interpreter=}")
-    await execute_command(
+    await execute_command_async(
         command=f"{interpreter} -m venv {venv_path}",
         logger_name=logger_name,
     )
@@ -65,7 +65,7 @@ async def _pip_install(
     pip_install_str = task_group.pip_install_string
     logger.info(f"{pip_install_str=}")
 
-    await execute_command(
+    await execute_command_async(
         cwd=Path(task_group.venv_path),
         command=(
             f"{python_bin} -m pip install --upgrade "
@@ -73,12 +73,12 @@ async def _pip_install(
         ),
         logger_name=logger_name,
     )
-    await execute_command(
+    await execute_command_async(
         cwd=Path(task_group.venv_path),
         command=f"{python_bin} -m pip install setuptools",
         logger_name=logger_name,
     )
-    await execute_command(
+    await execute_command_async(
         cwd=Path(task_group.venv_path),
         command=f"{python_bin} -m pip install {pip_install_str}",
         logger_name=logger_name,
@@ -97,7 +97,7 @@ async def _pip_install(
                 "Preliminary check: verify that "
                 f"{pinned_pkg_name} is already installed"
             )
-            stdout_show = await execute_command(
+            stdout_show = await execute_command_async(
                 cwd=Path(task_group.venv_path),
                 command=f"{python_bin} -m pip show {pinned_pkg_name}",
                 logger_name=logger_name,
@@ -114,7 +114,7 @@ async def _pip_install(
                     f"({pinned_pkg_version}); "
                     f"install version {pinned_pkg_version}."
                 )
-                await execute_command(
+                await execute_command_async(
                     cwd=Path(task_group.venv_path),
                     command=(
                         f"{python_bin} -m pip install "
@@ -129,7 +129,7 @@ async def _pip_install(
                 )
 
     # Extract package installation path from `pip show`
-    stdout_show = await execute_command(
+    stdout_show = await execute_command_async(
         cwd=Path(task_group.venv_path),
         command=f"{python_bin} -m pip show {task_group.pkg_name}",
         logger_name=logger_name,
@@ -158,7 +158,7 @@ async def _pip_install(
     logger.debug(f"[_pip install] {package_root=}")
 
     # Run `pip freeze --all` and store its output
-    stdout_freeze = await execute_command(
+    stdout_freeze = await execute_command_async(
         cwd=Path(task_group.venv_path),
         command=f"{python_bin} -m pip freeze --all",
         logger_name=logger_name,

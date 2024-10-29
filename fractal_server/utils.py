@@ -14,14 +14,15 @@ This module provides general purpose utilities that are not specific to any
 subsystem.
 """
 import asyncio
+import shlex
 import subprocess  # nosec
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
-from shlex import split as shlex_split
 from typing import Optional
 
 from .logger import get_logger
+from .string_tools import validate_cmd
 
 
 def get_timestamp() -> datetime:
@@ -31,7 +32,7 @@ def get_timestamp() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
-async def execute_command(
+async def execute_command_async(
     *,
     command: str,
     cwd: Optional[Path] = None,
@@ -57,7 +58,7 @@ async def execute_command(
         RuntimeError: if the process exited with non-zero status. The error
             string is set to the `stderr` of the process.
     """
-    command_split = shlex_split(command)
+    command_split = shlex.split(command)
     cmd, *args = command_split
 
     logger = get_logger(logger_name)
@@ -82,21 +83,40 @@ def execute_command_sync(
     *,
     command: str,
     logger_name: Optional[str] = None,
+    allow_char: Optional[str] = None,
 ) -> str:
     """
-    FIXME docstring
+    Execute arbitrary command
+
+    If the command returns a return code different from zero, a `RuntimeError`
+    is raised.
+
+    Arguments:
+        command: Command to be executed.
+        logger_name: Name of the logger.
+        allow_char: Argument propagated to `validate_cmd`.
     """
     logger = get_logger(logger_name)
+    logger.debug(f"START subprocess call to '{command}'")
+    validate_cmd(command=command, allow_char=allow_char)
     res = subprocess.run(  # nosec
-        shlex_split(command),
+        shlex.split(command),
         capture_output=True,
         encoding="utf-8",
     )
+    returncode = res.returncode
     stdout = res.stdout
     stderr = res.stderr
-    logger.debug(f"Subprocess call to: {command}")
+    logger.debug(f"{returncode=}")
     logger.debug(f"{stdout=}")
     logger.debug(f"{stderr=}")
     if res.returncode != 0:
-        raise RuntimeError(f"Command {command} failed.\n{stdout=}\n{stderr=}")
+        logger.debug(f"ERROR in subprocess call to '{command}'")
+        raise RuntimeError(
+            f"Command {command} failed.\n"
+            f"returncode={res.returncode}\n"
+            f"{stdout=}\n"
+            f"{stderr=}\n"
+        )
+    logger.debug(f"END   subprocess call to '{command}'")
     return stdout

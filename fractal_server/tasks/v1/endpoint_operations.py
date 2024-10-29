@@ -11,7 +11,7 @@ from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
@@ -32,7 +32,7 @@ async def download_package(
     )
     package_and_version = f"{task_pkg.package}{version}"
     cmd = f"{pip} download --no-deps {package_and_version} -d {dest}"
-    stdout = await execute_command(command=cmd, cwd=Path("."))
+    stdout = await execute_command_async(command=cmd, cwd=Path("."))
     pkg_file = next(
         line.split()[-1] for line in stdout.split("\n") if "Saved" in line
     )
