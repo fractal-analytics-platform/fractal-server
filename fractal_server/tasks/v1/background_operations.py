@@ -7,10 +7,10 @@ from pathlib import Path
 from shutil import rmtree as shell_rmtree
 
 from ...string_tools import slugify_task_name_for_source_v1
-from ..utils import _normalize_package_name
 from ..utils import get_collection_log_v1
 from ..utils import get_collection_path
 from ..utils import get_log_path
+from ..utils import normalize_package_name
 from ._TaskCollectPip import _TaskCollectPip
 from .utils import _init_venv_v1
 from fractal_server.app.db import DBSyncSession
@@ -165,8 +165,8 @@ async def _create_venv_install_package(
     """
 
     # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
+    task_pkg.package_name = normalize_package_name(task_pkg.package_name)
+    task_pkg.package = normalize_package_name(task_pkg.package)
 
     python_bin = await _init_venv_v1(
         path=path,
@@ -192,8 +192,8 @@ async def create_package_environment_pip(
     logger = get_logger(logger_name)
 
     # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
+    task_pkg.package_name = normalize_package_name(task_pkg.package_name)
+    task_pkg.package = normalize_package_name(task_pkg.package)
 
     # Only proceed if package, version and manifest attributes are set
     task_pkg.check()

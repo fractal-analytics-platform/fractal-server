@@ -31,8 +31,8 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_collection_log_v2
+from fractal_server.tasks.utils import normalize_package_name
 from fractal_server.tasks.v2.backgroud_operations_local import (
     background_collect_pip_local,
 )
@@ -118,14 +118,14 @@ async def collect_tasks_pip(
                     f"Original error: {str(e)}",
                 ),
             )
-        task_group_attrs["pkg_name"] = _normalize_package_name(
+        task_group_attrs["pkg_name"] = normalize_package_name(
             wheel_info["distribution"]
         )
         task_group_attrs["version"] = wheel_info["version"]
         task_group_attrs["origin"] = TaskGroupV2OriginEnum.WHEELFILE
     else:
         pkg_name = task_collect.package
-        task_group_attrs["pkg_name"] = _normalize_package_name(pkg_name)
+        task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
         task_group_attrs["origin"] = TaskGroupV2OriginEnum.PYPI
         latest_version = await get_package_version_from_pypi(
             task_collect.package,

@@ -189,27 +189,24 @@ async def background_collect_pip_local(
                 logger.debug(
                     f"collecting - parsed from pip-show: {key}={value}"
                 )
-            # Check package_name match
-            # FIXME : Does this work well for non-canonical names?
+            # Check package_name match between pip show and task-group
             package_name_pip_show = pkg_attrs.get("package_name")
             package_name_task_group = task_group.pkg_name
             if package_name_pip_show != package_name_task_group:
-                error_msg = (
+                logger.warning(
                     f"`package_name` mismatch: "
                     f"{package_name_task_group=} but "
                     f"{package_name_pip_show=}"
                 )
-                logger.error(error_msg)
-                raise ValueError(error_msg)
             # Extract/drop parsed attributes
-            package_name = pkg_attrs.pop("package_name")
+            package_name = package_name_task_group
             python_bin = pkg_attrs.pop("python_bin")
             package_root_parent = pkg_attrs.pop("package_root_parent")
             manifest_path = pkg_attrs.pop("manifest_path")
 
-            # FIXME : Use more robust logic to determine `package_root`,
-            # e.g. as in the custom task-collection endpoint (where we use
-            # `importlib.util.find_spec`)
+            # FIXME SSH: Use more robust logic to determine `package_root`.
+            # Examples: use `importlib.util.find_spec`, or parse the output
+            # of `pip show --files {package_name}`.
             package_name_underscore = package_name.replace("-", "_")
             package_root = (
                 Path(package_root_parent) / package_name_underscore

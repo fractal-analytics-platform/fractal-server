@@ -4,7 +4,7 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from ..utils import _normalize_package_name
+from ..utils import normalize_package_name
 from ._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
 from .utils import get_python_interpreter_v1
 from fractal_server.app.schemas.v1 import ManifestV1
@@ -123,7 +123,7 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
         logger.debug("Package name and version read correctly.")
 
     # Normalize package name:
-    pkg_name = _normalize_package_name(pkg_name)
+    pkg_name = normalize_package_name(pkg_name)
 
     info = dict(
         pkg_name=pkg_name,
@@ -148,7 +148,7 @@ def create_package_dir_pip(
             f"Cannot create venv folder for package `{task_pkg.package}` "
             "with `version=None`."
         )
-    normalized_package = _normalize_package_name(task_pkg.package)
+    normalized_package = normalize_package_name(task_pkg.package)
     package_dir = f"{normalized_package}{task_pkg.package_version}"
     venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir
     if create:
