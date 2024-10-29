@@ -117,6 +117,10 @@ async def background_collect_pip_local(
                     "__FRACTAL_MAX_PIP_VERSION__",
                     settings.FRACTAL_MAX_PIP_VERSION,
                 ),
+                (
+                    "__PINNED_PACKAGE_LIST__",
+                    task_group.pinned_package_versions_string,
+                ),
             ]
 
             common_args = dict(
