@@ -78,6 +78,9 @@ def _customize_and_run_template(
     # Customize template
     for old_new in replacements:
         script_contents = script_contents.replace(old_new[0], old_new[1])
+    from devtools import debug
+
+    debug(script_contents)
     # Write script locally
     script_path_local = (Path(tmpdir) / script_filename).as_posix()
     with open(script_path_local, "w") as f:
@@ -175,6 +178,28 @@ async def background_collect_pip_local(
                 # Avoid keeping the db session open as we start some possibly
                 # long operations that do not use the db
                 db.close()
+
+                # Check that task-group and venv folders do not exist
+                for dir_to_be_checked in [
+                    task_group.path,
+                    task_group.venv_path,
+                ]:
+                    if Path(dir_to_be_checked).exists():
+                        error_msg = (
+                            f"ERROR: Folder {dir_to_be_checked} "
+                            "already exists. Exit."
+                        )
+                        logger.error(error_msg)
+                        _handle_failure(
+                            state_id=state_id,
+                            log_file_path=log_file_path,
+                            logger_name=LOGGER_NAME,
+                            exception=error_msg,
+                            db=db,
+                            task_group_id=task_group.id,
+                        )
+
+                        return
 
                 stdout = _customize_and_run_template(
                     script_filename="_1_create_venv.sh",
