@@ -7,7 +7,7 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.tasks.v2.backgroud_operations_local import (
+from fractal_server.tasks.v2.background_operations_local import (
     background_collect_pip_local,
 )
 
