@@ -735,6 +735,9 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?origin=other")
         assert res.status_code == 200
         assert len(res.json()) == 3
+        res = await client.get(f"{PREFIX}/task-group/?origin=pypi")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
         res = await client.get(f"{PREFIX}/task-group/?origin=INVALID")
         assert res.status_code == 422
 
