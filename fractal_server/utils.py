@@ -32,7 +32,7 @@ def get_timestamp() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
-async def execute_command(
+async def execute_command_async(
     *,
     command: str,
     cwd: Optional[Path] = None,
