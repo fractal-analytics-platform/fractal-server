@@ -201,12 +201,32 @@ async def background_collect_pip_local(
 
                         return
 
-                stdout = _customize_and_run_template(
-                    script_filename="_1_create_venv.sh",
-                    **common_args,
+                logger.debug(
+                    (f"START - Create task group folder {task_group.path}")
                 )
-                remove_venv_folder_upon_failure = True
+                Path(task_group.path).mkdir()
+                logger.debug(
+                    (f"END - Create task group folder {task_group.path}")
+                )
+                logger.debug(
+                    (f"START - Create python venv {task_group.venv_path}")
+                )
+                cmd = (
+                    f"{task_group.python_version} -m venv "
+                    f"{task_group.venv_path} --copies"
+                )
+                validate_cmd(cmd)
+                logger.debug(
+                    (f"END - Create python venv folder {task_group.venv_path}")
+                )
 
+                #
+                # stdout = _customize_and_run_template(
+                #     script_filename="_1_create_venv.sh",
+                #     **common_args,
+                # )
+                # remove_venv_folder_upon_failure = True
+                #
                 stdout = _customize_and_run_template(
                     script_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
