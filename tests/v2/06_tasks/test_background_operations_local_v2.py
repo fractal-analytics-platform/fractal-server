@@ -35,6 +35,7 @@ async def test_background_collect_pip_existing_file(
         run_cmd(f"python{current_py_version} -m venv {venv_dir}")
     debug(base_dir)
     debug(venv_dir)
+
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -65,7 +66,6 @@ async def test_background_collect_pip_existing_file(
     await background_collect_pip_local(
         task_group=task_group,
         state_id=state.id,
-        # tasks_base_dir=tmp_path
     )
     state = await db.get(CollectionStateV2, state.id)
     debug(state)

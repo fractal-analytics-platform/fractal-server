@@ -302,6 +302,7 @@ async def background_collect_pip_local(
                         logger.info(f"Now delete folder {task_group.path}")
                         cmd = f"rm -r {task_group.path}"
                         validate_cmd(cmd)
+                        # FIXME : add more logic before running a rm
                         subprocess.run(  # nosec
                             shlex.split(cmd),
                             capture_output=True,
