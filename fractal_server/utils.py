@@ -14,6 +14,7 @@ This module provides general purpose utilities that are not specific to any
 subsystem.
 """
 import asyncio
+import subprocess  # nosec
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
@@ -75,3 +76,27 @@ async def execute_command(
     if proc.returncode != 0:
         raise RuntimeError(stderr.decode("utf-8"))
     return stdout.decode("utf-8")
+
+
+def execute_command_sync(
+    *,
+    command: str,
+    logger_name: Optional[str] = None,
+) -> str:
+    """
+    FIXME docstring
+    """
+    logger = get_logger(logger_name)
+    res = subprocess.run(  # nosec
+        shlex_split(command),
+        capture_output=True,
+        encoding="utf-8",
+    )
+    stdout = res.stdout
+    stderr = res.stderr
+    logger.debug(f"Subprocess call to: {command}")
+    logger.debug(f"{stdout=}")
+    logger.debug(f"{stderr=}")
+    if res.returncode != 0:
+        raise RuntimeError(f"Command {command} failed.\n{stdout=}\n{stderr=}")
+    return stdout
