@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.1
+
+* Database:
+    * Drop `TaskV2.owner` column (\#1977).
+    * Make `TaskV2.taskgroupv2_id` column required (\#1977).
 
 # 2.7.0 (unreleased)
 
