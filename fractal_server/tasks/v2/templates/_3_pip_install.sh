@@ -9,8 +9,7 @@ write_log(){
 # Variables to be filled within fractal-server
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 INSTALL_STRING=__INSTALL_STRING__
-PINNED_PACKAGE_LIST=__PINNED_PACKAGE_LIST__
-# Example of value: __PINNED_PACKAGE_LIST__="pkga==1.0 pkgb==2.0.3"
+PINNED_PACKAGE_LIST="__PINNED_PACKAGE_LIST__"
 
 TIME_START=$(date +%s)
 
@@ -29,8 +28,10 @@ if [ "$PINNED_PACKAGE_LIST" != "" ]; then
     for PINNED_PKG_VERSION in $PINNED_PACKAGE_LIST; do
 
         PKGNAME=$(echo "$PINNED_PKG_VERSION" | cut -d '=' -f 1)
-        RETCODE=$("$VENVPYTHON" -m pip show "$PKGNAME")
-        if [ "$RETCODE" != 0 ];
+        write_log "INFO: package name $PKGNAME"
+        "$VENVPYTHON" -m pip show "$PKGNAME"
+        RETURNVALUE=$?
+        if [ $RETURNVALUE -ne 0 ];
         then
             write_log "ERROR: package $PKGNAME is not currently installed"
             exit 4

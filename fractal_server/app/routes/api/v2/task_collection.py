@@ -33,7 +33,7 @@ from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.tasks.utils import get_collection_log_v2
 from fractal_server.tasks.utils import normalize_package_name
-from fractal_server.tasks.v2.backgroud_operations_local import (
+from fractal_server.tasks.v2.background_operations_local import (
     background_collect_pip_local,
 )
 from fractal_server.tasks.v2.endpoint_operations import (

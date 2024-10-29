@@ -24,8 +24,11 @@ def customize_template(
     # Customize template
     script_data = template_data
     for old_new in replacements:
+        from devtools import debug
+
         script_data = script_data.replace(old_new[0], old_new[1])
     # Write script locally
+    debug(script_data)
     with open(script_path, "w") as f:
         f.write(script_data)
 
