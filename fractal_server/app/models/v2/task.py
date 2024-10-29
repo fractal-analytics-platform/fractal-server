@@ -29,7 +29,6 @@ class TaskV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
-    owner: Optional[str] = None
     version: Optional[str] = None
     args_schema_non_parallel: Optional[dict[str, Any]] = Field(
         sa_column=Column(JSON), default=None
@@ -44,7 +43,7 @@ class TaskV2(SQLModel, table=True):
     input_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
     output_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
 
-    taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
+    taskgroupv2_id: int = Field(foreign_key="taskgroupv2.id")
 
     category: Optional[str] = None
     modality: Optional[str] = None
