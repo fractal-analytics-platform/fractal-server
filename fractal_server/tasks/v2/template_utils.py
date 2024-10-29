@@ -38,8 +38,8 @@ def parse_script_5_stdout(stdout: str) -> dict[str, str]:
         ("Python interpreter:", "python_bin"),
         ("Package name:", "package_name"),
         ("Package version:", "package_version"),
-        ("Package parent folder:", "package_root_parent_remote"),
-        ("Manifest absolute path:", "manifest_path_remote"),
+        ("Package parent folder:", "package_root_parent"),
+        ("Manifest absolute path:", "manifest_path"),
     ]
     stdout_lines = stdout.splitlines()
     attributes = dict()

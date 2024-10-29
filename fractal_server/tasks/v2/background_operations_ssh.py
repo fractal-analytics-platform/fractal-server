@@ -224,9 +224,9 @@ def background_collect_pip_ssh(
                 package_name = pkg_attrs.pop("package_name")
                 python_bin = pkg_attrs.pop("python_bin")
                 package_root_parent_remote = pkg_attrs.pop(
-                    "package_root_parent_remote"
+                    "package_root_parent"
                 )
-                manifest_path_remote = pkg_attrs.pop("manifest_path_remote")
+                manifest_path_remote = pkg_attrs.pop("manifest_path")
 
                 # FIXME SSH: Use more robust logic to determine `package_root`,
                 # e.g. as in the custom task-collection endpoint (where we use
