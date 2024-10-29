@@ -1,5 +1,9 @@
 #!/bin/bash
 
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=fractal_test
+
 # --- Functions
 
 oauth_login(){
@@ -30,11 +34,9 @@ assert_users_and_oauth() {
     # $2 desired number of oauth accounts
     USERS=$(
         psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM user_oauth;"
-        | xargs
     )
     OAUTH_ACCOUNTS=$(
         psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM oauthaccount;"
-        | xargs
     )
     if [ "$USERS" -ne "$1" ] || [ "$OAUTH_ACCOUNTS" -ne "$2" ]; then
         exit 1
