@@ -90,10 +90,7 @@ async def test_invalid_manifest(
         assert res.status_code == 200
         collection_data = res.json()["data"]
         assert collection_data["status"] == "fail"
-        assert (
-            "Manifest version manifest_version='9999' not supported"
-            in collection_data["log"]
-        )
+        assert "Wrong manifest version" in collection_data["log"]
 
     # Missing manifest
     wheel_path = (
@@ -114,10 +111,7 @@ async def test_invalid_manifest(
         assert res.status_code == 200
         collection_data = res.json()["data"]
         assert collection_data["status"] == "fail"
-        assert (
-            "does not include __FRACTAL_MANIFEST__.json"
-            in collection_data["log"]
-        )
+        assert "manifest path not found" in collection_data["log"]
 
 
 async def test_missing_task_executable(
