@@ -103,7 +103,7 @@ async def test_task_collection_from_wheel(
         assert ".whl[my_extra]" in log
 
         # Check on-disk files
-        assert get_collection_log_v2(Path(venv_path).parent).exists()
+        assert get_log_path(Path(venv_path).parent).exists()
 
         # Check actual Python version
         python_bin = task_list[0]["command_non_parallel"].split()[0]
