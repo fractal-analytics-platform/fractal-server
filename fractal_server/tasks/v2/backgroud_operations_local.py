@@ -121,7 +121,7 @@ async def background_collect_pip_local(
     if Path(task_group.path).exists():
         raise FileExistsError(f"{task_group.path} already exists.")
     # Create the task_group path
-    Path(task_group.path).mkdir()
+    Path(task_group.path).mkdir(parents=True)
     LOGGER_NAME = "task_collection_local"
     log_file_path = get_log_path(Path(task_group.path))
     logger = set_logger(
