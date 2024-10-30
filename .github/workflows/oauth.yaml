@@ -51,11 +51,6 @@ jobs:
 
         - uses: actions/checkout@v4
 
-        - name: Install PSQL
-          run: |
-            sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends postgresql-client
-
         - name: Set up Python 3.10
           uses: actions/setup-python@v5
           with:
