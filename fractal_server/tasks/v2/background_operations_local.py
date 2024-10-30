@@ -3,6 +3,7 @@ from pathlib import Path
 
 from sqlalchemy.orm.attributes import flag_modified
 
+from .background_operations import _check_task_files_exist
 from .background_operations import _handle_failure
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
@@ -234,6 +235,7 @@ async def background_collect_pip_local(
                 package_root=Path(package_root),
                 python_bin=Path(python_bin),
             )
+            _check_task_files_exist(task_list=task_list)
             logger.info("collecting - _prepare_tasks_metadata - end")
 
             logger.info(
