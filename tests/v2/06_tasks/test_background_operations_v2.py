@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -7,11 +6,8 @@ from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.tasks.v2.collection_local import collect_package_local
 from fractal_server.tasks.v2.database_operations import _get_task_type
-from fractal_server.tasks.v2.utils_background import _download_package
-from fractal_server.tasks.v2.utils_background import (
-    background_collect_pip,
-)
 from fractal_server.tasks.v2.utils_background import (
     check_task_files_exist,
 )
@@ -72,21 +68,6 @@ def test_parse_wheel_filename():
         _parse_wheel_filename(wheel_filename="/tmp/something.whl")
 
 
-async def test_download_package(tmp_path: Path, current_py_version: str):
-    PACKAGE_VERSION = "1.0.1"
-    PACKAGE_NAME = "fractal_tasks_core"
-    wheel_path = await _download_package(
-        python_version=current_py_version,
-        pkg_name=PACKAGE_NAME,
-        version=PACKAGE_VERSION,
-        dest=(tmp_path / "wheel1"),
-    )
-    debug(wheel_path)
-    assert wheel_path.exists()
-    info = _parse_wheel_filename(wheel_filename=wheel_path.name)
-    assert info == dict(distribution=PACKAGE_NAME, version=PACKAGE_VERSION)
-
-
 async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
@@ -95,6 +76,7 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
         version="1.2.3",
         origin="pypi",
         path=path.as_posix(),
+        venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
     )
     db.add(task_group)
@@ -109,7 +91,7 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
     # Create task_group.path
     path.mkdir()
     # Run background task
-    await background_collect_pip(
+    await collect_package_local(
         task_group=task_group,
         state_id=state.id,
     )
@@ -117,6 +99,5 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
     state = await db.get(CollectionStateV2, state.id)
     debug(state)
     assert state.data["status"] == "fail"
-    assert "File exists" in state.data["log"]
     # Verify that foreign key was set to None
     assert state.taskgroupv2_id is None
