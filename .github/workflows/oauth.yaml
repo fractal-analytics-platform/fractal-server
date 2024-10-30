@@ -67,4 +67,10 @@ jobs:
             sleep 2
 
         - name: Run OAuth2 script
+          env:
+            PGUSER: postgres
+            PGPASSWORD: postgres
+            PGHOST: localhost
+            PGPORT: 5432
+            PGDATABASE: fractal_test
           run: bash -x scripts/oauth/oauth.sh
