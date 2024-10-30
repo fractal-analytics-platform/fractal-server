@@ -33,14 +33,16 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
-    zarr_dir: str
+    zarr_dir: Optional[str] = None
 
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: str) -> str:
-        return normalize_url(v)
+        if v is not None:
+            return normalize_url(v)
+        return v
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
@@ -57,7 +59,7 @@ class DatasetReadV2(BaseModel):
 
     timestamp_created: datetime
 
-    zarr_dir: str
+    zarr_dir: Optional[str] = None
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
@@ -94,14 +96,16 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     """
 
     name: str
-    zarr_dir: str
+    zarr_dir: Optional[str] = None
     images: list[SingleImage] = Field(default_factory=[])
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: str) -> str:
-        return normalize_url(v)
+        if v is not None:
+            return normalize_url(v)
+        return v
 
 
 class DatasetExportV2(BaseModel):
@@ -116,6 +120,6 @@ class DatasetExportV2(BaseModel):
     """
 
     name: str
-    zarr_dir: str
+    zarr_dir: Optional[str] = None
     images: list[SingleImage]
     filters: Filters

@@ -40,15 +40,36 @@ async def create_dataset(
     """
     Add new dataset to current project
     """
-    await _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+
+    if dataset.zarr_dir is None:
+        if user.settings.project_dir is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Both 'dataset.zarr_dir' and 'user.settings.project_dir' "
+                    "are null"
+                ),
+            )
+        else:
+            db_dataset.zarr_dir = "__PLACEHOLDER__"
+            db.add(db_dataset)
+            await db.commit()
+            await db.refresh(db_dataset)
+            db_dataset.zarr_dir = (
+                f"{user.settings.project_dir}/fractal/"
+                f"{project_id}_{project.name}/"
+                f"{db_dataset.id}_{db_dataset.name}"
+            )
+
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
-    await db.close()
 
+    await db.close()
     return db_dataset
 
 
