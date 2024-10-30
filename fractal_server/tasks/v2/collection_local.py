@@ -87,9 +87,25 @@ async def collect_package_local(
         task_group:
     """
 
-    # Check that the task_group path already exists
+    # Check that the task_group path does not exist
     if Path(task_group.path).exists():
-        raise FileExistsError(f"{task_group.path} already exists.")
+        # FIXME: we either merge this into handle_failure, or extract into a
+        # similar function
+        with next(get_sync_db()) as db:
+            collection_state = db.get(CollectionStateV2, state_id)
+            collection_state.data[
+                "log"
+            ] = f"ERROR: {task_group.path} already exists."
+            collection_state.data["status"] = CollectionStatusV2.FAIL
+            collection_state.taskgroupv2_id = None
+            flag_modified(collection_state, "data")
+            db.add(collection_state)
+            db.commit()
+            task_group = db.get(TaskGroupV2, task_group.id)
+            db.delete(task_group)
+            db.commit()
+            return
+
     # Create the task_group path
     Path(task_group.path).mkdir(parents=True)
     LOGGER_NAME = "task_collection_local"
