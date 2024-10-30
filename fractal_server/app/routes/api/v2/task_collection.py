@@ -27,19 +27,19 @@ from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
+from .endpoint_operations import get_package_version_from_pypi
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.tasks.utils import normalize_package_name
-from fractal_server.tasks.v2.background_operations_local import (
-    background_collect_pip_local,
+from fractal_server.tasks.v2.collection_local import (
+    collect_package_local,
 )
-from fractal_server.tasks.v2.endpoint_operations import (
-    get_package_version_from_pypi,
+from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
+from fractal_server.tasks.v2.utils_python_interpreter import (
+    get_python_interpreter_v2,
 )
-from fractal_server.tasks.v2.utils import _parse_wheel_filename
-from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 router = APIRouter()
 
@@ -248,8 +248,8 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
 
-        from fractal_server.tasks.v2.background_operations_ssh import (
-            background_collect_pip_ssh,
+        from fractal_server.tasks.v2.collection_ssh import (
+            collect_package_ssh,
         )
 
         # User appropriate FractalSSH object
@@ -262,7 +262,7 @@ async def collect_tasks_pip(
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
-            background_collect_pip_ssh,
+            collect_package_ssh,
             state_id=state.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
@@ -272,7 +272,7 @@ async def collect_tasks_pip(
     else:
         # Local task collection
         background_tasks.add_task(
-            background_collect_pip_local,
+            collect_package_local,
             state_id=state.id,
             task_group=task_group,
         )

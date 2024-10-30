@@ -4,10 +4,10 @@ from tempfile import TemporaryDirectory
 
 from sqlalchemy.orm.attributes import flag_modified
 
-from .background_operations import _handle_failure
-from .background_operations import _prepare_tasks_metadata
-from .background_operations import _set_collection_state_data_status
 from .database_operations import create_db_tasks_and_update_task_group
+from .utils_background import _handle_failure
+from .utils_background import _prepare_tasks_metadata
+from .utils_background import _set_collection_state_data_status
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -18,10 +18,12 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
-from fractal_server.tasks.v2.template_utils import customize_template
-from fractal_server.tasks.v2.template_utils import parse_script_5_stdout
-from fractal_server.tasks.v2.utils import compare_package_names
-from fractal_server.tasks.v2.utils import get_python_interpreter_v2
+from fractal_server.tasks.v2.utils_package_names import compare_package_names
+from fractal_server.tasks.v2.utils_python_interpreter import (
+    get_python_interpreter_v2,
+)
+from fractal_server.tasks.v2.utils_templates import customize_template
+from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
 
 
 def _customize_and_run_template(
@@ -76,7 +78,7 @@ def _customize_and_run_template(
     return stdout
 
 
-def background_collect_pip_ssh(
+def collect_package_ssh(
     *,
     state_id: int,
     task_group: TaskGroupV2,

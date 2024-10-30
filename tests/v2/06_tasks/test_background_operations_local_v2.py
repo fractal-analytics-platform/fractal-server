@@ -7,8 +7,8 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.tasks.v2.background_operations_local import (
-    background_collect_pip_local,
+from fractal_server.tasks.v2.collection_local import (
+    collect_package_local,
 )
 
 
@@ -57,7 +57,7 @@ async def test_background_collect_pip(
     await db.refresh(state)
     db.expunge(state)
     # Run background task
-    await background_collect_pip_local(
+    await collect_package_local(
         task_group=task_group,
         state_id=state.id,
     )
@@ -114,7 +114,7 @@ async def test_background_collect_pip_existing_file(
     debug(path)
     # Run background task
     with pytest.raises(FileExistsError):
-        await background_collect_pip_local(
+        await collect_package_local(
             task_group=task_group,
             state_id=state.id,
         )

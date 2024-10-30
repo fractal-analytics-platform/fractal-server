@@ -1,7 +1,9 @@
 import pytest
 
 from fractal_server.tasks.utils import normalize_package_name
-from fractal_server.tasks.v2.utils import get_python_interpreter_v2
+from fractal_server.tasks.v2.utils_python_interpreter import (
+    get_python_interpreter_v2,
+)
 
 
 async def test_get_python_interpreter_v2(

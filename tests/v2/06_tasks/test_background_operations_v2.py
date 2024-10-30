@@ -7,15 +7,15 @@ from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.tasks.v2.background_operations import (
-    _check_task_files_exist,
-)
-from fractal_server.tasks.v2.background_operations import _download_package
-from fractal_server.tasks.v2.background_operations import (
+from fractal_server.tasks.v2.database_operations import _get_task_type
+from fractal_server.tasks.v2.utils_background import _download_package
+from fractal_server.tasks.v2.utils_background import (
     background_collect_pip,
 )
-from fractal_server.tasks.v2.database_operations import _get_task_type
-from fractal_server.tasks.v2.utils import _parse_wheel_filename
+from fractal_server.tasks.v2.utils_background import (
+    check_task_files_exist,
+)
+from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 
 
 class _MockTaskCreateV2(BaseModel):
@@ -41,7 +41,7 @@ def test_check_task_files_exist(tmp_path):
     existing_path = existing_path.as_posix()
     missing_path = missing_path.as_posix()
     # Success
-    _check_task_files_exist(
+    check_task_files_exist(
         task_list=[
             _MockTaskCreateV2(command_non_parallel=f"py {existing_path}"),
             _MockTaskCreateV2(command_parallel=f"py {existing_path}"),
@@ -49,14 +49,14 @@ def test_check_task_files_exist(tmp_path):
     )
     # Failures
     with pytest.raises(FileNotFoundError) as e:
-        _check_task_files_exist(
+        check_task_files_exist(
             task_list=[
                 _MockTaskCreateV2(command_non_parallel=f"py {missing_path}")
             ]
         )
     assert "missing file" in str(e.value)
     with pytest.raises(FileNotFoundError) as e:
-        _check_task_files_exist(
+        check_task_files_exist(
             task_list=[
                 _MockTaskCreateV2(command_parallel=f"py {missing_path}")
             ]
