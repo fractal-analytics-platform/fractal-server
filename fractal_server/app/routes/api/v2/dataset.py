@@ -67,7 +67,7 @@ async def create_dataset(
         db_dataset = DatasetV2(
             project_id=project_id,
             zarr_dir="__PLACEHOLDER__",
-            **dataset.dict(),
+            **dataset.dict(exclude_none=True),
         )
         db.add(db_dataset)
         await db.commit()
@@ -85,7 +85,9 @@ async def create_dataset(
         await db.commit()
         await db.refresh(db_dataset)
     else:
-        db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+        db_dataset = DatasetV2(
+            project_id=project_id, **dataset.dict(exclude_none=True)
+        )
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
