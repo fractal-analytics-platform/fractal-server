@@ -1,7 +1,7 @@
 # Fractal Server
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/16e9cf11-d47d-4db8-a9b1-f5349e4175b7" alt="Fractal tasks core logo" width="400">
+  <img src="https://github.com/user-attachments/assets/16e9cf11-d47d-4db8-a9b1-f5349e4175b7" alt="Fractal server" width="400">
 </p>
 
 [![PyPI version](https://img.shields.io/pypi/v/fractal-server?color=gree)](https://pypi.org/project/fractal-server/)
