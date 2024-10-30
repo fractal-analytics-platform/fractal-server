@@ -62,11 +62,11 @@ def _set_collection_state_data_info(
 
 def _handle_failure(
     state_id: int,
-    log_file_path: Path,
     logger_name: str,
     exception: Exception,
     db: DBSyncSession,
     task_group_id: int,
+    log_file_path: Optional[Path] = None,
     path: Optional[Path] = None,
 ):
     """
@@ -83,7 +83,11 @@ def _handle_failure(
         db=db,
     )
 
-    new_log = log_file_path.open().read()
+    if log_file_path is not None:
+        new_log = log_file_path.open().read()
+    else:
+        new_log = ""
+
     _set_collection_state_data_log(
         state_id=state_id,
         new_log=new_log,

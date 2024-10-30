@@ -4,12 +4,6 @@ from pathlib import Path
 from sqlalchemy.orm.attributes import flag_modified
 
 from .database_operations import create_db_tasks_and_update_task_group
-from .utils_background import _handle_failure
-from .utils_background import _prepare_tasks_metadata
-from .utils_background import _set_collection_state_data_status
-from .utils_background import check_task_files_exist
-from .utils_templates import customize_template
-from .utils_templates import parse_script_5_stdout
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -21,11 +15,19 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.utils_background import _handle_failure
+from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import _refresh_logs
+from fractal_server.tasks.v2.utils_background import (
+    _set_collection_state_data_status,
+)
+from fractal_server.tasks.v2.utils_background import check_task_files_exist
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
+from fractal_server.tasks.v2.utils_templates import customize_template
+from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
 from fractal_server.utils import execute_command_sync
 
 
@@ -92,18 +94,26 @@ async def collect_package_local(
         # FIXME: we either merge this into handle_failure, or extract into a
         # similar function
         with next(get_sync_db()) as db:
-            collection_state = db.get(CollectionStateV2, state_id)
-            collection_state.data[
-                "log"
-            ] = f"ERROR: {task_group.path} already exists."
-            collection_state.data["status"] = CollectionStatusV2.FAIL
-            collection_state.taskgroupv2_id = None
-            flag_modified(collection_state, "data")
-            db.add(collection_state)
-            db.commit()
-            task_group = db.get(TaskGroupV2, task_group.id)
-            db.delete(task_group)
-            db.commit()
+            _handle_failure(
+                state_id=state_id,
+                logger_name=("FileExistsError collection local"),
+                exception=(f"ERROR: {task_group.path} already exists.",),
+                db=db,
+                task_group_id=task_group.id,
+            )
+
+            # collection_state = db.get(CollectionStateV2, state_id)
+            # collection_state.data[
+            #     "log"
+            # ] = f"ERROR: {task_group.path} already exists."
+            # collection_state.data["status"] = CollectionStatusV2.FAIL
+            # collection_state.taskgroupv2_id = None
+            # flag_modified(collection_state, "data")
+            # db.add(collection_state)
+            # db.commit()
+            # task_group = db.get(TaskGroupV2, task_group.id)
+            # db.delete(task_group)
+            # db.commit()
             return
 
     # Create the task_group path
