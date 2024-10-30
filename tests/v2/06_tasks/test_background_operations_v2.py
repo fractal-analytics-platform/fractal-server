@@ -11,7 +11,6 @@ from fractal_server.tasks.v2.database_operations import _get_task_type
 from fractal_server.tasks.v2.utils_background import (
     check_task_files_exist,
 )
-from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 
 
 class _MockTaskCreateV2(BaseModel):
@@ -58,14 +57,6 @@ def test_check_task_files_exist(tmp_path):
             ]
         )
     assert "missing file" in str(e.value)
-
-
-def test_parse_wheel_filename():
-    with pytest.raises(
-        ValueError,
-        match="Input must be a filename, not a full path",
-    ):
-        _parse_wheel_filename(wheel_filename="/tmp/something.whl")
 
 
 async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
