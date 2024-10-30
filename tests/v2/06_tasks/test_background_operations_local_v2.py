@@ -29,26 +29,23 @@ async def test_background_collect_pip(
     tmp_path, db, first_user, testdata_path, tmpdir_factory, current_py_version
 ):
 
-    base_dir = Path(tmpdir_factory.getbasetemp())
-    venv_dir = base_dir / "task_venv"
-
-    debug(base_dir)
-    debug(venv_dir)
+    path = tmp_path / "path"
+    venv_path = path / "venv"
 
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
         pkg_name="fractal-tasks-mock",
         version="0.0.1",
+        user_id=first_user.id,
         python_version=current_py_version,
         wheel_path=(
             f"{testdata_path.parent}/v2/fractal_tasks_valid/valid_tasks/dist"
             "/fractal_tasks_mock-0.0.1-py3-none-any.whl"
         ),
-        venv_path=venv_dir.as_posix(),
-        origin="local",
         path=path.as_posix(),
-        user_id=first_user.id,
+        venv_path=venv_path.as_posix(),
+        origin="wheel-path",
     )
     db.add(task_group)
     await db.commit()
