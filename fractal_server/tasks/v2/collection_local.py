@@ -248,7 +248,7 @@ async def collect_package_local(
             python_bin = pkg_attrs.pop("python_bin")
             package_root_parent = pkg_attrs.pop("package_root_parent")
 
-            # FIXME SSH: Use more robust logic to determine `package_root`.
+            # FIXME : Use more robust logic to determine `package_root`.
             # Examples: use `importlib.util.find_spec`, or parse the output
             # of `pip show --files {package_name}`.
             package_name_underscore = package_name.replace("-", "_")
@@ -259,12 +259,7 @@ async def collect_package_local(
             # Read and validate manifest file
             manifest_path = pkg_attrs.pop("manifest_path")
             logger.info(f"collecting - now loading {manifest_path=}")
-            if not Path(manifest_path).exists():
-                raise FileNotFoundError(
-                    f"{manifest_path=} not found.\n"
-                    "Hint: the manifest file must be at the root "
-                    "level of the package directory."
-                )
+
             with open(manifest_path) as json_data:
                 pkg_manifest_dict = json.load(json_data)
             logger.info(f"collecting - loaded {manifest_path=}")
