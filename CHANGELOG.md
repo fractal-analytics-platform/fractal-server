@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.7.1 (unreleased)
+# 2.7.1
 
 > WARNING: As of this version, all extras for `pip install` are deprecated and
 > the corresponding dependencies become required.
