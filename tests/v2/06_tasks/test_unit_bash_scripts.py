@@ -112,6 +112,7 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
     stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
     assert "installing pinned versions fractal-tasks-mock==0.0.1" in stdout
 
+    # create a wrong pinned_pkg_list
     venv_path_bad = path / "bad_venv"
     pinned_pkg_list = "pkgA==0.1.0 "
 
@@ -134,6 +135,75 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
     with pytest.raises(RuntimeError) as expinfo:
         execute_command_sync(command=f"bash {script_path.as_posix()}")
     assert "Package(s) not found: pkgA" in str(expinfo.value)
+
+
+def test_template_5(tmp_path, testdata_path, current_py_version):
+
+    path = tmp_path / "unit_templates"
+    venv_path = path / "venv"
+    install_string = testdata_path.parent / (
+        "v2/fractal_tasks_valid/valid_tasks/dist/"
+        "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    package_name = "fractal-tasks-mock"
+    execute_command_sync(
+        command=f"python{current_py_version} -m venv {venv_path}"
+    )
+    execute_command_sync(
+        command=(
+            f"{venv_path}/bin/python{current_py_version} "
+            f"-m pip install {install_string}"
+        )
+    )
+    replacements = [
+        ("__TASK_GROUP_DIR__", path.as_posix()),
+        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+        ("__INSTALL_STRING__", install_string.as_posix()),
+        ("__PYTHON__", f"python{current_py_version}"),
+        ("__PACKAGE_NAME__", package_name),
+    ]
+    script_path = tmp_path / "5_good.sh"
+    customize_template(
+        template_name="_5_pip_show.sh",
+        replacements=replacements,
+        script_path=script_path.as_posix(),
+    )
+    stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
+    assert "OK: manifest path exists" in stdout
+
+    # use a package with missing manifest
+    path = tmp_path / "unit_templates"
+    venv_path = path / "venv_miss_manifest"
+    install_string_miss = testdata_path.parent / (
+        "v2/fractal_tasks_fail/missing_manifest/dist/"
+        "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    package_name = "fractal-tasks-mock"
+    execute_command_sync(
+        command=f"python{current_py_version} -m venv {venv_path}"
+    )
+    execute_command_sync(
+        command=(
+            f"{venv_path}/bin/python{current_py_version} "
+            f"-m pip install {install_string_miss}"
+        )
+    )
+    replacements = [
+        ("__TASK_GROUP_DIR__", path.as_posix()),
+        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+        ("__INSTALL_STRING__", install_string_miss.as_posix()),
+        ("__PYTHON__", f"python{current_py_version}"),
+        ("__PACKAGE_NAME__", package_name),
+    ]
+    script_path = tmp_path / "5_good.sh"
+    customize_template(
+        template_name="_5_pip_show.sh",
+        replacements=replacements,
+        script_path=script_path.as_posix(),
+    )
+    with pytest.raises(RuntimeError) as expinfo:
+        execute_command_sync(command=f"bash {script_path.as_posix()}")
+    assert "ERROR: manifest path not found" in str(expinfo.value)
 
 
 # async def test_pip_install_with_pinned_dependencies(tmp_path, caplog):
