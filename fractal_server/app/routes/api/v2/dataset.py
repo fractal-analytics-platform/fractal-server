@@ -23,16 +23,10 @@ from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.config import get_settings
+from fractal_server.string_tools import sanitize_string
 from fractal_server.syringe import Inject
 
 router = APIRouter()
-
-
-def _slugify_name(_name: str) -> str:
-    _new_name = _name
-    for char in (" ", ".", "/", "\\"):
-        _new_name = _new_name.replace(char, "_")
-    return _new_name
 
 
 @router.post(
@@ -83,8 +77,8 @@ async def create_dataset(
             "zarr_dir",
             (
                 f"{user.settings.project_dir}/fractal/"
-                f"{project_id}_{_slugify_name(project.name)}/"
-                f"{db_dataset.id}_{_slugify_name(db_dataset.name)}"
+                f"{project_id}_{sanitize_string(project.name)}/"
+                f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
             ),
         )
         db.add(db_dataset)
