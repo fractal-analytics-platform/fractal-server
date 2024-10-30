@@ -1,5 +1,4 @@
 from pathlib import Path
-from shutil import rmtree as shell_rmtree
 from typing import Optional
 
 from sqlalchemy.orm import Session as DBSyncSession
@@ -101,11 +100,6 @@ def _handle_failure(
         logger_name=logger_name,
         db=db,
     )
-    # Delete corrupted package dir
-    if path is not None and Path(path).exists():
-        logger.info(f"Now delete temporary folder {path}")
-        shell_rmtree(path)
-        logger.info("Temporary folder deleted")
 
     # Delete TaskGroupV2 object / and apply cascade operation to FKs
     logger.info(f"Now delete TaskGroupV2 with {task_group_id=}")
