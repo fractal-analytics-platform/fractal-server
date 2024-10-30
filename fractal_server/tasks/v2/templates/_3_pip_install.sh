@@ -30,13 +30,9 @@ if [ "$PINNED_PACKAGE_LIST" != "" ]; then
         PKGNAME=$(echo "$PINNED_PKG_VERSION" | cut -d '=' -f 1)
         write_log "INFO: package name $PKGNAME"
         "$VENVPYTHON" -m pip show "$PKGNAME"
-        RETURNVALUE=$?
-        if [ $RETURNVALUE -ne 0 ];
-        then
-            write_log "ERROR: package $PKGNAME is not currently installed"
-            exit 4
-        fi
+
     done
+
     write_log "All packages in ${PINNED_PACKAGE_LIST} are already installed, proceed with specific versions."
     "$VENVPYTHON" -m pip install "$PINNED_PACKAGE_LIST"
     write_log "END installing pinned versions $PINNED_PACKAGE_LIST"

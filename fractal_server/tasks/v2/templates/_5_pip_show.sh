@@ -46,7 +46,7 @@ if [ -f "$MANIFEST_ABSOLUTE_PATH" ]; then
     echo
 else
     write_log "ERROR: manifest path not found at $MANIFEST_ABSOLUTE_PATH"
-    exit 3
+    exit 2
 fi
 
 # End
