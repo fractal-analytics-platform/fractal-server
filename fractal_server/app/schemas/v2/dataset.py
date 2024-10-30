@@ -59,7 +59,7 @@ class DatasetReadV2(BaseModel):
 
     timestamp_created: datetime
 
-    zarr_dir: Optional[str] = None
+    zarr_dir: str
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
@@ -96,7 +96,7 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     """
 
     name: str
-    zarr_dir: Optional[str] = None
+    zarr_dir: str
     images: list[SingleImage] = Field(default_factory=[])
     filters: Filters = Field(default_factory=Filters)
 
@@ -120,6 +120,6 @@ class DatasetExportV2(BaseModel):
     """
 
     name: str
-    zarr_dir: Optional[str] = None
+    zarr_dir: str
     images: list[SingleImage]
     filters: Filters

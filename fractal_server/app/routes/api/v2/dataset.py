@@ -26,6 +26,13 @@ from fractal_server.app.routes.auth import current_active_user
 router = APIRouter()
 
 
+def _slugify_name(_name: str) -> str:
+    _new_name = _name
+    for char in (" ", ".", "/", "\\"):
+        _new_name = _new_name.replace(char, "_")
+    return _new_name
+
+
 @router.post(
     "/project/{project_id}/dataset/",
     response_model=DatasetReadV2,
@@ -61,8 +68,8 @@ async def create_dataset(
             await db.refresh(db_dataset)
             db_dataset.zarr_dir = (
                 f"{user.settings.project_dir}/fractal/"
-                f"{project_id}_{project.name}/"
-                f"{db_dataset.id}_{db_dataset.name}"
+                f"{project_id}_{_slugify_name(project.name)}/"
+                f"{db_dataset.id}_{_slugify_name(db_dataset.name)}"
             )
 
     db.add(db_dataset)
