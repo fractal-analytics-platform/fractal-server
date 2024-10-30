@@ -53,8 +53,8 @@ jobs:
 
         - name: Install PSQL
           run: |
-            apt-get update
-            apt-get install --yes --no-install-recommends postgresql-client
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends postgresql-client
 
         - name: Set up Python 3.10
           uses: actions/setup-python@v5
