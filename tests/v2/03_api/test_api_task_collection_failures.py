@@ -143,12 +143,12 @@ async def test_missing_task_executable(
         assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
         # Inspect collection outcome
-        res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=True")
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         data = res.json()["data"]
         assert "missing file" in data["info"]
         assert data["status"] == "fail"
-        assert data["log"]  # This is because of verbose=True
+        assert data["log"]
         assert "fail" in data["log"]
 
 

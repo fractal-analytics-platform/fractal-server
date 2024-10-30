@@ -10,6 +10,7 @@ from .background_operations import _set_collection_state_data_status
 from .database_operations import create_db_tasks_and_update_task_group
 from .template_utils import customize_template
 from .template_utils import parse_script_5_stdout
+from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -62,6 +63,22 @@ def _customize_and_run_template(
     logger.debug(f"_customize_and_run_template {script_filename} - END")
 
     return stdout
+
+
+def _refresh_logs(
+    *,
+    state_id: int,
+    log_file_path: Path,
+    db: DBSyncSession,
+) -> None:
+    """
+    Read logs from file and update them in the db.
+    """
+    collection_state = db.get(CollectionStateV2, state_id)
+    collection_state.data["log"] = log_file_path.open("r").read()
+    flag_modified(collection_state, "data")
+    db.commit()
+    db.close()
 
 
 async def background_collect_pip_local(
@@ -155,20 +172,40 @@ async def background_collect_pip_local(
             logger.debug(
                 (f"END - Create python venv folder {task_group.venv_path}")
             )
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
+            )
 
             stdout = _customize_and_run_template(
                 script_filename="_2_preliminary_pip_operations.sh",
                 **common_args,
             )
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
+            )
             stdout = _customize_and_run_template(
                 script_filename="_3_pip_install.sh",
                 **common_args,
+            )
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
             )
             stdout_pip_freeze = _customize_and_run_template(
                 script_filename="_4_pip_freeze.sh",
                 **common_args,
             )
             logger.debug("installing - END")
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
+            )
 
             logger.debug("collecting - START")
             _set_collection_state_data_status(
@@ -177,14 +214,20 @@ async def background_collect_pip_local(
                 logger_name=LOGGER_NAME,
                 db=db,
             )
-
-            # Avoid keeping the db session open as we start some possibly
-            # long operations that do not use the db
-            db.close()
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
+            )
 
             stdout = _customize_and_run_template(
                 script_filename="_5_pip_show.sh",
                 **common_args,
+            )
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
             )
 
             pkg_attrs = parse_script_5_stdout(stdout)
@@ -228,6 +271,11 @@ async def background_collect_pip_local(
             logger.info("collecting - now validating manifest content")
             pkg_manifest = ManifestV2(**pkg_manifest_dict)
             logger.info("collecting - validated manifest content")
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
+            )
 
             logger.info("collecting - _prepare_tasks_metadata - start")
             task_list = _prepare_tasks_metadata(
@@ -238,6 +286,11 @@ async def background_collect_pip_local(
             )
             _check_task_files_exist(task_list=task_list)
             logger.info("collecting - _prepare_tasks_metadata - end")
+            _refresh_logs(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                db=db,
+            )
 
             logger.info(
                 "collecting - create_db_tasks_and_update_task_group - " "start"

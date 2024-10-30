@@ -10,7 +10,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.utils import get_collection_log_v2
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.endpoint_operations import (
     get_package_version_from_pypi,
@@ -131,8 +130,8 @@ async def test_task_collection_from_wheel(
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         assert res.status_code == 422
 
-        # Check that *verbose* collection info contains logs
-        res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
+        # Check that info contains logs
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         assert res.json()["data"]["log"] is not None
 
@@ -314,8 +313,8 @@ async def test_task_collection_from_pypi(
             if task["command_parallel"] is not None:
                 assert task["args_schema_parallel"] is not None
 
-        # Check that *verbose* collection info contains logs
-        res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
+        # Check that collection info contains logs
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         assert res.json()["data"]["log"] is not None
 
@@ -361,33 +360,6 @@ async def test_task_collection_failure_due_to_existing_path(
         )
         assert res.status_code == 422
         assert "Another task-group already has path" in res.json()["detail"]
-
-
-async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
-
-    LOG = "fractal is awesome"
-    with open(get_collection_log_v2(tmp_path), "w") as f:
-        f.write(LOG)
-    state = CollectionStateV2(data=dict(path=tmp_path.as_posix()))
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.get(f"{PREFIX}/collect/{state.id}/?verbose=true")
-
-    assert res.json()["data"]["log"] == LOG
-
-    state2 = CollectionStateV2()
-    db.add(state2)
-    await db.commit()
-    await db.refresh(state2)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.get(f"{PREFIX}/collect/{state2.id}/?verbose=true")
-    assert res.status_code == 422
-    assert res.json()["detail"] == (
-        f"No 'path' in CollectionStateV2[{state2.id}].data"
-    )
 
 
 async def test_contact_an_admin_message(

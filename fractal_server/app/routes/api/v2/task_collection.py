@@ -31,7 +31,6 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.tasks.utils import get_collection_log_v2
 from fractal_server.tasks.utils import normalize_package_name
 from fractal_server.tasks.v2.background_operations_local import (
     background_collect_pip_local,
@@ -296,42 +295,15 @@ async def collect_tasks_pip(
 async def check_collection_status(
     state_id: int,
     user: UserOAuth = Depends(current_active_user),
-    verbose: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:  # State[TaskCollectStatus]
     """
     Check status of background task collection
     """
-
-    logger = set_logger(logger_name="check_collection_status")
-    logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(CollectionStateV2, state_id)
-    if not state:
-        await db.close()
+    if state is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # FIXME SSH: add logic for when data.state["log"] is empty
-        pass
-    else:
-        # Non-SSH mode
-        # In some cases (i.e. a successful or ongoing task collection),
-        # state.data["log"] is not set; if so, we collect the current logs.
-        if verbose and not state.data.get("log"):
-            if "path" not in state.data.keys():
-                await db.close()
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"No 'path' in CollectionStateV2[{state_id}].data"
-                    ),
-                )
-            state.data["log"] = get_collection_log_v2(Path(state.data["path"]))
-
-    reset_logger_handlers(logger)
-    await db.close()
     return state
