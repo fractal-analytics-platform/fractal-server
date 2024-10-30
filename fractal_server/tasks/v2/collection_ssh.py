@@ -344,9 +344,9 @@ def collect_package_ssh(
                             f"Removing remote folder failed.\n"
                             f"Original error:\n{str(e)}"
                         )
-                    else:
-                        logger.info(
-                            "Not trying to remove remote folder "
-                            f"{task_group.path}."
-                        )
+                else:
+                    logger.info(
+                        "Not trying to remove remote folder "
+                        f"{task_group.path}."
+                    )
                 return
