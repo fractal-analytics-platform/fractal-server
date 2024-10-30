@@ -18,6 +18,7 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
+from fractal_server.tasks.v2.utils_background import _refresh_logs
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
@@ -164,9 +165,11 @@ def collect_package_ssh(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
-                # Avoid keeping the db session open as we start some possibly
-                # long operations that do not use the db
-                db.close()
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
 
                 # Create remote folder (note that because of `parents=True` we
                 # are in the `no error if existing, make parent directories as
@@ -178,21 +181,40 @@ def collect_package_ssh(
                     **common_args,
                 )
                 remove_venv_folder_upon_failure = True
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
 
                 stdout = _customize_and_run_template(
                     template_name="_2_preliminary_pip_operations.sh",
                     **common_args,
                 )
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
                 stdout = _customize_and_run_template(
                     template_name="_3_pip_install.sh",
                     **common_args,
+                )
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
                 )
                 stdout_pip_freeze = _customize_and_run_template(
                     template_name="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("installing - END")
-
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
                 logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
@@ -200,15 +222,16 @@ def collect_package_ssh(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
-                # Avoid keeping the db session open as we start some possibly
-                # long operations that do not use the db
-                db.close()
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
 
                 stdout = _customize_and_run_template(
                     template_name="_5_pip_show.sh",
                     **common_args,
                 )
-
                 pkg_attrs = parse_script_5_stdout(stdout)
                 for key, value in pkg_attrs.items():
                     logger.debug(
@@ -221,6 +244,12 @@ def collect_package_ssh(
                     pkg_name_pip_show=package_name_pip_show,
                     pkg_name_task_group=package_name_task_group,
                     logger_name=LOGGER_NAME,
+                )
+
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
                 )
 
                 # Extract/drop parsed attributes
@@ -270,6 +299,11 @@ def collect_package_ssh(
                 )
 
                 logger.debug("collecting - END")
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
@@ -310,9 +344,9 @@ def collect_package_ssh(
                             f"Removing remote folder failed.\n"
                             f"Original error:\n{str(e)}"
                         )
-                    else:
-                        logger.info(
-                            "Not trying to remove remote folder "
-                            f"{task_group.path}."
-                        )
+                else:
+                    logger.info(
+                        "Not trying to remove remote folder "
+                        f"{task_group.path}."
+                    )
                 return

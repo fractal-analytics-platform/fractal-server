@@ -17,8 +17,9 @@ echo -e "yes\nyes\nyes\nyes\nyes" | ./venv260/bin/fractalctl update-db-data
 poetry run fractalctl set-db
 
 # Apply 2.7.0 data migrations
+./venv270/bin/fractalctl set-db
 export FRACTAL_V27_DEFAULT_USER_EMAIL=admin@fractal.xy
-echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
+echo -e "yes\nyes\nyes\nyes\nyes" | ./venv270/bin/fractalctl update-db-data
 
 # Reset all passwords to a given value
 # Raw: 1234
