@@ -33,10 +33,10 @@ assert_users_and_oauth() {
     # $1 desired number of users
     # $2 desired number of oauth accounts
     USERS=$(
-        psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM user_oauth;"
+        psql -h localhost -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM user_oauth;"
     )
     OAUTH_ACCOUNTS=$(
-        psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM oauthaccount;"
+        psql -h localhost -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM oauthaccount;"
     )
     if [ "$USERS" -ne "$1" ] || [ "$OAUTH_ACCOUNTS" -ne "$2" ]; then
         exit 1
@@ -108,7 +108,7 @@ assert_email_and_id $USER_TOKEN_OAUTH "kilgore@fractal.xy" $USER_ID
 
 # Remove all oauth accounts from db.
 assert_users_and_oauth 2 1
-psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DELETE FROM oauthaccount;"
+psql -h localhost -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DELETE FROM oauthaccount;"
 assert_users_and_oauth 2 0
 
 # Test I can login as "kilgore@fractal.xy" with standard login.
