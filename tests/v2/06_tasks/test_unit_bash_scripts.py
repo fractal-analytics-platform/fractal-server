@@ -1,39 +1,55 @@
-from pathlib import Path
-
 import pytest
-from devtools import debug
 
-from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.config import get_settings
-from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
-from fractal_server.tasks.utils import COLLECTION_FREEZE_FILENAME
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import execute_command_sync
-from tests.execute_command import execute_command
 
 
-def test_template_1(tmp_path):
+def test_template_1(tmp_path, current_py_version):
+    path = tmp_path / "unit_templates"
+    venv_path = path / "venv"
+    replacements = [
+        ("__TASK_GROUP_DIR__", path.as_posix()),
+        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+        ("__PYTHON__", f"python{current_py_version}"),
+    ]
+    script_path = tmp_path / "1_good.sh"
+    customize_template(
+        template_name="_1_create_venv.sh",
+        replacements=replacements,
+        script_path=script_path.as_posix(),
+    )
+    execute_command_sync(command=f"bash {script_path.as_posix()}")
+    assert venv_path.exists()
 
-    replacements = {}
-    script_path = tmp_path / "x.sh"
+    replacements = [
+        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+        ("__PYTHON__", f"python{current_py_version}"),
+    ]
+
+    script_path = tmp_path / "1_bad_missing_path.sh"
     customize_template(
         template_name="_1_create_venv.sh",
         replacements=replacements,
         script_path=script_path,
     )
-    stdout = execute_command_sync(f"bash {script_path}")
-    assert somefolder.exists()
+    with pytest.raises(RuntimeError) as expinfo:
+        execute_command_sync(command=f"bash {script_path}")
+    assert "returncode=1" in str(expinfo.value)
 
-    replacements = {}
-    script_path = tmp_path / "x.sh"
+    replacements = [
+        ("__TASK_GROUP_DIR__", path.as_posix()),
+        ("__PYTHON__", f"python{current_py_version}"),
+    ]
+
+    script_path = tmp_path / "1_bad_missing_venv_path.sh"
     customize_template(
         template_name="_1_create_venv.sh",
         replacements=replacements,
         script_path=script_path,
     )
-    with pytest.raises():
-        execute_command_sync(f"bash {script_path}")
+    with pytest.raises(RuntimeError) as expinfo:
+        execute_command_sync(command=f"bash {script_path}")
+    assert "returncode=1" in str(expinfo.value)
 
 
 def test_template_3():
