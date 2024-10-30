@@ -2,9 +2,15 @@
 
 # 2.7.1 (unreleased)
 
+> WARNING: As of this version, all extras for `pip install` are deprecated and
+> the corresponding dependencies become required.
+
 * Database:
     * Drop `TaskV2.owner` column (\#1977).
     * Make `TaskV2.taskgroupv2_id` column required (\#1977).
+* Dependencies:
+    * Make `psycopg[binary]` dependency required, and drop `postgres-pyscopg-binary` extra (\#1970).
+    * Make `gunicorn` dependency required, and drop `gunicorn` extra (\#1970).
 * Testing:
     * Switch from SQLite to Postgres in the OAuth Github action (\#1981).
 

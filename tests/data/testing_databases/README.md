@@ -18,7 +18,7 @@ psql -d "$DB_NAME" -f "$OLD_DB_FILE"
 
 python3 -m venv venv
 source venv/bin/activate
-python3 -m pip install "fractal-server[postgres-psycopg-binary]==$NEW_FRACTAL_SERVER_VERSION"
+python3 -m pip install "fractal-server==$NEW_FRACTAL_SERVER_VERSION"
 
 # Make sure that .fractal_server.env looks similar to
 echo "POSTGRES_DB=$DB_NAME" >> .fractal_server.env
