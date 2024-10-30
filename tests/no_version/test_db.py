@@ -1,5 +1,6 @@
 import pytest
 from devtools import debug
+from sqlmodel import delete
 from sqlmodel import select
 
 from fractal_server.app.db import DB
@@ -114,3 +115,46 @@ def test_DB_class_sync():
 
     assert DB._engine_sync
     assert DB._sync_session_maker
+
+
+async def test_reusing_id(db):
+
+    num_users = 10
+
+    # Create `num_users` new users
+    user_list = [
+        UserOAuth(email=f"{x}@y.z", hashed_password="xxx")
+        for x in range(num_users)
+    ]
+
+    for user in user_list:
+        db.add(user)
+    await db.commit()
+    for user in user_list:
+        await db.refresh(user)
+
+    # Extract list of IDs
+    user_id_list = [user.id for user in user_list]
+
+    # Remove all users
+    await db.execute(delete(UserOAuth))
+    res = await db.execute(select(UserOAuth))
+    users = res.scalars().unique().all()
+    assert len(users) == 0
+
+    # Create `num_users + 10` new users
+    new_user_list = [
+        UserOAuth(email=f"{x}@y.z", hashed_password="xxx")
+        for x in range(num_users + 10)
+    ]
+    for user in new_user_list:
+        db.add(user)
+    await db.commit()
+    for user in new_user_list:
+        await db.refresh(user)
+
+    # Extract list of IDs
+    new_user_id_list = [user.id for user in new_user_list]
+
+    # Assert IDs lists are disjoined
+    assert set(new_user_id_list).isdisjoint(set(user_id_list))
