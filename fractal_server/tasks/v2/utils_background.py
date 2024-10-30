@@ -86,7 +86,7 @@ def _handle_failure(
     if log_file_path is not None:
         new_log = log_file_path.open().read()
     else:
-        new_log = exception.value()
+        new_log = str(exception)
 
     _set_collection_state_data_log(
         state_id=state_id,
