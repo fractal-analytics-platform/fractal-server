@@ -340,4 +340,14 @@ async def collect_package_local(
                 logger.error(
                     f"Removing folder failed.\nOriginal error:\n{str(e)}"
                 )
+
+                _handle_failure(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    logger_name=LOGGER_NAME,
+                    exception=e,
+                    db=db,
+                    task_group_id=task_group.id,
+                )
+
         return

@@ -59,7 +59,7 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
 
 
-async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
+async def test_collect_pip_existing_file(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -92,3 +92,44 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
     assert state.data["status"] == "fail"
     # Verify that foreign key was set to None
     assert state.taskgroupv2_id is None
+
+
+async def test_collect_pip_local_fail_rmtree(
+    tmp_path, db, first_user, testdata_path, current_py_version
+):
+    # Prepare db objects
+    path = tmp_path / "rmtree-error"
+    task_group = TaskGroupV2(
+        pkg_name="fractal-tasks-mock",
+        version="0.0.1",
+        origin="local",
+        wheel_path=(
+            testdata_path.parent
+            / (
+                "v2/fractal_tasks_valid/valid_tasks/dist/"
+                "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            )
+        ).as_posix(),
+        python_version=current_py_version,
+        path=path.as_posix(),
+        venv_path=(path / "venv").as_posix(),
+        user_id=first_user.id,
+    )
+    debug(task_group)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+    state = CollectionStateV2(taskgroupv2_id=task_group.id)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    db.expunge(state)
+    # Run background task
+    await collect_package_local(
+        task_group=task_group,
+        state_id=state.id,
+    )
+    # Verify that collection failed
+    state = await db.get(CollectionStateV2, state.id)
+    assert state.data["status"] == "fail"
