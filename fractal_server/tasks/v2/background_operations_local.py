@@ -20,6 +20,7 @@ from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils import compare_package_names
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
@@ -259,6 +260,13 @@ async def background_collect_pip_local(
             collection_state.data["log"] = log_file_path.open("r").read()
             collection_state.data["freeze"] = stdout_pip_freeze
             collection_state.data["status"] = CollectionStatusV2.OK
+
+            # Write the logs to disk (useful for reading logs via the API,
+            # before the background operation is over).
+            collection_path = get_collection_path(Path(task_group.path))
+            with collection_path.open("w") as f:
+                json.dump(collection_state.data, f, indent=2)
+
             # FIXME: The `task_list` key is likely not used by any client,
             # we should consider dropping it
             task_read_list = [
