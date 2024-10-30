@@ -343,10 +343,6 @@ async def collect_package_local(
                 logger.info(f"Deleted folder {task_group.path}")
             except Exception as e:
                 logger.error(
-                    f"Removing folder failed.\n" f"Original error:\n{str(e)}"
-                )
-            else:
-                logger.info(
-                    "Not trying to remove folder " f"{task_group.path}."
+                    f"Removing folder failed.\nOriginal error:\n{str(e)}"
                 )
         return
