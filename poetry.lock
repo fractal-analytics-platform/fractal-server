@@ -2601,10 +2601,7 @@ files = [
     {file = "wrapt-1.16.0.tar.gz", hash = "sha256:5f370f952971e7d17c7d1ead40e49f32345a7f7a5373571ef44d800d06b1899d"},
 ]
 
-[extras]
-gunicorn = ["gunicorn"]
-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ad448ba092202b775cbddcd5b77ac00e1e7c9f315b65b90f8cfe29088efb61f0"
+content-hash = "675184d332275ed84bf6a9926162bd78c412a53a93c64146b089705ea23392ec"
