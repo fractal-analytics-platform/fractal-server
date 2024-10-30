@@ -331,6 +331,7 @@ async def test_patch_user_settings_bulk(
             slurm_user="test01",
             slurm_accounts=[],
             cache_dir=None,
+            project_dir=None,
         ) == user.settings.dict(exclude={"id"})
 
     # remove user4 from default user group
