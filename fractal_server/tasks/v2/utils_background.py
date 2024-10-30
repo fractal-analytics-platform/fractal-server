@@ -66,11 +66,7 @@ def _handle_failure(
     db: DBSyncSession,
     task_group_id: int,
     log_file_path: Optional[Path] = None,
-    path: Optional[Path] = None,
 ):
-    """
-    Note: `venv_path` is only required to trigger the folder deletion.
-    """
 
     logger = get_logger(logger_name)
     logger.error(f"Task collection failed. Original error: {str(exception)}")

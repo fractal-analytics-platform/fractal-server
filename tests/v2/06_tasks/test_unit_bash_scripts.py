@@ -1,7 +1,40 @@
 import pytest
 
 from fractal_server.tasks.v2.utils_templates import customize_template
+from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
 from fractal_server.utils import execute_command_sync
+
+
+def test_parse_script_5_stdout():
+    stdout = (
+        "Python interpreter: /some\n"
+        "Package name: name\n"
+        "Package version: version\n"
+        "Package parent folder: /some\n"
+        "Manifest absolute path: /some\n"
+    )
+    res = parse_script_5_stdout(stdout)
+    assert res == {
+        "python_bin": "/some",
+        "package_name": "name",
+        "package_version": "version",
+        "package_root_parent": "/some",
+        "manifest_path": "/some",
+    }
+
+    stdout = (
+        "Python interpreter: /some\n"
+        "Package name: name1\n"
+        "Package name: name2\n"
+        "Package version: version\n"
+        "Package parent folder: /some\n"
+        "Manifest absolute path: /some\n"
+    )
+    with pytest.raises(ValueError, match="too many times"):
+        parse_script_5_stdout(stdout)
+
+    with pytest.raises(ValueError, match="not found"):
+        parse_script_5_stdout("invalid")
 
 
 def test_template_1(tmp_path, current_py_version):

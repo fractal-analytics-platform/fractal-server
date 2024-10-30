@@ -17,7 +17,7 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Install package
 write_log "START install ${INSTALL_STRING}"
-"$VENVPYTHON" -m pip install "$INSTALL_STRING"
+"$VENVPYTHON" -m pip install --no-cache-dir "$INSTALL_STRING"
 write_log "END   install ${INSTALL_STRING}"
 echo
 
@@ -34,7 +34,7 @@ if [ "$PINNED_PACKAGE_LIST" != "" ]; then
     done
 
     write_log "All packages in ${PINNED_PACKAGE_LIST} are already installed, proceed with specific versions."
-    "$VENVPYTHON" -m pip install "$PINNED_PACKAGE_LIST"
+    "$VENVPYTHON" -m pip install --no-cache-dir "$PINNED_PACKAGE_LIST"
     write_log "END installing pinned versions $PINNED_PACKAGE_LIST"
 else
     write_log "SKIP installing pinned versions $PINNED_PACKAGE_LIST (empty list)"
