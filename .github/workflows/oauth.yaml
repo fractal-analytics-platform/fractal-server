@@ -13,12 +13,14 @@ jobs:
     runs-on: ubuntu-22.04
 
     services:
+
       dexidp:
         image: ghcr.io/fractal-analytics-platform/oauth:0.1
         ports:
           - 5556:5556
+
       postgres:
-        image: postgres:14
+        image: postgres
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
