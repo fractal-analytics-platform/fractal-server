@@ -5,6 +5,8 @@
 * Database:
     * Drop `TaskV2.owner` column (\#1977).
     * Make `TaskV2.taskgroupv2_id` column required (\#1977).
+* Testing:
+    * Switch from SQLite to Postgres in the OAuth Github action (\#1981).
 
 # 2.7.0
 
