@@ -22,6 +22,8 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 router = APIRouter()
 
@@ -50,9 +52,15 @@ async def create_dataset(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+    settings = Inject(get_settings)
 
     if dataset.zarr_dir is None:
+
+        if settings.DB_ENGINE == "sqlite":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"{dataset.zarr_dir=} but {settings.DB_ENGINE=}",
+            )
         if user.settings.project_dir is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -61,22 +69,33 @@ async def create_dataset(
                     "are null"
                 ),
             )
-        else:
-            db_dataset.zarr_dir = "__PLACEHOLDER__"
-            db.add(db_dataset)
-            await db.commit()
-            await db.refresh(db_dataset)
-            db_dataset.zarr_dir = (
+
+        db_dataset = DatasetV2(
+            project_id=project_id,
+            zarr_dir="__PLACEHOLDER__",
+            **dataset.dict(),
+        )
+        db.add(db_dataset)
+        await db.commit()
+        await db.refresh(db_dataset)
+        setattr(
+            db_dataset,
+            "zarr_dir",
+            (
                 f"{user.settings.project_dir}/fractal/"
                 f"{project_id}_{_slugify_name(project.name)}/"
                 f"{db_dataset.id}_{_slugify_name(db_dataset.name)}"
-            )
+            ),
+        )
+        db.add(db_dataset)
+        await db.commit()
+        await db.refresh(db_dataset)
+    else:
+        db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+        db.add(db_dataset)
+        await db.commit()
+        await db.refresh(db_dataset)
 
-    db.add(db_dataset)
-    await db.commit()
-    await db.refresh(db_dataset)
-
-    await db.close()
     return db_dataset
 
 
