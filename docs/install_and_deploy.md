@@ -34,18 +34,6 @@ index](https://pypi.org/project/fractal-server), and it can be installed with
 pip install fractal-server
 ```
 
-Some additional features must be installed as *extras*, e.g. via one of the following
-```
-pip install fractal-server[postgres]
-pip install fractal-server[gunicorn]
-pip install fractal-server[gunicorn,postgres]
-```
-
-When including the `postgres` extra, the following additional packages should
-be available on the system (e.g. through an `apt`-like package manager):
-`postgresql, postgresql-contrib, libpq-dev, gcc`.
-
-
 For details on how to install Fractal Server in a development environment, see
 the [Contribute](../contribute) page.
 
@@ -129,7 +117,7 @@ shows that port 8010 is open for all the current virtual network (this means for
 ### Serving Fractal Server via Gunicorn
 
 Fractal Server is served through [uvicorn](https://www.uvicorn.org) by default, when it is run via the `fractalctl start` command, but different servers can be used.
-If Fractal Server is installed with the [`gunicorn`](https://gunicorn.org) extra, for instance, you can use a command like
+When using [`gunicorn`](https://gunicorn.org), you can use a command like
 ```
 gunicorn fractal_server.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
 ```
