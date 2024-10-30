@@ -4,8 +4,8 @@ from fastapi import HTTPException
 from httpx import Response
 from httpx import TimeoutException
 
-import fractal_server.tasks.v2.endpoint_operations
-from fractal_server.tasks.v2.endpoint_operations import (
+import fractal_server.app.routes.api.v2._aux_functions_task_collection
+from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
     get_package_version_from_pypi,
 )
 
@@ -57,7 +57,7 @@ async def test_get_package_version_from_pypi_failures(monkeypatch):
         return Response(status_code=200, json=dict(key="value"))
 
     monkeypatch.setattr(
-        fractal_server.tasks.v2.endpoint_operations.AsyncClient,
+        fractal_server.app.routes.api.v2._aux_functions_task_collection.AsyncClient,  # noqa
         "get",
         _patched_get_1,
     )
@@ -69,7 +69,7 @@ async def test_get_package_version_from_pypi_failures(monkeypatch):
         raise TimeoutException("error message")
 
     monkeypatch.setattr(
-        fractal_server.tasks.v2.endpoint_operations.AsyncClient,
+        fractal_server.app.routes.api.v2._aux_functions_task_collection.AsyncClient,  # noqa
         "get",
         _patched_get_2,
     )
@@ -81,7 +81,7 @@ async def test_get_package_version_from_pypi_failures(monkeypatch):
         raise RuntimeError("error message")
 
     monkeypatch.setattr(
-        fractal_server.tasks.v2.endpoint_operations.AsyncClient,
+        fractal_server.app.routes.api.v2._aux_functions_task_collection.AsyncClient,  # noqa
         "get",
         _patched_get_3,
     )

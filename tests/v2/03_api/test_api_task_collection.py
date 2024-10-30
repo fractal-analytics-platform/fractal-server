@@ -7,13 +7,13 @@ from packaging.version import Version
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
+    get_package_version_from_pypi,
+)
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
-from fractal_server.tasks.v2.endpoint_operations import (
-    get_package_version_from_pypi,
-)
 from tests.execute_command import execute_command
 
 
