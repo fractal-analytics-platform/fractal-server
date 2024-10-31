@@ -344,7 +344,6 @@ async def collect_package_local(
 
             _handle_failure(
                 state_id=state_id,
-                log_file_path=log_file_path,
                 logger_name=LOGGER_NAME,
                 exception=collection_e,
                 db=db,

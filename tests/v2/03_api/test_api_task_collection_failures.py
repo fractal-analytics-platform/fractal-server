@@ -149,7 +149,7 @@ async def test_missing_task_executable(
         assert "missing file" in data["info"]
         assert data["status"] == "fail"
         assert data["log"]
-        assert "fail" in data["log"]
+        assert "missing file" in data["log"]
 
 
 async def test_folder_already_exists(
