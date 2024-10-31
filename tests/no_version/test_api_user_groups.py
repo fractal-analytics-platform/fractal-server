@@ -361,7 +361,9 @@ async def test_patch_user_settings_bulk(
     # assert user1, user2 and user3 has been updated
     for user in [user1, user2, user3]:
         await db.refresh(user)
-        assert patch == user.settings.dict(exclude={"id", "slurm_user"})
+        assert patch == user.settings.dict(
+            exclude={"id", "slurm_user", "project_dir"}
+        )
         assert user.settings.slurm_user == "test01"  # `slurm_user` not patched
     # assert user4 has old settings
     await db.refresh(user4)
@@ -374,4 +376,4 @@ async def test_patch_user_settings_bulk(
         slurm_user="test01",
         slurm_accounts=[],
         cache_dir=None,
-    ) == user4.settings.dict(exclude={"id"})
+    ) == user4.settings.dict(exclude={"id", "project_dir"})
