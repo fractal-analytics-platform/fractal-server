@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Task group
+    * Add `pinned_package_versions_string` property.
+* Task collection
+    * Now both the local and SSH versions of the task collection use the bash templates.
+    * Now `pip install` uses `--no-cache`.
+* API
+    * Deprecate the `verbose` query parameter in `GET /api/v2/task/collect/{state_id}/`
 # 2.7.1
 
 > WARNING: As of this version, all extras for `pip install` are deprecated and
