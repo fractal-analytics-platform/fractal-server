@@ -320,34 +320,36 @@ async def collect_package_local(
             logger.debug("finalising - END")
             logger.debug("END")
 
-        except Exception as e:
+        except Exception as collection_e:
+
             # Delete corrupted package dir
-            _handle_failure(
-                state_id=state_id,
-                log_file_path=log_file_path,
-                logger_name=LOGGER_NAME,
-                exception=e,
-                db=db,
-                task_group_id=task_group.id,
-            )
             try:
                 logger.info(f"Now delete folder {task_group.path}")
                 import shutil
 
                 shutil.rmtree(task_group.path)
                 logger.info(f"Deleted folder {task_group.path}")
-            except Exception as e:
+            except Exception as rm_e:
                 logger.error(
-                    f"Removing folder failed.\nOriginal error:\n{str(e)}"
+                    "Removing folder failed."
+                    f"\nOriginal error:\n{str(collection_e)}"
                 )
-
                 _handle_failure(
                     state_id=state_id,
                     log_file_path=log_file_path,
                     logger_name=LOGGER_NAME,
-                    exception=e,
+                    exception=rm_e,
                     db=db,
                     task_group_id=task_group.id,
                 )
+                return
 
+            _handle_failure(
+                state_id=state_id,
+                log_file_path=log_file_path,
+                logger_name=LOGGER_NAME,
+                exception=collection_e,
+                db=db,
+                task_group_id=task_group.id,
+            )
         return
