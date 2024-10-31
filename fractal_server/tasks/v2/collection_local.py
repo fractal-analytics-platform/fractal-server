@@ -91,8 +91,6 @@ async def collect_package_local(
 
     # Check that the task_group path does not exist
     if Path(task_group.path).exists():
-        # FIXME: we either merge this into handle_failure, or extract into a
-        # similar function
         with next(get_sync_db()) as db:
             _handle_failure(
                 state_id=state_id,
