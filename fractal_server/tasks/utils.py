@@ -55,12 +55,6 @@ def get_collection_freeze_v1(venv_path: Path) -> str:
     return freeze
 
 
-def get_collection_freeze_v2(path: Path) -> str:
-    freeze_path = get_freeze_path(path)
-    freeze = freeze_path.open().read()
-    return freeze
-
-
 def normalize_package_name(name: str) -> str:
     """
     Implement PyPa specifications for package-name normalization
