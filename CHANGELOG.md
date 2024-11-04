@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.8.0
 
 * Task group
     * Add `pinned_package_versions_string` property (\#1980).
