@@ -23,6 +23,7 @@ from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.string_tools import sanitize_string
+from fractal_server.urls import normalize_url
 
 router = APIRouter()
 
@@ -64,11 +65,14 @@ async def create_dataset(
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
-        db_dataset.zarr_dir = (
+        path = (
             f"{user.settings.project_dir}/fractal/"
             f"{project_id}_{sanitize_string(project.name)}/"
             f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )
+        normalized_path = normalize_url(path)
+        db_dataset.zarr_dir = normalized_path
+
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
