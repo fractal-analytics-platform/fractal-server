@@ -319,14 +319,6 @@ def collect_package_ssh(
 
             except Exception as e:
                 # Delete corrupted package dir
-                _handle_failure(
-                    state_id=state_id,
-                    log_file_path=log_file_path,
-                    logger_name=LOGGER_NAME,
-                    exception=e,
-                    db=db,
-                    task_group_id=task_group.id,
-                )
                 if remove_venv_folder_upon_failure:
                     # FIXME: introduce nested try/except
                     try:
@@ -345,9 +337,27 @@ def collect_package_ssh(
                             f"Removing remote folder failed.\n"
                             f"Original error:\n{str(e)}"
                         )
+
+                    _handle_failure(
+                        state_id=state_id,
+                        log_file_path=log_file_path,
+                        logger_name=LOGGER_NAME,
+                        exception=e,
+                        db=db,
+                        task_group_id=task_group.id,
+                    )
+
                 else:
                     logger.info(
                         "Not trying to remove remote folder "
                         f"{task_group.path}."
+                    )
+                    _handle_failure(
+                        state_id=state_id,
+                        log_file_path=log_file_path,
+                        logger_name=LOGGER_NAME,
+                        exception=e,
+                        db=db,
+                        task_group_id=task_group.id,
                     )
                 return
