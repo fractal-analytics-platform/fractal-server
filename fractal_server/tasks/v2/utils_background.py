@@ -12,7 +12,6 @@ from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
-from fractal_server.tasks.utils import get_log_path
 
 
 def _set_collection_state_data_status(
@@ -209,9 +208,3 @@ def _refresh_logs(
     flag_modified(collection_state, "data")
     db.commit()
     db.close()
-
-
-def get_collection_log_v2(path: Path) -> str:
-    log_path = get_log_path(path)
-    log = log_path.open().read()
-    return log
