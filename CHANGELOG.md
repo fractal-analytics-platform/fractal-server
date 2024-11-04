@@ -9,7 +9,7 @@
     * Now `pip install` uses `--no-cache` (\#1980).
 * API
     * Deprecate the `verbose` query parameter in `GET /api/v2/task/collect/{state_id}/` (\#1980).
- 
+
 # 2.7.1
 
 > WARNING: As of this version, all extras for `pip install` are deprecated and
