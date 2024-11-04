@@ -33,14 +33,6 @@ write_log "START create venv in ${PACKAGE_ENV_DIR}"
 "$PYTHON" -m venv "$PACKAGE_ENV_DIR" --copies
 write_log "END   create venv in ${PACKAGE_ENV_DIR}"
 echo
-VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
-if [ -f "$VENVPYTHON" ]; then
-    write_log "OK: $VENVPYTHON exists."
-    echo
-else
-    write_log "ERROR: $VENVPYTHON not found"
-    exit 2
-fi
 
 # End
 TIME_END=$(date +%s)
