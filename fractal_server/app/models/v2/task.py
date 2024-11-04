@@ -118,3 +118,20 @@ class TaskGroupV2(SQLModel, table=True):
             ]
         )
         return output
+
+
+class TaskGroupActivityV2(SQLModel, table=True):
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
+    timestamp_started: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True)),
+    )
+    status: str
+    action: str
+    log: Optional[str] = None
+    timestamp_ended: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True)),
+    )
