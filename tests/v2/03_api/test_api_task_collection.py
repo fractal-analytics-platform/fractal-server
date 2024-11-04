@@ -13,7 +13,6 @@ from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.utils import get_log_path
 from tests.execute_command import execute_command
 
 
@@ -100,9 +99,6 @@ async def test_task_collection_from_wheel(
         assert log is not None
         # Check that my_extra was included, in a local-package collection
         assert ".whl[my_extra]" in log
-
-        # Check on-disk files
-        assert get_log_path(Path(venv_path).parent).exists()
 
         # Check actual Python version
         python_bin = task_list[0]["command_non_parallel"].split()[0]
@@ -287,9 +283,6 @@ async def test_task_collection_from_pypi(
         # Check that log were written, even with CRITICAL logging level
         log = data["log"]
         assert log is not None
-
-        # Check on-disk files
-        assert get_log_path(Path(venv_path).parent).exists()
 
         # Check actual Python version
         python_bin = task_list[0]["command_non_parallel"].split()[0]
