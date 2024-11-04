@@ -383,3 +383,20 @@ async def test_patch_user_settings_bulk(
         json=dict(project_dir="not/an/absolute/path"),
     )
     assert res.status_code == 422
+
+    # `None` is a valid `project_dir`
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_user_group.id}/user-settings/",
+        json=dict(project_dir="/fancy/dir"),
+    )
+    assert res.status_code == 200
+    for user in [user1, user2, user3]:
+        await db.refresh(user)
+        assert user.settings.project_dir == "/fancy/dir"
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_user_group.id}/user-settings/",
+        json=dict(project_dir=None),
+    )
+    for user in [user1, user2, user3]:
+        await db.refresh(user)
+        assert user.settings.project_dir is None
