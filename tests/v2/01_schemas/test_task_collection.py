@@ -24,6 +24,11 @@ def test_TaskCollectPipV2():
     )
     assert collection_none.pinned_package_versions is None
 
+    sanitized_keys = TaskCollectPipV2(
+        package="pkg", pinned_package_versions={"    a      ": "1.0.0"}
+    )
+    assert sanitized_keys.pinned_package_versions == dict(a="1.0.0")
+
     with pytest.raises(
         ValidationError, match="Local-package path must be absolute"
     ):
@@ -32,6 +37,17 @@ def test_TaskCollectPipV2():
     with pytest.raises(ValidationError):
         TaskCollectPipV2(
             package="pkg", pinned_package_versions={";maliciouscmd": "1.0.0"}
+        )
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(
+            package="pkg", pinned_package_versions={"pkg": ";maliciouscmd"}
+        )
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(
+            package="pkg",
+            pinned_package_versions={" a ": "1.0.0", "a": "2.0.0"},
         )
 
 
