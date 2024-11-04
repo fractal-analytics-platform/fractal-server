@@ -133,6 +133,20 @@ async def test_task_collection_ssh_from_pypi(
         )
         assert expected_error in str(res.json()["detail"])
 
+        # API FAILURE 3: invalid version
+        package_version = "9.9.9"
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core",
+                package_version=package_version,
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 422
+        assert "No version starting with 9.9.9 found" in res.json()["detail"]
+        debug(res.json())
+
         # BACKGROUND FAILURE 1: existing folder
         package_version = "1.2.0"
         remote_folder = (
@@ -168,20 +182,6 @@ async def test_task_collection_ssh_from_pypi(
             folder=remote_folder,
             safe_root=REMOTE_TASKS_BASE_DIR,
         )
-
-        # BACKGROUND FAILURE 2: invalid version
-        package_version = "9.9.9"
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                package="fractal-tasks-core",
-                package_version=package_version,
-                python_version=current_py_version,
-            ),
-        )
-        assert res.status_code == 422
-        assert "No version starting with 9.9.9 found" in res.json()["detail"]
-        debug(res.json())
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
@@ -284,5 +284,118 @@ async def test_task_collection_ssh_from_wheel(
             "Cannot provide package version when package " "is a wheel file."
         )
         assert error_msg in str(res.json()["detail"])
+
+        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+
+
+async def test_task_collection_ssh_failure(
+    db,
+    app,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp777_path: Path,
+    fractal_ssh_list: FractalSSHList,
+    current_py_version: str,
+    slurmlogin_ip,
+    ssh_keys,
+    testdata_path,
+    monkeypatch,
+):
+    """
+    Test exception handling, including the case where `remove_folder` fails
+    _during_ exception handling.
+    """
+
+    credentials = dict(
+        host=slurmlogin_ip,
+        user=SLURM_USER,
+        key_path=ssh_keys["private"],
+    )
+
+    assert not fractal_ssh_list.contains(**credentials)
+    fractal_ssh = fractal_ssh_list.get(**credentials)
+
+    # Define and create remote working directory
+    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
+
+    # Assign FractalSSH object to app state
+    app.state.fractal_ssh_list = fractal_ssh_list
+
+    # Override settins with Python/SSH configurations
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    settings_overrides = {
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        PY_KEY: f"/usr/bin/python{current_py_version}",
+        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
+        "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
+    }
+    override_settings_factory(**settings_overrides)
+
+    user_settings_dict = dict(
+        ssh_host=slurmlogin_ip,
+        ssh_username=SLURM_USER,
+        ssh_private_key_path=ssh_keys["private"],
+        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
+        ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
+    )
+
+    # Prepare payload that leads to a failed collection
+    local_wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    ).as_posix()
+    remote_wheel_path = (tmp777_path / Path(local_wheel_path).name).as_posix()
+    payload = dict(
+        package=remote_wheel_path,
+        python_version=current_py_version,
+    )
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
+        # Trigger task collection (first time)
+        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
+        assert res.status_code == 201
+        state_id = res.json()["id"]
+
+        # Check that task collection failed
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 200
+        state_data = res.json()["data"]
+        assert state_data["status"] == CollectionStatusV2.FAIL
+        debug(state_data["log"])
+        assert "No such file or directory" in state_data["log"]
+
+        # Patch ssh.remove_folder
+        import fractal_server.tasks.v2.collection_ssh
+
+        ERROR_MSG = "Could not remove folder!"
+
+        def patched_remove_folder(*args, **kwargs):
+            raise RuntimeError(ERROR_MSG)
+
+        monkeypatch.setattr(
+            fractal_server.tasks.v2.collection_ssh.FractalSSH,
+            "remove_folder",
+            patched_remove_folder,
+        )
+
+        # Trigger task collection (first time)
+        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
+        assert res.status_code == 201
+        state_id = res.json()["id"]
+
+        # Check that task collection failed
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 200
+        state_data = res.json()["data"]
+        assert state_data["status"] == CollectionStatusV2.FAIL
+        debug(state_data["log"])
+        assert "Removing folder failed" in state_data["log"]
+        assert ERROR_MSG in state_data["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)

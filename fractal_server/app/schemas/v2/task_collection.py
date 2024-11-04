@@ -10,7 +10,6 @@ from pydantic import Extra
 from pydantic import root_validator
 from pydantic import validator
 
-from .._validators import valdictkeys
 from .._validators import valstr
 from fractal_server.app.schemas._validators import valutc
 from fractal_server.app.schemas.v2 import ManifestV2
@@ -62,12 +61,29 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     _package_version = validator("package_version", allow_reuse=True)(
         valstr("package_version")
     )
-    _pinned_package_versions = validator(
-        "pinned_package_versions", allow_reuse=True
-    )(valdictkeys("pinned_package_versions"))
     _package_extras = validator("package_extras", allow_reuse=True)(
         valstr("package_extras")
     )
+
+    @validator("pinned_package_versions")
+    def pinned_package_validator(cls, value):
+        if value is None:
+            return value
+        old_keys = list(value.keys())
+        new_keys = [
+            valstr(f"pinned_package_versions[{key}]")(key) for key in old_keys
+        ]
+        if len(new_keys) != len(set(new_keys)):
+            raise ValueError(
+                f"Dictionary contains multiple identical keys: {value}."
+            )
+        for old_key, new_key in zip(old_keys, new_keys):
+            if new_key != old_key:
+                value[new_key] = value.pop(old_key)
+        for pkg, version in value.items():
+            validate_cmd(pkg)
+            validate_cmd(version)
+        return value
 
     @validator("package")
     def package_validator(cls, value):

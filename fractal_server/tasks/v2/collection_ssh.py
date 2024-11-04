@@ -4,10 +4,10 @@ from tempfile import TemporaryDirectory
 
 from sqlalchemy.orm.attributes import flag_modified
 
-from .background_operations import _handle_failure
-from .background_operations import _prepare_tasks_metadata
-from .background_operations import _set_collection_state_data_status
 from .database_operations import create_db_tasks_and_update_task_group
+from .utils_background import _handle_failure
+from .utils_background import _prepare_tasks_metadata
+from .utils_background import _set_collection_state_data_status
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -18,42 +18,20 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
-from fractal_server.tasks.v2.utils import get_python_interpreter_v2
-
-TEMPLATES_DIR = Path(__file__).parent / "templates"
-
-
-def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
-    searches = [
-        ("Python interpreter:", "python_bin"),
-        ("Package name:", "package_name"),
-        ("Package version:", "package_version"),
-        ("Package parent folder:", "package_root_parent_remote"),
-        ("Manifest absolute path:", "manifest_path_remote"),
-    ]
-    stdout_lines = stdout.splitlines()
-    attributes = dict()
-    for search, attribute_name in searches:
-        matching_lines = [_line for _line in stdout_lines if search in _line]
-        if len(matching_lines) == 0:
-            raise ValueError(f"String '{search}' not found in stdout.")
-        elif len(matching_lines) > 1:
-            raise ValueError(
-                f"String '{search}' found too many times "
-                f"({len(matching_lines)})."
-            )
-        else:
-            actual_line = matching_lines[0]
-            attribute_value = actual_line.split(search)[-1].strip(" ")
-            attributes[attribute_name] = attribute_value
-    return attributes
+from fractal_server.tasks.v2.utils_background import _refresh_logs
+from fractal_server.tasks.v2.utils_package_names import compare_package_names
+from fractal_server.tasks.v2.utils_python_interpreter import (
+    get_python_interpreter_v2,
+)
+from fractal_server.tasks.v2.utils_templates import customize_template
+from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
 
 
 def _customize_and_run_template(
-    script_filename: str,
-    templates_folder: Path,
+    *,
+    template_name: str,
     replacements: list[tuple[str, str]],
-    tmpdir: str,
+    script_dir: str,
     logger_name: str,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
@@ -64,31 +42,26 @@ def _customize_and_run_template(
 
     Args:
         script_filename:
-        templates_folder:
         replacements:
         tmpdir:
         logger_name:
         fractal_ssh:
     """
     logger = get_logger(logger_name)
-    logger.debug(f"_customize_and_run_template {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {template_name} - START")
 
-    # Read template
-    template_path = templates_folder / script_filename
-    with template_path.open("r") as f:
-        script_contents = f.read()
-    # Customize template
-    for old_new in replacements:
-        script_contents = script_contents.replace(old_new[0], old_new[1])
-    # Write script locally
-    script_path_local = (Path(tmpdir) / script_filename).as_posix()
-    with open(script_path_local, "w") as f:
-        f.write(script_contents)
+    script_path_local = Path(script_dir) / template_name
+
+    customize_template(
+        template_name=template_name,
+        replacements=replacements,
+        script_path=script_path_local,
+    )
 
     # Transfer script to remote host
     script_path_remote = os.path.join(
         tasks_base_dir,
-        f"script_{abs(hash(tmpdir))}{script_filename}",
+        f"script_{abs(hash(script_dir))}{template_name}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
     fractal_ssh.send_file(
@@ -102,11 +75,11 @@ def _customize_and_run_template(
     stdout = fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
-    logger.debug(f"_customize_and_run_template {script_filename} - END")
+    logger.debug(f"_customize_and_run_template {template_name} - END")
     return stdout
 
 
-def background_collect_pip_ssh(
+def collect_package_ssh(
     *,
     state_id: int,
     task_group: TaskGroupV2,
@@ -169,12 +142,15 @@ def background_collect_pip_ssh(
                         "__FRACTAL_MAX_PIP_VERSION__",
                         settings.FRACTAL_MAX_PIP_VERSION,
                     ),
+                    (
+                        "__PINNED_PACKAGE_LIST__",
+                        task_group.pinned_package_versions_string,
+                    ),
                 ]
 
                 common_args = dict(
-                    templates_folder=TEMPLATES_DIR,
                     replacements=replacements,
-                    tmpdir=tmpdir,
+                    script_dir=tmpdir,
                     logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
                     tasks_base_dir=tasks_base_dir,
@@ -189,35 +165,56 @@ def background_collect_pip_ssh(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
-                # Avoid keeping the db session open as we start some possibly
-                # long operations that do not use the db
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
                 db.close()
-
                 # Create remote folder (note that because of `parents=True` we
                 # are in the `no error if existing, make parent directories as
                 # needed` scenario)
                 fractal_ssh.mkdir(folder=tasks_base_dir, parents=True)
 
                 stdout = _customize_and_run_template(
-                    script_filename="_1_create_venv.sh",
+                    template_name="_1_create_venv.sh",
                     **common_args,
                 )
                 remove_venv_folder_upon_failure = True
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
 
                 stdout = _customize_and_run_template(
-                    script_filename="_2_preliminary_pip_operations.sh",
+                    template_name="_2_preliminary_pip_operations.sh",
                     **common_args,
+                )
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_3_pip_install.sh",
+                    template_name="_3_pip_install.sh",
                     **common_args,
                 )
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
                 stdout_pip_freeze = _customize_and_run_template(
-                    script_filename="_4_pip_freeze.sh",
+                    template_name="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("installing - END")
-
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
                 logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
@@ -225,43 +222,47 @@ def background_collect_pip_ssh(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
-                # Avoid keeping the db session open as we start some possibly
-                # long operations that do not use the db
-                db.close()
-
-                stdout = _customize_and_run_template(
-                    script_filename="_5_pip_show.sh",
-                    **common_args,
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
                 )
 
-                pkg_attrs = _parse_script_5_stdout(stdout)
+                stdout = _customize_and_run_template(
+                    template_name="_5_pip_show.sh",
+                    **common_args,
+                )
+                pkg_attrs = parse_script_5_stdout(stdout)
                 for key, value in pkg_attrs.items():
                     logger.debug(
                         f"collecting - parsed from pip-show: {key}={value}"
                     )
-                # Check package_name match
-                # FIXME SSH: Does this work well for non-canonical names?
+                # Check package_name match between pip show and task-group
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
-                if package_name_pip_show != package_name_task_group:
-                    error_msg = (
-                        f"`package_name` mismatch: "
-                        f"{package_name_task_group=} but "
-                        f"{package_name_pip_show=}"
-                    )
-                    logger.error(error_msg)
-                    raise ValueError(error_msg)
+                compare_package_names(
+                    pkg_name_pip_show=package_name_pip_show,
+                    pkg_name_task_group=package_name_task_group,
+                    logger_name=LOGGER_NAME,
+                )
+
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
+
                 # Extract/drop parsed attributes
-                package_name = pkg_attrs.pop("package_name")
+                package_name = package_name_task_group
                 python_bin = pkg_attrs.pop("python_bin")
                 package_root_parent_remote = pkg_attrs.pop(
-                    "package_root_parent_remote"
+                    "package_root_parent"
                 )
-                manifest_path_remote = pkg_attrs.pop("manifest_path_remote")
+                manifest_path_remote = pkg_attrs.pop("manifest_path")
 
-                # FIXME SSH: Use more robust logic to determine `package_root`,
-                # e.g. as in the custom task-collection endpoint (where we use
-                # `importlib.util.find_spec`)
+                # FIXME SSH: Use more robust logic to determine `package_root`.
+                # Examples: use `importlib.util.find_spec`, or parse the output
+                # of `pip show --files {package_name}`.
                 package_name_underscore = package_name.replace("-", "_")
                 package_root_remote = (
                     Path(package_root_parent_remote) / package_name_underscore
@@ -298,6 +299,11 @@ def background_collect_pip_ssh(
                 )
 
                 logger.debug("collecting - END")
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
@@ -311,16 +317,8 @@ def background_collect_pip_ssh(
                 logger.debug("finalising - END")
                 logger.debug("END")
 
-            except Exception as e:
+            except Exception as collection_e:
                 # Delete corrupted package dir
-                _handle_failure(
-                    state_id=state_id,
-                    log_file_path=log_file_path,
-                    logger_name=LOGGER_NAME,
-                    exception=e,
-                    db=db,
-                    task_group_id=task_group.id,
-                )
                 if remove_venv_folder_upon_failure:
                     try:
                         logger.info(
@@ -333,14 +331,22 @@ def background_collect_pip_ssh(
                         logger.info(
                             f"Deleted remoted folder {task_group.path}"
                         )
-                    except Exception as e:
+                    except Exception as e_rm:
                         logger.error(
-                            f"Removing remote folder failed.\n"
-                            f"Original error:\n{str(e)}"
+                            "Removing folder failed. "
+                            f"Original error:\n{str(e_rm)}"
                         )
-                    else:
-                        logger.info(
-                            "Not trying to remove remote folder "
-                            f"{task_group.path}."
-                        )
-                return
+                else:
+                    logger.info(
+                        "Not trying to remove remote folder "
+                        f"{task_group.path}."
+                    )
+                _handle_failure(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    logger_name=LOGGER_NAME,
+                    exception=collection_e,
+                    db=db,
+                    task_group_id=task_group.id,
+                )
+    return

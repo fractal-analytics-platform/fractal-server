@@ -90,10 +90,7 @@ async def test_invalid_manifest(
         assert res.status_code == 200
         collection_data = res.json()["data"]
         assert collection_data["status"] == "fail"
-        assert (
-            "Manifest version manifest_version='9999' not supported"
-            in collection_data["log"]
-        )
+        assert "Wrong manifest version" in collection_data["log"]
 
     # Missing manifest
     wheel_path = (
@@ -114,10 +111,7 @@ async def test_invalid_manifest(
         assert res.status_code == 200
         collection_data = res.json()["data"]
         assert collection_data["status"] == "fail"
-        assert (
-            "does not include __FRACTAL_MANIFEST__.json"
-            in collection_data["log"]
-        )
+        assert "manifest path not found" in collection_data["log"]
 
 
 async def test_missing_task_executable(
@@ -149,13 +143,13 @@ async def test_missing_task_executable(
         assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
         # Inspect collection outcome
-        res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=True")
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         data = res.json()["data"]
         assert "missing file" in data["info"]
         assert data["status"] == "fail"
-        assert data["log"]  # This is because of verbose=True
-        assert "fail" in data["log"]
+        assert data["log"]
+        assert "missing file" in data["log"]
 
 
 async def test_folder_already_exists(
