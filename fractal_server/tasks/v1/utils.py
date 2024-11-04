@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from fractal_server.logger import get_logger
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 def get_python_interpreter_v1(version: Optional[str] = None) -> str:
@@ -57,7 +57,7 @@ async def _init_venv_v1(
     logger.debug(f"[_init_venv] {path=}")
     interpreter = get_python_interpreter_v1(version=python_version)
     logger.debug(f"[_init_venv] {interpreter=}")
-    await execute_command(
+    await execute_command_async(
         cwd=path,
         command=f"{interpreter} -m venv venv",
         logger_name=logger_name,

@@ -14,8 +14,8 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Upgrade pip
 write_log "START upgrade pip"
-"$VENVPYTHON" -m pip install "pip<=__FRACTAL_MAX_PIP_VERSION__" --upgrade
-"$VENVPYTHON" -m pip install setuptools
+"$VENVPYTHON" -m pip install --no-cache-dir "pip<=__FRACTAL_MAX_PIP_VERSION__" --upgrade
+"$VENVPYTHON" -m pip install --no-cache-dir setuptools
 write_log "END   upgrade pip"
 echo
 

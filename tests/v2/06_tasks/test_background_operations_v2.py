@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -7,15 +6,11 @@ from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.tasks.v2.background_operations import (
-    _check_task_files_exist,
-)
-from fractal_server.tasks.v2.background_operations import _download_package
-from fractal_server.tasks.v2.background_operations import (
-    background_collect_pip,
-)
+from fractal_server.tasks.v2.collection_local import collect_package_local
 from fractal_server.tasks.v2.database_operations import _get_task_type
-from fractal_server.tasks.v2.utils import _parse_wheel_filename
+from fractal_server.tasks.v2.utils_background import (
+    check_task_files_exist,
+)
 
 
 class _MockTaskCreateV2(BaseModel):
@@ -41,7 +36,7 @@ def test_check_task_files_exist(tmp_path):
     existing_path = existing_path.as_posix()
     missing_path = missing_path.as_posix()
     # Success
-    _check_task_files_exist(
+    check_task_files_exist(
         task_list=[
             _MockTaskCreateV2(command_non_parallel=f"py {existing_path}"),
             _MockTaskCreateV2(command_parallel=f"py {existing_path}"),
@@ -49,14 +44,14 @@ def test_check_task_files_exist(tmp_path):
     )
     # Failures
     with pytest.raises(FileNotFoundError) as e:
-        _check_task_files_exist(
+        check_task_files_exist(
             task_list=[
                 _MockTaskCreateV2(command_non_parallel=f"py {missing_path}")
             ]
         )
     assert "missing file" in str(e.value)
     with pytest.raises(FileNotFoundError) as e:
-        _check_task_files_exist(
+        check_task_files_exist(
             task_list=[
                 _MockTaskCreateV2(command_parallel=f"py {missing_path}")
             ]
@@ -64,30 +59,7 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
 
 
-def test_parse_wheel_filename():
-    with pytest.raises(
-        ValueError,
-        match="Input must be a filename, not a full path",
-    ):
-        _parse_wheel_filename(wheel_filename="/tmp/something.whl")
-
-
-async def test_download_package(tmp_path: Path, current_py_version: str):
-    PACKAGE_VERSION = "1.0.1"
-    PACKAGE_NAME = "fractal_tasks_core"
-    wheel_path = await _download_package(
-        python_version=current_py_version,
-        pkg_name=PACKAGE_NAME,
-        version=PACKAGE_VERSION,
-        dest=(tmp_path / "wheel1"),
-    )
-    debug(wheel_path)
-    assert wheel_path.exists()
-    info = _parse_wheel_filename(wheel_filename=wheel_path.name)
-    assert info == dict(distribution=PACKAGE_NAME, version=PACKAGE_VERSION)
-
-
-async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
+async def test_collect_pip_existing_file(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -95,6 +67,7 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
         version="1.2.3",
         origin="pypi",
         path=path.as_posix(),
+        venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
     )
     db.add(task_group)
@@ -109,7 +82,7 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
     # Create task_group.path
     path.mkdir()
     # Run background task
-    await background_collect_pip(
+    collect_package_local(
         task_group=task_group,
         state_id=state.id,
     )
@@ -117,6 +90,71 @@ async def test_background_collect_pip_existing_file(tmp_path, db, first_user):
     state = await db.get(CollectionStateV2, state.id)
     debug(state)
     assert state.data["status"] == "fail"
-    assert "File exists" in state.data["log"]
     # Verify that foreign key was set to None
     assert state.taskgroupv2_id is None
+
+
+async def test_collect_pip_local_fail_rmtree(
+    tmp_path,
+    db,
+    first_user,
+    testdata_path,
+    current_py_version,
+    monkeypatch,
+):
+
+    import fractal_server.tasks.v2.collection_local
+
+    def patched_function(*args, **kwargs):
+        raise RuntimeError("Broken rm")
+
+    monkeypatch.setattr(
+        fractal_server.tasks.v2.collection_local.shutil,
+        "rmtree",
+        patched_function,
+    )
+
+    # Prepare db objects
+    path = tmp_path / "rmtree-error"
+    task_group = TaskGroupV2(
+        pkg_name="fractal-tasks-mock",
+        version="0.0.1",
+        origin="local",
+        wheel_path=(
+            testdata_path.parent
+            / (
+                "v2/fractal_tasks_fail/invalid_manifest/dist/"
+                "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            )
+        ).as_posix(),
+        python_version=current_py_version,
+        path=path.as_posix(),
+        venv_path=(path / "venv").as_posix(),
+        user_id=first_user.id,
+    )
+    debug(task_group)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+    state = CollectionStateV2(taskgroupv2_id=task_group.id)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    db.expunge(state)
+    # Run background task
+    try:
+        collect_package_local(
+            task_group=task_group,
+            state_id=state.id,
+        )
+    except RuntimeError as e:
+        print(
+            f"Caught exception {e} within the test, which is taking place in "
+            "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
+        )
+    # Verify that collection failed
+    state = await db.get(CollectionStateV2, state.id)
+    assert state.data["status"] == "fail"
+    assert "Broken rm" in state.data["log"]
+    assert path.exists()

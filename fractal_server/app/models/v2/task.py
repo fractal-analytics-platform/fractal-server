@@ -103,3 +103,18 @@ class TaskGroupV2(SQLModel, table=True):
                     f"{self.pkg_name=}, {self.wheel_path=}, {self.version=}."
                 )
             return f"{self.pkg_name}{extras}=={self.version}"
+
+    @property
+    def pinned_package_versions_string(self) -> str:
+        """
+        Prepare string to be used in `python -m pip install`.
+        """
+        if self.pinned_package_versions is None:
+            return ""
+        output = " ".join(
+            [
+                f"{key}=={value}"
+                for key, value in self.pinned_package_versions.items()
+            ]
+        )
+        return output

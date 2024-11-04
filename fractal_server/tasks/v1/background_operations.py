@@ -7,10 +7,10 @@ from pathlib import Path
 from shutil import rmtree as shell_rmtree
 
 from ...string_tools import slugify_task_name_for_source_v1
-from ..utils import _normalize_package_name
 from ..utils import get_collection_log_v1
 from ..utils import get_collection_path
 from ..utils import get_log_path
+from ..v2.utils_package_names import normalize_package_name
 from ._TaskCollectPip import _TaskCollectPip
 from .utils import _init_venv_v1
 from fractal_server.app.db import DBSyncSession
@@ -23,7 +23,7 @@ from fractal_server.app.schemas.v1 import TaskReadV1
 from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 async def _pip_install(
@@ -60,12 +60,12 @@ async def _pip_install(
     cmd_install = f"{pip} install {pip_install_str}"
     cmd_inspect = f"{pip} show {task_pkg.package}"
 
-    await execute_command(
+    await execute_command_async(
         cwd=venv_path,
         command=f"{pip} install --upgrade pip",
         logger_name=logger_name,
     )
-    await execute_command(
+    await execute_command_async(
         cwd=venv_path, command=cmd_install, logger_name=logger_name
     )
     if task_pkg.pinned_package_versions:
@@ -82,7 +82,7 @@ async def _pip_install(
                 "Preliminary check: verify that "
                 f"{pinned_pkg_version} is already installed"
             )
-            stdout_inspect = await execute_command(
+            stdout_inspect = await execute_command_async(
                 cwd=venv_path,
                 command=f"{pip} show {pinned_pkg_name}",
                 logger_name=logger_name,
@@ -99,7 +99,7 @@ async def _pip_install(
                     f"({pinned_pkg_version}); "
                     f"install version {pinned_pkg_version}."
                 )
-                await execute_command(
+                await execute_command_async(
                     cwd=venv_path,
                     command=(
                         f"{pip} install "
@@ -114,7 +114,7 @@ async def _pip_install(
                 )
 
     # Extract package installation path from `pip show`
-    stdout_inspect = await execute_command(
+    stdout_inspect = await execute_command_async(
         cwd=venv_path, command=cmd_inspect, logger_name=logger_name
     )
 
@@ -165,8 +165,8 @@ async def _create_venv_install_package(
     """
 
     # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
+    task_pkg.package_name = normalize_package_name(task_pkg.package_name)
+    task_pkg.package = normalize_package_name(task_pkg.package)
 
     python_bin = await _init_venv_v1(
         path=path,
@@ -192,8 +192,8 @@ async def create_package_environment_pip(
     logger = get_logger(logger_name)
 
     # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
+    task_pkg.package_name = normalize_package_name(task_pkg.package_name)
+    task_pkg.package = normalize_package_name(task_pkg.package)
 
     # Only proceed if package, version and manifest attributes are set
     task_pkg.check()

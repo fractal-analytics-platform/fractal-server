@@ -1,0 +1,1 @@
+print("easy task")
