@@ -133,6 +133,20 @@ async def test_task_collection_ssh_from_pypi(
         )
         assert expected_error in str(res.json()["detail"])
 
+        # API FAILURE 3: invalid version
+        package_version = "9.9.9"
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core",
+                package_version=package_version,
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 422
+        assert "No version starting with 9.9.9 found" in res.json()["detail"]
+        debug(res.json())
+
         # BACKGROUND FAILURE 1: existing folder
         package_version = "1.2.0"
         remote_folder = (
@@ -168,20 +182,6 @@ async def test_task_collection_ssh_from_pypi(
             folder=remote_folder,
             safe_root=REMOTE_TASKS_BASE_DIR,
         )
-
-        # BACKGROUND FAILURE 2: invalid version
-        package_version = "9.9.9"
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                package="fractal-tasks-core",
-                package_version=package_version,
-                python_version=current_py_version,
-            ),
-        )
-        assert res.status_code == 422
-        assert "No version starting with 9.9.9 found" in res.json()["detail"]
-        debug(res.json())
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
