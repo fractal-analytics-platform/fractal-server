@@ -117,10 +117,12 @@ def test_DB_class_sync():
     assert DB._sync_session_maker
 
 
-@pytest.mark.skipif(
-    DB_ENGINE == "sqlite", reason="Skip if DB is SQLite, pass if it's Postgres"
-)
 async def test_reusing_id(db):
+    """
+    Tests different database behaviors with incremental IDs.
+
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1991
+    """
 
     num_users = 10
 
@@ -159,5 +161,9 @@ async def test_reusing_id(db):
     # Extract list of IDs
     new_user_id_list = [user.id for user in new_user_list]
 
-    # Assert IDs lists are disjoined
-    assert set(new_user_id_list).isdisjoint(set(user_id_list))
+    if DB_ENGINE == "sqlite":
+        # Assert IDs lists are overlapping
+        assert not set(new_user_id_list).isdisjoint(set(user_id_list))
+    else:
+        # Assert IDs lists are disjoined
+        assert set(new_user_id_list).isdisjoint(set(user_id_list))
