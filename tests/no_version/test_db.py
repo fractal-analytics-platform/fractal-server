@@ -117,9 +117,6 @@ def test_DB_class_sync():
     assert DB._sync_session_maker
 
 
-@pytest.mark.skipif(
-    DB_ENGINE == "sqlite", reason="Skip if DB is SQLite, pass if it's Postgres"
-)
 async def test_reusing_id(db):
 
     num_users = 10

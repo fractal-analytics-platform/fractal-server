@@ -22,9 +22,7 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
-from fractal_server.config import get_settings
 from fractal_server.string_tools import sanitize_string
-from fractal_server.syringe import Inject
 
 router = APIRouter()
 
@@ -46,15 +44,9 @@ async def create_dataset(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    settings = Inject(get_settings)
 
     if dataset.zarr_dir is None:
 
-        if settings.DB_ENGINE == "sqlite":
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{dataset.zarr_dir=} but {settings.DB_ENGINE=}",
-            )
         if user.settings.project_dir is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
