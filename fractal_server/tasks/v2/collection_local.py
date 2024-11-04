@@ -181,6 +181,10 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
+                # Close db connections before long pip related operations
+                # Warning this expunge all ORM objects.
+                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
+                db.close()
 
                 stdout = _customize_and_run_template(
                     script_filename="_2_preliminary_pip_operations.sh",
@@ -313,7 +317,6 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
-
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["freeze"] = stdout_pip_freeze
                 collection_state.data["status"] = CollectionStatusV2.OK

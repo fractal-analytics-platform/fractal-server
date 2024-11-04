@@ -207,4 +207,3 @@ def _refresh_logs(
     collection_state.data["log"] = log_file_path.open("r").read()
     flag_modified(collection_state, "data")
     db.commit()
-    db.close()

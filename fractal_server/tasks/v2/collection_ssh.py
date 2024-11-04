@@ -170,7 +170,7 @@ def collect_package_ssh(
                     log_file_path=log_file_path,
                     db=db,
                 )
-
+                db.close()
                 # Create remote folder (note that because of `parents=True` we
                 # are in the `no error if existing, make parent directories as
                 # needed` scenario)
