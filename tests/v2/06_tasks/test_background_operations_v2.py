@@ -106,7 +106,7 @@ async def test_collect_pip_local_fail_rmtree(
     import fractal_server.tasks.v2.collection_local
 
     def patched_function(*args, **kwargs):
-        raise Exception("Broken rm")
+        raise RuntimeError("Broken rm")
 
     monkeypatch.setattr(
         fractal_server.tasks.v2.collection_local.shutil,
@@ -143,10 +143,16 @@ async def test_collect_pip_local_fail_rmtree(
     await db.refresh(state)
     db.expunge(state)
     # Run background task
-    collect_package_local(
-        task_group=task_group,
-        state_id=state.id,
-    )
+    try:
+        collect_package_local(
+            task_group=task_group,
+            state_id=state.id,
+        )
+    except RuntimeError as e:
+        print(
+            f"Caught exception {e} within the test, which is taking place in "
+            "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
+        )
     # Verify that collection failed
     state = await db.get(CollectionStateV2, state.id)
     assert state.data["status"] == "fail"
