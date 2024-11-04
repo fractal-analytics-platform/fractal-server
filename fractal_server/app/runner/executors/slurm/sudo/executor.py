@@ -160,7 +160,7 @@ class SlurmJob:
         slurm_config: SlurmConfig,
         workflow_task_file_prefix: str | None = None,
         slurm_file_prefix: str | None = None,
-        wftask_file_prefixes: tuple[str, ... | None] = None,
+        wftask_file_prefixes: tuple[str, ...] | None = None,
         single_task_submission: bool = False,
     ):
         if single_task_submission and num_tasks_tot > 1:
@@ -227,7 +227,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         workflow_dir_remote: Path,
         shutdown_file: str | None = None,
         user_cache_dir: str | None = None,
-        common_script_lines: list[str | None] = None,
+        common_script_lines: list[str] | None = None,
         slurm_poll_interval: int | None = None,
         keep_pickle_files: bool = False,
         slurm_account: str | None = None,

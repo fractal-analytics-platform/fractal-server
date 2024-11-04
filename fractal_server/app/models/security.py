@@ -10,6 +10,7 @@
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 from datetime import datetime
+from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import Column
@@ -46,7 +47,7 @@ class OAuthAccount(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: "UserOAuth" | None = Relationship(back_populates="oauth_accounts")
+    user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
     expires_at: int | None = Field(nullable=True)

@@ -89,7 +89,7 @@ class SlurmJob:
         slurm_config: SlurmConfig,
         workflow_task_file_prefix: str | None = None,
         slurm_file_prefix: str | None = None,
-        wftask_file_prefixes: tuple[str, ... | None] = None,
+        wftask_file_prefixes: tuple[str, ...] | None = None,
         single_task_submission: bool = False,
     ):
         if single_task_submission and num_tasks_tot > 1:
