@@ -49,7 +49,7 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
 
     async def __dataset_factory_v2(db: AsyncSession = db, **kwargs):
         defaults = dict(
-            name="My Dataset", project_id=1, zarr_dir=f"{tmp_path}/zarr"
+            name="My Dataset", project_id=1, zarr_dir=f"{tmp_path}/z/a/r/r"
         )
         args = dict(**defaults)
         args.update(kwargs)
