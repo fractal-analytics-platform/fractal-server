@@ -73,6 +73,7 @@ def _customize_and_run_template(
 def collect_package_local(
     *,
     state_id: int,
+    task_group_activity_id: int,
     task_group: TaskGroupV2,
 ) -> None:
     """
@@ -116,6 +117,7 @@ def collect_package_local(
                 logger.error(error_msg)
                 _handle_failure(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=FileExistsError(error_msg),
@@ -156,6 +158,7 @@ def collect_package_local(
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     new_status=CollectionStatusV2.INSTALLING,
                     logger_name=LOGGER_NAME,
                     db=db,
@@ -179,6 +182,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -193,6 +197,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -202,6 +207,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -212,6 +218,7 @@ def collect_package_local(
                 logger.debug("installing - END")
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -219,12 +226,14 @@ def collect_package_local(
                 logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     new_status=CollectionStatusV2.COLLECTING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -235,6 +244,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -276,6 +286,7 @@ def collect_package_local(
                 logger.info("collecting - validated manifest content")
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -291,6 +302,7 @@ def collect_package_local(
                 logger.info("collecting - _prepare_tasks_metadata - end")
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -315,6 +327,7 @@ def collect_package_local(
 
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -348,6 +361,7 @@ def collect_package_local(
 
                 _handle_failure(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=collection_e,

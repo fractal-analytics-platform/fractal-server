@@ -29,6 +29,7 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2.task import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
@@ -237,10 +238,16 @@ async def collect_tasks_pip(
     state = CollectionStateV2(
         data=collection_state_data, taskgroupv2_id=task_group.id
     )
+    task_group_activity = TaskGroupActivityV2(
+        taskgroupv2_id=task_group.id, status=CollectionStatusV2.PENDING
+    )
     db.add(state)
     await db.commit()
     await db.refresh(state)
 
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
     logger = set_logger(logger_name="collect_tasks_pip")
 
     # END of SSH/non-SSH common part
@@ -274,6 +281,7 @@ async def collect_tasks_pip(
         background_tasks.add_task(
             collect_package_local,
             state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
             task_group=task_group,
         )
     logger.debug(

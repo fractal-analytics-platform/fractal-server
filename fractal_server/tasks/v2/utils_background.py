@@ -7,6 +7,7 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2.task import TaskGroupActivityV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
@@ -17,6 +18,7 @@ from fractal_server.logger import reset_logger_handlers
 def _set_collection_state_data_status(
     *,
     state_id: int,
+    task_group_activity_id: int,
     new_status: CollectionStatusV2,
     logger_name: str,
     db: DBSyncSession,
@@ -25,13 +27,17 @@ def _set_collection_state_data_status(
     logger.debug(f"{state_id=} - set state.data['status'] to {new_status}")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["status"] = CollectionStatusV2(new_status)
+    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+    task_group_activity.status = CollectionStatusV2(new_status)
     flag_modified(collection_state, "data")
+    db.add(task_group_activity)
     db.commit()
 
 
 def _set_collection_state_data_log(
     *,
     state_id: int,
+    task_group_activity_id: int,
     new_log: str,
     logger_name: str,
     db: DBSyncSession,
@@ -40,7 +46,10 @@ def _set_collection_state_data_log(
     logger.debug(f"{state_id=} - set state.data['log']")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["log"] = new_log
+    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+    task_group_activity.log = new_log
     flag_modified(collection_state, "data")
+    db.add(task_group_activity)
     db.commit()
 
 
@@ -61,6 +70,7 @@ def _set_collection_state_data_info(
 
 def _handle_failure(
     state_id: int,
+    task_group_activity_id: int,
     logger_name: str,
     exception: Exception,
     db: DBSyncSession,
@@ -72,6 +82,7 @@ def _handle_failure(
 
     _set_collection_state_data_status(
         state_id=state_id,
+        task_group_activity_id=task_group_activity_id,
         new_status=CollectionStatusV2.FAIL,
         logger_name=logger_name,
         db=db,
@@ -81,6 +92,7 @@ def _handle_failure(
 
     _set_collection_state_data_log(
         state_id=state_id,
+        task_group_activity_id=task_group_activity_id,
         new_log=new_log,
         logger_name=logger_name,
         db=db,
@@ -109,6 +121,22 @@ def _handle_failure(
         collection_state.taskgroupv2_id = None
         db.add(collection_state)
     logger.info("End of CollectionStateV2 cascade operations.")
+
+    logger.info("Start of TaskGroupActivityV2 cascade operations.")
+    stm = select(TaskGroupActivityV2).where(
+        TaskGroupActivityV2.taskgroupv2_id == task_group_id
+    )
+    res = db.execute(stm)
+    task_group_activity_list = res.scalars().all()
+    for task_group_activity in task_group_activity_list:
+        logger.info(
+            f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
+            ".taskgroupv2_id to None."
+        )
+        task_group_activity.taskgroupv2_id = None
+        db.add(task_group_activity)
+    logger.info("End of TaskGroupActivityV2 cascade operations.")
+
     task_group = db.get(TaskGroupV2, task_group_id)
     db.delete(task_group)
     db.commit()
@@ -197,6 +225,7 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
 def _refresh_logs(
     *,
     state_id: int,
+    task_group_activity_id: int,
     log_file_path: Path,
     db: DBSyncSession,
 ) -> None:
@@ -205,5 +234,7 @@ def _refresh_logs(
     """
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["log"] = log_file_path.open("r").read()
+    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+    task_group_activity.log = log_file_path.open("r").read()
     flag_modified(collection_state, "data")
     db.commit()
