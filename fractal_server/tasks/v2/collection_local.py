@@ -68,7 +68,7 @@ def _customize_and_run_template(
     return stdout
 
 
-async def collect_package_local(
+def collect_package_local(
     *,
     state_id: int,
     task_group: TaskGroupV2,

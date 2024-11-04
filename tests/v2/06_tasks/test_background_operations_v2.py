@@ -82,7 +82,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     # Create task_group.path
     path.mkdir()
     # Run background task
-    await collect_package_local(
+    collect_package_local(
         task_group=task_group,
         state_id=state.id,
     )
@@ -129,7 +129,7 @@ async def test_collect_pip_local_fail_rmtree(
         await db.refresh(state)
         db.expunge(state)
         # Run background task
-        await collect_package_local(
+        collect_package_local(
             task_group=task_group,
             state_id=state.id,
         )
