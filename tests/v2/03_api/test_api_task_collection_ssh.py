@@ -388,5 +388,6 @@ async def test_task_collection_ssh_failure(
         state_data = res.json()["data"]
         assert state_data["status"] == CollectionStatusV2.FAIL
         debug(state_data["log"])
+        assert "Removing folder failed" in state_data["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
