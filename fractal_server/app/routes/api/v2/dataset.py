@@ -22,6 +22,8 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.string_tools import sanitize_string
+from fractal_server.urls import normalize_url
 
 router = APIRouter()
 
@@ -40,14 +42,45 @@ async def create_dataset(
     """
     Add new dataset to current project
     """
-    await _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
-    db.add(db_dataset)
-    await db.commit()
-    await db.refresh(db_dataset)
-    await db.close()
+
+    if dataset.zarr_dir is None:
+
+        if user.settings.project_dir is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Both 'dataset.zarr_dir' and 'user.settings.project_dir' "
+                    "are null"
+                ),
+            )
+
+        db_dataset = DatasetV2(
+            project_id=project_id,
+            zarr_dir="__PLACEHOLDER__",
+            **dataset.dict(exclude={"zarr_dir"}),
+        )
+        db.add(db_dataset)
+        await db.commit()
+        await db.refresh(db_dataset)
+        path = (
+            f"{user.settings.project_dir}/fractal/"
+            f"{project_id}_{sanitize_string(project.name)}/"
+            f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
+        )
+        normalized_path = normalize_url(path)
+        db_dataset.zarr_dir = normalized_path
+
+        db.add(db_dataset)
+        await db.commit()
+        await db.refresh(db_dataset)
+    else:
+        db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+        db.add(db_dataset)
+        await db.commit()
+        await db.refresh(db_dataset)
 
     return db_dataset
 
