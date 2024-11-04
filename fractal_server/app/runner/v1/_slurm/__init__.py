@@ -19,7 +19,6 @@ Executor objects.
 from pathlib import Path
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from ...async_wrap import async_wrap
 from ...executors.slurm.sudo.executor import FractalSlurmExecutor
@@ -57,7 +56,7 @@ def _process_workflow(
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     user_cache_dir: str,
-    worker_init: Optional[Union[str, list[str]]] = None,
+    worker_init: Optional[str | list[str]] = None,
 ) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend

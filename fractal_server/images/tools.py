@@ -2,12 +2,11 @@ from copy import copy
 from typing import Any
 from typing import Literal
 from typing import Optional
-from typing import Union
 
 from fractal_server.images import Filters
 
 
-ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
+ImageSearch = dict[Literal["image", "index"], int | dict[str, Any]]
 
 
 def find_image_by_zarr_url(

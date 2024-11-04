@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -159,7 +158,7 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
     input_filters: Optional[Filters] = None
 
-    task: Union[TaskImportV2, TaskImportV2Legacy]
+    task: TaskImportV2 | TaskImportV2Legacy
 
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdictkeys("meta_non_parallel")

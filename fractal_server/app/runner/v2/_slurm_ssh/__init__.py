@@ -19,7 +19,6 @@ Executor objects.
 from pathlib import Path
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from .....ssh._fabric import FractalSSH
 from ....models.v2 import DatasetV2
@@ -46,7 +45,7 @@ def _process_workflow(
     first_task_index: int,
     last_task_index: int,
     fractal_ssh: FractalSSH,
-    worker_init: Optional[Union[str, list[str]]] = None,
+    worker_init: Optional[str | list[str]] = None,
 ) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend

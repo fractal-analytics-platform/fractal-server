@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import validator
 from sqlalchemy import Column
@@ -88,7 +87,7 @@ class WorkflowTask(_WorkflowTaskBaseV1, SQLModel, table=True):
         return self.task.is_parallel
 
     @property
-    def parallelization_level(self) -> Union[str, None]:
+    def parallelization_level(self) -> str | None:
         return self.task.parallelization_level
 
 

@@ -15,7 +15,6 @@ This module provides logging utilities
 import logging
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from .config import get_settings
 from .syringe import Inject
@@ -57,7 +56,7 @@ def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
 def set_logger(
     logger_name: str,
     *,
-    log_file_path: Optional[Union[str, Path]] = None,
+    log_file_path: Optional[str | Path] = None,
 ) -> logging.Logger:
     """
     Set up a `fractal-server` logger

@@ -20,7 +20,6 @@ import sys
 from typing import Literal
 from typing import Optional
 from typing import Type
-from typing import Union
 
 import cloudpickle
 
@@ -61,8 +60,7 @@ class FractalVersionMismatch(RuntimeError):
 
 def _check_versions_mismatch(
     server_versions: dict[
-        Literal["python", "fractal_server", "cloudpickle"],
-        Union[str, tuple[int]],
+        Literal["python", "fractal_server", "cloudpickle"], str | tuple[int]
     ]
 ):
     """

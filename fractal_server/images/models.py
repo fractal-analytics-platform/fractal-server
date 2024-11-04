@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -52,7 +51,7 @@ class SingleImageTaskOutput(SingleImageBase):
     @validator("attributes")
     def validate_attributes(
         cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
+    ) -> dict[str, int | float | str | bool | None]:
         for key, value in v.items():
             if not isinstance(value, (int, float, str, bool, type(None))):
                 raise ValueError(
@@ -71,7 +70,7 @@ class SingleImage(SingleImageBase):
     @validator("attributes")
     def validate_attributes(
         cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool]]:
+    ) -> dict[str, int | float | str | bool]:
         for key, value in v.items():
             if not isinstance(value, (int, float, str, bool)):
                 raise ValueError(
@@ -93,7 +92,7 @@ class SingleImageUpdate(BaseModel):
     @validator("attributes")
     def validate_attributes(
         cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool]]:
+    ) -> dict[str, int | float | str | bool]:
         if v is not None:
             # validate keys
             valdictkeys("attributes")(v)
@@ -123,7 +122,7 @@ class Filters(BaseModel, extra=Extra.forbid):
     @validator("attributes")
     def validate_attributes(
         cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
+    ) -> dict[str, int | float | str | bool | None]:
         for key, value in v.items():
             if not isinstance(value, (int, float, str, bool, type(None))):
                 raise ValueError(

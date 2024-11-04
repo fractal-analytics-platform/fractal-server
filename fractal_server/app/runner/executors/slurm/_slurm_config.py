@@ -15,7 +15,6 @@ Submodule to handle the SLURM configuration for a WorkflowTask
 import json
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -56,7 +55,7 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
 
     partition: Optional[str]
     cpus_per_task: Optional[int]
-    mem: Optional[Union[int, str]]
+    mem: Optional[int | str]
     constraint: Optional[str]
     gres: Optional[str]
     time: Optional[str]
@@ -85,8 +84,8 @@ class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
 
     target_cpus_per_job: int
     max_cpus_per_job: int
-    target_mem_per_job: Union[int, str]
-    max_mem_per_job: Union[int, str]
+    target_mem_per_job: int | str
+    max_mem_per_job: int | str
     target_num_jobs: int
     max_num_jobs: int
 
@@ -400,7 +399,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         return lines
 
 
-def _parse_mem_value(raw_mem: Union[str, int]) -> int:
+def _parse_mem_value(raw_mem: str | int) -> int:
     """
     Convert a memory-specification string into an integer (in MB units), or
     simply return the input if it is already an integer.

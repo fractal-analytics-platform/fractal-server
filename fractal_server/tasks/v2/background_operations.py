@@ -7,7 +7,6 @@ from pathlib import Path
 from shutil import rmtree as shell_rmtree
 from tempfile import TemporaryDirectory
 from typing import Optional
-from typing import Union
 from zipfile import ZipFile
 
 from sqlalchemy.orm import Session as DBSyncSession
@@ -227,7 +226,7 @@ async def _download_package(
     python_version: str,
     pkg_name: str,
     version: str,
-    dest: Union[str, Path],
+    dest: str | Path,
 ) -> Path:
     """
     Download package to destination and return wheel-file path.

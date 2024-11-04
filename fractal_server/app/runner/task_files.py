@@ -1,11 +1,10 @@
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from fractal_server.string_tools import sanitize_string
 
 
-def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
+def task_subfolder_name(order: int | str, task_name: str) -> str:
     """
     Get name of task-specific subfolder.
 

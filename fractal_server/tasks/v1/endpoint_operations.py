@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from typing import Optional
-from typing import Union
 from zipfile import ZipFile
 
 from ..utils import _normalize_package_name
@@ -20,7 +19,7 @@ FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 async def download_package(
     *,
     task_pkg: _TaskCollectPipV1,
-    dest: Union[str, Path],
+    dest: str | Path,
 ) -> Path:
     """
     Download package to destination
