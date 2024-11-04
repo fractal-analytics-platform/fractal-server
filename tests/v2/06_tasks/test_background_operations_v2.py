@@ -129,10 +129,11 @@ async def test_collect_pip_local_fail_rmtree(
         await db.refresh(state)
         db.expunge(state)
         # Run background task
-        collect_package_local(
-            task_group=task_group,
-            state_id=state.id,
-        )
+        with pytest.raises(Exception):
+            collect_package_local(
+                task_group=task_group,
+                state_id=state.id,
+            )
         # Verify that collection failed
         state = await db.get(CollectionStateV2, state.id)
         assert state.data["status"] == "fail"
