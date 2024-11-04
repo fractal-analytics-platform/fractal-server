@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.2 (Unreleased)
+
+* API:
+    * Combine the `args_schema_parallel` and `args_schema_non_parallel` query parameters in `GET /api/v2/task/` into a single parameter `args_schema` (\#1998).
+
 # 2.7.1
 
 > WARNING: As of this version, all extras for `pip install` are deprecated and
@@ -68,9 +73,9 @@
         * Stop logging warnings for non-common tasks in workflow export (\#1893).
         * Drop `WorkflowTaskCreateV2.order` (\#1906).
         * Update endpoints for workflow import/export  (\#1925, \#1939, \#1960).
-    * Datasets
+    * Datasets:
         * Remove `TaskDumpV2.owner` attribute (\#1909).
-    * Jobs
+    * Jobs:
         * Prevent job submission if includes non-active or non-accessible tasks (\#1817).
         * Remove rate limit for `POST /project/{project_id}/job/submit/` (\#1944).
     * Admin:
