@@ -61,18 +61,7 @@ async def test_task_get_list(
         assert data[2]["args_schema_non_parallel"] == dict(a=1)
         assert data[2]["args_schema_parallel"] == dict(b=2)
 
-        res = await client.get(f"{PREFIX}/?args_schema_non_parallel=false")
-        assert res.json()[2]["args_schema_non_parallel"] is None
-        assert res.json()[2]["args_schema_parallel"] == dict(b=2)
-
-        res = await client.get(f"{PREFIX}/?args_schema_parallel=false")
-        assert res.json()[2]["args_schema_non_parallel"] == dict(a=1)
-        assert res.json()[2]["args_schema_parallel"] is None
-
-        res = await client.get(
-            f"{PREFIX}/"
-            "?args_schema_parallel=false&args_schema_non_parallel=False"
-        )
+        res = await client.get(f"{PREFIX}/?args_schema=false")
         assert res.json()[2]["args_schema_non_parallel"] is None
         assert res.json()[2]["args_schema_parallel"] is None
 
