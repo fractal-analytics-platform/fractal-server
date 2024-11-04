@@ -302,6 +302,11 @@ async def test_task_collection_ssh_failure(
     testdata_path,
     monkeypatch,
 ):
+    """
+    Test exception handling, including the case where `remove_folder` fails
+    _during_ exception handling.
+    """
+
     credentials = dict(
         host=slurmlogin_ip,
         user=SLURM_USER,
@@ -368,8 +373,10 @@ async def test_task_collection_ssh_failure(
         # Patch ssh.remove_folder
         import fractal_server.tasks.v2.collection_ssh
 
+        ERROR_MSG = "Could not remove folder!"
+
         def patched_remove_folder(*args, **kwargs):
-            raise RuntimeError("fake error")
+            raise RuntimeError(ERROR_MSG)
 
         monkeypatch.setattr(
             fractal_server.tasks.v2.collection_ssh.FractalSSH,
@@ -389,5 +396,6 @@ async def test_task_collection_ssh_failure(
         assert state_data["status"] == CollectionStatusV2.FAIL
         debug(state_data["log"])
         assert "Removing folder failed" in state_data["log"]
+        assert ERROR_MSG in state_data["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)

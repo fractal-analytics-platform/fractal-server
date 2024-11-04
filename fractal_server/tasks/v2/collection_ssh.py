@@ -333,7 +333,7 @@ def collect_package_ssh(
                         )
                     except Exception as e_rm:
                         logger.error(
-                            "Removing folder failed.\n"
+                            "Removing folder failed. "
                             f"Original error:\n{str(e_rm)}"
                         )
                 else:
