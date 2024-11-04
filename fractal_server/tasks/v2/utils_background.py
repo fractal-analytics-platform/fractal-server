@@ -66,9 +66,8 @@ def _handle_failure(
     exception: Exception,
     db: DBSyncSession,
     task_group_id: int,
-    log_file_path: Optional[Path] = None,
+    log_file_path: Path,
 ):
-
     logger = get_logger(logger_name)
     logger.error(f"Task collection failed. Original error: {str(exception)}")
 
@@ -79,10 +78,7 @@ def _handle_failure(
         db=db,
     )
 
-    if log_file_path is not None:
-        new_log = log_file_path.open().read()
-    else:
-        new_log = str(exception)
+    new_log = log_file_path.open("r").read()
 
     _set_collection_state_data_log(
         state_id=state_id,

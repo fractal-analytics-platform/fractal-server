@@ -90,35 +90,39 @@ def collect_package_local(
         task_group:
     """
 
-    # Check that the task_group path does not exist
-    if Path(task_group.path).exists():
-        with next(get_sync_db()) as db:
-            _handle_failure(
-                state_id=state_id,
-                logger_name="task_collection_local",
-                exception=FileExistsError(
-                    f"{task_group.path} already exists.",
-                ),
-                db=db,
-                task_group_id=task_group.id,
-            )
-            return
-
     # Create the task_group path
     with TemporaryDirectory() as tmpdir:
 
+        # Setup logger in tmpdir
         LOGGER_NAME = "task_collection_local"
         log_file_path = get_log_path(Path(tmpdir))
         logger = set_logger(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
+
+        # Log some info
         logger.debug("START")
         for key, value in task_group.model_dump().items():
             logger.debug(f"task_group.{key}: {value}")
 
-        # Open a DB session soon, since it is needed for updating `state`
+        # Open a DB session
         with next(get_sync_db()) as db:
+
+            # Check that the task_group path does not exist
+            if Path(task_group.path).exists():
+                error_msg = f"{task_group.path} already exists."
+                logger.error(error_msg)
+                _handle_failure(
+                    state_id=state_id,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileExistsError(error_msg),
+                    db=db,
+                    task_group_id=task_group.id,
+                )
+                return
+
             try:
                 # Prepare replacements for task-collection scripts
                 python_bin = get_python_interpreter_v2(
@@ -155,12 +159,12 @@ def collect_package_local(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
-                # Avoid keeping the db session open as we start some possibly
-                # long operations that do not use the db
-                db.close()
 
+                # Create main path for task group
                 Path(task_group.path).mkdir(parents=True)
+                logger.debug(f"Created {task_group.path}")
 
+                # Create venv
                 logger.debug(
                     (f"START - Create python venv {task_group.venv_path}")
                 )
@@ -168,9 +172,7 @@ def collect_package_local(
                     f"python{task_group.python_version} -m venv "
                     f"{task_group.venv_path} --copies"
                 )
-
                 stdout = execute_command_sync(command=cmd)
-
                 logger.debug(
                     (f"END - Create python venv folder {task_group.venv_path}")
                 )
@@ -250,7 +252,7 @@ def collect_package_local(
                 python_bin = pkg_attrs.pop("python_bin")
                 package_root_parent = pkg_attrs.pop("package_root_parent")
 
-                # FIXME : Use more robust logic to determine `package_root`.
+                # TODO : Use more robust logic to determine `package_root`.
                 # Examples: use `importlib.util.find_spec`, or parse the output
                 # of `pip show --files {package_name}`.
                 package_name_underscore = package_name.replace("-", "_")
@@ -261,7 +263,6 @@ def collect_package_local(
                 # Read and validate manifest file
                 manifest_path = pkg_attrs.pop("manifest_path")
                 logger.info(f"collecting - now loading {manifest_path=}")
-
                 with open(manifest_path) as json_data:
                     pkg_manifest_dict = json.load(json_data)
                 logger.info(f"collecting - loaded {manifest_path=}")
@@ -307,8 +308,13 @@ def collect_package_local(
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
 
+                _refresh_logs(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
+
                 collection_state = db.get(CollectionStateV2, state_id)
-                collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
                 collection_state.data["status"] = CollectionStatusV2.OK
                 # FIXME: The `task_list` key is likely not used by any client,
@@ -350,6 +356,7 @@ def collect_package_local(
                 _handle_failure(
                     state_id=state_id,
                     logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
                     exception=collection_e,
                     db=db,
                     task_group_id=task_group.id,

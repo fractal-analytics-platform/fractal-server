@@ -328,6 +328,7 @@ def collect_package_ssh(
                     task_group_id=task_group.id,
                 )
                 if remove_venv_folder_upon_failure:
+                    # FIXME: introduce nested try/except
                     try:
                         logger.info(
                             f"Now delete remote folder {task_group.path}"
