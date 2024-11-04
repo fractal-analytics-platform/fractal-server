@@ -43,3 +43,5 @@ tests/data/slurm_docker_images/*/fractal_server_local.tar.gz
 tests/data/slurm_docker_images/*/public_ssh_key
 tests/data/ssh_config.json
 *.egg-info
+
+.DS_Store
