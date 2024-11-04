@@ -13,7 +13,8 @@ def test_TaskCollectPipV2():
     Check that leading/trailing whitespace characters were removed
     """
     collection = TaskCollectPipV2(
-        package="  package  ", package_version="  1.2.3  "
+        package="  package  ",
+        package_version="  1.2.3  ",
     )
     assert collection.package == "package"
     assert collection.package_version == "1.2.3"
@@ -22,6 +23,11 @@ def test_TaskCollectPipV2():
         ValidationError, match="Local-package path must be absolute"
     ):
         TaskCollectPipV2(package="not/absolute.whl")
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(
+            package="pkg", pinned_package_versions={";maliciouscmd": "1.0.0"}
+        )
 
 
 async def test_TaskCollectCustomV2(testdata_path):
