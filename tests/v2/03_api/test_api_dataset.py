@@ -8,6 +8,8 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.images import SingleImage
+from fractal_server.string_tools import sanitize_string
+from fractal_server.urls import normalize_url
 
 PREFIX = "api/v2"
 
@@ -230,7 +232,13 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
         )
+        assert res.json()["zarr_dir"] == normalize_url(
+            f"{user.settings.project_dir}/fractal/"
+            f"{prj.id}_{sanitize_string(prj.name)}/"
+            f"{res.json()['id']}_{sanitize_string(res.json()['name'])}"
+        )
         assert res.status_code == 201
+
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
         res = await client.post(
