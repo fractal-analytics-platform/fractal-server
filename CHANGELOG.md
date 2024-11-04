@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.8.1 (Unreleased)
+
+* Internal:
+    * Replace each `Union[X, Y]` with `X | Y` and each `Optional[X]` with `X | None` (\#2000).
+
 # 2.8.0
 
 * Task group
@@ -14,8 +19,6 @@
     * Add `project_dir` attribute to `UserSettings` (\#1990).
     * Set a default for `DatasetV2.zarr_dir` (\#1990).
     * Combine the `args_schema_parallel` and `args_schema_non_parallel` query parameters in `GET /api/v2/task/` into a single parameter `args_schema` (\#1998).
-* Internal:
-    * Replace each `Union[X, Y]` with `X | Y` and each `Optional[X]` with `X | None` (\#2000).
 
 # 2.7.1
 
