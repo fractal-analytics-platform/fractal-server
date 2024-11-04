@@ -95,47 +95,60 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
 
 
 async def test_collect_pip_local_fail_rmtree(
-    tmp_path, db, first_user, testdata_path, current_py_version
+    tmp_path,
+    db,
+    first_user,
+    testdata_path,
+    current_py_version,
+    monkeypatch,
 ):
-    from unittest.mock import patch
 
-    with patch("shutil.rmtree", side_effect=Exception("Broken rm")):
-        # Prepare db objects
-        path = tmp_path / "rmtree-error"
-        task_group = TaskGroupV2(
-            pkg_name="fractal-tasks-mock",
-            version="0.0.1",
-            origin="local",
-            wheel_path=(
-                testdata_path.parent
-                / (
-                    "v2/fractal_tasks_fail/invalid_manifest/dist/"
-                    "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-                )
-            ).as_posix(),
-            python_version=current_py_version,
-            path=path.as_posix(),
-            venv_path=(path / "venv").as_posix(),
-            user_id=first_user.id,
-        )
-        debug(task_group)
-        db.add(task_group)
-        await db.commit()
-        await db.refresh(task_group)
-        db.expunge(task_group)
-        state = CollectionStateV2(taskgroupv2_id=task_group.id)
-        db.add(state)
-        await db.commit()
-        await db.refresh(state)
-        db.expunge(state)
-        # Run background task
-        with pytest.raises(Exception):
-            collect_package_local(
-                task_group=task_group,
-                state_id=state.id,
+    import fractal_server.tasks.v2.collection_local
+
+    def patched_function(*args, **kwargs):
+        raise Exception("Broken rm")
+
+    monkeypatch.setattr(
+        fractal_server.tasks.v2.collection_local.shutil,
+        "rmtree",
+        patched_function,
+    )
+
+    # Prepare db objects
+    path = tmp_path / "rmtree-error"
+    task_group = TaskGroupV2(
+        pkg_name="fractal-tasks-mock",
+        version="0.0.1",
+        origin="local",
+        wheel_path=(
+            testdata_path.parent
+            / (
+                "v2/fractal_tasks_fail/invalid_manifest/dist/"
+                "fractal_tasks_mock-0.0.1-py3-none-any.whl"
             )
-        # Verify that collection failed
-        state = await db.get(CollectionStateV2, state.id)
-        assert state.data["status"] == "fail"
-        assert "Broken rm" in state.data["log"]
-        assert path.exists()
+        ).as_posix(),
+        python_version=current_py_version,
+        path=path.as_posix(),
+        venv_path=(path / "venv").as_posix(),
+        user_id=first_user.id,
+    )
+    debug(task_group)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+    state = CollectionStateV2(taskgroupv2_id=task_group.id)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    db.expunge(state)
+    # Run background task
+    collect_package_local(
+        task_group=task_group,
+        state_id=state.id,
+    )
+    # Verify that collection failed
+    state = await db.get(CollectionStateV2, state.id)
+    assert state.data["status"] == "fail"
+    assert "Broken rm" in state.data["log"]
+    assert path.exists()

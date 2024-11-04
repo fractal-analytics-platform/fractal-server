@@ -317,10 +317,9 @@ def collect_package_ssh(
                 logger.debug("finalising - END")
                 logger.debug("END")
 
-            except Exception as e:
+            except Exception as collection_e:
                 # Delete corrupted package dir
                 if remove_venv_folder_upon_failure:
-                    # FIXME: introduce nested try/except
                     try:
                         logger.info(
                             f"Now delete remote folder {task_group.path}"
@@ -332,32 +331,22 @@ def collect_package_ssh(
                         logger.info(
                             f"Deleted remoted folder {task_group.path}"
                         )
-                    except Exception as e:
+                    except Exception as e_rm:
                         logger.error(
-                            f"Removing remote folder failed.\n"
-                            f"Original error:\n{str(e)}"
+                            "Removing folder failed. "
+                            f"Original error:\n{str(e_rm)}"
                         )
-
-                    _handle_failure(
-                        state_id=state_id,
-                        log_file_path=log_file_path,
-                        logger_name=LOGGER_NAME,
-                        exception=e,
-                        db=db,
-                        task_group_id=task_group.id,
-                    )
-
                 else:
                     logger.info(
                         "Not trying to remove remote folder "
                         f"{task_group.path}."
                     )
-                    _handle_failure(
-                        state_id=state_id,
-                        log_file_path=log_file_path,
-                        logger_name=LOGGER_NAME,
-                        exception=e,
-                        db=db,
-                        task_group_id=task_group.id,
-                    )
-                return
+                _handle_failure(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    logger_name=LOGGER_NAME,
+                    exception=collection_e,
+                    db=db,
+                    task_group_id=task_group.id,
+                )
+    return
