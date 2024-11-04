@@ -98,7 +98,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     pip = venv_path / "venv/bin/pip"
     await _init_venv_v1(path=venv_path, logger_name=LOG)
 
-    async def _aux(*, pin: dict[str, str | None] = None) -> str:
+    async def _aux(*, pin: dict[str, str] | None = None) -> str:
         """pip install with pin and return version for EXTRA package"""
         await _pip_install(
             venv_path=venv_path,

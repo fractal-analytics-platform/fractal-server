@@ -44,7 +44,7 @@ def _process_workflow(
     first_task_index: int,
     last_task_index: int,
     fractal_ssh: FractalSSH,
-    worker_init: str | list[str | None] = None,
+    worker_init: str | list[str] | None = None,
 ) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend

@@ -47,8 +47,8 @@ class _TaskManifestBaseV1(BaseModel):
     executable: str
     input_type: str
     output_type: str
-    meta: dict[str, Any | None] = Field(default_factory=dict)
-    args_schema: dict[str, Any | None]
+    meta: dict[str, Any] | None = Field(default_factory=dict)
+    args_schema: dict[str, Any] | None
     docs_info: str | None
     docs_link: HttpUrl | None
 

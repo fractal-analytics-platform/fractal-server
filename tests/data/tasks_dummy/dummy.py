@@ -41,7 +41,7 @@ def dummy(
     *,
     input_paths: list[str],
     output_path: str,
-    metadata: Dict[str, Any | None] = None,
+    metadata: Dict[str, Any] | None = None,
     # arguments of this task
     message: str = "default message",
     index: int = 0,

@@ -29,7 +29,7 @@ def valstr(attribute: str, accept_none: bool = False):
 
 
 def valdictkeys(attribute: str):
-    def val(d: dict[str, Any | None]) -> dict[str, Any | None]:
+    def val(d: dict[str, Any] | None) -> dict[str, Any] | None:
         """
         Apply valstr to every key of the dictionary, and fail if there are
         identical keys.

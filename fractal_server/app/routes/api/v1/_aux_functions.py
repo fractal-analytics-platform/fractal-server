@@ -398,8 +398,8 @@ async def _workflow_insert_task(
     *,
     workflow_id: int,
     task_id: int,
-    args: dict[str, Any | None] = None,
-    meta: dict[str, Any | None] = None,
+    args: dict[str, Any] | None = None,
+    meta: dict[str, Any] | None = None,
     order: int | None = None,
     db: AsyncSession,
 ) -> WorkflowTask:

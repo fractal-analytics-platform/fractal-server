@@ -54,9 +54,9 @@ class TaskUpdateV1(_TaskBaseV1):
     output_type: str | None
     command: str | None
     source: str | None
-    meta: dict[str, Any | None]
+    meta: dict[str, Any] | None
     version: str | None
-    args_schema: dict[str, Any | None]
+    args_schema: dict[str, Any] | None
     args_schema_version: str | None
     docs_info: str | None
     docs_link: HttpUrl | None
@@ -114,10 +114,10 @@ class TaskReadV1(_TaskBaseV1):
     command: str
     input_type: str
     output_type: str
-    meta: dict[str, Any | None] = Field(default={})
+    meta: dict[str, Any] | None = Field(default={})
     owner: str | None
     version: str | None
-    args_schema: dict[str, Any | None]
+    args_schema: dict[str, Any] | None
     args_schema_version: str | None
     docs_info: str | None
     docs_link: HttpUrl | None
@@ -144,9 +144,9 @@ class TaskCreateV1(_TaskBaseV1):
     command: str
     input_type: str
     output_type: str
-    meta: dict[str, Any | None] = Field(default={})
+    meta: dict[str, Any] | None = Field(default={})
     version: str | None
-    args_schema: dict[str, Any | None]
+    args_schema: dict[str, Any] | None
     args_schema_version: str | None
     docs_info: str | None
     docs_link: HttpUrl | None

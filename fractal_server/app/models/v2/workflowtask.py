@@ -19,10 +19,10 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     workflow_id: int = Field(foreign_key="workflowv2.id")
     order: int | None
-    meta_parallel: dict[str, Any | None] = Field(sa_column=Column(JSON))
-    meta_non_parallel: dict[str, Any | None] = Field(sa_column=Column(JSON))
-    args_parallel: dict[str, Any | None] = Field(sa_column=Column(JSON))
-    args_non_parallel: dict[str, Any | None] = Field(sa_column=Column(JSON))
+    meta_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    meta_non_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    args_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    args_non_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
 
     input_filters: dict[
         Literal["attributes", "types"], dict[str, Any]

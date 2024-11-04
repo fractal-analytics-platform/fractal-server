@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 
 class A(BaseModel):
-    x: dict[str, bool | str | None] = {}
+    x: dict[str, bool | str] | None = {}
     # NOTE the order of (bool, str, None) is important
     # even if `bool(2)==True` and `bool(None)==False`, we get "2" and None
 

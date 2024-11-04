@@ -59,7 +59,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobReadV2 | None]:
+) -> list[JobReadV2] | None:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -143,7 +143,7 @@ async def get_job_list(
     user: UserOAuth = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobReadV2 | None]:
+) -> list[JobReadV2] | None:
     """
     Get job list for given project
     """

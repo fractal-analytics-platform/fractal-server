@@ -35,7 +35,7 @@ async def get_workflow_list(
     project_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowReadV2 | None]:
+) -> list[WorkflowReadV2] | None:
     """
     Get workflow list for given project
     """

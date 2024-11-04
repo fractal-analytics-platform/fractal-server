@@ -40,7 +40,7 @@ def dummy_parallel(
     input_paths: list[str],
     output_path: str,
     component: str,
-    metadata: Dict[str, Any | None] = None,
+    metadata: Dict[str, Any] | None = None,
     # arguments of this task
     message: str = "default message",
     raise_error: bool = False,

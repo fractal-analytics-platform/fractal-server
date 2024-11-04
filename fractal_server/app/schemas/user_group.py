@@ -32,7 +32,7 @@ class UserGroupRead(BaseModel):
     id: int
     name: str
     timestamp_created: datetime
-    user_ids: list[int | None] = None
+    user_ids: list[int] | None = None
     viewer_paths: list[str]
 
 
@@ -67,7 +67,7 @@ class UserGroupUpdate(BaseModel, extra=Extra.forbid):
     """
 
     new_user_ids: list[int] = Field(default_factory=list)
-    viewer_paths: list[str | None] = None
+    viewer_paths: list[str] | None = None
 
     _val_unique = validator("new_user_ids", allow_reuse=True)(
         val_unique_list("new_user_ids")

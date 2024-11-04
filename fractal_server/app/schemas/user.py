@@ -39,7 +39,7 @@ class UserRead(schemas.BaseUser[int]):
     """
 
     username: str | None
-    group_ids_names: list[tuple[int, str | None]] = None
+    group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
 
 
@@ -81,7 +81,7 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
 
 
 class UserUpdateWithNewGroupIds(UserUpdate):
-    new_group_ids: list[int | None] = None
+    new_group_ids: list[int] | None = None
 
     _val_unique = validator("new_group_ids", allow_reuse=True)(
         val_unique_list("new_group_ids")

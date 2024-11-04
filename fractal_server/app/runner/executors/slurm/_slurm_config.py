@@ -59,8 +59,8 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
     gres: str | None
     time: str | None
     account: str | None
-    extra_lines: list[str | None]
-    pre_submission_commands: list[str | None]
+    extra_lines: list[str] | None
+    pre_submission_commands: list[str] | None
     gpus: str | None
 
 
@@ -137,7 +137,7 @@ class SlurmConfigFile(BaseModel, extra=Extra.forbid):
     default_slurm_config: _SlurmConfigSet
     gpu_slurm_config: _SlurmConfigSet | None
     batching_config: _BatchingConfigSet
-    user_local_exports: dict[str, str | None]
+    user_local_exports: dict[str, str] | None
 
 
 def load_slurm_config_file(
@@ -263,10 +263,10 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble
-    extra_lines: list[str | None] = Field(default_factory=list)
+    extra_lines: list[str] | None = Field(default_factory=list)
 
     # Variables that will be `export`ed in the SLURM submission script
-    user_local_exports: dict[str, str | None] = None
+    user_local_exports: dict[str, str] | None = None
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     tasks_per_job: int | None = None

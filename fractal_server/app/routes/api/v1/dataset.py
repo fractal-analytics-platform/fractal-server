@@ -73,7 +73,7 @@ async def read_dataset_list(
     history: bool = True,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetReadV1 | None]:
+) -> list[DatasetReadV1] | None:
     """
     Get dataset list for given project
     """
@@ -269,7 +269,7 @@ async def get_resource_list(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ResourceReadV1 | None]:
+) -> list[ResourceReadV1] | None:
     """
     Get resources from a dataset
     """

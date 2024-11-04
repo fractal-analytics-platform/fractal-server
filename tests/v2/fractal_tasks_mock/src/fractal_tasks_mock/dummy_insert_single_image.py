@@ -10,12 +10,12 @@ def dummy_insert_single_image(
     *,
     zarr_urls: list[str],
     zarr_dir: str,
-    attributes: dict[str, Any | None] = None,
-    types: dict[str, Any | None] = None,
+    attributes: dict[str, Any] | None = None,
+    types: dict[str, Any] | None = None,
     fail: bool = False,
     fail_2: bool = False,
     trailing_slash: bool = False,
-    full_new_image: dict[str, Any | None] = None,
+    full_new_image: dict[str, Any] | None = None,
 ) -> dict:
     """
     Remove images

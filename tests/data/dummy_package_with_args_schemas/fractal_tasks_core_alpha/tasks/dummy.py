@@ -40,7 +40,7 @@ def dummy(
     *,
     input_paths: list[str],
     output_path: str,
-    metadata: dict[str, Any | None] = None,
+    metadata: dict[str, Any] | None = None,
     # arguments of this task
     message: str = "default_message",
     index: int = 0,

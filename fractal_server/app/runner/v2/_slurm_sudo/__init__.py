@@ -40,7 +40,7 @@ def _process_workflow(
     slurm_user: str | None = None,
     slurm_account: str | None = None,
     user_cache_dir: str,
-    worker_init: str | list[str | None] = None,
+    worker_init: str | list[str] | None = None,
 ) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend

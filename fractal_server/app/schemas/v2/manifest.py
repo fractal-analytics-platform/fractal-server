@@ -46,8 +46,8 @@ class TaskManifestV2(BaseModel):
     output_types: dict[str, bool] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    args_schema_non_parallel: dict[str, Any | None] = None
-    args_schema_parallel: dict[str, Any | None] = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
     docs_info: str | None = None
     docs_link: HttpUrl | None = None
 

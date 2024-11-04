@@ -37,10 +37,10 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 
 class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: dict[str, Any | None]
-    meta_parallel: dict[str, Any | None]
-    args_non_parallel: dict[str, Any | None]
-    args_parallel: dict[str, Any | None]
+    meta_non_parallel: dict[str, Any] | None
+    meta_parallel: dict[str, Any] | None
+    args_non_parallel: dict[str, Any] | None
+    args_parallel: dict[str, Any] | None
     input_filters: Filters = Field(default_factory=Filters)
 
     # Validators
@@ -86,11 +86,11 @@ class WorkflowTaskReadV2(BaseModel):
 
     workflow_id: int
     order: int | None
-    meta_non_parallel: dict[str, Any | None]
-    meta_parallel: dict[str, Any | None]
+    meta_non_parallel: dict[str, Any] | None
+    meta_parallel: dict[str, Any] | None
 
-    args_non_parallel: dict[str, Any | None]
-    args_parallel: dict[str, Any | None]
+    args_non_parallel: dict[str, Any] | None
+    args_parallel: dict[str, Any] | None
 
     input_filters: Filters
 
@@ -105,10 +105,10 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
 
 class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: dict[str, Any | None]
-    meta_parallel: dict[str, Any | None]
-    args_non_parallel: dict[str, Any | None]
-    args_parallel: dict[str, Any | None]
+    meta_non_parallel: dict[str, Any] | None
+    meta_parallel: dict[str, Any] | None
+    args_non_parallel: dict[str, Any] | None
+    args_parallel: dict[str, Any] | None
     input_filters: Filters | None
 
     # Validators
@@ -150,10 +150,10 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
 class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: dict[str, Any | None] = None
-    meta_parallel: dict[str, Any | None] = None
-    args_non_parallel: dict[str, Any | None] = None
-    args_parallel: dict[str, Any | None] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
 
     input_filters: Filters | None = None
 
@@ -175,10 +175,10 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    meta_non_parallel: dict[str, Any | None] = None
-    meta_parallel: dict[str, Any | None] = None
-    args_non_parallel: dict[str, Any | None] = None
-    args_parallel: dict[str, Any | None] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
     input_filters: Filters = Field(default_factory=Filters)
 
     task: TaskExportV2

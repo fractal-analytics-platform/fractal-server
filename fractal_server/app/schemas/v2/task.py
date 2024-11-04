@@ -21,11 +21,11 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     command_non_parallel: str | None = None
     command_parallel: str | None = None
 
-    meta_non_parallel: dict[str, Any | None] = None
-    meta_parallel: dict[str, Any | None] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
     version: str | None = None
-    args_schema_non_parallel: dict[str, Any | None] = None
-    args_schema_parallel: dict[str, Any | None] = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
     args_schema_version: str | None = None
     docs_info: str | None = None
     docs_link: HttpUrl | None = None
@@ -115,8 +115,8 @@ class TaskReadV2(BaseModel):
     command_parallel: str | None = None
     meta_parallel: dict[str, Any]
     meta_non_parallel: dict[str, Any]
-    args_schema_non_parallel: dict[str, Any | None] = None
-    args_schema_parallel: dict[str, Any | None] = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
     args_schema_version: str | None = None
     docs_info: str | None = None
     docs_link: HttpUrl | None = None
@@ -135,13 +135,13 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 
     command_parallel: str | None = None
     command_non_parallel: str | None = None
-    input_types: dict[str, bool | None] = None
-    output_types: dict[str, bool | None] = None
+    input_types: dict[str, bool] | None = None
+    output_types: dict[str, bool] | None = None
 
     category: str | None = None
     modality: str | None = None
     authors: str | None = None
-    tags: list[str | None] = None
+    tags: list[str] | None = None
 
     # Validators
     @validator("input_types", "output_types")

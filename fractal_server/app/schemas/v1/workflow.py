@@ -33,8 +33,8 @@ class _WorkflowTaskBaseV1(BaseModel):
     Base class for `WorkflowTask`.
     """
 
-    meta: dict[str, Any | None] = None
-    args: dict[str, Any | None] = None
+    meta: dict[str, Any] | None = None
+    args: dict[str, Any] | None = None
 
 
 class WorkflowTaskCreateV1(_WorkflowTaskBaseV1):
@@ -158,7 +158,7 @@ class WorkflowUpdateV1(_WorkflowBaseV1):
     """
 
     name: str | None
-    reordered_workflowtask_ids: list[int | None]
+    reordered_workflowtask_ids: list[int] | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

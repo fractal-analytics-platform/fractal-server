@@ -42,7 +42,7 @@ class WorkflowReadV2WithWarnings(WorkflowReadV2):
 class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
 
     name: str | None
-    reordered_workflowtask_ids: list[int | None]
+    reordered_workflowtask_ids: list[int] | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

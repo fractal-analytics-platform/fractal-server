@@ -250,8 +250,8 @@ async def MockCurrentUser(app, db, default_user_group):
         Context managed user override
         """
 
-        user_kwargs: dict[str, Any | None] = None
-        user_settings_dict: dict[str, Any | None] = None
+        user_kwargs: dict[str, Any] | None = None
+        user_settings_dict: dict[str, Any] | None = None
         email: str | None = field(default_factory=_random_email)
         previous_dependencies: dict = field(default_factory=dict)
 

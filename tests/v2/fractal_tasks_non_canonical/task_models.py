@@ -10,14 +10,14 @@ class _BaseTask(BaseModel):
 
     name: str
     executable: str
-    meta: dict[str, Any | None]
-    input_types: dict[str, bool | None]
-    output_types: dict[str, bool | None]
+    meta: dict[str, Any] | None
+    input_types: dict[str, bool] | None
+    output_types: dict[str, bool] | None
 
 
 class CompoundTask(_BaseTask):
     executable_init: str
-    meta_init: dict[str, Any | None]
+    meta_init: dict[str, Any] | None
 
     @property
     def executable_non_parallel(self) -> str:
@@ -28,11 +28,11 @@ class CompoundTask(_BaseTask):
         return self.executable
 
     @property
-    def meta_non_parallel(self) -> dict[str, Any | None]:
+    def meta_non_parallel(self) -> dict[str, Any] | None:
         return self.meta_init
 
     @property
-    def meta_parallel(self) -> dict[str, Any | None]:
+    def meta_parallel(self) -> dict[str, Any] | None:
         return self.meta
 
 
@@ -50,7 +50,7 @@ class ParallelTask(_BaseTask):
         return None
 
     @property
-    def meta_parallel(self) -> dict[str, Any | None]:
+    def meta_parallel(self) -> dict[str, Any] | None:
         return self.meta
 
 
@@ -68,5 +68,5 @@ class NonParallelTask(_BaseTask):
         return None
 
     @property
-    def meta_non_parallel(self) -> dict[str, Any | None]:
+    def meta_non_parallel(self) -> dict[str, Any] | None:
         return self.meta

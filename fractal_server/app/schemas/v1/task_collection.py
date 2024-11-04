@@ -45,7 +45,7 @@ class TaskCollectPipV1(BaseModel):
     package_version: str | None = None
     package_extras: str | None = None
     python_version: str | None = None
-    pinned_package_versions: dict[str, str | None] = None
+    pinned_package_versions: dict[str, str] | None = None
 
     _package_extras = validator("package_extras", allow_reuse=True)(
         valstr("package_extras")
@@ -96,7 +96,7 @@ class TaskCollectStatusV1(BaseModel):
     status: Literal["pending", "installing", "collecting", "fail", "OK"]
     package: str
     venv_path: Path
-    task_list: list[TaskReadV1 | None] = Field(default=[])
+    task_list: list[TaskReadV1] | None = Field(default=[])
     log: str | None
     info: str | None
 

@@ -9,7 +9,7 @@ def create_cellvoyager_ome_zarr(
     zarr_urls: list[str],
     zarr_dir: str,
     image_dir: str,
-    fake_list_relative_paths: list[str | None] = None,
+    fake_list_relative_paths: list[str] | None = None,
 ) -> dict:
     """
     Dummy task description.

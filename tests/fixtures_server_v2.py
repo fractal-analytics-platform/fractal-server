@@ -185,7 +185,7 @@ async def task_factory_v2(db: AsyncSession):
 
     async def __task_factory(
         user_id: int,
-        task_group_kwargs: dict[str, str | None] = None,
+        task_group_kwargs: dict[str, str] | None = None,
         db: AsyncSession = db,
         index: int = 0,
         type: Literal["parallel", "non_parallel", "compound"] = "compound",

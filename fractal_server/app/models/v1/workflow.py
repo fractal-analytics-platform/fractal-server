@@ -52,8 +52,8 @@ class WorkflowTask(_WorkflowTaskBaseV1, SQLModel, table=True):
     workflow_id: int = Field(foreign_key="workflow.id")
     task_id: int = Field(foreign_key="task.id")
     order: int | None
-    meta: dict[str, Any | None] = Field(sa_column=Column(JSON))
-    args: dict[str, Any | None] = Field(sa_column=Column(JSON))
+    meta: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    args: dict[str, Any] | None = Field(sa_column=Column(JSON))
     task: Task = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
     @validator("args")

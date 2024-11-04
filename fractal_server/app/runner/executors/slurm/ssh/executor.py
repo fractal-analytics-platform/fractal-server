@@ -103,7 +103,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Monitoring options
         slurm_poll_interval: int | None = None,
         # SLURM submission script options
-        common_script_lines: list[str | None] = None,
+        common_script_lines: list[str] | None = None,
         slurm_account: str | None = None,
         # Other kwargs are ignored
         **kwargs,
@@ -616,9 +616,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         single_task_submission: bool = False,
-        args: Sequence[Any | None] = None,
+        args: Sequence[Any] | None = None,
         kwargs: dict | None = None,
-        components: list[Any | None] = None,
+        components: list[Any] | None = None,
     ) -> SlurmJob:
         """
         Prepare a SLURM job locally, without submitting it

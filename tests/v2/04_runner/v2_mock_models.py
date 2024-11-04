@@ -37,8 +37,8 @@ class TaskV2Mock(BaseModel):
 
     command_non_parallel: str | None = None
     command_parallel: str | None = None
-    meta_parallel: dict[str, Any | None] = Field(default_factory=dict)
-    meta_non_parallel: dict[str, Any | None] = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] | None = Field(default_factory=dict)
+    meta_non_parallel: dict[str, Any] | None = Field(default_factory=dict)
     type: str | None
 
     @root_validator(pre=False)
@@ -73,8 +73,8 @@ class WorkflowTaskV2Mock(BaseModel):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: dict[str, Any | None] = Field()
-    meta_non_parallel: dict[str, Any | None] = Field()
+    meta_parallel: dict[str, Any] | None = Field()
+    meta_non_parallel: dict[str, Any] | None = Field()
     task: TaskV2Mock
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int

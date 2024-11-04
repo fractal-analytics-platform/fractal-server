@@ -52,7 +52,7 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
     ssh_tasks_dir: str | None = None
     ssh_jobs_dir: str | None = None
     slurm_user: str | None = None
-    slurm_accounts: list[StrictStr | None] = None
+    slurm_accounts: list[StrictStr] | None = None
     cache_dir: str | None = None
     project_dir: str | None = None
 
@@ -101,7 +101,7 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
 
 
 class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
-    slurm_accounts: list[StrictStr | None] = None
+    slurm_accounts: list[StrictStr] | None = None
     cache_dir: str | None = None
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(

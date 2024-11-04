@@ -589,9 +589,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         single_task_submission: bool = False,
-        args: Sequence[Any | None] = None,
+        args: Sequence[Any] | None = None,
         kwargs: dict | None = None,
-        components: list[Any | None] = None,
+        components: list[Any] | None = None,
     ) -> Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the

@@ -92,7 +92,7 @@ async def read_dataset_list(
     history: bool = True,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetReadV2 | None]:
+) -> list[DatasetReadV2] | None:
     """
     Get dataset list for given project
     """

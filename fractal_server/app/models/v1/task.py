@@ -37,10 +37,10 @@ class Task(_TaskBaseV1, SQLModel, table=True):
     source: str = Field(unique=True)
     input_type: str
     output_type: str
-    meta: dict[str, Any | None] = Field(sa_column=Column(JSON), default={})
+    meta: dict[str, Any] | None = Field(sa_column=Column(JSON), default={})
     owner: str | None = None
     version: str | None = None
-    args_schema: dict[str, Any | None] = Field(
+    args_schema: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
     args_schema_version: str | None

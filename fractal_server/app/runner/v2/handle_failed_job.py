@@ -107,7 +107,7 @@ def assemble_history_failed_job(
     return new_history
 
 
-def assemble_images_failed_job(job: JobV2) -> dict[str, Any | None]:
+def assemble_images_failed_job(job: JobV2) -> dict[str, Any] | None:
     """
     Assemble `DatasetV2.images` for a failed workflow-execution.
 
@@ -132,7 +132,7 @@ def assemble_images_failed_job(job: JobV2) -> dict[str, Any | None]:
         return None
 
 
-def assemble_filters_failed_job(job: JobV2) -> dict[str, Any | None]:
+def assemble_filters_failed_job(job: JobV2) -> dict[str, Any] | None:
     """
     Assemble `DatasetV2.filters` for a failed workflow-execution.
 

@@ -54,7 +54,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     package_version: str | None = None
     package_extras: str | None = None
     python_version: Literal["3.9", "3.10", "3.11", "3.12"] | None = None
-    pinned_package_versions: dict[str, str | None] = None
+    pinned_package_versions: dict[str, str] | None = None
 
     _package = validator("package", allow_reuse=True)(valstr("package"))
     _package_version = validator("package_version", allow_reuse=True)(

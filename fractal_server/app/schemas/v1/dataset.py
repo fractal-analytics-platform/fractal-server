@@ -112,8 +112,8 @@ class DatasetUpdateV1(_DatasetBaseV1):
     """
 
     name: str | None
-    meta: dict[str, Any | None] = None
-    history: list[_DatasetHistoryItemV1 | None] = None
+    meta: dict[str, Any] | None = None
+    history: list[_DatasetHistoryItemV1] | None = None
     read_only: bool | None
 
     # Validators
