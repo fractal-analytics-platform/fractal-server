@@ -19,6 +19,11 @@ def test_TaskCollectPipV2():
     assert collection.package == "package"
     assert collection.package_version == "1.2.3"
 
+    collection_none = TaskCollectPipV2(
+        package="pkg", pinned_package_versions=None
+    )
+    assert collection_none.pinned_package_versions is None
+
     with pytest.raises(
         ValidationError, match="Local-package path must be absolute"
     ):
