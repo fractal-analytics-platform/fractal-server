@@ -27,6 +27,8 @@ async def test_schemas_dataset_v2():
         DatasetCreateV2(
             name="name", zarr_dir="/zarr", filters={"types": {"a": "b"}}
         )
+    # Test zarr_dir=None is valid
+    DatasetCreateV2(name="name", zarr_dir=None)
 
     dataset_create = DatasetCreateV2(
         name="name",
@@ -36,7 +38,7 @@ async def test_schemas_dataset_v2():
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
 
     with pytest.raises(ValidationError):
-        DatasetImportV2(name="name", zarr_dir="None")
+        DatasetImportV2(name="name", zarr_dir=None)
 
     dataset_import = DatasetImportV2(
         name="name",
