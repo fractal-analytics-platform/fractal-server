@@ -97,7 +97,7 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
 
     name: str
     zarr_dir: str
-    images: list[SingleImage] = Field(default_factory=[])
+    images: list[SingleImage] = Field(default_factory=list)
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
