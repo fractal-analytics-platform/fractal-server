@@ -19,6 +19,10 @@ __all__ = (
 
 
 class UserSettingsRead(BaseModel):
+    """
+    Schema reserved for superusers
+    """
+
     id: int
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
@@ -40,6 +44,10 @@ class UserSettingsReadStrict(BaseModel):
 
 
 class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
+    """
+    Schema reserved for superusers
+    """
+
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
     ssh_private_key_path: Optional[str] = None
