@@ -352,6 +352,7 @@ async def test_patch_user_settings_bulk(
         # missing `slurm_user`
         slurm_accounts=["foo", "bar"],
         cache_dir="/tmp/cache",
+        project_dir="/foo",
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{default_user_group.id}/user-settings/", json=patch
@@ -361,9 +362,7 @@ async def test_patch_user_settings_bulk(
     # assert user1, user2 and user3 has been updated
     for user in [user1, user2, user3]:
         await db.refresh(user)
-        assert patch == user.settings.dict(
-            exclude={"id", "slurm_user", "project_dir"}
-        )
+        assert patch == user.settings.dict(exclude={"id", "slurm_user"})
         assert user.settings.slurm_user == "test01"  # `slurm_user` not patched
     # assert user4 has old settings
     await db.refresh(user4)
@@ -376,4 +375,11 @@ async def test_patch_user_settings_bulk(
         slurm_user="test01",
         slurm_accounts=[],
         cache_dir=None,
-    ) == user4.settings.dict(exclude={"id", "project_dir"})
+        project_dir=None,
+    ) == user4.settings.dict(exclude={"id"})
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_user_group.id}/user-settings/",
+        json=dict(project_dir="not/an/absolute/path"),
+    )
+    assert res.status_code == 422

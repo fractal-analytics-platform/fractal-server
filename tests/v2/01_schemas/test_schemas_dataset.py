@@ -35,6 +35,13 @@ async def test_schemas_dataset_v2():
     )
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
 
+    # unit test `zarr_dir==None`
+    DatasetImportV2(
+        name="name",
+        filters={"attributes": {"x": 10}},
+        zarr_dir="/tmp/",
+        images=[{"zarr_url": "/tmp/image/"}],
+    )
     dataset_import = DatasetImportV2(
         name="name",
         filters={"attributes": {"x": 10}},
