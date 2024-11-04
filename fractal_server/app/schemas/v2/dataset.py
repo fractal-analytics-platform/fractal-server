@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -23,7 +22,7 @@ class _DatasetHistoryItemV2(BaseModel):
 
     workflowtask: WorkflowTaskDumpV2
     status: WorkflowTaskStatusTypeV2
-    parallelization: Optional[dict]
+    parallelization: dict | None
 
 
 # CRUD
@@ -33,7 +32,7 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
-    zarr_dir: Optional[str] = None
+    zarr_dir: str | None = None
 
     filters: Filters = Field(default_factory=Filters)
 
@@ -70,13 +69,13 @@ class DatasetReadV2(BaseModel):
 
 class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str]
-    zarr_dir: Optional[str]
-    filters: Optional[Filters]
+    name: str | None
+    zarr_dir: str | None
+    filters: Filters | None
 
     # Validators
     @validator("zarr_dir")
-    def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
+    def normalize_zarr_dir(cls, v: str | None) -> str | None:
         if v is not None:
             return normalize_url(v)
         return v

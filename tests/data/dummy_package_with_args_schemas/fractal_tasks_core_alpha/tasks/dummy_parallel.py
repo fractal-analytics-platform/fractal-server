@@ -23,8 +23,6 @@ from datetime import timezone
 from pathlib import Path
 from sys import stdout
 from typing import Any
-from typing import Optional
-
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s; %(levelname)s; %(message)s"
@@ -37,11 +35,11 @@ def dummy_parallel(
     input_paths: list[str],
     output_path: str,
     component: str,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any | None] = None,
     # arguments of this task
     message: str = "default message",
     raise_error: bool = False,
-    sleep_time: Optional[int] = None,
+    sleep_time: int | None = None,
 ) -> dict[str, Any]:
     """
     Dummy task to be run in parallel

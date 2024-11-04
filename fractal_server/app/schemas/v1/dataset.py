@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -79,7 +78,7 @@ class _DatasetHistoryItemV1(BaseModel):
 
     workflowtask: WorkflowTaskDumpV1
     status: WorkflowTaskStatusTypeV1
-    parallelization: Optional[dict]
+    parallelization: dict | None
 
 
 class _DatasetBaseV1(BaseModel):
@@ -95,7 +94,7 @@ class _DatasetBaseV1(BaseModel):
     """
 
     name: str
-    type: Optional[str]
+    type: str | None
     meta: dict[str, Any] = Field(default={})
     history: list[_DatasetHistoryItemV1] = Field(default=[])
     read_only: bool = False
@@ -112,10 +111,10 @@ class DatasetUpdateV1(_DatasetBaseV1):
         read_only:
     """
 
-    name: Optional[str]
-    meta: Optional[dict[str, Any]] = None
-    history: Optional[list[_DatasetHistoryItemV1]] = None
-    read_only: Optional[bool]
+    name: str | None
+    meta: dict[str, Any | None] = None
+    history: list[_DatasetHistoryItemV1 | None] = None
+    read_only: bool | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -162,9 +161,4 @@ class DatasetStatusReadV1(BaseModel):
     `/project/{project_id}/dataset/{dataset_id}/status/` endpoint
     """
 
-    status: Optional[
-        dict[
-            int,
-            WorkflowTaskStatusTypeV1,
-        ]
-    ] = None
+    status: dict[int, WorkflowTaskStatusTypeV1] | None = None

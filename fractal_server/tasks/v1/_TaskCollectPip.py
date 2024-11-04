@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from pydantic import root_validator
 
@@ -21,9 +20,9 @@ class _TaskCollectPip(TaskCollectPipV1):
            during task collection.
     """
 
-    package_name: Optional[str] = None
-    package_path: Optional[Path] = None
-    package_manifest: Optional[ManifestV1] = None
+    package_name: str | None = None
+    package_path: Path | None = None
+    package_manifest: ManifestV1 | None = None
 
     @property
     def is_local_package(self) -> bool:

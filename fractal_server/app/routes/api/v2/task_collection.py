@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -56,7 +55,7 @@ async def collect_tasks_pip(
     response: Response,
     request: Request,
     private: bool = False,
-    user_group_id: Optional[int] = None,
+    user_group_id: int | None = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:

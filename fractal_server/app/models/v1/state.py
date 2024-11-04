@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -26,7 +25,7 @@ class State(SQLModel, table=True):
         timestamp: Timestap of the `State`
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     data: dict[str, Any] = Field(sa_column=Column(JSON), default={})
     timestamp: datetime = Field(
         default_factory=get_timestamp,

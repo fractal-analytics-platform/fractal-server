@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from sqlmodel import select
@@ -16,8 +14,8 @@ router = APIRouter()
 
 @router.get("/", response_model=list[ProjectReadV2])
 async def view_project(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
+    id: int | None = None,
+    user_id: int | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectReadV2]:

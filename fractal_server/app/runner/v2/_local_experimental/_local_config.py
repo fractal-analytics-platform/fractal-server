@@ -4,7 +4,6 @@ Submodule to handle the local-backend configuration for a WorkflowTask
 import json
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -34,7 +33,7 @@ class LocalBackendConfig(BaseModel, extra=Extra.forbid):
             start at the same time.
     """
 
-    parallel_tasks_per_job: Optional[int]
+    parallel_tasks_per_job: int | None
 
 
 def get_default_local_backend_config():
@@ -47,7 +46,7 @@ def get_default_local_backend_config():
 def get_local_backend_config(
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
-    config_path: Optional[Path] = None,
+    config_path: Path | None = None,
 ) -> LocalBackendConfig:
     """
     Prepare a `LocalBackendConfig` configuration object

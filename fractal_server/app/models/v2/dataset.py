@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -17,7 +16,7 @@ class DatasetV2(SQLModel, table=True):
     class Config:
         arbitrary_types_allowed = True
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
 
     project_id: int = Field(foreign_key="projectv2.id")

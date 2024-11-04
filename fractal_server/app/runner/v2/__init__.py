@@ -8,7 +8,6 @@ the individual backends.
 import os
 import traceback
 from pathlib import Path
-from typing import Optional
 
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
@@ -78,10 +77,10 @@ async def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_settings: UserSettings,
-    worker_init: Optional[str] = None,
-    slurm_user: Optional[str] = None,
-    user_cache_dir: Optional[str] = None,
-    fractal_ssh: Optional[FractalSSH] = None,
+    worker_init: str | None = None,
+    slurm_user: str | None = None,
+    user_cache_dir: str | None = None,
+    fractal_ssh: FractalSSH | None = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -117,11 +116,9 @@ async def submit_workflow(
     with next(DB.get_sync_db()) as db_sync:
 
         try:
-            job: Optional[JobV2] = db_sync.get(JobV2, job_id)
-            dataset: Optional[DatasetV2] = db_sync.get(DatasetV2, dataset_id)
-            workflow: Optional[WorkflowV2] = db_sync.get(
-                WorkflowV2, workflow_id
-            )
+            job: JobV2 | None = db_sync.get(JobV2, job_id)
+            dataset: DatasetV2 | None = db_sync.get(DatasetV2, dataset_id)
+            workflow: WorkflowV2 | None = db_sync.get(WorkflowV2, workflow_id)
         except Exception as e:
             logger.error(
                 f"Error conneting to the database. Original error: {str(e)}"

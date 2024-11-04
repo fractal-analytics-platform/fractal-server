@@ -1,5 +1,4 @@
 import string
-from typing import Optional
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
 
@@ -54,7 +53,7 @@ def slugify_task_name_for_source_v1(task_name: str) -> str:
     return task_name.replace(" ", "_").lower()
 
 
-def validate_cmd(command: str, allow_char: Optional[str] = None):
+def validate_cmd(command: str, allow_char: str | None = None):
     """
     Assert that the provided `command` does not contain any of the forbidden
     characters for commands

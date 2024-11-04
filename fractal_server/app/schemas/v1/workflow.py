@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import validator
@@ -34,8 +33,8 @@ class _WorkflowTaskBaseV1(BaseModel):
     Base class for `WorkflowTask`.
     """
 
-    meta: Optional[dict[str, Any]] = None
-    args: Optional[dict[str, Any]] = None
+    meta: dict[str, Any | None] = None
+    args: dict[str, Any | None] = None
 
 
 class WorkflowTaskCreateV1(_WorkflowTaskBaseV1):
@@ -46,7 +45,7 @@ class WorkflowTaskCreateV1(_WorkflowTaskBaseV1):
         order:
     """
 
-    order: Optional[int]
+    order: int | None
     # Validators
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
 
@@ -64,7 +63,7 @@ class WorkflowTaskReadV1(_WorkflowTaskBaseV1):
     """
 
     id: int
-    order: Optional[int]
+    order: int | None
     workflow_id: int
     task_id: int
     task: TaskReadV1
@@ -158,8 +157,8 @@ class WorkflowUpdateV1(_WorkflowBaseV1):
         reordered_workflowtask_ids:
     """
 
-    name: Optional[str]
-    reordered_workflowtask_ids: Optional[list[int]]
+    name: str | None
+    reordered_workflowtask_ids: list[int | None]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

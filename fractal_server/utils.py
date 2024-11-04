@@ -19,7 +19,6 @@ import subprocess  # nosec
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
-from typing import Optional
 
 from .logger import get_logger
 from .string_tools import validate_cmd
@@ -35,8 +34,8 @@ def get_timestamp() -> datetime:
 async def execute_command_async(
     *,
     command: str,
-    cwd: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    cwd: Path | None = None,
+    logger_name: str | None = None,
 ) -> str:
     """
     Execute arbitrary command
@@ -82,8 +81,8 @@ async def execute_command_async(
 def execute_command_sync(
     *,
     command: str,
-    logger_name: Optional[str] = None,
-    allow_char: Optional[str] = None,
+    logger_name: str | None = None,
+    allow_char: str | None = None,
 ) -> str:
     """
     Execute arbitrary command

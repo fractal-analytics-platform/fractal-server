@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from pydantic import validator
 from sqlalchemy import Column
@@ -48,13 +47,13 @@ class WorkflowTask(_WorkflowTaskBaseV1, SQLModel, table=True):
         arbitrary_types_allowed = True
         fields = {"parent": {"exclude": True}}
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     workflow_id: int = Field(foreign_key="workflow.id")
     task_id: int = Field(foreign_key="task.id")
-    order: Optional[int]
-    meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
+    order: int | None
+    meta: dict[str, Any | None] = Field(sa_column=Column(JSON))
+    args: dict[str, Any | None] = Field(sa_column=Column(JSON))
     task: Task = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
     @validator("args")
@@ -104,7 +103,7 @@ class Workflow(_WorkflowBaseV1, SQLModel, table=True):
             List of associations to tasks.
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     project: "Project" = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(lazy="selectin"),

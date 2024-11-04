@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -14,7 +13,7 @@ from fractal_server.utils import get_timestamp
 
 class ProjectV2(SQLModel, table=True):
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,

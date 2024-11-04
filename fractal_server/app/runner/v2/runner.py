@@ -5,7 +5,6 @@ from copy import copy
 from copy import deepcopy
 from pathlib import Path
 from typing import Callable
-from typing import Optional
 
 from ....images import Filters
 from ....images import SingleImage
@@ -32,8 +31,8 @@ def execute_tasks_v2(
     dataset: DatasetV2,
     executor: ThreadPoolExecutor,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_dir_remote: Path | None = None,
+    logger_name: str | None = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> DatasetV2:
 

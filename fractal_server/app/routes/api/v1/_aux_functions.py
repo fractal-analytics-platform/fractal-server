@@ -3,7 +3,6 @@ Auxiliary functions to get object from the database or perform simple checks
 """
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from fastapi import HTTPException
 from fastapi import status
@@ -399,9 +398,9 @@ async def _workflow_insert_task(
     *,
     workflow_id: int,
     task_id: int,
-    args: Optional[dict[str, Any]] = None,
-    meta: Optional[dict[str, Any]] = None,
-    order: Optional[int] = None,
+    args: dict[str, Any | None] = None,
+    meta: dict[str, Any | None] = None,
+    order: int | None = None,
     db: AsyncSession,
 ) -> WorkflowTask:
     """

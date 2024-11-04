@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pytest
 from devtools import debug
 from pydantic import BaseModel
@@ -15,8 +13,8 @@ from fractal_server.tasks.v2.utils_background import (
 
 class _MockTaskCreateV2(BaseModel):
     name: str = "task_name"
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
 
 
 def test_get_task_type():

@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -22,16 +21,16 @@ class TaskGroupV2OriginEnum(str, Enum):
 
 class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     user_id: int
-    user_group_id: Optional[int] = None
+    user_group_id: int | None = None
     active: bool = True
     origin: TaskGroupV2OriginEnum
     pkg_name: str
-    version: Optional[str] = None
-    python_version: Optional[str] = None
-    path: Optional[str] = None
-    venv_path: Optional[str] = None
-    wheel_path: Optional[str] = None
-    pip_extras: Optional[str] = None
+    version: str | None = None
+    python_version: str | None = None
+    path: str | None = None
+    venv_path: str | None = None
+    wheel_path: str | None = None
+    pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
@@ -58,16 +57,16 @@ class TaskGroupReadV2(BaseModel):
     task_list: list[TaskReadV2]
 
     user_id: int
-    user_group_id: Optional[int] = None
+    user_group_id: int | None = None
 
     origin: Literal["pypi", "wheel-file", "other"]
     pkg_name: str
-    version: Optional[str] = None
-    python_version: Optional[str] = None
-    path: Optional[str] = None
-    venv_path: Optional[str] = None
-    wheel_path: Optional[str] = None
-    pip_extras: Optional[str] = None
+    version: str | None = None
+    python_version: str | None = None
+    path: str | None = None
+    venv_path: str | None = None
+    wheel_path: str | None = None
+    pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     active: bool
@@ -75,8 +74,8 @@ class TaskGroupReadV2(BaseModel):
 
 
 class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
-    user_group_id: Optional[int] = None
-    active: Optional[bool] = None
+    user_group_id: int | None = None
+    active: bool | None = None
 
     @validator("active")
     def active_cannot_be_None(cls, value):

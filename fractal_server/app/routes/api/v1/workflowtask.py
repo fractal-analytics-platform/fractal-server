@@ -12,7 +12,6 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 from copy import deepcopy
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -48,7 +47,7 @@ async def create_workflowtask(
     new_task: WorkflowTaskCreateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskReadV1]:
+) -> WorkflowTaskReadV1 | None:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -109,7 +108,7 @@ async def update_workflowtask(
     workflow_task_update: WorkflowTaskUpdateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskReadV1]:
+) -> WorkflowTaskReadV1 | None:
     """
     Edit a WorkflowTask of a Workflow
     """

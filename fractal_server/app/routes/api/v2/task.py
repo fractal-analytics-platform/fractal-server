@@ -1,5 +1,4 @@
 from copy import deepcopy  # noqa
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -37,9 +36,9 @@ logger = set_logger(__name__)
 @router.get("/", response_model=list[TaskReadV2])
 async def get_list_task(
     args_schema: bool = True,
-    category: Optional[str] = None,
-    modality: Optional[str] = None,
-    author: Optional[str] = None,
+    category: str | None = None,
+    modality: str | None = None,
+    author: str | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
@@ -98,7 +97,7 @@ async def patch_task(
     task_update: TaskUpdateV2,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskReadV2]:
+) -> TaskReadV2 | None:
     """
     Edit a specific task (restricted to task owner)
     """
@@ -135,11 +134,11 @@ async def patch_task(
 )
 async def create_task(
     task: TaskCreateV2,
-    user_group_id: Optional[int] = None,
+    user_group_id: int | None = None,
     private: bool = False,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskReadV2]:
+) -> TaskReadV2 | None:
     """
     Create a new task
     """

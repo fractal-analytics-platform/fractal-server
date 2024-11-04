@@ -3,7 +3,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -52,10 +51,10 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     """
 
     package: str
-    package_version: Optional[str] = None
-    package_extras: Optional[str] = None
-    python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[dict[str, str]] = None
+    package_version: str | None = None
+    package_extras: str | None = None
+    python_version: Literal["3.9", "3.10", "3.11", "3.12" | None] = None
+    pinned_package_versions: dict[str, str | None] = None
 
     _package = validator("package", allow_reuse=True)(valstr("package"))
     _package_version = validator("package_version", allow_reuse=True)(
@@ -130,9 +129,9 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
     manifest: ManifestV2
     python_interpreter: str
     label: str
-    package_root: Optional[str]
-    package_name: Optional[str]
-    version: Optional[str]
+    package_root: str | None
+    package_name: str | None
+    version: str | None
 
     # Valstr
     _python_interpreter = validator("python_interpreter", allow_reuse=True)(
@@ -192,7 +191,7 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
 
 class CollectionStateReadV2(BaseModel):
 
-    id: Optional[int]
+    id: int | None
     data: dict[str, Any]
     timestamp: datetime
 

@@ -1,11 +1,10 @@
 from pathlib import Path
-from typing import Optional
 
 from fractal_server.logger import get_logger
 from fractal_server.utils import execute_command_async
 
 
-def get_python_interpreter_v1(version: Optional[str] = None) -> str:
+def get_python_interpreter_v1(version: str | None = None) -> str:
     """
     Return the path to the python interpreter
 
@@ -37,7 +36,7 @@ def get_python_interpreter_v1(version: Optional[str] = None) -> str:
 async def _init_venv_v1(
     *,
     path: Path,
-    python_version: Optional[str] = None,
+    python_version: str | None = None,
     logger_name: str,
 ) -> Path:
     """

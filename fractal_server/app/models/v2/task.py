@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from pydantic import HttpUrl
 from sqlalchemy import Column
@@ -14,13 +13,13 @@ from fractal_server.utils import get_timestamp
 
 
 class TaskV2(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
 
     type: str
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
-    source: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
+    source: str | None = None
 
     meta_non_parallel: dict[str, Any] = Field(
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
@@ -29,32 +28,32 @@ class TaskV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
-    version: Optional[str] = None
-    args_schema_non_parallel: Optional[dict[str, Any]] = Field(
+    version: str | None = None
+    args_schema_non_parallel: dict[str, Any | None] = Field(
         sa_column=Column(JSON), default=None
     )
-    args_schema_parallel: Optional[dict[str, Any]] = Field(
+    args_schema_parallel: dict[str, Any | None] = Field(
         sa_column=Column(JSON), default=None
     )
-    args_schema_version: Optional[str]
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    args_schema_version: str | None
+    docs_info: str | None = None
+    docs_link: HttpUrl | None = None
 
     input_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
     output_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
 
     taskgroupv2_id: int = Field(foreign_key="taskgroupv2.id")
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
-    authors: Optional[str] = None
+    category: str | None = None
+    modality: str | None = None
+    authors: str | None = None
     tags: list[str] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
 
 
 class TaskGroupV2(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     task_list: list[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin", cascade="all, delete-orphan"
@@ -62,16 +61,16 @@ class TaskGroupV2(SQLModel, table=True):
     )
 
     user_id: int = Field(foreign_key="user_oauth.id")
-    user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
+    user_group_id: int | None = Field(foreign_key="usergroup.id")
 
     origin: str
     pkg_name: str
-    version: Optional[str] = None
-    python_version: Optional[str] = None
-    path: Optional[str] = None
-    venv_path: Optional[str] = None
-    wheel_path: Optional[str] = None
-    pip_extras: Optional[str] = None
+    version: str | None = None
+    python_version: str | None = None
+    path: str | None = None
+    venv_path: str | None = None
+    wheel_path: str | None = None
+    pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
             JSON,

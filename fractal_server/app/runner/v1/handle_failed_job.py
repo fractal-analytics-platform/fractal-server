@@ -17,7 +17,6 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 from ...models.v1 import ApplyWorkflow
 from ...models.v1 import Dataset
@@ -33,7 +32,7 @@ def assemble_history_failed_job(
     output_dataset: Dataset,
     workflow: Workflow,
     logger: logging.Logger,
-    failed_wftask: Optional[WorkflowTask] = None,
+    failed_wftask: WorkflowTask | None = None,
 ) -> list[dict[str, Any]]:
     """
     Assemble `history` after a workflow-execution job fails.

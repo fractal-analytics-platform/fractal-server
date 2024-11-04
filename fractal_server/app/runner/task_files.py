@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from fractal_server.string_tools import sanitize_string
 
@@ -55,8 +54,8 @@ class TaskFiles:
     remote_subfolder: Path
     subfolder_name: str
     task_name: str
-    task_order: Optional[int] = None
-    component: Optional[str] = None
+    task_order: int | None = None
+    component: str | None = None
 
     file_prefix: str
     file_prefix_with_subfolder: str
@@ -71,8 +70,8 @@ class TaskFiles:
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
         task_name: str,
-        task_order: Optional[int] = None,
-        component: Optional[str] = None,
+        task_order: int | None = None,
+        component: str | None = None,
     ):
         self.workflow_dir_local = workflow_dir_local
         self.workflow_dir_remote = workflow_dir_remote
@@ -108,8 +107,8 @@ def get_task_file_paths(
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
     task_name: str,
-    task_order: Optional[int] = None,
-    component: Optional[str] = None,
+    task_order: int | None = None,
+    component: str | None = None,
 ) -> TaskFiles:
     """
     Return the corrisponding TaskFiles object

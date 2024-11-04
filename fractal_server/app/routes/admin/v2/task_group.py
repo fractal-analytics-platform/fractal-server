@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -47,12 +45,12 @@ async def query_task_group(
 
 @router.get("/", response_model=list[TaskGroupReadV2])
 async def query_task_group_list(
-    user_id: Optional[int] = None,
-    user_group_id: Optional[int] = None,
-    private: Optional[bool] = None,
-    active: Optional[bool] = None,
-    pkg_name: Optional[str] = None,
-    origin: Optional[TaskGroupV2OriginEnum] = None,
+    user_id: int | None = None,
+    user_group_id: int | None = None,
+    private: bool | None = None,
+    active: bool | None = None,
+    pkg_name: str | None = None,
+    origin: TaskGroupV2OriginEnum | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:

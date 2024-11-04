@@ -8,8 +8,6 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of ApplyWorkflow models;
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Extra
 
@@ -29,13 +27,13 @@ class TaskDumpV1(BaseModel):
     command: str
     input_type: str
     output_type: str
-    owner: Optional[str]
-    version: Optional[str]
+    owner: str | None
+    version: str | None
 
 
 class WorkflowTaskDumpV1(BaseModel):
     id: int
-    order: Optional[int]
+    order: int | None
     workflow_id: int
     task_id: int
     task: TaskDumpV1
@@ -57,7 +55,7 @@ class ResourceDumpV1(BaseModel):
 class DatasetDumpV1(BaseModel):
     id: int
     name: str
-    type: Optional[str]
+    type: str | None
     read_only: bool
     resource_list: list[ResourceDumpV1]
     project_id: int

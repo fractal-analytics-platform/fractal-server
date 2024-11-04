@@ -21,7 +21,6 @@ from copy import copy
 from pathlib import Path
 from typing import Any
 from typing import Callable
-from typing import Optional
 from typing import Sequence
 
 import cloudpickle
@@ -86,7 +85,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     keep_pickle_files: bool
 
     common_script_lines: list[str]
-    slurm_account: Optional[str]
+    slurm_account: str | None
 
     jobs: dict[str, tuple[Future, SlurmJob]]
     map_jobid_to_slurm_files_local: dict[str, tuple[str, str, str]]
@@ -102,10 +101,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Runner options
         keep_pickle_files: bool = False,
         # Monitoring options
-        slurm_poll_interval: Optional[int] = None,
+        slurm_poll_interval: int | None = None,
         # SLURM submission script options
-        common_script_lines: Optional[list[str]] = None,
-        slurm_account: Optional[str] = None,
+        common_script_lines: list[str | None] = None,
+        slurm_account: str | None = None,
         # Other kwargs are ignored
         **kwargs,
     ):
@@ -225,7 +224,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.map_jobid_to_slurm_files_local.pop(jobid)
 
     def get_input_pickle_file_path_local(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+        self, *, arg: str, subfolder_name: str, prefix: str | None = None
     ) -> Path:
 
         prefix = prefix or "cfut"
@@ -237,7 +236,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         return output
 
     def get_input_pickle_file_path_remote(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+        self, *, arg: str, subfolder_name: str, prefix: str | None = None
     ) -> Path:
 
         prefix = prefix or "cfut"
@@ -249,7 +248,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         return output
 
     def get_output_pickle_file_path_local(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+        self, *, arg: str, subfolder_name: str, prefix: str | None = None
     ) -> Path:
         prefix = prefix or "cfut"
         return (
@@ -259,7 +258,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
 
     def get_output_pickle_file_path_remote(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+        self, *, arg: str, subfolder_name: str, prefix: str | None = None
     ) -> Path:
         prefix = prefix or "cfut"
         return (
@@ -269,7 +268,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
 
     def get_slurm_script_file_path_local(
-        self, *, subfolder_name: str, prefix: Optional[str] = None
+        self, *, subfolder_name: str, prefix: str | None = None
     ) -> Path:
         prefix = prefix or "_temp"
         return (
@@ -279,7 +278,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
 
     def get_slurm_script_file_path_remote(
-        self, *, subfolder_name: str, prefix: Optional[str] = None
+        self, *, subfolder_name: str, prefix: str | None = None
     ) -> Path:
         prefix = prefix or "_temp"
         return (
@@ -293,7 +292,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         *,
         subfolder_name: str,
         arg: str = "%j",
-        prefix: Optional[str] = None,
+        prefix: str | None = None,
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
         return (
@@ -307,7 +306,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         *,
         subfolder_name: str,
         arg: str = "%j",
-        prefix: Optional[str] = None,
+        prefix: str | None = None,
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
         return (
@@ -321,7 +320,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         *,
         subfolder_name: str,
         arg: str = "%j",
-        prefix: Optional[str] = None,
+        prefix: str | None = None,
     ) -> Path:
         prefix = prefix or "slurmpy.stderr"
         return (
@@ -335,7 +334,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         *,
         subfolder_name: str,
         arg: str = "%j",
-        prefix: Optional[str] = None,
+        prefix: str | None = None,
     ) -> Path:
         prefix = prefix or "slurmpy.stderr"
         return (
@@ -348,8 +347,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *fun_args: Sequence[Any],
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
+        slurm_config: SlurmConfig | None = None,
+        task_files: TaskFiles | None = None,
         **fun_kwargs: dict,
     ) -> Future:
         """
@@ -427,8 +426,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         fn: Callable[..., Any],
         iterable: list[Sequence[Any]],
         *,
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
+        slurm_config: SlurmConfig | None = None,
+        task_files: TaskFiles | None = None,
     ):
         """
         Return an iterator with the results of several execution of a function
@@ -617,9 +616,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         single_task_submission: bool = False,
-        args: Optional[Sequence[Any]] = None,
-        kwargs: Optional[dict] = None,
-        components: Optional[list[Any]] = None,
+        args: Sequence[Any | None] = None,
+        kwargs: dict | None = None,
+        components: list[Any | None] = None,
     ) -> SlurmJob:
         """
         Prepare a SLURM job locally, without submitting it

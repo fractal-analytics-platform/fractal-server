@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -37,10 +36,10 @@ class JobStatusTypeV2(str, Enum):
 
 class JobCreateV2(BaseModel, extra=Extra.forbid):
 
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
-    slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[str]
+    first_task_index: int | None = None
+    last_task_index: int | None = None
+    slurm_account: StrictStr | None = None
+    worker_init: str | None
 
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
@@ -83,23 +82,23 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
 class JobReadV2(BaseModel):
 
     id: int
-    project_id: Optional[int]
+    project_id: int | None
     project_dump: ProjectDumpV2
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
+    slurm_account: str | None
+    workflow_id: int | None
     workflow_dump: WorkflowDumpV2
-    dataset_id: Optional[int]
+    dataset_id: int | None
     dataset_dump: DatasetDumpV2
     start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    end_timestamp: datetime | None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
-    worker_init: Optional[str]
+    log: str | None
+    working_dir: str | None
+    working_dir_user: str | None
+    first_task_index: int | None
+    last_task_index: int | None
+    worker_init: str | None
 
     _start_timestamp = validator("start_timestamp", allow_reuse=True)(
         valutc("start_timestamp")

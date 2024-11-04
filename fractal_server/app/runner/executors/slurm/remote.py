@@ -18,7 +18,6 @@ import logging
 import os
 import sys
 from typing import Literal
-from typing import Optional
 from typing import Type
 
 import cloudpickle
@@ -111,7 +110,7 @@ def worker(
     *,
     in_fname: str,
     out_fname: str,
-    extra_import_paths: Optional[str] = None,
+    extra_import_paths: str | None = None,
 ) -> None:
     """
     Execute a job, possibly on a remote node.

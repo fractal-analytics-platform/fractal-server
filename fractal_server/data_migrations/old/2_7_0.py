@@ -4,7 +4,6 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -35,8 +34,8 @@ async def check_non_duplication_constraints(
     *,
     user_id: int,
     pkg_name: str,
-    version: Optional[str] = None,
-    user_group_id: Optional[int] = None,
+    version: str | None = None,
+    user_group_id: int | None = None,
 ):
     try:
         async for db_async in get_async_db():

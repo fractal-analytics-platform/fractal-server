@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -16,13 +15,13 @@ class JobV2(SQLModel, table=True):
     class Config:
         arbitrary_types_allowed = True
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: Optional[int] = Field(foreign_key="projectv2.id")
-    workflow_id: Optional[int] = Field(foreign_key="workflowv2.id")
-    dataset_id: Optional[int] = Field(foreign_key="datasetv2.id")
+    id: int | None = Field(default=None, primary_key=True)
+    project_id: int | None = Field(foreign_key="projectv2.id")
+    workflow_id: int | None = Field(foreign_key="workflowv2.id")
+    dataset_id: int | None = Field(foreign_key="datasetv2.id")
 
     user_email: str = Field(nullable=False)
-    slurm_account: Optional[str]
+    slurm_account: str | None
 
     dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
@@ -34,9 +33,9 @@ class JobV2(SQLModel, table=True):
         sa_column=Column(JSON, nullable=False)
     )
 
-    worker_init: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
+    worker_init: str | None
+    working_dir: str | None
+    working_dir_user: str | None
     first_task_index: int
     last_task_index: int
 
@@ -44,8 +43,8 @@ class JobV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    end_timestamp: Optional[datetime] = Field(
+    end_timestamp: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
     status: str = JobStatusTypeV2.SUBMITTED
-    log: Optional[str] = None
+    log: str | None = None

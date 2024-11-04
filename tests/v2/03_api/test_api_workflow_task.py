@@ -436,13 +436,12 @@ async def test_patch_workflow_task_with_args_schema(
     """
 
     from pydantic import BaseModel
-    from typing import Optional
 
     # Prepare models to generate a valid JSON Schema
     class _Arguments(BaseModel):
         a: int
         b: str = "one"
-        c: Optional[str] = None
+        c: str | None = None
         d: list[int] = [1, 2, 3]
 
     args_schema = _Arguments.schema()

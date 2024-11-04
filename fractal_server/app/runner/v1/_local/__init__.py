@@ -21,7 +21,6 @@ Incidentally, it also represents the reference implementation for a backend.
 """
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 from ....models.v1 import Workflow
 from ...async_wrap import async_wrap
@@ -86,13 +85,13 @@ async def process_workflow(
     input_history: list[dict[str, Any]],
     logger_name: str,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    user_cache_dir: Optional[str] = None,
-    worker_init: Optional[str] = None,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
+    workflow_dir_remote: Path | None = None,
+    slurm_user: str | None = None,
+    slurm_account: str | None = None,
+    user_cache_dir: str | None = None,
+    worker_init: str | None = None,
+    first_task_index: int | None = None,
+    last_task_index: int | None = None,
 ) -> dict[str, Any]:
     """
     Run a workflow

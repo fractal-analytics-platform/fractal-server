@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -34,7 +33,7 @@ async def create_workflowtask(
     new_task: WorkflowTaskCreateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskReadV2]:
+) -> WorkflowTaskReadV2 | None:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -122,7 +121,7 @@ async def update_workflowtask(
     workflow_task_update: WorkflowTaskUpdateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskReadV2]:
+) -> WorkflowTaskReadV2 | None:
     """
     Edit a WorkflowTask of a Workflow
     """
