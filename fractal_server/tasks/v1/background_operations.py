@@ -10,7 +10,7 @@ from ...string_tools import slugify_task_name_for_source_v1
 from ..utils import get_collection_log_v1
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ..utils import normalize_package_name
+from ..v2.utils_package_names import normalize_package_name
 from ._TaskCollectPip import _TaskCollectPip
 from .utils import _init_venv_v1
 from fractal_server.app.db import DBSyncSession

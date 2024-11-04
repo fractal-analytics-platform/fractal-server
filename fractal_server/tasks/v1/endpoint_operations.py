@@ -4,7 +4,7 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from ..utils import normalize_package_name
+from ..v2.utils_package_names import normalize_package_name
 from ._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
 from .utils import get_python_interpreter_v1
 from fractal_server.app.schemas.v1 import ManifestV1

@@ -32,11 +32,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.tasks.utils import normalize_package_name
 from fractal_server.tasks.v2.collection_local import (
     collect_package_local,
 )
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )

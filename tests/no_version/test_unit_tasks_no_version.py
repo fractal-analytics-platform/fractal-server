@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fractal_server.tasks.utils import get_absolute_venv_path_v1
-from fractal_server.tasks.utils import normalize_package_name
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 
 
 def test_get_absolute_venv_path(tmp_path, override_settings_factory):

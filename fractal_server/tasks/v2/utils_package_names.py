@@ -1,4 +1,5 @@
-from ..utils import normalize_package_name
+import re
+
 from fractal_server.logger import get_logger
 
 
@@ -26,6 +27,24 @@ def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
         raise ValueError(
             f"Invalid {wheel_filename=}. Original error: {str(e)}."
         )
+
+
+def normalize_package_name(name: str) -> str:
+    """
+    Implement PyPa specifications for package-name normalization
+
+    The name should be lowercased with all runs of the characters `.`, `-`,
+    or `_` replaced with a single `-` character. This can be implemented in
+    Python with the re module.
+    (https://packaging.python.org/en/latest/specifications/name-normalization)
+
+    Args:
+        name: The non-normalized package name.
+
+    Returns:
+        The normalized package name.
+    """
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 def compare_package_names(

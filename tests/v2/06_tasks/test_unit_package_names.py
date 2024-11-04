@@ -1,8 +1,8 @@
 import pytest
 
-from fractal_server.tasks.utils import normalize_package_name
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 
 
 def test_parse_wheel_filename():
