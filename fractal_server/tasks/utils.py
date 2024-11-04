@@ -41,12 +41,6 @@ def get_collection_log_v1(path: Path) -> str:
     return log
 
 
-def get_collection_log_v2(path: Path) -> str:
-    log_path = get_log_path(path)
-    log = log_path.open().read()
-    return log
-
-
 def get_collection_freeze_v1(venv_path: Path) -> str:
     package_path = get_absolute_venv_path_v1(venv_path)
     freeze_path = get_freeze_path(package_path)
