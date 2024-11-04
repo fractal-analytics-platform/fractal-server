@@ -419,6 +419,7 @@ async def test_contact_an_admin_message(
         await db.refresh(task_group)
         # Create a CollectionState associated to the new TaskGroup.
         db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
+
         await db.commit()
 
         # Fail inside `_verify_non_duplication_user_constraint`, but get a
