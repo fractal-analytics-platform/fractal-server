@@ -25,7 +25,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 )
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.data_migrations.tools import _check_current_version
-from fractal_server.tasks.utils import _normalize_package_name
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.utils import get_timestamp
 
 logger = logging.getLogger("fix_db")
@@ -171,7 +171,7 @@ def prepare_task_groups(
                 python_version,
                 name,
             ) = source_fields
-            pkg_name = _normalize_package_name(pkg_name)
+            pkg_name = normalize_package_name(pkg_name)
             task_group_key = ":".join(
                 [pkg_name, version, extras, python_version]
             )

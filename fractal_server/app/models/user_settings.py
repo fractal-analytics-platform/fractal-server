@@ -36,3 +36,4 @@ class UserSettings(SQLModel, table=True):
     ssh_jobs_dir: Optional[str] = None
     slurm_user: Optional[str] = None
     cache_dir: Optional[str] = None
+    project_dir: Optional[str] = None

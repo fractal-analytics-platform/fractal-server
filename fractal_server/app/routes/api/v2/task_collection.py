@@ -24,6 +24,7 @@ from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
+from ._aux_functions_task_collection import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
@@ -31,16 +32,14 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import get_collection_log_v2
-from fractal_server.tasks.v2.background_operations import (
-    background_collect_pip,
+from fractal_server.tasks.v2.collection_local import (
+    collect_package_local,
 )
-from fractal_server.tasks.v2.endpoint_operations import (
-    get_package_version_from_pypi,
+from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
+from fractal_server.tasks.v2.utils_python_interpreter import (
+    get_python_interpreter_v2,
 )
-from fractal_server.tasks.v2.utils import _parse_wheel_filename
-from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 router = APIRouter()
 
@@ -118,14 +117,14 @@ async def collect_tasks_pip(
                     f"Original error: {str(e)}",
                 ),
             )
-        task_group_attrs["pkg_name"] = _normalize_package_name(
+        task_group_attrs["pkg_name"] = normalize_package_name(
             wheel_info["distribution"]
         )
         task_group_attrs["version"] = wheel_info["version"]
         task_group_attrs["origin"] = TaskGroupV2OriginEnum.WHEELFILE
     else:
         pkg_name = task_collect.package
-        task_group_attrs["pkg_name"] = _normalize_package_name(pkg_name)
+        task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
         task_group_attrs["origin"] = TaskGroupV2OriginEnum.PYPI
         latest_version = await get_package_version_from_pypi(
             task_collect.package,
@@ -249,8 +248,8 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
 
-        from fractal_server.tasks.v2.background_operations_ssh import (
-            background_collect_pip_ssh,
+        from fractal_server.tasks.v2.collection_ssh import (
+            collect_package_ssh,
         )
 
         # User appropriate FractalSSH object
@@ -263,7 +262,7 @@ async def collect_tasks_pip(
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
-            background_collect_pip_ssh,
+            collect_package_ssh,
             state_id=state.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
@@ -273,7 +272,7 @@ async def collect_tasks_pip(
     else:
         # Local task collection
         background_tasks.add_task(
-            background_collect_pip,
+            collect_package_local,
             state_id=state.id,
             task_group=task_group,
         )
@@ -296,42 +295,15 @@ async def collect_tasks_pip(
 async def check_collection_status(
     state_id: int,
     user: UserOAuth = Depends(current_active_user),
-    verbose: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:  # State[TaskCollectStatus]
     """
     Check status of background task collection
     """
-
-    logger = set_logger(logger_name="check_collection_status")
-    logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(CollectionStateV2, state_id)
-    if not state:
-        await db.close()
+    if state is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # FIXME SSH: add logic for when data.state["log"] is empty
-        pass
-    else:
-        # Non-SSH mode
-        # In some cases (i.e. a successful or ongoing task collection),
-        # state.data["log"] is not set; if so, we collect the current logs.
-        if verbose and not state.data.get("log"):
-            if "path" not in state.data.keys():
-                await db.close()
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"No 'path' in CollectionStateV2[{state_id}].data"
-                    ),
-                )
-            state.data["log"] = get_collection_log_v2(Path(state.data["path"]))
-
-    reset_logger_handlers(logger)
-    await db.close()
     return state

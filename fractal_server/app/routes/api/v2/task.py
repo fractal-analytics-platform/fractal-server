@@ -36,8 +36,7 @@ logger = set_logger(__name__)
 
 @router.get("/", response_model=list[TaskReadV2])
 async def get_list_task(
-    args_schema_parallel: bool = True,
-    args_schema_non_parallel: bool = True,
+    args_schema: bool = True,
     category: Optional[str] = None,
     modality: Optional[str] = None,
     author: Optional[str] = None,
@@ -72,11 +71,9 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
-    if args_schema_parallel is False:
+    if args_schema is False:
         for task in task_list:
             setattr(task, "args_schema_parallel", None)
-    if args_schema_non_parallel is False:
-        for task in task_list:
             setattr(task, "args_schema_non_parallel", None)
 
     return task_list

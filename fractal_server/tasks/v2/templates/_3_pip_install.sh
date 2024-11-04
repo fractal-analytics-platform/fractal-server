@@ -9,6 +9,7 @@ write_log(){
 # Variables to be filled within fractal-server
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 INSTALL_STRING=__INSTALL_STRING__
+PINNED_PACKAGE_LIST="__PINNED_PACKAGE_LIST__"
 
 TIME_START=$(date +%s)
 
@@ -16,9 +17,29 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Install package
 write_log "START install ${INSTALL_STRING}"
-"$VENVPYTHON" -m pip install "$INSTALL_STRING"
+"$VENVPYTHON" -m pip install --no-cache-dir "$INSTALL_STRING"
 write_log "END   install ${INSTALL_STRING}"
 echo
+
+
+# Optionally install pinned versions
+if [ "$PINNED_PACKAGE_LIST" != "" ]; then
+    write_log "START installing pinned versions $PINNED_PACKAGE_LIST"
+    for PINNED_PKG_VERSION in $PINNED_PACKAGE_LIST; do
+
+        PKGNAME=$(echo "$PINNED_PKG_VERSION" | cut -d '=' -f 1)
+        write_log "INFO: package name $PKGNAME"
+        "$VENVPYTHON" -m pip show "$PKGNAME"
+
+    done
+
+    write_log "All packages in ${PINNED_PACKAGE_LIST} are already installed, proceed with specific versions."
+    "$VENVPYTHON" -m pip install --no-cache-dir "$PINNED_PACKAGE_LIST"
+    write_log "END installing pinned versions $PINNED_PACKAGE_LIST"
+else
+    write_log "SKIP installing pinned versions $PINNED_PACKAGE_LIST (empty list)"
+fi
+
 
 # End
 TIME_END=$(date +%s)

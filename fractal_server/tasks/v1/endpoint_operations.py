@@ -3,14 +3,14 @@ from pathlib import Path
 from typing import Optional
 from zipfile import ZipFile
 
-from ..utils import _normalize_package_name
+from ..v2.utils_package_names import normalize_package_name
 from ._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
 from .utils import get_python_interpreter_v1
 from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
-from fractal_server.utils import execute_command
+from fractal_server.utils import execute_command_async
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
@@ -31,7 +31,7 @@ async def download_package(
     )
     package_and_version = f"{task_pkg.package}{version}"
     cmd = f"{pip} download --no-deps {package_and_version} -d {dest}"
-    stdout = await execute_command(command=cmd, cwd=Path("."))
+    stdout = await execute_command_async(command=cmd, cwd=Path("."))
     pkg_file = next(
         line.split()[-1] for line in stdout.split("\n") if "Saved" in line
     )
@@ -122,7 +122,7 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
         logger.debug("Package name and version read correctly.")
 
     # Normalize package name:
-    pkg_name = _normalize_package_name(pkg_name)
+    pkg_name = normalize_package_name(pkg_name)
 
     info = dict(
         pkg_name=pkg_name,
@@ -147,7 +147,7 @@ def create_package_dir_pip(
             f"Cannot create venv folder for package `{task_pkg.package}` "
             "with `version=None`."
         )
-    normalized_package = _normalize_package_name(task_pkg.package)
+    normalized_package = normalize_package_name(task_pkg.package)
     package_dir = f"{normalized_package}{task_pkg.package_version}"
     venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir
     if create:

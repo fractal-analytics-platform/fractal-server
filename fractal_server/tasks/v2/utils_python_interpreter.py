@@ -31,29 +31,3 @@ def get_python_interpreter_v2(
     if value is None:
         raise ValueError(f"Requested {python_version=}, but {key}={value}.")
     return value
-
-
-def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
-    """
-    Extract distribution and version from a wheel filename.
-
-    The structure of a wheel filename is fixed, and it must start with
-    `{distribution}-{version}` (see
-    https://packaging.python.org/en/latest/specifications/binary-distribution-format
-    ).
-
-    Note that we transform exceptions in `ValueError`s, since this function is
-    also used within Pydantic validators.
-    """
-    if "/" in wheel_filename:
-        raise ValueError(
-            "[_parse_wheel_filename] Input must be a filename, not a full "
-            f"path (given: {wheel_filename})."
-        )
-    try:
-        parts = wheel_filename.split("-")
-        return dict(distribution=parts[0], version=parts[1])
-    except Exception as e:
-        raise ValueError(
-            f"Invalid {wheel_filename=}. Original error: {str(e)}."
-        )

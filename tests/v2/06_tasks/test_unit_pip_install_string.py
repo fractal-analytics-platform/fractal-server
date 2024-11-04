@@ -3,7 +3,7 @@ import pytest
 from fractal_server.app.models.v2 import TaskGroupV2
 
 
-async def test_pip_install_string():
+def test_pip_install_string():
     # No wheel path
     tg = TaskGroupV2(pkg_name="pkg", version="1.2.3")
     assert tg.pip_install_string == "pkg==1.2.3"
@@ -34,3 +34,20 @@ async def test_pip_install_string():
         wheel_path="/tmp/x.whl", pkg_name="pkg", pip_extras="extra1"
     )
     assert tg.pip_install_string == "/tmp/x.whl[extra1]"
+
+
+def test_pinned_package_versions_string():
+    tg = TaskGroupV2(pkg_name="pkg", version="1.2.3")
+    assert tg.pinned_package_versions_string == ""
+
+    tg = TaskGroupV2(
+        pkg_name="pkg", version="1.2.3", pinned_package_versions=dict()
+    )
+    assert tg.pinned_package_versions_string == ""
+
+    tg = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        pinned_package_versions=dict(pkgA="1.2.3a", pkgB="3.2.1b"),
+    )
+    assert tg.pinned_package_versions_string == "pkgA==1.2.3a pkgB==3.2.1b"
