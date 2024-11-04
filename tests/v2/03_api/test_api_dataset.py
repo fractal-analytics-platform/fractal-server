@@ -7,9 +7,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.config import get_settings
 from fractal_server.images import SingleImage
-from fractal_server.syringe import Inject
 
 PREFIX = "api/v2"
 
@@ -232,11 +230,7 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
         )
-        settings = Inject(get_settings)
-        if settings.DB_ENGINE == "sqlite":
-            assert res.status_code == 422
-        else:
-            assert res.status_code == 201
+        assert res.status_code == 201
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
         res = await client.post(
