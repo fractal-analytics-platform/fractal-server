@@ -3,12 +3,12 @@
 # Unreleased
 
 * Task group
-    * Add `pinned_package_versions_string` property.
+    * Add `pinned_package_versions_string` property (\#1980).
 * Task collection
-    * Now both the local and SSH versions of the task collection use the bash templates.
-    * Now `pip install` uses `--no-cache`.
+    * Now both the local and SSH versions of the task collection use the bash templates (\#1980).
+    * Now `pip install` uses `--no-cache` (\#1980).
 * API
-    * Deprecate the `verbose` query parameter in `GET /api/v2/task/collect/{state_id}/`
+    * Deprecate the `verbose` query parameter in `GET /api/v2/task/collect/{state_id}/` (\#1980).
  
 # 2.7.1
 
