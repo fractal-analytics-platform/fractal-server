@@ -59,27 +59,21 @@ async def create_dataset(
         db_dataset = DatasetV2(
             project_id=project_id,
             zarr_dir="__PLACEHOLDER__",
-            **dataset.dict(exclude_none=True),
+            **dataset.dict(exclude={"zarr_dir"}),
         )
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
-        setattr(
-            db_dataset,
-            "zarr_dir",
-            (
-                f"{user.settings.project_dir}/fractal/"
-                f"{project_id}_{sanitize_string(project.name)}/"
-                f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
-            ),
+        db_dataset.zarr_dir = (
+            f"{user.settings.project_dir}/fractal/"
+            f"{project_id}_{sanitize_string(project.name)}/"
+            f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
     else:
-        db_dataset = DatasetV2(
-            project_id=project_id, **dataset.dict(exclude_none=True)
-        )
+        db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
