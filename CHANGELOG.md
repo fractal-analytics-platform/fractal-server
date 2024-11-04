@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.7.2 (Unreleased)
+
+* API:
+    * Add `project_dir` attribute to `UserSettings` (\#1990).
+    * Set a default for `DatasetV2.zarr_dir` (\#1990).
+
 # 2.7.1
 
 > WARNING: As of this version, all extras for `pip install` are deprecated and
