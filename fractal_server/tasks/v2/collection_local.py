@@ -12,7 +12,6 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -235,7 +234,6 @@ def collect_package_local(
                 logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
-                    task_group_activity_id=task_group_activity_id,
                     new_status=CollectionStatusV2.COLLECTING,
                     logger_name=LOGGER_NAME,
                     db=db,
@@ -350,13 +348,6 @@ def collect_package_local(
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["freeze"] = stdout_pip_freeze
                 collection_state.data["status"] = CollectionStatusV2.OK
-                # FIXME: The `task_list` key is likely not used by any client,
-                # we should consider dropping it
-                task_read_list = [
-                    TaskReadV2(**task.model_dump()).dict()
-                    for task in task_group.task_list
-                ]
-                collection_state.data["task_list"] = task_read_list
                 flag_modified(collection_state, "data")
 
                 task_group_activity = db.get(
