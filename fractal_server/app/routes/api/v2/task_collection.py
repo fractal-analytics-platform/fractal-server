@@ -247,7 +247,7 @@ async def collect_tasks_pip(
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
-        package=task_group.pkg_name,
+        pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
     db.add(state)
