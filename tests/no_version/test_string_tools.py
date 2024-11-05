@@ -22,3 +22,9 @@ def test_unit_validate_cmd():
         with pytest.raises(ValueError):
             validate_cmd(cmd)
         validate_cmd(cmd, allow_char=f"xy{char}z")
+
+    with pytest.raises(
+        ValueError,
+        match="MyAttribute must not contain",
+    ):
+        validate_cmd("; rm", attribute_name="MyAttribute")
