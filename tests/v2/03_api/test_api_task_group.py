@@ -131,10 +131,22 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
         task = await task_factory_v2(user_id=user1.id, source="source")
 
     state = CollectionStateV2(taskgroupv2_id=task.taskgroupv2_id)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=user1.id,
+        taskgroupv2_id=task.taskgroupv2_id,
+        pkg_name="pkg",
+        version="1.0.0",
+        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatusV2.PENDING,
+    )
     db.add(state)
     await db.commit()
     await db.refresh(state)
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
     assert state.taskgroupv2_id == task.taskgroupv2_id
+    assert task_group_activity.taskgroupv2_id == task.taskgroupv2_id
 
     async with MockCurrentUser():
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
@@ -148,6 +160,8 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
 
     await db.refresh(state)
     assert state.taskgroupv2_id is None
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id is None
 
 
 async def test_delete_task_group_fail(
