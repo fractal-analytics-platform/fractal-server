@@ -1,8 +1,8 @@
 """Add TaskGroupActivityV2
 
-Revision ID: 606d4df56483
+Revision ID: 57faddb94433
 Revises: 8e8f227a3e36
-Create Date: 2024-11-04 15:51:44.237939
+Create Date: 2024-11-05 12:16:08.665424
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "606d4df56483"
+revision = "57faddb94433"
 down_revision = "8e8f227a3e36"
 branch_labels = None
 depends_on = None
@@ -22,9 +22,16 @@ def upgrade() -> None:
     op.create_table(
         "taskgroupactivityv2",
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("taskgroupv2_id", sa.Integer(), nullable=True),
         sa.Column(
             "timestamp_started", sa.DateTime(timezone=True), nullable=True
+        ),
+        sa.Column(
+            "pkg_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column(
+            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column(
             "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
@@ -40,6 +47,11 @@ def upgrade() -> None:
             ["taskgroupv2_id"],
             ["taskgroupv2.id"],
             name=op.f("fk_taskgroupactivityv2_taskgroupv2_id_taskgroupv2"),
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user_oauth.id"],
+            name=op.f("fk_taskgroupactivityv2_user_id_user_oauth"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_taskgroupactivityv2")),
     )
