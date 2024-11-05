@@ -377,8 +377,8 @@ async def test_get_task_group_activity_list(
             f"?timestamp_started_min={quote(str(activity3.timestamp_started))}"
         )
         assert len(res.json()) == 2
-        # combination
-        res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=FOo")
+        # combination and iconstains
+        res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=O")
         assert len(res.json()) == 2
 
     async with MockCurrentUser():
