@@ -14,6 +14,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
@@ -128,6 +129,21 @@ async def delete_task_group(
         collection_state.taskgroupv2_id = None
         db.add(collection_state)
     logger.debug("End of cascade operations on CollectionStateV2.")
+
+    logger.debug("Start of cascade operations on TaskGroupActivityV2.")
+    stm = select(TaskGroupActivityV2).where(
+        TaskGroupActivityV2.taskgroupv2_id == task_group_id
+    )
+    res = await db.execute(stm)
+    task_group_activity_list = res.scalars().all()
+    for task_group_activity in task_group_activity_list:
+        logger.debug(
+            f"Setting CollectionStateV2[{task_group_activity.id}]"
+            ".taskgroupv2_id to None."
+        )
+        task_group_activity.taskgroupv2_id = None
+        db.add(task_group_activity)
+    logger.debug("End of cascade operations on TaskGroupActivityV2.")
 
     await db.delete(task_group)
     await db.commit()
