@@ -1,8 +1,8 @@
 """Add TaskGroupActivityV2
 
-Revision ID: 57faddb94433
+Revision ID: 7fe36b294e1a
 Revises: 19eca0dd47a9
-Create Date: 2024-11-05 12:16:08.665424
+Create Date: 2024-11-05 15:34:54.331330
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "57faddb94433"
+revision = "7fe36b294e1a"
 down_revision = "19eca0dd47a9"
 branch_labels = None
 depends_on = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("taskgroupv2_id", sa.Integer(), nullable=True),
         sa.Column(
-            "timestamp_started", sa.DateTime(timezone=True), nullable=True
+            "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column(
             "pkg_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False

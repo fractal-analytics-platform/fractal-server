@@ -109,7 +109,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     debug(state)
     debug(task_group_activity_v2)
     assert state.data["status"] == "fail"
-    assert task_group_activity_v2.status == "fail"
+    assert task_group_activity_v2.status == "failed"
     # Verify that foreign key was set to None
     assert state.taskgroupv2_id is None
 
@@ -194,7 +194,7 @@ async def test_collect_pip_local_fail_rmtree(
     debug(state)
     debug(task_group_activity_v2)
     assert state.data["status"] == "fail"
-    assert task_group_activity_v2.status == "fail"
+    assert task_group_activity_v2.status == "failed"
     assert "Broken rm" in state.data["log"]
     assert "Broken rm" in task_group_activity_v2.log
     assert path.exists()
