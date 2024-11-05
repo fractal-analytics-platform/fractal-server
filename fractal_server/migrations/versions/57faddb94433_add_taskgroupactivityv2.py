@@ -1,7 +1,7 @@
 """Add TaskGroupActivityV2
 
 Revision ID: 57faddb94433
-Revises: 8e8f227a3e36
+Revises: 19eca0dd47a9
 Create Date: 2024-11-05 12:16:08.665424
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "57faddb94433"
-down_revision = "8e8f227a3e36"
+down_revision = "19eca0dd47a9"
 branch_labels = None
 depends_on = None
 
