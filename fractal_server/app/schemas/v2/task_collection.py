@@ -66,7 +66,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     )
 
     @validator("pinned_package_versions")
-    def pinned_package_validator(cls, value):
+    def pinned_package_versions_validator(cls, value):
         if value is None:
             return value
         old_keys = list(value.keys())
@@ -97,16 +97,26 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
                 raise ValueError(
                     f"Local-package path must be absolute: (given {value})."
                 )
+        validate_cmd(value, attribute_name="package")
         return value
 
     @validator("package_version")
-    def package_version_validator(cls, v, values):
+    def package_version_validator(
+        cls, v: Optional[str], values
+    ) -> Optional[str]:
         v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
             raise ValueError(
                 "Cannot provide package version when package is a wheel file."
             )
+        validate_cmd(v, attribute_name="package_version")
         return v
+
+    @validator("package_extras")
+    def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
+        value = valstr("package_extras")(value)
+        validate_cmd(value, attribute_name="package_extras")
+        return value
 
 
 class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
