@@ -187,3 +187,20 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return task_group
+
+
+@router.get("/activity/", response_model=list[TaskGroupActivityV2])
+async def get_task_group_activity_list(
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupActivityV2]:
+    pass
+
+
+@router.get("/activity/{activity_id}/", response_model=TaskGroupActivityV2)
+async def get_task_group_activity(
+    activity_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupActivityV2:
+    pass
