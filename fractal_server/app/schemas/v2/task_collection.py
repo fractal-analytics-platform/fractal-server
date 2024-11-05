@@ -57,14 +57,6 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    _package = validator("package", allow_reuse=True)(valstr("package"))
-    _package_version = validator("package_version", allow_reuse=True)(
-        valstr("package_version")
-    )
-    _package_extras = validator("package_extras", allow_reuse=True)(
-        valstr("package_extras")
-    )
-
     @validator("pinned_package_versions")
     def pinned_package_versions_validator(cls, value):
         if value is None:
@@ -87,6 +79,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
 
     @validator("package")
     def package_validator(cls, value):
+        value = valstr("package")(value)
         if "/" in value or value.endswith(".whl"):
             if not value.endswith(".whl"):
                 raise ValueError(
