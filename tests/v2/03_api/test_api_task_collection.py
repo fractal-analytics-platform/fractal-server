@@ -25,7 +25,6 @@ async def test_task_collection_from_wheel(
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
-    use_current_python: bool,
     current_py_version: str,
 ):
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
@@ -243,7 +242,7 @@ async def test_task_collection_from_pypi(
 
 
 async def test_task_collection_failure_due_to_existing_path(
-    tmp_path, db, client, MockCurrentUser
+    db, client, MockCurrentUser
 ):
     settings = Inject(get_settings)
 

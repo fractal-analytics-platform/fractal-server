@@ -78,9 +78,12 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     db.expunge(task_group)
     state = CollectionStateV2(taskgroupv2_id=task_group.id)
     task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
         taskgroupv2_id=task_group.id,
         status=CollectionStatusV2.PENDING,
         action="collect",
+        pkg_name="pkg",
+        version="1.0.0",
     )
     db.add(state)
     await db.commit()
@@ -156,9 +159,12 @@ async def test_collect_pip_local_fail_rmtree(
     db.expunge(task_group)
     state = CollectionStateV2(taskgroupv2_id=task_group.id)
     task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
         taskgroupv2_id=task_group.id,
         status=CollectionStatusV2.PENDING,
         action="collect",
+        pkg_name="pkg",
+        version="1.0.0",
     )
     db.add(state)
     await db.commit()

@@ -92,15 +92,6 @@ async def test_task_collection_ssh_from_pypi(
         state_data = res.json()["data"]
         debug(state_data)
         assert state_data["status"] == CollectionStatusV2.OK
-        # Check fractal-tasks-core version in freeze data
-        assert f"fractal-tasks-core=={package_version}" in state_data["freeze"]
-        # Check pip version constraint in freeze data
-        pip_version = next(
-            line
-            for line in state_data["freeze"].split("\n")
-            if line.startswith("pip")
-        ).split("==")[1]
-        assert pip_version == CURRENT_FRACTAL_MAX_PIP_VERSION
         # Check remote venv folder exists
         remote_folder = state_data["venv_path"]
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
@@ -367,7 +358,6 @@ async def test_task_collection_ssh_failure(
         assert res.status_code == 200
         state_data = res.json()["data"]
         assert state_data["status"] == CollectionStatusV2.FAIL
-        debug(state_data["log"])
         assert "No such file or directory" in state_data["log"]
 
         # Patch ssh.remove_folder

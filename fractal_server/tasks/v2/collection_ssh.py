@@ -165,7 +165,6 @@ def collect_package_ssh(
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
-                    task_group_activity_id=task_group_activity_id,
                     new_status=CollectionStatusV2.INSTALLING,
                     logger_name=LOGGER_NAME,
                     db=db,
@@ -234,7 +233,6 @@ def collect_package_ssh(
                 logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
-                    task_group_activity_id=task_group_activity_id,
                     new_status=CollectionStatusV2.COLLECTING,
                     logger_name=LOGGER_NAME,
                     db=db,
@@ -344,7 +342,6 @@ def collect_package_ssh(
                     TaskGroupActivityV2, task_group_activity_id
                 )
                 task_group_activity.status = TaskGroupActivityStatusV2.OK
-                db.commit(task_group_activity)
 
                 db.commit()
                 logger.debug("finalising - END")
