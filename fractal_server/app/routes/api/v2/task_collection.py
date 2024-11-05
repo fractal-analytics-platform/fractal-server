@@ -22,6 +22,7 @@ from ....models.v2 import TaskGroupV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
+from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_collection import get_package_version_from_pypi
@@ -33,6 +34,9 @@ from fractal_server.app.models.v2.task import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2.task_collection import (
+    TaskGroupActivityActionV2,
+)
 from fractal_server.tasks.v2.collection_local import (
     collect_package_local,
 )
@@ -240,8 +244,8 @@ async def collect_tasks_pip(
     )
     task_group_activity = TaskGroupActivityV2(
         taskgroupv2_id=task_group.id,
-        status=CollectionStatusV2.PENDING,
-        action="collect",
+        status=TaskGroupActivityStatusV2.ONGOING,
+        action=TaskGroupActivityActionV2.COLLECT,
     )
     db.add(state)
     await db.commit()
