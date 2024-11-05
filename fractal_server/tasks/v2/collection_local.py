@@ -8,8 +8,10 @@ from sqlalchemy.orm.attributes import flag_modified
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
@@ -22,6 +24,9 @@ from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import _refresh_logs
 from fractal_server.tasks.v2.utils_background import (
     _set_collection_state_data_status,
+)
+from fractal_server.tasks.v2.utils_background import (
+    _set_task_group_activity_status,
 )
 from fractal_server.tasks.v2.utils_background import check_task_files_exist
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
@@ -94,7 +99,6 @@ def collect_package_local(
 
     # Create the task_group path
     with TemporaryDirectory() as tmpdir:
-
         # Setup logger in tmpdir
         LOGGER_NAME = "task_collection_local"
         log_file_path = get_log_path(Path(tmpdir))
@@ -158,8 +162,13 @@ def collect_package_local(
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
-                    task_group_activity_id=task_group_activity_id,
                     new_status=CollectionStatusV2.INSTALLING,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.ONGOING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
@@ -231,6 +240,13 @@ def collect_package_local(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.ONGOING,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
+
                 _refresh_logs(
                     state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
@@ -342,6 +358,13 @@ def collect_package_local(
                 ]
                 collection_state.data["task_list"] = task_read_list
                 flag_modified(collection_state, "data")
+
+                task_group_activity = db.get(
+                    TaskGroupActivityV2, task_group_activity_id
+                )
+                task_group_activity.status = TaskGroupActivityStatusV2.OK
+                db.commit(task_group_activity)
+
                 db.commit()
                 logger.debug("finalising - END")
                 logger.debug("END")
