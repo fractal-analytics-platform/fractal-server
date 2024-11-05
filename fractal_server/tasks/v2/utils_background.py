@@ -10,6 +10,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2.task import TaskGroupActivityV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
@@ -28,8 +29,26 @@ def _set_collection_state_data_status(
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["status"] = CollectionStatusV2(new_status)
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    task_group_activity.status = CollectionStatusV2(new_status)
+    task_group_activity.status = TaskGroupActivityStatusV2(new_status)
     flag_modified(collection_state, "data")
+    db.add(task_group_activity)
+    db.commit()
+
+
+def _set_task_group_activity_status(
+    *,
+    task_group_activity_id: int,
+    new_status: TaskGroupActivityStatusV2,
+    logger_name: str,
+    db: DBSyncSession,
+):
+    logger = get_logger(logger_name)
+    logger.debug(
+        f"{task_group_activity_id=} "
+        "- set task_group_activity.status to {new_status}"
+    )
+    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+    task_group_activity.status = TaskGroupActivityStatusV2(new_status)
     db.add(task_group_activity)
     db.commit()
 
@@ -84,6 +103,13 @@ def _handle_failure(
         state_id=state_id,
         task_group_activity_id=task_group_activity_id,
         new_status=CollectionStatusV2.FAIL,
+        logger_name=logger_name,
+        db=db,
+    )
+
+    _set_task_group_activity_status(
+        task_group_activity_id=task_group_activity_id,
+        new_status=TaskGroupActivityStatusV2.FAILED,
         logger_name=logger_name,
         db=db,
     )
