@@ -83,3 +83,16 @@ class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
         if value is None:
             raise ValueError("`active` cannot be set to None")
         return value
+
+
+class TaskGroupActivityV2Read(BaseModel):
+    id: int
+    user_id: int
+    taskgroupv2_id: Optional[int] = None
+    timestamp_started: datetime
+    timestamp_ended: Optional[datetime] = None
+    pkg_name: str
+    version: str
+    status: str
+    action: str
+    log: Optional[str] = None
