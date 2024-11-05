@@ -30,13 +30,13 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2.task import TaskGroupActivityV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.app.schemas.v2.task_collection import (
+from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.tasks.v2.collection_local import (
     collect_package_local,
 )
