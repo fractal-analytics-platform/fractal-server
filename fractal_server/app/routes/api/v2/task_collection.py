@@ -243,7 +243,7 @@ async def collect_tasks_pip(
         data=collection_state_data, taskgroupv2_id=task_group.id
     )
     task_group_activity = TaskGroupActivityV2(
-        user_id=user.id,
+        user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
