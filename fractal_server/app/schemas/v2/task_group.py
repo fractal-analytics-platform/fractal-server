@@ -12,14 +12,25 @@ from .._validators import val_absolute_path
 from .._validators import valdictkeys
 from .._validators import valstr
 from .task import TaskReadV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
 
 class TaskGroupV2OriginEnum(str, Enum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
     OTHER = "other"
+
+
+class TaskGroupActivityStatusV2(str, Enum):
+    PENDING = "pending"
+    ONGOING = "ongoing"
+    FAILED = "failed"
+    OK = "OK"
+
+
+class TaskGroupActivityActionV2(str, Enum):
+    COLLECT = "collect"
+    DEACTIVATE = "deactivate"
+    REACTIVATE = "reactivate"
 
 
 class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
