@@ -363,7 +363,7 @@ def collect_package_local(
                     TaskGroupActivityV2, task_group_activity_id
                 )
                 task_group_activity.status = TaskGroupActivityStatusV2.OK
-                db.commit(task_group_activity)
+                db.add(task_group_activity)
 
                 db.commit()
                 logger.debug("finalising - END")

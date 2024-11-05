@@ -247,7 +247,7 @@ async def collect_tasks_pip(
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
-        package=task_group.pkg_name,
+        pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
     db.add(state)
@@ -280,6 +280,7 @@ async def collect_tasks_pip(
         background_tasks.add_task(
             collect_package_ssh,
             state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
