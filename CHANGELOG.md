@@ -3,13 +3,13 @@
 # Unreleased
 
 * API
-    * Add `GET /api/v2/task-group/activity/`
-    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/`
-    * Add `GET /admin/v2/task-group/activity/`
+    * Add `GET /api/v2/task-group/activity/`. (\#2005)
+    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/`. (\#2005)
+    * Add `GET /admin/v2/task-group/activity/`. (\#2005)
 * Database
-    * Add `TaskGroupActivityV2` table
+    * Add `TaskGroupActivityV2` table. (\#2005)
 * Schemas
-    * Add `TaskGroupActivityV2Read`
+    * Add `TaskGroupActivityV2Read`. (\#2005)
 
 # 2.8.1
 
