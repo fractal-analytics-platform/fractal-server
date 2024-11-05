@@ -243,9 +243,12 @@ async def collect_tasks_pip(
         data=collection_state_data, taskgroupv2_id=task_group.id
     )
     task_group_activity = TaskGroupActivityV2(
+        user_id=user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.ONGOING,
+        status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
+        package=task_group.pkg_name,
+        version=task_group.version,
     )
     db.add(state)
     await db.commit()
