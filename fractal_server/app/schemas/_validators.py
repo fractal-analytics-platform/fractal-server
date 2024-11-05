@@ -73,7 +73,7 @@ def val_absolute_path(attribute: str, accept_none: bool = False):
     Check that a string attribute is an absolute path
     """
 
-    def val(string: str | None) -> str:
+    def val(string: str | None) -> str | None:
         if string is None:
             if accept_none:
                 return string

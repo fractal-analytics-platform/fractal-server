@@ -38,7 +38,7 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
     @validator("zarr_dir")
-    def normalize_zarr_dir(cls, v: str) -> str:
+    def normalize_zarr_dir(cls, v: str | None) -> str | None:
         if v is not None:
             return normalize_url(v)
         return v
