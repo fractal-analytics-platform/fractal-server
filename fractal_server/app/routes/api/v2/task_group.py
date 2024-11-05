@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
@@ -189,18 +190,18 @@ async def patch_task_group(
     return task_group
 
 
-@router.get("/activity/", response_model=list[TaskGroupActivityV2])
+@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
 async def get_task_group_activity_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupActivityV2]:
+) -> list[TaskGroupActivityV2Read]:
     pass
 
 
-@router.get("/activity/{activity_id}/", response_model=TaskGroupActivityV2)
+@router.get("/activity/{activity_id}/", response_model=TaskGroupActivityV2Read)
 async def get_task_group_activity(
     activity_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2:
+) -> TaskGroupActivityV2Read:
     pass
