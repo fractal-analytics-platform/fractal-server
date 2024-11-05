@@ -1,16 +1,22 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.8.1
+
+* API:
+    * Validate all user-provided strings that end up in pip-install commands (\#2003).
+
 # 2.8.0
 
-* Task group
-    * Add `pinned_package_versions_string` property (\#1980).
 * Task collection
     * Now both the local and SSH versions of the task collection use the bash templates (\#1980).
     * Update task-collections database logs incrementally (\#1980).
+    * Add `TaskGroupV2.pinned_package_versions_string` property (\#1980).
     * Support pinned-package versions for SSH task collection (\#1980).
     * Now `pip install` uses `--no-cache` (\#1980).
 * API
     * Deprecate the `verbose` query parameter in `GET /api/v2/task/collect/{state_id}/` (\#1980).
+    * Add `project_dir` attribute to `UserSettings` (\#1990).
+    * Set a default for `DatasetV2.zarr_dir` (\#1990).
     * Combine the `args_schema_parallel` and `args_schema_non_parallel` query parameters in `GET /api/v2/task/` into a single parameter `args_schema` (\#1998).
 
 # 2.7.1

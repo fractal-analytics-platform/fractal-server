@@ -8,6 +8,8 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.images import SingleImage
+from fractal_server.string_tools import sanitize_string
+from fractal_server.urls import normalize_url
 
 PREFIX = "api/v2"
 
@@ -194,33 +196,26 @@ async def test_get_user_datasets(
             assert len(ds["history"]) == 0
 
 
-async def test_post_dataset(client, MockCurrentUser):
-    async with MockCurrentUser():
-        # CREATE A PROJECT
-        res = await client.post(
-            f"{PREFIX}/project/",
-            json=dict(name="test project"),
-        )
-        assert res.status_code == 201
-        project = res.json()
-        project_id = project["id"]
+async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
 
         # ADD DATASET
         payload = dict(name="new dataset", zarr_dir="/tmp/zarr")
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/",
+            f"{PREFIX}/project/{prj.id}/dataset/",
             json=payload,
         )
         debug(res.json())
         assert res.status_code == 201
         dataset = res.json()
         assert dataset["name"] == payload["name"]
-        assert dataset["project_id"] == project_id
+        assert dataset["project_id"] == prj.id
 
         # EDIT DATASET
         payload1 = dict(name="new dataset name")
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/",
+            f"{PREFIX}/project/{prj.id}/dataset/{dataset['id']}/",
             json=payload1,
         )
         patched_dataset = res.json()
@@ -228,6 +223,28 @@ async def test_post_dataset(client, MockCurrentUser):
         assert res.status_code == 200
         for k, v in payload1.items():
             assert patched_dataset[k] == v
+
+    # Test POST dataset without zarr_dir
+    async with MockCurrentUser(
+        user_settings_dict={"project_dir": "/some/dir"}
+    ) as user:
+        prj = await project_factory_v2(user)
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
+        )
+        assert res.json()["zarr_dir"] == normalize_url(
+            f"{user.settings.project_dir}/fractal/"
+            f"{prj.id}_{sanitize_string(prj.name)}/"
+            f"{res.json()['id']}_{sanitize_string(res.json()['name'])}"
+        )
+        assert res.status_code == 201
+
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName2")
+        )
+        assert res.status_code == 422
 
 
 async def test_delete_dataset(

@@ -331,6 +331,7 @@ async def test_patch_user_settings_bulk(
             slurm_user="test01",
             slurm_accounts=[],
             cache_dir=None,
+            project_dir=None,
         ) == user.settings.dict(exclude={"id"})
 
     # remove user4 from default user group
@@ -351,6 +352,7 @@ async def test_patch_user_settings_bulk(
         # missing `slurm_user`
         slurm_accounts=["foo", "bar"],
         cache_dir="/tmp/cache",
+        project_dir="/foo",
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{default_user_group.id}/user-settings/", json=patch
@@ -373,4 +375,28 @@ async def test_patch_user_settings_bulk(
         slurm_user="test01",
         slurm_accounts=[],
         cache_dir=None,
+        project_dir=None,
     ) == user4.settings.dict(exclude={"id"})
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_user_group.id}/user-settings/",
+        json=dict(project_dir="not/an/absolute/path"),
+    )
+    assert res.status_code == 422
+
+    # `None` is a valid `project_dir`
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_user_group.id}/user-settings/",
+        json=dict(project_dir="/fancy/dir"),
+    )
+    assert res.status_code == 200
+    for user in [user1, user2, user3]:
+        await db.refresh(user)
+        assert user.settings.project_dir == "/fancy/dir"
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/group/{default_user_group.id}/user-settings/",
+        json=dict(project_dir=None),
+    )
+    for user in [user1, user2, user3]:
+        await db.refresh(user)
+        assert user.settings.project_dir is None

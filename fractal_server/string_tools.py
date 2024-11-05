@@ -54,7 +54,12 @@ def slugify_task_name_for_source_v1(task_name: str) -> str:
     return task_name.replace(" ", "_").lower()
 
 
-def validate_cmd(command: str, allow_char: Optional[str] = None):
+def validate_cmd(
+    command: str,
+    *,
+    allow_char: Optional[str] = None,
+    attribute_name: str = "Command",
+):
     """
     Assert that the provided `command` does not contain any of the forbidden
     characters for commands
@@ -63,6 +68,7 @@ def validate_cmd(command: str, allow_char: Optional[str] = None):
     Args:
         command: command to validate.
         allow_char: chars to accept among the forbidden ones
+        attribute_name: Name of the attribute, to be used in error message.
     """
     if not isinstance(command, str):
         raise ValueError(f"{command=} is not a string.")
@@ -71,6 +77,7 @@ def validate_cmd(command: str, allow_char: Optional[str] = None):
         forbidden = forbidden - set(allow_char)
     if not forbidden.isdisjoint(set(command)):
         raise ValueError(
-            f"Command must not contain any of this characters: '{forbidden}'\n"
-            f"Provided command: '{command}'."
+            f"{attribute_name} must not contain any of this characters: "
+            f"'{forbidden}'\n"
+            f"Provided {attribute_name.lower()}: '{command}'."
         )
