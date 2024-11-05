@@ -1,5 +1,16 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API
+    * Add `GET /api/v2/task-group/activity/`
+    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/`
+    * Add `GET /admin/v2/task-group/activity/`
+* Database
+    * Add `TaskGroupActivityV2` table
+* Schemas
+    * Add `TaskGroupActivityV2Read`
+
 # 2.8.1
 
 * API:
