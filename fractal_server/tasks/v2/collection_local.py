@@ -3,12 +3,8 @@ import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from sqlalchemy.orm.attributes import flag_modified
-
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import CollectionStateV2
-from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -219,7 +215,7 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
-                stdout_pip_freeze = _customize_and_run_template(
+                _customize_and_run_template(
                     script_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
@@ -235,12 +231,6 @@ def collect_package_local(
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status=CollectionStatusV2.COLLECTING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
-                _set_task_group_activity_status(
-                    task_group_activity_id=task_group_activity_id,
-                    new_status=TaskGroupActivityStatusV2.ONGOING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
@@ -338,6 +328,18 @@ def collect_package_local(
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
+                _set_collection_state_data_status(
+                    state_id=state_id,
+                    new_status=CollectionStatusV2.OK,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.OK,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
 
                 _refresh_logs(
                     state_id=state_id,
@@ -345,18 +347,7 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
-                collection_state = db.get(CollectionStateV2, state_id)
-                collection_state.data["freeze"] = stdout_pip_freeze
-                collection_state.data["status"] = CollectionStatusV2.OK
-                flag_modified(collection_state, "data")
 
-                task_group_activity = db.get(
-                    TaskGroupActivityV2, task_group_activity_id
-                )
-                task_group_activity.status = TaskGroupActivityStatusV2.OK
-                db.add(task_group_activity)
-
-                db.commit()
                 logger.debug("finalising - END")
                 logger.debug("END")
 
