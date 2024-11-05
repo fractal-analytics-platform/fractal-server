@@ -19,7 +19,6 @@ from fractal_server.logger import reset_logger_handlers
 def _set_collection_state_data_status(
     *,
     state_id: int,
-    task_group_activity_id: int,
     new_status: CollectionStatusV2,
     logger_name: str,
     db: DBSyncSession,
@@ -28,10 +27,7 @@ def _set_collection_state_data_status(
     logger.debug(f"{state_id=} - set state.data['status'] to {new_status}")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["status"] = CollectionStatusV2(new_status)
-    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    task_group_activity.status = TaskGroupActivityStatusV2(new_status)
     flag_modified(collection_state, "data")
-    db.add(task_group_activity)
     db.commit()
 
 
@@ -49,25 +45,6 @@ def _set_task_group_activity_status(
     )
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     task_group_activity.status = TaskGroupActivityStatusV2(new_status)
-    db.add(task_group_activity)
-    db.commit()
-
-
-def _set_collection_state_data_log(
-    *,
-    state_id: int,
-    task_group_activity_id: int,
-    new_log: str,
-    logger_name: str,
-    db: DBSyncSession,
-):
-    logger = get_logger(logger_name)
-    logger.debug(f"{state_id=} - set state.data['log']")
-    collection_state = db.get(CollectionStateV2, state_id)
-    collection_state.data["log"] = new_log
-    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    task_group_activity.log = new_log
-    flag_modified(collection_state, "data")
     db.add(task_group_activity)
     db.commit()
 
@@ -114,15 +91,13 @@ def _handle_failure(
         db=db,
     )
 
-    new_log = log_file_path.open("r").read()
-
-    _set_collection_state_data_log(
+    _refresh_logs(
         state_id=state_id,
         task_group_activity_id=task_group_activity_id,
-        new_log=new_log,
-        logger_name=logger_name,
+        log_file_path=log_file_path,
         db=db,
     )
+
     # For backwards-compatibility, we also set state.data["info"]
     _set_collection_state_data_info(
         state_id=state_id,
@@ -263,4 +238,5 @@ def _refresh_logs(
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     task_group_activity.log = log_file_path.open("r").read()
     flag_modified(collection_state, "data")
+    db.add(task_group_activity)
     db.commit()
