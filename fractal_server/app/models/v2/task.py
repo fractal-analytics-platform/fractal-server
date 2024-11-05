@@ -129,7 +129,7 @@ class TaskGroupActivityV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True)),
     )
-    package: str
+    pkg_name: str
     version: str
     status: str
     action: str
