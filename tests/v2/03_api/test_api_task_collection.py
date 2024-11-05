@@ -21,8 +21,8 @@ PREFIX = "api/v2/task"
 async def test_task_collection_from_wheel(
     db,
     client,
-    use_current_python: bool,
     MockCurrentUser,
+    use_current_python: bool,
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
