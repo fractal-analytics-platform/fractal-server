@@ -204,4 +204,34 @@ async def get_task_group_activity(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
-    pass
+    activity = await db.get(TaskGroupActivityV2, activity_id)
+
+    if activity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupActivityV2 {activity_id} not found",
+        )
+
+    if activity.taskgroupv2_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "TaskGroupActivityV2.taskgroupv2_id is None.\n"
+                "Orphaned TaskActivitiesV2 can only be accessed by admins.",
+            ),
+        )
+    else:
+        try:
+            await _get_task_group_read_access(
+                task_group_id=activity.taskgroupv2_id, user_id=user.id, db=db
+            )
+        except HTTPException as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"You cannot access TaskGroup {activity.taskgroupv2_id}.\n"
+                    f"Original error: '{e}'."
+                ),
+            )
+
+    return activity
