@@ -37,6 +37,68 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
+@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
+async def get_task_group_activity_list(
+    taskgroupv2_id: Optional[int] = None,
+    pkg_name: Optional[str] = None,
+    status: Optional[TaskGroupActivityStatusV2] = None,
+    action: Optional[TaskGroupActivityActionV2] = None,
+    timestamp_started_min: Optional[datetime] = None,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupActivityV2Read]:
+
+    stm = select(TaskGroupActivityV2).where(
+        TaskGroupActivityV2.user_id == user.id
+    )
+    if taskgroupv2_id:
+        stm = stm.where(TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id)
+    if pkg_name:
+        stm = stm.where(TaskGroupActivityV2.pkg_name.icontains(pkg_name))
+    if status:
+        stm = stm.where(TaskGroupActivityV2.status == status)
+    if action:
+        stm = stm.where(TaskGroupActivityV2.action == action)
+    if timestamp_started_min is not None:
+        timestamp_started_min = _convert_to_db_timestamp(timestamp_started_min)
+        stm = stm.where(
+            TaskGroupActivityV2.timestamp_started >= timestamp_started_min
+        )
+
+    res = await db.execute(stm)
+    activities = res.scalars().all()
+    return activities
+
+
+@router.get(
+    "/activity/{task_group_activity_id}/",
+    response_model=TaskGroupActivityV2Read,
+)
+async def get_task_group_activity(
+    task_group_activity_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupActivityV2Read:
+
+    activity = await db.get(TaskGroupActivityV2, task_group_activity_id)
+
+    if activity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupActivityV2 {task_group_activity_id} not found",
+        )
+    if activity.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You are not the owner of TaskGroupActivityV2 "
+                f"{task_group_activity_id}",
+            ),
+        )
+
+    return activity
+
+
 @router.get("/", response_model=list[TaskGroupReadV2])
 async def get_task_group_list(
     user: UserOAuth = Depends(current_active_user),
@@ -193,65 +255,3 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return task_group
-
-
-@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
-async def get_task_group_activity_list(
-    taskgroupv2_id: Optional[int] = None,
-    pkg_name: Optional[str] = None,
-    status: Optional[TaskGroupActivityStatusV2] = None,
-    action: Optional[TaskGroupActivityActionV2] = None,
-    timestamp_started_min: Optional[datetime] = None,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupActivityV2Read]:
-
-    stm = select(TaskGroupActivityV2).where(
-        TaskGroupActivityV2.user_id == user.id
-    )
-    if taskgroupv2_id:
-        stm = stm.where(TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id)
-    if pkg_name:
-        stm = stm.where(TaskGroupActivityV2.pkg_name.icontains(pkg_name))
-    if status:
-        stm = stm.where(TaskGroupActivityV2.status == status)
-    if action:
-        stm = stm.where(TaskGroupActivityV2.action == action)
-    if timestamp_started_min is not None:
-        timestamp_started_min = _convert_to_db_timestamp(timestamp_started_min)
-        stm = stm.where(
-            TaskGroupActivityV2.timestamp_started >= timestamp_started_min
-        )
-
-    res = await db.execute(stm)
-    activities = res.scalars().all()
-    return activities
-
-
-@router.get(
-    "/activity/{task_group_activity_id}/",
-    response_model=TaskGroupActivityV2Read,
-)
-async def get_task_group_activity(
-    task_group_activity_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2Read:
-
-    activity = await db.get(TaskGroupActivityV2, task_group_activity_id)
-
-    if activity is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupActivityV2 {task_group_activity_id} not found",
-        )
-    if activity.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "You are not the owner of TaskGroupActivityV2 "
-                f"{task_group_activity_id}",
-            ),
-        )
-
-    return activity
