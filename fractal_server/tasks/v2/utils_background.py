@@ -78,7 +78,6 @@ def _handle_failure(
 
     _set_collection_state_data_status(
         state_id=state_id,
-        task_group_activity_id=task_group_activity_id,
         new_status=CollectionStatusV2.FAIL,
         logger_name=logger_name,
         db=db,
