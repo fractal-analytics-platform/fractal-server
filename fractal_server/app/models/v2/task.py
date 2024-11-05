@@ -127,7 +127,7 @@ class TaskGroupActivityV2(SQLModel, table=True):
     taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
     timestamp_started: datetime = Field(
         default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True)),
+        sa_column=Column(DateTime(timezone=True, nullable=False)),
     )
     pkg_name: str
     version: str
