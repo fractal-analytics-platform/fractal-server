@@ -12,6 +12,8 @@ from .._validators import val_absolute_path
 from .._validators import valdictkeys
 from .._validators import valstr
 from .task import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
 
 class TaskGroupV2OriginEnum(str, Enum):
@@ -93,6 +95,6 @@ class TaskGroupActivityV2Read(BaseModel):
     timestamp_ended: Optional[datetime] = None
     pkg_name: str
     version: str
-    status: str
-    action: str
+    status: TaskGroupActivityStatusV2
+    action: TaskGroupActivityActionV2
     log: Optional[str] = None
