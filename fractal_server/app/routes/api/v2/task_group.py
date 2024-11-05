@@ -24,7 +24,6 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.routes.aux._timestamp import _convert_to_db_timestamp
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -51,16 +50,15 @@ async def get_task_group_activity_list(
     stm = select(TaskGroupActivityV2).where(
         TaskGroupActivityV2.user_id == user.id
     )
-    if taskgroupv2_id:
+    if taskgroupv2_id is not None:
         stm = stm.where(TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id)
-    if pkg_name:
+    if pkg_name is not None:
         stm = stm.where(TaskGroupActivityV2.pkg_name.icontains(pkg_name))
-    if status:
+    if status is not None:
         stm = stm.where(TaskGroupActivityV2.status == status)
-    if action:
+    if action is not None:
         stm = stm.where(TaskGroupActivityV2.action == action)
     if timestamp_started_min is not None:
-        timestamp_started_min = _convert_to_db_timestamp(timestamp_started_min)
         stm = stm.where(
             TaskGroupActivityV2.timestamp_started >= timestamp_started_min
         )

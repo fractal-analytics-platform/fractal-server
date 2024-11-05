@@ -1,9 +1,12 @@
+from urllib.parse import quote
+
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+
 
 PREFIX = "/api/v2/task-group"
 
@@ -365,8 +368,6 @@ async def test_get_task_group_activity_list(
         res = await client.get(f"{PREFIX}/activity/?action=xxx")
         assert res.status_code == 422
         # timestamp_started_min
-        from urllib.parse import quote
-
         res = await client.get(
             f"{PREFIX}/activity/"
             f"?timestamp_started_min={quote(str(activity2.timestamp_started))}"
@@ -377,8 +378,8 @@ async def test_get_task_group_activity_list(
             f"?timestamp_started_min={quote(str(activity3.timestamp_started))}"
         )
         assert len(res.json()) == 2
-        # combination
-        res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=FOo")
+        # combination and iconstains
+        res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=O")
         assert len(res.json()) == 2
 
     async with MockCurrentUser():
