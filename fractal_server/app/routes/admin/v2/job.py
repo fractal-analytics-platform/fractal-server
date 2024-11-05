@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 from pathlib import Path
 from typing import Optional
 
@@ -19,33 +18,15 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
+from fractal_server.app.routes.aux._timestamp import _convert_to_db_timestamp
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import JobUpdateV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
 router = APIRouter()
-
-
-def _convert_to_db_timestamp(dt: datetime) -> datetime:
-    """
-    This function takes a timezone-aware datetime and converts it to UTC.
-    If using SQLite, it also removes the timezone information in order to make
-    the datetime comparable with datetimes in the database.
-    """
-    if dt.tzinfo is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"The timestamp provided has no timezone information: {dt}",
-        )
-    _dt = dt.astimezone(timezone.utc)
-    if Inject(get_settings).DB_ENGINE == "sqlite":
-        return _dt.replace(tzinfo=None)
-    return _dt
 
 
 @router.get("/", response_model=list[JobReadV2])
