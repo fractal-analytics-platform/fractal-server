@@ -63,6 +63,7 @@ async def test_task_collection_from_wheel(
         res = await client.get(
             f"/api/v2/task-group/activity/{task_group_activity_id}/"
         )
+        assert res.status_code == 200
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level

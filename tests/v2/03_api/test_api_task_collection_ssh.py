@@ -3,7 +3,6 @@ from pathlib import Path
 
 from devtools import debug
 
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
@@ -83,18 +82,15 @@ async def test_task_collection_ssh_from_pypi(
             ),
         )
         debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        debug(state_data)
-        assert state_data["status"] == CollectionStatusV2.OK
-        # Check remote venv folder exists
-        remote_folder = state_data["venv_path"]
-        fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "OK"
 
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
@@ -158,14 +154,16 @@ async def test_task_collection_ssh_from_pypi(
                 python_version=current_py_version,
             ),
         )
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        assert "already exists" in state_data["log"]
+        task_group_activity = res.json()
+
+        assert task_group_activity["status"] == "failed"
+        assert "already exists" in task_group_activity["log"]
         # Check that existing folder was _not_ removed
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
         # Cleanup: remove folder
@@ -248,18 +246,16 @@ async def test_task_collection_ssh_from_wheel(
                 python_version=current_py_version,
             ),
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        debug(state_data["log"])
-        assert state_data["status"] == CollectionStatusV2.OK
-        # Check remote venv folder exists
-        remote_folder = state_data["venv_path"]
-        fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        task_group_activity = res.json()
+
+        assert task_group_activity["status"] == "OK"
 
         # API FAILURE: wheel file and version set
         res = await client.post(
@@ -350,15 +346,16 @@ async def test_task_collection_ssh_failure(
     ):
         # Trigger task collection (first time)
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-
-        # Check that task collection failed
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        assert "No such file or directory" in state_data["log"]
+        task_group_activity = res.json()
+
+        assert task_group_activity["status"] == "failed"
+        assert "No such file or directory" in task_group_activity["log"]
 
         # Patch ssh.remove_folder
         import fractal_server.tasks.v2.collection_ssh
@@ -376,16 +373,15 @@ async def test_task_collection_ssh_failure(
 
         # Trigger task collection (first time)
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-
-        # Check that task collection failed
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        debug(state_data["log"])
-        assert "Removing folder failed" in state_data["log"]
-        assert ERROR_MSG in state_data["log"]
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert "Removing folder failed" in task_group_activity["log"]
+        assert ERROR_MSG in task_group_activity["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
