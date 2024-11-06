@@ -2,7 +2,8 @@
 
 # 2.9.0 (unreleased)
 
-> WARNING: As of this version, the `CollectionStateV2` table is deprecated.
+> WARNING: This version removes the `CollectionStateV2` database table.
+> Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
 
 * API
     * Add `GET /api/v2/task-group/activity/` (\#2005).
