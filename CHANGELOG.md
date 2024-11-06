@@ -2,7 +2,7 @@
 
 # 2.9.0 (unreleased)
 
-> WARNING: As of this version, the `CollectionStateV2` table.
+> WARNING: As of this version, the `CollectionStateV2` table is deprecated.
 
 * API
     * Add `GET /api/v2/task-group/activity/` (\#2005).
