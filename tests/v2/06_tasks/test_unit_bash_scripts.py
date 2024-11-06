@@ -41,7 +41,6 @@ def test_template_1(tmp_path, current_py_version):
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
     replacements = [
-        ("__TASK_GROUP_DIR__", path.as_posix()),
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__PYTHON__", f"python{current_py_version}"),
     ]
@@ -53,36 +52,6 @@ def test_template_1(tmp_path, current_py_version):
     )
     execute_command_sync(command=f"bash {script_path.as_posix()}")
     assert venv_path.exists()
-
-    replacements = [
-        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
-        ("__PYTHON__", f"python{current_py_version}"),
-    ]
-
-    script_path = tmp_path / "1_bad_missing_path.sh"
-    customize_template(
-        template_name="_1_create_venv.sh",
-        replacements=replacements,
-        script_path=script_path,
-    )
-    with pytest.raises(RuntimeError) as expinfo:
-        execute_command_sync(command=f"bash {script_path}")
-    assert "returncode=1" in str(expinfo.value)
-
-    replacements = [
-        ("__TASK_GROUP_DIR__", path.as_posix()),
-        ("__PYTHON__", f"python{current_py_version}"),
-    ]
-
-    script_path = tmp_path / "1_bad_missing_venv_path.sh"
-    customize_template(
-        template_name="_1_create_venv.sh",
-        replacements=replacements,
-        script_path=script_path,
-    )
-    with pytest.raises(RuntimeError) as expinfo:
-        execute_command_sync(command=f"bash {script_path}")
-    assert "returncode=1" in str(expinfo.value)
 
 
 def test_template_3(tmp_path, testdata_path, current_py_version):
@@ -97,7 +66,6 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
         command=f"python{current_py_version} -m venv {venv_path}"
     )
     replacements = [
-        ("__TASK_GROUP_DIR__", path.as_posix()),
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PYTHON__", f"python{current_py_version}"),
@@ -120,7 +88,6 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
         command=f"python{current_py_version} -m venv {venv_path_bad}"
     )
     replacements = [
-        ("__TASK_GROUP_DIR__", path.as_posix()),
         ("__PACKAGE_ENV_DIR__", venv_path_bad.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PYTHON__", f"python{current_py_version}"),
@@ -156,7 +123,6 @@ def test_template_5(tmp_path, testdata_path, current_py_version):
         )
     )
     replacements = [
-        ("__TASK_GROUP_DIR__", path.as_posix()),
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PYTHON__", f"python{current_py_version}"),
@@ -189,7 +155,6 @@ def test_template_5(tmp_path, testdata_path, current_py_version):
         )
     )
     replacements = [
-        ("__TASK_GROUP_DIR__", path.as_posix()),
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string_miss.as_posix()),
         ("__PYTHON__", f"python{current_py_version}"),
