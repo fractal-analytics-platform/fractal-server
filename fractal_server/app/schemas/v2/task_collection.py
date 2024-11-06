@@ -16,14 +16,6 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 
 
-class CollectionStatusV2(str, Enum):
-    PENDING = "pending"
-    INSTALLING = "installing"
-    COLLECTING = "collecting"
-    FAIL = "fail"
-    OK = "OK"
-
-
 class TaskGroupActivityStatusV2(str, Enum):
     PENDING = "pending"
     ONGOING = "ongoing"

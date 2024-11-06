@@ -6,7 +6,6 @@ from tempfile import TemporaryDirectory
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
@@ -17,9 +16,6 @@ from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import _handle_failure
 from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import _refresh_logs
-from fractal_server.tasks.v2.utils_background import (
-    _set_collection_state_data_status,
-)
 from fractal_server.tasks.v2.utils_background import (
     _set_task_group_activity_status,
 )
@@ -72,7 +68,6 @@ def _customize_and_run_template(
 
 def collect_package_local(
     *,
-    state_id: int,
     task_group_activity_id: int,
     task_group: TaskGroupV2,
 ) -> None:
@@ -115,7 +110,6 @@ def collect_package_local(
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
                 _handle_failure(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
@@ -155,12 +149,6 @@ def collect_package_local(
                 )
 
                 logger.debug("installing - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.INSTALLING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
                 _set_task_group_activity_status(
                     task_group_activity_id=task_group_activity_id,
                     new_status=TaskGroupActivityStatusV2.ONGOING,
@@ -185,7 +173,6 @@ def collect_package_local(
                     (f"END - Create python venv folder {task_group.venv_path}")
                 )
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -200,7 +187,6 @@ def collect_package_local(
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -210,7 +196,6 @@ def collect_package_local(
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -221,22 +206,14 @@ def collect_package_local(
                 )
                 logger.debug("installing - END")
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
 
                 logger.debug("collecting - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.COLLECTING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
 
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -247,7 +224,6 @@ def collect_package_local(
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -289,7 +265,6 @@ def collect_package_local(
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
                 logger.info("collecting - validated manifest content")
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -305,7 +280,6 @@ def collect_package_local(
                 check_task_files_exist(task_list=task_list)
                 logger.info("collecting - _prepare_tasks_metadata - end")
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -328,12 +302,6 @@ def collect_package_local(
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.OK,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
                 _set_task_group_activity_status(
                     task_group_activity_id=task_group_activity_id,
                     new_status=TaskGroupActivityStatusV2.OK,
@@ -342,7 +310,6 @@ def collect_package_local(
                 )
 
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -365,7 +332,6 @@ def collect_package_local(
                     )
 
                 _handle_failure(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,

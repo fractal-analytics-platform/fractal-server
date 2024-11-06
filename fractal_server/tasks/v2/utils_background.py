@@ -2,33 +2,15 @@ from pathlib import Path
 from typing import Optional
 
 from sqlalchemy.orm import Session as DBSyncSession
-from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 
-from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
-
-
-def _set_collection_state_data_status(
-    *,
-    state_id: int,
-    new_status: CollectionStatusV2,
-    logger_name: str,
-    db: DBSyncSession,
-):
-    logger = get_logger(logger_name)
-    logger.debug(f"{state_id=} - set state.data['status'] to {new_status}")
-    collection_state = db.get(CollectionStateV2, state_id)
-    collection_state.data["status"] = CollectionStatusV2(new_status)
-    flag_modified(collection_state, "data")
-    db.commit()
 
 
 def _set_task_group_activity_status(
@@ -49,23 +31,7 @@ def _set_task_group_activity_status(
     db.commit()
 
 
-def _set_collection_state_data_info(
-    *,
-    state_id: int,
-    new_info: str,
-    logger_name: str,
-    db: DBSyncSession,
-):
-    logger = get_logger(logger_name)
-    logger.debug(f"{state_id=} - set state.data['info']")
-    collection_state = db.get(CollectionStateV2, state_id)
-    collection_state.data["info"] = new_info
-    flag_modified(collection_state, "data")
-    db.commit()
-
-
 def _handle_failure(
-    state_id: int,
     task_group_activity_id: int,
     logger_name: str,
     exception: Exception,
@@ -76,13 +42,6 @@ def _handle_failure(
     logger = get_logger(logger_name)
     logger.error(f"Task collection failed. Original error: {str(exception)}")
 
-    _set_collection_state_data_status(
-        state_id=state_id,
-        new_status=CollectionStatusV2.FAIL,
-        logger_name=logger_name,
-        db=db,
-    )
-
     _set_task_group_activity_status(
         task_group_activity_id=task_group_activity_id,
         new_status=TaskGroupActivityStatusV2.FAILED,
@@ -91,36 +50,12 @@ def _handle_failure(
     )
 
     _refresh_logs(
-        state_id=state_id,
         task_group_activity_id=task_group_activity_id,
         log_file_path=log_file_path,
         db=db,
     )
 
-    # For backwards-compatibility, we also set state.data["info"]
-    _set_collection_state_data_info(
-        state_id=state_id,
-        new_info=f"Original error: {exception}",
-        logger_name=logger_name,
-        db=db,
-    )
-
-    # Delete TaskGroupV2 object / and apply cascade operation to FKs
     logger.info(f"Now delete TaskGroupV2 with {task_group_id=}")
-    logger.info("Start of CollectionStateV2 cascade operations.")
-    stm = select(CollectionStateV2).where(
-        CollectionStateV2.taskgroupv2_id == task_group_id
-    )
-    res = db.execute(stm)
-    collection_states = res.scalars().all()
-    for collection_state in collection_states:
-        logger.info(
-            f"Setting CollectionStateV2[{collection_state.id}].taskgroupv2_id "
-            "to None."
-        )
-        collection_state.taskgroupv2_id = None
-        db.add(collection_state)
-    logger.info("End of CollectionStateV2 cascade operations.")
 
     logger.info("Start of TaskGroupActivityV2 cascade operations.")
     stm = select(TaskGroupActivityV2).where(
@@ -224,7 +159,6 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
 
 def _refresh_logs(
     *,
-    state_id: int,
     task_group_activity_id: int,
     log_file_path: Path,
     db: DBSyncSession,
@@ -232,10 +166,7 @@ def _refresh_logs(
     """
     Read logs from file and update them in the db.
     """
-    collection_state = db.get(CollectionStateV2, state_id)
-    collection_state.data["log"] = log_file_path.open("r").read()
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     task_group_activity.log = log_file_path.open("r").read()
-    flag_modified(collection_state, "data")
     db.add(task_group_activity)
     db.commit()

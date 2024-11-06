@@ -5,11 +5,9 @@ from tempfile import TemporaryDirectory
 from .database_operations import create_db_tasks_and_update_task_group
 from .utils_background import _handle_failure
 from .utils_background import _prepare_tasks_metadata
-from .utils_background import _set_collection_state_data_status
 from .utils_background import _set_task_group_activity_status
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
@@ -80,7 +78,6 @@ def _customize_and_run_template(
 
 def collect_package_ssh(
     *,
-    state_id: int,
     task_group_activity_id: int,
     task_group: TaskGroupV2,
     fractal_ssh: FractalSSH,
@@ -159,20 +156,15 @@ def collect_package_ssh(
                 fractal_ssh.check_connection()
 
                 logger.debug("installing - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.INSTALLING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
+
                 _set_task_group_activity_status(
                     task_group_activity_id=task_group_activity_id,
                     new_status=TaskGroupActivityStatusV2.ONGOING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -189,7 +181,6 @@ def collect_package_ssh(
                 )
                 remove_venv_folder_upon_failure = True
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -200,7 +191,6 @@ def collect_package_ssh(
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -210,7 +200,6 @@ def collect_package_ssh(
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -221,21 +210,13 @@ def collect_package_ssh(
                 )
                 logger.debug("installing - END")
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
                 logger.debug("collecting - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.COLLECTING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
 
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -260,7 +241,6 @@ def collect_package_ssh(
                 )
 
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -314,7 +294,6 @@ def collect_package_ssh(
 
                 logger.debug("collecting - END")
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -322,12 +301,7 @@ def collect_package_ssh(
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.OK,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
+
                 _set_task_group_activity_status(
                     task_group_activity_id=task_group_activity_id,
                     new_status=TaskGroupActivityStatusV2.OK,
@@ -336,7 +310,6 @@ def collect_package_ssh(
                 )
 
                 _refresh_logs(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
@@ -370,7 +343,6 @@ def collect_package_ssh(
                         f"{task_group.path}."
                     )
                 _handle_failure(
-                    state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     logger_name=LOGGER_NAME,

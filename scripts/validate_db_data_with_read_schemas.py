@@ -11,7 +11,6 @@ from fractal_server.app.models.v1 import Resource
 from fractal_server.app.models.v1 import State
 from fractal_server.app.models.v1 import Task
 from fractal_server.app.models.v1 import Workflow
-from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
@@ -28,7 +27,6 @@ from fractal_server.app.schemas.v1 import StateRead
 from fractal_server.app.schemas.v1 import TaskReadV1
 from fractal_server.app.schemas.v1 import WorkflowReadV1
 from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
-from fractal_server.app.schemas.v2 import CollectionStateReadV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
@@ -218,10 +216,3 @@ with next(get_sync_db()) as db:
     for job in sorted(jobs, key=lambda x: x.id):
         JobReadV2(**job.model_dump())
         print(f"V2 - Job {job.id} validated")
-
-    # COLLECTION STATES V2
-    stm = select(CollectionStateV2)
-    states = db.execute(stm).scalars().all()
-    for collection_state in sorted(states, key=lambda x: x.id):
-        CollectionStateReadV2(**collection_state.model_dump())
-        print(f"V2 - CollectionState {state.id} validated")
