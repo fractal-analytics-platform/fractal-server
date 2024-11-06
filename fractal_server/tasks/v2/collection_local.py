@@ -1,5 +1,6 @@
 import json
 import shutil
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -7,6 +8,7 @@ from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
@@ -30,31 +32,43 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 
 
 def _customize_and_run_template(
-    script_filename: str,
+    template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
     logger_name: str,
+    prefix: int,
 ) -> str:
     """
     Customize one of the template bash scripts.
 
     Args:
-        script_filename:
-        replacements:
-        script_dir:
-        logger_name:
+        template_filename: Filename of the template file (ends with ".sh").
+        replacements: Dictionary of replacements.
+        script_dir: Local folder where the script will be placed.
+        prefix: Prefix for the script filename.
+        logger_name: Logger name
     """
     logger = get_logger(logger_name)
-    logger.debug(f"_customize_and_run_template {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {template_filename} - START")
 
+    # Prepare name and path of script
+    if not template_filename.endswith(".sh"):
+        raise ValueError(
+            f"Invalid {template_filename=} (it must end with '.sh')."
+        )
+    template_filename_stripped = template_filename[:-3]
+
+    script_filename = f"{prefix}{template_filename_stripped}"
     script_path_local = Path(script_dir) / script_filename
+
     # Read template
     customize_template(
-        template_name=script_filename,
+        template_name=template_filename,
         replacements=replacements,
         script_path=script_path_local,
     )
@@ -65,7 +79,7 @@ def _customize_and_run_template(
     stdout = execute_command_sync(command=cmd)
 
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-    logger.debug(f"_customize_and_run_template {script_filename} - END")
+    logger.debug(f"_customize_and_run_template {template_filename} - END")
 
     return stdout
 
@@ -147,11 +161,16 @@ def collect_package_local(
                         task_group.pinned_package_versions_string,
                     ),
                 ]
-
                 common_args = dict(
                     replacements=replacements,
-                    script_dir=task_group.path,
                     logger_name=LOGGER_NAME,
+                    script_dir=(
+                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
+                    ),
                 )
 
                 logger.debug("installing - START")
@@ -182,7 +201,7 @@ def collect_package_local(
                 )
                 stdout = execute_command_sync(command=cmd)
                 logger.debug(
-                    (f"END - Create python venv folder {task_group.venv_path}")
+                    (f"END - Create python venv {task_group.venv_path}")
                 )
                 _refresh_logs(
                     state_id=state_id,
@@ -196,7 +215,7 @@ def collect_package_local(
                 db.close()
 
                 stdout = _customize_and_run_template(
-                    script_filename="_2_preliminary_pip_operations.sh",
+                    template_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
                 )
                 _refresh_logs(
@@ -206,7 +225,7 @@ def collect_package_local(
                     db=db,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_3_pip_install.sh",
+                    template_filename="_3_pip_install.sh",
                     **common_args,
                 )
                 _refresh_logs(
@@ -216,7 +235,7 @@ def collect_package_local(
                     db=db,
                 )
                 _customize_and_run_template(
-                    script_filename="_4_pip_freeze.sh",
+                    template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("installing - END")
@@ -243,7 +262,7 @@ def collect_package_local(
                 )
 
                 stdout = _customize_and_run_template(
-                    script_filename="_5_pip_show.sh",
+                    template_filename="_5_pip_show.sh",
                     **common_args,
                 )
                 _refresh_logs(

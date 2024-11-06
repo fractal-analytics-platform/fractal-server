@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -10,6 +11,7 @@ from .utils_background import _set_task_group_activity_status
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
@@ -24,14 +26,16 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 
 
 def _customize_and_run_template(
     *,
-    template_name: str,
+    template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
     logger_name: str,
+    prefix: str,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
 ) -> str:
@@ -40,19 +44,30 @@ def _customize_and_run_template(
     via SFTP and then run it via SSH.
 
     Args:
-        script_filename:
-        replacements:
-        tmpdir:
-        logger_name:
-        fractal_ssh:
+
+
+        template_filename: Filename of the template file (ends with ".sh").
+        replacements: Dictionary of replacements.
+        script_dir: Local folder where the script will be placed.
+        prefix: Prefix for the script filename.
+        logger_name: Logger name
+        fractal_ssh: FractalSSH object
+        tasks_base_dir: Remote base directory
     """
     logger = get_logger(logger_name)
-    logger.debug(f"_customize_and_run_template {template_name} - START")
+    logger.debug(f"_customize_and_run_template {template_filename} - START")
 
-    script_path_local = Path(script_dir) / template_name
+    # Prepare name and path of script
+    if not template_filename.endswith(".sh"):
+        raise ValueError(
+            f"Invalid {template_filename=} (it must end with '.sh')."
+        )
+    template_filename_stripped = template_filename[:-3]
+    script_filename = f"{prefix}{template_filename_stripped}"
+    script_path_local = Path(script_dir) / script_filename
 
     customize_template(
-        template_name=template_name,
+        template_name=template_filename,
         replacements=replacements,
         script_path=script_path_local,
     )
@@ -60,7 +75,7 @@ def _customize_and_run_template(
     # Transfer script to remote host
     script_path_remote = os.path.join(
         tasks_base_dir,
-        f"script_{abs(hash(script_dir))}{template_name}",
+        f"script_{abs(hash(script_dir))}{template_filename}",
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
     fractal_ssh.send_file(
@@ -74,7 +89,7 @@ def _customize_and_run_template(
     stdout = fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
-    logger.debug(f"_customize_and_run_template {template_name} - END")
+    logger.debug(f"_customize_and_run_template {template_filename} - END")
     return stdout
 
 
@@ -150,7 +165,11 @@ def collect_package_ssh(
 
                 common_args = dict(
                     replacements=replacements,
-                    script_dir=tmpdir,
+                    script_dir=(Path(tmpdir) / SCRIPTS_SUBFOLDER).as_posix(),
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
+                    ),
                     logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
                     tasks_base_dir=tasks_base_dir,
@@ -184,7 +203,7 @@ def collect_package_ssh(
                 fractal_ssh.mkdir(folder=tasks_base_dir, parents=True)
 
                 stdout = _customize_and_run_template(
-                    template_name="_1_create_venv.sh",
+                    template_filename="_1_create_venv.sh",
                     **common_args,
                 )
                 remove_venv_folder_upon_failure = True
@@ -196,7 +215,7 @@ def collect_package_ssh(
                 )
 
                 stdout = _customize_and_run_template(
-                    template_name="_2_preliminary_pip_operations.sh",
+                    template_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
                 )
                 _refresh_logs(
@@ -206,7 +225,7 @@ def collect_package_ssh(
                     db=db,
                 )
                 stdout = _customize_and_run_template(
-                    template_name="_3_pip_install.sh",
+                    template_filename="_3_pip_install.sh",
                     **common_args,
                 )
                 _refresh_logs(
@@ -216,7 +235,7 @@ def collect_package_ssh(
                     db=db,
                 )
                 _customize_and_run_template(
-                    template_name="_4_pip_freeze.sh",
+                    template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("installing - END")
@@ -242,7 +261,7 @@ def collect_package_ssh(
                 )
 
                 stdout = _customize_and_run_template(
-                    template_name="_5_pip_show.sh",
+                    template_filename="_5_pip_show.sh",
                     **common_args,
                 )
                 pkg_attrs = parse_script_5_stdout(stdout)
