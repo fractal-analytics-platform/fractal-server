@@ -323,18 +323,16 @@ async def test_contact_an_admin_message(
         await db.commit()
         await db.refresh(task_group)
         # Create a TaskGroupActivityStatusV2 associated to the new TaskGroup.
-        db.add(
-            TaskGroupActivityV2(
-                user_id=userB.id,
-                taskgroup_id=task_group.id,
-                action=TaskGroupActivityActionV2.COLLECT,
-                status=TaskGroupActivityStatusV2.PENDING,
-                pkg_name="fractal-tasks-core",
-                version="1.1.0",
-            )
+        task_group_activity_1 = TaskGroupActivityV2(
+            user_id=userB.id,
+            taskgroupv2_id=task_group.id,
+            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatusV2.PENDING,
+            pkg_name="fractal-tasks-core",
+            version="1.1.0",
         )
+        db.add(task_group_activity_1)
         await db.commit()
-
         # Fail inside `_verify_non_duplication_user_constraint`,
         # (case `len(states) == 1`).
         res = await client.post(
@@ -344,6 +342,18 @@ async def test_contact_an_admin_message(
         assert res.status_code == 422
         assert "There exists a task-group activity" in res.json()["detail"]
 
+        # Crete a new CollectionState associated to the same TaskGroup
+        # (this is NOT ALLOWED using the API).
+        task_group_activity_2 = TaskGroupActivityV2(
+            user_id=userB.id,
+            taskgroupv2_id=task_group.id,
+            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatusV2.PENDING,
+            pkg_name="fractal-tasks-core",
+            version="1.1.0",
+        )
+        db.add(task_group_activity_2)
+        await db.commit()
         # Fail inside `_verify_non_duplication_user_constraint`, but get a
         # richer message from `_get_collection_status_message`
         # (case `len(states) > 1`).
