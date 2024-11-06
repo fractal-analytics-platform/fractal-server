@@ -188,7 +188,7 @@ async def delete_task_group(
     task_group_activity_list = res.scalars().all()
     for task_group_activity in task_group_activity_list:
         logger.debug(
-            f"Setting CollectionStateV2[{task_group_activity.id}]"
+            f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
             ".taskgroupv2_id to None."
         )
         task_group_activity.taskgroupv2_id = None
