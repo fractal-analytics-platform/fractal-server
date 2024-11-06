@@ -21,10 +21,10 @@ from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2.task import TaskGroupV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
-from fractal_server.app.schemas.v2.task import TaskImportV2
+from fractal_server.app.schemas.v2 import TaskImportV2
 from fractal_server.logger import set_logger
 
 router = APIRouter()

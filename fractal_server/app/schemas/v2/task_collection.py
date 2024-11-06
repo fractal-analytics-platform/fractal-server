@@ -24,6 +24,19 @@ class CollectionStatusV2(str, Enum):
     OK = "OK"
 
 
+class TaskGroupActivityStatusV2(str, Enum):
+    PENDING = "pending"
+    ONGOING = "ongoing"
+    FAILED = "failed"
+    OK = "OK"
+
+
+class TaskGroupActivityActionV2(str, Enum):
+    COLLECT = "collect"
+    DEACTIVATE = "deactivate"
+    REACTIVATE = "reactivate"
+
+
 class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     """
     TaskCollectPipV2 class

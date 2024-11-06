@@ -20,6 +20,19 @@ class TaskGroupV2OriginEnum(str, Enum):
     OTHER = "other"
 
 
+class TaskGroupActivityStatusV2(str, Enum):
+    PENDING = "pending"
+    ONGOING = "ongoing"
+    FAILED = "failed"
+    OK = "OK"
+
+
+class TaskGroupActivityActionV2(str, Enum):
+    COLLECT = "collect"
+    DEACTIVATE = "deactivate"
+    REACTIVATE = "reactivate"
+
+
 class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     user_id: int
     user_group_id: Optional[int] = None
@@ -83,3 +96,16 @@ class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
         if value is None:
             raise ValueError("`active` cannot be set to None")
         return value
+
+
+class TaskGroupActivityV2Read(BaseModel):
+    id: int
+    user_id: int
+    taskgroupv2_id: Optional[int] = None
+    timestamp_started: datetime
+    timestamp_ended: Optional[datetime] = None
+    pkg_name: str
+    version: str
+    status: TaskGroupActivityStatusV2
+    action: TaskGroupActivityActionV2
+    log: Optional[str] = None

@@ -129,5 +129,6 @@ jobs:
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
           cd fractal_server
+          poetry run alembic history
           poetry run alembic upgrade head
           poetry run alembic downgrade base

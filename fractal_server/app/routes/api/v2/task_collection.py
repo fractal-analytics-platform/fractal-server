@@ -22,6 +22,7 @@ from ....models.v2 import TaskGroupV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
+from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_collection import get_package_version_from_pypi
@@ -29,8 +30,12 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import (
+    TaskGroupActivityActionV2,
+)
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.tasks.v2.collection_local import (
     collect_package_local,
@@ -237,10 +242,21 @@ async def collect_tasks_pip(
     state = CollectionStateV2(
         data=collection_state_data, taskgroupv2_id=task_group.id
     )
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.COLLECT,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+    )
     db.add(state)
     await db.commit()
     await db.refresh(state)
 
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
     logger = set_logger(logger_name="collect_tasks_pip")
 
     # END of SSH/non-SSH common part
@@ -264,6 +280,7 @@ async def collect_tasks_pip(
         background_tasks.add_task(
             collect_package_ssh,
             state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
@@ -274,6 +291,7 @@ async def collect_tasks_pip(
         background_tasks.add_task(
             collect_package_local,
             state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
             task_group=task_group,
         )
     logger.debug(

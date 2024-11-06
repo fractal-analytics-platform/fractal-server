@@ -3,14 +3,11 @@ import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from sqlalchemy.orm.attributes import flag_modified
-
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -22,6 +19,9 @@ from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import _refresh_logs
 from fractal_server.tasks.v2.utils_background import (
     _set_collection_state_data_status,
+)
+from fractal_server.tasks.v2.utils_background import (
+    _set_task_group_activity_status,
 )
 from fractal_server.tasks.v2.utils_background import check_task_files_exist
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
@@ -73,6 +73,7 @@ def _customize_and_run_template(
 def collect_package_local(
     *,
     state_id: int,
+    task_group_activity_id: int,
     task_group: TaskGroupV2,
 ) -> None:
     """
@@ -93,7 +94,6 @@ def collect_package_local(
 
     # Create the task_group path
     with TemporaryDirectory() as tmpdir:
-
         # Setup logger in tmpdir
         LOGGER_NAME = "task_collection_local"
         log_file_path = get_log_path(Path(tmpdir))
@@ -116,6 +116,7 @@ def collect_package_local(
                 logger.error(error_msg)
                 _handle_failure(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=FileExistsError(error_msg),
@@ -160,6 +161,12 @@ def collect_package_local(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.ONGOING,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
 
                 # Create main path for task group
                 Path(task_group.path).mkdir(parents=True)
@@ -179,6 +186,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -193,6 +201,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -202,16 +211,18 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
-                stdout_pip_freeze = _customize_and_run_template(
+                _customize_and_run_template(
                     script_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("installing - END")
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -223,8 +234,10 @@ def collect_package_local(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -235,6 +248,7 @@ def collect_package_local(
                 )
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -276,6 +290,7 @@ def collect_package_local(
                 logger.info("collecting - validated manifest content")
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -291,6 +306,7 @@ def collect_package_local(
                 logger.info("collecting - _prepare_tasks_metadata - end")
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -312,24 +328,26 @@ def collect_package_local(
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
+                _set_collection_state_data_status(
+                    state_id=state_id,
+                    new_status=CollectionStatusV2.OK,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.OK,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
 
                 _refresh_logs(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
-                collection_state = db.get(CollectionStateV2, state_id)
-                collection_state.data["freeze"] = stdout_pip_freeze
-                collection_state.data["status"] = CollectionStatusV2.OK
-                # FIXME: The `task_list` key is likely not used by any client,
-                # we should consider dropping it
-                task_read_list = [
-                    TaskReadV2(**task.model_dump()).dict()
-                    for task in task_group.task_list
-                ]
-                collection_state.data["task_list"] = task_read_list
-                flag_modified(collection_state, "data")
-                db.commit()
+
                 logger.debug("finalising - END")
                 logger.debug("END")
 
@@ -348,6 +366,7 @@ def collect_package_local(
 
                 _handle_failure(
                     state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=collection_e,

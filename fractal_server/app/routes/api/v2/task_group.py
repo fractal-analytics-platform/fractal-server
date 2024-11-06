@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -14,12 +17,16 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
@@ -27,6 +34,67 @@ from fractal_server.logger import set_logger
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+
+@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
+async def get_task_group_activity_list(
+    taskgroupv2_id: Optional[int] = None,
+    pkg_name: Optional[str] = None,
+    status: Optional[TaskGroupActivityStatusV2] = None,
+    action: Optional[TaskGroupActivityActionV2] = None,
+    timestamp_started_min: Optional[datetime] = None,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupActivityV2Read]:
+
+    stm = select(TaskGroupActivityV2).where(
+        TaskGroupActivityV2.user_id == user.id
+    )
+    if taskgroupv2_id is not None:
+        stm = stm.where(TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id)
+    if pkg_name is not None:
+        stm = stm.where(TaskGroupActivityV2.pkg_name.icontains(pkg_name))
+    if status is not None:
+        stm = stm.where(TaskGroupActivityV2.status == status)
+    if action is not None:
+        stm = stm.where(TaskGroupActivityV2.action == action)
+    if timestamp_started_min is not None:
+        stm = stm.where(
+            TaskGroupActivityV2.timestamp_started >= timestamp_started_min
+        )
+
+    res = await db.execute(stm)
+    activities = res.scalars().all()
+    return activities
+
+
+@router.get(
+    "/activity/{task_group_activity_id}/",
+    response_model=TaskGroupActivityV2Read,
+)
+async def get_task_group_activity(
+    task_group_activity_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupActivityV2Read:
+
+    activity = await db.get(TaskGroupActivityV2, task_group_activity_id)
+
+    if activity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupActivityV2 {task_group_activity_id} not found",
+        )
+    if activity.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You are not the owner of TaskGroupActivityV2 "
+                f"{task_group_activity_id}",
+            ),
+        )
+
+    return activity
 
 
 @router.get("/", response_model=list[TaskGroupReadV2])
@@ -40,7 +108,6 @@ async def get_task_group_list(
     """
     Get all accessible TaskGroups
     """
-
     if only_owner:
         condition = TaskGroupV2.user_id == user.id
     else:
@@ -128,6 +195,21 @@ async def delete_task_group(
         collection_state.taskgroupv2_id = None
         db.add(collection_state)
     logger.debug("End of cascade operations on CollectionStateV2.")
+
+    logger.debug("Start of cascade operations on TaskGroupActivityV2.")
+    stm = select(TaskGroupActivityV2).where(
+        TaskGroupActivityV2.taskgroupv2_id == task_group_id
+    )
+    res = await db.execute(stm)
+    task_group_activity_list = res.scalars().all()
+    for task_group_activity in task_group_activity_list:
+        logger.debug(
+            f"Setting CollectionStateV2[{task_group_activity.id}]"
+            ".taskgroupv2_id to None."
+        )
+        task_group_activity.taskgroupv2_id = None
+        db.add(task_group_activity)
+    logger.debug("End of cascade operations on TaskGroupActivityV2.")
 
     await db.delete(task_group)
     await db.commit()
