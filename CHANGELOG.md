@@ -12,6 +12,8 @@
 * Task-collection internals:
     * Update `TaskGroupActivityV2` objects (\#2005).
     * Update filename and path for task-collection scripts (\#2008).
+* SSH internals:
+    * Add `FractalSSH.remote_exists` method (\#2008).
 
 # 2.8.1
 

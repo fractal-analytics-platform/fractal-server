@@ -7,26 +7,10 @@ write_log(){
 
 
 # Variables to be filled within fractal-server
-TASK_GROUP_DIR=__TASK_GROUP_DIR__
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 PYTHON=__PYTHON__
 
 TIME_START=$(date +%s)
-
-# Check that task-group and venv folders do not exist
-for DIR_TO_BE_CHECKED in "$TASK_GROUP_DIR" "$PACKAGE_ENV_DIR";
-do
-    if [ -d "$DIR_TO_BE_CHECKED" ]; then
-        write_log "ERROR: Folder $DIR_TO_BE_CHECKED already exists. Exit."
-        exit 1
-    fi
-done
-
-write_log "START mkdir -p $PACKAGE_ENV_DIR"
-mkdir -p $PACKAGE_ENV_DIR
-write_log "END   mkdir -p $PACKAGE_ENV_DIR"
-echo
-
 
 # Create venv
 write_log "START create venv in ${PACKAGE_ENV_DIR}"
