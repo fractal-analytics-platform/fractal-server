@@ -14,6 +14,7 @@ from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -30,6 +31,7 @@ from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
@@ -178,6 +180,13 @@ with next(get_sync_db()) as db:
             task_list.append(TaskReadV2(**task.model_dump()))
         TaskGroupReadV2(**task_group.model_dump(), task_list=task_list)
         print(f"V2 - TaskGroup {task_group.id} validated")
+
+    # TASK GROUP V2 ACTIVITIES
+    stm = select(TaskGroupActivityV2)
+    task_group_activities = db.execute(stm).scalars().all()
+    for activity in sorted(task_group_activities, key=lambda x: x.id):
+        TaskGroupActivityV2Read(**activity.model_dump())
+        print(f"V2 - TaskGroupActivity {activity.id} validated")
 
     # WORKFLOWS V2
     stm = select(WorkflowV2)
