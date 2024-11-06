@@ -9,6 +9,7 @@
     * Add `TaskGroupActivityV2Read` schema (\#2005).
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
+    * Drop `CollectionStateV2` table (\#2010).
 * Task-collection internals:
     * Update `TaskGroupActivityV2` objects (\#2005).
     * Update filename and path for task-collection scripts (\#2008).
