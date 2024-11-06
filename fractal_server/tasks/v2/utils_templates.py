@@ -28,9 +28,7 @@ def customize_template(
     for old_new in replacements:
         script_data = script_data.replace(old_new[0], old_new[1])
     # Create parent folder if needed
-    parent_dir = Path(script_path).parent
-    if not parent_dir.is_dir():
-        parent_dir.mkdir()
+    Path(script_path).parent.mkdir(exist_ok=True)
     # Write script locally
     with open(script_path, "w") as f:
         f.write(script_data)
