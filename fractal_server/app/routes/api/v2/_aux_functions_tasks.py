@@ -13,15 +13,15 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -220,7 +220,7 @@ async def _get_valid_user_group_id(
     return user_group_id
 
 
-async def _get_task_group_activity_status_message(
+async def _get_collection_task_group_activity_status_message(
     task_group: TaskGroupV2, db: AsyncSession
 ) -> str:
     res = await db.execute(
@@ -239,7 +239,7 @@ async def _get_task_group_activity_status_message(
         )
     elif len(task_group_activity_list) == 1:
         msg = (
-            "\nThere exists a task-collection state "
+            "\nThere exists a task-group activity"
             f"(ID={task_group_activity_list[0].id}) for "
             f"such task group (ID={task_group.id}), with status "
             f"'{task_group_activity_list[0].status}'."
@@ -276,7 +276,7 @@ async def _verify_non_duplication_user_constraint(
                     "This should have not happened: please contact an admin."
                 ),
             )
-        state_msg = await _get_task_group_activity_status_message(
+        state_msg = await _get_collection_task_group_activity_status_message(
             duplicate[0], db
         )
         raise HTTPException(
@@ -318,7 +318,7 @@ async def _verify_non_duplication_group_constraint(
                     "This should have not happened: please contact an admin."
                 ),
             )
-        state_msg = await _get_task_group_activity_status_message(
+        state_msg = await _get_collection_task_group_activity_status_message(
             duplicate[0], db
         )
         raise HTTPException(
