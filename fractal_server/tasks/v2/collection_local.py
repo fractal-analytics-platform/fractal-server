@@ -148,7 +148,6 @@ def collect_package_local(
                 settings = Inject(get_settings)
                 replacements = [
                     ("__PACKAGE_NAME__", task_group.pkg_name),
-                    ("__TASK_GROUP_DIR__", task_group.path),
                     ("__PACKAGE_ENV_DIR__", task_group.venv_path),
                     ("__PYTHON__", python_bin),
                     ("__INSTALL_STRING__", install_string),
