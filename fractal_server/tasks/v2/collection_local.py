@@ -1,11 +1,13 @@
 import json
 import shutil
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .database_operations import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
@@ -26,31 +28,43 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 
 
 def _customize_and_run_template(
-    script_filename: str,
+    template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
     logger_name: str,
+    prefix: int,
 ) -> str:
     """
     Customize one of the template bash scripts.
 
     Args:
-        script_filename:
-        replacements:
-        script_dir:
-        logger_name:
+        template_filename: Filename of the template file (ends with ".sh").
+        replacements: Dictionary of replacements.
+        script_dir: Local folder where the script will be placed.
+        prefix: Prefix for the script filename.
+        logger_name: Logger name
     """
     logger = get_logger(logger_name)
-    logger.debug(f"_customize_and_run_template {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {template_filename} - START")
 
+    # Prepare name and path of script
+    if not template_filename.endswith(".sh"):
+        raise ValueError(
+            f"Invalid {template_filename=} (it must end with '.sh')."
+        )
+    template_filename_stripped = template_filename[:-3]
+
+    script_filename = f"{prefix}{template_filename_stripped}"
     script_path_local = Path(script_dir) / script_filename
+
     # Read template
     customize_template(
-        template_name=script_filename,
+        template_name=template_filename,
         replacements=replacements,
         script_path=script_path_local,
     )
@@ -61,7 +75,7 @@ def _customize_and_run_template(
     stdout = execute_command_sync(command=cmd)
 
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-    logger.debug(f"_customize_and_run_template {script_filename} - END")
+    logger.debug(f"_customize_and_run_template {template_filename} - END")
 
     return stdout
 
@@ -77,13 +91,13 @@ def collect_package_local(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it will run within a thread - due to
+    NOTE: by making this function sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
 
     Arguments:
-        state_id:
+        task_group_activity_id:
         task_group:
     """
 
@@ -105,7 +119,7 @@ def collect_package_local(
         # Open a DB session
         with next(get_sync_db()) as db:
 
-            # Check that the task_group path does not exist
+            # Check that the (local) task_group path does not exist
             if Path(task_group.path).exists():
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
@@ -128,7 +142,6 @@ def collect_package_local(
                 settings = Inject(get_settings)
                 replacements = [
                     ("__PACKAGE_NAME__", task_group.pkg_name),
-                    ("__TASK_GROUP_DIR__", task_group.path),
                     ("__PACKAGE_ENV_DIR__", task_group.venv_path),
                     ("__PYTHON__", python_bin),
                     ("__INSTALL_STRING__", install_string),
@@ -141,11 +154,16 @@ def collect_package_local(
                         task_group.pinned_package_versions_string,
                     ),
                 ]
-
                 common_args = dict(
                     replacements=replacements,
-                    script_dir=task_group.path,
                     logger_name=LOGGER_NAME,
+                    script_dir=(
+                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
+                    ),
                 )
 
                 logger.debug("installing - START")
@@ -156,34 +174,40 @@ def collect_package_local(
                     db=db,
                 )
 
-                # Create main path for task group
+                # Create task_group.path
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
 
-                # Create venv
-                logger.debug(
-                    (f"START - Create python venv {task_group.venv_path}")
-                )
-                cmd = (
-                    f"python{task_group.python_version} -m venv "
-                    f"{task_group.venv_path} --copies"
-                )
-                stdout = execute_command_sync(command=cmd)
-                logger.debug(
-                    (f"END - Create python venv folder {task_group.venv_path}")
+                # Run script 1
+                stdout = _customize_and_run_template(
+                    template_filename="_1_create_venv.sh",
+                    **common_args,
                 )
                 _refresh_logs(
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
-                # Close db connections before long pip related operations
-                # Warning this expunge all ORM objects.
+
+                # Run script 2
+                stdout = _customize_and_run_template(
+                    template_filename="_2_preliminary_pip_operations.sh",
+                    **common_args,
+                )
+                _refresh_logs(
+                    task_group_activity_id=task_group_activity_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
+
+                # Close db connections before long pip related operations.
+                # WARNING: this expunges all ORM objects.
                 # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
                 db.close()
 
+                # Run script 3
                 stdout = _customize_and_run_template(
-                    script_filename="_2_preliminary_pip_operations.sh",
+                    template_filename="_3_pip_install.sh",
                     **common_args,
                 )
                 _refresh_logs(
@@ -191,36 +215,21 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
-                stdout = _customize_and_run_template(
-                    script_filename="_3_pip_install.sh",
-                    **common_args,
-                )
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+
+                # Run script 4
                 _customize_and_run_template(
-                    script_filename="_4_pip_freeze.sh",
+                    template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
-                logger.debug("installing - END")
                 _refresh_logs(
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
 
-                logger.debug("collecting - START")
-
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-
+                # Run script 5
                 stdout = _customize_and_run_template(
-                    script_filename="_5_pip_show.sh",
+                    template_filename="_5_pip_show.sh",
                     **common_args,
                 )
                 _refresh_logs(
