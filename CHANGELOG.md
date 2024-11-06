@@ -2,6 +2,8 @@
 
 # 2.9.0 (unreleased)
 
+> WARNING: As of this version, the `CollectionStateV2` table.
+
 * API
     * Add `GET /api/v2/task-group/activity/` (\#2005).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` (\#2005).
