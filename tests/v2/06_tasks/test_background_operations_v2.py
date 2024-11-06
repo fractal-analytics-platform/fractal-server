@@ -102,6 +102,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     )
     debug(task_group_activity_v2)
     assert task_group_activity_v2.status == "failed"
+    assert task_group_activity_v2.taskgroupv2_id is None
 
 
 async def test_collect_pip_local_fail_rmtree(
