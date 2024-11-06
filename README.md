@@ -171,7 +171,7 @@
 | fractal\_server/logger.py                                                      |       44 |        2 |       12 |        2 |     93% |  160, 164 |
 | fractal\_server/main.py                                                        |       72 |        1 |       12 |        2 |     96% |51->56, 142 |
 | fractal\_server/ssh/\_\_init\_\_.py                                            |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/ssh/\_fabric.py                                                |      229 |        0 |       42 |        3 |     99% |167->169, 232->exit, 274->326 |
+| fractal\_server/ssh/\_fabric.py                                                |      239 |        0 |       42 |        3 |     99% |167->169, 232->exit, 274->326 |
 | fractal\_server/string\_tools.py                                               |       19 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/syringe.py                                                     |       28 |        2 |        2 |        0 |     93% |     93-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
@@ -183,17 +183,17 @@
 | fractal\_server/tasks/v1/get\_collection\_data.py                              |       11 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v1/utils.py                                              |       22 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/tasks/v2/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/v2/collection\_local.py                                  |      124 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/tasks/v2/collection\_ssh.py                                    |      116 |        0 |        6 |        0 |    100% |           |
+| fractal\_server/tasks/v2/collection\_local.py                                  |      125 |        0 |        8 |        0 |    100% |           |
+| fractal\_server/tasks/v2/collection\_ssh.py                                    |      128 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/tasks/v2/database\_operations.py                               |       18 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_background.py                                  |      102 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_package\_names.py                              |       23 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_python\_interpreter.py                         |       13 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/tasks/v2/utils\_templates.py                                   |       25 |        0 |        8 |        0 |    100% |           |
+| fractal\_server/tasks/v2/utils\_templates.py                                   |       27 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       40 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **10785** |  **461** | **2268** |  **190** | **94%** |           |
+|                                                                      **TOTAL** | **10810** |  **461** | **2272** |  **190** | **94%** |           |
 
 
 ## Setup coverage badge
