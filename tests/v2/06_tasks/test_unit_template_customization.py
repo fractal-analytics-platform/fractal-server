@@ -36,9 +36,9 @@ def test_customize_and_run_template_ssh():
             replacements={},
             prefix="prefix",
             logger_name="logger",
-            script_dir="/somewhere",
+            script_dir_local="/somewhere",
             fractal_ssh=None,
-            tasks_base_dir="/something",
+            script_dir_remote="/something",
         )
 
     with pytest.raises(FileNotFoundError):
@@ -47,8 +47,8 @@ def test_customize_and_run_template_ssh():
             # Fake arguments
             replacements={},
             prefix="prefix",
-            script_dir="/somewhere",
+            script_dir_local="/somewhere",
             logger_name="logger",
             fractal_ssh=None,
-            tasks_base_dir="/something",
+            script_dir_remote="/something",
         )

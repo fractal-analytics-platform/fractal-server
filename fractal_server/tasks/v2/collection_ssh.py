@@ -33,11 +33,11 @@ def _customize_and_run_template(
     *,
     template_filename: str,
     replacements: list[tuple[str, str]],
-    script_dir: str,
+    script_dir_local: str,
     logger_name: str,
     prefix: str,
     fractal_ssh: FractalSSH,
-    tasks_base_dir: str,
+    script_dir_remote: str,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -52,7 +52,7 @@ def _customize_and_run_template(
         prefix: Prefix for the script filename.
         logger_name: Logger name
         fractal_ssh: FractalSSH object
-        tasks_base_dir: Remote base directory
+        script_dir_remote: Remote scripts directory
     """
     logger = get_logger(logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
@@ -64,7 +64,7 @@ def _customize_and_run_template(
         )
     template_filename_stripped = template_filename[:-3]
     script_filename = f"{prefix}{template_filename_stripped}"
-    script_path_local = Path(script_dir) / script_filename
+    script_path_local = Path(script_dir_local) / script_filename
 
     customize_template(
         template_name=template_filename,
@@ -74,8 +74,8 @@ def _customize_and_run_template(
 
     # Transfer script to remote host
     script_path_remote = os.path.join(
-        tasks_base_dir,
-        f"script_{abs(hash(script_dir))}{template_filename}",
+        script_dir_remote,
+        script_filename,
     )
     logger.debug(f"Now transfer {script_path_local=} over SSH.")
     fractal_ssh.send_file(
@@ -107,7 +107,7 @@ def collect_package_ssh(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it will run within a thread - due to
+    NOTE: by making this function sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
@@ -116,7 +116,7 @@ def collect_package_ssh(
         state_id:
         task_group:
         fractal_ssh:
-        tasks_base_dir:
+        tasks_base_dir: Typically `user_settings.ssh_tasks_dir`.
     """
 
     # Work within a temporary folder, where also logs will be placed
@@ -165,14 +165,18 @@ def collect_package_ssh(
 
                 common_args = dict(
                     replacements=replacements,
-                    script_dir=(Path(tmpdir) / SCRIPTS_SUBFOLDER).as_posix(),
+                    script_dir_local=(
+                        Path(tmpdir) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    script_dir_remote=(
+                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
                         f"{TaskGroupActivityActionV2.COLLECT}"
                     ),
                     logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
-                    tasks_base_dir=tasks_base_dir,
                 )
 
                 fractal_ssh.check_connection()
