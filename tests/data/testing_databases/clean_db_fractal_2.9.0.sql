@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 14.4
--- Dumped by pg_dump version 14.12 (Homebrew)
+-- Dumped by pg_dump version 14.13 (Homebrew)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1555,7 +1555,7 @@ COPY public.task (meta, source, id, name, command, input_type, output_type, owne
 --
 
 COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started, pkg_name, version, status, action, log, timestamp_ended) FROM stdin;
-1	1	2	2024-11-06 16:12:13.157254+01	admin:ls-task	1.0.0	OK	collect	\N	\N
+1	1	2	2024-11-06 16:27:58.056661+01	admin:ls-task	1.0.0	OK	collect	\N	\N
 \.
 
 
