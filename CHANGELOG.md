@@ -1,15 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.9.0 (unreleased)
 
 * API
-    * Add `GET /api/v2/task-group/activity/`. (\#2005)
-    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/`. (\#2005)
-    * Add `GET /admin/v2/task-group/activity/`. (\#2005)
+    * Add `GET /api/v2/task-group/activity/` (\#2005).
+    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` (\#2005).
+    * Add `GET /admin/v2/task-group/activity/` (\#2005).
+    * Add `TaskGroupActivityV2Read` schema (\#2005).
 * Database
-    * Add `TaskGroupActivityV2` table. (\#2005)
-* Schemas
-    * Add `TaskGroupActivityV2Read`. (\#2005)
+    * Add `TaskGroupActivityV2` table (\#2005).
+* Task-collection internals:
+    * Update `TaskGroupActivityV2` objects (\#2005).
+    * Update filename and path for task-collection scripts (\#2008).
 
 # 2.8.1
 
