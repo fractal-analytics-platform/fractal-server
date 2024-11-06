@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -225,6 +226,7 @@ async def _get_task_group_activity_status_message(
     res = await db.execute(
         select(TaskGroupActivityV2).where(
             TaskGroupActivityV2.taskgroupv2_id == task_group.id
+            and TaskGroupActivityV2.action == TaskGroupActivityActionV2.COLLECT
         )
     )
     task_group_activity_list = res.scalars().all()
