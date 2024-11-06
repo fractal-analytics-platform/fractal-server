@@ -343,3 +343,13 @@ async def test_contact_an_admin_message(
         )
         assert res.status_code == 422
         assert "There exists a task-group activity" in res.json()["detail"]
+
+        # Fail inside `_verify_non_duplication_user_constraint`, but get a
+        # richer message from `_get_collection_status_message`
+        # (case `len(states) > 1`).
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="fractal-tasks-core", package_version="1.1.0"),
+        )
+        assert "TaskGroupActivityV2" in res.json()["detail"]
+        assert "contact an admin" in res.json()["detail"]
