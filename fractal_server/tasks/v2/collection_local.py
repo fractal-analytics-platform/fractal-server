@@ -96,13 +96,13 @@ def collect_package_local(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it will run within a thread - due to
+    NOTE: by making this function sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
 
     Arguments:
-        state_id:
+        task_group_activity_id:
         task_group:
     """
 
@@ -124,7 +124,7 @@ def collect_package_local(
         # Open a DB session
         with next(get_sync_db()) as db:
 
-            # Check that the task_group path does not exist
+            # Check that the (local) task_group path does not exist
             if Path(task_group.path).exists():
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
@@ -187,21 +187,14 @@ def collect_package_local(
                     db=db,
                 )
 
-                # Create main path for task group
+                # Create task_group.path
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
 
-                # Create venv
-                logger.debug(
-                    (f"START - Create python venv {task_group.venv_path}")
-                )
-                cmd = (
-                    f"python{task_group.python_version} -m venv "
-                    f"{task_group.venv_path} --copies"
-                )
-                stdout = execute_command_sync(command=cmd)
-                logger.debug(
-                    (f"END - Create python venv {task_group.venv_path}")
+                # Run script 1
+                stdout = _customize_and_run_template(
+                    template_filename="_1_create_venv.sh",
+                    **common_args,
                 )
                 _refresh_logs(
                     state_id=state_id,
@@ -209,11 +202,8 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
-                # Close db connections before long pip related operations
-                # Warning this expunge all ORM objects.
-                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
-                db.close()
 
+                # Run script 2
                 stdout = _customize_and_run_template(
                     template_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
@@ -224,6 +214,13 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
+
+                # Close db connections before long pip related operations.
+                # WARNING: this expunges all ORM objects.
+                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
+                db.close()
+
+                # Run script 3
                 stdout = _customize_and_run_template(
                     template_filename="_3_pip_install.sh",
                     **common_args,
@@ -234,11 +231,12 @@ def collect_package_local(
                     log_file_path=log_file_path,
                     db=db,
                 )
+
+                # Run script 4
                 _customize_and_run_template(
                     template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
-                logger.debug("installing - END")
                 _refresh_logs(
                     state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
@@ -246,7 +244,6 @@ def collect_package_local(
                     db=db,
                 )
 
-                logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status=CollectionStatusV2.COLLECTING,
@@ -254,13 +251,7 @@ def collect_package_local(
                     db=db,
                 )
 
-                _refresh_logs(
-                    state_id=state_id,
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-
+                # Run script 5
                 stdout = _customize_and_run_template(
                     template_filename="_5_pip_show.sh",
                     **common_args,

@@ -113,10 +113,12 @@ def collect_package_ssh(
 
 
     Arguments:
-        state_id:
+        task_group_activity_id:
         task_group:
         fractal_ssh:
-        tasks_base_dir: Typically `user_settings.ssh_tasks_dir`.
+        tasks_base_dir:
+            Only used as a `safe_root` in `remove_dir`, and typically set to
+            `user_settings.ssh_tasks_dir`.
     """
 
     # Work within a temporary folder, where also logs will be placed
@@ -131,15 +133,40 @@ def collect_package_ssh(
         for key, value in task_group.model_dump().items():
             logger.debug(f"task_group.{key}: {value}")
 
-        # `remove_venv_folder_upon_failure` is set to True only if
-        # script 1 goes through, which means that the remote folder
-        # `package_env_dir` did not already exist. If this remote
-        # folder already existed, then script 1 fails and the boolean
-        # flag `remove_venv_folder_upon_failure` remains false.
-        remove_venv_folder_upon_failure = False
-
-        # Open a DB session soon, since it is needed for updating `state`
+        # Open a DB session
         with next(get_sync_db()) as db:
+
+            # Check that SSH connection works
+            try:
+                fractal_ssh.check_connection()
+            except Exception as e:
+                logger.error("Cannot establish SSH connection.")
+                _handle_failure(
+                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=e,
+                    db=db,
+                    task_group_id=task_group.id,
+                )
+                return
+
+            # Check that the (remote) task_group path does not exist
+            if fractal_ssh.remote_exists(task_group.path):
+                error_msg = f"{task_group.path} already exists."
+                logger.error(error_msg)
+                _handle_failure(
+                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileExistsError(error_msg),
+                    db=db,
+                    task_group_id=task_group.id,
+                )
+                return
+
             try:
                 # Prepare replacements for task-collection scripts
                 python_bin = get_python_interpreter_v2(
@@ -162,15 +189,15 @@ def collect_package_ssh(
                         task_group.pinned_package_versions_string,
                     ),
                 ]
-
+                script_dir_remote = (
+                    Path(task_group.path) / SCRIPTS_SUBFOLDER
+                ).as_posix()
                 common_args = dict(
                     replacements=replacements,
                     script_dir_local=(
                         Path(tmpdir) / SCRIPTS_SUBFOLDER
                     ).as_posix(),
-                    script_dir_remote=(
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
-                    ).as_posix(),
+                    script_dir_remote=script_dir_remote,
                     prefix=(
                         f"{int(time.time())}_"
                         f"{TaskGroupActivityActionV2.COLLECT}"
@@ -178,8 +205,6 @@ def collect_package_ssh(
                     logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
                 )
-
-                fractal_ssh.check_connection()
 
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
@@ -200,17 +225,19 @@ def collect_package_ssh(
                     log_file_path=log_file_path,
                     db=db,
                 )
-                db.close()
-                # Create remote folder (note that because of `parents=True` we
-                # are in the `no error if existing, make parent directories as
-                # needed` scenario)
-                fractal_ssh.mkdir(folder=tasks_base_dir, parents=True)
 
+                # Create remote `task_group.path` and `script_dir_remote`
+                # folders (note that because of `parents=True` we  are in
+                # the `no error if existing, make parent directories as
+                # needed` scenario for `mkdir`)
+                fractal_ssh.mkdir(folder=task_group.path, parents=True)
+                fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
+
+                # Run script 1
                 stdout = _customize_and_run_template(
                     template_filename="_1_create_venv.sh",
                     **common_args,
                 )
-                remove_venv_folder_upon_failure = True
                 _refresh_logs(
                     state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
@@ -218,6 +245,7 @@ def collect_package_ssh(
                     db=db,
                 )
 
+                # Run script 2
                 stdout = _customize_and_run_template(
                     template_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
@@ -228,6 +256,13 @@ def collect_package_ssh(
                     log_file_path=log_file_path,
                     db=db,
                 )
+
+                # Close db connections before long pip related operations.
+                # WARNING: this expunges all ORM objects.
+                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
+                db.close()
+
+                # Run script 3
                 stdout = _customize_and_run_template(
                     template_filename="_3_pip_install.sh",
                     **common_args,
@@ -238,18 +273,18 @@ def collect_package_ssh(
                     log_file_path=log_file_path,
                     db=db,
                 )
+
+                # Run script 4
                 _customize_and_run_template(
                     template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
-                logger.debug("installing - END")
                 _refresh_logs(
                     state_id=state_id,
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
-                logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status=CollectionStatusV2.COLLECTING,
@@ -257,13 +292,7 @@ def collect_package_ssh(
                     db=db,
                 )
 
-                _refresh_logs(
-                    state_id=state_id,
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-
+                # Run script 5
                 stdout = _customize_and_run_template(
                     template_filename="_5_pip_show.sh",
                     **common_args,
@@ -370,27 +399,17 @@ def collect_package_ssh(
 
             except Exception as collection_e:
                 # Delete corrupted package dir
-                if remove_venv_folder_upon_failure:
-                    try:
-                        logger.info(
-                            f"Now delete remote folder {task_group.path}"
-                        )
-                        fractal_ssh.remove_folder(
-                            folder=task_group.path,
-                            safe_root=tasks_base_dir,
-                        )
-                        logger.info(
-                            f"Deleted remoted folder {task_group.path}"
-                        )
-                    except Exception as e_rm:
-                        logger.error(
-                            "Removing folder failed. "
-                            f"Original error:\n{str(e_rm)}"
-                        )
-                else:
-                    logger.info(
-                        "Not trying to remove remote folder "
-                        f"{task_group.path}."
+                try:
+                    logger.info(f"Now delete remote folder {task_group.path}")
+                    fractal_ssh.remove_folder(
+                        folder=task_group.path,
+                        safe_root=tasks_base_dir,
+                    )
+                    logger.info(f"Deleted remoted folder {task_group.path}")
+                except Exception as e_rm:
+                    logger.error(
+                        "Removing folder failed. "
+                        f"Original error:\n{str(e_rm)}"
                     )
                 _handle_failure(
                     state_id=state_id,
