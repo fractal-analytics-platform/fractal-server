@@ -2,7 +2,6 @@ from urllib.parse import quote
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
-from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -130,7 +129,6 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
 
-    state = CollectionStateV2(taskgroupv2_id=task.taskgroupv2_id)
     task_group_activity = TaskGroupActivityV2(
         user_id=user1.id,
         taskgroupv2_id=task.taskgroupv2_id,
@@ -139,13 +137,9 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
         action=TaskGroupActivityActionV2.COLLECT,
         status=TaskGroupActivityStatusV2.PENDING,
     )
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
     db.add(task_group_activity)
     await db.commit()
     await db.refresh(task_group_activity)
-    assert state.taskgroupv2_id == task.taskgroupv2_id
     assert task_group_activity.taskgroupv2_id == task.taskgroupv2_id
 
     async with MockCurrentUser():
@@ -158,8 +152,6 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 404
 
-    await db.refresh(state)
-    assert state.taskgroupv2_id is None
     await db.refresh(task_group_activity)
     assert task_group_activity.taskgroupv2_id is None
 

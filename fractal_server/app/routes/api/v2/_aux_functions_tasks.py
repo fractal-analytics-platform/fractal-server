@@ -13,7 +13,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -219,27 +220,29 @@ async def _get_valid_user_group_id(
     return user_group_id
 
 
-async def _get_collection_status_message(
+async def _get_collection_task_group_activity_status_message(
     task_group: TaskGroupV2, db: AsyncSession
 ) -> str:
     res = await db.execute(
-        select(CollectionStateV2).where(
-            CollectionStateV2.taskgroupv2_id == task_group.id
+        select(TaskGroupActivityV2).where(
+            TaskGroupActivityV2.taskgroupv2_id == task_group.id
+            and TaskGroupActivityV2.action == TaskGroupActivityActionV2.COLLECT
         )
     )
-    states = res.scalars().all()
-    if len(states) > 1:
+    task_group_activity_list = res.scalars().all()
+    if len(task_group_activity_list) > 1:
         msg = (
-            "Expected one CollectionStateV2 associated to TaskGroup "
-            f"{task_group.id}, found {len(states)} "
-            f"(IDs: {[state.id for state in states]}).\n"
+            "Expected one TaskGroupActivityV2 associated to TaskGroup "
+            f"{task_group.id}, found {len(task_group_activity_list)} "
+            f"(IDs: {[tga.id for tga in task_group_activity_list]}).\n"
             "Warning: this should have not happened, please contact an admin."
         )
-    elif len(states) == 1:
+    elif len(task_group_activity_list) == 1:
         msg = (
-            f"\nThere exists a task-collection state (ID={states[0].id}) for "
+            "\nThere exists a task-group activity"
+            f"(ID={task_group_activity_list[0].id}) for "
             f"such task group (ID={task_group.id}), with status "
-            f"'{states[0].data.get('status')}'."
+            f"'{task_group_activity_list[0].status}'."
         )
     else:
         msg = ""
@@ -273,7 +276,9 @@ async def _verify_non_duplication_user_constraint(
                     "This should have not happened: please contact an admin."
                 ),
             )
-        state_msg = await _get_collection_status_message(duplicate[0], db)
+        state_msg = await _get_collection_task_group_activity_status_message(
+            duplicate[0], db
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
@@ -313,7 +318,9 @@ async def _verify_non_duplication_group_constraint(
                     "This should have not happened: please contact an admin."
                 ),
             )
-        state_msg = await _get_collection_status_message(duplicate[0], db)
+        state_msg = await _get_collection_task_group_activity_status_message(
+            duplicate[0], db
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(

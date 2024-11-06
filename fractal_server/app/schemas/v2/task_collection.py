@@ -1,7 +1,4 @@
-from datetime import datetime
-from enum import Enum
 from pathlib import Path
-from typing import Any
 from typing import Literal
 from typing import Optional
 
@@ -11,30 +8,8 @@ from pydantic import root_validator
 from pydantic import validator
 
 from .._validators import valstr
-from fractal_server.app.schemas._validators import valutc
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
-
-
-class CollectionStatusV2(str, Enum):
-    PENDING = "pending"
-    INSTALLING = "installing"
-    COLLECTING = "collecting"
-    FAIL = "fail"
-    OK = "OK"
-
-
-class TaskGroupActivityStatusV2(str, Enum):
-    PENDING = "pending"
-    ONGOING = "ongoing"
-    FAILED = "failed"
-    OK = "OK"
-
-
-class TaskGroupActivityActionV2(str, Enum):
-    COLLECT = "collect"
-    DEACTIVATE = "deactivate"
-    REACTIVATE = "reactivate"
 
 
 class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
@@ -204,12 +179,3 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
                 f"Python interpreter path must be absolute: (given {value})."
             )
         return value
-
-
-class CollectionStateReadV2(BaseModel):
-
-    id: Optional[int]
-    data: dict[str, Any]
-    timestamp: datetime
-
-    _timestamp = validator("timestamp", allow_reuse=True)(valutc("timestamp"))

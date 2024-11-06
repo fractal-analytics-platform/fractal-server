@@ -4,12 +4,13 @@ from pathlib import Path
 import pytest
 from devtools import debug  # noqa
 
-from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
     get_package_version_from_pypi,
 )
-from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -57,22 +58,18 @@ async def test_task_collection_from_wheel(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state = res.json()
-        state_id = state["id"]
-        venv_path = state["data"]["venv_path"]
-        debug(venv_path)
-        assert "fractal-tasks-mock" in venv_path
-
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        assert res.json()["log"] is None
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-        assert data["status"] == "OK"
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level
-        log = data["log"]
+        log = task_group_activity["log"]
         assert log is not None
         # Check that my_extra was included, in a local-package collection
         assert ".whl[my_extra]" in log
@@ -80,11 +77,6 @@ async def test_task_collection_from_wheel(
         # A second identical collection fails
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         assert res.status_code == 422
-
-        # Check that info contains logs
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
-        assert res.status_code == 200
-        assert res.json()["data"]["log"] is not None
 
 
 async def test_task_collection_from_wheel_non_canonical(
@@ -129,25 +121,22 @@ async def test_task_collection_from_wheel_non_canonical(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
-        state = res.json()
-        state_id = state["id"]
-        venv_path = state["data"]["venv_path"]
-        assert "fractal-tasks-non-canonical" in venv_path
-
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
         # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
 
         # Check that log were written, even with CRITICAL logging level
-        log = data["log"]
+        log = task_group_activity["log"]
         assert log is not None
         # Check that my_extra was included, in a local-package collection
         assert ".whl[my_extra]" in log
-        assert data["status"] == "OK"
+        assert task_group_activity["status"] == "OK"
 
 
 OLD_FRACTAL_TASKS_CORE_VERSION = "1.0.2"
@@ -213,28 +202,19 @@ async def test_task_collection_from_pypi(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state = res.json()
-        state_id = state["id"]
-        venv_path = state["data"]["venv_path"]
-        debug(venv_path)
-        assert "fractal-tasks-core" in venv_path
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
 
         # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
-        assert res.status_code == 200
-        state = res.json()
-        debug(state)
-        data = state["data"]
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level
-        log = data["log"]
+        log = task_group_activity["log"]
         assert log is not None
-
-        # Check that collection info contains logs
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
-        assert res.status_code == 200
-        assert res.json()["data"]["log"] is not None
 
         # Collect again and fail due to non-duplication constraint
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
@@ -342,26 +322,38 @@ async def test_contact_an_admin_message(
         db.add(task_group)
         await db.commit()
         await db.refresh(task_group)
-        # Create a CollectionState associated to the new TaskGroup.
-        db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
-
+        # Create a TaskGroupActivityStatusV2 associated to the new TaskGroup.
+        task_group_activity_1 = TaskGroupActivityV2(
+            user_id=userB.id,
+            taskgroupv2_id=task_group.id,
+            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatusV2.PENDING,
+            pkg_name="fractal-tasks-core",
+            version="1.1.0",
+        )
+        db.add(task_group_activity_1)
         await db.commit()
-
-        # Fail inside `_verify_non_duplication_user_constraint`, but get a
-        # richer message from `_get_collection_status_message`
+        # Fail inside `_verify_non_duplication_user_constraint`,
         # (case `len(states) == 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
         assert res.status_code == 422
-        assert "There exists a task-collection state" in res.json()["detail"]
+        assert "There exists a task-group activity" in res.json()["detail"]
 
         # Crete a new CollectionState associated to the same TaskGroup
         # (this is NOT ALLOWED using the API).
-        db.add(CollectionStateV2(taskgroupv2_id=task_group.id))
+        task_group_activity_2 = TaskGroupActivityV2(
+            user_id=userB.id,
+            taskgroupv2_id=task_group.id,
+            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatusV2.PENDING,
+            pkg_name="fractal-tasks-core",
+            version="1.1.0",
+        )
+        db.add(task_group_activity_2)
         await db.commit()
-
         # Fail inside `_verify_non_duplication_user_constraint`, but get a
         # richer message from `_get_collection_status_message`
         # (case `len(states) > 1`).
@@ -369,5 +361,5 @@ async def test_contact_an_admin_message(
             f"{PREFIX}/collect/pip/",
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
-        assert "CollectionStateV2 " in res.json()["detail"]
+        assert "TaskGroupActivityV2" in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]

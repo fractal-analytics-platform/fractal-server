@@ -5,7 +5,6 @@ from devtools import debug  # noqa
 from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 
 PREFIX = "api/v2/task"
 
@@ -13,12 +12,6 @@ PREFIX = "api/v2/task"
 async def test_failed_API_calls(
     client, MockCurrentUser, tmp_path, testdata_path
 ):
-
-    # Missing state ID
-    invalid_state_id = 99999
-    async with MockCurrentUser():
-        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}/")
-        assert res.status_code == 404
 
     # Task collection triggered by non-verified user
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
@@ -83,14 +76,15 @@ async def test_invalid_manifest(
         res = await client.post(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
-        assert res.status_code == 201
-        collection_state_id = res.json()["id"]
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
         # Background task failed
-        res = await client.get(f"{PREFIX}/collect/{collection_state_id}/")
-        assert res.status_code == 200
-        collection_data = res.json()["data"]
-        assert collection_data["status"] == "fail"
-        assert "Wrong manifest version" in collection_data["log"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert "Wrong manifest version" in task_group_activity["log"]
 
     # Missing manifest
     wheel_path = (
@@ -104,14 +98,15 @@ async def test_invalid_manifest(
         res = await client.post(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
-        assert res.status_code == 201
-        collection_state_id = res.json()["id"]
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
         # Background task failed
-        res = await client.get(f"{PREFIX}/collect/{collection_state_id}/")
-        assert res.status_code == 200
-        collection_data = res.json()["data"]
-        assert collection_data["status"] == "fail"
-        assert "manifest path not found" in collection_data["log"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert "manifest path not found" in task_group_activity["log"]
 
 
 async def test_missing_task_executable(
@@ -139,17 +134,18 @@ async def test_missing_task_executable(
         res = await client.post(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state_id = res.json()["id"]
-        # Inspect collection outcome
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+
+        task_group_activity_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        data = res.json()["data"]
-        assert "missing file" in data["info"]
-        assert data["status"] == "fail"
-        assert data["log"]
-        assert "missing file" in data["log"]
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert "missing file" in task_group_activity["log"]
 
 
 async def test_folder_already_exists(
@@ -224,14 +220,17 @@ async def test_failure_cleanup(
                 **payload, pinned_package_versions={"pydantic": "99.99.99"}
             ),
         )
-        assert res.status_code == 201
-        collection_id = res.json()["id"]
-
-        # Background task actually failed
-        res = await client.get(f"{PREFIX}/collect/{collection_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
         assert (
             "No matching distribution found for pydantic==99.99.99"
-            in res.json()["data"]["log"]
+            in task_group_activity["log"]
         )
 
         # Cleanup was performed correctly

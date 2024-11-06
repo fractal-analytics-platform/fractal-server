@@ -2,7 +2,6 @@
 v2 `models` module
 """
 from ..linkuserproject import LinkUserProjectV2
-from .collection_state import CollectionStateV2
 from .dataset import DatasetV2
 from .job import JobV2
 from .project import ProjectV2
@@ -17,7 +16,6 @@ __all__ = [
     "DatasetV2",
     "JobV2",
     "ProjectV2",
-    "CollectionStateV2",
     "TaskGroupV2",
     "TaskGroupActivityV2",
     "TaskV2",

@@ -9,7 +9,6 @@ from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
-from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -818,12 +817,18 @@ async def test_task_group_admin(
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id, source="source")
         await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
-
-    state = CollectionStateV2(taskgroupv2_id=task_group_1["id"])
-    db.add(state)
+        task_group_activity = TaskGroupActivityV2(
+            user_id=user.id,
+            taskgroupv2_id=task_group_1["id"],
+            status=TaskGroupActivityStatusV2.PENDING,
+            action="collect",
+            pkg_name="pkg",
+            version="1.0.0",
+        )
+    db.add(task_group_activity)
     await db.commit()
-    await db.refresh(state)
-    assert state.taskgroupv2_id == task_group_1["id"]
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id == task_group_1["id"]
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.delete(f"{PREFIX}/task-group/{task_group_1['id']}/")
@@ -839,8 +844,8 @@ async def test_task_group_admin(
         )
         assert res.status_code == 422
 
-    await db.refresh(state)
-    assert state.taskgroupv2_id is None
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id is None
 
 
 async def test_get_task_group_activity(
