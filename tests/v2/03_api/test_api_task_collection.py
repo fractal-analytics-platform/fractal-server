@@ -59,6 +59,8 @@ async def test_task_collection_from_wheel(
             json=payload,
         )
         assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        assert res.json()["log"] is None
         task_group_activity_id = res.json()["id"]
         res = await client.get(
             f"/api/v2/task-group/activity/{task_group_activity_id}/"
@@ -340,4 +342,4 @@ async def test_contact_an_admin_message(
             json=dict(package="fractal-tasks-core", package_version="1.1.0"),
         )
         assert res.status_code == 422
-        assert "already owns a task group" in res.json()["detail"]
+        assert "There exists a task-group activity" in res.json()["detail"]
