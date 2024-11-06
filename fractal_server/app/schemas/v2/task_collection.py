@@ -1,4 +1,3 @@
-from enum import Enum
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -11,19 +10,6 @@ from pydantic import validator
 from .._validators import valstr
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
-
-
-class TaskGroupActivityStatusV2(str, Enum):
-    PENDING = "pending"
-    ONGOING = "ongoing"
-    FAILED = "failed"
-    OK = "OK"
-
-
-class TaskGroupActivityActionV2(str, Enum):
-    COLLECT = "collect"
-    DEACTIVATE = "deactivate"
-    REACTIVATE = "reactivate"
 
 
 class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
