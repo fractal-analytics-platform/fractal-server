@@ -44,8 +44,6 @@ def _customize_and_run_template(
     via SFTP and then run it via SSH.
 
     Args:
-
-
         template_filename: Filename of the template file (ends with ".sh").
         replacements: Dictionary of replacements.
         script_dir: Local folder where the script will be placed.
@@ -62,7 +60,7 @@ def _customize_and_run_template(
         raise ValueError(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
-    template_filename_stripped = template_filename[:-3]
+    template_filename_stripped = Path(template_filename).stem
     script_filename = f"{prefix}{template_filename_stripped}"
     script_path_local = Path(script_dir_local) / script_filename
 
