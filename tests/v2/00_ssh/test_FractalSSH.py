@@ -284,3 +284,20 @@ def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
     assert path.exists()
     with path.open("r") as f:
         assert f.read() == content
+
+
+def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
+    remote_folder = (tmp777_path / "folder").as_posix()
+    remote_file = (tmp777_path / "folder/file").as_posix()
+
+    assert not fractal_ssh.remote_exists(path=remote_folder)
+    assert not fractal_ssh.remote_exists(path=remote_file)
+
+    Path(remote_folder).mkdir()
+    assert fractal_ssh.remote_exists(path=remote_folder)
+    assert not fractal_ssh.remote_exists(path=remote_file)
+
+    with open(remote_file, "w") as f:
+        f.write("hello\n")
+    assert fractal_ssh.remote_exists(path=remote_folder)
+    assert fractal_ssh.remote_exists(path=remote_file)
