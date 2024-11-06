@@ -389,3 +389,60 @@ async def test_task_collection_ssh_failure(
         assert ERROR_MSG in state_data["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+
+
+async def test_task_collection_ssh_failure_no_connection(
+    db,
+    app,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    current_py_version: str,
+):
+    """
+    Test exception handling for when SSH connection is not available.
+    """
+
+    # Assign empty FractalSSH object to app state
+    app.state.fractal_ssh_list = FractalSSHList()
+
+    # Override settins with Python/SSH configurations
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    settings_overrides = {
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        PY_KEY: f"/usr/bin/python{current_py_version}",
+        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
+    }
+    override_settings_factory(**settings_overrides)
+
+    user_settings_dict = dict(
+        ssh_host="fake",
+        ssh_username="fake",
+        ssh_private_key_path="fake",
+        ssh_tasks_dir="/fake",
+        ssh_jobs_dir="/fake",
+    )
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
+        # Trigger task collection (first time)
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core",
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 201
+        state_id = res.json()["id"]
+
+        # Check that task collection failed
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 200
+        state_data = res.json()["data"]
+
+        assert state_data["status"] == CollectionStatusV2.FAIL
+        assert "Cannot establish SSH connection" in state_data["log"]
