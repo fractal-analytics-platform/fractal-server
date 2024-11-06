@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2.task_collection import (
+from fractal_server.app.schemas.v2 import (
     TaskGroupActivityStatusV2,
 )
 from fractal_server.tasks.v2.collection_local import collect_package_local
