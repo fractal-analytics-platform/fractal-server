@@ -178,9 +178,6 @@ def collect_package_local(
                 # Create task_group.path
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
-                from devtools import debug
-
-                debug(task_group)
 
                 if task_group.wheel_path:
                     logger.debug(
@@ -188,7 +185,6 @@ def collect_package_local(
                         f"into {task_group.path} - start"
                     )
                     shutil.copy(task_group.wheel_path, task_group.path)
-                    debug(task_group.wheel_path)
                     task_group.wheel_path = (
                         Path(task_group.path)
                         / Path(task_group.wheel_path).name
