@@ -13,7 +13,7 @@
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
-    * Add `TaskGroupV2.pip_freeze` column (\#2017).
+    * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
 * Task-collection internals:
     * Update `TaskGroupActivityV2` objects (\#2005).
     * Update filename and path for task-collection scripts (\#2008).
