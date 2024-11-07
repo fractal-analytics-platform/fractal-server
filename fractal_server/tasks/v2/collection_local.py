@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .database_operations import create_db_tasks_and_update_task_group
+from .database_operations import update_task_group_pip_freeze
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -72,7 +73,7 @@ def _customize_and_run_template(
     cmd = f"bash {script_path_local}"
     logger.debug(f"Now run '{cmd}' ")
 
-    stdout = execute_command_sync(command=cmd)
+    stdout = execute_command_sync(command=cmd, logger_name=logger_name)
 
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
     logger.debug(f"_customize_and_run_template {template_filename} - END")
@@ -217,7 +218,7 @@ def collect_package_local(
                 )
 
                 # Run script 4
-                _customize_and_run_template(
+                pip_freeze_stdout = _customize_and_run_template(
                     template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
@@ -305,6 +306,20 @@ def collect_package_local(
                 )
                 logger.info(
                     "collecting - create_db_tasks_and_update_task_group - end"
+                )
+
+                logger.info(
+                    "collecting - add pip freeze stdout to TaskGroupV2 - start"
+                )
+
+                update_task_group_pip_freeze(
+                    task_group_id=task_group.id,
+                    pip_freeze_stdout=pip_freeze_stdout,
+                    db=db,
+                )
+
+                logger.info(
+                    "collecting - add pip freeze stdout to TaskGroupV2 - end"
                 )
 
                 logger.debug("collecting - END")
