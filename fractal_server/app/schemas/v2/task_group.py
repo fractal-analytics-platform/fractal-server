@@ -45,6 +45,7 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
     pip_extras: Optional[str] = None
+    pip_freeze: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
@@ -80,6 +81,7 @@ class TaskGroupReadV2(BaseModel):
     path: Optional[str] = None
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
+    pip_freeze: Optional[str] = None
     pip_extras: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 

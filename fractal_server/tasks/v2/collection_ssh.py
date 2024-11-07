@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .database_operations import create_db_tasks_and_update_task_group
+from .database_operations import update_task_group_pip_freeze
 from .utils_background import _handle_failure
 from .utils_background import _prepare_tasks_metadata
 from .utils_background import _set_task_group_activity_status
@@ -259,7 +260,7 @@ def collect_package_ssh(
                 )
 
                 # Run script 4
-                _customize_and_run_template(
+                pip_freeze_stdout = _customize_and_run_template(
                     template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
@@ -338,6 +339,20 @@ def collect_package_ssh(
                 )
                 logger.info(
                     "collecting - create_db_tasks_and_update_task_group - end"
+                )
+
+                logger.info(
+                    "collecting - add pip freeze stdout to TaskGroupV2 - start"
+                )
+
+                update_task_group_pip_freeze(
+                    task_group_id=task_group.id,
+                    pip_freeze_stdout=pip_freeze_stdout,
+                    db=db,
+                )
+
+                logger.info(
+                    "collecting - add pip freeze stdout to TaskGroupV2 - end"
                 )
 
                 logger.debug("collecting - END")

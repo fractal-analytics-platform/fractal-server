@@ -42,3 +42,24 @@ def create_db_tasks_and_update_task_group(
     db.refresh(task_group)
 
     return task_group
+
+
+def update_task_group_pip_freeze(
+    *,
+    task_group_id: int,
+    pip_freeze_stdout: str,
+    db: DBSyncSession,
+) -> TaskGroupV2:
+    """
+    Update TaskGroupV2 pip_freeze attribute
+
+    Arguments:
+        task_group: ID of an existing TaskGroupV2 object.
+        pip_freeze_stdout: A string with `pip freeze` stdout from task venv.
+        db: A synchronous database session
+    """
+
+    task_group = db.get(TaskGroupV2, task_group_id)
+    task_group.pip_freeze = pip_freeze_stdout
+    db.add(task_group)
+    db.commit()

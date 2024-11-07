@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug  # noqa
+from packaging.version import Version
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -39,7 +40,7 @@ async def test_task_collection_from_wheel(
         FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
         FRACTAL_MAX_PIP_VERSION=FRACTAL_MAX_PIP_VERSION,
     )
-
+    settings = Inject(get_settings)
     # Prepare absolute path to wheel file
     wheel_path = (
         testdata_path.parent
@@ -73,7 +74,19 @@ async def test_task_collection_from_wheel(
         assert log is not None
         # Check that my_extra was included, in a local-package collection
         assert ".whl[my_extra]" in log
-
+        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        # Check pip_freeze attribute in TaskGroupV2
+        res = await client.get("/api/v2/task-group/" f"{task_groupv2_id}/")
+        assert res.status_code == 200
+        task_group = res.json()
+        pip_version = next(
+            line
+            for line in task_group["pip_freeze"].split("\n")
+            if line.startswith("pip")
+        ).split("==")[1]
+        assert Version(pip_version) <= Version(
+            settings.FRACTAL_MAX_PIP_VERSION
+        )
         # A second identical collection fails
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         assert res.status_code == 422

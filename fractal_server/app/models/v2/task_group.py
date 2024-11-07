@@ -30,6 +30,7 @@ class TaskGroupV2(SQLModel, table=True):
     path: Optional[str] = None
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
+    pip_freeze: Optional[str] = None
     pip_extras: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(

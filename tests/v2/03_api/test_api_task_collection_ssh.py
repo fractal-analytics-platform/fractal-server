@@ -91,7 +91,15 @@ async def test_task_collection_ssh_from_pypi(
         assert res.status_code == 200
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
-
+        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        # Check pip_freeze attribute in TaskGroupV2
+        res = await client.get("/api/v2/task-group/" f"{task_groupv2_id}/")
+        assert res.status_code == 200
+        task_group = res.json()
+        assert (
+            f"fractal-tasks-core=={package_version}"
+            in task_group["pip_freeze"]
+        )
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pip/",
