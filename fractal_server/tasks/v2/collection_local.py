@@ -178,6 +178,25 @@ def collect_package_local(
                 # Create task_group.path
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
+                from devtools import debug
+
+                debug(task_group)
+
+                if task_group.wheel_path:
+                    logger.debug(
+                        f"Copy {task_group.wheel_path} "
+                        f"into {task_group.path} - start"
+                    )
+                    shutil.copy(task_group.wheel_path, task_group.path)
+                    debug(task_group.wheel_path)
+                    task_group.wheel_path = (
+                        Path(task_group.path)
+                        / Path(task_group.wheel_path).name
+                    ).as_posix()
+                    logger.debug(
+                        "Now new wheel_path "
+                        f"is {task_group.wheel_path} - end"
+                    )
 
                 # Run script 1
                 stdout = _customize_and_run_template(

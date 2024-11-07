@@ -62,6 +62,56 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
 
 
+async def test_collect_pip_wheel_file(
+    tmp_path, db, first_user, testdata_path, current_py_version
+):
+    # Prepare db objects
+    path = tmp_path / "something"
+    task_group = TaskGroupV2(
+        pkg_name="fractal-tasks-mock",
+        version="0.0.1",
+        origin="pypi",
+        path=path.as_posix(),
+        wheel_path=(
+            f"{testdata_path.parent}"
+            "/v2/fractal_tasks_valid/valid_tasks/"
+            "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        ),
+        venv_path=(path / "venv").as_posix(),
+        python_version=current_py_version,
+        user_id=first_user.id,
+    )
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action="collect",
+        pkg_name="fractal-tasks-mock",
+        version="0.0.1",
+    )
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+    db.expunge(task_group_activity)
+    # Create task_group.path
+    # path.mkdir()
+    # Run background task
+    collect_package_local(
+        task_group=task_group,
+        task_group_activity_id=task_group_activity.id,
+    )
+    # Verify that collection failed
+    task_group_activity_v2 = await db.get(
+        TaskGroupActivityV2, task_group_activity.id
+    )
+    debug(task_group_activity_v2)
+    assert task_group_activity_v2.status == "OK"
+
+
 async def test_collect_pip_existing_file(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
