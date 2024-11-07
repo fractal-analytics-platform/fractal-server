@@ -299,7 +299,7 @@ def collect_package_local(
                     "collecting - create_db_tasks_and_update_task_group - "
                     "start"
                 )
-                task_group = create_db_tasks_and_update_task_group(
+                create_db_tasks_and_update_task_group(
                     task_list=task_list,
                     task_group_id=task_group.id,
                     db=db,

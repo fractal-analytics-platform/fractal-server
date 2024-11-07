@@ -63,6 +63,3 @@ def update_task_group_pip_freeze(
     task_group.pip_freeze = pip_freeze_stdout
     db.add(task_group)
     db.commit()
-    db.refresh(task_group)
-
-    return task_group
