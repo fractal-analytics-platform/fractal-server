@@ -170,8 +170,7 @@ def collect_package_local(
                     (f"START - Create python venv {task_group.venv_path}")
                 )
                 cmd = (
-                    f"python{task_group.python_version} -m venv "
-                    f"{task_group.venv_path} --copies"
+                    f"{python_bin} -m venv " f"{task_group.venv_path} --copies"
                 )
                 stdout = execute_command_sync(command=cmd)
                 logger.debug(
