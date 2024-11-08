@@ -70,6 +70,7 @@ async def test_task_collection_from_wheel(
         task_group_activity = res.json()
         debug(task_group_activity)
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
         # Check that log were written, even with CRITICAL logging level
         log = task_group_activity["log"]
         assert log is not None
