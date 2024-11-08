@@ -11,6 +11,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
+from fractal_server.utils import get_timestamp
 
 
 def _set_task_group_activity_status(
@@ -27,6 +28,11 @@ def _set_task_group_activity_status(
     )
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     task_group_activity.status = TaskGroupActivityStatusV2(new_status)
+    if new_status in [
+        TaskGroupActivityStatusV2.OK,
+        TaskGroupActivityStatusV2.FAILED,
+    ]:
+        task_group_activity.timestamp_ended = get_timestamp()
     db.add(task_group_activity)
     db.commit()
 
