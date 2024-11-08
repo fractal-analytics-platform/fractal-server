@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
+from devtools import debug
 from fabric import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -301,3 +302,80 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
         f.write("hello\n")
     assert fractal_ssh.remote_exists(path=remote_folder)
     assert fractal_ssh.remote_exists(path=remote_file)
+
+
+def test_closed_socket(
+    fractal_ssh: FractalSSH,
+    run_in_container: callable,
+    tmp_path: Path,
+):
+    """
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2019
+    """
+
+    debug("STEP 0")
+
+    # Open connection and check socket is open
+    debug("STEP 1")
+
+    fractal_ssh.check_connection()
+    sock = fractal_ssh._connection.transport.sock
+    assert not sock._closed
+
+    debug("STEP 2")
+
+    # Manually close socket
+    # import socket
+    # fractal_ssh._connection.transport.sock.shutdown(socket.SHUT_RDWR)
+    # fractal_ssh._connection.transport.sock.close()
+    # assert sock._closed
+
+    res = run_in_container("killall sshd")
+    debug(res.stdout)
+    debug(res.stderr)
+    assert res.returncode == 0
+
+    res = run_in_container("service ssh status")
+    debug(res.stdout)
+    debug(res.stderr)
+    assert res.returncode == 3
+
+    with pytest.raises(RuntimeError, match="Reached last attempt"):
+        fractal_ssh.run_command(cmd="whoami", max_attempts=1)
+
+    res = run_in_container("service ssh start")
+    debug(res.stdout)
+    debug(res.stderr)
+    assert res.returncode == 0
+
+    import time
+
+    time.sleep(0.5)
+
+    res = run_in_container("service ssh status")
+    debug(res.returncode)
+    debug(res.stdout)
+    debug(res.stderr)
+    assert res.returncode == 0
+
+    debug("STEP 3")
+
+    # Running an SFTP command fails
+    with pytest.raises(Exception) as exc_info:
+        local_file_old = (tmp_path / "local_old").as_posix()
+        with open(local_file_old, "w") as f:
+            f.write("hi there\n")
+        # fractal_ssh.send_file(local=local_file_old, remote="remote_file")
+        fractal_ssh._sftp_unsafe().put(local_file_old, "remote")
+    debug(f"Captured and ignored {exc_info.value}")
+
+    # fractal_ssh.run_command(cmd="whoami", max_attempts=1)
+    # debug("STEP 4")
+
+    # fractal_ssh.check_connection()
+
+    # debug("STEP 5")
+
+    # fractal_ssh.run_command(cmd="whoami")
+
+    # debug("STEP 6")

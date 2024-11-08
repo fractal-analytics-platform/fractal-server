@@ -136,6 +136,21 @@ def slurmlogin_ip(slurmlogin_container) -> str:
 
 
 @pytest.fixture
+def run_in_container(slurmlogin_container) -> str:
+    def __runner__(cmd: str) -> subprocess.CompletedProcess:
+        full_cmd = f"docker exec --user root {slurmlogin_container} {cmd}"
+        logging.info(f"Now running {full_cmd=}.")
+        res = subprocess.run(
+            shlex.split(full_cmd),
+            capture_output=True,
+            encoding="utf-8",
+        )
+        return res
+
+    return __runner__
+
+
+@pytest.fixture
 def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
     command = (
         f"docker exec --user root {slurmlogin_container} service ssh status"

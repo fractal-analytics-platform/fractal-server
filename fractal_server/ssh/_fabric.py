@@ -200,18 +200,42 @@ class FractalSSH(object):
         `connection`, so that we can provide a meaningful error in case the
         SSH connection cannot be opened.
         """
-        if not self._connection.is_connected:
+        self.logger.debug(
+            f"[check_connection] {self._connection.is_connected=}"
+        )
+        if self._connection.is_connected:
+            # Even if the connection appears open, it could be broken for
+            # external reasons (e.g. the socket is closed because the SSH
+            # server was taken down and then restarted). In these cases, we
+            # catch the error and try to re-open the connection.
             try:
-                with _acquire_lock_with_timeout(
-                    lock=self._lock,
-                    label="_connection.open",
-                    timeout=self.default_lock_timeout,
-                ):
-                    self._connection.open()
-            except Exception as e:
-                raise RuntimeError(
-                    f"Cannot open SSH connection. Original error:\n{str(e)}"
+                self.run_command(cmd="whoami")
+                self.logger.info(
+                    "[check_connection] SSH connection is already OK, exit."
                 )
+                return
+            except (OSError, EOFError) as e:
+                self.logger.warning(
+                    f"[check_connection] Detected error {str(e)}, re-open."
+                )
+        # Try opening the connection (either because it is closed, or because
+        # an error happened).
+        try:
+            with _acquire_lock_with_timeout(
+                lock=self._lock,
+                label="_connection.open",
+                timeout=self.default_lock_timeout,
+                logger_name=self.logger_name,
+            ):
+                self._connection.open()
+                self.logger.info(
+                    "[check_connection] SSH connection opened, exit."
+                )
+
+        except Exception as e:
+            raise RuntimeError(
+                f"Cannot open SSH connection. Original error:\n{str(e)}"
+            )
 
     def close(self) -> None:
         """
