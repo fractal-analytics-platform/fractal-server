@@ -136,6 +136,32 @@ def collect_package_local(
 
             try:
                 # Prepare replacements for task-collection scripts
+
+                # Create task_group.path
+                Path(task_group.path).mkdir(parents=True)
+                logger.debug(f"Created {task_group.path}")
+                task_group_id = task_group.id
+                # Copy wheel file into task group path
+                if task_group.wheel_path:
+                    logger.debug(
+                        f"Copy {task_group.wheel_path} "
+                        f"into {task_group.path} - start"
+                    )
+                    shutil.copy(task_group.wheel_path, task_group.path)
+                    task_group.wheel_path = (
+                        Path(task_group.path)
+                        / Path(task_group.wheel_path).name
+                    ).as_posix()
+                    db.add(task_group)
+                    db.commit()
+                    db.refresh(task_group)
+                    logger.debug(
+                        "Now new wheel_path "
+                        f"is {task_group.wheel_path} - end"
+                    )
+                from devtools import debug
+
+                debug(task_group)
                 python_bin = get_python_interpreter_v2(
                     python_version=task_group.python_version
                 )
@@ -174,10 +200,6 @@ def collect_package_local(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
-
-                # Create task_group.path
-                Path(task_group.path).mkdir(parents=True)
-                logger.debug(f"Created {task_group.path}")
 
                 # Run script 1
                 stdout = _customize_and_run_template(
@@ -245,6 +267,7 @@ def collect_package_local(
                         f"collecting - parsed from pip-show: {key}={value}"
                     )
                 # Check package_name match between pip show and task-group
+                task_group = db.get(TaskGroupV2, task_group_id)
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
                 compare_package_names(
@@ -345,6 +368,7 @@ def collect_package_local(
             except Exception as collection_e:
                 # Delete corrupted package dir
                 try:
+                    task_group = db.get(TaskGroupV2, task_group_id)
                     logger.info(f"Now delete folder {task_group.path}")
 
                     shutil.rmtree(task_group.path)

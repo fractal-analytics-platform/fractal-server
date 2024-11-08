@@ -68,6 +68,7 @@ async def test_task_collection_from_wheel(
         )
         assert res.status_code == 200
         task_group_activity = res.json()
+        debug(task_group_activity)
         assert task_group_activity["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level
         log = task_group_activity["log"]
@@ -76,7 +77,7 @@ async def test_task_collection_from_wheel(
         assert ".whl[my_extra]" in log
         task_groupv2_id = task_group_activity["taskgroupv2_id"]
         # Check pip_freeze attribute in TaskGroupV2
-        res = await client.get("/api/v2/task-group/" f"{task_groupv2_id}/")
+        res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
         assert res.status_code == 200
         task_group = res.json()
         pip_version = next(
@@ -87,6 +88,16 @@ async def test_task_collection_from_wheel(
         assert Version(pip_version) <= Version(
             settings.FRACTAL_MAX_PIP_VERSION
         )
+        assert (
+            Path(res.json()["path"]) / Path(wheel_path).name
+        ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
+
+        assert Path(res.json()["wheel_path"]).exists()
+        assert (
+            f"fractal-tasks-mock @ file://{res.json()['wheel_path']}"
+            in res.json()["pip_freeze"]
+        )
+
         # A second identical collection fails
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         assert res.status_code == 422

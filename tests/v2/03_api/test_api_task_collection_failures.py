@@ -60,7 +60,7 @@ async def test_invalid_manifest(
     """
     GIVEN a package with invalid/missing manifest
     WHEN the api to collect tasks from that package is called
-    THEN it returns 201 but the background task fails
+    THEN it returns 202 but the background task fails
     """
 
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)

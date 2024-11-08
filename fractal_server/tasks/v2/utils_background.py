@@ -23,7 +23,7 @@ def _set_task_group_activity_status(
     logger = get_logger(logger_name)
     logger.debug(
         f"{task_group_activity_id=} "
-        "- set task_group_activity.status to {new_status}"
+        f"- set task_group_activity.status to {new_status}"
     )
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     task_group_activity.status = TaskGroupActivityStatusV2(new_status)

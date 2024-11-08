@@ -264,6 +264,7 @@ async def test_task_collection_ssh_from_wheel(
         task_group_activity = res.json()
 
         assert task_group_activity["status"] == "OK"
+        # FIXME: add assert for new wheel_path
 
         # API FAILURE: wheel file and version set
         res = await client.post(
