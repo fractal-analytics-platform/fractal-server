@@ -17,6 +17,7 @@
 * Task-collection internals:
     * Update `TaskGroupActivityV2` objects (\#2005).
     * Update filename and path for task-collection scripts (\#2008).
+    * Copy wheel file into `task_group.path` and update `task_group.wheel_path` (\#2020).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
 
