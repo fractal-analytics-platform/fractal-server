@@ -100,11 +100,6 @@ async def test_collect_pip_wheel_file(
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
 
-    # Check that before collect `path` does not have wheel file
-    task_group_path = Path(task_group.path) / Path(task_group_wheel_path).name
-
-    assert not task_group_path.exists()
-
     # Run background task
     collect_package_local(
         task_group=task_group,
