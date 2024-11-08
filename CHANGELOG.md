@@ -7,9 +7,9 @@
 
 * API
     * Remove `GET /api/v2/task/collect/{state_id}/"` endpoint (\#2010).
-    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005).
+    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
-    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005).
+    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `TaskGroupActivityV2Read` schema (\#2005).
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
