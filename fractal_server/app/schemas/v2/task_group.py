@@ -19,6 +19,19 @@ class TaskGroupV2OriginEnum(str, Enum):
     OTHER = "other"
 
 
+class TaskGroupActivityStatusV2(str, Enum):
+    PENDING = "pending"
+    ONGOING = "ongoing"
+    FAILED = "failed"
+    OK = "OK"
+
+
+class TaskGroupActivityActionV2(str, Enum):
+    COLLECT = "collect"
+    DEACTIVATE = "deactivate"
+    REACTIVATE = "reactivate"
+
+
 class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     user_id: int
     user_group_id: int | None = None
@@ -31,6 +44,7 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     venv_path: str | None = None
     wheel_path: str | None = None
     pip_extras: str | None = None
+    pip_freeze: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
@@ -66,6 +80,7 @@ class TaskGroupReadV2(BaseModel):
     path: str | None = None
     venv_path: str | None = None
     wheel_path: str | None = None
+    pip_freeze: str | None = None
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
@@ -82,3 +97,16 @@ class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
         if value is None:
             raise ValueError("`active` cannot be set to None")
         return value
+
+
+class TaskGroupActivityV2Read(BaseModel):
+    id: int
+    user_id: int
+    taskgroupv2_id: int | None = None
+    timestamp_started: datetime
+    timestamp_ended: datetime | None = None
+    pkg_name: str
+    version: str
+    status: TaskGroupActivityStatusV2
+    action: TaskGroupActivityActionV2
+    log: str | None = None

@@ -1,6 +1,11 @@
+from urllib.parse import quote
+
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
-from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+
 
 PREFIX = "/api/v2/task-group"
 
@@ -124,11 +129,18 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
     async with MockCurrentUser() as user1:
         task = await task_factory_v2(user_id=user1.id, source="source")
 
-    state = CollectionStateV2(taskgroupv2_id=task.taskgroupv2_id)
-    db.add(state)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=user1.id,
+        taskgroupv2_id=task.taskgroupv2_id,
+        pkg_name="pkg",
+        version="1.0.0",
+        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatusV2.PENDING,
+    )
+    db.add(task_group_activity)
     await db.commit()
-    await db.refresh(state)
-    assert state.taskgroupv2_id == task.taskgroupv2_id
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id == task.taskgroupv2_id
 
     async with MockCurrentUser():
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
@@ -140,8 +152,8 @@ async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 404
 
-    await db.refresh(state)
-    assert state.taskgroupv2_id is None
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id is None
 
 
 async def test_delete_task_group_fail(
@@ -259,3 +271,124 @@ async def test_patch_task_group(
             f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=False)
         )
         assert res.status_code == 403
+
+
+async def test_get_single_task_group_activity(client, MockCurrentUser, db):
+    async with MockCurrentUser() as user:
+        activity = TaskGroupActivityV2(
+            user_id=user.id,
+            pkg_name="foo",
+            version="1",
+            status=TaskGroupActivityStatusV2.OK,
+            action=TaskGroupActivityActionV2.COLLECT,
+        )
+        db.add(activity)
+        await db.commit()
+        await db.refresh(activity)
+
+        res = await client.get(f"{PREFIX}/activity/{activity.id}/")
+        assert res.status_code == 200
+
+        res = await client.get(f"{PREFIX}/activity/{activity.id+1}/")
+        assert res.status_code == 404
+
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}/activity/{activity.id}/")
+        assert res.status_code == 403
+
+
+async def test_get_task_group_activity_list(
+    client, MockCurrentUser, db, task_factory_v2
+):
+    async with MockCurrentUser() as user:
+        task = await task_factory_v2(user_id=user.id, source="source")
+
+        activity1 = TaskGroupActivityV2(
+            user_id=user.id,
+            pkg_name="foo",
+            version="1",
+            status=TaskGroupActivityStatusV2.OK,
+            action=TaskGroupActivityActionV2.COLLECT,
+        )
+        activity2 = TaskGroupActivityV2(
+            user_id=user.id,
+            pkg_name="bar",
+            version="1",
+            status=TaskGroupActivityStatusV2.OK,
+            action=TaskGroupActivityActionV2.REACTIVATE,
+        )
+        activity3 = TaskGroupActivityV2(
+            user_id=user.id,
+            pkg_name="foo",
+            version="2",
+            status=TaskGroupActivityStatusV2.FAILED,
+            action=TaskGroupActivityActionV2.COLLECT,
+            taskgroupv2_id=task.taskgroupv2_id,
+        )
+        activity4 = TaskGroupActivityV2(
+            user_id=user.id,
+            pkg_name="foo",
+            version="1",
+            status=TaskGroupActivityStatusV2.OK,
+            action=TaskGroupActivityActionV2.COLLECT,
+            taskgroupv2_id=task.taskgroupv2_id,
+        )
+        for activity in [activity1, activity2, activity3, activity4]:
+            db.add(activity)
+        await db.commit()
+        for activity in [activity1, activity2, activity3, activity4]:
+            await db.refresh(activity)
+
+        res = await client.get(f"{PREFIX}/activity/")
+        assert res.status_code == 200
+        assert len(res.json()) == 4
+
+        # taskgroupv2_id
+        res = await client.get(
+            f"{PREFIX}/activity/?taskgroupv2_id={task.taskgroupv2_id}"
+        )
+        assert len(res.json()) == 2
+        # pkg_name
+        res = await client.get(f"{PREFIX}/activity/?pkg_name=foo")
+        assert len(res.json()) == 3
+        res = await client.get(f"{PREFIX}/activity/?pkg_name=bar")
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/activity/?pkg_name=xxx")
+        assert len(res.json()) == 0
+        # status
+        res = await client.get(f"{PREFIX}/activity/?status=OK")
+        assert len(res.json()) == 3
+        res = await client.get(f"{PREFIX}/activity/?status=failed")
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/activity/?status=ongoing")
+        assert len(res.json()) == 0
+        res = await client.get(f"{PREFIX}/activity/?status=xxx")
+        assert res.status_code == 422
+        # action
+        res = await client.get(f"{PREFIX}/activity/?action=collect")
+        assert len(res.json()) == 3
+        res = await client.get(f"{PREFIX}/activity/?action=reactivate")
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/activity/?action=deactivate")
+        assert len(res.json()) == 0
+        res = await client.get(f"{PREFIX}/activity/?action=xxx")
+        assert res.status_code == 422
+        # timestamp_started_min
+        res = await client.get(
+            f"{PREFIX}/activity/"
+            f"?timestamp_started_min={quote(str(activity2.timestamp_started))}"
+        )
+        assert len(res.json()) == 3
+        res = await client.get(
+            f"{PREFIX}/activity/"
+            f"?timestamp_started_min={quote(str(activity3.timestamp_started))}"
+        )
+        assert len(res.json()) == 2
+        # combination and iconstains
+        res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=O")
+        assert len(res.json()) == 2
+
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}/activity/")
+        assert res.status_code == 200
+        assert len(res.json()) == 0

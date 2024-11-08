@@ -1,16 +1,15 @@
 import json
 import shutil
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from sqlalchemy.orm.attributes import flag_modified
-
 from .database_operations import create_db_tasks_and_update_task_group
+from .database_operations import update_task_group_pip_freeze
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import CollectionStatusV2
-from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -21,7 +20,7 @@ from fractal_server.tasks.v2.utils_background import _handle_failure
 from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import _refresh_logs
 from fractal_server.tasks.v2.utils_background import (
-    _set_collection_state_data_status,
+    _set_task_group_activity_status,
 )
 from fractal_server.tasks.v2.utils_background import check_task_files_exist
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
@@ -30,31 +29,43 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 
 
 def _customize_and_run_template(
-    script_filename: str,
+    template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
     logger_name: str,
+    prefix: int,
 ) -> str:
     """
     Customize one of the template bash scripts.
 
     Args:
-        script_filename:
-        replacements:
-        script_dir:
-        logger_name:
+        template_filename: Filename of the template file (ends with ".sh").
+        replacements: Dictionary of replacements.
+        script_dir: Local folder where the script will be placed.
+        prefix: Prefix for the script filename.
+        logger_name: Logger name
     """
     logger = get_logger(logger_name)
-    logger.debug(f"_customize_and_run_template {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {template_filename} - START")
 
+    # Prepare name and path of script
+    if not template_filename.endswith(".sh"):
+        raise ValueError(
+            f"Invalid {template_filename=} (it must end with '.sh')."
+        )
+    template_filename_stripped = template_filename[:-3]
+
+    script_filename = f"{prefix}{template_filename_stripped}"
     script_path_local = Path(script_dir) / script_filename
+
     # Read template
     customize_template(
-        template_name=script_filename,
+        template_name=template_filename,
         replacements=replacements,
         script_path=script_path_local,
     )
@@ -62,17 +73,17 @@ def _customize_and_run_template(
     cmd = f"bash {script_path_local}"
     logger.debug(f"Now run '{cmd}' ")
 
-    stdout = execute_command_sync(command=cmd)
+    stdout = execute_command_sync(command=cmd, logger_name=logger_name)
 
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-    logger.debug(f"_customize_and_run_template {script_filename} - END")
+    logger.debug(f"_customize_and_run_template {template_filename} - END")
 
     return stdout
 
 
 def collect_package_local(
     *,
-    state_id: int,
+    task_group_activity_id: int,
     task_group: TaskGroupV2,
 ) -> None:
     """
@@ -81,19 +92,18 @@ def collect_package_local(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it will run within a thread - due to
+    NOTE: by making this function sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
 
     Arguments:
-        state_id:
+        task_group_activity_id:
         task_group:
     """
 
     # Create the task_group path
     with TemporaryDirectory() as tmpdir:
-
         # Setup logger in tmpdir
         LOGGER_NAME = "task_collection_local"
         log_file_path = get_log_path(Path(tmpdir))
@@ -110,12 +120,12 @@ def collect_package_local(
         # Open a DB session
         with next(get_sync_db()) as db:
 
-            # Check that the task_group path does not exist
+            # Check that the (local) task_group path does not exist
             if Path(task_group.path).exists():
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
                 _handle_failure(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=FileExistsError(error_msg),
@@ -126,6 +136,32 @@ def collect_package_local(
 
             try:
                 # Prepare replacements for task-collection scripts
+
+                # Create task_group.path
+                Path(task_group.path).mkdir(parents=True)
+                logger.debug(f"Created {task_group.path}")
+                task_group_id = task_group.id
+                # Copy wheel file into task group path
+                if task_group.wheel_path:
+                    logger.debug(
+                        f"Copy {task_group.wheel_path} "
+                        f"into {task_group.path} - start"
+                    )
+                    shutil.copy(task_group.wheel_path, task_group.path)
+                    task_group.wheel_path = (
+                        Path(task_group.path)
+                        / Path(task_group.wheel_path).name
+                    ).as_posix()
+                    db.add(task_group)
+                    db.commit()
+                    db.refresh(task_group)
+                    logger.debug(
+                        "Now new wheel_path "
+                        f"is {task_group.wheel_path} - end"
+                    )
+                from devtools import debug
+
+                debug(task_group)
                 python_bin = get_python_interpreter_v2(
                     python_version=task_group.python_version
                 )
@@ -133,7 +169,6 @@ def collect_package_local(
                 settings = Inject(get_settings)
                 replacements = [
                     ("__PACKAGE_NAME__", task_group.pkg_name),
-                    ("__TASK_GROUP_DIR__", task_group.path),
                     ("__PACKAGE_ENV_DIR__", task_group.venv_path),
                     ("__PYTHON__", python_bin),
                     ("__INSTALL_STRING__", install_string),
@@ -146,95 +181,82 @@ def collect_package_local(
                         task_group.pinned_package_versions_string,
                     ),
                 ]
-
                 common_args = dict(
                     replacements=replacements,
-                    script_dir=task_group.path,
                     logger_name=LOGGER_NAME,
+                    script_dir=(
+                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
+                    ),
                 )
 
                 logger.debug("installing - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.INSTALLING,
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.ONGOING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
 
-                # Create main path for task group
-                Path(task_group.path).mkdir(parents=True)
-                logger.debug(f"Created {task_group.path}")
-
-                # Create venv
-                logger.debug(
-                    (f"START - Create python venv {task_group.venv_path}")
-                )
-                cmd = (
-                    f"python{task_group.python_version} -m venv "
-                    f"{task_group.venv_path} --copies"
-                )
-                stdout = execute_command_sync(command=cmd)
-                logger.debug(
-                    (f"END - Create python venv folder {task_group.venv_path}")
+                # Run script 1
+                stdout = _customize_and_run_template(
+                    template_filename="_1_create_venv.sh",
+                    **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
-                # Close db connections before long pip related operations
-                # Warning this expunge all ORM objects.
+
+                # Run script 2
+                stdout = _customize_and_run_template(
+                    template_filename="_2_preliminary_pip_operations.sh",
+                    **common_args,
+                )
+                _refresh_logs(
+                    task_group_activity_id=task_group_activity_id,
+                    log_file_path=log_file_path,
+                    db=db,
+                )
+
+                # Close db connections before long pip related operations.
+                # WARNING: this expunges all ORM objects.
                 # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
                 db.close()
 
+                # Run script 3
                 stdout = _customize_and_run_template(
-                    script_filename="_2_preliminary_pip_operations.sh",
+                    template_filename="_3_pip_install.sh",
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-                stdout = _customize_and_run_template(
-                    script_filename="_3_pip_install.sh",
-                    **common_args,
-                )
-                _refresh_logs(
-                    state_id=state_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-                stdout_pip_freeze = _customize_and_run_template(
-                    script_filename="_4_pip_freeze.sh",
-                    **common_args,
-                )
-                logger.debug("installing - END")
-                _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
 
-                logger.debug("collecting - START")
-                _set_collection_state_data_status(
-                    state_id=state_id,
-                    new_status=CollectionStatusV2.COLLECTING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
+                # Run script 4
+                pip_freeze_stdout = _customize_and_run_template(
+                    template_filename="_4_pip_freeze.sh",
+                    **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
 
+                # Run script 5
                 stdout = _customize_and_run_template(
-                    script_filename="_5_pip_show.sh",
+                    template_filename="_5_pip_show.sh",
                     **common_args,
                 )
                 _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -245,6 +267,7 @@ def collect_package_local(
                         f"collecting - parsed from pip-show: {key}={value}"
                     )
                 # Check package_name match between pip show and task-group
+                task_group = db.get(TaskGroupV2, task_group_id)
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
                 compare_package_names(
@@ -275,7 +298,7 @@ def collect_package_local(
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
                 logger.info("collecting - validated manifest content")
                 _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -290,7 +313,7 @@ def collect_package_local(
                 check_task_files_exist(task_list=task_list)
                 logger.info("collecting - _prepare_tasks_metadata - end")
                 _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
@@ -299,7 +322,7 @@ def collect_package_local(
                     "collecting - create_db_tasks_and_update_task_group - "
                     "start"
                 )
-                task_group = create_db_tasks_and_update_task_group(
+                create_db_tasks_and_update_task_group(
                     task_list=task_list,
                     task_group_id=task_group.id,
                     db=db,
@@ -308,34 +331,44 @@ def collect_package_local(
                     "collecting - create_db_tasks_and_update_task_group - end"
                 )
 
+                logger.info(
+                    "collecting - add pip freeze stdout to TaskGroupV2 - start"
+                )
+
+                update_task_group_pip_freeze(
+                    task_group_id=task_group.id,
+                    pip_freeze_stdout=pip_freeze_stdout,
+                    db=db,
+                )
+
+                logger.info(
+                    "collecting - add pip freeze stdout to TaskGroupV2 - end"
+                )
+
                 logger.debug("collecting - END")
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
+                _set_task_group_activity_status(
+                    task_group_activity_id=task_group_activity_id,
+                    new_status=TaskGroupActivityStatusV2.OK,
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
 
                 _refresh_logs(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     db=db,
                 )
-                collection_state = db.get(CollectionStateV2, state_id)
-                collection_state.data["freeze"] = stdout_pip_freeze
-                collection_state.data["status"] = CollectionStatusV2.OK
-                # FIXME: The `task_list` key is likely not used by any client,
-                # we should consider dropping it
-                task_read_list = [
-                    TaskReadV2(**task.model_dump()).dict()
-                    for task in task_group.task_list
-                ]
-                collection_state.data["task_list"] = task_read_list
-                flag_modified(collection_state, "data")
-                db.commit()
+
                 logger.debug("finalising - END")
                 logger.debug("END")
 
             except Exception as collection_e:
                 # Delete corrupted package dir
                 try:
+                    task_group = db.get(TaskGroupV2, task_group_id)
                     logger.info(f"Now delete folder {task_group.path}")
 
                     shutil.rmtree(task_group.path)
@@ -347,7 +380,7 @@ def collect_package_local(
                     )
 
                 _handle_failure(
-                    state_id=state_id,
+                    task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=collection_e,

@@ -2,8 +2,11 @@ import pytest
 from devtools import debug
 from pydantic import BaseModel
 
-from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import (
+    TaskGroupActivityStatusV2,
+)
 from fractal_server.tasks.v2.collection_local import collect_package_local
 from fractal_server.tasks.v2.database_operations import _get_task_type
 from fractal_server.tasks.v2.utils_background import (
@@ -72,24 +75,32 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
-    state = CollectionStateV2(taskgroupv2_id=task_group.id)
-    db.add(state)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action="collect",
+        pkg_name="pkg",
+        version="1.0.0",
+    )
+    db.add(task_group_activity)
     await db.commit()
-    await db.refresh(state)
-    db.expunge(state)
+    await db.refresh(task_group_activity)
+    db.expunge(task_group_activity)
     # Create task_group.path
     path.mkdir()
     # Run background task
     collect_package_local(
         task_group=task_group,
-        state_id=state.id,
+        task_group_activity_id=task_group_activity.id,
     )
     # Verify that collection failed
-    state = await db.get(CollectionStateV2, state.id)
-    debug(state)
-    assert state.data["status"] == "fail"
-    # Verify that foreign key was set to None
-    assert state.taskgroupv2_id is None
+    task_group_activity_v2 = await db.get(
+        TaskGroupActivityV2, task_group_activity.id
+    )
+    debug(task_group_activity_v2)
+    assert task_group_activity_v2.status == "failed"
+    assert task_group_activity_v2.taskgroupv2_id is None
 
 
 async def test_collect_pip_local_fail_rmtree(
@@ -135,16 +146,24 @@ async def test_collect_pip_local_fail_rmtree(
     await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
-    state = CollectionStateV2(taskgroupv2_id=task_group.id)
-    db.add(state)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action="collect",
+        pkg_name="pkg",
+        version="1.0.0",
+    )
     await db.commit()
-    await db.refresh(state)
-    db.expunge(state)
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+    db.expunge(task_group_activity)
     # Run background task
     try:
         collect_package_local(
             task_group=task_group,
-            state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
         )
     except RuntimeError as e:
         print(
@@ -152,7 +171,10 @@ async def test_collect_pip_local_fail_rmtree(
             "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
         )
     # Verify that collection failed
-    state = await db.get(CollectionStateV2, state.id)
-    assert state.data["status"] == "fail"
-    assert "Broken rm" in state.data["log"]
+    task_group_activity_v2 = await db.get(
+        TaskGroupActivityV2, task_group_activity.id
+    )
+    debug(task_group_activity_v2)
+    assert task_group_activity_v2.status == "failed"
+    assert "Broken rm" in task_group_activity_v2.log
     assert path.exists()

@@ -16,11 +16,10 @@ from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskGroupV2
-from ....schemas.v2 import CollectionStateReadV2
-from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
+from ....schemas.v2 import TaskGroupActivityStatusV2
+from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_collection import get_package_version_from_pypi
@@ -28,8 +27,11 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import (
+    TaskGroupActivityActionV2,
+)
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.tasks.v2.collection_local import (
     collect_package_local,
@@ -47,7 +49,7 @@ logger = set_logger(__name__)
 
 @router.post(
     "/collect/pip/",
-    response_model=CollectionStateReadV2,
+    response_model=TaskGroupActivityV2Read,
 )
 async def collect_tasks_pip(
     task_collect: TaskCollectPipV2,
@@ -58,7 +60,7 @@ async def collect_tasks_pip(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> CollectionStateReadV2:
+) -> TaskGroupActivityV2Read:
     """
     Task collection endpoint
 
@@ -226,20 +228,17 @@ async def collect_tasks_pip(
     db.expunge(task_group)
 
     # All checks are OK, proceed with task collection
-    collection_state_data = dict(
-        status=CollectionStatusV2.PENDING,
-        package=task_group.pkg_name,
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.COLLECT,
+        pkg_name=task_group.pkg_name,
         version=task_group.version,
-        path=task_group.path,
-        venv_path=task_group.venv_path,
     )
-    state = CollectionStateV2(
-        data=collection_state_data, taskgroupv2_id=task_group.id
-    )
-    db.add(state)
+    db.add(task_group_activity)
     await db.commit()
-    await db.refresh(state)
-
+    await db.refresh(task_group_activity)
     logger = set_logger(logger_name="collect_tasks_pip")
 
     # END of SSH/non-SSH common part
@@ -262,7 +261,7 @@ async def collect_tasks_pip(
 
         background_tasks.add_task(
             collect_package_ssh,
-            state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
             task_group=task_group,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
@@ -272,37 +271,13 @@ async def collect_tasks_pip(
         # Local task collection
         background_tasks.add_task(
             collect_package_local,
-            state_id=state.id,
+            task_group_activity_id=task_group_activity.id,
             task_group=task_group,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "
-        "and return state"
+        "and return task_group_activity"
     )
     reset_logger_handlers(logger)
-    info = (
-        "Collecting tasks in the background. "
-        f"GET /task/collect/{state.id}/ to query collection status"
-    )
-    state.data["info"] = info
-    response.status_code = status.HTTP_201_CREATED
-
-    return state
-
-
-@router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
-async def check_collection_status(
-    state_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> CollectionStateReadV2:  # State[TaskCollectStatus]
-    """
-    Check status of background task collection
-    """
-    state = await db.get(CollectionStateV2, state_id)
-    if state is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No task collection info with id={state_id}",
-        )
-    return state
+    response.status_code = status.HTTP_202_ACCEPTED
+    return task_group_activity

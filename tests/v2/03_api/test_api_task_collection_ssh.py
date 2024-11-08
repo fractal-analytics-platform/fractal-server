@@ -3,7 +3,6 @@ from pathlib import Path
 
 from devtools import debug
 
-from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
@@ -49,7 +48,7 @@ async def test_task_collection_ssh_from_pypi(
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
 
-    # Override settins with Python/SSH configurations
+    # Override settings with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
     PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
     settings_overrides = {
@@ -83,28 +82,24 @@ async def test_task_collection_ssh_from_pypi(
             ),
         )
         debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        debug(state_data)
-        assert state_data["status"] == CollectionStatusV2.OK
-        # Check fractal-tasks-core version in freeze data
-        assert f"fractal-tasks-core=={package_version}" in state_data["freeze"]
-        # Check pip version constraint in freeze data
-        pip_version = next(
-            line
-            for line in state_data["freeze"].split("\n")
-            if line.startswith("pip")
-        ).split("==")[1]
-        assert pip_version == CURRENT_FRACTAL_MAX_PIP_VERSION
-        # Check remote venv folder exists
-        remote_folder = state_data["venv_path"]
-        fractal_ssh.run_command(cmd=f"ls {remote_folder}")
-
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "OK"
+        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        # Check pip_freeze attribute in TaskGroupV2
+        res = await client.get("/api/v2/task-group/" f"{task_groupv2_id}/")
+        assert res.status_code == 200
+        task_group = res.json()
+        assert (
+            f"fractal-tasks-core=={package_version}"
+            in task_group["pip_freeze"]
+        )
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pip/",
@@ -167,14 +162,16 @@ async def test_task_collection_ssh_from_pypi(
                 python_version=current_py_version,
             ),
         )
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        assert "already exists" in state_data["log"]
+        task_group_activity = res.json()
+
+        assert task_group_activity["status"] == "failed"
+        assert "already exists" in task_group_activity["log"]
         # Check that existing folder was _not_ removed
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
         # Cleanup: remove folder
@@ -214,7 +211,7 @@ async def test_task_collection_ssh_from_wheel(
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
 
-    # Override settins with Python/SSH configurations
+    # Override settings with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
     PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
     settings_overrides = {
@@ -257,18 +254,17 @@ async def test_task_collection_ssh_from_wheel(
                 python_version=current_py_version,
             ),
         )
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        debug(state_data["log"])
-        assert state_data["status"] == CollectionStatusV2.OK
-        # Check remote venv folder exists
-        remote_folder = state_data["venv_path"]
-        fractal_ssh.run_command(cmd=f"ls {remote_folder}")
+        task_group_activity = res.json()
+
+        assert task_group_activity["status"] == "OK"
+        # FIXME: add assert for new wheel_path
 
         # API FAILURE: wheel file and version set
         res = await client.post(
@@ -322,7 +318,7 @@ async def test_task_collection_ssh_failure(
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
 
-    # Override settins with Python/SSH configurations
+    # Override settings with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
     PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
     settings_overrides = {
@@ -359,16 +355,16 @@ async def test_task_collection_ssh_failure(
     ):
         # Trigger task collection (first time)
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-
-        # Check that task collection failed
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        debug(state_data["log"])
-        assert "No such file or directory" in state_data["log"]
+        task_group_activity = res.json()
+
+        assert task_group_activity["status"] == "failed"
+        assert "No such file or directory" in task_group_activity["log"]
 
         # Patch ssh.remove_folder
         import fractal_server.tasks.v2.collection_ssh
@@ -386,16 +382,71 @@ async def test_task_collection_ssh_failure(
 
         # Trigger task collection (first time)
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-
-        # Check that task collection failed
-        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
         assert res.status_code == 200
-        state_data = res.json()["data"]
-        assert state_data["status"] == CollectionStatusV2.FAIL
-        debug(state_data["log"])
-        assert "Removing folder failed" in state_data["log"]
-        assert ERROR_MSG in state_data["log"]
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert "Removing folder failed" in task_group_activity["log"]
+        assert ERROR_MSG in task_group_activity["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+
+
+async def test_task_collection_ssh_failure_no_connection(
+    db,
+    app,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    current_py_version: str,
+):
+    """
+    Test exception handling for when SSH connection is not available.
+    """
+
+    # Assign empty FractalSSH object to app state
+    app.state.fractal_ssh_list = FractalSSHList()
+
+    # Override settings with Python/SSH configurations
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    settings_overrides = {
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        PY_KEY: f"/usr/bin/python{current_py_version}",
+        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
+    }
+    override_settings_factory(**settings_overrides)
+
+    user_settings_dict = dict(
+        ssh_host="fake",
+        ssh_username="fake",
+        ssh_private_key_path="fake",
+        ssh_tasks_dir="/fake",
+        ssh_jobs_dir="/fake",
+    )
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
+        # Trigger task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package="fractal-tasks-core",
+                python_version=current_py_version,
+            ),
+        )
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert "Cannot establish SSH connection" in task_group_activity["log"]

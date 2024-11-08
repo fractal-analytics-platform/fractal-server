@@ -4,9 +4,10 @@ from sqlalchemy.exc import IntegrityError
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -132,19 +133,26 @@ async def test_collection_state(db):
     await db.commit()
     await db.refresh(task_group)
 
-    state = CollectionStateV2(taskgroupv2_id=task_group.id)
-    db.add(state)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action="collect",
+        pkg_name="pkg",
+        version="1.0.0",
+    )
+    db.add(task_group_activity)
     await db.commit()
-
-    assert state.taskgroupv2_id == task_group.id
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id == task_group.id
 
     await db.delete(task_group)
 
     settings = Inject(get_settings)
     if settings.DB_ENGINE == "sqlite":
         await db.commit()
-        await db.refresh(state)
-        assert state.taskgroupv2_id is not None
+        await db.refresh(task_group_activity)
+        assert task_group_activity.taskgroupv2_id is not None
     else:
         with pytest.raises(IntegrityError):
             await db.commit()

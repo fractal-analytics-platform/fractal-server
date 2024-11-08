@@ -19,7 +19,7 @@ env:
   # with the SOURCE_VERSION of fractal-server.
   # Here we test the script that upgrades the DB from SOURCE_VERSION to the
   #current version.
-  SOURCE_VERSION: 2.7.0a11
+  SOURCE_VERSION: 2.9.0
   ROOTDIR: tests/data/testing_databases
 
 jobs:
@@ -129,5 +129,6 @@ jobs:
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
           cd fractal_server
+          poetry run alembic history
           poetry run alembic upgrade head
           poetry run alembic downgrade base

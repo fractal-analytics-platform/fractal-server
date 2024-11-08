@@ -470,6 +470,24 @@ class FractalSSH(object):
                 f.write(content)
         self.logger.info(f"END writing to remote file {path}.")
 
+    def remote_exists(self, path: str) -> bool:
+        """
+        Return whether a remote file/folder exists
+        """
+        self.logger.info(f"START remote_file_exists {path}")
+        with _acquire_lock_with_timeout(
+            lock=self._lock,
+            label=f"remote_file_exists {path=}",
+            timeout=self.default_lock_timeout,
+        ):
+            try:
+                self._sftp_unsafe().stat(path)
+                self.logger.info(f"END   remote_file_exists {path} / True")
+                return True
+            except FileNotFoundError:
+                self.logger.info(f"END   remote_file_exists {path} / False")
+                return False
+
 
 class FractalSSHList(object):
     """

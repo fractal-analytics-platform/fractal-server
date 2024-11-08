@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -10,13 +13,16 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
@@ -25,6 +31,39 @@ from fractal_server.logger import set_logger
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+
+@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
+async def get_task_group_activity_list(
+    user_id: Optional[int] = None,
+    taskgroupv2_id: Optional[int] = None,
+    pkg_name: Optional[str] = None,
+    status: Optional[TaskGroupActivityStatusV2] = None,
+    action: Optional[TaskGroupActivityActionV2] = None,
+    timestamp_started_min: Optional[datetime] = None,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskGroupActivityV2Read]:
+
+    stm = select(TaskGroupActivityV2)
+    if user_id:
+        stm = stm.where(TaskGroupActivityV2.user_id == user_id)
+    if taskgroupv2_id:
+        stm = stm.where(TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id)
+    if pkg_name:
+        stm = stm.where(TaskGroupActivityV2.pkg_name.icontains(pkg_name))
+    if status:
+        stm = stm.where(TaskGroupActivityV2.status == status)
+    if action:
+        stm = stm.where(TaskGroupActivityV2.action == action)
+    if timestamp_started_min is not None:
+        stm = stm.where(
+            TaskGroupActivityV2.timestamp_started >= timestamp_started_min
+        )
+
+    res = await db.execute(stm)
+    activities = res.scalars().all()
+    return activities
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
@@ -137,22 +176,22 @@ async def delete_task_group(
             detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
         )
 
-    # Cascade operations: set foreign-keys to null for CollectionStateV2 which
-    # are in relationship with the current TaskGroupV2
-    logger.debug("Start of cascade operations on CollectionStateV2.")
-    stm = select(CollectionStateV2).where(
-        CollectionStateV2.taskgroupv2_id == task_group_id
+    # Cascade operations: set foreign-keys to null for TaskGroupActivityV2
+    # which are in relationship with the current TaskGroupV2
+    logger.debug("Start of cascade operations on TaskGroupActivityV2.")
+    stm = select(TaskGroupActivityV2).where(
+        TaskGroupActivityV2.taskgroupv2_id == task_group_id
     )
     res = await db.execute(stm)
-    collection_states = res.scalars().all()
-    for collection_state in collection_states:
+    task_group_activity_list = res.scalars().all()
+    for task_group_activity in task_group_activity_list:
         logger.debug(
-            f"Setting CollectionStateV2[{collection_state.id}].taskgroupv2_id "
-            "to None."
+            f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
+            ".taskgroupv2_id to None."
         )
-        collection_state.taskgroupv2_id = None
-        db.add(collection_state)
-    logger.debug("End of cascade operations on CollectionStateV2.")
+        task_group_activity.taskgroupv2_id = None
+        db.add(task_group_activity)
+    logger.debug("End of cascade operations on TaskGroupActivityV2.")
 
     await db.delete(task_group)
     await db.commit()

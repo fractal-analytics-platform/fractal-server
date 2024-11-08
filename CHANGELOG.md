@@ -1,11 +1,31 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.8.1 (Unreleased)
+# 2.9.0 (unreleased)
+
+> WARNING: This version removes the `CollectionStateV2` database table.
+> Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
+
+* API
+    * Remove `GET /api/v2/task/collect/{state_id}/"` endpoint (\#2010).
+    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005).
+    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
+    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005).
+    * Add `TaskGroupActivityV2Read` schema (\#2005).
+* Database
+    * Add `TaskGroupActivityV2` table (\#2005).
+    * Drop `CollectionStateV2` table (\#2010).
+    * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
+* Task-collection internals:
+    * Update `TaskGroupActivityV2` objects (\#2005).
+    * Update filename and path for task-collection scripts (\#2008).
+    * Copy wheel file into `task_group.path` and update `task_group.wheel_path`, for local task collection (\#2020).
+* SSH internals:
+    * Add `FractalSSH.remote_exists` method (\#2008).
+
+# 2.8.1
 
 * API:
     * Validate all user-provided strings that end up in pip-install commands (\#2003).
-* Internal:
-    * Replace each `Union[X, Y]` with `X | Y` and each `Optional[X]` with `X | None` (\#2000).
 
 # 2.8.0
 
