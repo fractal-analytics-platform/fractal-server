@@ -159,9 +159,7 @@ def collect_package_local(
                         "Now new wheel_path "
                         f"is {task_group.wheel_path} - end"
                     )
-                from devtools import debug
 
-                debug(task_group)
                 python_bin = get_python_interpreter_v2(
                     python_version=task_group.python_version
                 )
