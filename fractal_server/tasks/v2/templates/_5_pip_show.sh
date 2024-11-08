@@ -38,16 +38,16 @@ echo
 MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show "$PACKAGE_NAME" --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
 write_log "Manifest relative path: $MANIFEST_RELATIVE_PATH"
 echo
-MANIFEST_ABSOLUTE_PATH="${PACKAGE_PARENT_FOLDER}/${MANIFEST_RELATIVE_PATH}"
-write_log "Manifest absolute path: $MANIFEST_ABSOLUTE_PATH"
-echo
-if [ -f "$MANIFEST_ABSOLUTE_PATH" ]; then
+if [ "$MANIFEST_RELATIVE_PATH" != "" ]; then
     write_log "OK: manifest path exists"
     echo
 else
-    write_log "ERROR: manifest path not found at $MANIFEST_ABSOLUTE_PATH"
+    write_log "ERROR: manifest path not found for $PACKAGE_NAME"
     exit 2
 fi
+MANIFEST_ABSOLUTE_PATH="${PACKAGE_PARENT_FOLDER}/${MANIFEST_RELATIVE_PATH}"
+write_log "Manifest absolute path: $MANIFEST_ABSOLUTE_PATH"
+echo
 
 # End
 TIME_END=$(date +%s)
