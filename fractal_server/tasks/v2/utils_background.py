@@ -167,6 +167,7 @@ def _refresh_logs(
     Read logs from file and update them in the db.
     """
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    task_group_activity.log = log_file_path.open("r").read()
+    with log_file_path.open("r") as f:
+        task_group_activity.log = f.read()
     db.add(task_group_activity)
     db.commit()
