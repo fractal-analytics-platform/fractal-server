@@ -162,6 +162,7 @@ async def test_task_collection_from_wheel_non_canonical(
         # Check that my_extra was included, in a local-package collection
         assert ".whl[my_extra]" in log
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
 
 
 OLD_FRACTAL_TASKS_CORE_VERSION = "1.0.2"
@@ -237,6 +238,7 @@ async def test_task_collection_from_pypi(
         )
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
         # Check that log were written, even with CRITICAL logging level
         log = task_group_activity["log"]
         assert log is not None

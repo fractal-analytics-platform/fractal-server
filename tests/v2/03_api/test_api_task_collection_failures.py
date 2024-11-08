@@ -84,6 +84,7 @@ async def test_invalid_manifest(
         )
         task_group_activity = res.json()
         assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
         assert "Wrong manifest version" in task_group_activity["log"]
 
     # Missing manifest
@@ -106,6 +107,7 @@ async def test_invalid_manifest(
         )
         task_group_activity = res.json()
         assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
         assert "manifest path not found" in task_group_activity["log"]
 
 
@@ -145,6 +147,7 @@ async def test_missing_task_executable(
         assert res.status_code == 200
         task_group_activity = res.json()
         assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
         assert "missing file" in task_group_activity["log"]
 
 
@@ -228,6 +231,7 @@ async def test_failure_cleanup(
         )
         task_group_activity = res.json()
         assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
         assert (
             "No matching distribution found for pydantic==99.99.99"
             in task_group_activity["log"]
