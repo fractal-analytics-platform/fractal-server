@@ -68,6 +68,7 @@ async def test_task_collection_from_wheel(
         )
         assert res.status_code == 200
         task_group_activity = res.json()
+        debug(task_group_activity)
         assert task_group_activity["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level
         log = task_group_activity["log"]
@@ -90,6 +91,12 @@ async def test_task_collection_from_wheel(
         assert (
             Path(res.json()["path"]) / Path(wheel_path).name
         ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
+
+        assert Path(res.json()["wheel_path"]).exists()
+        assert (
+            f"fractal-tasks-mock @ file://{res.json()['wheel_path']}"
+            in res.json()["pip_freeze"]
+        )
 
         # A second identical collection fails
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
