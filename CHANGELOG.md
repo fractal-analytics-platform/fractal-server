@@ -16,7 +16,7 @@
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
 * Task-collection internals:
-    * Update `TaskGroupActivityV2` objects (\#2005).
+    * Update `TaskGroupActivityV2` objects (\#2005, \#2026).
     * Update filename and path for task-collection scripts (\#2008).
     * Copy wheel file into `task_group.path` and update `task_group.wheel_path`, for local task collection (\#2020).
 * SSH internals:
