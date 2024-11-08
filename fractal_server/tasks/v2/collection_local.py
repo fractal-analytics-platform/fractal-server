@@ -364,6 +364,7 @@ def collect_package_local(
             except Exception as collection_e:
                 # Delete corrupted package dir
                 try:
+                    task_group = db.get(TaskGroupV2, task_group_id)
                     logger.info(f"Now delete folder {task_group.path}")
 
                     shutil.rmtree(task_group.path)
