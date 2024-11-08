@@ -910,6 +910,12 @@ async def test_get_task_group_activity(
             f"{PREFIX}/task-group/activity/?user_id={user2.id}"
         )
         assert len(res.json()) == 2
+        # task_group_activity_id
+        res = await client.get(
+            f"{PREFIX}/task-group/activity/"
+            f"?user_id={user1.id}&task_group_activity_id={activity1.id}"
+        )
+        assert len(res.json()) == 1
         # taskgroupv2_id
         res = await client.get(
             f"{PREFIX}/task-group/activity/"
