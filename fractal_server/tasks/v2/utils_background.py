@@ -27,7 +27,8 @@ def _set_task_group_activity_status(
         f"- set task_group_activity.status to {new_status}"
     )
     task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    task_group_activity.status = TaskGroupActivityStatusV2(new_status)
+    new_status = TaskGroupActivityStatusV2(new_status)
+    task_group_activity.status = new_status
     if new_status in [
         TaskGroupActivityStatusV2.OK,
         TaskGroupActivityStatusV2.FAILED,
