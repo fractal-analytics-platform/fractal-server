@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -85,6 +86,7 @@ async def test_collect_pip_wheel_file(
     await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
+    task_group_wheel_path = task_group.wheel_path
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
@@ -97,19 +99,31 @@ async def test_collect_pip_wheel_file(
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
-    # Create task_group.path
-    # path.mkdir()
+
+    # Check that before collect `path` does not have wheel file
+    task_group_path = Path(task_group.path) / Path(task_group_wheel_path).name
+
+    assert not task_group_path.exists()
+
     # Run background task
     collect_package_local(
         task_group=task_group,
         task_group_activity_id=task_group_activity.id,
     )
-    # Verify that collection failed
     task_group_activity_v2 = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
     debug(task_group_activity_v2)
     assert task_group_activity_v2.status == "OK"
+    task_group_db = await db.get(
+        TaskGroupV2, task_group_activity.taskgroupv2_id
+    )
+    # Now `path` has the wheel file
+    task_group_path = (
+        Path(task_group_db.path) / Path(task_group_wheel_path).name
+    )
+
+    assert task_group_path.exists()
 
 
 async def test_collect_pip_existing_file(tmp_path, db, first_user):

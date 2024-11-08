@@ -178,7 +178,8 @@ def collect_package_local(
                 # Create task_group.path
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
-
+                task_group_id = task_group.id
+                # Copy wheel file into task group path
                 if task_group.wheel_path:
                     logger.debug(
                         f"Copy {task_group.wheel_path} "
@@ -189,6 +190,8 @@ def collect_package_local(
                         Path(task_group.path)
                         / Path(task_group.wheel_path).name
                     ).as_posix()
+                    db.add(task_group)
+                    db.commit()
                     logger.debug(
                         "Now new wheel_path "
                         f"is {task_group.wheel_path} - end"
@@ -260,6 +263,7 @@ def collect_package_local(
                         f"collecting - parsed from pip-show: {key}={value}"
                     )
                 # Check package_name match between pip show and task-group
+                task_group = db.get(TaskGroupV2, task_group_id)
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
                 compare_package_names(
