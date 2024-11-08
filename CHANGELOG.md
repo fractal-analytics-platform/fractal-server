@@ -6,9 +6,10 @@
 > Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
 
 * API
-    * Add `GET /api/v2/task-group/activity/` (\#2005).
-    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` (\#2005).
-    * Add `GET /admin/v2/task-group/activity/` (\#2005).
+    * Remove `GET /api/v2/task/collect/{state_id}/"` endpoint (\#2010).
+    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005).
+    * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
+    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005).
     * Add `TaskGroupActivityV2Read` schema (\#2005).
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
