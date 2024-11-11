@@ -174,7 +174,7 @@
 | fractal\_server/string\_tools.py                                               |       19 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/syringe.py                                                     |       28 |        2 |        2 |        0 |     93% |     93-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/utils.py                                                 |       23 |        1 |        2 |        0 |     96% |        34 |
+| fractal\_server/tasks/utils.py                                                 |       21 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/tasks/v1/\_TaskCollectPip.py                                   |       43 |        0 |       18 |        0 |    100% |           |
 | fractal\_server/tasks/v1/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v1/background\_operations.py                             |      145 |        1 |       20 |        1 |     99% |       143 |
@@ -194,7 +194,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       40 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       56 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **10765** |  **450** | **2278** |  **191** | **94%** |           |
+|                                                                      **TOTAL** | **10763** |  **449** | **2278** |  **191** | **94%** |           |
 
 
 ## Setup coverage badge
