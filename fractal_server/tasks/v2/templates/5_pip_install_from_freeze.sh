@@ -23,7 +23,7 @@ echo
 
 # Install from pip-freeze file
 write_log "START installing requirements from ${PIP_FREEZE_FILE}"
-"$VENVPYTHON" -m pip install -r ${PIP_FREEZE_FILE}
+"$VENVPYTHON" -m pip install -r "${PIP_FREEZE_FILE}"
 write_log "END   installing requirements from ${PIP_FREEZE_FILE}"
 echo
 
