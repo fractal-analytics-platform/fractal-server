@@ -178,10 +178,17 @@ def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
 
 def test_template_3_and_5(tmp_path, current_py_version):
 
-    # Create 'venv1'
     venv_path_1 = tmp_path / "venv1"
-    execute_command_sync(
-        command=f"python{current_py_version} -m venv {venv_path_1}"
+    venv_path_2 = tmp_path / "venv2"
+
+    # Create 'venv1'
+    _customize_and_run_template(
+        template_filename="1_create_venv.sh",
+        replacements=[
+            ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
+            ("__PYTHON__", f"python{current_py_version}"),
+        ],
+        script_dir=tmp_path,
     )
 
     # Run script 3 (pip freeze) on 'venv1'
@@ -212,11 +219,14 @@ def test_template_3_and_5(tmp_path, current_py_version):
         f.write(stdout_1)
 
     # Create 'venv2'
-    venv_path_2 = tmp_path / "venv2"
-    execute_command_sync(
-        command=f"python{current_py_version} -m venv {venv_path_2}"
+    _customize_and_run_template(
+        template_filename="1_create_venv.sh",
+        replacements=[
+            ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
+            ("__PYTHON__", f"python{current_py_version}"),
+        ],
+        script_dir=tmp_path,
     )
-
     # Run script 3 (pip freeze) on 'venv2'
     stdout_2 = _customize_and_run_template(
         template_filename="3_pip_freeze.sh",

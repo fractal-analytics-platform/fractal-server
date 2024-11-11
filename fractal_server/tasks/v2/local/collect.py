@@ -60,12 +60,11 @@ def _customize_and_run_template(
         raise ValueError(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
-    template_filename_stripped = template_filename[:-3]
 
     if prefix is not None:
-        template_filename_stripped = f"{prefix}{template_filename_stripped}"
+        template_filename = f"{prefix}{template_filename}"
 
-    script_path_local = Path(script_dir) / template_filename_stripped
+    script_path_local = Path(script_dir) / template_filename
 
     # Read template
     customize_template(
