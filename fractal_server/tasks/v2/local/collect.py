@@ -4,6 +4,7 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
@@ -26,7 +27,9 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
-from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
+from fractal_server.tasks.v2.utils_templates import (
+    parse_script_pip_show_stdout,
+)
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
@@ -38,7 +41,7 @@ def _customize_and_run_template(
     template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
-    prefix: int,
+    prefix: Optional[int] = None,
 ) -> str:
     """
     Customize one of the template bash scripts.
@@ -57,26 +60,25 @@ def _customize_and_run_template(
         raise ValueError(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
+
     template_filename_stripped = template_filename[:-3]
 
-    script_filename = f"{prefix}{template_filename_stripped}"
+    if prefix is not None:
+        script_filename = f"{prefix}{template_filename_stripped}"
+    else:
+        script_filename = template_filename_stripped
     script_path_local = Path(script_dir) / script_filename
-
     # Read template
     customize_template(
         template_name=template_filename,
         replacements=replacements,
         script_path=script_path_local,
     )
-
     cmd = f"bash {script_path_local}"
     logger.debug(f"Now run '{cmd}' ")
-
     stdout = execute_command_sync(command=cmd, logger_name=LOGGER_NAME)
-
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
     logger.debug(f"_customize_and_run_template {template_filename} - END")
-
     return stdout
 
 
@@ -194,7 +196,7 @@ def collect_package_local(
 
                 # Run script 1
                 stdout = _customize_and_run_template(
-                    template_filename="_1_create_venv.sh",
+                    template_filename="1_create_venv.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
@@ -202,37 +204,29 @@ def collect_package_local(
 
                 # Run script 2
                 stdout = _customize_and_run_template(
-                    template_filename="_2_preliminary_pip_operations.sh",
+                    template_filename="2_pip_install.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 3
-                stdout = _customize_and_run_template(
-                    template_filename="_3_pip_install.sh",
+                pip_freeze_stdout = _customize_and_run_template(
+                    template_filename="3_pip_freeze.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 4
-                pip_freeze_stdout = _customize_and_run_template(
-                    template_filename="_4_pip_freeze.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                # Run script 5
                 stdout = _customize_and_run_template(
-                    template_filename="_5_pip_show.sh",
+                    template_filename="4_pip_show.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                pkg_attrs = parse_script_5_stdout(stdout)
+                pkg_attrs = parse_script_pip_show_stdout(stdout)
                 for key, value in pkg_attrs.items():
                     logger.debug(f"Parsed from pip-show: {key}={value}")
                 # Check package_name match between pip show and task-group
