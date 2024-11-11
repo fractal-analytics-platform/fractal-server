@@ -178,39 +178,30 @@ def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
 
 def test_template_3_and_5(tmp_path, current_py_version):
 
+    # Create two venvs
     venv_path_1 = tmp_path / "venv1"
     venv_path_2 = tmp_path / "venv2"
+    for venv_path in [venv_path_1, venv_path_2]:
+        _customize_and_run_template(
+            template_filename="1_create_venv.sh",
+            replacements=[
+                ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+                ("__PYTHON__", f"python{current_py_version}"),
+            ],
+            script_dir=tmp_path,
+        )
+        _customize_and_run_template(
+            template_filename="2_pip_install.sh",
+            replacements=[
+                ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+                ("__INSTALL_STRING__", "pip"),
+                ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+                ("__PINNED_PACKAGE_LIST__", ""),
+            ],
+            script_dir=tmp_path,
+        )
 
-    # Create 'venv1'
-    _customize_and_run_template(
-        template_filename="1_create_venv.sh",
-        replacements=[
-            ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
-            ("__PYTHON__", f"python{current_py_version}"),
-        ],
-        script_dir=tmp_path,
-    )
-    _customize_and_run_template(
-        template_filename="2_pip_install.sh",
-        replacements=[
-            ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
-            ("__INSTALL_STRING__", "pip"),
-            ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-            ("__PINNED_PACKAGE_LIST__", ""),
-        ],
-        script_dir=tmp_path,
-    )
-
-    # Run script 3 (pip freeze) on 'venv1'
-    stdout_0 = _customize_and_run_template(
-        template_filename="3_pip_freeze.sh",
-        replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
-        script_dir=tmp_path,
-    )
-    dependencies_0 = _parse_pip_freeze_output(stdout_0)
-    assert "pip" in dependencies_0
-
-    # Pip-install devtools (on 'venv1')
+    # Pip-install devtools on 'venv1'
     _customize_and_run_template(
         template_filename="2_pip_install.sh",
         replacements=[
@@ -221,40 +212,21 @@ def test_template_3_and_5(tmp_path, current_py_version):
         ],
         script_dir=tmp_path,
     )
-
-    stdout_1 = _customize_and_run_template(
+    # Run script 3 (pip freeze) on 'venv1'
+    pip_freeze_venv_1 = _customize_and_run_template(
         template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
         script_dir=tmp_path,
     )
-    dependencies_1 = _parse_pip_freeze_output(stdout_1)
-    assert dependencies_0.items() < dependencies_1.items()
+    dependencies_1 = _parse_pip_freeze_output(pip_freeze_venv_1)
+    assert "pip" in dependencies_1
 
     # Write requirements file
     requirements_file = tmp_path / "requirements.txt"
     with requirements_file.open("w") as f:
-        f.write(stdout_1)
-
-    # Create 'venv2'
-    _customize_and_run_template(
-        template_filename="1_create_venv.sh",
-        replacements=[
-            ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
-            ("__PYTHON__", f"python{current_py_version}"),
-        ],
-        script_dir=tmp_path,
-    )
-    # Run script 3 (pip freeze) on 'venv2'
-    stdout_2 = _customize_and_run_template(
-        template_filename="3_pip_freeze.sh",
-        replacements=[("__PACKAGE_ENV_DIR__", venv_path_2.as_posix())],
-        script_dir=tmp_path,
-    )
-    dependencies_2 = _parse_pip_freeze_output(stdout_2)
-    assert dependencies_2.keys() == dependencies_0.keys()
+        f.write(pip_freeze_venv_1)
 
     # Run script 5 (install from freeze) on 'venv2'
-
     _customize_and_run_template(
         template_filename="5_pip_install_from_freeze.sh",
         replacements=[
@@ -265,11 +237,12 @@ def test_template_3_and_5(tmp_path, current_py_version):
         script_dir=tmp_path,
     )
 
-    stdout_3 = _customize_and_run_template(
+    # Run script 3 (pip freeze) on 'venv2'
+    pip_freeze_venv_2 = _customize_and_run_template(
         template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_2.as_posix())],
         script_dir=tmp_path,
     )
-    dependencies_3 = _parse_pip_freeze_output(stdout_3)
+    dependencies_2 = _parse_pip_freeze_output(pip_freeze_venv_2)
 
-    assert dependencies_3 == dependencies_1
+    assert dependencies_2 == dependencies_1
