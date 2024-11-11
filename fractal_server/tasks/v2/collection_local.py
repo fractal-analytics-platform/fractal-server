@@ -28,7 +28,9 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
-from fractal_server.tasks.v2.utils_templates import parse_script_pip_show
+from fractal_server.tasks.v2.utils_templates import (
+    parse_script_pip_show_stdout,
+)
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 
@@ -259,7 +261,7 @@ def collect_package_local(
                     db=db,
                 )
 
-                pkg_attrs = parse_script_pip_show(stdout)
+                pkg_attrs = parse_script_pip_show_stdout(stdout)
                 for key, value in pkg_attrs.items():
                     logger.debug(
                         f"collecting - parsed from pip-show: {key}={value}"
