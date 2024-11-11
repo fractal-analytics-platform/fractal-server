@@ -11,10 +11,10 @@ from fractal_server.app.schemas.v2 import (
 )
 from fractal_server.tasks.v2.collection_local import collect_package_local
 from fractal_server.tasks.v2.collection_ssh import collect_package_ssh
-from fractal_server.tasks.v2.database_operations import _get_task_type
 from fractal_server.tasks.v2.utils_background import (
     check_task_files_exist,
 )
+from fractal_server.tasks.v2.utils_database import _get_task_type
 
 
 class _MockTaskCreateV2(BaseModel):

@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from .database_operations import create_db_tasks_and_update_task_group
+from .utils_database import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
