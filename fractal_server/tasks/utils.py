@@ -40,11 +40,3 @@ def get_collection_log_v1(path: Path) -> str:
     with log_path.open("r") as f:
         log = f.read()
     return log
-
-
-def get_collection_freeze_v1(venv_path: Path) -> str:
-    package_path = get_absolute_venv_path_v1(venv_path)
-    freeze_path = get_freeze_path(package_path)
-    with freeze_path.open("r") as f:
-        freeze = f.read()
-    return freeze
