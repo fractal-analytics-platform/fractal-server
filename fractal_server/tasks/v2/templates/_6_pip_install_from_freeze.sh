@@ -20,7 +20,11 @@ write_log "START upgrade pip"
 write_log "END   upgrade pip"
 echo
 
+# Install from pip-freeze file
+write_log "START installing requirements from ${PIP_FREEZE_FILE}"
 "$VENVPYTHON" -m pip install -r ${PIP_FREEZE_FILE}
+write_log "END   installing requirements from ${PIP_FREEZE_FILE}"
+echo
 
 # End
 TIME_END=$(date +%s)

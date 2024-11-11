@@ -11,7 +11,7 @@ PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 
 TIME_START=$(date +%s)
 
-# Create venv
+# Remove venv
 write_log "START remove venv in ${PACKAGE_ENV_DIR}"
 rm -rf "$PACKAGE_ENV_DIR"
 write_log "END   remove venv in ${PACKAGE_ENV_DIR}"
