@@ -287,7 +287,10 @@ async def deactivate_task_group(
 
     # if origin="pypi" or "wheel-file"
 
-    if task_group.wheel_path is not None and settings.FRACTAL_RUNNER_BACKEND:
+    if (
+        task_group.wheel_path is not None
+        and settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh"
+    ):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     task_group_activity = TaskGroupActivityV2(
@@ -304,6 +307,10 @@ async def deactivate_task_group(
     #     task_group_id=task_group.id,
     #     task_group_activity_id=task_group_activity.id,
     # )
+    logger.debug(
+        "Task group deactivation endpoint: start deactivate "
+        "and return task_group_activity"
+    )
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
 
@@ -331,6 +338,7 @@ async def reactivate_task_group(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     if task_group.origin == "other":
+        task_group.active = True
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
             taskgroupv2_id=task_group.id,
@@ -340,6 +348,7 @@ async def reactivate_task_group(
             version=task_group.version,
             log="fixme",
         )
+        db.add(task_group)
         db.add(task_group_activity)
         await db.commit()
 
@@ -347,7 +356,10 @@ async def reactivate_task_group(
 
     # if origin="pypi" or "wheel-file"
 
-    if task_group.wheel_path is not None and settings.FRACTAL_RUNNER_BACKEND:
+    if (
+        task_group.wheel_path is not None
+        and settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh"
+    ):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     task_group_activity = TaskGroupActivityV2(
@@ -364,5 +376,10 @@ async def reactivate_task_group(
     #     task_group_id=task_group.id,
     #     task_group_activity_id=task_group_activity.id,
     # )
+    logger.debug(
+        "Task group reactivation endpoint: start reactivate "
+        "and return task_group_activity"
+    )
+
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
