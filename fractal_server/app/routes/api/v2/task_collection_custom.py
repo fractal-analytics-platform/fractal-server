@@ -27,11 +27,11 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 from fractal_server.syringe import Inject
-from fractal_server.tasks.v2.database_operations import (
-    create_db_tasks_and_update_task_group,
-)
 from fractal_server.tasks.v2.utils_background import (
     _prepare_tasks_metadata,
+)
+from fractal_server.tasks.v2.utils_database import (
+    create_db_tasks_and_update_task_group,
 )
 
 router = APIRouter()
