@@ -101,7 +101,6 @@ def _prepare_tasks_metadata(
             task_attributes[
                 "command_parallel"
             ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
-        # Set type
         # Create object
         task_obj = TaskCreateV2(
             **_task.dict(
