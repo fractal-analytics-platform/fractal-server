@@ -5,15 +5,22 @@ write_log(){
     echo "[collect-task, $TIMESTAMP] $1"
 }
 
-
 # Variables to be filled within fractal-server
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 INSTALL_STRING=__INSTALL_STRING__
 PINNED_PACKAGE_LIST="__PINNED_PACKAGE_LIST__"
+FRACTAL_MAX_PIP_VERSION="__FRACTAL_MAX_PIP_VERSION__"
 
 TIME_START=$(date +%s)
 
 VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
+
+# Upgrade `pip` and install `setuptools`
+write_log "START upgrade pip and install setuptools"
+"$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
+"$VENVPYTHON" -m pip install --no-cache-dir setuptools
+write_log "END   upgrade pip and install setuptools"
+echo
 
 # Install package
 write_log "START install ${INSTALL_STRING}"
