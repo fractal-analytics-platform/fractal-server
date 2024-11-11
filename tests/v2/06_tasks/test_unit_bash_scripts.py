@@ -106,6 +106,39 @@ def test_template_2(tmp_path, testdata_path, current_py_version):
     assert "Package(s) not found: pkgA" in str(expinfo.value)
 
 
+def test_template_3(tmp_path, current_py_version):
+
+    venv_path = tmp_path / "venv"
+    replacements = [("__PACKAGE_ENV_DIR__", venv_path.as_posix())]
+
+    execute_command_sync(
+        command=f"python{current_py_version} -m venv {venv_path}"
+    )
+
+    script_path = tmp_path / "3_empty.sh"
+    customize_template(
+        template_name="3_pip_freeze.sh",
+        replacements=replacements,
+        script_path=script_path.as_posix(),
+    )
+    empty_stdout = execute_command_sync(
+        command=f"bash {script_path.as_posix()}"
+    )
+    assert len(empty_stdout.split("\n")[:-1]) == 2
+
+    execute_command_sync(command=f"{venv_path}/bin/pip install devtools")
+
+    script_path = tmp_path / "3_devtools.sh"
+    customize_template(
+        template_name="3_pip_freeze.sh",
+        replacements=replacements,
+        script_path=script_path.as_posix(),
+    )
+
+    stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
+    assert len(stdout.split("\n")[:-1]) > 2
+
+
 def test_template_4(tmp_path, testdata_path, current_py_version):
 
     path = tmp_path / "unit_templates"
