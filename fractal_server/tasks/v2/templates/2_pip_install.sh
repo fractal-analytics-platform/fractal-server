@@ -15,11 +15,11 @@ TIME_START=$(date +%s)
 
 VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
-# Upgrade pip
-write_log "START upgrade pip"
+# Upgrade `pip` and install `setuptools`
+write_log "START upgrade pip and install setuptools"
 "$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
 "$VENVPYTHON" -m pip install --no-cache-dir setuptools
-write_log "END   upgrade pip"
+write_log "END   upgrade pip and install setuptools"
 echo
 
 # Install package
