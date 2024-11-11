@@ -272,8 +272,8 @@ async def collect_tasks_pip(
         # Local task collection
         background_tasks.add_task(
             collect_package_local,
+            task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            task_group=task_group,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "

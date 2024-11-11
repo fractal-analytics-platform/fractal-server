@@ -93,7 +93,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     path.mkdir()
     # Run background task
     collect_package_local(
-        task_group=task_group,
+        task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
     )
     # Verify that collection failed

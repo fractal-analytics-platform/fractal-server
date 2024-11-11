@@ -5,9 +5,9 @@ from tempfile import TemporaryDirectory
 
 from .database_operations import create_db_tasks_and_update_task_group
 from .database_operations import update_task_group_pip_freeze
-from .utils_background import _handle_failure
 from .utils_background import _prepare_tasks_metadata
 from .utils_background import _set_task_group_activity_status
+from .utils_background import fail_and_cleanup
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -137,7 +137,7 @@ def collect_package_ssh(
                 fractal_ssh.check_connection()
             except Exception as e:
                 logger.error("Cannot establish SSH connection.")
-                _handle_failure(
+                fail_and_cleanup(
                     task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
@@ -151,7 +151,7 @@ def collect_package_ssh(
             if fractal_ssh.remote_exists(task_group.path):
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
-                _handle_failure(
+                fail_and_cleanup(
                     task_group_activity_id=task_group_activity_id,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
@@ -395,7 +395,7 @@ def collect_package_ssh(
                         "Removing folder failed. "
                         f"Original error:\n{str(e_rm)}"
                     )
-                _handle_failure(
+                fail_and_cleanup(
                     task_group_activity_id=task_group_activity_id,
                     log_file_path=log_file_path,
                     logger_name=LOGGER_NAME,
