@@ -171,8 +171,8 @@ def test_template_4(tmp_path, testdata_path, current_py_version):
 
 
 def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
-    splitted_output = stdout.split("\n")[:-1]
-    freeze_dict = {x.split("==")[0]: x.split("==")[1] for x in splitted_output}
+    splitted_output = stdout.split()
+    freeze_dict = {[x.split("==") for x in splitted_output]}
     return freeze_dict
 
 
