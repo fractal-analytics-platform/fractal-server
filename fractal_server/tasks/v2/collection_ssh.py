@@ -256,11 +256,6 @@ def collect_package_ssh(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Close db connections before long operations. Note: we do not
-                # use `db.close()`, since it would expunge all ORM objects.
-                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session
-                db.connection().close()
-
                 # Run script 3
                 stdout = _customize_and_run_template(
                     template_filename="_3_pip_install.sh",
