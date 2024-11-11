@@ -1,31 +1,34 @@
+import logging
 import os
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .database_operations import create_db_tasks_and_update_task_group
-from .database_operations import update_task_group_pip_freeze
 from .utils_background import _prepare_tasks_metadata
-from .utils_background import _set_task_group_activity_status
 from .utils_background import fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.syringe import Inject
-from fractal_server.tasks.v2.utils_background import _refresh_logs
+from fractal_server.tasks.v2.utils_background import add_commit_refresh
+from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
 from fractal_server.tasks.v2.utils_templates import customize_template
+from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.utils import get_timestamp
+
+LOGGER_NAME = __name__
 
 
 def _customize_and_run_template(
@@ -33,7 +36,6 @@ def _customize_and_run_template(
     template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir_local: str,
-    logger_name: str,
     prefix: str,
     fractal_ssh: FractalSSH,
     script_dir_remote: str,
@@ -47,11 +49,10 @@ def _customize_and_run_template(
         replacements: Dictionary of replacements.
         script_dir: Local folder where the script will be placed.
         prefix: Prefix for the script filename.
-        logger_name: Logger name
         fractal_ssh: FractalSSH object
         script_dir_remote: Remote scripts directory
     """
-    logger = get_logger(logger_name)
+    logger = get_logger(LOGGER_NAME)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
 
     # Prepare name and path of script
@@ -90,10 +91,25 @@ def _customize_and_run_template(
     return stdout
 
 
+def _copy_wheel_file_ssh(
+    task_group: TaskGroupV2, fractal_ssh: FractalSSH
+) -> str:
+    logger = get_logger(LOGGER_NAME)
+    source = task_group.wheel_path
+    dest = (
+        Path(task_group.path) / Path(task_group.wheel_path).name
+    ).as_posix()
+    cmd = "cp {source} {dest}"
+    logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
+    fractal_ssh.run_command(cmd=cmd)
+    logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
+    return dest
+
+
 def collect_package_ssh(
     *,
+    task_group_id: int,
     task_group_activity_id: int,
-    task_group: TaskGroupV2,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
 ) -> None:
@@ -109,8 +125,8 @@ def collect_package_ssh(
 
 
     Arguments:
+        task_group_id:
         task_group_activity_id:
-        task_group:
         fractal_ssh:
         tasks_base_dir:
             Only used as a `safe_root` in `remove_dir`, and typically set to
@@ -125,12 +141,25 @@ def collect_package_ssh(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-        logger.debug("START")
-        for key, value in task_group.model_dump().items():
-            logger.debug(f"task_group.{key}: {value}")
 
-        # Open a DB session
         with next(get_sync_db()) as db:
+
+            # Get main objects from db
+            activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+            task_group = db.get(TaskGroupV2, task_group_id)
+            if activity is None or task_group is None:
+                # Use `logging` directly
+                logging.error(
+                    "Cannot find database rows with "
+                    f"{task_group_id=} and {task_group_activity_id=}:\n"
+                    f"{task_group=}\n{activity=}. Exit."
+                )
+                return
+
+            # Log some info
+            logger.debug("START")
+            for key, value in task_group.model_dump().items():
+                logger.debug(f"task_group.{key}: {value}")
 
             # Check that SSH connection works
             try:
@@ -138,12 +167,12 @@ def collect_package_ssh(
             except Exception as e:
                 logger.error("Cannot establish SSH connection.")
                 fail_and_cleanup(
-                    task_group_activity_id=task_group_activity_id,
+                    task_group=task_group,
+                    task_group_activity=activity,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=e,
                     db=db,
-                    task_group_id=task_group.id,
                 )
                 return
 
@@ -152,36 +181,37 @@ def collect_package_ssh(
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
                 fail_and_cleanup(
-                    task_group_activity_id=task_group_activity_id,
+                    task_group=task_group,
+                    task_group_activity=activity,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
                     exception=FileExistsError(error_msg),
                     db=db,
-                    task_group_id=task_group.id,
                 )
                 return
 
             try:
-                # Prepare replacements for task-collection scripts
-                python_bin = get_python_interpreter_v2(
-                    python_version=task_group.python_version
+
+                # Copy wheel file into task group path
+                if task_group.wheel_path:
+                    new_wheel_path = _copy_wheel_file_ssh(
+                        task_group=task_group,
+                        fractal_ssh=fractal_ssh,
+                    )
+                    task_group.wheel_path = new_wheel_path
+                    task_group = add_commit_refresh(
+                        task_group=task_group, db=db
+                    )
+
+                # Prepare replacements for templates
+                replacements = get_collection_replacements(
+                    task_group=task_group,
+                    python_bin=get_python_interpreter_v2(
+                        python_version=task_group.python_version
+                    ),
                 )
-                install_string = task_group.pip_install_string
-                settings = Inject(get_settings)
-                replacements = [
-                    ("__PACKAGE_NAME__", task_group.pkg_name),
-                    ("__PACKAGE_ENV_DIR__", task_group.venv_path),
-                    ("__PYTHON__", python_bin),
-                    ("__INSTALL_STRING__", install_string),
-                    (
-                        "__FRACTAL_MAX_PIP_VERSION__",
-                        settings.FRACTAL_MAX_PIP_VERSION,
-                    ),
-                    (
-                        "__PINNED_PACKAGE_LIST__",
-                        task_group.pinned_package_versions_string,
-                    ),
-                ]
+
+                # Prepare common arguments for `_customize_and_run_template``
                 script_dir_remote = (
                     Path(task_group.path) / SCRIPTS_SUBFOLDER
                 ).as_posix()
@@ -193,26 +223,17 @@ def collect_package_ssh(
                     script_dir_remote=script_dir_remote,
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT}"
+                        f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
-                    logger_name=LOGGER_NAME,
                     fractal_ssh=fractal_ssh,
                 )
 
                 logger.debug("installing - START")
 
-                _set_task_group_activity_status(
-                    task_group_activity_id=task_group_activity_id,
-                    new_status=TaskGroupActivityStatusV2.ONGOING,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
-
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+                # Set status to ONGOING and refresh logs
+                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
                 # Create remote `task_group.path` and `script_dir_remote`
                 # folders (note that because of `parents=True` we  are in
@@ -226,60 +247,49 @@ def collect_package_ssh(
                     template_filename="_1_create_venv.sh",
                     **common_args,
                 )
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 2
                 stdout = _customize_and_run_template(
                     template_filename="_2_preliminary_pip_operations.sh",
                     **common_args,
                 )
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
-                # Close db connections before long pip related operations.
-                # WARNING: this expunges all ORM objects.
-                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close
-                db.close()
+                # Close db connections before long operations. Note: we do not
+                # use `db.close()`, since it would expunge all ORM objects.
+                # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session
+                db.connection.close()
 
                 # Run script 3
                 stdout = _customize_and_run_template(
                     template_filename="_3_pip_install.sh",
                     **common_args,
                 )
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 4
                 pip_freeze_stdout = _customize_and_run_template(
                     template_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 5
                 stdout = _customize_and_run_template(
                     template_filename="_5_pip_show.sh",
                     **common_args,
                 )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
                 pkg_attrs = parse_script_5_stdout(stdout)
                 for key, value in pkg_attrs.items():
-                    logger.debug(
-                        f"collecting - parsed from pip-show: {key}={value}"
-                    )
+                    logger.debug(f"parsed from pip-show: {key}={value}")
                 # Check package_name match between pip show and task-group
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
@@ -288,13 +298,6 @@ def collect_package_ssh(
                     pkg_name_task_group=package_name_task_group,
                     logger_name=LOGGER_NAME,
                 )
-
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-
                 # Extract/drop parsed attributes
                 package_name = package_name_task_group
                 python_bin = pkg_attrs.pop("python_bin")
@@ -303,7 +306,7 @@ def collect_package_ssh(
                 )
                 manifest_path_remote = pkg_attrs.pop("manifest_path")
 
-                # FIXME SSH: Use more robust logic to determine `package_root`.
+                # TODO SSH: Use more robust logic to determine `package_root`.
                 # Examples: use `importlib.util.find_spec`, or parse the output
                 # of `pip show --files {package_name}`.
                 package_name_underscore = package_name.replace("-", "_")
@@ -315,70 +318,41 @@ def collect_package_ssh(
                 pkg_manifest_dict = fractal_ssh.read_remote_json_file(
                     manifest_path_remote
                 )
-                logger.info(f"collecting - loaded {manifest_path_remote=}")
+                logger.info(f"Loaded {manifest_path_remote=}")
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
-                logger.info("collecting - manifest is a valid ManifestV2")
+                logger.info("Manifest is a valid ManifestV2")
 
-                logger.info("collecting - _prepare_tasks_metadata - start")
+                logger.info("_prepare_tasks_metadata - start")
                 task_list = _prepare_tasks_metadata(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
                     package_root=Path(package_root_remote),
                     python_bin=Path(python_bin),
                 )
-                logger.info("collecting - _prepare_tasks_metadata - end")
+                logger.info("_prepare_tasks_metadata - end")
 
-                logger.info(
-                    "collecting - create_db_tasks_and_update_task_group - "
-                    "start"
-                )
+                logger.info("create_db_tasks_and_update_task_group - " "start")
                 create_db_tasks_and_update_task_group(
                     task_list=task_list,
                     task_group_id=task_group.id,
                     db=db,
                 )
-                logger.info(
-                    "collecting - create_db_tasks_and_update_task_group - end"
-                )
+                logger.info("create_db_tasks_and_update_task_group - end")
 
-                logger.info(
-                    "collecting - add pip freeze stdout to TaskGroupV2 - start"
-                )
-
-                update_task_group_pip_freeze(
-                    task_group_id=task_group.id,
-                    pip_freeze_stdout=pip_freeze_stdout,
-                    db=db,
-                )
-
-                logger.info(
-                    "collecting - add pip freeze stdout to TaskGroupV2 - end"
-                )
-
-                logger.debug("collecting - END")
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
+                # Update pip-freeze data
+                logger.info("Add pip freeze stdout to TaskGroupV2 - start")
+                task_group.pip_freeze = pip_freeze_stdout
+                task_group = add_commit_refresh(obj=task_group, db=db)
+                logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")
-
-                _set_task_group_activity_status(
-                    task_group_activity_id=task_group_activity_id,
-                    new_status=TaskGroupActivityStatusV2.OK,
-                    logger_name=LOGGER_NAME,
-                    db=db,
-                )
-
-                _refresh_logs(
-                    task_group_activity_id=task_group_activity_id,
-                    log_file_path=log_file_path,
-                    db=db,
-                )
-
+                activity.status = TaskGroupActivityStatusV2.OK
+                activity.timestamp_ended = get_timestamp()
+                activity = add_commit_refresh(obj=activity, db=db)
                 logger.debug("finalising - END")
+                logger.debug("END")
+
                 logger.debug("END")
 
             except Exception as collection_e:
@@ -396,11 +370,11 @@ def collect_package_ssh(
                         f"Original error:\n{str(e_rm)}"
                     )
                 fail_and_cleanup(
-                    task_group_activity_id=task_group_activity_id,
+                    task_group=task_group,
+                    task_group_activity=activity,
                     log_file_path=log_file_path,
                     logger_name=LOGGER_NAME,
                     exception=collection_e,
                     db=db,
-                    task_group_id=task_group.id,
                 )
     return

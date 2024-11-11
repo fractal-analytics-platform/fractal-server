@@ -48,7 +48,6 @@ def _customize_and_run_template(
         replacements: Dictionary of replacements.
         script_dir: Local folder where the script will be placed.
         prefix: Prefix for the script filename.
-        logger_name: Logger name
     """
     logger = get_logger(LOGGER_NAME)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
@@ -81,7 +80,7 @@ def _customize_and_run_template(
     return stdout
 
 
-def _copy_wheel_file(task_group: TaskGroupV2) -> str:
+def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
     logger = get_logger(LOGGER_NAME)
     source = task_group.wheel_path
     dest = (
@@ -110,8 +109,8 @@ def collect_package_local(
 
 
     Arguments:
+        task_group_id:
         task_group_activity_id:
-        task_group:
     """
 
     with TemporaryDirectory() as tmpdir:
@@ -162,7 +161,9 @@ def collect_package_local(
 
                 # Copy wheel file into task group path
                 if task_group.wheel_path:
-                    new_wheel_path = _copy_wheel_file(task_group=task_group)
+                    new_wheel_path = _copy_wheel_file_local(
+                        task_group=task_group
+                    )
                     task_group.wheel_path = new_wheel_path
                     task_group = add_commit_refresh(
                         task_group=task_group, db=db
@@ -179,17 +180,16 @@ def collect_package_local(
                 # Prepare common arguments for `_customize_and_run_template``
                 common_args = dict(
                     replacements=replacements,
-                    logger_name=LOGGER_NAME,
                     script_dir=(
                         Path(task_group.path) / SCRIPTS_SUBFOLDER
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT}"
+                        f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
                 )
 
-                # Set status to ONGOING
+                # Set status to ONGOING and refresh logs
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
@@ -266,17 +266,17 @@ def collect_package_local(
 
                 # Read and validate manifest file
                 manifest_path = pkg_attrs.pop("manifest_path")
-                logger.info(f"collecting - now loading {manifest_path=}")
+                logger.info(f"now loading {manifest_path=}")
                 with open(manifest_path) as json_data:
                     pkg_manifest_dict = json.load(json_data)
-                logger.info(f"collecting - loaded {manifest_path=}")
-                logger.info("collecting - now validating manifest content")
+                logger.info(f"loaded {manifest_path=}")
+                logger.info("now validating manifest content")
                 pkg_manifest = ManifestV2(**pkg_manifest_dict)
-                logger.info("collecting - validated manifest content")
+                logger.info("validated manifest content")
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.info("collecting - _prepare_tasks_metadata - start")
+                logger.info("_prepare_tasks_metadata - start")
                 task_list = _prepare_tasks_metadata(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
@@ -284,7 +284,7 @@ def collect_package_local(
                     python_bin=Path(python_bin),
                 )
                 check_task_files_exist(task_list=task_list)
-                logger.info("collecting - _prepare_tasks_metadata - end")
+                logger.info("_prepare_tasks_metadata - end")
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
@@ -296,6 +296,7 @@ def collect_package_local(
                 )
                 logger.info("create_db_tasks_and_update_task_group - end")
 
+                # Update pip-freeze data
                 logger.info("Add pip freeze stdout to TaskGroupV2 - start")
                 task_group.pip_freeze = pip_freeze_stdout
                 task_group = add_commit_refresh(obj=task_group, db=db)

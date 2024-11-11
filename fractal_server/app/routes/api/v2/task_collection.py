@@ -262,8 +262,8 @@ async def collect_tasks_pip(
 
         background_tasks.add_task(
             collect_package_ssh,
+            task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            task_group=task_group,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
