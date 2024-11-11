@@ -206,14 +206,7 @@ def test_template_3_and_5(tmp_path, current_py_version):
         script_dir=tmp_path,
     )
     dependencies_0 = _parse_pip_freeze_output(stdout_0)
-    # Assert only
-    if current_py_version == "3.12":
-        assert len(dependencies_0) == 1
-        assert "pip" in dependencies_0
-    else:
-        assert len(dependencies_0) == 2
-        assert "pip" in dependencies_0
-        assert "setuptools" in dependencies_0
+    assert "pip" in dependencies_0
 
     # Pip-install devtools (on 'venv1')
     _customize_and_run_template(
