@@ -211,7 +211,7 @@ def collect_package_local(
                 # Close db connections before long operations. Note: we do not
                 # use `db.close()`, since it would expunge all ORM objects.
                 # https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session
-                db.connection.close()
+                db.connection().close()
 
                 # Run script 3
                 stdout = _customize_and_run_template(
