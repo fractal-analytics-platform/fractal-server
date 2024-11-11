@@ -164,7 +164,7 @@ async def test_collect_pip_local_fail_rmtree(
     # Run background task
     try:
         collect_package_local(
-            task_group=task_group,
+            task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )
     except RuntimeError as e:
