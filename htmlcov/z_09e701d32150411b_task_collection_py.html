@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_task_collection_custom_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2024-11-11 11:30 +0000
+            created at 2024-11-11 14:25 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -118,7 +118,7 @@
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">    <span class="nam">TaskGroupActivityActionV2</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskGroupV2OriginEnum</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">tasks</span><span class="op">.</span><span class="nam">v2</span><span class="op">.</span><span class="nam">collection_local</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">tasks</span><span class="op">.</span><span class="nam">v2</span><span class="op">.</span><span class="nam">local</span><span class="op">.</span><span class="nam">collect</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="nam">collect_package_local</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">tasks</span><span class="op">.</span><span class="nam">v2</span><span class="op">.</span><span class="nam">utils_package_names</span> <span class="key">import</span> <span class="nam">_parse_wheel_filename</span>&nbsp;</span><span class="r"></span></p>
@@ -331,7 +331,7 @@
     <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">    <span class="key">if</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm_ssh"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">        <span class="com"># SSH task collection</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">        <span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">tasks</span><span class="op">.</span><span class="nam">v2</span><span class="op">.</span><span class="nam">collection_ssh</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">        <span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">tasks</span><span class="op">.</span><span class="nam">v2</span><span class="op">.</span><span class="nam">ssh</span><span class="op">.</span><span class="nam">collect</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">            <span class="nam">collect_package_ssh</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -346,8 +346,8 @@
     <p class="pln"><span class="n"><a id="t262" href="#t262">262</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t263" href="#t263">263</a></span><span class="t">        <span class="nam">background_tasks</span><span class="op">.</span><span class="nam">add_task</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t264" href="#t264">264</a></span><span class="t">            <span class="nam">collect_package_ssh</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t265" href="#t265">265</a></span><span class="t">            <span class="nam">task_group_activity_id</span><span class="op">=</span><span class="nam">task_group_activity</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t">            <span class="nam">task_group</span><span class="op">=</span><span class="nam">task_group</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t265" href="#t265">265</a></span><span class="t">            <span class="nam">task_group_id</span><span class="op">=</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t">            <span class="nam">task_group_activity_id</span><span class="op">=</span><span class="nam">task_group_activity</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t267" href="#t267">267</a></span><span class="t">            <span class="nam">fractal_ssh</span><span class="op">=</span><span class="nam">fractal_ssh</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t">            <span class="nam">tasks_base_dir</span><span class="op">=</span><span class="nam">user_settings</span><span class="op">.</span><span class="nam">ssh_tasks_dir</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -356,8 +356,8 @@
     <p class="pln"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">        <span class="com"># Local task collection</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">        <span class="nam">background_tasks</span><span class="op">.</span><span class="nam">add_task</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t274" href="#t274">274</a></span><span class="t">            <span class="nam">collect_package_local</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">            <span class="nam">task_group_activity_id</span><span class="op">=</span><span class="nam">task_group_activity</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t276" href="#t276">276</a></span><span class="t">            <span class="nam">task_group</span><span class="op">=</span><span class="nam">task_group</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">            <span class="nam">task_group_id</span><span class="op">=</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t276" href="#t276">276</a></span><span class="t">            <span class="nam">task_group_activity_id</span><span class="op">=</span><span class="nam">task_group_activity</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t277" href="#t277">277</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t278" href="#t278">278</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t279" href="#t279">279</a></span><span class="t">        <span class="str">"Task-collection endpoint: start background collection "</span>&nbsp;</span><span class="r"></span></p>
@@ -375,7 +375,7 @@
             <a class="nav" href="z_09e701d32150411b_task_collection_custom_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2024-11-11 11:30 +0000
+            created at 2024-11-11 14:25 +0000
         </p>
     </div>
 </footer>
