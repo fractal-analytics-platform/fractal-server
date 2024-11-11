@@ -10,6 +10,7 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityStatusV2,
 )
 from fractal_server.tasks.v2.collection_local import collect_package_local
+from fractal_server.tasks.v2.collection_ssh import collect_package_ssh
 from fractal_server.tasks.v2.database_operations import _get_task_type
 from fractal_server.tasks.v2.utils_background import (
     check_task_files_exist,
@@ -180,3 +181,26 @@ async def test_collect_pip_local_fail_rmtree(
     assert task_group_activity_v2.status == "failed"
     assert "Broken rm" in task_group_activity_v2.log
     assert path.exists()
+
+
+def test_unit_missing_objects(db, caplog):
+    """
+    Test a branch which is in principle unreachable.
+    """
+    caplog.clear()
+    collect_package_local(
+        task_group_activity_id=9999,
+        task_group_id=9999,
+    )
+    assert "Cannot find database rows" in caplog.text
+
+    caplog.clear()
+    assert caplog.text == ""
+
+    collect_package_ssh(
+        task_group_activity_id=9999,
+        task_group_id=9999,
+        fractal_ssh=None,
+        tasks_base_dir="/invalid",
+    )
+    assert "Cannot find database rows" in caplog.text
