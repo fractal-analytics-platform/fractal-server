@@ -99,7 +99,7 @@ def _copy_wheel_file_ssh(
     dest = (
         Path(task_group.path) / Path(task_group.wheel_path).name
     ).as_posix()
-    cmd = "cp {source} {dest}"
+    cmd = f"cp {source} {dest}"
     logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
     fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
