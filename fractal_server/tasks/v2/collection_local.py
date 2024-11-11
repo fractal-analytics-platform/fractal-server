@@ -165,9 +165,7 @@ def collect_package_local(
                         task_group=task_group
                     )
                     task_group.wheel_path = new_wheel_path
-                    task_group = add_commit_refresh(
-                        task_group=task_group, db=db
-                    )
+                    task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates
                 replacements = get_collection_replacements(
