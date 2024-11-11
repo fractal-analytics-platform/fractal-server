@@ -144,18 +144,3 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
 def get_current_log(logger_file_path: str) -> str:
     with open(logger_file_path, "r") as f:
         return f.read()
-
-
-def _refresh_logs(
-    *,
-    task_group_activity_id: int,
-    log_file_path: Path,
-    db: DBSyncSession,
-) -> None:
-    """
-    Read logs from file and update them in the db.
-    """
-    task_group_activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    task_group_activity.log = log_file_path.open("r").read()
-    db.add(task_group_activity)
-    db.commit()
