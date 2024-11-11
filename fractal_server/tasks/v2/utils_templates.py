@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 SCRIPTS_SUBFOLDER = "scripts"
@@ -61,3 +65,25 @@ def parse_script_pip_show_stdout(stdout: str) -> dict[str, str]:
             attribute_value = actual_line.split(search)[-1].strip(" ")
             attributes[attribute_name] = attribute_value
     return attributes
+
+
+def get_collection_replacements(
+    *, task_group: TaskGroupV2, python_bin: str
+) -> dict[str, str]:
+    settings = Inject(get_settings)
+
+    replacements = [
+        ("__PACKAGE_NAME__", task_group.pkg_name),
+        ("__PACKAGE_ENV_DIR__", task_group.venv_path),
+        ("__PYTHON__", python_bin),
+        ("__INSTALL_STRING__", task_group.pip_install_string),
+        (
+            "__FRACTAL_MAX_PIP_VERSION__",
+            settings.FRACTAL_MAX_PIP_VERSION,
+        ),
+        (
+            "__PINNED_PACKAGE_LIST__",
+            task_group.pinned_package_versions_string,
+        ),
+    ]
+    return replacements
