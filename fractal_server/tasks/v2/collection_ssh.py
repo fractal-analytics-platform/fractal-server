@@ -192,15 +192,6 @@ def collect_package_ssh(
 
             try:
 
-                # Copy wheel file into task group path
-                if task_group.wheel_path:
-                    new_wheel_path = _copy_wheel_file_ssh(
-                        task_group=task_group,
-                        fractal_ssh=fractal_ssh,
-                    )
-                    task_group.wheel_path = new_wheel_path
-                    task_group = add_commit_refresh(obj=task_group, db=db)
-
                 # Prepare replacements for templates
                 replacements = get_collection_replacements(
                     task_group=task_group,
@@ -226,19 +217,28 @@ def collect_package_ssh(
                     fractal_ssh=fractal_ssh,
                 )
 
-                logger.debug("installing - START")
-
-                # Set status to ONGOING and refresh logs
-                activity.status = TaskGroupActivityStatusV2.ONGOING
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
                 # Create remote `task_group.path` and `script_dir_remote`
                 # folders (note that because of `parents=True` we  are in
                 # the `no error if existing, make parent directories as
                 # needed` scenario for `mkdir`)
                 fractal_ssh.mkdir(folder=task_group.path, parents=True)
                 fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
+
+                # Copy wheel file into task group path
+                if task_group.wheel_path:
+                    new_wheel_path = _copy_wheel_file_ssh(
+                        task_group=task_group,
+                        fractal_ssh=fractal_ssh,
+                    )
+                    task_group.wheel_path = new_wheel_path
+                    task_group = add_commit_refresh(obj=task_group, db=db)
+
+                logger.debug("installing - START")
+
+                # Set status to ONGOING and refresh logs
+                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 1
                 stdout = _customize_and_run_template(
