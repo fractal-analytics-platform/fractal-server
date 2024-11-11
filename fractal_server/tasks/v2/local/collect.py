@@ -196,7 +196,7 @@ def collect_package_local(
 
                 # Run script 1
                 stdout = _customize_and_run_template(
-                    template_filename="_1_create_venv.sh",
+                    template_filename="1_create_venv.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
@@ -204,31 +204,23 @@ def collect_package_local(
 
                 # Run script 2
                 stdout = _customize_and_run_template(
-                    template_filename="_2_preliminary_pip_operations.sh",
+                    template_filename="2_pip_install.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 3
-                stdout = _customize_and_run_template(
-                    template_filename="_3_pip_install.sh",
+                pip_freeze_stdout = _customize_and_run_template(
+                    template_filename="3_pip_freeze.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 4
-                pip_freeze_stdout = _customize_and_run_template(
-                    template_filename="_4_pip_freeze.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                # Run script 5
                 stdout = _customize_and_run_template(
-                    template_filename="_5_pip_show.sh",
+                    template_filename="4_pip_show.sh",
                     **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
