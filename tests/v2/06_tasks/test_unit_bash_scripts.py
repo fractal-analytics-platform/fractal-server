@@ -1,11 +1,11 @@
 import pytest
 
 from fractal_server.tasks.v2.utils_templates import customize_template
-from fractal_server.tasks.v2.utils_templates import parse_script_5_stdout
+from fractal_server.tasks.v2.utils_templates import parse_script_pip_show
 from fractal_server.utils import execute_command_sync
 
 
-def test_parse_script_5_stdout():
+def test_parse_script_pip_show():
     stdout = (
         "Python interpreter: /some\n"
         "Package name: name\n"
@@ -13,7 +13,7 @@ def test_parse_script_5_stdout():
         "Package parent folder: /some\n"
         "Manifest absolute path: /some\n"
     )
-    res = parse_script_5_stdout(stdout)
+    res = parse_script_pip_show(stdout)
     assert res == {
         "python_bin": "/some",
         "package_name": "name",
@@ -31,10 +31,10 @@ def test_parse_script_5_stdout():
         "Manifest absolute path: /some\n"
     )
     with pytest.raises(ValueError, match="too many times"):
-        parse_script_5_stdout(stdout)
+        parse_script_pip_show(stdout)
 
     with pytest.raises(ValueError, match="not found"):
-        parse_script_5_stdout("invalid")
+        parse_script_pip_show("invalid")
 
 
 def test_template_1(tmp_path, current_py_version):
@@ -46,7 +46,7 @@ def test_template_1(tmp_path, current_py_version):
     ]
     script_path = tmp_path / "1_good.sh"
     customize_template(
-        template_name="_1_create_venv.sh",
+        template_name="1_create_venv.sh",
         replacements=replacements,
         script_path=script_path.as_posix(),
     )
@@ -54,7 +54,7 @@ def test_template_1(tmp_path, current_py_version):
     assert venv_path.exists()
 
 
-def test_template_3(tmp_path, testdata_path, current_py_version):
+def test_template_2(tmp_path, testdata_path, current_py_version):
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
     install_string = testdata_path.parent / (
@@ -68,12 +68,12 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__PYTHON__", f"python{current_py_version}"),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
+        ("__FRACTAL_MAX_PIP_VERSION__", "99"),
     ]
-    script_path = tmp_path / "3_good.sh"
+    script_path = tmp_path / "2_good.sh"
     customize_template(
-        template_name="_3_pip_install.sh",
+        template_name="2_pip_install.sh",
         replacements=replacements,
         script_path=script_path.as_posix(),
     )
@@ -90,12 +90,12 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path_bad.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__PYTHON__", f"python{current_py_version}"),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
+        ("__FRACTAL_MAX_PIP_VERSION__", "25"),
     ]
-    script_path = tmp_path / "3_bad_pkg.sh"
+    script_path = tmp_path / "2_bad_pkg.sh"
     customize_template(
-        template_name="_3_pip_install.sh",
+        template_name="2_pip_install.sh",
         replacements=replacements,
         script_path=script_path.as_posix(),
     )
@@ -104,7 +104,7 @@ def test_template_3(tmp_path, testdata_path, current_py_version):
     assert "Package(s) not found: pkgA" in str(expinfo.value)
 
 
-def test_template_5(tmp_path, testdata_path, current_py_version):
+def test_template_4(tmp_path, testdata_path, current_py_version):
 
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
@@ -124,13 +124,11 @@ def test_template_5(tmp_path, testdata_path, current_py_version):
     )
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
-        ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__PYTHON__", f"python{current_py_version}"),
         ("__PACKAGE_NAME__", package_name),
     ]
-    script_path = tmp_path / "5_good.sh"
+    script_path = tmp_path / "4_good.sh"
     customize_template(
-        template_name="_5_pip_show.sh",
+        template_name="4_pip_show.sh",
         replacements=replacements,
         script_path=script_path.as_posix(),
     )
@@ -156,13 +154,11 @@ def test_template_5(tmp_path, testdata_path, current_py_version):
     )
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
-        ("__INSTALL_STRING__", install_string_miss.as_posix()),
-        ("__PYTHON__", f"python{current_py_version}"),
         ("__PACKAGE_NAME__", package_name),
     ]
-    script_path = tmp_path / "5_good.sh"
+    script_path = tmp_path / "4_good.sh"
     customize_template(
-        template_name="_5_pip_show.sh",
+        template_name="4_pip_show.sh",
         replacements=replacements,
         script_path=script_path.as_posix(),
     )

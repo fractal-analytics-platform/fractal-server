@@ -34,9 +34,9 @@ def customize_template(
         f.write(script_data)
 
 
-def parse_script_5_stdout(stdout: str) -> dict[str, str]:
+def parse_script_pip_show(stdout: str) -> dict[str, str]:
     """
-    Parse standard output of template 5.
+    Parse standard output of 4_pip_show.sh
     """
     searches = [
         ("Python interpreter:", "python_bin"),

@@ -9,6 +9,7 @@ write_log(){
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 INSTALL_STRING=__INSTALL_STRING__
 PINNED_PACKAGE_LIST="__PINNED_PACKAGE_LIST__"
+FRACTAL_MAX_PIP_VERSION="__FRACTAL_MAX_PIP_VERSION__"
 
 TIME_START=$(date +%s)
 
@@ -16,7 +17,7 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Upgrade pip
 write_log "START upgrade pip"
-"$VENVPYTHON" -m pip install --no-cache-dir "pip<=__FRACTAL_MAX_PIP_VERSION__" --upgrade
+"$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
 "$VENVPYTHON" -m pip install --no-cache-dir setuptools
 write_log "END   upgrade pip"
 echo
