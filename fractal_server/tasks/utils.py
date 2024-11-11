@@ -33,5 +33,6 @@ def get_log_path(base: Path) -> Path:
 def get_collection_log_v1(path: Path) -> str:
     package_path = get_absolute_venv_path_v1(path)
     log_path = get_log_path(package_path)
-    log = log_path.open().read()
+    with log_path.open("r") as f:
+        log = f.read()
     return log
