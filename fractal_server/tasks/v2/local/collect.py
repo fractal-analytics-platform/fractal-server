@@ -61,26 +61,24 @@ def _customize_and_run_template(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
 
+    template_filename_stripped = template_filename[:-3]
+
     if prefix is not None:
-        template_filename = f"{prefix}{template_filename}"
-
-    script_path_local = Path(script_dir) / template_filename
-
+        script_filename = f"{prefix}{template_filename_stripped}"
+    else:
+        script_filename = template_filename_stripped
+    script_path_local = Path(script_dir) / script_filename
     # Read template
     customize_template(
         template_name=template_filename,
         replacements=replacements,
         script_path=script_path_local,
     )
-
     cmd = f"bash {script_path_local}"
     logger.debug(f"Now run '{cmd}' ")
-
     stdout = execute_command_sync(command=cmd, logger_name=LOGGER_NAME)
-
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
     logger.debug(f"_customize_and_run_template {template_filename} - END")
-
     return stdout
 
 
