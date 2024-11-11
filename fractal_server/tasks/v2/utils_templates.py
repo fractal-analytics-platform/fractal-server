@@ -67,7 +67,7 @@ def parse_script_5_stdout(stdout: str) -> dict[str, str]:
     return attributes
 
 
-def _get_replacements(
+def get_collection_replacements(
     *, task_group: TaskGroupV2, python_bin: str
 ) -> dict[str, str]:
     settings = Inject(get_settings)
