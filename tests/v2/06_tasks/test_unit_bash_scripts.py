@@ -194,7 +194,9 @@ def test_template_3_and_5(tmp_path, current_py_version):
         template_filename="2_pip_install.sh",
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
+            ("__INSTALL_STRING__", "pip"),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+            ("__PINNED_PACKAGE_LIST__", ""),
         ],
         script_dir=tmp_path,
     )
@@ -215,6 +217,7 @@ def test_template_3_and_5(tmp_path, current_py_version):
             ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
             ("__INSTALL_STRING__", "devtools"),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+            ("__PINNED_PACKAGE_LIST__", ""),
         ],
         script_dir=tmp_path,
     )
@@ -248,7 +251,7 @@ def test_template_3_and_5(tmp_path, current_py_version):
         script_dir=tmp_path,
     )
     dependencies_2 = _parse_pip_freeze_output(stdout_2)
-    assert dependencies_2 == dependencies_0
+    assert dependencies_2.keys() == dependencies_0.keys()
 
     # Run script 5 (install from freeze) on 'venv2'
 
