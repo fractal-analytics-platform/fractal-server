@@ -190,6 +190,14 @@ def test_template_3_and_5(tmp_path, current_py_version):
         ],
         script_dir=tmp_path,
     )
+    _customize_and_run_template(
+        template_filename="2_pip_install.sh",
+        replacements=[
+            ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
+            ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+        ],
+        script_dir=tmp_path,
+    )
 
     # Run script 3 (pip freeze) on 'venv1'
     stdout_0 = _customize_and_run_template(
@@ -199,12 +207,25 @@ def test_template_3_and_5(tmp_path, current_py_version):
     )
     dependencies_0 = _parse_pip_freeze_output(stdout_0)
     # Assert only
-    assert len(dependencies_0) == 2
-    assert "pip" in dependencies_0
-    assert "setuptools" in dependencies_0
+    if current_py_version == "3.12":
+        assert len(dependencies_0) == 1
+        assert "pip" in dependencies_0
+    else:
+        assert len(dependencies_0) == 2
+        assert "pip" in dependencies_0
+        assert "setuptools" in dependencies_0
 
     # Pip-install devtools (on 'venv1')
-    execute_command_sync(command=f"{venv_path_1}/bin/pip install devtools")
+    _customize_and_run_template(
+        template_filename="2_pip_install.sh",
+        replacements=[
+            ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
+            ("__INSTALL_STRING__", "devtools"),
+            ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+        ],
+        script_dir=tmp_path,
+    )
+
     stdout_1 = _customize_and_run_template(
         template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
