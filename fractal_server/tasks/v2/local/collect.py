@@ -4,9 +4,9 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group
+from .utils_local import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -25,61 +25,14 @@ from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
-from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import (
     parse_script_pip_show_stdout,
 )
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
-from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 LOGGER_NAME = __name__
-
-
-def _customize_and_run_template(
-    template_filename: str,
-    replacements: list[tuple[str, str]],
-    script_dir: str,
-    prefix: Optional[int] = None,
-) -> str:
-    """
-    Customize one of the template bash scripts.
-
-    Args:
-        template_filename: Filename of the template file (ends with ".sh").
-        replacements: Dictionary of replacements.
-        script_dir: Local folder where the script will be placed.
-        prefix: Prefix for the script filename.
-    """
-    logger = get_logger(LOGGER_NAME)
-    logger.debug(f"_customize_and_run_template {template_filename} - START")
-
-    # Prepare name and path of script
-    if not template_filename.endswith(".sh"):
-        raise ValueError(
-            f"Invalid {template_filename=} (it must end with '.sh')."
-        )
-
-    template_filename_stripped = template_filename[:-3]
-
-    if prefix is not None:
-        script_filename = f"{prefix}{template_filename_stripped}"
-    else:
-        script_filename = template_filename_stripped
-    script_path_local = Path(script_dir) / script_filename
-    # Read template
-    customize_template(
-        template_name=template_filename,
-        replacements=replacements,
-        script_path=script_path_local,
-    )
-    cmd = f"bash {script_path_local}"
-    logger.debug(f"Now run '{cmd}' ")
-    stdout = execute_command_sync(command=cmd, logger_name=LOGGER_NAME)
-    logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-    logger.debug(f"_customize_and_run_template {template_filename} - END")
-    return stdout
 
 
 def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
