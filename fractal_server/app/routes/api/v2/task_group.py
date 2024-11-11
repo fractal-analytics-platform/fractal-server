@@ -240,3 +240,42 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return task_group
+
+
+@router.post(
+    "/{task_group_id}/deactivate/", response_model=TaskGroupActivityV2Read
+)
+async def deactivate_task_group(
+    task_group_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupReadV2:
+    """
+    Deactivate task group venv
+    """
+
+    task_group = await _get_task_group_full_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    if task_group.origin == "other":
+        task_group.active = False
+        task_group_activity = TaskGroupActivityV2(
+            user_id=task_group.user_id,
+            taskgroupv2_id=task_group.id,
+            status=TaskGroupActivityStatusV2.OK,
+            action=TaskGroupActivityActionV2.DEACTIVATE,
+            pkg_name=task_group.pkg_name,
+            version=task_group.version,
+        )
+        db.add(task_group)
+        db.add(task_group_activity)
+        await db.commit()
+
+        return task_group_activity
+
+    # if origin="pypi" or "wheel-file"
+    if task_group.pip_freeze is None:
+        pass
