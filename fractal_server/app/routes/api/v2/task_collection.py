@@ -34,7 +34,7 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.tasks.v2.collection_local import (
+from fractal_server.tasks.v2.local.collect import (
     collect_package_local,
 )
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
@@ -247,7 +247,7 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
 
-        from fractal_server.tasks.v2.collection_ssh import (
+        from fractal_server.tasks.v2.ssh.collect import (
             collect_package_ssh,
         )
 
