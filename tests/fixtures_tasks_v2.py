@@ -17,11 +17,11 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
-from fractal_server.tasks.v2.database_operations import (
-    create_db_tasks_and_update_task_group,
-)
 from fractal_server.tasks.v2.utils_background import (
     _prepare_tasks_metadata,
+)
+from fractal_server.tasks.v2.utils_database import (
+    create_db_tasks_and_update_task_group,
 )
 
 
