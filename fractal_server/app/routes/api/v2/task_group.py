@@ -306,3 +306,63 @@ async def deactivate_task_group(
     # )
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
+
+
+@router.post(
+    "/{task_group_id}/reactivate/", response_model=TaskGroupActivityV2Read
+)
+async def reactivate_task_group(
+    task_group_id: int,
+    # backgroud_tasks: BackgroundTasks,
+    response: Response,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupReadV2:
+    """
+    Deactivate task group venv
+    """
+    settings = Inject(get_settings)
+    task_group = await _get_task_group_full_access(
+        task_group_id=task_group_id,
+        user_id=user.id,
+        db=db,
+    )
+    if task_group.active:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    if task_group.origin == "other":
+        task_group_activity = TaskGroupActivityV2(
+            user_id=task_group.user_id,
+            taskgroupv2_id=task_group.id,
+            status=TaskGroupActivityStatusV2.OK,
+            action=TaskGroupActivityActionV2.REACTIVATE,
+            pkg_name=task_group.pkg_name,
+            version=task_group.version,
+            log="fixme",
+        )
+        db.add(task_group_activity)
+        await db.commit()
+
+        return task_group_activity
+
+    # if origin="pypi" or "wheel-file"
+
+    if task_group.wheel_path is not None and settings.FRACTAL_RUNNER_BACKEND:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.REACTIVATE,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        log="fixme",
+    )
+    # background_tasks.add_task(
+    #     reactivate_local,
+    #     task_group_id=task_group.id,
+    #     task_group_activity_id=task_group_activity.id,
+    # )
+    response.status_code = status.HTTP_202_ACCEPTED
+    return task_group_activity
