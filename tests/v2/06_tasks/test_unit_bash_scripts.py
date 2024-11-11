@@ -1,6 +1,6 @@
 import pytest
-from devtools import debug
 
+from fractal_server.tasks.v2.local.collect import _customize_and_run_template
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import (
     parse_script_pip_show_stdout,
@@ -172,7 +172,7 @@ def test_template_4(tmp_path, testdata_path, current_py_version):
 
 def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
     splitted_output = stdout.split()
-    freeze_dict = {[x.split("==") for x in splitted_output]}
+    freeze_dict = dict([x.split("==") for x in splitted_output])
     return freeze_dict
 
 
@@ -185,14 +185,10 @@ def test_template_3_and_5(tmp_path, current_py_version):
     )
 
     # Run script 3 (pip freeze) on 'venv1'
-    pip_freeze_script_path_1 = tmp_path / "pip_freeze.sh"
-    customize_template(
-        template_name="3_pip_freeze.sh",
+    stdout_0 = _customize_and_run_template(
+        template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
-        script_path=pip_freeze_script_path_1.as_posix(),
-    )
-    stdout_0 = execute_command_sync(
-        command=f"bash {pip_freeze_script_path_1.as_posix()}"
+        script_dir=tmp_path,
     )
     dependencies_0 = _parse_pip_freeze_output(stdout_0)
     # Assert only
@@ -202,8 +198,10 @@ def test_template_3_and_5(tmp_path, current_py_version):
 
     # Pip-install devtools (on 'venv1')
     execute_command_sync(command=f"{venv_path_1}/bin/pip install devtools")
-    stdout_1 = execute_command_sync(
-        command=f"bash {pip_freeze_script_path_1.as_posix()}"
+    stdout_1 = _customize_and_run_template(
+        template_filename="3_pip_freeze.sh",
+        replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
+        script_dir=tmp_path,
     )
     dependencies_1 = _parse_pip_freeze_output(stdout_1)
     assert dependencies_0.items() < dependencies_1.items()
@@ -220,37 +218,31 @@ def test_template_3_and_5(tmp_path, current_py_version):
     )
 
     # Run script 3 (pip freeze) on 'venv2'
-    pip_freeze_script_path_2 = tmp_path / "pip_freeze_2.sh"
-    customize_template(
-        template_name="3_pip_freeze.sh",
+    stdout_2 = _customize_and_run_template(
+        template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_2.as_posix())],
-        script_path=pip_freeze_script_path_2.as_posix(),
-    )
-    stdout_2 = execute_command_sync(
-        command=f"bash {pip_freeze_script_path_2.as_posix()}"
+        script_dir=tmp_path,
     )
     dependencies_2 = _parse_pip_freeze_output(stdout_2)
     assert dependencies_2 == dependencies_0
 
     # Run script 5 (install from freeze) on 'venv2'
 
-    pip_install_script = tmp_path / "install_from_freeze.sh"
-    customize_template(
-        template_name="5_pip_install_from_freeze.sh",
+    _customize_and_run_template(
+        template_filename="5_pip_install_from_freeze.sh",
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
         ],
-        script_path=pip_install_script.as_posix(),
+        script_dir=tmp_path,
     )
-    script_5_stdout = execute_command_sync(
-        command=f"bash {pip_install_script.as_posix()}"
-    )
-    debug(script_5_stdout)
 
-    stdout_3 = execute_command_sync(
-        command=f"bash {pip_freeze_script_path_2.as_posix()}"
+    stdout_3 = _customize_and_run_template(
+        template_filename="3_pip_freeze.sh",
+        replacements=[("__PACKAGE_ENV_DIR__", venv_path_2.as_posix())],
+        script_dir=tmp_path,
     )
     dependencies_3 = _parse_pip_freeze_output(stdout_3)
+
     assert dependencies_3 == dependencies_1

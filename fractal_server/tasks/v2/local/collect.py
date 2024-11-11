@@ -4,6 +4,7 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group
 from fractal_server.app.db import get_sync_db
@@ -40,7 +41,7 @@ def _customize_and_run_template(
     template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
-    prefix: int,
+    prefix: Optional[int] = None,
 ) -> str:
     """
     Customize one of the template bash scripts.
@@ -61,8 +62,10 @@ def _customize_and_run_template(
         )
     template_filename_stripped = template_filename[:-3]
 
-    script_filename = f"{prefix}{template_filename_stripped}"
-    script_path_local = Path(script_dir) / script_filename
+    if prefix is not None:
+        template_filename_stripped = f"{prefix}{template_filename_stripped}"
+
+    script_path_local = Path(script_dir) / template_filename_stripped
 
     # Read template
     customize_template(
