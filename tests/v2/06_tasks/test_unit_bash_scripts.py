@@ -246,3 +246,33 @@ def test_templates_freeze(tmp_path, current_py_version):
     dependencies_2 = _parse_pip_freeze_output(pip_freeze_venv_2)
 
     assert dependencies_2 == dependencies_1
+
+
+def test_venv_size_and_file_number(tmp_path):
+    structure = {
+        "file1": 1,
+        "file2": 2,
+        "subfolder1/file3": 3,
+        "subfolder1/file4": 4,
+        "subfolder2/file5": 5,
+    }
+    test_folder = tmp_path / "test"
+
+    test_folder.mkdir()
+
+    for relative_path, size_mb in structure.items():
+        file_path = test_folder / relative_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write file with the specified size in MB
+        with open(file_path, "wb") as f:
+            f.write(b"_" * size_mb * 1024 * 1024)
+
+    stdout = _customize_and_run_template(
+        template_filename="5_get_venv_size_and_file_number.sh",
+        replacements=[("__PACKAGE_ENV_DIR__", test_folder.as_posix())],
+        script_dir=tmp_path,
+    )
+    size_in_kB, file_number = stdout.split()
+    assert int(size_in_kB) == sum(structure.values()) * 1024 * 2
+    assert int(file_number) == 5
