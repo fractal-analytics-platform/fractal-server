@@ -24,6 +24,7 @@
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+    * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
 
 # 2.8.1
 
