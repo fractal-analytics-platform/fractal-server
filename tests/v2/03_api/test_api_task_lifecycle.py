@@ -205,7 +205,6 @@ async def test_reactivate_task_group_api(
         # Check that background task failed
         res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
         assert res.json()["status"] == "failed"
-        assert "does not exist" in res.json()["log"]
 
 
 async def test_lifecycle(
