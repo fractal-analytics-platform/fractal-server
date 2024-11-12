@@ -100,6 +100,7 @@ def deactivate_local(
                         f"{int(time.time())}_"
                         f"{TaskGroupActivityActionV2.DEACTIVATE}_"
                     ),
+                    logger_name=LOGGER_NAME,
                 )
                 pip_freeze_stdout = _customize_and_run_template(
                     template_filename="4_pip_freeze.sh",
