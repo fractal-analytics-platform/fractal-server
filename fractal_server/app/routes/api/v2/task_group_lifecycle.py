@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
+from ._aux_functions_task_lifecycle import check_no_ongoing_activity
 from ._aux_functions_tasks import _get_task_group_full_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -49,6 +50,9 @@ async def deactivate_task_group(
         user_id=user.id,
         db=db,
     )
+
+    # Check no other activity is ongoing
+    await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
 
     # Check that task-group is active
     if not task_group.active:
@@ -148,6 +152,9 @@ async def reactivate_task_group(
                 f"Cannot reactivate a task group with {task_group.active=}."
             ),
         )
+
+    # Check no other activity is ongoing
+    await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
 
     # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:
