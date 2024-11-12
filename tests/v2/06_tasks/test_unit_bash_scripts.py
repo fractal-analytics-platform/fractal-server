@@ -249,40 +249,30 @@ def test_templates_freeze(tmp_path, current_py_version):
 
 
 def test_venv_size_and_file_number(tmp_path):
-    structure = {
-        "file1": 1,  # MB
-        "file2": 2,  # MB
-        "subfolder1/file3": 3,  # MB
-        "subfolder1/file4": 4,  # MB
-        "subfolder2/file5": 5,  # MB
-    }
-    test_folder = tmp_path / "test"
 
-    test_folder.mkdir()
+    # Create folders
+    folder = tmp_path / "test"
+    subfolder = folder / "subfolder"
+    subfolder.mkdir(parents=True)
 
-    for relative_path, size_mb in structure.items():
-        file_path = test_folder / relative_path
-        file_path.parent.mkdir(parents=True, exist_ok=True)
+    # Create files
+    FILESIZE_IN_MB = 1
+    FILES = [folder / "file1", folder / "file2", subfolder / "file3"]
+    for file in FILES:
+        with file.open("wb") as f:
+            f.write(b"_" * FILESIZE_IN_MB * (1024**2))
 
-        # Write file with the specified size in MB
-        with open(file_path, "wb") as f:
-            f.write(b"_" * size_mb * (1024**2))
-
+    # Run script
     stdout = _customize_and_run_template(
         template_filename="5_get_venv_size_and_file_number.sh",
-        replacements=[("__PACKAGE_ENV_DIR__", test_folder.as_posix())],
+        replacements=[("__PACKAGE_ENV_DIR__", folder.as_posix())],
         script_dir=tmp_path,
     )
-    size_in_kB, file_number = stdout.split()
+    size_in_kB, file_number = [int(item) for item in stdout.split()]
+    print(f"{size_in_kB=}")
+    print(f"{file_number=}")
 
-    expected_size_in_kB = (
-        sum(f.stat().st_size for f in test_folder.glob("**/*") if f.is_file())
-        / 1024
-    )
-
-    assert int(file_number) == 5
-    # since github measurement is a little different from local machine,
-    # we assert that `size_in_kB` differs at most of 1% from the expected value
-    assert abs(int(size_in_kB) - expected_size_in_kB) < (
-        expected_size_in_kB / 100
-    )
+    # Check that file number and (approximate) disk usage
+    assert file_number == len(FILES)
+    EXPECTED_SIZE_IN_KB = FILESIZE_IN_MB * 1024 * len(FILES)
+    assert abs(size_in_kB - EXPECTED_SIZE_IN_KB) < 0.02 * size_in_kB
