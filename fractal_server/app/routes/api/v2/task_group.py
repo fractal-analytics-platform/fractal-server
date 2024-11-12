@@ -276,7 +276,7 @@ async def deactivate_task_group(
             status=TaskGroupActivityStatusV2.OK,
             action=TaskGroupActivityActionV2.DEACTIVATE,
             pkg_name=task_group.pkg_name,
-            version=task_group.version,
+            version="N/A",
             log="fixme",
         )
         db.add(task_group)
@@ -345,7 +345,7 @@ async def reactivate_task_group(
             status=TaskGroupActivityStatusV2.OK,
             action=TaskGroupActivityActionV2.REACTIVATE,
             pkg_name=task_group.pkg_name,
-            version=task_group.version,
+            version="N/A",
             log="fixme",
         )
         db.add(task_group)
