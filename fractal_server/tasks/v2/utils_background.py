@@ -155,7 +155,7 @@ def check_venv_path(
 
     logger = get_logger(logger_name)
 
-    if not Path(task_group.venv_path.exists()):
+    if not Path(task_group.venv_path).exists():
         error_msg = f"{task_group=} venv_path not exists."
         logger.error(error_msg)
         fail_and_cleanup(
