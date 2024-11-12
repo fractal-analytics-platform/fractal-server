@@ -25,6 +25,9 @@
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+* Testing:
+    * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
+
 
 # 2.8.1
 
