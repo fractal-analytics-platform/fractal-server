@@ -14,6 +14,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 
 LOGGER_NAME = __name__
@@ -101,6 +102,7 @@ def deactivate_local(
                 )
                 # Update pip-freeze data
                 logger.info("Add pip freeze stdout to TaskGroupV2 - start")
+                activity.log = get_current_log(log_file_path)
                 task_group.pip_freeze = pip_freeze_stdout
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.info("Add pip freeze stdout to TaskGroupV2 - end")

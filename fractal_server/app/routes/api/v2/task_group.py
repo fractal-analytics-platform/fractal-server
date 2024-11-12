@@ -31,6 +31,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
+from fractal_server.utils import get_timestamp
 
 # from fastapi import BackgroundTasks
 
@@ -278,6 +279,8 @@ async def deactivate_task_group(
             pkg_name=task_group.pkg_name,
             version="N/A",
             log="fixme",
+            timestamp_started=get_timestamp(),
+            timestamp_ended=get_timestamp(),
         )
         db.add(task_group)
         db.add(task_group_activity)
@@ -302,6 +305,7 @@ async def deactivate_task_group(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         log="fixme",
+        timestamp_started=get_timestamp(),
     )
     task_group.active = False
     db.add(task_group)
@@ -352,6 +356,8 @@ async def reactivate_task_group(
             pkg_name=task_group.pkg_name,
             version="N/A",
             log="fixme",
+            timestamp_started=get_timestamp(),
+            timestamp_ended=get_timestamp(),
         )
         db.add(task_group)
         db.add(task_group_activity)
@@ -376,6 +382,7 @@ async def reactivate_task_group(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         log="fixme",
+        timestamp_started=get_timestamp(),
     )
     db.add(task_group_activity)
     await db.commit()

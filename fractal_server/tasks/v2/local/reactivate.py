@@ -26,7 +26,7 @@ def reactivate_local(
     task_group_id: int,
 ) -> None:
     """
-    Deactivate a task group venv.
+    Reactivate a task group venv.
 
     This function is run as a background task, therefore exceptions must be
     handled.
@@ -143,8 +143,6 @@ def reactivate_local(
             )
 
             activity.log = get_current_log(log_file_path)
-            activity = add_commit_refresh(obj=activity, db=db)
-
             task_group.active = True
             task_group = add_commit_refresh(obj=task_group, db=db)
             logger.debug(f"{task_group.active=} - end install from pip freeze")
