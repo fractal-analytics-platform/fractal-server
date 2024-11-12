@@ -40,7 +40,7 @@ class TaskGroupV2(SQLModel, table=True):
     )
     pip_freeze: Optional[str] = None
     venv_path: Optional[str] = None
-    venv_size: Optional[int] = None
+    venv_size_in_kB: Optional[int] = None
     venv_file_number: Optional[int] = None
 
     active: bool = True

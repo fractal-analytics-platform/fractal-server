@@ -101,7 +101,7 @@ async def test_task_collection_ssh_from_pypi(
             in task_group["pip_freeze"]
         )
         # Check venv_size and venv_file_number in TaskGroupV2
-        assert task_group["venv_size"] is not None
+        assert task_group["venv_size_in_kB"] is not None
         assert task_group["venv_file_number"] is not None
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
