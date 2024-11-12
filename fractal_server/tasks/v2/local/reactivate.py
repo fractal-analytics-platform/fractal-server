@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
-from ..utils_background import fail_and_cleanup
+from ..utils_background import check_venv_path
 from ..utils_templates import get_collection_replacements
 from .utils_local import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
@@ -66,17 +66,13 @@ def reactivate_local(
                 logger.debug(f"task_group.{key}: {value}")
 
             # Check that the (local) task_group path does exist
-            if not Path(task_group.venv_path).exists():
-                error_msg = f"{task_group} venv_path not exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
-                    db=db,
-                )
+            if check_venv_path(
+                task_group=task_group,
+                activity=activity,
+                logger_name=LOGGER_NAME,
+                log_file_path=log_file_path,
+                db=db,
+            ):
                 return
 
             # Prepare replacements for templates

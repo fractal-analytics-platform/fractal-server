@@ -19,6 +19,7 @@ from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import check_task_files_exist
+from fractal_server.tasks.v2.utils_background import check_venv_path
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
@@ -94,18 +95,16 @@ def collect_package_local(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            # Check that the (local) task_group path does not exist
-            if Path(task_group.path).exists():
-                error_msg = f"{task_group.path} already exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileExistsError(error_msg),
-                    db=db,
-                )
+            # Check that the (local) task_group path does exist
+            if check_venv_path(
+                task_group=task_group,
+                activity=activity,
+                logger_name=LOGGER_NAME,
+                log_file_path=log_file_path,
+                db=db,
+            ):
+                return
+
                 return
 
             try:
