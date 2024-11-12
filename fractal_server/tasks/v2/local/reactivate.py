@@ -79,54 +79,16 @@ def reactivate_local(
                 )
                 return
 
-            if task_group.pip_freeze is None:
-
-                logging.error(
-                    "Cannot find task_group pip_freeze with "
-                    f"{task_group_id=} :\n"
-                    f"{task_group=}\n. Exit."
-                )
-
-                error_msg = f"{task_group=} pip_freeze not exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
-                    db=db,
-                )
-                return
-
-            if (
-                task_group.origin == "wheel"
-                and task_group.wheel_path is None
-                and not Path(task_group.wheel_path).exists()
-            ):
-                logging.error(
-                    "Cannot find task_group wheel_path with "
-                    f"{task_group_id=} :\n"
-                    f"{task_group=}\n. Exit."
-                )
-                error_msg = f"{task_group} wheel_path not exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
-                    db=db,
-                )
-                return
-
             # Prepare replacements for templates
             replacements = get_collection_replacements(
                 task_group=task_group,
                 python_bin="/not/applicable",
             )
-
+            with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
+                f.write()
+            replacements.append(
+                ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
+            )
             # Prepare common arguments for `_customize_and_run_template``
             common_args = dict(
                 replacements=replacements,
