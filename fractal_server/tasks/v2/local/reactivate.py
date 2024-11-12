@@ -84,10 +84,10 @@ def reactivate_local(
                 task_group=task_group,
                 python_bin="/not/applicable",
             )
-            with open(f"{tmpdir}/pip_freeze.txt", "w") as f:  # noqa
+            with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
                 f.write()
             replacements.append(
-                ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")  # noqa
+                ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
             )
             # Prepare common arguments for `_customize_and_run_template``
             common_args = dict(
