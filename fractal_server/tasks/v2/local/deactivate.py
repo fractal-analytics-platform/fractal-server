@@ -135,7 +135,8 @@ def deactivate_local(
             # At this point we are sure that venv_path
             # wheel_path and pip_freeze exist
             shutil.rmtree(task_group.venv_path)
-            activity.log = f"All good, {task_group.venv_path} removed"
-            activity.status = (TaskGroupActivityStatusV2.OK,)
+
+            activity.log = f"All good, {task_group.venv_path} removed."
+            activity.status = TaskGroupActivityStatusV2.OK
             activity.timestamp_ended = get_timestamp()
             activity = add_commit_refresh(obj=activity, db=db)

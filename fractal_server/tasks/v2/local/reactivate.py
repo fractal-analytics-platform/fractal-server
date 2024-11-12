@@ -4,9 +4,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
+from ..utils_background import fail_and_cleanup
 from ..utils_templates import get_collection_replacements
 from .utils_local import _customize_and_run_template
-from .utils_local import fail_and_cleanup
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -85,7 +85,7 @@ def reactivate_local(
                 python_bin="/not/applicable",
             )
             with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
-                f.write()
+                f.write(task_group.pip_freeze)
             replacements.append(
                 ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
             )
@@ -99,6 +99,7 @@ def reactivate_local(
                     f"{int(time.time())}_"
                     f"{TaskGroupActivityActionV2.REACTIVATE}_"
                 ),
+                logger_name=LOGGER_NAME,
             )
             logger.debug("start - install from pip freeze")
             _customize_and_run_template(
