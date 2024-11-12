@@ -4,7 +4,11 @@ from fastapi import HTTPException
 from fastapi import status
 from httpx import AsyncClient
 from httpx import TimeoutException
+from sqlmodel import select
 
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 
 
@@ -122,3 +126,31 @@ async def get_package_version_from_pypi(
         # Case 3: `version` is unset and we use latest
         logger.info(f"No version requested, returning {latest_version=}.")
         return latest_version
+
+
+async def check_no_ongoing_activity(
+    *,
+    task_group_id: int,
+    db: AsyncSession,
+) -> None:
+    stm = (
+        select(TaskGroupActivityV2)
+        .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
+        .where(TaskGroupActivityV2.status == TaskGroupActivityStatusV2.ONGOING)
+    )
+    res = await db.execute(stm)
+    activities = res.scalars().all()
+    if activities == []:
+        return
+    log = "Found ongoing activities for the same task-group:"
+    for activity in activities:
+        log = (
+            f"{log}\n"
+            f"Action={activity.action}, "
+            f"status={activity.status}, "
+            f"timestamp_started={activity.timestamp_started}."
+        )
+    raise HTTPException(
+        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=log,
+    )
