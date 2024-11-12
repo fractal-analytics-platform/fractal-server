@@ -143,3 +143,29 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
 def get_current_log(logger_file_path: str) -> str:
     with open(logger_file_path, "r") as f:
         return f.read()
+
+
+def check_venv_path(
+    task_group: TaskGroupV2,
+    activity: TaskGroupActivityV2,
+    log_file_path: str,
+    db: DBSyncSession,
+    logger_name: str,
+) -> bool:
+
+    logger = get_logger(logger_name)
+
+    if not Path(task_group.venv_path.exists()):
+        error_msg = f"{task_group=} venv_path not exists."
+        logger.error(error_msg)
+        fail_and_cleanup(
+            task_group=task_group,
+            task_group_activity=activity,
+            logger_name=logger_name,
+            log_file_path=log_file_path,
+            exception=FileNotFoundError(error_msg),
+            db=db,
+        )
+        return True
+    else:
+        return False
