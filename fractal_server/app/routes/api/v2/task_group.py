@@ -9,8 +9,6 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
-from .....config import get_settings
-from .....syringe import Inject
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -31,7 +29,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
-from fractal_server.utils import get_timestamp
 
 # from fastapi import BackgroundTasks
 
@@ -245,156 +242,3 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return task_group
-
-
-@router.post(
-    "/{task_group_id}/deactivate/", response_model=TaskGroupActivityV2Read
-)
-async def deactivate_task_group(
-    task_group_id: int,
-    # backgroud_tasks: BackgroundTasks,
-    response: Response,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
-    """
-    Deactivate task group venv
-    """
-    settings = Inject(get_settings)
-    task_group = await _get_task_group_full_access(
-        task_group_id=task_group_id,
-        user_id=user.id,
-        db=db,
-    )
-    if not task_group.active:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-    if task_group.origin == "other":
-        task_group.active = False
-        task_group_activity = TaskGroupActivityV2(
-            user_id=task_group.user_id,
-            taskgroupv2_id=task_group.id,
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.DEACTIVATE,
-            pkg_name=task_group.pkg_name,
-            version="N/A",
-            log="fixme",
-            timestamp_started=get_timestamp(),
-            timestamp_ended=get_timestamp(),
-        )
-        db.add(task_group)
-        db.add(task_group_activity)
-        await db.commit()
-        response.status_code = status.HTTP_202_ACCEPTED
-
-        return task_group_activity
-
-    # if origin="pypi" or "wheel-file"
-
-    if (
-        task_group.wheel_path is not None
-        and settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh"
-    ):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-    task_group_activity = TaskGroupActivityV2(
-        user_id=task_group.user_id,
-        taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
-        pkg_name=task_group.pkg_name,
-        version=task_group.version,
-        log="fixme",
-        timestamp_started=get_timestamp(),
-    )
-    task_group.active = False
-    db.add(task_group)
-    db.add(task_group_activity)
-    await db.commit()
-    # background_tasks.add_task(
-    #     deactivate_local,
-    #     task_group_id=task_group.id,
-    #     task_group_activity_id=task_group_activity.id,
-    # )
-    logger.debug(
-        "Task group deactivation endpoint: start deactivate "
-        "and return task_group_activity"
-    )
-    response.status_code = status.HTTP_202_ACCEPTED
-    return task_group_activity
-
-
-@router.post(
-    "/{task_group_id}/reactivate/", response_model=TaskGroupActivityV2Read
-)
-async def reactivate_task_group(
-    task_group_id: int,
-    # backgroud_tasks: BackgroundTasks,
-    response: Response,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
-    """
-    Deactivate task group venv
-    """
-    settings = Inject(get_settings)
-    task_group = await _get_task_group_full_access(
-        task_group_id=task_group_id,
-        user_id=user.id,
-        db=db,
-    )
-    if task_group.active:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-    if task_group.origin == "other":
-        task_group.active = True
-        task_group_activity = TaskGroupActivityV2(
-            user_id=task_group.user_id,
-            taskgroupv2_id=task_group.id,
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.REACTIVATE,
-            pkg_name=task_group.pkg_name,
-            version="N/A",
-            log="fixme",
-            timestamp_started=get_timestamp(),
-            timestamp_ended=get_timestamp(),
-        )
-        db.add(task_group)
-        db.add(task_group_activity)
-        await db.commit()
-        response.status_code = status.HTTP_202_ACCEPTED
-
-        return task_group_activity
-
-    # if origin="pypi" or "wheel-file"
-
-    if (
-        task_group.wheel_path is not None
-        and settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh"
-    ):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-    task_group_activity = TaskGroupActivityV2(
-        user_id=task_group.user_id,
-        taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.REACTIVATE,
-        pkg_name=task_group.pkg_name,
-        version=task_group.version,
-        log="fixme",
-        timestamp_started=get_timestamp(),
-    )
-    db.add(task_group_activity)
-    await db.commit()
-    # background_tasks.add_task(
-    #     reactivate_local,
-    #     task_group_id=task_group.id,
-    #     task_group_activity_id=task_group_activity.id,
-    # )
-    logger.debug(
-        "Task group reactivation endpoint: start reactivate "
-        "and return task_group_activity"
-    )
-
-    response.status_code = status.HTTP_202_ACCEPTED
-    return task_group_activity
