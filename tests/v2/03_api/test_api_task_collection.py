@@ -7,7 +7,7 @@ from packaging.version import Version
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
