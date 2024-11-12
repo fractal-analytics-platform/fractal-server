@@ -19,8 +19,8 @@ from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
-from fractal_server.tasks.v2.local.deactivate import deactivate_local
-from fractal_server.tasks.v2.local.reactivate import reactivate_local
+from fractal_server.tasks.v2.local import deactivate_local
+from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()

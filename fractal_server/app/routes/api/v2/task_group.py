@@ -30,8 +30,6 @@ from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
 
-# from fastapi import BackgroundTasks
-
 router = APIRouter()
 
 logger = set_logger(__name__)
