@@ -142,4 +142,6 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
 
 def get_current_log(logger_file_path: str) -> str:
     with open(logger_file_path, "r") as f:
-        return f.read()
+        current_log = f.read()
+    current_log = current_log.replace("\\n", "\n")
+    return current_log
