@@ -226,9 +226,9 @@ def collect_package_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 6
+                # Run script 5
                 venv_info = _customize_and_run_template(
-                    template_filename="6_get_venv_size_and_file_number.sh",
+                    template_filename="5_get_venv_size_and_file_number.sh",
                     **common_args,
                 )
                 venv_size, venv_file_number = venv_info.split()
