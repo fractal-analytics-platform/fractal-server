@@ -250,11 +250,11 @@ def test_templates_freeze(tmp_path, current_py_version):
 
 def test_venv_size_and_file_number(tmp_path):
     structure = {
-        "file1": 1,
-        "file2": 2,
-        "subfolder1/file3": 3,
-        "subfolder1/file4": 4,
-        "subfolder2/file5": 5,
+        "file1": 1,  # MB
+        "file2": 2,  # MB
+        "subfolder1/file3": 3,  # MB
+        "subfolder1/file4": 4,  # MB
+        "subfolder2/file5": 5,  # MB
     }
     test_folder = tmp_path / "test"
 
@@ -266,7 +266,7 @@ def test_venv_size_and_file_number(tmp_path):
 
         # Write file with the specified size in MB
         with open(file_path, "wb") as f:
-            f.write(b"_" * size_mb * 1024 * 1024)
+            f.write(b"_" * size_mb * (1024**2))
 
     stdout = _customize_and_run_template(
         template_filename="5_get_venv_size_and_file_number.sh",
@@ -274,5 +274,12 @@ def test_venv_size_and_file_number(tmp_path):
         script_dir=tmp_path,
     )
     size_in_kB, file_number = stdout.split()
-    assert int(size_in_kB) == sum(structure.values()) * 1024 * 2
+
+    assert (
+        int(size_in_kB)
+        == sum(
+            f.stat().st_size for f in test_folder.glob("**/*") if f.is_file()
+        )
+        / 512
+    )
     assert int(file_number) == 5
