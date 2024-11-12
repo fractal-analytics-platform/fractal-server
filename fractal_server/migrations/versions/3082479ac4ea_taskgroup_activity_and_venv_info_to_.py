@@ -8,7 +8,6 @@ Create Date: 2024-11-12 14:39:34.035859
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "3082479ac4ea"
@@ -84,14 +83,12 @@ def downgrade() -> None:
         sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
         sa.Column(
             "data",
-            postgresql.JSON(astext_type=sa.Text()),
-            autoincrement=False,
+            sa.JSON(),
             nullable=True,
         ),
         sa.Column(
             "timestamp",
-            postgresql.TIMESTAMP(timezone=True),
-            autoincrement=False,
+            sa.DateTime(timezone=True),
             nullable=True,
         ),
         sa.Column(
