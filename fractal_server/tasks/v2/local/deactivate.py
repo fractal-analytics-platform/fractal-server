@@ -64,7 +64,7 @@ def deactivate_local(
 
             # Check that the (local) task_group path does exist
             if not Path(task_group.venv_path).exists():
-                error_msg = f"{task_group.venv_path} not exists."
+                error_msg = f"{task_group} venv_path not exists."
                 logger.error(error_msg)
                 fail_and_cleanup(
                     task_group=task_group,
@@ -115,7 +115,7 @@ def deactivate_local(
                     f"{task_group_id=} :\n"
                     f"{task_group=}\n. Exit."
                 )
-                error_msg = f"{task_group.wheel_path} not exists."
+                error_msg = f"{task_group} wheel_path not exists."
                 logger.error(error_msg)
                 fail_and_cleanup(
                     task_group=task_group,
