@@ -140,6 +140,7 @@ def collect_package_local(
                         f"{int(time.time())}_"
                         f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
+                    logger_name=LOGGER_NAME,
                 )
 
                 # Set status to ONGOING and refresh logs

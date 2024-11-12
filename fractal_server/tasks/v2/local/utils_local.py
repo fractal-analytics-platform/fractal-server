@@ -5,13 +5,12 @@ from fractal_server.logger import get_logger
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import execute_command_sync
 
-LOGGER_NAME = __name__
-
 
 def _customize_and_run_template(
     template_filename: str,
     replacements: list[tuple[str, str]],
     script_dir: str,
+    logger_name: str,
     prefix: Optional[int] = None,
 ) -> str:
     """
@@ -23,7 +22,7 @@ def _customize_and_run_template(
         script_dir: Local folder where the script will be placed.
         prefix: Prefix for the script filename.
     """
-    logger = get_logger(LOGGER_NAME)
+    logger = get_logger(logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
 
     # Prepare name and path of script
@@ -47,7 +46,7 @@ def _customize_and_run_template(
     )
     cmd = f"bash {script_path_local}"
     logger.debug(f"Now run '{cmd}' ")
-    stdout = execute_command_sync(command=cmd, logger_name=LOGGER_NAME)
+    stdout = execute_command_sync(command=cmd, logger_name=logger_name)
     logger.debug(f"Standard output of '{cmd}':\n{stdout}")
     logger.debug(f"_customize_and_run_template {template_filename} - END")
     return stdout
