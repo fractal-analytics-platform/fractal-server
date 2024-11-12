@@ -176,7 +176,7 @@ def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
     return freeze_dict
 
 
-def test_template_3_and_5(tmp_path, current_py_version):
+def test_templates_freeze(tmp_path, current_py_version):
 
     # Create two venvs
     venv_path_1 = tmp_path / "venv1"
@@ -226,9 +226,9 @@ def test_template_3_and_5(tmp_path, current_py_version):
     with requirements_file.open("w") as f:
         f.write(pip_freeze_venv_1)
 
-    # Run script 5 (install from freeze) on 'venv2'
+    # Run script 6 (install from freeze) on 'venv2'
     _customize_and_run_template(
-        template_filename="5_pip_install_from_freeze.sh",
+        template_filename="6_pip_install_from_freeze.sh",
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
