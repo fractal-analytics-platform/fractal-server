@@ -133,24 +133,35 @@ async def check_no_ongoing_activity(
     task_group_id: int,
     db: AsyncSession,
 ) -> None:
+    """
+    Find ongoing activities for the same task group.
+
+    Arguments:
+        task_group_id:
+        db:
+    """
+    # DB query
     stm = (
         select(TaskGroupActivityV2)
         .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
         .where(TaskGroupActivityV2.status == TaskGroupActivityStatusV2.ONGOING)
     )
     res = await db.execute(stm)
-    activities = res.scalars().all()
-    if activities == []:
+    ongoing_activities = res.scalars().all()
+
+    if ongoing_activities == []:
+        # All good, exit
         return
-    log = "Found ongoing activities for the same task-group:"
-    for ind, activity in enumerate(activities):
-        log = (
-            f"{log}\n{ind + 1}) "
+
+    msg = "Found ongoing activities for the same task-group:"
+    for ind, activity in enumerate(ongoing_activities):
+        msg = (
+            f"{msg}\n{ind + 1}) "
             f"Action={activity.action}, "
             f"status={activity.status}, "
             f"timestamp_started={activity.timestamp_started}."
         )
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        detail=log,
+        detail=msg,
     )
