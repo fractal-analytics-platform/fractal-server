@@ -96,7 +96,7 @@ def deactivate_local(
                     ),
                 )
                 pip_freeze_stdout = _customize_and_run_template(
-                    template_filename="4_pip_show.sh",
+                    template_filename="4_pip_freeze.sh",
                     **common_args,
                 )
                 # Update pip-freeze data
