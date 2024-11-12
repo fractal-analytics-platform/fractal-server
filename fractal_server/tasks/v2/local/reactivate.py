@@ -4,9 +4,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
-from ..utils_background import check_venv_path
 from ..utils_templates import get_collection_replacements
 from .utils_local import _customize_and_run_template
+from .utils_local import check_venv_path
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
