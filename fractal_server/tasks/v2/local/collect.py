@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 
 from ..utils_database import create_db_tasks_and_update_task_group
 from .utils_local import _customize_and_run_template
+from .utils_local import check_venv_path
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -19,7 +20,6 @@ from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import check_task_files_exist
-from fractal_server.tasks.v2.utils_background import check_venv_path
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
