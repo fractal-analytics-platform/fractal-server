@@ -280,6 +280,6 @@ def test_venv_size_and_file_number(tmp_path):
         == sum(
             f.stat().st_size for f in test_folder.glob("**/*") if f.is_file()
         )
-        / 512
+        / 1024
     )
     assert int(file_number) == 5
