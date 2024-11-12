@@ -29,13 +29,14 @@ def fail_and_cleanup(
     task_group: TaskGroupV2,
     task_group_activity: TaskGroupActivityV2,
     logger_name: str,
+    exception: Exception,
     log_file_path: Path,
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
     logger.error(
         f"Task {task_group_activity.action} failed. "
-        "Original error: {str(exception)}"
+        f"Original error: {str(exception)}"
     )
 
     task_group_activity.status = TaskGroupActivityStatusV2.FAILED
