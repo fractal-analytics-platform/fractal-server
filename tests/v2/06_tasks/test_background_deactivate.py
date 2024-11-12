@@ -97,12 +97,11 @@ async def test_collect_pip_local_fail_rmtree(
     tmp_path,
     db,
     first_user,
-    testdata_path,
     current_py_version,
     monkeypatch,
 ):
 
-    import fractal_server.tasks.v2.local.collect
+    import fractal_server.tasks.v2.local.deactivate
 
     def patched_function(*args, **kwargs):
         raise RuntimeError("Broken rm")
