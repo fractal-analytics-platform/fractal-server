@@ -102,6 +102,7 @@ async def test_reactivate_task_group_api(
     MockCurrentUser,
     db,
     task_factory_v2,
+    current_py_version,
 ):
     """
     This tests _only_ the API of the `reactivate` endpoint.
@@ -121,7 +122,9 @@ async def test_reactivate_task_group_api(
             user_id=user.id, version=None, name="task"
         )
         task_pypi = await task_factory_v2(
-            user_id=user.id, name="task", version="1.2.3"
+            user_id=user.id,
+            name="task",
+            version="1.2.3",
         )
         active_task_group = await db.get(
             TaskGroupV2, active_task.taskgroupv2_id
@@ -134,6 +137,7 @@ async def test_reactivate_task_group_api(
         task_group_pypi.origin = "pypi"
         task_group_pypi.active = False
         task_group_pypi.venv_path = "/invalid/so/it/fails"
+        task_group_pypi.python_version = current_py_version
         db.add(active_task_group)
         db.add(task_group_other)
         db.add(task_group_pypi)
