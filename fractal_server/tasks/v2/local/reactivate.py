@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 from ..utils_background import add_commit_refresh
 from ..utils_templates import get_collection_replacements
 from .utils_local import _customize_and_run_template
-from .utils_local import check_venv_path
+from .utils_local import fail_and_cleanup
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -65,14 +65,18 @@ def reactivate_local(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            # Check that the (local) task_group path does exist
-            if check_venv_path(
-                task_group=task_group,
-                activity=activity,
-                logger_name=LOGGER_NAME,
-                log_file_path=log_file_path,
-                db=db,
-            ):
+            # Check that the (local) task_group venv_path does not exist
+            if Path(task_group.venv_path).exists():
+                error_msg = f"{task_group.venv_path} already exists."
+                logger.error(error_msg)
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileExistsError(error_msg),
+                    db=db,
+                )
                 return
 
             # Prepare replacements for templates

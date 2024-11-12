@@ -7,7 +7,6 @@ from tempfile import TemporaryDirectory
 
 from ..utils_database import create_db_tasks_and_update_task_group
 from .utils_local import _customize_and_run_template
-from .utils_local import check_venv_path
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -96,13 +95,17 @@ def collect_package_local(
                 logger.debug(f"task_group.{key}: {value}")
 
             # Check that the (local) task_group path does exist
-            if check_venv_path(
-                task_group=task_group,
-                activity=activity,
-                logger_name=LOGGER_NAME,
-                log_file_path=log_file_path,
-                db=db,
-            ):
+            if Path(task_group.path).exists():
+                error_msg = f"{task_group.path} already exists."
+                logger.error(error_msg)
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileExistsError(error_msg),
+                    db=db,
+                )
                 return
 
             try:
