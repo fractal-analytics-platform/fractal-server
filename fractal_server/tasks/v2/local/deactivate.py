@@ -12,10 +12,12 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.utils import get_timestamp
 
 LOGGER_NAME = __name__
 
@@ -132,3 +134,6 @@ def deactivate_local(
             # At this point we are sure that venv_path
             # wheel_path and pip_freeze exist
             shutil.rmtree(task_group.venv_path)
+            activity.status = (TaskGroupActivityStatusV2.OK,)
+            activity.timestamp_ended = get_timestamp()
+            activity = add_commit_refresh(obj=activity, db=db)
