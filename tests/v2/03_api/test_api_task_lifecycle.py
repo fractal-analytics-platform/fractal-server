@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from devtools import debug
+
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -90,7 +94,7 @@ async def test_deactivate_task_group_api(
         # Check that background task failed
         res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
         assert res.json()["status"] == "failed"
-        assert res.json()["log"] == "does not exist"
+        assert "does not exist" in res.json()["log"]
 
 
 async def test_reactivate_task_group_api(
@@ -181,4 +185,69 @@ async def test_reactivate_task_group_api(
         # Check that background task failed
         res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
         assert res.json()["status"] == "failed"
-        assert res.json()["log"] == "does not exist"
+        assert "does not exist" in res.json()["log"]
+
+
+async def test_lifecycle(
+    client,
+    MockCurrentUser,
+    db,
+    testdata_path,
+):
+    # Absolute path to wheel file
+    wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Task collection
+        res = await client.post(
+            "api/v2/task/collect/pip/",
+            json=dict(package=wheel_path.as_posix()),
+        )
+        assert res.status_code == 202
+        activity = res.json()
+        activity_id = activity["id"]
+        task_group_id = activity["taskgroupv2_id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "OK"
+
+        # Deactivate task group
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert res.json()["status"] == "OK"
+
+        # Assertions
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        assert task_group.active is False
+        assert Path(task_group.path).exists()
+        assert not Path(task_group.venv_path).exists()
+        assert Path(task_group.wheel_path).exists()
+
+        # Reactivate task group
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert res.json()["status"] == "OK"
+
+        # Assertions
+        await db.refresh(task_group)
+        assert task_group.active is True
+        assert Path(task_group.path).exists()
+        assert Path(task_group.venv_path).exists()
+        assert Path(task_group.wheel_path).exists()

@@ -15,6 +15,9 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
+from fractal_server.tasks.v2.utils_python_interpreter import (
+    get_python_interpreter_v2,
+)
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
@@ -79,10 +82,15 @@ def reactivate_local(
                 )
                 return
 
+            activity.status = TaskGroupActivityStatusV2.ONGOING
+            activity = add_commit_refresh(obj=activity, db=db)
+
             # Prepare replacements for templates
             replacements = get_collection_replacements(
                 task_group=task_group,
-                python_bin="/not/applicable",
+                python_bin=get_python_interpreter_v2(
+                    python_version=task_group.python_version
+                ),
             )
             with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
                 f.write(task_group.pip_freeze)
@@ -101,6 +109,17 @@ def reactivate_local(
                 ),
                 logger_name=LOGGER_NAME,
             )
+
+            logger.debug("start - create venv")
+            _customize_and_run_template(
+                template_filename="1_create_venv.sh",
+                **common_args,
+            )
+            logger.debug("end - create venv")
+            activity.log = get_current_log(log_file_path)
+            activity.timestamp_ended = get_timestamp()
+            activity = add_commit_refresh(obj=activity, db=db)
+
             logger.debug("start - install from pip freeze")
             _customize_and_run_template(
                 template_filename="5_pip_install_from_freeze.sh",
@@ -108,8 +127,9 @@ def reactivate_local(
             )
             logger.debug("end - install from pip freeze")
             activity.log = get_current_log(log_file_path)
-            activity.status = (TaskGroupActivityStatusV2.OK,)
+            activity.status = TaskGroupActivityStatusV2.OK
             activity.timestamp_ended = get_timestamp()
             activity = add_commit_refresh(obj=activity, db=db)
             task_group.active = True
             task_group = add_commit_refresh(obj=task_group, db=db)
+            logger.debug("END")
