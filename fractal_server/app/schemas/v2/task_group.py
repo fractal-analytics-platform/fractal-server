@@ -85,6 +85,9 @@ class TaskGroupReadV2(BaseModel):
     pip_extras: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
+    venv_size: Optional[int] = None
+    venv_file_number: Optional[int] = None
+
     active: bool
     timestamp_created: datetime
 

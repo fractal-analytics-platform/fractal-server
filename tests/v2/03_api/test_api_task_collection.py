@@ -92,6 +92,9 @@ async def test_task_collection_from_wheel(
         assert (
             Path(res.json()["path"]) / Path(wheel_path).name
         ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
+        # Check venv_size and venv_file_number in TaskGroupV2
+        assert task_group["venv_size"] is not None
+        assert task_group["venv_file_number"] is not None
 
         assert Path(res.json()["wheel_path"]).exists()
         assert (
