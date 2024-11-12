@@ -23,7 +23,9 @@ async def test_deactivate_task_group_api(
     async with MockCurrentUser() as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(user_id=user.id, name="task")
-        task_other = await task_factory_v2(user_id=user.id, name="task")
+        task_other = await task_factory_v2(
+            user_id=user.id, version=None, name="task"
+        )
         task_pypi = await task_factory_v2(
             user_id=user.id, name="task", version="1.2.3"
         )
@@ -104,7 +106,9 @@ async def test_reactivate_task_group_api(
     async with MockCurrentUser() as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
-        task_other = await task_factory_v2(user_id=user.id, name="task")
+        task_other = await task_factory_v2(
+            user_id=user.id, version=None, name="task"
+        )
         task_pypi = await task_factory_v2(
             user_id=user.id, name="task", version="1.2.3"
         )
