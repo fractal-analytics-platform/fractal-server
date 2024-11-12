@@ -15,6 +15,7 @@
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
+    * Add  `venv_size_in_kB` and `venv_file_number` to `TaskGroupV2` (\#2034).
 * Task-collection internals:
     * Refactor task collection and database-session management in background tasks (\#2030).
     * Update `TaskGroupActivityV2` objects (\#2005).
