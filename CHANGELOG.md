@@ -7,18 +7,21 @@
 
 * API
     * Remove `GET /api/v2/task/collect/{state_id}/"` endpoint (\#2010).
-    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005).
+    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
-    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005).
+    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `TaskGroupActivityV2Read` schema (\#2005).
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
 * Task-collection internals:
+    * Refactor task collection and database-session management in background tasks (\#2030).
     * Update `TaskGroupActivityV2` objects (\#2005).
     * Update filename and path for task-collection scripts (\#2008).
     * Copy wheel file into `task_group.path` and update `task_group.wheel_path`, for local task collection (\#2020).
+    * Set `TaskGroupActivityV2.timestamp_ended` when collections terminate (\#2026).
+    * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
 
