@@ -37,6 +37,7 @@ async def test_deactivate_task_group_api(
         non_active_task_group.active = False
         task_group_other.origin = "other"
         task_group_pypi.origin = "pypi"
+        task_group_pypi.venv_path = "/invalid/so/it/fails"
         db.add(non_active_task_group)
         db.add(task_group_other)
         db.add(task_group_pypi)
@@ -77,6 +78,7 @@ async def test_deactivate_task_group_api(
         )
         activity = res.json()
         assert res.status_code == 202
+        activity_id = activity["id"]
         assert activity["version"] == task_group_pypi.version
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
         assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
@@ -84,6 +86,11 @@ async def test_deactivate_task_group_api(
         assert activity["timestamp_ended"] is None
         await db.refresh(task_group_pypi)
         assert task_group_pypi.active is False
+
+        # Check that background task failed
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        assert res.json()["status"] == "failed"
+        assert res.json()["log"] == "does not exist"
 
 
 async def test_reactivate_task_group_api(
@@ -122,6 +129,7 @@ async def test_reactivate_task_group_api(
         task_group_other.active = False
         task_group_pypi.origin = "pypi"
         task_group_pypi.active = False
+        task_group_pypi.venv_path = "/invalid/so/it/fails"
         db.add(active_task_group)
         db.add(task_group_other)
         db.add(task_group_pypi)
@@ -161,9 +169,16 @@ async def test_reactivate_task_group_api(
             f"api/v2/task-group/{task_group_pypi.id}/reactivate/"
         )
         activity = res.json()
+        activity_id = activity["id"]
         assert res.status_code == 202
         assert activity["version"] == task_group_pypi.version
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
         assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
+        await db.refresh(task_group_pypi)
+
+        # Check that background task failed
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        assert res.json()["status"] == "failed"
+        assert res.json()["log"] == "does not exist"
