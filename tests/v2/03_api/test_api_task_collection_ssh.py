@@ -264,6 +264,7 @@ async def test_task_collection_ssh_from_wheel(
         task_group_activity = res.json()
 
         assert task_group_activity["status"] == "OK"
+        # FIXME: add assert for new wheel_path
 
         # API FAILURE: wheel file and version set
         res = await client.post(
@@ -366,7 +367,7 @@ async def test_task_collection_ssh_failure(
         assert "No such file or directory" in task_group_activity["log"]
 
         # Patch ssh.remove_folder
-        import fractal_server.tasks.v2.collection_ssh
+        import fractal_server.tasks.v2.ssh.collect
 
         ERROR_MSG = "Could not remove folder!"
 
@@ -374,7 +375,7 @@ async def test_task_collection_ssh_failure(
             raise RuntimeError(ERROR_MSG)
 
         monkeypatch.setattr(
-            fractal_server.tasks.v2.collection_ssh.FractalSSH,
+            fractal_server.tasks.v2.ssh.collect.FractalSSH,
             "remove_folder",
             patched_remove_folder,
         )

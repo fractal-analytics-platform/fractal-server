@@ -348,6 +348,13 @@ async def test_get_task_group_activity_list(
             f"{PREFIX}/activity/?taskgroupv2_id={task.taskgroupv2_id}"
         )
         assert len(res.json()) == 2
+        # task_group_activity_id
+        res = await client.get(
+            f"{PREFIX}/activity/"
+            f"?taskgroupv2_id={task.taskgroupv2_id}"
+            f"&task_group_activity_id={activity3.id}"
+        )
+        assert len(res.json()) == 1
         # pkg_name
         res = await client.get(f"{PREFIX}/activity/?pkg_name=foo")
         assert len(res.json()) == 3
