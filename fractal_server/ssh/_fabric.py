@@ -196,9 +196,11 @@ class FractalSSH(object):
         """
         Open the SSH connection and handle exceptions.
 
-        This function can be called from within other functions that use
-        `connection`, so that we can provide a meaningful error in case the
-        SSH connection cannot be opened.
+        This method should always be called at the beginning of background
+        operations that use FractalSSH, so that:
+
+        1. We try to restore unusable connections (e.g. due to closed socket).
+        2. We provide an informative error if connection cannot be established.
         """
         self.logger.debug(
             f"[check_connection] {self._connection.is_connected=}"
@@ -206,9 +208,15 @@ class FractalSSH(object):
         if self._connection.is_connected:
             # Even if the connection appears open, it could be broken for
             # external reasons (e.g. the socket is closed because the SSH
-            # server was taken down and then restarted). In these cases, we
-            # catch the error and try to re-open the connection.
+            # server was restarted). In these cases, we catch the error and
+            # try to re-open the connection.
             try:
+                self.logger.info(
+                    "[check_connection] Run dummy command to check connection."
+                )
+                # Run both an SFTP and an SSH command, as they correspond to
+                # different sockets
+                self.remote_exists("/dummy/path/")
                 self.run_command(cmd="whoami")
                 self.logger.info(
                     "[check_connection] SSH connection is already OK, exit."
@@ -218,9 +226,10 @@ class FractalSSH(object):
                 self.logger.warning(
                     f"[check_connection] Detected error {str(e)}, re-open."
                 )
-        # Try opening the connection (either because it is closed, or because
+        # Try opening the connection (if it was closed) or to re-open it (if
         # an error happened).
         try:
+            self.close()
             with _acquire_lock_with_timeout(
                 lock=self._lock,
                 label="_connection.open",
@@ -228,6 +237,7 @@ class FractalSSH(object):
                 logger_name=self.logger_name,
             ):
                 self._connection.open()
+                self._connection.client.open_sftp()
                 self.logger.info(
                     "[check_connection] SSH connection opened, exit."
                 )
@@ -252,9 +262,8 @@ class FractalSSH(object):
             timeout=self.default_lock_timeout,
         ):
             self._connection.close()
-
-        if self._connection.client is not None:
-            self._connection.client.close()
+            if self._connection.client is not None:
+                self._connection.client.close()
 
     def run_command(
         self,
