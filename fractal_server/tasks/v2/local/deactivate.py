@@ -129,7 +129,7 @@ def deactivate_local(
                         db=db,
                     )
                     return
-            # At this point we are sure that venv_path exists and
-            # pip_freeze exists
-            if task_group.origin == "pypi":
-                shutil.rmtree(task_group.venv_path)
+
+            # At this point we are in task_group.origin=="pypi" scenario
+            # we are sure that venv_path exists and pip_freeze exists
+            shutil.rmtree(task_group.venv_path)
