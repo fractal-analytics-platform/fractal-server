@@ -180,6 +180,7 @@ async def test_reactivate_task_group_api(
             f"api/v2/task-group/{task_group_pypi.id}/reactivate/"
         )
         assert res.status_code == 422
+        assert "task_group.pip_freeze=None" in res.json()["detail"]
 
         # Set pip_freeze
         task_group_pypi.pip_freeze = "devtools==0.12.0"
