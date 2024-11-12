@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
@@ -18,8 +19,9 @@ from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+from fractal_server.tasks.v2.local.deactivate import deactivate_local
+from fractal_server.tasks.v2.local.reactivate import reactivate_local
 from fractal_server.utils import get_timestamp
-
 
 router = APIRouter()
 
@@ -33,7 +35,7 @@ logger = set_logger(__name__)
 )
 async def deactivate_task_group(
     task_group_id: int,
-    # backgroud_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks,
     response: Response,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -41,15 +43,6 @@ async def deactivate_task_group(
     """
     Deactivate task-group venv
     """
-
-    # Fail for SSH
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Not implemented (yet) for SSH.",
-        )
-
     # Check access
     task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,
@@ -102,11 +95,21 @@ async def deactivate_task_group(
     db.add(task_group)
     db.add(task_group_activity)
     await db.commit()
-    # background_tasks.add_task(
-    #     deactivate_local,
-    #     task_group_id=task_group.id,
-    #     task_group_activity_id=task_group_activity.id,
-    # )
+
+    # Submit background task
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Not implemented (yet) for SSH.",
+        )
+    else:
+        background_tasks.add_task(
+            deactivate_local,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+        )
+
     logger.debug(
         "Task group deactivation endpoint: start deactivate "
         "and return task_group_activity"
@@ -121,7 +124,7 @@ async def deactivate_task_group(
 )
 async def reactivate_task_group(
     task_group_id: int,
-    # backgroud_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks,
     response: Response,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -129,14 +132,6 @@ async def reactivate_task_group(
     """
     Deactivate task-group venv
     """
-
-    # Fail for SSH
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Not implemented (yet) for SSH.",
-        )
 
     # Check access
     task_group = await _get_task_group_full_access(
@@ -188,11 +183,20 @@ async def reactivate_task_group(
     )
     db.add(task_group_activity)
     await db.commit()
-    # background_tasks.add_task(
-    #     reactivate_local,
-    #     task_group_id=task_group.id,
-    #     task_group_activity_id=task_group_activity.id,
-    # )
+
+    # Submit background task
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Not implemented (yet) for SSH.",
+        )
+    else:
+        background_tasks.add_task(
+            reactivate_local,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+        )
     logger.debug(
         "Task group reactivation endpoint: start reactivate "
         "and return task_group_activity"
