@@ -275,11 +275,14 @@ def test_venv_size_and_file_number(tmp_path):
     )
     size_in_kB, file_number = stdout.split()
 
-    assert (
-        int(size_in_kB)
-        == sum(
-            f.stat().st_size for f in test_folder.glob("**/*") if f.is_file()
-        )
+    expected_size_in_kB = (
+        sum(f.stat().st_size for f in test_folder.glob("**/*") if f.is_file())
         / 1024
     )
+
     assert int(file_number) == 5
+    # since github measurement is a little different, we assert that
+    # `size_in_kB` differs at most of 1% from the expected value
+    assert abs(int(size_in_kB) - expected_size_in_kB) < (
+        expected_size_in_kB / 100
+    )
