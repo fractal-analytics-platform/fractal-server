@@ -13,6 +13,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 
 
@@ -135,9 +136,15 @@ def reactivate_local(
                     f"{TaskGroupActivityActionV2.REACTIVATE}_"
                 ),
             )
+            logger.debug("start - install from pip freeze")
             _customize_and_run_template(
                 template_filename="5_pip_install_from_freeze.sh",
                 **common_args,
             )
 
+            activity.log = get_current_log(log_file_path)
+            activity = add_commit_refresh(obj=activity, db=db)
+
+            task_group.active = True
             task_group = add_commit_refresh(obj=task_group, db=db)
+            logger.debug(f"{task_group.active=} - end install from pip freeze")
