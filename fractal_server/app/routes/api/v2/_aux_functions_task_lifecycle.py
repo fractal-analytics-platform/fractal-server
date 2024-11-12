@@ -143,14 +143,14 @@ async def check_no_ongoing_activity(
     if activities == []:
         return
     log = "Found ongoing activities for the same task-group:"
-    for activity in activities:
+    for ind, activity in enumerate(activities):
         log = (
-            f"{log}\n"
+            f"{log}\n{ind + 1}) "
             f"Action={activity.action}, "
             f"status={activity.status}, "
             f"timestamp_started={activity.timestamp_started}."
         )
     raise HTTPException(
-        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail=log,
     )
