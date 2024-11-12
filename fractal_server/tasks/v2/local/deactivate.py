@@ -83,7 +83,6 @@ def deactivate_local(
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
-
                 if task_group.pip_freeze is None:
                     logger.debug("Only for task groups created before 2.9.0")
                     # Prepare replacements for templates
@@ -119,10 +118,10 @@ def deactivate_local(
 
                 if (
                     task_group.origin == "wheel"
-                    and task_group.wheel_path is None
                     and not Path(task_group.wheel_path).exists()
                 ):
-                    logging.error(
+
+                    logger.error(
                         "Cannot find task_group wheel_path with "
                         f"{task_group_id=} :\n"
                         f"{task_group=}\n. Exit."

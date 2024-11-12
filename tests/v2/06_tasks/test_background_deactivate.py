@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -84,6 +86,7 @@ async def test_deactivate_wheel_no_wheel_path(tmp_path, db, first_user):
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
+        pip_freeze="pip",
     )
     db.add(task_group)
     await db.commit()
@@ -101,6 +104,9 @@ async def test_deactivate_wheel_no_wheel_path(tmp_path, db, first_user):
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
+    # create path and venv_path
+    Path(task_group.path).mkdir()
+    Path(task_group.venv_path).mkdir()
     # background task
     deactivate_local(
         task_group_id=task_group.id,
@@ -113,3 +119,6 @@ async def test_deactivate_wheel_no_wheel_path(tmp_path, db, first_user):
     debug(task_group_activity_v2)
     assert task_group_activity_v2.status == "failed"
     assert "does not exist" in task_group_activity_v2.log
+    assert (
+        "Cannot find task_group wheel_path with" in task_group_activity_v2.log
+    )
