@@ -105,7 +105,31 @@ def deactivate_local(
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
-            if task_group.wheel_path is not None:
-                # and it does not exists on disk fail!
-                pass
-            shutil.rmtree(task_group.venv_path)
+            if task_group.origin == "wheel":
+                if (
+                    task_group.wheel_path is not None
+                    and Path(task_group.wheel_path).exists()
+                ):
+                    shutil.rmtree(task_group.venv_path)
+
+                else:
+                    logging.error(
+                        "Cannot find task_group wheel_path with "
+                        f"{task_group_id=} :\n"
+                        f"{task_group=}\n. Exit."
+                    )
+                    error_msg = f"{task_group.wheel_path} not exists."
+                    logger.error(error_msg)
+                    fail_and_cleanup(
+                        task_group=task_group,
+                        task_group_activity=activity,
+                        logger_name=LOGGER_NAME,
+                        log_file_path=log_file_path,
+                        exception=FileNotFoundError(error_msg),
+                        db=db,
+                    )
+                    return
+            # At this point we are sure that venv_path exists and
+            # pip_freeze exists
+            if task_group.origin == "pypi":
+                shutil.rmtree(task_group.venv_path)
