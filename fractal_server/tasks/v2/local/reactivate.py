@@ -1,4 +1,5 @@
 import logging
+import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -82,54 +83,77 @@ def reactivate_local(
                 )
                 return
 
-            activity.status = TaskGroupActivityStatusV2.ONGOING
-            activity = add_commit_refresh(obj=activity, db=db)
+            try:
+                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity = add_commit_refresh(obj=activity, db=db)
 
-            # Prepare replacements for templates
-            replacements = get_collection_replacements(
-                task_group=task_group,
-                python_bin=get_python_interpreter_v2(
-                    python_version=task_group.python_version
-                ),
-            )
-            with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
-                f.write(task_group.pip_freeze)
-            replacements.append(
-                ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
-            )
-            # Prepare common arguments for `_customize_and_run_template``
-            common_args = dict(
-                replacements=replacements,
-                script_dir=(
-                    Path(task_group.path) / SCRIPTS_SUBFOLDER
-                ).as_posix(),
-                prefix=(
-                    f"{int(time.time())}_"
-                    f"{TaskGroupActivityActionV2.REACTIVATE}_"
-                ),
-                logger_name=LOGGER_NAME,
-            )
+                # Prepare replacements for templates
+                replacements = get_collection_replacements(
+                    task_group=task_group,
+                    python_bin=get_python_interpreter_v2(
+                        python_version=task_group.python_version
+                    ),
+                )
+                with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
+                    f.write(task_group.pip_freeze)
+                replacements.append(
+                    ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
+                )
+                # Prepare common arguments for `_customize_and_run_template``
+                common_args = dict(
+                    replacements=replacements,
+                    script_dir=(
+                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.REACTIVATE}_"
+                    ),
+                    logger_name=LOGGER_NAME,
+                )
 
-            logger.debug("start - create venv")
-            _customize_and_run_template(
-                template_filename="1_create_venv.sh",
-                **common_args,
-            )
-            logger.debug("end - create venv")
-            activity.log = get_current_log(log_file_path)
-            activity.timestamp_ended = get_timestamp()
-            activity = add_commit_refresh(obj=activity, db=db)
+                logger.debug("start - create venv")
+                _customize_and_run_template(
+                    template_filename="1_create_venv.sh",
+                    **common_args,
+                )
+                logger.debug("end - create venv")
+                activity.log = get_current_log(log_file_path)
+                activity.timestamp_ended = get_timestamp()
+                activity = add_commit_refresh(obj=activity, db=db)
 
-            logger.debug("start - install from pip freeze")
-            _customize_and_run_template(
-                template_filename="5_pip_install_from_freeze.sh",
-                **common_args,
-            )
-            logger.debug("end - install from pip freeze")
-            activity.log = get_current_log(log_file_path)
-            activity.status = TaskGroupActivityStatusV2.OK
-            activity.timestamp_ended = get_timestamp()
-            activity = add_commit_refresh(obj=activity, db=db)
-            task_group.active = True
-            task_group = add_commit_refresh(obj=task_group, db=db)
-            logger.debug("END")
+                logger.debug("start - install from pip freeze")
+                _customize_and_run_template(
+                    template_filename="5_pip_install_from_freeze.sh",
+                    **common_args,
+                )
+                logger.debug("end - install from pip freeze")
+                activity.log = get_current_log(log_file_path)
+                activity.status = TaskGroupActivityStatusV2.OK
+                activity.timestamp_ended = get_timestamp()
+                activity = add_commit_refresh(obj=activity, db=db)
+                task_group.active = True
+                task_group = add_commit_refresh(obj=task_group, db=db)
+                logger.debug("END")
+
+            except Exception as reactivate_e:
+                # Delete corrupted venv_path
+                try:
+                    logger.info(f"Now delete folder {task_group.venv_path}")
+                    shutil.rmtree(task_group.venv_path)
+                    logger.info(f"Deleted folder {task_group.venv_path}")
+                except Exception as rm_e:
+                    logger.error(
+                        "Removing folder failed.\n"
+                        f"Original error:\n{str(rm_e)}"
+                    )
+
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=reactivate_e,
+                    db=db,
+                )
+        return

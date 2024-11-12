@@ -79,68 +79,82 @@ def deactivate_local(
                 )
                 return
 
-            activity.status = TaskGroupActivityStatusV2.ONGOING
-            activity = add_commit_refresh(obj=activity, db=db)
+            try:
 
-            if task_group.pip_freeze is None:
-                logger.debug("Only for task groups created before 2.9.0")
-                # Prepare replacements for templates
-                replacements = get_collection_replacements(
-                    task_group=task_group,
-                    python_bin="/not/applicable",
-                )
-
-                # Prepare common arguments for `_customize_and_run_template``
-                common_args = dict(
-                    replacements=replacements,
-                    script_dir=(
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
-                    ).as_posix(),
-                    prefix=(
-                        f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.DEACTIVATE}_"
-                    ),
-                    logger_name=LOGGER_NAME,
-                )
-                pip_freeze_stdout = _customize_and_run_template(
-                    template_filename="4_pip_freeze.sh",
-                    **common_args,
-                )
-                # Update pip-freeze data
-                logger.info("Add pip freeze stdout to TaskGroupV2 - start")
-                activity.log = get_current_log(log_file_path)
+                activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
-                task_group.pip_freeze = pip_freeze_stdout
-                task_group = add_commit_refresh(obj=task_group, db=db)
-                logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
-            if (
-                task_group.origin == "wheel"
-                and task_group.wheel_path is None
-                and not Path(task_group.wheel_path).exists()
-            ):
-                logging.error(
-                    "Cannot find task_group wheel_path with "
-                    f"{task_group_id=} :\n"
-                    f"{task_group=}\n. Exit."
-                )
-                error_msg = f"{task_group} wheel_path not exists."
-                logger.error(error_msg)
+                if task_group.pip_freeze is None:
+                    logger.debug("Only for task groups created before 2.9.0")
+                    # Prepare replacements for templates
+                    replacements = get_collection_replacements(
+                        task_group=task_group,
+                        python_bin="/not/applicable",
+                    )
+
+                    # Prepare common arguments for
+                    # `_customize_and_run_template``
+                    common_args = dict(
+                        replacements=replacements,
+                        script_dir=(
+                            Path(task_group.path) / SCRIPTS_SUBFOLDER
+                        ).as_posix(),
+                        prefix=(
+                            f"{int(time.time())}_"
+                            f"{TaskGroupActivityActionV2.DEACTIVATE}_"
+                        ),
+                        logger_name=LOGGER_NAME,
+                    )
+                    pip_freeze_stdout = _customize_and_run_template(
+                        template_filename="4_pip_freeze.sh",
+                        **common_args,
+                    )
+                    # Update pip-freeze data
+                    logger.info("Add pip freeze stdout to TaskGroupV2 - start")
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+                    task_group.pip_freeze = pip_freeze_stdout
+                    task_group = add_commit_refresh(obj=task_group, db=db)
+                    logger.info("Add pip freeze stdout to TaskGroupV2 - end")
+
+                if (
+                    task_group.origin == "wheel"
+                    and task_group.wheel_path is None
+                    and not Path(task_group.wheel_path).exists()
+                ):
+                    logging.error(
+                        "Cannot find task_group wheel_path with "
+                        f"{task_group_id=} :\n"
+                        f"{task_group=}\n. Exit."
+                    )
+                    error_msg = f"{task_group} wheel_path not exists."
+                    logger.error(error_msg)
+                    fail_and_cleanup(
+                        task_group=task_group,
+                        task_group_activity=activity,
+                        logger_name=LOGGER_NAME,
+                        log_file_path=log_file_path,
+                        exception=FileNotFoundError(error_msg),
+                        db=db,
+                    )
+                    return
+
+                # At this point we are sure that venv_path
+                # wheel_path and pip_freeze exist
+                shutil.rmtree(task_group.venv_path)
+
+                activity.log = f"All good, {task_group.venv_path} removed."
+                activity.status = TaskGroupActivityStatusV2.OK
+                activity.timestamp_ended = get_timestamp()
+                activity = add_commit_refresh(obj=activity, db=db)
+
+            except Exception as e:
                 fail_and_cleanup(
                     task_group=task_group,
                     task_group_activity=activity,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
+                    exception=e,
                     db=db,
                 )
-                return
-
-            # At this point we are sure that venv_path
-            # wheel_path and pip_freeze exist
-            shutil.rmtree(task_group.venv_path)
-
-            activity.log = f"All good, {task_group.venv_path} removed."
-            activity.status = TaskGroupActivityStatusV2.OK
-            activity.timestamp_ended = get_timestamp()
-            activity = add_commit_refresh(obj=activity, db=db)
+        return
