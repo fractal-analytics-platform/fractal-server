@@ -307,75 +307,60 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 def test_closed_socket(
     fractal_ssh: FractalSSH,
     run_in_container: callable,
-    tmp_path: Path,
+    tmp777_path: Path,
 ):
     """
+    This test reproduces the situation where sockets for the paramiko/fabric
+    connections are closed (e.g. due to a restart of the SSH service), but
+    the corresponding Python objects remain active.
+
+    The `check_connection` method detects some errors and tries to re-open the
+    connections.
+
     https://github.com/fractal-analytics-platform/fractal-server/issues/2019
     """
 
-    debug("STEP 0")
+    # Prepare local/remote files
+    local_file = (tmp777_path / "local").as_posix()
+    with open(local_file, "w") as f:
+        f.write("hi there\n")
+    remote_file_1 = (tmp777_path / "remote_1").as_posix()
+    remote_file_2 = (tmp777_path / "remote_2").as_posix()
 
-    # Open connection and check socket is open
-    debug("STEP 1")
-
+    # Open connection and run an SFTP command
     fractal_ssh.check_connection()
-    sock = fractal_ssh._connection.transport.sock
-    assert not sock._closed
+    fractal_ssh.send_file(local=local_file, remote=remote_file_1)
 
-    debug("STEP 2")
+    # Check sockets are open
+    debug(fractal_ssh._connection.transport.sock)
+    debug(fractal_ssh._sftp_unsafe().sock)
+    assert not fractal_ssh._connection.transport.sock._closed
+    assert not fractal_ssh._sftp_unsafe().sock.closed
 
-    # Manually close socket
-    # import socket
-    # fractal_ssh._connection.transport.sock.shutdown(socket.SHUT_RDWR)
-    # fractal_ssh._connection.transport.sock.close()
-    # assert sock._closed
+    # Manually close sockets
+    fractal_ssh._sftp_unsafe().sock.closed = True
+    fractal_ssh._connection.transport.sock.close()
 
-    res = run_in_container("killall sshd")
-    debug(res.stdout)
-    debug(res.stderr)
-    assert res.returncode == 0
+    # Check sockets are closed
+    debug(fractal_ssh._connection.transport.sock)
+    debug(fractal_ssh._sftp_unsafe().sock)
+    assert fractal_ssh._connection.transport.sock._closed
+    assert fractal_ssh._sftp_unsafe().sock.closed
 
-    res = run_in_container("service ssh status")
-    debug(res.stdout)
-    debug(res.stderr)
-    assert res.returncode == 3
+    # Running an SFTP command now fails with an OSError
+    with pytest.raises(OSError, match="Socket is closed"):
+        fractal_ssh.send_file(local=local_file, remote=remote_file_2)
+    assert not Path(remote_file_2).exists()
 
-    with pytest.raises(RuntimeError, match="Reached last attempt"):
-        fractal_ssh.run_command(cmd="whoami", max_attempts=1)
+    # `check_connection` does its best to restore a corrupt connection
+    fractal_ssh.check_connection()
 
-    res = run_in_container("service ssh start")
-    debug(res.stdout)
-    debug(res.stderr)
-    assert res.returncode == 0
+    # Check sockets are open
+    debug(fractal_ssh._connection.transport.sock)
+    debug(fractal_ssh._sftp_unsafe().sock)
+    assert not fractal_ssh._connection.transport.sock._closed
+    assert not fractal_ssh._sftp_unsafe().sock.closed
 
-    import time
-
-    time.sleep(0.5)
-
-    res = run_in_container("service ssh status")
-    debug(res.returncode)
-    debug(res.stdout)
-    debug(res.stderr)
-    assert res.returncode == 0
-
-    debug("STEP 3")
-
-    # Running an SFTP command fails
-    with pytest.raises(Exception) as exc_info:
-        local_file_old = (tmp_path / "local_old").as_posix()
-        with open(local_file_old, "w") as f:
-            f.write("hi there\n")
-        # fractal_ssh.send_file(local=local_file_old, remote="remote_file")
-        fractal_ssh._sftp_unsafe().put(local_file_old, "remote")
-    debug(f"Captured and ignored {exc_info.value}")
-
-    # fractal_ssh.run_command(cmd="whoami", max_attempts=1)
-    # debug("STEP 4")
-
-    # fractal_ssh.check_connection()
-
-    # debug("STEP 5")
-
-    # fractal_ssh.run_command(cmd="whoami")
-
-    # debug("STEP 6")
+    # Successfully run a SFTP command
+    fractal_ssh.send_file(local=local_file, remote=remote_file_2)
+    assert fractal_ssh.remote_exists(remote_file_2)
