@@ -41,6 +41,7 @@ def _customize_and_run_template(
     prefix: str,
     fractal_ssh: FractalSSH,
     script_dir_remote: str,
+    logger_name: str,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -54,7 +55,7 @@ def _customize_and_run_template(
         fractal_ssh: FractalSSH object
         script_dir_remote: Remote scripts directory
     """
-    logger = get_logger(LOGGER_NAME)
+    logger = get_logger(logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
 
     # Prepare name and path of script
@@ -217,6 +218,7 @@ def collect_package_ssh(
                         f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
                     fractal_ssh=fractal_ssh,
+                    logger_name=LOGGER_NAME,
                 )
 
                 # Create remote `task_group.path` and `script_dir_remote`
