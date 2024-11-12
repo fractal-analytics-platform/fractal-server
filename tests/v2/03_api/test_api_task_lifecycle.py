@@ -2,6 +2,7 @@ from pathlib import Path
 
 from devtools import debug
 
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -270,3 +271,53 @@ async def test_lifecycle(
         assert Path(task_group.path).exists()
         assert Path(task_group.venv_path).exists()
         assert Path(task_group.wheel_path).exists()
+
+
+async def test_ongoing_activities(
+    client,
+    MockCurrentUser,
+    db,
+    task_factory_v2,
+):
+    """
+    Test that deactivate/reactivate endpoints fail if other
+    activities for the same task group are ongoing.
+    """
+
+    async with MockCurrentUser() as user:
+        # Create mock objects
+        task = await task_factory_v2(user_id=user.id, name="task")
+        task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
+        db.add(task_group)
+        await db.commit()
+        await db.refresh(task_group)
+        activity = TaskGroupActivityV2(
+            user_id=user.id,
+            taskgroupv2_id=task_group.id,
+            action=TaskGroupActivityActionV2.DEACTIVATE,
+            status=TaskGroupActivityStatusV2.ONGOING,
+            pkg_name="dummy",
+            version="dummy",
+        )
+        db.add(activity)
+        await db.commit()
+
+        # API failure for deactivate
+        res = await client.post(
+            f"api/v2/task-group/{task_group.id}/deactivate/"
+        )
+        assert res.status_code == 422
+        assert "Found ongoing activities" in res.json()["detail"]
+
+        # Set active to False
+        task_group.active = False
+        db.add(task_group)
+        await db.commit()
+        await db.refresh(task_group)
+
+        # API failure for reactivate
+        res = await client.post(
+            f"api/v2/task-group/{task_group.id}/reactivate/"
+        )
+        assert res.status_code == 422
+        assert "Found ongoing activities" in res.json()["detail"]
