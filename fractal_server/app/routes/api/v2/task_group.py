@@ -377,6 +377,8 @@ async def reactivate_task_group(
         version=task_group.version,
         log="fixme",
     )
+    db.add(task_group_activity)
+    await db.commit()
     # background_tasks.add_task(
     #     reactivate_local,
     #     task_group_id=task_group.id,
