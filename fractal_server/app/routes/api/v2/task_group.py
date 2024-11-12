@@ -308,6 +308,8 @@ async def deactivate_task_group(
     #     task_group_id=task_group.id,
     #     task_group_activity_id=task_group_activity.id,
     # )
+    db.add(task_group_activity)
+    await db.commit()
     logger.debug(
         "Task group deactivation endpoint: start deactivate "
         "and return task_group_activity"
@@ -378,6 +380,8 @@ async def reactivate_task_group(
     #     task_group_id=task_group.id,
     #     task_group_activity_id=task_group_activity.id,
     # )
+    db.add(task_group_activity)
+    await db.commit()
     logger.debug(
         "Task group reactivation endpoint: start reactivate "
         "and return task_group_activity"

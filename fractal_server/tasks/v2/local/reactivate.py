@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
 from ..utils_templates import get_collection_replacements
 from .utils_local import _customize_and_run_template
@@ -138,3 +139,5 @@ def reactivate_local(
                 template_filename="5_pip_install_from_freeze.sh",
                 **common_args,
             )
+
+            task_group = add_commit_refresh(obj=task_group, db=db)
