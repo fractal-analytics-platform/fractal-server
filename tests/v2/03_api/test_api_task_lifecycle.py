@@ -1,5 +1,3 @@
-from devtools import debug  # noqa
-
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -77,7 +75,6 @@ async def test_deactivate_task_group_api(
         )
         activity = res.json()
         assert res.status_code == 202
-        debug(activity)
         assert activity["version"] == task_group_pypi.version
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
         assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
@@ -161,7 +158,6 @@ async def test_reactivate_task_group_api(
         )
         activity = res.json()
         assert res.status_code == 202
-        debug(activity)
         assert activity["version"] == task_group_pypi.version
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
         assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
