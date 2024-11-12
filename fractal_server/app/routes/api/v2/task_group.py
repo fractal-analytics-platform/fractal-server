@@ -282,6 +282,7 @@ async def deactivate_task_group(
         db.add(task_group)
         db.add(task_group_activity)
         await db.commit()
+        response.status_code = status.HTTP_202_ACCEPTED
 
         return task_group_activity
 
@@ -351,6 +352,7 @@ async def reactivate_task_group(
         db.add(task_group)
         db.add(task_group_activity)
         await db.commit()
+        response.status_code = status.HTTP_202_ACCEPTED
 
         return task_group_activity
 

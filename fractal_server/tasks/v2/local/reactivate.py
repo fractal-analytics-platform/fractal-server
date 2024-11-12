@@ -1,13 +1,18 @@
 import logging
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import fail_and_cleanup
+from ..utils_templates import get_collection_replacements
+from .utils_local import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 
 
 LOGGER_NAME = __name__
@@ -111,3 +116,25 @@ def reactivate_local(
                     db=db,
                 )
                 return
+
+            # Prepare replacements for templates
+            replacements = get_collection_replacements(
+                task_group=task_group,
+                python_bin="/not/applicable",
+            )
+
+            # Prepare common arguments for `_customize_and_run_template``
+            common_args = dict(
+                replacements=replacements,
+                script_dir=(
+                    Path(task_group.path) / SCRIPTS_SUBFOLDER
+                ).as_posix(),
+                prefix=(
+                    f"{int(time.time())}_"
+                    f"{TaskGroupActivityActionV2.REACTIVATE}_"
+                ),
+            )
+            _customize_and_run_template(
+                template_filename="5_pip_install_from_freeze.sh",
+                **common_args,
+            )
