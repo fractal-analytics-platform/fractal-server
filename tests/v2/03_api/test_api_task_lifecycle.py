@@ -126,6 +126,9 @@ async def test_reactivate_task_group_api(
             name="task",
             version="1.2.3",
         )
+        task_pypi = await task_factory_v2(
+            user_id=user.id, name="task", version="1.2.3"
+        )
         active_task_group = await db.get(
             TaskGroupV2, active_task.taskgroupv2_id
         )
@@ -171,6 +174,18 @@ async def test_reactivate_task_group_api(
         assert activity["timestamp_ended"] is not None
         await db.refresh(task_group_other)
         assert task_group_other.active is True
+
+        # API success with `origin="pypi"`, but no `pip_freeze`
+        res = await client.post(
+            f"api/v2/task-group/{task_group_pypi.id}/reactivate/"
+        )
+        assert res.status_code == 422
+
+        # Set pip_freeze
+        task_group_pypi.pip_freeze = "devtools==0.12.0"
+        db.add(task_group_pypi)
+        await db.commit()
+        await db.refresh(task_group_pypi)
 
         # API success with `origin="pypi"`
         res = await client.post(
