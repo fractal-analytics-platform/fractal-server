@@ -272,6 +272,7 @@ def test_venv_size_and_file_number(tmp_path):
         template_filename="5_get_venv_size_and_file_number.sh",
         replacements=[("__PACKAGE_ENV_DIR__", folder.as_posix())],
         script_dir=tmp_path,
+        logger_name=__name__,
     )
     size_in_kB, file_number = [int(item) for item in stdout.split()]
     print(f"{size_in_kB=}")
