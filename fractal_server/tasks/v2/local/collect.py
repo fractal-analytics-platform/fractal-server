@@ -105,8 +105,6 @@ def collect_package_local(
             ):
                 return
 
-                return
-
             try:
 
                 # Create task_group.path folder
