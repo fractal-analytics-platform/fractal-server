@@ -9,6 +9,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import (
     TaskGroupActivityStatusV2,
 )
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local.collect import collect_package_local
 from fractal_server.tasks.v2.ssh.collect import collect_package_ssh
 from fractal_server.tasks.v2.utils_background import (
@@ -82,7 +83,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatusV2.PENDING,
-        action="collect",
+        action=TaskGroupActivityActionV2.COLLECT,
         pkg_name="pkg",
         version="1.0.0",
     )
@@ -153,7 +154,7 @@ async def test_collect_pip_local_fail_rmtree(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatusV2.PENDING,
-        action="collect",
+        action=TaskGroupActivityActionV2.COLLECT,
         pkg_name="pkg",
         version="1.0.0",
     )
