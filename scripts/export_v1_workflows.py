@@ -11,22 +11,30 @@ from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v1 import Workflow
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import sanitize_string
+from fractal_server.utils import get_timestamp
 
-
-if len(sys.argv) != 2:
-    raise ValueError(f"Usage: 'python {sys.argv[0]} folder'")
 
 logger = set_logger(sys.argv[0])
 
 if __name__ == "__main__":
 
-    base_folder = Path(sys.argv[1])
+    if len(sys.argv) != 2:
+        raise ValueError(f"Usage: 'python {sys.argv[0]} folder'")
+
+    folder = Path(sys.argv[1])
+    if not folder.exists():
+        logger.error(f"Folder {folder} does not exist. Exiting.")
+        exit(2)
+
+    timestamp = get_timestamp().strftime("%Y%m%d_%H%M%S")
+    base_folder = folder / f"{timestamp}_fractal_v1_workflows"
     confirm = input(
-        "Do you confirm you want to save Workflow dumps at "
-        f"'{base_folder.resolve()}'? [yY]"
+        f"Fractal V1 Workflow will be saved at '{base_folder.resolve()}'. "
+        "Do you confirm? [yY]: "
     )
+
     if confirm not in ["y", "Y"]:
-        logger.error("Exiting.")
+        logger.error(f"Folder {base_folder} not confirmed. Exiting.")
         exit(1)
 
     db = next(get_sync_db())
