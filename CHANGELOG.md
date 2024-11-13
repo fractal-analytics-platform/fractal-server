@@ -27,7 +27,8 @@
     * Add `FractalSSH.remote_exists` method (\#2008).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
-
+* Internal:
+    * Fix escaping of newlines within f-strings (\#2028).
 
 # 2.8.1
 
