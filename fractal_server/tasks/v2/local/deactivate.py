@@ -84,15 +84,18 @@ def deactivate_local(
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
                 if task_group.pip_freeze is None:
-                    logger.debug("Only for task groups created before 2.9.0")
+                    logger.warning(
+                        "Recreate pip-freeze information, since "
+                        f"{task_group.pip_freeze=}. NOTE: this should only "
+                        "happen for task groups created before 2.9.0."
+                    )
                     # Prepare replacements for templates
                     replacements = get_collection_replacements(
                         task_group=task_group,
                         python_bin="/not/applicable",
                     )
 
-                    # Prepare common arguments for
-                    # `_customize_and_run_template``
+                    # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
                         replacements=replacements,
                         script_dir=(
