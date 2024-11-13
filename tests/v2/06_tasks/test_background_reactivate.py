@@ -131,7 +131,6 @@ async def test_reactivate_local_fail(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
-    await db.commit()
     db.add(task_group_activity)
     await db.commit()
     await db.refresh(task_group_activity)
@@ -153,8 +152,8 @@ async def test_reactivate_local_fail(
     assert activity.status == "failed"
     MSG = "Could not find a version that satisfies the requirement something==99.99.99"  # noqa
     assert MSG in activity.log
-
     assert Path(task_group.path).exists()
+
     if make_rmtree_fail:
         assert FAILED_RMTREE_MESSAGE in activity.log
         assert Path(task_group.venv_path).exists()
