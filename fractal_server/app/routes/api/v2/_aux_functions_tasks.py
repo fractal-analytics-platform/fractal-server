@@ -224,10 +224,9 @@ async def _get_collection_task_group_activity_status_message(
     task_group: TaskGroupV2, db: AsyncSession
 ) -> str:
     res = await db.execute(
-        select(TaskGroupActivityV2).where(
-            TaskGroupActivityV2.taskgroupv2_id == task_group.id
-            and TaskGroupActivityV2.action == TaskGroupActivityActionV2.COLLECT
-        )
+        select(TaskGroupActivityV2)
+        .where(TaskGroupActivityV2.taskgroupv2_id == task_group.id)
+        .where(TaskGroupActivityV2.action == TaskGroupActivityActionV2.COLLECT)
     )
     task_group_activity_list = res.scalars().all()
     if len(task_group_activity_list) > 1:
