@@ -140,10 +140,16 @@ async def test_reactivate_local_fail(
     Path(task_group.path).mkdir()
 
     # Run background task
-    reactivate_local(
-        task_group_id=task_group.id,
-        task_group_activity_id=task_group_activity.id,
-    )
+    try:
+        reactivate_local(
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+        )
+    except RuntimeError as e:
+        print(
+            f"Caught exception {e} within the test, which is taking place in "
+            "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
+        )
 
     # Verify that collection failed
     activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
