@@ -108,7 +108,6 @@ def test_template_2(tmp_path, testdata_path, current_py_version):
 
 
 def test_template_4(tmp_path, testdata_path, current_py_version):
-
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
     install_string = testdata_path.parent / (
@@ -189,6 +188,7 @@ def test_templates_freeze(tmp_path, current_py_version):
                 ("__PYTHON__", f"python{current_py_version}"),
             ],
             script_dir=tmp_path,
+            logger_name=__name__,
         )
         _customize_and_run_template(
             template_filename="2_pip_install.sh",
@@ -199,6 +199,7 @@ def test_templates_freeze(tmp_path, current_py_version):
                 ("__PINNED_PACKAGE_LIST__", ""),
             ],
             script_dir=tmp_path,
+            logger_name=__name__,
         )
 
     # Pip-install devtools on 'venv1'
@@ -211,12 +212,14 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__PINNED_PACKAGE_LIST__", ""),
         ],
         script_dir=tmp_path,
+        logger_name=__name__,
     )
     # Run script 3 (pip freeze) on 'venv1'
     pip_freeze_venv_1 = _customize_and_run_template(
         template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
         script_dir=tmp_path,
+        logger_name=__name__,
     )
     dependencies_1 = _parse_pip_freeze_output(pip_freeze_venv_1)
     assert "pip" in dependencies_1
@@ -235,6 +238,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
         ],
         script_dir=tmp_path,
+        logger_name=__name__,
     )
 
     # Run script 3 (pip freeze) on 'venv2'
@@ -242,6 +246,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         template_filename="3_pip_freeze.sh",
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_2.as_posix())],
         script_dir=tmp_path,
+        logger_name=__name__,
     )
     dependencies_2 = _parse_pip_freeze_output(pip_freeze_venv_2)
 
@@ -267,6 +272,7 @@ def test_venv_size_and_file_number(tmp_path):
         template_filename="5_get_venv_size_and_file_number.sh",
         replacements=[("__PACKAGE_ENV_DIR__", folder.as_posix())],
         script_dir=tmp_path,
+        logger_name=__name__,
     )
     size_in_kB, file_number = [int(item) for item in stdout.split()]
     print(f"{size_in_kB=}")
