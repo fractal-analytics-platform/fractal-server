@@ -1,9 +1,9 @@
 import pytest
 
-from fractal_server.tasks.v2.collection_local import (
+from fractal_server.tasks.v2.local.collect import (
     _customize_and_run_template as _customize_and_run_template_local,
 )
-from fractal_server.tasks.v2.collection_ssh import (
+from fractal_server.tasks.v2.ssh.collect import (
     _customize_and_run_template as _customize_and_run_template_ssh,
 )
 
@@ -15,7 +15,7 @@ def test_customize_and_run_template_local():
             replacements={},
             script_dir="/somewhere",
             prefix="prefix",
-            logger_name="logger",
+            logger_name=__name__,
         )
 
     with pytest.raises(FileNotFoundError):
@@ -24,7 +24,7 @@ def test_customize_and_run_template_local():
             replacements={},
             script_dir="/somewhere",
             prefix="prefix",
-            logger_name="logger",
+            logger_name=__name__,
         )
 
 
@@ -35,10 +35,10 @@ def test_customize_and_run_template_ssh():
             # Fake arguments
             replacements={},
             prefix="prefix",
-            logger_name="logger",
             script_dir_local="/somewhere",
             fractal_ssh=None,
             script_dir_remote="/something",
+            logger_name=__name__,
         )
 
     with pytest.raises(FileNotFoundError):
@@ -48,7 +48,7 @@ def test_customize_and_run_template_ssh():
             replacements={},
             prefix="prefix",
             script_dir_local="/somewhere",
-            logger_name="logger",
             fractal_ssh=None,
             script_dir_remote="/something",
+            logger_name=__name__,
         )

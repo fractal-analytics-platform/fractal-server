@@ -797,19 +797,13 @@ async def test_task_group_admin(
         assert res.status_code == 403
         res = await client.patch(
             f"{PREFIX}/task-group/{task_group_1['id']}/",
-            json=dict(user_group_id=None, active=False),
+            json=dict(user_group_id=None),
         )
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/task-group/?private=true")
         assert len(res.json()) == 2
         res = await client.get(f"{PREFIX}/task-group/?active=true")
-        assert len(res.json()) == 1
-
-        res = await client.patch(
-            f"{PREFIX}/task-group/{task_group_1['id']}/",
-            json=dict(active=None),
-        )
-        assert res.status_code == 422
+        assert len(res.json()) == 2
 
     # DELETE
     async with MockCurrentUser() as user:
@@ -910,6 +904,12 @@ async def test_get_task_group_activity(
             f"{PREFIX}/task-group/activity/?user_id={user2.id}"
         )
         assert len(res.json()) == 2
+        # task_group_activity_id
+        res = await client.get(
+            f"{PREFIX}/task-group/activity/"
+            f"?user_id={user1.id}&task_group_activity_id={activity1.id}"
+        )
+        assert len(res.json()) == 1
         # taskgroupv2_id
         res = await client.get(
             f"{PREFIX}/task-group/activity/"

@@ -100,6 +100,9 @@ async def test_task_collection_ssh_from_pypi(
             f"fractal-tasks-core=={package_version}"
             in task_group["pip_freeze"]
         )
+        # Check venv_size and venv_file_number in TaskGroupV2
+        assert task_group["venv_size_in_kB"] is not None
+        assert task_group["venv_file_number"] is not None
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pip/",
@@ -367,7 +370,7 @@ async def test_task_collection_ssh_failure(
         assert "No such file or directory" in task_group_activity["log"]
 
         # Patch ssh.remove_folder
-        import fractal_server.tasks.v2.collection_ssh
+        import fractal_server.tasks.v2.ssh.collect
 
         ERROR_MSG = "Could not remove folder!"
 
@@ -375,7 +378,7 @@ async def test_task_collection_ssh_failure(
             raise RuntimeError(ERROR_MSG)
 
         monkeypatch.setattr(
-            fractal_server.tasks.v2.collection_ssh.FractalSSH,
+            fractal_server.tasks.v2.ssh.collect.FractalSSH,
             "remove_folder",
             patched_remove_folder,
         )

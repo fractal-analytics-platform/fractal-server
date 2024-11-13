@@ -34,6 +34,7 @@ logger = set_logger(__name__)
 
 @router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
 async def get_task_group_activity_list(
+    task_group_activity_id: int | None = None,
     user_id: int | None = None,
     taskgroupv2_id: int | None = None,
     pkg_name: str | None = None,
@@ -45,6 +46,8 @@ async def get_task_group_activity_list(
 ) -> list[TaskGroupActivityV2Read]:
 
     stm = select(TaskGroupActivityV2)
+    if task_group_activity_id is not None:
+        stm = stm.where(TaskGroupActivityV2.id == task_group_activity_id)
     if user_id:
         stm = stm.where(TaskGroupActivityV2.user_id == user_id)
     if taskgroupv2_id:

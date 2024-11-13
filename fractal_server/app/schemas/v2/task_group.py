@@ -84,19 +84,15 @@ class TaskGroupReadV2(BaseModel):
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
+    venv_size_in_kB: int | None = None
+    venv_file_number: int | None = None
+
     active: bool
     timestamp_created: datetime
 
 
 class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
     user_group_id: int | None = None
-    active: bool | None = None
-
-    @validator("active")
-    def active_cannot_be_None(cls, value):
-        if value is None:
-            raise ValueError("`active` cannot be set to None")
-        return value
 
 
 class TaskGroupActivityV2Read(BaseModel):

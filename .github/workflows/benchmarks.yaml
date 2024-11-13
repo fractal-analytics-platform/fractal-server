@@ -30,8 +30,6 @@ jobs:
     steps:
 
      - uses: actions/checkout@v4
-       with:
-        fetch-depth: 1
 
      - name: Install poetry
        run: pipx install poetry==1.8.2
@@ -114,8 +112,6 @@ jobs:
     steps:
 
      - uses: actions/checkout@v4
-       with:
-        fetch-depth: 1
 
      - name: Install poetry
        run: pipx install poetry==1.8.2

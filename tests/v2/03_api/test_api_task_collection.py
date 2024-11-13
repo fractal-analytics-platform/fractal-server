@@ -7,7 +7,7 @@ from packaging.version import Version
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -69,7 +69,12 @@ async def test_task_collection_from_wheel(
         assert res.status_code == 200
         task_group_activity = res.json()
         debug(task_group_activity)
+
+        assert task_group_activity["log"].count("\n") > 0
+        assert task_group_activity["log"].count("\\n") == 0
+
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
         # Check that log were written, even with CRITICAL logging level
         log = task_group_activity["log"]
         assert log is not None
@@ -91,6 +96,9 @@ async def test_task_collection_from_wheel(
         assert (
             Path(res.json()["path"]) / Path(wheel_path).name
         ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
+        # Check venv_size and venv_file_number in TaskGroupV2
+        assert task_group["venv_size_in_kB"] is not None
+        assert task_group["venv_file_number"] is not None
 
         assert Path(res.json()["wheel_path"]).exists()
         assert (
@@ -161,6 +169,7 @@ async def test_task_collection_from_wheel_non_canonical(
         # Check that my_extra was included, in a local-package collection
         assert ".whl[my_extra]" in log
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
 
 
 OLD_FRACTAL_TASKS_CORE_VERSION = "1.0.2"
@@ -236,6 +245,7 @@ async def test_task_collection_from_pypi(
         )
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
         # Check that log were written, even with CRITICAL logging level
         log = task_group_activity["log"]
         assert log is not None

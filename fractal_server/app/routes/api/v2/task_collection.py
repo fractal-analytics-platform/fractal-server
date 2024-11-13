@@ -22,7 +22,7 @@ from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2
 from ...aux.validate_user_settings import validate_user_settings
-from ._aux_functions_task_collection import get_package_version_from_pypi
+from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
@@ -33,7 +33,7 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.tasks.v2.collection_local import (
+from fractal_server.tasks.v2.local.collect import (
     collect_package_local,
 )
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
@@ -246,7 +246,7 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
 
-        from fractal_server.tasks.v2.collection_ssh import (
+        from fractal_server.tasks.v2.ssh.collect import (
             collect_package_ssh,
         )
 
@@ -261,8 +261,8 @@ async def collect_tasks_pip(
 
         background_tasks.add_task(
             collect_package_ssh,
+            task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            task_group=task_group,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
@@ -271,8 +271,8 @@ async def collect_tasks_pip(
         # Local task collection
         background_tasks.add_task(
             collect_package_local,
+            task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            task_group=task_group,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "

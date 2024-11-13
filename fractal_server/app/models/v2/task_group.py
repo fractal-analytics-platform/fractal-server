@@ -31,6 +31,7 @@ class TaskGroupV2(SQLModel, table=True):
     wheel_path: str | None = None
     pip_freeze: str | None = None
     pip_extras: str | None = None
+
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
             JSON,
@@ -39,6 +40,9 @@ class TaskGroupV2(SQLModel, table=True):
             nullable=True,
         ),
     )
+
+    venv_size_in_kB: int | None = None
+    venv_file_number: int | None = None
 
     active: bool = True
     timestamp_created: datetime = Field(
