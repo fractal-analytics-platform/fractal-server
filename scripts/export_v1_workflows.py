@@ -28,18 +28,21 @@ if __name__ == "__main__":
 
     timestamp = get_timestamp().strftime("%Y%m%d_%H%M%S")
     base_folder = folder / f"{timestamp}_fractal_v1_workflows"
+    base_folder = base_folder.resolve()
+
     confirm = input(
-        f"Fractal V1 Workflow will be saved at '{base_folder.resolve()}'. "
+        f"Fractal V1 Workflow will be saved at '{base_folder}'. "
         "Do you confirm? [yY]: "
     )
 
     if confirm not in ["y", "Y"]:
-        logger.error(f"Folder {base_folder} not confirmed. Exiting.")
+        logger.error(f"Folder '{base_folder}' not confirmed. Exiting.")
         exit(1)
 
     db = next(get_sync_db())
 
     workflow_list = db.execute(select(Workflow)).scalars().all()
+    workflow_map = dict()
 
     for workflow in workflow_list:
         dump = dict(
@@ -69,8 +72,13 @@ if __name__ == "__main__":
             / f"{dump['project_id']}_{sanitize_string(project_name)}"
             / f"{dump['id']}_{sanitize_string(dump['name'])}.json"
         )
+        workflow_map[dump["id"]] = json_path
+
         json_path.parent.mkdir(parents=True, exist_ok=True)
         with json_path.open("w") as f:
             json.dump(dump, f, indent=2, sort_keys=True, default=str)
 
-        logger.info(f"Workflow {dump['id']} dumped at '{json_path.resolve()}'")
+        logger.info(f"Workflow {dump['id']} dumped at '{json_path}'")
+
+    with (base_folder / "workflows.json").open("w") as f:
+        json.dump(workflow_map, f)
