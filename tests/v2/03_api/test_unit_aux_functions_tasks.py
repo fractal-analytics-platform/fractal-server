@@ -163,8 +163,8 @@ async def test_get_collection_task_group_activity_status_message(
     db,
     MockCurrentUser,
 ):
-
     async with MockCurrentUser() as user:
+        # Create task group
         task_group = TaskGroupV2(
             user_id=user.id,
             origin="other",
@@ -175,21 +175,65 @@ async def test_get_collection_task_group_activity_status_message(
         await db.commit()
         await db.refresh(task_group)
 
-        for action in ["activate", "deactivate"]:
-            activity = TaskGroupActivityV2(
+        # Add one non-collection activity
+        db.add(
+            TaskGroupActivityV2(
                 user_id=user.id,
                 taskgroupv2_id=task_group.id,
                 pkg_name=task_group.pkg_name,
                 version=task_group.version,
                 status="OK",
-                action=action,
+                action="deactivate",
             )
-            db.add(activity)
+        )
         await db.commit()
 
+        # Check message
         msg = await _get_collection_task_group_activity_status_message(
-            task_group=task_group,
+            task_group_id=task_group.id,
             db=db,
         )
         debug(msg)
         assert msg == ""
+
+        # Add one collection activity
+        db.add(
+            TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                pkg_name=task_group.pkg_name,
+                version=task_group.version,
+                status="OK",
+                action="collect",
+            )
+        )
+        await db.commit()
+
+        # Check message
+        msg = await _get_collection_task_group_activity_status_message(
+            task_group_id=task_group.id,
+            db=db,
+        )
+        debug(msg)
+        assert "There exists another task-group activity" in msg
+
+        # Add another collection activity
+        db.add(
+            TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                pkg_name=task_group.pkg_name,
+                version=task_group.version,
+                status="OK",
+                action="collect",
+            )
+        )
+        await db.commit()
+
+        # Check message
+        msg = await _get_collection_task_group_activity_status_message(
+            task_group_id=task_group.id,
+            db=db,
+        )
+        debug(msg)
+        assert "please contact an admin" in msg

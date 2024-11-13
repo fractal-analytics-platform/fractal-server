@@ -221,26 +221,29 @@ async def _get_valid_user_group_id(
 
 
 async def _get_collection_task_group_activity_status_message(
-    task_group: TaskGroupV2, db: AsyncSession
+    task_group_id: int,
+    db: AsyncSession,
 ) -> str:
+
     res = await db.execute(
         select(TaskGroupActivityV2)
-        .where(TaskGroupActivityV2.taskgroupv2_id == task_group.id)
+        .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
         .where(TaskGroupActivityV2.action == TaskGroupActivityActionV2.COLLECT)
     )
     task_group_activity_list = res.scalars().all()
     if len(task_group_activity_list) > 1:
         msg = (
-            "\nExpected one TaskGroupActivityV2 associated to TaskGroup "
-            f"{task_group.id}, found {len(task_group_activity_list)} "
-            f"(IDs: {[tga.id for tga in task_group_activity_list]}).\n"
+            "\nWarning: "
+            "Expected only one TaskGroupActivityV2 associated to TaskGroup "
+            f"{task_group_id}, found {len(task_group_activity_list)} "
+            f"(IDs: {[tga.id for tga in task_group_activity_list]})."
             "Warning: this should have not happened, please contact an admin."
         )
     elif len(task_group_activity_list) == 1:
         msg = (
-            "\nThere exists a task-group activity"
+            "\nThere exists another task-group activity "
             f"(ID={task_group_activity_list[0].id}) for "
-            f"such task group (ID={task_group.id}), with status "
+            f"this task group (ID={task_group_id}), with status "
             f"'{task_group_activity_list[0].status}'."
         )
     else:
@@ -276,7 +279,7 @@ async def _verify_non_duplication_user_constraint(
                 ),
             )
         state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0], db
+            duplicate[0].id, db
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -318,7 +321,7 @@ async def _verify_non_duplication_group_constraint(
                 ),
             )
         state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0], db
+            duplicate[0].id, db
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
