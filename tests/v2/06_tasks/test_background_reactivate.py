@@ -96,13 +96,15 @@ async def test_reactivate_local_fail(
     if make_rmtree_fail:
         import fractal_server.tasks.v2.local.reactivate
 
-        def patched_function(*args, **kwargs):
-            raise RuntimeError("Broken rm")
+        FAILED_RMTREE_MESSAGE = "Broken rm"
+
+        def patched_rmtree(*args, **kwargs):
+            raise RuntimeError(FAILED_RMTREE_MESSAGE)
 
         monkeypatch.setattr(
             fractal_server.tasks.v2.local.reactivate.shutil,
             "rmtree",
-            patched_function,
+            patched_rmtree,
         )
 
     # Prepare task group that will make `pip install` fail
@@ -135,7 +137,7 @@ async def test_reactivate_local_fail(
     await db.refresh(task_group_activity)
     db.expunge_all()
 
-    # create path
+    # Create path
     Path(task_group.path).mkdir()
 
     # Run background task
@@ -143,15 +145,18 @@ async def test_reactivate_local_fail(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
     )
+
     # Verify that collection failed
     activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
     debug(activity.status)
     debug(activity.log)
     assert activity.status == "failed"
+    MSG = "Could not find a version that satisfies the requirement something==99.99.99"  # noqa
+    assert MSG in activity.log
 
     assert Path(task_group.path).exists()
     if make_rmtree_fail:
-        assert "Broken rm" in activity.log
+        assert FAILED_RMTREE_MESSAGE in activity.log
         assert Path(task_group.venv_path).exists()
     else:
         assert not Path(task_group.venv_path).exists()
