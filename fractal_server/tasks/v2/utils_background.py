@@ -10,6 +10,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.utils import get_timestamp
@@ -28,39 +29,41 @@ def fail_and_cleanup(
     task_group: TaskGroupV2,
     task_group_activity: TaskGroupActivityV2,
     logger_name: str,
-    log_file_path: Path,
     exception: Exception,
+    log_file_path: Path,
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.error(f"Task collection failed. Original error: {str(exception)}")
+    logger.error(
+        f"Task {task_group_activity.action} failed. "
+        f"Original error: {str(exception)}"
+    )
 
     task_group_activity.status = TaskGroupActivityStatusV2.FAILED
     task_group_activity.timestamp_ended = get_timestamp()
     task_group_activity.log = get_current_log(log_file_path)
     task_group_activity = add_commit_refresh(obj=task_group_activity, db=db)
+    if task_group_activity.action == TaskGroupActivityActionV2.COLLECT:
+        logger.info(f"Now delete TaskGroupV2 with {task_group.id=}")
 
-    logger.info(f"Now delete TaskGroupV2 with {task_group.id=}")
-
-    logger.info("Start of TaskGroupActivityV2 cascade operations.")
-    stm = select(TaskGroupActivityV2).where(
-        TaskGroupActivityV2.taskgroupv2_id == task_group.id
-    )
-    res = db.execute(stm)
-    task_group_activity_list = res.scalars().all()
-    for task_group_activity in task_group_activity_list:
-        logger.info(
-            f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
-            ".taskgroupv2_id to None."
+        logger.info("Start of TaskGroupActivityV2 cascade operations.")
+        stm = select(TaskGroupActivityV2).where(
+            TaskGroupActivityV2.taskgroupv2_id == task_group.id
         )
-        task_group_activity.taskgroupv2_id = None
-        db.add(task_group_activity)
-    logger.info("End of TaskGroupActivityV2 cascade operations.")
+        res = db.execute(stm)
+        task_group_activity_list = res.scalars().all()
+        for task_group_activity in task_group_activity_list:
+            logger.info(
+                f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
+                ".taskgroupv2_id to None."
+            )
+            task_group_activity.taskgroupv2_id = None
+            db.add(task_group_activity)
+        logger.info("End of TaskGroupActivityV2 cascade operations.")
+        logger.info(f"TaskGroupV2 with {task_group.id=} deleted")
 
-    db.delete(task_group)
+        db.delete(task_group)
     db.commit()
-    logger.info(f"TaskGroupV2 with {task_group.id=} deleted")
-
     reset_logger_handlers(logger)
 
 

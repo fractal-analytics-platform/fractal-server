@@ -4,9 +4,9 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group
+from .utils_local import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -25,61 +25,14 @@ from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
-from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import (
     parse_script_pip_show_stdout,
 )
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
-from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 LOGGER_NAME = __name__
-
-
-def _customize_and_run_template(
-    template_filename: str,
-    replacements: list[tuple[str, str]],
-    script_dir: str,
-    prefix: Optional[int] = None,
-) -> str:
-    """
-    Customize one of the template bash scripts.
-
-    Args:
-        template_filename: Filename of the template file (ends with ".sh").
-        replacements: Dictionary of replacements.
-        script_dir: Local folder where the script will be placed.
-        prefix: Prefix for the script filename.
-    """
-    logger = get_logger(LOGGER_NAME)
-    logger.debug(f"_customize_and_run_template {template_filename} - START")
-
-    # Prepare name and path of script
-    if not template_filename.endswith(".sh"):
-        raise ValueError(
-            f"Invalid {template_filename=} (it must end with '.sh')."
-        )
-
-    template_filename_stripped = template_filename
-
-    if prefix is not None:
-        script_filename = f"{prefix}{template_filename_stripped}"
-    else:
-        script_filename = template_filename_stripped
-    script_path_local = Path(script_dir) / script_filename
-    # Read template
-    customize_template(
-        template_name=template_filename,
-        replacements=replacements,
-        script_path=script_path_local,
-    )
-    cmd = f"bash {script_path_local}"
-    logger.debug(f"Now run '{cmd}' ")
-    stdout = execute_command_sync(command=cmd, logger_name=LOGGER_NAME)
-    logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-    logger.debug(f"_customize_and_run_template {template_filename} - END")
-    return stdout
 
 
 def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
@@ -141,7 +94,7 @@ def collect_package_local(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            # Check that the (local) task_group path does not exist
+            # Check that the (local) task_group path does exist
             if Path(task_group.path).exists():
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
@@ -187,6 +140,7 @@ def collect_package_local(
                         f"{int(time.time())}_"
                         f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
+                    logger_name=LOGGER_NAME,
                 )
 
                 # Set status to ONGOING and refresh logs
@@ -223,6 +177,15 @@ def collect_package_local(
                     template_filename="4_pip_show.sh",
                     **common_args,
                 )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                # Run script 5
+                venv_info = _customize_and_run_template(
+                    template_filename="5_get_venv_size_and_file_number.sh",
+                    **common_args,
+                )
+                venv_size, venv_file_number = venv_info.split()
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
@@ -283,11 +246,19 @@ def collect_package_local(
                 )
                 logger.info("create_db_tasks_and_update_task_group - end")
 
-                # Update pip-freeze data
-                logger.info("Add pip freeze stdout to TaskGroupV2 - start")
+                # Update task_group data
+                logger.info(
+                    "Add pip_freeze, venv_size and venv_file_number "
+                    "to TaskGroupV2 - start"
+                )
                 task_group.pip_freeze = pip_freeze_stdout
+                task_group.venv_size_in_kB = int(venv_size)
+                task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
-                logger.info("Add pip freeze stdout to TaskGroupV2 - end")
+                logger.info(
+                    "Add pip_freeze, venv_size and venv_file_number "
+                    "to TaskGroupV2 - end"
+                )
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")

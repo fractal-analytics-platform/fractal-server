@@ -6,25 +6,33 @@
 > Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
 
 * API
-    * Remove `GET /api/v2/task/collect/{state_id}/"` endpoint (\#2010).
+    * Remove `GET /api/v2/task/collect/{state_id}/` endpoint (\#2010).
+    * Remove `active` property from `PATCH /api/v2/task-group/{task_group_id}/` (\#2033).
     * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
-    * Add `TaskGroupActivityV2Read` schema (\#2005).
+    * Add `POST /admin/v2/task-group/{task_group_id}/deactivate` endpoint (\#2033).
+    * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033).
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
-* Task-collection internals:
+    * Add  `venv_size_in_kB` and `venv_file_number` to `TaskGroupV2` (\#2034).
+* Task-lifecycle internals:
     * Refactor task collection and database-session management in background tasks (\#2030).
     * Update `TaskGroupActivityV2` objects (\#2005).
     * Update filename and path for task-collection scripts (\#2008).
     * Copy wheel file into `task_group.path` and update `task_group.wheel_path`, for local task collection (\#2020).
     * Set `TaskGroupActivityV2.timestamp_ended` when collections terminate (\#2026).
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
+    * Introduce background operations for _local_ reactivate/deactivate (\#2033).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
+* Testing:
+    * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
+* Internal:
+    * Fix escaping of newlines within f-strings (\#2028).
 
 # 2.8.1
 

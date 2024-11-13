@@ -41,6 +41,7 @@ def _customize_and_run_template(
     prefix: str,
     fractal_ssh: FractalSSH,
     script_dir_remote: str,
+    logger_name: str,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -54,7 +55,7 @@ def _customize_and_run_template(
         fractal_ssh: FractalSSH object
         script_dir_remote: Remote scripts directory
     """
-    logger = get_logger(LOGGER_NAME)
+    logger = get_logger(logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
 
     # Prepare name and path of script
@@ -217,6 +218,7 @@ def collect_package_ssh(
                         f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
                     fractal_ssh=fractal_ssh,
+                    logger_name=LOGGER_NAME,
                 )
 
                 # Create remote `task_group.path` and `script_dir_remote`
@@ -274,6 +276,15 @@ def collect_package_ssh(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
+                # Run script 5
+                venv_info = _customize_and_run_template(
+                    template_filename="5_get_venv_size_and_file_number.sh",
+                    **common_args,
+                )
+                venv_size, venv_file_number = venv_info.split()
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
                 pkg_attrs = parse_script_pip_show_stdout(stdout)
 
                 for key, value in pkg_attrs.items():
@@ -327,11 +338,19 @@ def collect_package_ssh(
                 )
                 logger.info("create_db_tasks_and_update_task_group - end")
 
-                # Update pip-freeze data
-                logger.info("Add pip freeze stdout to TaskGroupV2 - start")
+                # Update task_group data
+                logger.info(
+                    "Add pip_freeze, venv_size and venv_file_number "
+                    "to TaskGroupV2 - start"
+                )
                 task_group.pip_freeze = pip_freeze_stdout
+                task_group.venv_size_in_kB = int(venv_size)
+                task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
-                logger.info("Add pip freeze stdout to TaskGroupV2 - end")
+                logger.info(
+                    "Add pip_freeze, venv_size and venv_file_number "
+                    "to TaskGroupV2 - end"
+                )
 
                 # Finalize (write metadata to DB)
                 logger.debug("finalising - START")

@@ -28,9 +28,7 @@ class TaskGroupV2(SQLModel, table=True):
     version: Optional[str] = None
     python_version: Optional[str] = None
     path: Optional[str] = None
-    venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
-    pip_freeze: Optional[str] = None
     pip_extras: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
@@ -40,6 +38,10 @@ class TaskGroupV2(SQLModel, table=True):
             nullable=True,
         ),
     )
+    pip_freeze: Optional[str] = None
+    venv_path: Optional[str] = None
+    venv_size_in_kB: Optional[int] = None
+    venv_file_number: Optional[int] = None
 
     active: bool = True
     timestamp_created: datetime = Field(
