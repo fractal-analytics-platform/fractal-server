@@ -15,11 +15,19 @@ from fractal_server.string_tools import sanitize_string
 
 if len(sys.argv) != 2:
     raise ValueError(f"Usage: 'python {sys.argv[0]} folder'")
-base_folder = Path(sys.argv[1])
 
 logger = set_logger(sys.argv[0])
 
 if __name__ == "__main__":
+
+    base_folder = Path(sys.argv[1])
+    confirm = input(
+        "Do you confirm you want to save Workflow dumps at "
+        f"'{base_folder.resolve()}'? [yY]"
+    )
+    if confirm not in ["y", "Y"]:
+        logger.error("Exiting.")
+        exit(1)
 
     db = next(get_sync_db())
 
@@ -56,4 +64,5 @@ if __name__ == "__main__":
         json_path.parent.mkdir(parents=True, exist_ok=True)
         with json_path.open("w") as f:
             json.dump(dump, f, indent=2, sort_keys=True, default=str)
-        logger.info(f"Workflow {dump['id']} dumped at '{json_path}'")
+
+        logger.info(f"Workflow {dump['id']} dumped at '{json_path.resolve()}'")
