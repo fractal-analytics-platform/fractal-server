@@ -25,6 +25,8 @@
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+* Internal:
+    * Fix escaping of newlines within f-strings (\#2028).
 
 # 2.8.1
 
