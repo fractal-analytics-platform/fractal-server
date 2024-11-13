@@ -108,7 +108,7 @@ async def test_reactivate_local_fail(
         )
 
     # Prepare task group that will make `pip install` fail
-    path = tmp_path / "rmtree-error"
+    path = tmp_path / f"make-rmtree-fail-{make_rmtree_fail}"
     task_group = TaskGroupV2(
         pkg_name="invalid-package-name",
         version="11.11.11",
