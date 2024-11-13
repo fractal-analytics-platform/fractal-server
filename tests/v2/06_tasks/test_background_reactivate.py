@@ -78,7 +78,7 @@ async def test_reactivate_venv_path(tmp_path, db, first_user):
     assert "already exists" in task_group_activity_v2.log
 
 
-@pytest.mark.parametrize("make_rmtree_fail", [True])
+@pytest.mark.parametrize("make_rmtree_fail", [False, True])
 async def test_reactivate_local_fail(
     tmp_path,
     db,
