@@ -215,7 +215,7 @@ async def test_get_collection_task_group_activity_status_message(
             db=db,
         )
         debug(msg)
-        assert "There exists another task-group activity" in msg
+        assert "There exists another task-group collection" in msg
 
         # Add another collection activity
         db.add(
