@@ -79,7 +79,7 @@ async def test_reactivate_venv_path(tmp_path, db, first_user):
 
 
 @pytest.mark.parametrize("make_rmtree_fail", [True, False])
-async def test_deactivate_local_fail(
+async def test_reactivate_local_fail(
     tmp_path,
     db,
     first_user,
@@ -87,6 +87,11 @@ async def test_deactivate_local_fail(
     monkeypatch,
     make_rmtree_fail: bool,
 ):
+    """
+    Make reactivation fail (due to wrong pip-freeze data), in two cases:
+    1. The removal of the venv path works.
+    2. The removal of the venv path fails.
+    """
 
     if make_rmtree_fail:
         import fractal_server.tasks.v2.local.reactivate
