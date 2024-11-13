@@ -13,6 +13,7 @@
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `POST /admin/v2/task-group/{task_group_id}/deactivate` endpoint (\#2033).
     * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033).
+    * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
 * Database
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
