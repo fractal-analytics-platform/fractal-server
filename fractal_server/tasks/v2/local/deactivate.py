@@ -119,9 +119,9 @@ def deactivate_local(
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
-                if (
-                    task_group.origin == "wheel"
-                    and not Path(task_group.wheel_path).exists()
+                if task_group.origin == "wheel" and (
+                    task_group.wheel_path is None
+                    or not Path(task_group.wheel_path).exists()
                 ):
 
                     logger.error(
