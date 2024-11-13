@@ -232,7 +232,7 @@ async def _get_collection_task_group_activity_status_message(
     task_group_activity_list = res.scalars().all()
     if len(task_group_activity_list) > 1:
         msg = (
-            "Expected one TaskGroupActivityV2 associated to TaskGroup "
+            "\nExpected one TaskGroupActivityV2 associated to TaskGroup "
             f"{task_group.id}, found {len(task_group_activity_list)} "
             f"(IDs: {[tga.id for tga in task_group_activity_list]}).\n"
             "Warning: this should have not happened, please contact an admin."
