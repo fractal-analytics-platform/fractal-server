@@ -222,7 +222,7 @@ async def test_lifecycle(
     )
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        # Task collection
+        # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
             json=dict(package=wheel_path.as_posix()),
@@ -236,7 +236,7 @@ async def test_lifecycle(
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
 
-        # Deactivate task group
+        # STEP 2: Deactivate task group
         res = await client.post(
             f"api/v2/task-group/{task_group_id}/deactivate/"
         )
@@ -254,7 +254,7 @@ async def test_lifecycle(
         assert not Path(task_group.venv_path).exists()
         assert Path(task_group.wheel_path).exists()
 
-        # Reactivate task group
+        # STEP 3: Reactivate task group
         res = await client.post(
             f"api/v2/task-group/{task_group_id}/reactivate/"
         )
@@ -270,6 +270,31 @@ async def test_lifecycle(
         assert task_group.active is True
         assert Path(task_group.path).exists()
         assert Path(task_group.venv_path).exists()
+        assert Path(task_group.wheel_path).exists()
+
+        # STEP 4: Deactivate a task group created before 2.9.0, which has no
+        # pip-freeze information
+        task_group.pip_freeze = None
+        db.add(task_group)
+        await db.commit()
+        await db.refresh(task_group)
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert res.json()["status"] == "OK"
+
+        # Assertions
+        db.expunge(task_group)
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        assert task_group.active is False
+        assert task_group.pip_freeze is not None
+        assert Path(task_group.path).exists()
+        assert not Path(task_group.venv_path).exists()
         assert Path(task_group.wheel_path).exists()
 
 
