@@ -2,7 +2,8 @@
 
 # 2.9.0 (unreleased)
 
-> WARNING 1: This version drops support for sqlite, and removes the configuration variable `DB_ENGINE`.
+> WARNING 1: This version drops support for sqlite, and removes the
+> configuration variables `DB_ENGINE` and `SQLITE_PATH`.
 
 > WARNING 2: This version removes the `CollectionStateV2` database table.
 > Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
@@ -17,7 +18,7 @@
     * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033).
     * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
 * Database
-    * Drop support for sqlite, and remove the `DB_ENGINE` configuration variable (\#2052).
+    * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
