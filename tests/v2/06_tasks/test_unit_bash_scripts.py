@@ -189,6 +189,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ],
             script_dir=tmp_path,
             logger_name=__name__,
+            prefix="prefix",
         )
         _customize_and_run_template(
             template_filename="2_pip_install.sh",
@@ -200,6 +201,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ],
             script_dir=tmp_path,
             logger_name=__name__,
+            prefix="prefix",
         )
 
     # Pip-install devtools on 'venv1'
@@ -213,6 +215,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         ],
         script_dir=tmp_path,
         logger_name=__name__,
+        prefix="prefix",
     )
     # Run script 3 (pip freeze) on 'venv1'
     pip_freeze_venv_1 = _customize_and_run_template(
@@ -220,6 +223,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_1.as_posix())],
         script_dir=tmp_path,
         logger_name=__name__,
+        prefix="prefix",
     )
     dependencies_1 = _parse_pip_freeze_output(pip_freeze_venv_1)
     assert "pip" in dependencies_1
@@ -239,6 +243,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         ],
         script_dir=tmp_path,
         logger_name=__name__,
+        prefix="prefix",
     )
 
     # Run script 3 (pip freeze) on 'venv2'
@@ -247,6 +252,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         replacements=[("__PACKAGE_ENV_DIR__", venv_path_2.as_posix())],
         script_dir=tmp_path,
         logger_name=__name__,
+        prefix="prefix",
     )
     dependencies_2 = _parse_pip_freeze_output(pip_freeze_venv_2)
 
@@ -273,6 +279,7 @@ def test_venv_size_and_file_number(tmp_path):
         replacements=[("__PACKAGE_ENV_DIR__", folder.as_posix())],
         script_dir=tmp_path,
         logger_name=__name__,
+        prefix="prefix",
     )
     size_in_kB, file_number = [int(item) for item in stdout.split()]
     print(f"{size_in_kB=}")
