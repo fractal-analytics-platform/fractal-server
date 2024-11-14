@@ -196,49 +196,19 @@ async def test_patch_task_group(
         )
 
         res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["active"] is True
         assert res.json()["user_group_id"] == default_user_group.id
 
-        # Update 1: change `active`
-        res = await client.patch(
-            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=False)
-        )
-        assert res.status_code == 200
-        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["active"] is False
-        assert res.json()["user_group_id"] == default_user_group.id
-
-        # Update 2: change `active`
-        res = await client.patch(
-            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=True)
-        )
-        assert res.status_code == 200
-        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["active"] is True
-        assert res.json()["user_group_id"] == default_user_group.id
-
-        # Update 3: change both `user_group_id` and `active`
+        # Update: change `user_group_id`
         res = await client.patch(
             f"{PREFIX}/{taskA.taskgroupv2_id}/",
-            json=dict(user_group_id=None, active=True),
+            json=dict(user_group_id=default_user_group.id),
         )
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["active"] is True
-        assert res.json()["user_group_id"] is None
-
-        # Update 4: change both `user_group_id` and `active`
-        res = await client.patch(
-            f"{PREFIX}/{taskA.taskgroupv2_id}/",
-            json=dict(user_group_id=default_user_group.id, active=False),
-        )
-        assert res.status_code == 200
-        res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["active"] is False
         assert res.json()["user_group_id"] == default_user_group.id
 
         # Non existing TaskGroup
-        res = await client.patch(f"{PREFIX}/9999999/", json=dict(active=False))
+        res = await client.patch(f"{PREFIX}/9999999/", json={})
         assert res.status_code == 404
 
         # Non existing UserGroup
@@ -268,7 +238,8 @@ async def test_patch_task_group(
 
         # Unauthorized
         res = await client.patch(
-            f"{PREFIX}/{taskA.taskgroupv2_id}/", json=dict(active=False)
+            f"{PREFIX}/{taskA.taskgroupv2_id}/",
+            json={},
         )
         assert res.status_code == 403
 

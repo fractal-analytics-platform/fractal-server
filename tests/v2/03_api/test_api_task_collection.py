@@ -7,7 +7,7 @@ from packaging.version import Version
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.api.v2._aux_functions_task_collection import (
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -69,6 +69,10 @@ async def test_task_collection_from_wheel(
         assert res.status_code == 200
         task_group_activity = res.json()
         debug(task_group_activity)
+
+        assert task_group_activity["log"].count("\n") > 0
+        assert task_group_activity["log"].count("\\n") == 0
+
         assert task_group_activity["status"] == "OK"
         assert task_group_activity["timestamp_ended"] is not None
         # Check that log were written, even with CRITICAL logging level
