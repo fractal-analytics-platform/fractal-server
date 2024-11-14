@@ -134,13 +134,7 @@ def _zip_folder_to_file_and_remove(folder: str) -> None:
         logger.error(
             f"Error while creating temporary zip file. Original error: '{e}'."
         )
-        tmp_zipfile = Path(tmp_zipfile)
-        if tmp_zipfile.exists():
-            logger.error(
-                f"Removing corrupted zip file '{tmp_zipfile.as_posix()}'."
-            )
-            tmp_zipfile.unlink()
-            logger.error("Zip file removed.")
+        Path(tmp_zipfile).unlink(missing_ok=True)
         return
 
     logger.info(f"Moving temporary zip file to {zipfile}.")
