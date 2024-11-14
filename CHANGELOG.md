@@ -32,6 +32,7 @@
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
     * Introduce background operations for _local_ reactivate/deactivate (\#2033).
     * Fix escaping of newlines within f-strings, in logs (\#2028).
+    * Improve handling of task groups created before 2.9.0 (\#2050).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
 * Testing:

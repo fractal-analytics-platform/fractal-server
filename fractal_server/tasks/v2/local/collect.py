@@ -47,7 +47,7 @@ def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
     return dest
 
 
-def collect_package_local(
+def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
