@@ -140,7 +140,7 @@ async def test_deactivate_wheel_no_wheel_path(tmp_path, db, first_user):
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
-        origin="wheel",
+        origin="wheel-file",
         wheel_path="/invalid",
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
