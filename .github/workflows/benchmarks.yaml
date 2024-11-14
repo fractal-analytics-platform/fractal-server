@@ -45,7 +45,6 @@ jobs:
 
      - name: Run Fractal with Gunicorn
        run: |
-        export DB_ENGINE=postgres-psycopg
         export POSTGRES_DB=fractal_test
         export POSTGRES_PASSWORD=postgres
         export POSTGRES_USER=postgres

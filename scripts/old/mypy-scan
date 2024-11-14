@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Adapted from https://jaredkhan.com/blog/mypy-pre-commit
-
-poetry run mypy --package fractal_server\
-    --ignore-missing-imports\
-    --warn-redundant-casts\
-    --warn-unused-ignores\
-    --warn-unreachable\
-    --pretty\

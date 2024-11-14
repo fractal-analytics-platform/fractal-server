@@ -43,7 +43,7 @@ jobs:
             cache: "pip"
 
         - name: Install dependencies
-          run: pip install -e ".[postgres-psycopg-binary]"
+          run: pip install -e .
 
         - name: Run Fractal
           env:
@@ -52,7 +52,6 @@ jobs:
             FRACTAL_RUNNER_BACKEND: local
             JWT_SECRET_KEY: jwt_secret_key
             JWT_EXPIRE_SECONDS: 1000
-            DB_ENGINE: postgres-psycopg
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
             POSTGRES_DB: fractal_test

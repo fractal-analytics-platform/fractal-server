@@ -4,8 +4,6 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 
 async def test_project_and_workflows(db):
@@ -67,22 +65,6 @@ async def test_project_and_workflows(db):
     db_project = project_query.scalars().one()
     await db.delete(db_project)
 
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres-psycopg":
-        with pytest.raises(IntegrityError):
-            # WorkflowV2.project_id violates fk-contraint in Postgres
-            await db.commit()
-    else:
-        # SQLite does not handle fk-constraints well
+    with pytest.raises(IntegrityError):
+        # WorkflowV2.project_id violates fk-contraint in Postgres
         await db.commit()
-        db.expunge_all()
-
-        project_query = await db.execute(select(ProjectV2))
-        db_project = project_query.scalars().one_or_none()
-        assert db_project is None
-
-        workflow_query = await db.execute(select(WorkflowV2))
-        db_workflow = workflow_query.scalars().one_or_none()
-        assert db_workflow is not None  # no cascade
-        assert db_workflow.project_id is not None  # fk is not null
-        assert db_workflow.project is None  # relationship is null

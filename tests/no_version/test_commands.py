@@ -9,21 +9,9 @@ import pytest
 from devtools import debug
 
 import fractal_server
-from tests.fixtures_server import DB_ENGINE
 
 
 FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
-
-
-def test_set_db(tmp_path: Path, set_test_db):
-    """
-    Run `poetry run fractalctl set-db`
-    """
-    debug(DB_ENGINE)
-    if DB_ENGINE == "sqlite":
-        db_file = str(tmp_path / "test.db")
-        debug(db_file)
-        assert os.path.exists(db_file)
 
 
 def test_alembic_check(set_test_db):
