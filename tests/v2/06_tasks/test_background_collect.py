@@ -10,8 +10,8 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityStatusV2,
 )
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
-from fractal_server.tasks.v2.local.collect import collect_package_local
-from fractal_server.tasks.v2.ssh.collect import collect_package_ssh
+from fractal_server.tasks.v2.local.collect import collect_local
+from fractal_server.tasks.v2.ssh.collect import collect_ssh
 from fractal_server.tasks.v2.utils_background import (
     check_task_files_exist,
 )
@@ -94,7 +94,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     # Create task_group.path
     path.mkdir()
     # Run background task
-    collect_package_local(
+    collect_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
     )
@@ -165,7 +165,7 @@ async def test_collect_pip_local_fail_rmtree(
     db.expunge(task_group_activity)
     # Run background task
     try:
-        collect_package_local(
+        collect_local(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )
@@ -189,7 +189,7 @@ def test_unit_missing_objects(db, caplog):
     Test a branch which is in principle unreachable.
     """
     caplog.clear()
-    collect_package_local(
+    collect_local(
         task_group_activity_id=9999,
         task_group_id=9999,
     )
@@ -198,7 +198,7 @@ def test_unit_missing_objects(db, caplog):
     caplog.clear()
     assert caplog.text == ""
 
-    collect_package_ssh(
+    collect_ssh(
         task_group_activity_id=9999,
         task_group_id=9999,
         fractal_ssh=None,
