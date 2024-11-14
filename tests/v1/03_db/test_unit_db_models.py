@@ -889,11 +889,8 @@ async def test_project_relationships(db):
 
 async def test_timestamp(db):
     """
-    SQLite encodes datetime objects as strings; therefore when extracting a
-    timestamp from the db, it is not timezone-aware by default.
-    Regarding Postgres:
+    This test asserts the behaviour described in
     https://www.psycopg.org/psycopg3/docs/basic/adapt.html#date-time-types-adaptation
-    This test asserts this behaviour.
     """
     p = Project(name="project")
     assert isinstance(p.timestamp_created, datetime.datetime)

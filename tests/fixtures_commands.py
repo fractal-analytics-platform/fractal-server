@@ -53,8 +53,6 @@ async def set_test_db(tmp_path):
     # Apply migrations on reverse until database is dropped, in order to
     # keep tests stateless:
     # https://alembic.sqlalchemy.org/en/latest/tutorial.html#downgrading
-    # Not required by SQLite. In that case we do not remove the `test.db`
-    # file, which can be read after the test.
     cmd = "poetry run alembic downgrade base"
     res = subprocess.run(
         shlex.split(cmd),
