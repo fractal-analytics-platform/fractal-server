@@ -35,7 +35,7 @@ from fractal_server.app.schemas.v2 import (
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.tasks.v2.local.collect import (
-    collect_package_local,
+    collect_local,
 )
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
@@ -271,7 +271,7 @@ async def collect_tasks_pip(
     else:
         # Local task collection
         background_tasks.add_task(
-            collect_package_local,
+            collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )
