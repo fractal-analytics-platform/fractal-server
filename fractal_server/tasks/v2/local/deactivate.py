@@ -124,6 +124,10 @@ def deactivate_local(
                 # Handle some specific cases for wheel-file case
                 if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
 
+                    logger.info(
+                        f"Handle specific cases for {task_group.origin=}."
+                    )
+
                     # Blocking situation: `wheel_path` is not set or points
                     # to a missing path
                     if (
@@ -148,19 +152,18 @@ def deactivate_local(
 
                     # Recoverable situation: `wheel_path` was not yet copied
                     # over to the correct server-side folder
-                    if Path(task_group.wheel_path).parent != Path(
-                        task_group.path
-                    ):
+                    wheel_path_parent_dir = Path(task_group.wheel_path).parent
+                    if wheel_path_parent_dir != Path(task_group.path):
                         logger.warning(
-                            f"{task_group.wheel_path=} is not in "
-                            f"{task_group.path=}. NOTE: this should only "
+                            f"{wheel_path_parent_dir.as_posix()} differs from "
+                            f"{task_group.path}. NOTE: this should only "
                             "happen for task groups created before 2.9.0."
                         )
 
                         if task_group.wheel_path not in task_group.pip_freeze:
                             raise ValueError(
                                 f"Cannot find {task_group.wheel_path=} in "
-                                "pip-freeze data."
+                                "pip-freeze data. Exit."
                             )
 
                         logger.info(
