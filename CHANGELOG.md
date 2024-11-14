@@ -27,12 +27,13 @@
     * Set `TaskGroupActivityV2.timestamp_ended` when collections terminate (\#2026).
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
     * Introduce background operations for _local_ reactivate/deactivate (\#2033).
+    * Fix escaping of newlines within f-strings, in logs (\#2028).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
-* Internal:
-    * Fix escaping of newlines within f-strings (\#2028).
+* Scripts:
+    * Introduce `scripts/export_v1_workflows.py` (\#2043).
 
 # 2.8.1
 
