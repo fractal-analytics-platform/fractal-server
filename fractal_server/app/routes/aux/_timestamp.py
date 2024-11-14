@@ -8,8 +8,6 @@ from fastapi import status
 def _convert_to_db_timestamp(dt: datetime) -> datetime:
     """
     This function takes a timezone-aware datetime and converts it to UTC.
-    If using SQLite, it also removes the timezone information in order to make
-    the datetime comparable with datetimes in the database.
     """
     if dt.tzinfo is None:
         raise HTTPException(
