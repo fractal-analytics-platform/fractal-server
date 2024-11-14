@@ -74,7 +74,7 @@ if __name__ == "__main__":
             / f"{wf_dump['id']}_{sanitize_string(wf_dump['name'])}.json"
         )
 
-        json_path.parent.mkdir(parents=True, exist_ok=False)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
         with json_path.open("w") as f:
             json.dump(wf_dump, f, indent=2, sort_keys=True, default=str)
 
