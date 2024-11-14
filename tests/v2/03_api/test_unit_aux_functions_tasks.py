@@ -1,10 +1,15 @@
 import pytest
+from devtools import debug
 from fastapi import HTTPException
 
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import TaskGroupActivityV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_collection_task_group_activity_status_message,
+)
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_full_access,
 )
@@ -152,3 +157,83 @@ async def test_get_task_require_active(db, task_factory_v2):
         await _get_task_read_access(
             task_id=task.id, user_id=user.id, db=db, require_active=True
         )
+
+
+async def test_get_collection_task_group_activity_status_message(
+    db,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+        # Create task group
+        task_group = TaskGroupV2(
+            user_id=user.id,
+            origin="other",
+            pkg_name="pkg_name",
+            version="version",
+        )
+        db.add(task_group)
+        await db.commit()
+        await db.refresh(task_group)
+
+        # Add one non-collection activity
+        db.add(
+            TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                pkg_name=task_group.pkg_name,
+                version=task_group.version,
+                status="OK",
+                action="deactivate",
+            )
+        )
+        await db.commit()
+
+        # Check message
+        msg = await _get_collection_task_group_activity_status_message(
+            task_group_id=task_group.id,
+            db=db,
+        )
+        debug(msg)
+        assert msg == ""
+
+        # Add one collection activity
+        db.add(
+            TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                pkg_name=task_group.pkg_name,
+                version=task_group.version,
+                status="OK",
+                action="collect",
+            )
+        )
+        await db.commit()
+
+        # Check message
+        msg = await _get_collection_task_group_activity_status_message(
+            task_group_id=task_group.id,
+            db=db,
+        )
+        debug(msg)
+        assert "There exists another task-group collection" in msg
+
+        # Add another collection activity
+        db.add(
+            TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                pkg_name=task_group.pkg_name,
+                version=task_group.version,
+                status="OK",
+                action="collect",
+            )
+        )
+        await db.commit()
+
+        # Check message
+        msg = await _get_collection_task_group_activity_status_message(
+            task_group_id=task_group.id,
+            db=db,
+        )
+        debug(msg)
+        assert "please contact an admin" in msg
