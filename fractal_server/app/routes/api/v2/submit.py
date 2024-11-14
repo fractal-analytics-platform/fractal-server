@@ -127,16 +127,6 @@ async def apply_workflow(
         )
         used_task_group_ids.add(task.taskgroupv2_id)
 
-    # Update TaskGroupV2.timestamp_last_used
-    res = await db.execute(
-        select(TaskGroupV2).where(TaskGroupV2.id.in_(used_task_group_ids))
-    )
-    used_task_groups = res.scalars().all()
-    for used_task_group in used_task_groups:
-        used_task_group.timestamp_last_used = now
-        db.add(used_task_group)
-    await db.commit()
-
     # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     user_settings = await validate_user_settings(
@@ -197,6 +187,16 @@ async def apply_workflow(
     db.add(job)
     await db.commit()
     await db.refresh(job)
+
+    # Update TaskGroupV2.timestamp_last_used
+    res = await db.execute(
+        select(TaskGroupV2).where(TaskGroupV2.id.in_(used_task_group_ids))
+    )
+    used_task_groups = res.scalars().all()
+    for used_task_group in used_task_groups:
+        used_task_group.timestamp_last_used = now
+        db.add(used_task_group)
+    await db.commit()
 
     # Define server-side job directory
     timestamp_string = now.strftime("%Y%m%d_%H%M%S")
