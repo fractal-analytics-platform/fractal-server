@@ -84,6 +84,30 @@ def deactivate_local(
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                # Handle some specific cases for wheel-file case
+                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE and (
+                    task_group.wheel_path is None
+                    or not Path(task_group.wheel_path).exists()
+                ):
+
+                    logger.error(
+                        "Cannot find task_group wheel_path with "
+                        f"{task_group_id=} :\n"
+                        f"{task_group=}\n. Exit."
+                    )
+                    error_msg = f"{task_group.wheel_path} does not exist."
+                    logger.error(error_msg)
+                    fail_and_cleanup(
+                        task_group=task_group,
+                        task_group_activity=activity,
+                        logger_name=LOGGER_NAME,
+                        log_file_path=log_file_path,
+                        exception=FileNotFoundError(error_msg),
+                        db=db,
+                    )
+                    return
+
                 if task_group.pip_freeze is None:
                     logger.warning(
                         "Recreate pip-freeze information, since "
@@ -119,28 +143,6 @@ def deactivate_local(
                     task_group.pip_freeze = pip_freeze_stdout
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info("Add pip freeze stdout to TaskGroupV2 - end")
-
-                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE and (
-                    task_group.wheel_path is None
-                    or not Path(task_group.wheel_path).exists()
-                ):
-
-                    logger.error(
-                        "Cannot find task_group wheel_path with "
-                        f"{task_group_id=} :\n"
-                        f"{task_group=}\n. Exit."
-                    )
-                    error_msg = f"{task_group.wheel_path} does not exist."
-                    logger.error(error_msg)
-                    fail_and_cleanup(
-                        task_group=task_group,
-                        task_group_activity=activity,
-                        logger_name=LOGGER_NAME,
-                        log_file_path=log_file_path,
-                        exception=FileNotFoundError(error_msg),
-                        db=db,
-                    )
-                    return
 
                 # At this point we are sure that venv_path
                 # wheel_path and pip_freeze exist
