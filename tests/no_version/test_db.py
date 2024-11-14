@@ -5,7 +5,6 @@ from sqlmodel import select
 
 from fractal_server.app.db import DB
 from fractal_server.app.models.security import UserOAuth
-from tests.fixtures_server import DB_ENGINE
 
 
 async def test_db_connection(db):
@@ -51,14 +50,6 @@ async def test_sync_db(db_sync, db):
     task_list = res.scalars().unique().all()
     assert len(task_list) == 1
     assert task_list[0].email == "user@oauth.com"
-
-
-@pytest.mark.skipif(
-    DB_ENGINE == "sqlite", reason="Skip if DB is SQLite, pass if it's Postgres"
-)
-def test_DB_ENGINE_is_postgres():
-    debug(DB_ENGINE)
-    pass
 
 
 async def test_DB_class_async():
@@ -161,9 +152,5 @@ async def test_reusing_id(db):
     # Extract list of IDs
     new_user_id_list = [user.id for user in new_user_list]
 
-    if DB_ENGINE == "sqlite":
-        # Assert IDs lists are overlapping
-        assert not set(new_user_id_list).isdisjoint(set(user_id_list))
-    else:
-        # Assert IDs lists are disjoined
-        assert set(new_user_id_list).isdisjoint(set(user_id_list))
+    # Assert IDs lists are disjoined
+    assert set(new_user_id_list).isdisjoint(set(user_id_list))

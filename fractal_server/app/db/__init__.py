@@ -2,17 +2,14 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
-import sqlite3
 from typing import AsyncGenerator
 from typing import Generator
 
 from sqlalchemy import create_engine
-from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from ...config import get_settings
 from ...logger import set_logger
@@ -20,14 +17,6 @@ from ...syringe import Inject
 
 
 logger = set_logger(__name__)
-
-SQLITE_WARNING_MESSAGE = (
-    "SQLite is supported (supported version >=3.37, "
-    f"current {sqlite3.sqlite_version=}) "
-    "but discouraged in production. "
-    "Given its partial support for ForeignKey constraints, "
-    "database consistency cannot be guaranteed."
-)
 
 
 class DB:
@@ -56,14 +45,7 @@ class DB:
         settings = Inject(get_settings)
         settings.check_db()
 
-        if settings.DB_ENGINE == "sqlite":
-            logger.warning(SQLITE_WARNING_MESSAGE)
-            # Set some sqlite-specific options
-            engine_kwargs_async = dict(poolclass=StaticPool)
-        else:
-            engine_kwargs_async = {
-                "pool_pre_ping": True,
-            }
+        engine_kwargs_async = {"pool_pre_ping": True}
 
         cls._engine_async = create_async_engine(
             settings.DATABASE_ASYNC_URL,
@@ -83,15 +65,7 @@ class DB:
         settings = Inject(get_settings)
         settings.check_db()
 
-        if settings.DB_ENGINE == "sqlite":
-            logger.warning(SQLITE_WARNING_MESSAGE)
-            # Set some sqlite-specific options
-            engine_kwargs_sync = dict(
-                poolclass=StaticPool,
-                connect_args={"check_same_thread": False},
-            )
-        else:
-            engine_kwargs_sync = {}
+        engine_kwargs_sync = {}
 
         cls._engine_sync = create_engine(
             settings.DATABASE_SYNC_URL,
@@ -106,13 +80,6 @@ class DB:
             autoflush=False,
             future=True,
         )
-
-        @event.listens_for(cls._engine_sync, "connect")
-        def set_sqlite_pragma(dbapi_connection, connection_record):
-            if settings.DB_ENGINE == "sqlite":
-                cursor = dbapi_connection.cursor()
-                cursor.execute("PRAGMA journal_mode=WAL")
-                cursor.close()
 
     @classmethod
     async def get_async_db(cls) -> AsyncGenerator[AsyncSession, None]:

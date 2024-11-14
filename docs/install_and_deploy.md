@@ -5,8 +5,7 @@
 Running Fractal Server assumes that
 
 1. It has access to a shared filesystem on which it can read and write.
-2. It has access to a database (currently supported: `postgres` (recommended)
-   and `sqlite`).
+2. It has access to a database (currently supported: `postgres`).
 3. It has access to one of the supported [computational backends](../internals/runners/).
 
 These requirements are sufficient to use the [local
@@ -51,7 +50,7 @@ either as enviromnent variables or in a file like `.fractal_server.env`.
 An example of such file is
 ```
 JWT_SECRET_KEY=XXX
-SQLITE_PATH=/some/path/to/fractal_server.db
+POSTGRES_DB=fractal-database-name
 FRACTAL_TASKS_DIR=/some/path/to/the/task/environment/folder
 FRACTAL_RUNNER_WORKING_BASE_DIR=some_folder_name
 FRACTAL_RUNNER_BACKEND=slurm
@@ -71,8 +70,6 @@ The command
 fractalctl set-db
 ```
 initalizes the database, according to the configuration variables.
-When using SQLite, for instance, the database file is created at the
-`SQLITE_PATH` path (notice: the parent folder must already exist).
 
 #### 3. Start the server
 

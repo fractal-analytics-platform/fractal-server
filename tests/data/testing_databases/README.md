@@ -25,7 +25,7 @@ echo "POSTGRES_DB=$DB_NAME" >> .fractal_server.env
 ```
 
 2. Manually edit `.fractal_server.env`, so that there is a single `POSTGRES_DB`
-   line. Also make sure that `DB_ENGINE=postgres-psycopg`.
+   line.
 
 3. Run migrations and dump db to file:
 ```bash

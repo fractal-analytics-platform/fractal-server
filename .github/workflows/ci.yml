@@ -9,20 +9,17 @@ on:
 jobs:
 
   tests_v1:
-    name: "V1 - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    name: "V1 - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     strategy:
       matrix:
         python-version: ["3.10"]
-        db: ["postgres-psycopg"]
 
     services:
       postgres:
-        # Disable postgres service when using sqlite, through the workaround
-        # described in https://github.com/actions/runner/issues/822
-        image: ${{ (matrix.db != 'sqlite') && 'postgres' || '' }}
+        image: 'postgres'
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
@@ -67,38 +64,28 @@ jobs:
 
       - name: Test with pytest
         env:
-          COVERAGE_FILE: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
-          DB_ENGINE: ${{ matrix.db }}
+          COVERAGE_FILE: coverage-data-v1-${{ matrix.python-version }}
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/no_version --ignore tests/v2
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}
-          path: coverage-data-v1-${{ matrix.python-version }}-${{ matrix.db }}*
+          name: coverage-data-v1-${{ matrix.python-version }}
+          path: coverage-data-v1-${{ matrix.python-version }}*
 
   tests_v2:
 
-    name: "V2 - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    name: "V2 - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-        db: ["sqlite", "postgres-psycopg"]
-        exclude:
-
-          - python-version: "3.11"
-            db: "sqlite"
-          - python-version: "3.12"
-            db: "sqlite"
 
     services:
       postgres:
-        # Disable postgres service when using sqlite, through the workaround
-        # described in https://github.com/actions/runner/issues/822
-        image: ${{ (matrix.db != 'sqlite') && 'postgres' || '' }}
+        image: 'postgres'
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
@@ -143,15 +130,14 @@ jobs:
 
       - name: Test with pytest
         env:
-          COVERAGE_FILE: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}
-          DB_ENGINE: ${{ matrix.db }}
+          COVERAGE_FILE: coverage-data-v2-${{ matrix.python-version }}
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 tests/no_version --ignore tests/v1
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}
-          path: coverage-data-v2-${{ matrix.python-version }}-${{ matrix.db }}*
+          name: coverage-data-v2-${{ matrix.python-version }}
+          path: coverage-data-v2-${{ matrix.python-version }}*
 
 
   coverage:
