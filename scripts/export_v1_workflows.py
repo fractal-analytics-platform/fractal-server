@@ -80,5 +80,7 @@ if __name__ == "__main__":
 
         logger.info(f"Workflow {dump['id']} dumped at '{json_path}'")
 
-    with (base_folder / "workflows.json").open("w") as f:
-        json.dump(workflow_map, f)
+    workflow_map_path = base_folder / "workflows.json"
+    with workflow_map_path.open("w") as f:
+        json.dump(workflow_map, f, sort_keys=True, default=str)
+    logger.info(f"Workflow map saved at '{workflow_map_path}'")
