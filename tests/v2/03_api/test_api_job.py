@@ -3,6 +3,7 @@ import time
 import pytest
 from devtools import debug
 
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -604,3 +605,36 @@ async def test_stop_job(
             assert shutdown_file.exists()
         else:
             assert res.status_code == 422
+
+
+async def test_update_timestamp_taskgroup(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="dataset"
+        )
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
+        assert task_group.timestamp_last_used is None
+
+        await client.post(
+            f"{PREFIX}/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+
+        await db.refresh(task_group)
+        assert task_group.timestamp_last_used is not None
