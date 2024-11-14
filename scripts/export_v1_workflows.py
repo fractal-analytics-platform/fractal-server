@@ -37,9 +37,12 @@ if __name__ == "__main__":
         logger.error(f"Folder {base_folder} not confirmed. Exiting.")
         exit(1)
 
+    base_folder.mkdir(exist_ok=False, parents=False)
+
     db = next(get_sync_db())
 
     workflow_list = db.execute(select(Workflow)).scalars().all()
+    logger.info(f"Found {len(workflow_list)} V1 workflows to export.")
 
     for workflow in workflow_list:
         dump = dict(
