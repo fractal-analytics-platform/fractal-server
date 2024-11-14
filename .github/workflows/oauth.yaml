@@ -43,7 +43,7 @@ jobs:
             cache: "pip"
 
         - name: Install dependencies
-          run: pip install -e ".[postgres-psycopg-binary]"
+          run: pip install -e .
 
         - name: Run Fractal
           env:
