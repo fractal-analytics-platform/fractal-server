@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
+from devtools import debug
 from fabric import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -301,3 +302,65 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
         f.write("hello\n")
     assert fractal_ssh.remote_exists(path=remote_folder)
     assert fractal_ssh.remote_exists(path=remote_file)
+
+
+def test_closed_socket(
+    fractal_ssh: FractalSSH,
+    run_in_container: callable,
+    tmp777_path: Path,
+):
+    """
+    This test reproduces the situation where sockets for the paramiko/fabric
+    connections are closed (e.g. due to a restart of the SSH service), but
+    the corresponding Python objects remain active.
+
+    The `check_connection` method detects some errors and tries to re-open the
+    connections.
+
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2019
+    """
+
+    # Prepare local/remote files
+    local_file = (tmp777_path / "local").as_posix()
+    with open(local_file, "w") as f:
+        f.write("hi there\n")
+    remote_file_1 = (tmp777_path / "remote_1").as_posix()
+    remote_file_2 = (tmp777_path / "remote_2").as_posix()
+
+    # Open connection and run an SFTP command
+    fractal_ssh.check_connection()
+    fractal_ssh.send_file(local=local_file, remote=remote_file_1)
+
+    # Check sockets are open
+    debug(fractal_ssh._connection.transport.sock)
+    debug(fractal_ssh._sftp_unsafe().sock)
+    assert not fractal_ssh._connection.transport.sock._closed
+    assert not fractal_ssh._sftp_unsafe().sock.closed
+
+    # Manually close sockets
+    fractal_ssh._sftp_unsafe().sock.closed = True
+    fractal_ssh._connection.transport.sock.close()
+
+    # Check sockets are closed
+    debug(fractal_ssh._connection.transport.sock)
+    debug(fractal_ssh._sftp_unsafe().sock)
+    assert fractal_ssh._connection.transport.sock._closed
+    assert fractal_ssh._sftp_unsafe().sock.closed
+
+    # Running an SFTP command now fails with an OSError
+    with pytest.raises(OSError, match="Socket is closed"):
+        fractal_ssh.send_file(local=local_file, remote=remote_file_2)
+    assert not Path(remote_file_2).exists()
+
+    # `check_connection` does its best to restore a corrupt connection
+    fractal_ssh.check_connection()
+
+    # Check sockets are open
+    debug(fractal_ssh._connection.transport.sock)
+    debug(fractal_ssh._sftp_unsafe().sock)
+    assert not fractal_ssh._connection.transport.sock._closed
+    assert not fractal_ssh._sftp_unsafe().sock.closed
+
+    # Successfully run a SFTP command
+    fractal_ssh.send_file(local=local_file, remote=remote_file_2)
+    assert fractal_ssh.remote_exists(remote_file_2)
