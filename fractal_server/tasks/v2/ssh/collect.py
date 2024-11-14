@@ -63,8 +63,7 @@ def _customize_and_run_template(
         raise ValueError(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
-    template_filename_stripped = Path(template_filename).stem
-    script_filename = f"{prefix}{template_filename_stripped}"
+    script_filename = f"{prefix}_{template_filename}"
     script_path_local = Path(script_dir_local) / script_filename
 
     customize_template(
@@ -109,7 +108,7 @@ def _copy_wheel_file_ssh(
     return dest
 
 
-def collect_package_ssh(
+def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,

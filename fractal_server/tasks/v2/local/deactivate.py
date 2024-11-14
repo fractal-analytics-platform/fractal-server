@@ -12,6 +12,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
@@ -83,6 +84,7 @@ def deactivate_local(
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
+
                 if task_group.pip_freeze is None:
                     logger.warning(
                         "Recreate pip-freeze information, since "
@@ -119,34 +121,80 @@ def deactivate_local(
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
-                if task_group.origin == "wheel" and (
-                    task_group.wheel_path is None
-                    or not Path(task_group.wheel_path).exists()
-                ):
+                # Handle some specific cases for wheel-file case
+                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
 
-                    logger.error(
-                        "Cannot find task_group wheel_path with "
-                        f"{task_group_id=} :\n"
-                        f"{task_group=}\n. Exit."
+                    logger.info(
+                        f"Handle specific cases for {task_group.origin=}."
                     )
-                    error_msg = f"{task_group.wheel_path} does not exist."
-                    logger.error(error_msg)
-                    fail_and_cleanup(
-                        task_group=task_group,
-                        task_group_activity=activity,
-                        logger_name=LOGGER_NAME,
-                        log_file_path=log_file_path,
-                        exception=FileNotFoundError(error_msg),
-                        db=db,
-                    )
-                    return
 
-                # At this point we are sure that venv_path
-                # wheel_path and pip_freeze exist
+                    # Blocking situation: `wheel_path` is not set or points
+                    # to a missing path
+                    if (
+                        task_group.wheel_path is None
+                        or not Path(task_group.wheel_path).exists()
+                    ):
+                        error_msg = (
+                            "Invalid wheel path for task group with "
+                            f"{task_group_id=}. {task_group.wheel_path=} is "
+                            "unset or does not exist."
+                        )
+                        logger.error(error_msg)
+                        fail_and_cleanup(
+                            task_group=task_group,
+                            task_group_activity=activity,
+                            logger_name=LOGGER_NAME,
+                            log_file_path=log_file_path,
+                            exception=FileNotFoundError(error_msg),
+                            db=db,
+                        )
+                        return
+
+                    # Recoverable situation: `wheel_path` was not yet copied
+                    # over to the correct server-side folder
+                    wheel_path_parent_dir = Path(task_group.wheel_path).parent
+                    if wheel_path_parent_dir != Path(task_group.path):
+                        logger.warning(
+                            f"{wheel_path_parent_dir.as_posix()} differs from "
+                            f"{task_group.path}. NOTE: this should only "
+                            "happen for task groups created before 2.9.0."
+                        )
+
+                        if task_group.wheel_path not in task_group.pip_freeze:
+                            raise ValueError(
+                                f"Cannot find {task_group.wheel_path=} in "
+                                "pip-freeze data. Exit."
+                            )
+
+                        logger.info(
+                            f"Now copy wheel file into {task_group.path}."
+                        )
+                        new_wheel_path = (
+                            Path(task_group.path)
+                            / Path(task_group.wheel_path).name
+                        ).as_posix()
+                        shutil.copy(task_group.wheel_path, new_wheel_path)
+                        logger.info(f"Copied wheel file to {new_wheel_path}.")
+
+                        task_group.wheel_path = new_wheel_path
+                        new_pip_freeze = task_group.pip_freeze.replace(
+                            task_group.wheel_path,
+                            new_wheel_path,
+                        )
+                        task_group.pip_freeze = new_pip_freeze
+                        task_group = add_commit_refresh(obj=task_group, db=db)
+                        logger.info(
+                            "Updated `wheel_path` and `pip_freeze` "
+                            "task-group attributes."
+                        )
+
+                # We now have all required information for reactivating the
+                # virtual environment at a later point
+                logger.info(f"Now removing {task_group.venv_path}.")
                 shutil.rmtree(task_group.venv_path)
-
-                activity.log = f"All good, {task_group.venv_path} removed."
+                logger.info(f"All good, {task_group.venv_path} removed.")
                 activity.status = TaskGroupActivityStatusV2.OK
+                activity.log = get_current_log(log_file_path)
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
 
