@@ -19,10 +19,15 @@ export OAUTH_DEXIDP_CLIENT_ID=client_test_id
 export OAUTH_DEXIDP_CLIENT_SECRET=client_test_secret
 export OAUTH_DEXIDP_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
 export OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
+export PGUSER=postgres
+export PGPASSWORD=postgres
+export PGHOST=localhost
+export PGPORT=5432
+export PGDATABASE=$POSTGRES_DB
 dropdb $POSTGRES_DB
 createdb $POSTGRES_DB
-poetry run fractalctl set-db
-poetry run fractalctl start --port 8001
+fractalctl set-db
+fractalctl start --port 8001
 ```
 
 Terminal 3
