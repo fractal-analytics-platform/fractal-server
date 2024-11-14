@@ -5,6 +5,7 @@ from devtools import debug
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import deactivate_local
 
@@ -140,7 +141,7 @@ async def test_deactivate_wheel_no_wheel_path(tmp_path, db, first_user):
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
-        origin="wheel-file",
+        origin=TaskGroupV2OriginEnum.WHEELFILE,
         wheel_path="/invalid",
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
@@ -178,6 +179,4 @@ async def test_deactivate_wheel_no_wheel_path(tmp_path, db, first_user):
     debug(task_group_activity_v2)
     assert task_group_activity_v2.status == "failed"
     assert "does not exist" in task_group_activity_v2.log
-    assert (
-        "Cannot find task_group wheel_path with" in task_group_activity_v2.log
-    )
+    assert "Invalid wheel path" in task_group_activity_v2.log
