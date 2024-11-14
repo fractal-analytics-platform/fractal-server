@@ -193,7 +193,7 @@ def test_settings_check_wrong_python():
             FRACTAL_TASKS_DIR="/tmp",
             FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             FRACTAL_RUNNER_BACKEND="local",
-            SQLITE_PATH="/tmp/db.db",
+            POSTGRES_DB="db-name",
             FRACTAL_TASKS_PYTHON_3_12=None,
             FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.12",
         )
@@ -210,7 +210,7 @@ def test_make_FRACTAL_TASKS_DIR_absolute():
     """
     settings = Settings(
         JWT_SECRET_KEY="secret",
-        SQLITE_PATH="/tmp/test.db",
+        POSTGRES_DB="db-name",
         FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
         FRACTAL_TASKS_DIR="relative-path",
     )
@@ -224,7 +224,7 @@ def test_make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute():
     """
     settings = Settings(
         JWT_SECRET_KEY="secret",
-        SQLITE_PATH="/tmp/test.db",
+        POSTGRES_DB="db-name",
         FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
         FRACTAL_TASKS_DIR="/tmp",
     )
@@ -270,7 +270,7 @@ def test_collect_oauth_clients(monkeypatch):
         FRACTAL_TASKS_DIR="/tmp",
         FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
         FRACTAL_RUNNER_BACKEND="local",
-        SQLITE_PATH="/tmp/db.db",
+        POSTGRES_DB="db-name",
     )
     debug(settings.OAUTH_CLIENTS_CONFIG)
     assert settings.OAUTH_CLIENTS_CONFIG == []
@@ -283,7 +283,7 @@ def test_collect_oauth_clients(monkeypatch):
             FRACTAL_TASKS_DIR="/tmp",
             FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             FRACTAL_RUNNER_BACKEND="local",
-            SQLITE_PATH="/tmp/db.db",
+            POSTGRES_DB="db-name",
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 1
@@ -303,7 +303,7 @@ def test_collect_oauth_clients(monkeypatch):
             FRACTAL_TASKS_DIR="/tmp",
             FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             FRACTAL_RUNNER_BACKEND="local",
-            SQLITE_PATH="/tmp/db.db",
+            POSTGRES_DB="db-name",
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
@@ -314,7 +314,7 @@ def test_collect_oauth_clients(monkeypatch):
 def test_python_interpreters():
     common_attributes = dict(
         JWT_SECRET_KEY="something",
-        SQLITE_PATH="/something",
+        POSTGRES_DB="db-name",
         FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
         FRACTAL_TASKS_DIR="/something",
     )

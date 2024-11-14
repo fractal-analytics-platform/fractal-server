@@ -191,11 +191,6 @@ class Settings(BaseSettings):
     Name of the PostgreSQL database to connect to.
     """
 
-    SQLITE_PATH: Optional[str]
-    """
-    File path where the SQLite database is located (or will be located).
-    """
-
     @property
     def DATABASE_ASYNC_URL(self) -> URL:
         url = URL.create(
