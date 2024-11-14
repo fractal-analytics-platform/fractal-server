@@ -63,16 +63,11 @@ poetry run alembic check
 If needed, the simplest procedure is to use `alembic --autogenerate` to create
 an incremental migration script, as in
 ```
-$ export SQLITE_PATH=some-test.db
-$ rm some-test.db
+$ export POSTGRES_DB="autogenerate-fractal-revision"
+$ dropdb --if-exist "$POSTGRES_DB"
+$ createdb "$POSTGRES_DB"
 $ poetry run fractalctl set-db --skip-init-data
 $ poetry run alembic revision --autogenerate -m "Some migration message"
-
-# UserWarning: SQLite is partially supported but discouraged in production environment.SQLite offers partial support for ForeignKey constraints. As such, consistency of the database cannot be guaranteed.
-# INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
-# INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
-# INFO  [alembic.autogenerate.compare] Detected added column 'task.x'
-#   Generating /some/path/fractal_server/migrations/versions/155de544c342_.py ...  done
 ```
 
 ## Release

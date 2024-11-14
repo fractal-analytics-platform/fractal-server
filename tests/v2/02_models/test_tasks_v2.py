@@ -8,8 +8,6 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 
 async def test_task_group_v2(db):
@@ -66,34 +64,19 @@ async def test_task_group_v2(db):
 
     # Delete user_group
 
-    settings = Inject(get_settings)
-    if settings.DB_ENGINE == "sqlite":
-
-        await db.delete(user_group)
+    await db.delete(user_group)
+    with pytest.raises(IntegrityError):
+        # Fail because `task_group.user_group_id` is not None
         await db.commit()
-        await db.refresh(task_group)
+    await db.rollback()
 
-        assert task_group.user_group_id is not None  # SQLite and FK problem
+    await db.delete(user_group)
+    task_group.user_group_id = None
+    db.add(task_group)
+    await db.commit()
 
-        task_group.user_group_id = None
-        db.add(task_group)
-        await db.commit()
-
-    else:
-
-        await db.delete(user_group)
-        with pytest.raises(IntegrityError):
-            # Fail because `task_group.user_group_id` is not None
-            await db.commit()
-        await db.rollback()
-
-        await db.delete(user_group)
-        task_group.user_group_id = None
-        db.add(task_group)
-        await db.commit()
-
-        await db.refresh(task_group)
-        assert task_group.user_group_id is None
+    await db.refresh(task_group)
+    assert task_group.user_group_id is None
 
     # Consistency check
 
@@ -148,12 +131,6 @@ async def test_collection_state(db):
 
     await db.delete(task_group)
 
-    settings = Inject(get_settings)
-    if settings.DB_ENGINE == "sqlite":
+    with pytest.raises(IntegrityError):
         await db.commit()
-        await db.refresh(task_group_activity)
-        assert task_group_activity.taskgroupv2_id is not None
-    else:
-        with pytest.raises(IntegrityError):
-            await db.commit()
-        await db.rollback()
+    await db.rollback()

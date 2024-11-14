@@ -1,48 +1,13 @@
 # Database Interface
 
-Fractal Server allows either _SQLite_ or _PostgreSQL_ to be used as database,
-and the choice is based on the
-[DB_ENGINE](../../configuration/#fractal_server.config.Settings.DB_ENGINE)
-environment variable; the other database-related configuration variables for
-each case are described below (and in the [configuration
-page](../../configuration/)).
-
+Fractal Server only allows _PostgreSQL_ to be used as database; the database-related configuration variables are described below (and in the [configuration page](../../configuration/)).
 
 To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
 `1`.
 
-## SQLite
-
-SQLite is the default value for `DB_ENGINE`, but you can also set it explicitly:
-
-```
-DB_ENGINE=sqlite
-```
-
-You must always provide the path to the database file, either as absolute or relative path:
-```
-SQLITE_PATH=/path/to/fractal_server.db
-```
-If the `SQLITE_PATH` file does not exist, it will be created by `fractalctl
-set-db`.
-
-> ⚠️  **Important warnings:**
->
-> 1. SQLite is supported but discouraged in production. Given its partial
->    support for ForeignKey constraints, consistency of the database cannot be
->    guaranteed.
-> 2. The minimum required version for the sqlite system library is v3.37 (which
->    is for instance the one in the
->    [libsqlite3-0 package](https://packages.ubuntu.com/jammy/libsqlite3-0)
->    package for Ubuntu 22.04LTS).
-
-
-## PostgreSQL
-
 ### Requirements
 
 To use PostgreSQL as a database, Fractal Server relies on `sqlalchemy` and `psycopg[binary]`.
-
 
 ### Setup
 
@@ -78,7 +43,6 @@ is done by setting the following configuration variables (before running
 - Required:
 
     ```
-    DB_ENGINE=postgres-psycopg
     POSTGRES_DB=fractal_db
     ```
 
