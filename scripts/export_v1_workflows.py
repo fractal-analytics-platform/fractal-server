@@ -19,33 +19,34 @@ logger = set_logger(sys.argv[0])
 if __name__ == "__main__":
 
     if len(sys.argv) != 2:
-        raise ValueError(f"Usage: 'python {sys.argv[0]} folder'")
+        raise ValueError(f"Usage: 'python {sys.argv[0]} FOLDER'")
 
     folder = Path(sys.argv[1])
     if not folder.exists():
-        logger.error(f"Folder {folder} does not exist. Exiting.")
-        exit(2)
+        sys.exit(f"Folder {folder} does not exist. Exiting.")
 
     timestamp = get_timestamp().strftime("%Y%m%d_%H%M%S")
     base_folder = folder / f"{timestamp}_fractal_v1_workflows"
+    base_folder = base_folder.resolve()
+
     confirm = input(
-        f"Fractal V1 Workflow will be saved at '{base_folder.resolve()}'. "
+        f"Fractal V1 Workflow will be saved at '{base_folder}'. "
         "Do you confirm? [yY]: "
     )
 
     if confirm not in ["y", "Y"]:
-        logger.error(f"Folder {base_folder} not confirmed. Exiting.")
-        exit(1)
+        sys.exit(f"Folder '{base_folder}' not confirmed. Exiting.")
 
     base_folder.mkdir(exist_ok=False, parents=False)
+    logger.info(f"Created {base_folder.as_posix()}.")
 
     db = next(get_sync_db())
-
     workflow_list = db.execute(select(Workflow)).scalars().all()
     logger.info(f"Found {len(workflow_list)} V1 workflows to export.")
 
+    workflow_map = dict()
     for workflow in workflow_list:
-        dump = dict(
+        wf_dump = dict(
             **workflow.model_dump(),
             task_list=[
                 dict(
@@ -55,12 +56,12 @@ if __name__ == "__main__":
                 for workflowtask in workflow.task_list
             ],
         )
-        project_name = db.get(Project, dump["project_id"]).name
+        project_name = db.get(Project, wf_dump["project_id"]).name
         user_email = (
             db.execute(
                 select(UserOAuth.email)
                 .join(LinkUserProject)
-                .where(LinkUserProject.project_id == dump["project_id"])
+                .where(LinkUserProject.project_id == wf_dump["project_id"])
             )
             .scalars()
             .one_or_none()
@@ -69,11 +70,20 @@ if __name__ == "__main__":
         json_path = (
             base_folder
             / sanitize_string(user_email)
-            / f"{dump['project_id']}_{sanitize_string(project_name)}"
-            / f"{dump['id']}_{sanitize_string(dump['name'])}.json"
+            / f"{wf_dump['project_id']}_{sanitize_string(project_name)}"
+            / f"{wf_dump['id']}_{sanitize_string(wf_dump['name'])}.json"
         )
-        json_path.parent.mkdir(parents=True, exist_ok=True)
-        with json_path.open("w") as f:
-            json.dump(dump, f, indent=2, sort_keys=True, default=str)
 
-        logger.info(f"Workflow {dump['id']} dumped at '{json_path.resolve()}'")
+        json_path.parent.mkdir(parents=True, exist_ok=False)
+        with json_path.open("w") as f:
+            json.dump(wf_dump, f, indent=2, sort_keys=True, default=str)
+
+        workflow_map[wf_dump["id"]] = json_path.as_posix()
+        logger.info(
+            f"Workflow {wf_dump['id']} dumped at '{json_path.as_posix()}'"
+        )
+
+    workflow_map_path = base_folder / "workflows.json"
+    with workflow_map_path.open("w") as f:
+        json.dump(workflow_map, f, sort_keys=True, indent=2)
+    logger.info(f"Workflow map saved at '{workflow_map_path}'")
