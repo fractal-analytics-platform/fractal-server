@@ -12,6 +12,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
@@ -119,7 +120,7 @@ def deactivate_local(
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
-                if task_group.origin == "wheel" and (
+                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE and (
                     task_group.wheel_path is None
                     or not Path(task_group.wheel_path).exists()
                 ):
