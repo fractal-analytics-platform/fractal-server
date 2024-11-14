@@ -122,9 +122,32 @@ def _zip_folder_to_file_and_remove(folder: str) -> None:
     3. Checks if the folder can be safely deleted using the
         `_folder_can_be_deleted` function. If so, deletes the original folder.
     """
-    _create_zip(folder, f"{folder}_tmp.zip")
-    shutil.move(f"{folder}_tmp.zip", f"{folder}.zip")
+
+    tmp_zipfile = f"{folder}_tmp.zip"
+    zipfile = f"{folder}.zip"
+
+    try:
+        logger.info(f"Start creating temporary zip file at '{tmp_zipfile}'.")
+        _create_zip(folder, tmp_zipfile)
+        logger.info("Zip file created.")
+    except Exception as e:
+        logger.error(
+            f"Error while creating temporary zip file. Original error: '{e}'."
+        )
+        tmp_zipfile = Path(tmp_zipfile)
+        if tmp_zipfile.exists():
+            logger.error(
+                f"Removing corrupted zip file '{tmp_zipfile.as_posix()}'."
+            )
+            tmp_zipfile.unlink()
+            logger.error("Zip file removed.")
+        return
+
+    logger.info(f"Moving temporary zip file to {zipfile}.")
+    shutil.move(tmp_zipfile, zipfile)
+    logger.info("Zip file moved.")
+
     if _folder_can_be_deleted(folder):
-        logger.info(f"Deleting folder '{folder}'...")
+        logger.info(f"Removing folder '{folder}'.")
         shutil.rmtree(folder)
-        logger.info(f"Deletion of folder '{folder}' completed.")
+        logger.info("Folder removed.")
