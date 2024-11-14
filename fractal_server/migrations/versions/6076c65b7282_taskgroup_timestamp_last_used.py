@@ -1,8 +1,8 @@
 """TaskGroup timestamp last_used
 
-Revision ID: 1ced626318d9
+Revision ID: 6076c65b7282
 Revises: 3082479ac4ea
-Create Date: 2024-11-14 09:16:40.805385
+Create Date: 2024-11-14 09:40:03.336064
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "1ced626318d9"
+revision = "6076c65b7282"
 down_revision = "3082479ac4ea"
 branch_labels = None
 depends_on = None

@@ -90,6 +90,7 @@ class TaskGroupReadV2(BaseModel):
 
     active: bool
     timestamp_created: datetime
+    timestamp_last_used: Optional[datetime] = None
 
 
 class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):

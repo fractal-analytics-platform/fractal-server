@@ -129,9 +129,10 @@ async def apply_workflow(
 
     # Update TaskGroupV2.timestamp_last_used
     res = await db.execute(
-        select(TaskGroupV2).where(TaskGroupV2.id._in(used_task_group_ids))
+        select(TaskGroupV2).where(TaskGroupV2.id.in_(used_task_group_ids))
     )
-    for used_task_group in res.json():
+    used_task_groups = res.scalars().all()
+    for used_task_group in used_task_groups:
         used_task_group.timestamp_last_used = now
         db.add(used_task_group)
     await db.commit()
