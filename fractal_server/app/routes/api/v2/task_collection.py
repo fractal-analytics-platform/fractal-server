@@ -248,7 +248,7 @@ async def collect_tasks_pip(
         # SSH task collection
 
         from fractal_server.tasks.v2.ssh.collect import (
-            collect_package_ssh,
+            collect_ssh,
         )
 
         # User appropriate FractalSSH object
@@ -261,7 +261,7 @@ async def collect_tasks_pip(
         fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
-            collect_package_ssh,
+            collect_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             fractal_ssh=fractal_ssh,

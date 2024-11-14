@@ -109,7 +109,7 @@ def _copy_wheel_file_ssh(
     return dest
 
 
-def collect_package_ssh(
+def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,
