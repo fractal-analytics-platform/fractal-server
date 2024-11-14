@@ -61,17 +61,17 @@ def test_create_zip_fail(tmp_path, monkeypatch):
     def _fake_create_zip(*args, **kwargs):
         raise RuntimeError("foo")
 
+    test_folder = make_folder(tmp_path)
+
+    corrupted_file = Path(f"{test_folder}_tmp.zip")
+    corrupted_file.touch()
+
+    assert corrupted_file.exists()
     monkeypatch.setattr(
         fractal_server.zip_tools, "_create_zip", _fake_create_zip
     )
-    test_folder = make_folder(tmp_path)
-
-    corrupted_file = f"{test_folder}_tmp.zip"
-    Path(corrupted_file).touch()
-
-    assert Path(corrupted_file).exists()
     _zip_folder_to_file_and_remove(test_folder.as_posix())
-    assert not Path(corrupted_file).exists()
+    assert not corrupted_file.exists()
 
 
 def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
