@@ -86,27 +86,36 @@ def deactivate_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Handle some specific cases for wheel-file case
-                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE and (
-                    task_group.wheel_path is None
-                    or not Path(task_group.wheel_path).exists()
-                ):
+                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
 
-                    logger.error(
-                        "Cannot find task_group wheel_path with "
-                        f"{task_group_id=} :\n"
-                        f"{task_group=}\n. Exit."
-                    )
-                    error_msg = f"{task_group.wheel_path} does not exist."
-                    logger.error(error_msg)
-                    fail_and_cleanup(
-                        task_group=task_group,
-                        task_group_activity=activity,
-                        logger_name=LOGGER_NAME,
-                        log_file_path=log_file_path,
-                        exception=FileNotFoundError(error_msg),
-                        db=db,
-                    )
-                    return
+                    # Blocking situation: `wheel_path` is not set or points
+                    # to a missing path
+                    if (
+                        task_group.wheel_path is None
+                        or not Path(task_group.wheel_path).exists()
+                    ):
+                        error_msg = (
+                            "Invalid wheel path for task group with "
+                            f"{task_group_id=}. {task_group.wheel_path=} is "
+                            "unset or does not exist."
+                        )
+                        logger.error(error_msg)
+                        fail_and_cleanup(
+                            task_group=task_group,
+                            task_group_activity=activity,
+                            logger_name=LOGGER_NAME,
+                            log_file_path=log_file_path,
+                            exception=FileNotFoundError(error_msg),
+                            db=db,
+                        )
+                        return
+
+                    # Recoverable situation: `wheel_path` was not yet copied
+                    # over to the correct server-side folder
+                    if Path(task_group.wheel_path).parent != Path(
+                        task_group.path
+                    ):
+                        pass
 
                 if task_group.pip_freeze is None:
                     logger.warning(
