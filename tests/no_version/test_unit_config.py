@@ -27,18 +27,6 @@ def test_settings_injection(override_settings):
         # valid
         (
             dict(
-                DB_ENGINE="sqlite",
-                JWT_SECRET_KEY="secret",
-                FRACTAL_TASKS_DIR="/tmp",
-                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
-                SQLITE_PATH="/tmp/db.db",
-            ),
-            False,
-        ),
-        (
-            dict(
-                DB_ENGINE="postgres-psycopg",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 POSTGRES_DB="test",
@@ -53,7 +41,7 @@ def test_settings_injection(override_settings):
                 FRACTAL_TASKS_DIR="/tmp",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
-                SQLITE_PATH="/tmp/db.db",
+                POSTGRES_DB="test",
             ),
             True,
         ),
@@ -63,28 +51,16 @@ def test_settings_injection(override_settings):
                 JWT_SECRET_KEY="secret",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
-                SQLITE_PATH="/tmp/db.db",
+                POSTGRES_DB="test",
             ),
             True,
         ),
-        # check_db (sqlite)
-        # Missing SQLITE_PATH
-        (
-            dict(
-                JWT_SECRET_KEY="secret",
-                FRACTAL_TASKS_DIR="/tmp",
-                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
-            ),
-            True,
-        ),
-        # check_db (postgres)
+        # check_db
         # missing POSTGRES_DB
         (
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="postgres-psycopg",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
             ),
@@ -94,7 +70,6 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="postgres-psycopg",
                 POSTGRES_DB="fractal",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
@@ -107,9 +82,8 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
                 FRACTAL_RUNNER_BACKEND="local",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
             ),
             True,
         ),
@@ -117,9 +91,8 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
                 FRACTAL_RUNNER_BACKEND="local",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             ),
             False,
@@ -130,8 +103,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="slurm",
                 FRACTAL_SLURM_CONFIG_FILE="__REPLACE_WITH_VALID_PATH__",
@@ -143,8 +115,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="slurm",
             ),
@@ -155,8 +126,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="slurm",
                 FRACTAL_SLURM_CONFIG_FILE="/not/existing/file.xy",
@@ -168,8 +138,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_SLURM_CONFIG_FILE="/not/existing/file.xyz",
             ),
@@ -180,8 +149,7 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                SQLITE_PATH="/tmp/test.db",
+                POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_LOCAL_CONFIG_FILE="/not/existing/file.xyz",
             ),

@@ -16,7 +16,6 @@ import shutil
 import sys
 from os import environ
 from os import getenv
-from os.path import abspath
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -167,10 +166,6 @@ class Settings(BaseSettings):
     ###########################################################################
     # DATABASE
     ###########################################################################
-    DB_ENGINE: Literal["sqlite", "postgres-psycopg"] = "sqlite"
-    """
-    Database engine to use (supported: `sqlite`, `postgres-psycopg`).
-    """
     DB_ECHO: bool = False
     """
     If `True`, make database operations verbose.
@@ -203,37 +198,19 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_ASYNC_URL(self) -> URL:
-        if self.DB_ENGINE == "postgres-psycopg":
-            url = URL.create(
-                drivername="postgresql+psycopg",
-                username=self.POSTGRES_USER,
-                password=self.POSTGRES_PASSWORD,
-                host=self.POSTGRES_HOST,
-                port=self.POSTGRES_PORT,
-                database=self.POSTGRES_DB,
-            )
-        else:
-            if not self.SQLITE_PATH:
-                raise FractalConfigurationError(
-                    "SQLITE_PATH path cannot be None"
-                )
-            sqlite_path = abspath(self.SQLITE_PATH)
-            url = URL.create(
-                drivername="sqlite+aiosqlite",
-                database=sqlite_path,
-            )
+        url = URL.create(
+            drivername="postgresql+psycopg",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            database=self.POSTGRES_DB,
+        )
         return url
 
     @property
     def DATABASE_SYNC_URL(self):
-        if self.DB_ENGINE == "postgres-psycopg":
-            return self.DATABASE_ASYNC_URL.set(drivername="postgresql+psycopg")
-        else:
-            if not self.SQLITE_PATH:
-                raise FractalConfigurationError(
-                    "SQLITE_PATH path cannot be None"
-                )
-            return self.DATABASE_ASYNC_URL.set(drivername="sqlite")
+        return self.DATABASE_ASYNC_URL.set(drivername="postgresql+psycopg")
 
     ###########################################################################
     # FRACTAL SPECIFIC
@@ -533,25 +510,8 @@ class Settings(BaseSettings):
         """
         Checks that db environment variables are properly set.
         """
-        if self.DB_ENGINE == "postgres-psycopg":
-            if not self.POSTGRES_DB:
-                raise FractalConfigurationError(
-                    "POSTGRES_DB cannot be None when DB_ENGINE="
-                    "postgres-psycopg."
-                )
-
-            try:
-                import psycopg  # noqa: F401
-            except ModuleNotFoundError:
-                raise FractalConfigurationError(
-                    "DB engine is `postgres-psycopg` but `psycopg` is not "
-                    "available"
-                )
-        else:
-            if not self.SQLITE_PATH:
-                raise FractalConfigurationError(
-                    "SQLITE_PATH cannot be None when DB_ENGINE=sqlite."
-                )
+        if not self.POSTGRES_DB:
+            raise FractalConfigurationError("POSTGRES_DB cannot be None.")
 
     def check_runner(self) -> None:
 

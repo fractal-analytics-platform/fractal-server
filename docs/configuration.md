@@ -8,8 +8,7 @@ Some are optional and sensible defaults are provided.
 > JWT_SECRET_KEY
 > FRACTAL_TASKS_DIR
 > FRACTAL_RUNNER_WORKING_BASE_DIR
+> POSTGRES_DB
 > ```
->
-> together with the database-specific variables: `SQLITE_PATH` for SQLite, or `DB_ENGINE=postgres-psycopg` and `POSTGRES_DB` for Postgres.
 
 ::: fractal_server.config

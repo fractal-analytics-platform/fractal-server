@@ -5,8 +5,7 @@
 Running Fractal Server assumes that
 
 1. It has access to a shared filesystem on which it can read and write.
-2. It has access to a database (currently supported: `postgres` (recommended)
-   and `sqlite`).
+2. It has access to a database (currently supported: `postgres`).
 3. It has access to one of the supported [computational backends](../internals/runners/).
 
 These requirements are sufficient to use the [local

@@ -1,5 +1,4 @@
 import logging
-import os
 import random
 import sys
 from dataclasses import dataclass
@@ -28,25 +27,15 @@ from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
-DB_ENGINE = os.environ.get("DB_ENGINE", "postgres-psycopg")
-
 
 def get_patched_settings(temp_path: Path):
     settings = Settings()
     settings.JWT_SECRET_KEY = "secret_key"
 
     settings.FRACTAL_DEFAULT_ADMIN_USERNAME = "admin"
-
-    settings.DB_ENGINE = DB_ENGINE
-    if DB_ENGINE == "sqlite":
-        settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
-    elif DB_ENGINE == "postgres-psycopg":
-        settings.POSTGRES_USER = "postgres"
-        settings.POSTGRES_PASSWORD = "postgres"
-        settings.POSTGRES_DB = "fractal_test"
-    else:
-        raise ValueError
-
+    settings.POSTGRES_USER = "postgres"
+    settings.POSTGRES_PASSWORD = "postgres"
+    settings.POSTGRES_DB = "fractal_test"
     settings.FRACTAL_TASKS_DIR = temp_path / "fractal_tasks_dir"
     settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
     settings.FRACTAL_TASKS_DIR.chmod(0o755)

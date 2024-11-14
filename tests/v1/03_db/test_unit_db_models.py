@@ -16,8 +16,6 @@ from fractal_server.app.models.v1 import WorkflowTask
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 
 async def test_projects(db):
@@ -153,25 +151,9 @@ async def test_project_and_workflows(db):
     db_project = project_query.scalars().one()
     await db.delete(db_project)
 
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres-psycopg":
-        with pytest.raises(IntegrityError):
-            # Workflow.project_id violates fk-contraint in Postgres
-            await db.commit()
-    else:
-        # SQLite does not handle fk-constraints well
+    with pytest.raises(IntegrityError):
+        # Workflow.project_id violates fk-contraint in Postgres
         await db.commit()
-        db.expunge_all()
-
-        project_query = await db.execute(select(Project))
-        db_project = project_query.scalars().one_or_none()
-        assert db_project is None
-
-        workflow_query = await db.execute(select(Workflow))
-        db_workflow = workflow_query.scalars().one_or_none()
-        assert db_workflow is not None  # no cascade
-        assert db_workflow.project_id is not None  # fk is not null
-        assert db_workflow.project is None  # relationship is null
 
 
 async def test_workflows_tasks_and_workflowtasks(db):
@@ -308,25 +290,9 @@ async def test_project_and_datasets(db):
     db_project = project_query.scalars().one()
     await db.delete(db_project)
 
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres-psycopg":
-        with pytest.raises(IntegrityError):
-            # Dataset.project_id violates fk-contraint in Postgres
-            await db.commit()
-    else:
-        # SQLite does not handle fk-constraints well
+    with pytest.raises(IntegrityError):
+        # Dataset.project_id violates fk-contraint in Postgres
         await db.commit()
-        db.expunge_all()
-
-        project_query = await db.execute(select(Project))
-        db_project = project_query.scalars().one_or_none()
-        assert db_project is None
-
-        dataset_query = await db.execute(select(Dataset))
-        db_dataset = dataset_query.scalars().one_or_none()
-        assert db_dataset is not None  # no cascade
-        assert db_dataset.project_id is not None  # fk is not null
-        assert db_dataset.project is None  # relationship is null
 
 
 async def test_dataset_and_resources(db):
@@ -472,8 +438,6 @@ async def test_jobs(db):
         assert job.output_dataset_id is not None
         assert job.project_id is not None
 
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-
     # Test deletion of related objects.
     # NOTE: Since there are no cascade relationships between Dataset/Workflow
     # and ApplyWorkflow, foreign-keys would remain non-null even after delete
@@ -491,16 +455,10 @@ async def test_jobs(db):
 
     # Failed deletions
     for db_object in (db_workflow, db_input_dataset, db_output_dataset):
-        if DB_ENGINE == "postgres-psycopg":
-            with pytest.raises(IntegrityError):
-                await db.delete(db_object)
-                await db.commit()
-            await db.rollback()
-        else:
-            # Skip this block when using sqlite, since its implementation of
-            # foreign-key constraints may actually allow these delete
-            # operations.
-            pass
+        with pytest.raises(IntegrityError):
+            await db.delete(db_object)
+            await db.commit()
+        await db.rollback()
 
     # Successful deletions (after making foreign keys null)
     job_query = await db.execute(select(ApplyWorkflow))
@@ -530,15 +488,10 @@ async def test_jobs(db):
     # Failed project deletion
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
-    if DB_ENGINE == "postgres-psycopg":
-        with pytest.raises(IntegrityError):
-            await db.delete(db_project)
-            await db.commit()
-        await db.rollback()
-    else:
-        # Skip this block when using sqlite, since its implementation of
-        # foreign-key constraints may actually allow these delete operations.
-        pass
+    with pytest.raises(IntegrityError):
+        await db.delete(db_project)
+        await db.commit()
+    await db.rollback()
 
     # Successful project deletion (after making foreign keys null)
     job_query = await db.execute(select(ApplyWorkflow))
@@ -956,13 +909,8 @@ async def test_timestamp(db):
 
     assert isinstance(project.timestamp_created, datetime.datetime)
 
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "sqlite":
-        assert project.timestamp_created.tzinfo is None
-        assert project.timestamp_created.tzname() is None
-    elif DB_ENGINE == "postgres-psycopg":
-        assert project.timestamp_created.tzinfo is not None
-        assert (
-            project.timestamp_created.astimezone(tz=datetime.timezone.utc)
-            == p.timestamp_created
-        )
+    assert project.timestamp_created.tzinfo is not None
+    assert (
+        project.timestamp_created.astimezone(tz=datetime.timezone.utc)
+        == p.timestamp_created
+    )
