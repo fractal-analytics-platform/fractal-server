@@ -27,6 +27,8 @@
     * Add `FractalSSH.remote_exists` method (\#2008).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
+* Scripts:
+    * Introduce `scripts/export_v1_workflows.py` (\#2043).
 
 
 # 2.8.1
