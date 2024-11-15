@@ -156,6 +156,7 @@ def collect_ssh(
                     new_wheel_path = _copy_wheel_file_ssh(
                         task_group=task_group,
                         fractal_ssh=fractal_ssh,
+                        logger_name=LOGGER_NAME,
                     )
                     task_group.wheel_path = new_wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)

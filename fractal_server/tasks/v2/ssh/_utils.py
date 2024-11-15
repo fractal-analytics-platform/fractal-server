@@ -4,7 +4,6 @@ from pathlib import Path
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.v2.ssh.collect import LOGGER_NAME
 from fractal_server.tasks.v2.utils_templates import customize_template
 
 
@@ -69,9 +68,7 @@ def _customize_and_run_template(
 
 
 def _copy_wheel_file_ssh(
-    *,
-    task_group: TaskGroupV2,
-    fractal_ssh: FractalSSH,
+    *, task_group: TaskGroupV2, fractal_ssh: FractalSSH, logger_name: str
 ) -> str:
     """
     Handle the situation where `task_group.wheel_path` is not part of
@@ -80,7 +77,7 @@ def _copy_wheel_file_ssh(
     Returns:
         The new `wheel_path`.
     """
-    logger = get_logger(LOGGER_NAME)
+    logger = get_logger(logger_name=logger_name)
     source = task_group.wheel_path
     dest = (
         Path(task_group.path) / Path(task_group.wheel_path).name

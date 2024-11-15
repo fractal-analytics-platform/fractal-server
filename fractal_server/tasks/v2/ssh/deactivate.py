@@ -24,7 +24,7 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
-def deactivate_local(
+def deactivate_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
@@ -184,6 +184,7 @@ def deactivate_local(
                         new_wheel_path = _copy_wheel_file_ssh(
                             task_group=task_group,
                             fractal_ssh=fractal_ssh,
+                            logger_name=LOGGER_NAME,
                         )
                         logger.info(f"Copied wheel file to {new_wheel_path}.")
 
