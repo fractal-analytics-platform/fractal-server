@@ -539,7 +539,8 @@ CREATE TABLE public.taskgroupv2 (
     timestamp_created timestamp with time zone NOT NULL,
     pip_freeze character varying,
     "venv_size_in_kB" integer,
-    venv_file_number integer
+    venv_file_number integer,
+    timestamp_last_used timestamp with time zone
 );
 
 
@@ -1566,9 +1567,9 @@ COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started,
 -- Data for Name: taskgroupv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, wheel_path, pip_extras, pinned_package_versions, active, timestamp_created, pip_freeze, "venv_size_in_kB", venv_file_number) FROM stdin;
-1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	\N	\N
-2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	\N	\N
+COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, wheel_path, pip_extras, pinned_package_versions, active, timestamp_created, pip_freeze, "venv_size_in_kB", venv_file_number, timestamp_last_used) FROM stdin;
+1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	\N	\N	\N
+2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	\N	\N	\N
 \.
 
 

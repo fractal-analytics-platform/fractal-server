@@ -30,6 +30,7 @@ from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
+from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
@@ -60,6 +61,8 @@ async def apply_workflow(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[JobReadV2]:
+
+    now = get_timestamp()
 
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
@@ -112,22 +115,23 @@ async def apply_workflow(
         )
 
     # Check that tasks have read-access and are `active`
+    used_task_group_ids = set()
     for wftask in workflow.task_list[
         first_task_index : last_task_index + 1  # noqa: E203
     ]:
-        await _get_task_read_access(
+        task = await _get_task_read_access(
             user_id=user.id,
             task_id=wftask.task_id,
             require_active=True,
             db=db,
         )
+        used_task_group_ids.add(task.taskgroupv2_id)
 
     # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     user_settings = await validate_user_settings(
         user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
     )
-
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
         select(JobV2)
@@ -184,8 +188,18 @@ async def apply_workflow(
     await db.commit()
     await db.refresh(job)
 
+    # Update TaskGroupV2.timestamp_last_used
+    res = await db.execute(
+        select(TaskGroupV2).where(TaskGroupV2.id.in_(used_task_group_ids))
+    )
+    used_task_groups = res.scalars().all()
+    for used_task_group in used_task_groups:
+        used_task_group.timestamp_last_used = now
+        db.add(used_task_group)
+    await db.commit()
+
     # Define server-side job directory
-    timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
+    timestamp_string = now.strftime("%Y%m%d_%H%M%S")
     WORKFLOW_DIR_LOCAL = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
