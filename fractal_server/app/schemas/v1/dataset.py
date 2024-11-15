@@ -8,7 +8,6 @@ from pydantic import validator
 
 from .._validators import val_absolute_path
 from .._validators import valstr
-from .._validators import valutc
 from .dumps import WorkflowTaskDumpV1
 from .project import ProjectReadV1
 from .workflow import WorkflowTaskStatusTypeV1
@@ -150,10 +149,6 @@ class DatasetReadV1(_DatasetBaseV1):
     read_only: bool
     project: ProjectReadV1
     timestamp_created: datetime
-
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
-        valutc("timestamp_created")
-    )
 
 
 class DatasetStatusReadV1(BaseModel):
