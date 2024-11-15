@@ -296,7 +296,7 @@ async def deactivate_task_group(
         )
 
     logger.debug(
-        "Task group deactivation endpoint: start deactivate "
+        "Admin task group deactivation endpoint: start deactivate "
         "and return task_group_activity"
     )
     response.status_code = status.HTTP_202_ACCEPTED
@@ -392,7 +392,7 @@ async def reactivate_task_group(
             task_group_activity_id=task_group_activity.id,
         )
     logger.debug(
-        "Task group reactivation endpoint: start reactivate "
+        "Admin task group reactivation endpoint: start reactivate "
         "and return task_group_activity"
     )
     response.status_code = status.HTTP_202_ACCEPTED
