@@ -8,6 +8,7 @@ from pydantic import validator
 from pydantic.types import StrictStr
 
 from .._validators import valstr
+from .._validators import valutc
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
@@ -99,6 +100,13 @@ class JobReadV2(BaseModel):
     first_task_index: Optional[int]
     last_task_index: Optional[int]
     worker_init: Optional[str]
+
+    _start_timestamp = validator("start_timestamp", allow_reuse=True)(
+        valutc("start_timestamp")
+    )
+    _end_timestamp = validator("end_timestamp", allow_reuse=True)(
+        valutc("end_timestamp")
+    )
 
 
 class JobUpdateV2(BaseModel, extra=Extra.forbid):
