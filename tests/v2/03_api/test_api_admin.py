@@ -187,7 +187,7 @@ async def test_view_job(
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min={quote('1999-01-01T00:00:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
+        assert res.status_code == 422  # because timezone is None
         assert "timezone" in res.json()["detail"]
 
         res = await client.get(
@@ -682,6 +682,7 @@ async def test_task_group_admin(
     client,
     MockCurrentUser,
     project_factory_v2,
+    dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
     task_factory_v2,
@@ -805,12 +806,34 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert len(res.json()) == 2
 
-    # DELETE
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, source="source")
-        await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
+        dataset = await dataset_factory_v2(project_id=project.id)
+
+        workflow1 = await workflow_factory_v2(project_id=project.id)
+        task1 = await task_factory_v2(user_id=user.id, source="source")
+        await workflowtask_factory_v2(
+            workflow_id=workflow1.id, task_id=task1.id
+        )
+        res1 = await client.post(
+            f"/api/v2/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow1.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        job1 = res1.json()
+
+        workflow2 = await workflow_factory_v2(project_id=project.id)
+        task2 = await task_factory_v2(user_id=user.id, source="source")
+        await workflowtask_factory_v2(
+            workflow_id=workflow2.id, task_id=task2.id
+        )
+        res2 = await client.post(
+            f"/api/v2/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow2.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        job2 = res2.json()
+
         task_group_activity = TaskGroupActivityV2(
             user_id=user.id,
             taskgroupv2_id=task_group_1["id"],
@@ -825,6 +848,29 @@ async def test_task_group_admin(
     assert task_group_activity.taskgroupv2_id == task_group_1["id"]
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        res = await client.get(
+            f"{PREFIX}/task-group/"
+            f"?timestamp_last_used_min={quote('1500-01-01T00:00:01+00:00')}"
+        )
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/task-group/"
+            f"?timestamp_last_used_min={quote(job1['start_timestamp'])}"
+        )
+        assert len(res.json()) == 1
+        res = await client.get(
+            f"{PREFIX}/task-group/"
+            f"?timestamp_last_used_max={quote('3000-01-01T00:00:01+00:00')}"
+        )
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/task-group/"
+            f"?timestamp_last_used_max={job2['start_timestamp']}"
+        )
+        assert len(res.json()) == 2
+
+        # DELETE
         res = await client.delete(f"{PREFIX}/task-group/{task_group_1['id']}/")
         assert res.status_code == 204
         res = await client.delete(f"{PREFIX}/task-group/{task_group_2['id']}/")
@@ -834,7 +880,7 @@ async def test_task_group_admin(
         res = await client.delete(f"{PREFIX}/task-group/9999/")
         assert res.status_code == 404
         res = await client.delete(
-            f"{PREFIX}/task-group/{task.taskgroupv2_id}/"
+            f"{PREFIX}/task-group/{task1.taskgroupv2_id}/"
         )
         assert res.status_code == 422
 
