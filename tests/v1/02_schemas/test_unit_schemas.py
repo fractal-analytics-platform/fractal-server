@@ -143,8 +143,8 @@ def test_apply_workflow_read():
 
     job3 = ApplyWorkflowReadV1(
         id=1,
-        start_timestamp=datetime(2000, 1, 1, tzinfo=None),
-        end_timestamp=datetime(2000, 1, 2, tzinfo=None),
+        start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
+        end_timestamp=datetime(2000, 1, 2, tzinfo=timezone.utc),
         status="good",
         project_dump=PROJECT_DUMP,
         workflow_dump=WORKFLOW_DUMP,
@@ -181,12 +181,12 @@ def test_dataset_read():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime(1999, 1, 1, tzinfo=None),
+            timestamp_created=datetime(1999, 1, 1, tzinfo=timezone.utc),
         ),
         resource_list=[],
         name="n",
         read_only=True,
-        timestamp_created=datetime(2000, 1, 1, tzinfo=None),
+        timestamp_created=datetime(2000, 1, 1, tzinfo=timezone.utc),
     )
     debug(d)
     assert d.timestamp_created.tzinfo == timezone.utc
@@ -322,7 +322,8 @@ def test_project_create():
 
 def test_state_read():
     s = StateRead(
-        data={"some": "thing"}, timestamp=datetime(2000, 1, 1, tzinfo=None)
+        data={"some": "thing"},
+        timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
     )
     debug(s)
     assert s.id is None
@@ -491,7 +492,7 @@ def test_workflow_read_empty_task_list():
             read_only=False,
             timestamp_created=get_timestamp(),
         ),
-        timestamp_created=datetime(2000, 1, 1, tzinfo=None),
+        timestamp_created=datetime(2000, 1, 1, tzinfo=timezone.utc),
     )
     debug(w)
     assert w.timestamp_created.tzinfo == timezone.utc
