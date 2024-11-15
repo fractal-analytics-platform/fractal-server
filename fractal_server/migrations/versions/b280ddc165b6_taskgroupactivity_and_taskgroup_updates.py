@@ -1,8 +1,8 @@
-"""TaskGroup Activity and venv-info to TaskGroup
+"""TaskGroupActivity and TaskGroup updates
 
-Revision ID: 3082479ac4ea
+Revision ID: b280ddc165b6
 Revises: 19eca0dd47a9
-Create Date: 2024-11-12 14:39:34.035859
+Create Date: 2024-11-15 10:34:52.987694
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "3082479ac4ea"
+revision = "b280ddc165b6"
 down_revision = "19eca0dd47a9"
 branch_labels = None
 depends_on = None
@@ -58,6 +58,11 @@ def upgrade() -> None:
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
+                "local_path", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+            )
+        )
+        batch_op.add_column(
+            sa.Column(
                 "pip_freeze", sqlmodel.sql.sqltypes.AutoString(), nullable=True
             )
         )
@@ -85,18 +90,16 @@ def downgrade() -> None:
         batch_op.drop_column("venv_file_number")
         batch_op.drop_column("venv_size_in_kB")
         batch_op.drop_column("pip_freeze")
+        batch_op.drop_column("local_path")
 
     op.create_table(
         "collectionstatev2",
         sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
-        sa.Column(
-            "data",
-            sa.JSON(),
-            nullable=True,
-        ),
+        sa.Column("data", sa.JSON(), autoincrement=False, nullable=True),
         sa.Column(
             "timestamp",
             sa.DateTime(timezone=True),
+            autoincrement=False,
             nullable=True,
         ),
         sa.Column(
