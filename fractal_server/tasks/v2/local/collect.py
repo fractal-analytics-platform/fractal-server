@@ -16,9 +16,9 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.local._utils import check_task_files_exist
 from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
-from fractal_server.tasks.v2.utils_background import check_task_files_exist
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names

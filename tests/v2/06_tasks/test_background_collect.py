@@ -11,7 +11,7 @@ from fractal_server.app.schemas.v2 import (
 )
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import collect_local
-from fractal_server.tasks.v2.utils_background import (
+from fractal_server.tasks.v2.local._utils import (
     check_task_files_exist,
 )
 from fractal_server.tasks.v2.utils_database import _get_task_type
