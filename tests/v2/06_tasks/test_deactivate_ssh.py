@@ -121,13 +121,13 @@ async def test_deactivate_ssh_fail(
 
 
 async def test_deactivate_wheel_no_wheel_path(
-    tmp_path,
+    tmp777_path,
     db,
     first_user,
     fractal_ssh,
 ):
     # Prepare db objects
-    path = tmp_path / "something"
+    path = tmp777_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
@@ -163,7 +163,7 @@ async def test_deactivate_wheel_no_wheel_path(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         fractal_ssh=fractal_ssh,
-        tasks_base_dir=tmp_path.as_posix(),
+        tasks_base_dir=tmp777_path.as_posix(),
     )
     # Verify that deactivate failed
     task_group_activity_v2 = await db.get(
@@ -176,7 +176,6 @@ async def test_deactivate_wheel_no_wheel_path(
 
 
 async def test_deactivate_wheel_package_created_before_2_9_0(
-    tmp_path,
     db,
     first_user,
     current_py_version,
@@ -193,7 +192,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     override_settings_factory(**{key: value})
 
     # STEP 1: collect a package
-    path = tmp_path / "fractal-tasks-mock-path"
+    path = tmp777_path / "fractal-tasks-mock-path"
     venv_path = path / "venv"
     local_wheel_path = (
         testdata_path.parent
@@ -237,7 +236,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         task_group_id=task_group.id,
         task_group_activity_id=activity_collect.id,
         fractal_ssh=fractal_ssh,
-        tasks_base_dir=tmp_path.as_posix(),
+        tasks_base_dir=tmp777_path.as_posix(),
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK
@@ -275,7 +274,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         task_group_id=task_group.id,
         task_group_activity_id=activity_deactivate.id,
         fractal_ssh=fractal_ssh,
-        tasks_base_dir=tmp_path.as_posix(),
+        tasks_base_dir=tmp777_path.as_posix(),
     )
 
     # Check outcome
