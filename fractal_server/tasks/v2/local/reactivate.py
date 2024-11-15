@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
 from ..utils_templates import get_collection_replacements
-from .utils_local import _customize_and_run_template
+from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
