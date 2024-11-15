@@ -9,6 +9,15 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
 
+class MockFractalSSHList:
+    """
+    Implement the only method which is used from within the API.
+    """
+
+    def get(self, *args, **kwargs):
+        return None
+
+
 @pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_deactivate_task_group_api(
     app,
@@ -36,13 +45,7 @@ async def test_deactivate_task_group_api(
         )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
-        class FakeFractalSSHList:
-            def get(self, *args, **kwargs):
-                return None
-
-        app.state.fractal_ssh_list = FakeFractalSSHList()
-
+        app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
             ssh_host="ssh_host",
             ssh_username="ssh_username",
@@ -129,16 +132,25 @@ async def test_deactivate_task_group_api(
             assert "does not exist" in res.json()["log"]
 
 
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_reactivate_task_group_api(
+    app,
     client,
     MockCurrentUser,
     db,
     task_factory_v2,
     current_py_version,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
 ):
     """
     This tests _only_ the API of the `reactivate` endpoint.
     """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
+
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
             user_id=different_user.id, name="task"
@@ -147,7 +159,18 @@ async def test_reactivate_task_group_api(
             TaskGroupV2, non_accessible_task.taskgroupv2_id
         )
 
-    async with MockCurrentUser() as user:
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
         task_other = await task_factory_v2(
@@ -329,7 +352,7 @@ async def test_lifecycle(
         assert Path(task_group.wheel_path).exists()
 
 
-async def test_ongoing_activities(
+async def test_fail_due_to_ongoing_activities(
     client,
     MockCurrentUser,
     db,
