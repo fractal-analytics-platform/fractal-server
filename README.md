@@ -197,8 +197,8 @@
 | fractal\_server/tasks/v2/utils\_templates.py                                   |       34 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/zip\_tools.py                                                  |       56 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **11007** |  **452** | **2300** |  **193** | **94%** |           |
+| fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
+|                                                                      **TOTAL** | **11018** |  **452** | **2300** |  **193** | **94%** |           |
 
 
 ## Setup coverage badge
