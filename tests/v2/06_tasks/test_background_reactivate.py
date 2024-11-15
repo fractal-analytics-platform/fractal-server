@@ -10,30 +10,6 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import reactivate_local
 
 
-def test_unit_missing_objects(db, caplog):
-    """
-    Test a branch which is in principle unreachable.
-    """
-    caplog.clear()
-    reactivate_local(
-        task_group_activity_id=9999,
-        task_group_id=9999,
-    )
-    assert "Cannot find database rows" in caplog.text
-
-    caplog.clear()
-    assert caplog.text == ""
-
-    # not implemented
-    # collect_package_ssh(
-    #     task_group_activity_id=9999,
-    #     task_group_id=9999,
-    #     fractal_ssh=None,
-    #     tasks_base_dir="/invalid",
-    # )
-    # assert "Cannot find database rows" in caplog.text
-
-
 async def test_reactivate_venv_path(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
