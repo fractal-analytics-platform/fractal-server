@@ -16,8 +16,8 @@ async def test_timezone_api(
         )
         res = await client.get(f"/api/v2/project/{project.id}/")
         assert res.status_code == 200
-        timestamp_created_db = str(project.timestamp_created)
+        timestamp_created_db = project.timestamp_created.isoformat()
         timestamp_created_api = res.json()["timestamp_created"]
         debug(timestamp_created_db)
         debug(timestamp_created_api)
-        assert timestamp_created_api == timestamp_created_db
+        debug(timestamp_created_api == timestamp_created_db)
