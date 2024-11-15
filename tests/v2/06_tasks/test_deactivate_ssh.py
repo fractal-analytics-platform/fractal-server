@@ -72,7 +72,7 @@ async def test_deactivate_ssh_fail(
     import fractal_server.tasks.v2.ssh.deactivate
 
     monkeypatch.setattr(
-        fractal_server.tasks.v2.local.deactivate,
+        fractal_server.tasks.v2.ssh.deactivate,
         "_customize_and_run_template",
         fail_function,
     )
