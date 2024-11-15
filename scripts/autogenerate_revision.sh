@@ -9,6 +9,7 @@ if [[ $# -ne 1 ]]; then
     echo "Expected usage: $0 \"MIGRATION MESSAGE\""
     exit 2
 fi
+MIGRATION_MSG=$1
 
 
 export POSTGRES_DB="autogenerate-fractal-revision"
