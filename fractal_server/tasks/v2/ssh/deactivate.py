@@ -40,6 +40,10 @@ def deactivate_ssh(
     Arguments:
         task_group_id:
         task_group_activity_id:
+        fractal_ssh:
+        tasks_base_dir:
+            Only used as a `safe_root` in `remove_dir`, and typically set to
+            `user_settings.ssh_tasks_dir`.
     """
 
     with TemporaryDirectory() as tmpdir:
