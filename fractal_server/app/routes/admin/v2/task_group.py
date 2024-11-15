@@ -20,6 +20,7 @@ from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.routes.aux._timestamp import _convert_to_db_timestamp
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -93,6 +94,8 @@ async def query_task_group_list(
     active: Optional[bool] = None,
     pkg_name: Optional[str] = None,
     origin: Optional[TaskGroupV2OriginEnum] = None,
+    timestamp_last_used_min: Optional[datetime] = None,
+    timestamp_last_used_max: Optional[datetime] = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
@@ -122,6 +125,20 @@ async def query_task_group_list(
         stm = stm.where(TaskGroupV2.origin == origin)
     if pkg_name is not None:
         stm = stm.where(TaskGroupV2.pkg_name.icontains(pkg_name))
+    if timestamp_last_used_min is not None:
+        timestamp_last_used_min = _convert_to_db_timestamp(
+            timestamp_last_used_min
+        )
+        stm = stm.where(
+            TaskGroupV2.timestamp_last_used >= timestamp_last_used_min
+        )
+    if timestamp_last_used_max is not None:
+        timestamp_last_used_max = _convert_to_db_timestamp(
+            timestamp_last_used_max
+        )
+        stm = stm.where(
+            TaskGroupV2.timestamp_last_used <= timestamp_last_used_max
+        )
 
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()
