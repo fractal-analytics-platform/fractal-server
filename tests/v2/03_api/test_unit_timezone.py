@@ -7,8 +7,10 @@ async def test_timezone_api(
     MockCurrentUser,
     project_factory_v2,
 ):
-
-    # authenticated
+    """
+    Test that API returns a timestamp in the same format which
+    corresponds to the one in the database.
+    """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(
             name="project name",
