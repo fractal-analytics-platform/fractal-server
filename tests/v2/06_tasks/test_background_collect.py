@@ -10,7 +10,7 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityStatusV2,
 )
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
-from fractal_server.tasks.v2.local.collect import collect_local
+from fractal_server.tasks.v2.local import collect_local
 from fractal_server.tasks.v2.utils_background import (
     check_task_files_exist,
 )
