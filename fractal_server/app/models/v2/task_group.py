@@ -27,6 +27,7 @@ class TaskGroupV2(SQLModel, table=True):
     pkg_name: str
     version: Optional[str] = None
     python_version: Optional[str] = None
+    local_path: Optional[str] = None
     path: Optional[str] = None
     wheel_path: Optional[str] = None
     pip_extras: Optional[str] = None

@@ -41,6 +41,7 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     version: Optional[str] = None
     python_version: Optional[str] = None
     path: Optional[str] = None
+    local_path: Optional[str] = None
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
     pip_extras: Optional[str] = None
@@ -49,6 +50,9 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
     _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
+    _local_path = validator("local_path", allow_reuse=True)(
+        val_absolute_path("local_path")
+    )
     _venv_path = validator("venv_path", allow_reuse=True)(
         val_absolute_path("venv_path")
     )
@@ -78,6 +82,7 @@ class TaskGroupReadV2(BaseModel):
     version: Optional[str] = None
     python_version: Optional[str] = None
     path: Optional[str] = None
+    local_path: Optional[str] = None
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
     pip_freeze: Optional[str] = None

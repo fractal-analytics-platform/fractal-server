@@ -163,6 +163,14 @@ async def collect_tasks_pip(
     ).as_posix()
     task_group_attrs["path"] = task_group_path
     task_group_attrs["venv_path"] = Path(task_group_path, "venv").as_posix()
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        local_path = (
+            settings.FRACTAL_TASKS_DIR
+            / str(user.id)
+            / task_group_attrs["pkg_name"]
+            / task_group_attrs["version"]
+        ).as_posix()
+        task_group_attrs["local_path"] = local_path
 
     # Validate TaskGroupV2 attributes
     try:
@@ -203,15 +211,21 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
-
-        # Verify that folder does not exist (for local collection)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # Verify that the local folder does not exist
+        local_path = task_group_attrs["local_path"]
+        if Path(local_path).exists():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"{local_path} already exists.",
+            )
+    else:
+        # Verify that folder does not exist
         if Path(task_group_path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"{task_group_path} already exists.",
             )
-
         # Verify that wheel file exists
         wheel_path = task_group_attrs.get("wheel_path", None)
         if wheel_path is not None:
