@@ -70,9 +70,23 @@ def reactivate_ssh(
 
             # Log some info
             logger.debug("START")
-
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
+
+            # Check that SSH connection works
+            try:
+                fractal_ssh.check_connection()
+            except Exception as e:
+                logger.error("Cannot establish SSH connection.")
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=e,
+                    db=db,
+                )
+                return
 
             # Check that the (remote) task_group venv_path does not exist
             if fractal_ssh.remote_exists(task_group.venv_path):
