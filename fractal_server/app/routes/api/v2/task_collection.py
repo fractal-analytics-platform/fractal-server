@@ -63,10 +63,7 @@ async def collect_tasks_pip(
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     """
-    Task collection endpoint
-
-    Trigger the creation of a dedicated virtual environment, the installation
-    of a package and the collection of tasks as advertised in the manifest.
+    Task-collection endpoint
     """
 
     # Get settings
@@ -247,11 +244,9 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
 
-        from fractal_server.tasks.v2.ssh.collect import (
-            collect_ssh,
-        )
+        from fractal_server.tasks.v2.ssh import collect_ssh
 
-        # User appropriate FractalSSH object
+        # Use appropriate FractalSSH object
         ssh_credentials = dict(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
