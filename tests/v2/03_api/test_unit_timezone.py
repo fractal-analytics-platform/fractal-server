@@ -20,4 +20,4 @@ async def test_timezone_api(
         timestamp_created_api = res.json()["timestamp_created"]
         debug(timestamp_created_db)
         debug(timestamp_created_api)
-        debug(timestamp_created_api == timestamp_created_db)
+        assert timestamp_created_api == timestamp_created_db
