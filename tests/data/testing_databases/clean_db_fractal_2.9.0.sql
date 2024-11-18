@@ -540,7 +540,7 @@ CREATE TABLE public.taskgroupv2 (
     pip_freeze character varying,
     "venv_size_in_kB" integer,
     venv_file_number integer,
-    timestamp_last_used timestamp with time zone NOT NULL,
+    timestamp_last_used timestamp with time zone NOT NULL
 );
 
 
