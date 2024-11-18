@@ -12,30 +12,6 @@ from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.utils import execute_command_sync
 
 
-def test_unit_missing_objects(db, caplog):
-    """
-    Test a branch which is in principle unreachable.
-    """
-    caplog.clear()
-    deactivate_local(
-        task_group_activity_id=9999,
-        task_group_id=9999,
-    )
-    assert "Cannot find database rows" in caplog.text
-
-    caplog.clear()
-    assert caplog.text == ""
-
-    # not implemented
-    # collect_package_ssh(
-    #     task_group_activity_id=9999,
-    #     task_group_id=9999,
-    #     fractal_ssh=None,
-    #     tasks_base_dir="/invalid",
-    # )
-    # assert "Cannot find database rows" in caplog.text
-
-
 async def test_deactivate_fail_no_venv_path(tmp_path, db, first_user):
     path = tmp_path / "something"
     task_group = TaskGroupV2(

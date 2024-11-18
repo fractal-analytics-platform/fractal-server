@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -13,16 +12,16 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.tasks.v2.ssh._utils import _copy_wheel_file_ssh
+from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
-from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import (
     parse_script_pip_show_stdout,
@@ -31,81 +30,6 @@ from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
 LOGGER_NAME = __name__
-
-
-def _customize_and_run_template(
-    *,
-    template_filename: str,
-    replacements: list[tuple[str, str]],
-    script_dir_local: str,
-    prefix: str,
-    fractal_ssh: FractalSSH,
-    script_dir_remote: str,
-    logger_name: str,
-) -> str:
-    """
-    Customize one of the template bash scripts, transfer it to the remote host
-    via SFTP and then run it via SSH.
-
-    Args:
-        template_filename: Filename of the template file (ends with ".sh").
-        replacements: Dictionary of replacements.
-        script_dir: Local folder where the script will be placed.
-        prefix: Prefix for the script filename.
-        fractal_ssh: FractalSSH object
-        script_dir_remote: Remote scripts directory
-    """
-    logger = get_logger(logger_name=logger_name)
-    logger.debug(f"_customize_and_run_template {template_filename} - START")
-
-    # Prepare name and path of script
-    if not template_filename.endswith(".sh"):
-        raise ValueError(
-            f"Invalid {template_filename=} (it must end with '.sh')."
-        )
-    script_filename = f"{prefix}_{template_filename}"
-    script_path_local = Path(script_dir_local) / script_filename
-
-    customize_template(
-        template_name=template_filename,
-        replacements=replacements,
-        script_path=script_path_local,
-    )
-
-    # Transfer script to remote host
-    script_path_remote = os.path.join(
-        script_dir_remote,
-        script_filename,
-    )
-    logger.debug(f"Now transfer {script_path_local=} over SSH.")
-    fractal_ssh.send_file(
-        local=script_path_local,
-        remote=script_path_remote,
-    )
-
-    # Execute script remotely
-    cmd = f"bash {script_path_remote}"
-    logger.debug(f"Now run '{cmd}' over SSH.")
-    stdout = fractal_ssh.run_command(cmd=cmd)
-    logger.debug(f"Standard output of '{cmd}':\n{stdout}")
-
-    logger.debug(f"_customize_and_run_template {template_filename} - END")
-    return stdout
-
-
-def _copy_wheel_file_ssh(
-    task_group: TaskGroupV2, fractal_ssh: FractalSSH
-) -> str:
-    logger = get_logger(LOGGER_NAME)
-    source = task_group.wheel_path
-    dest = (
-        Path(task_group.path) / Path(task_group.wheel_path).name
-    ).as_posix()
-    cmd = f"cp {source} {dest}"
-    logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
-    fractal_ssh.run_command(cmd=cmd)
-    logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
-    return dest
 
 
 def collect_ssh(
@@ -214,7 +138,7 @@ def collect_ssh(
                     script_dir_remote=script_dir_remote,
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
                     ),
                     fractal_ssh=fractal_ssh,
                     logger_name=LOGGER_NAME,
@@ -232,6 +156,7 @@ def collect_ssh(
                     new_wheel_path = _copy_wheel_file_ssh(
                         task_group=task_group,
                         fractal_ssh=fractal_ssh,
+                        logger_name=LOGGER_NAME,
                     )
                     task_group.wheel_path = new_wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)

@@ -1,22 +1,43 @@
+import shutil
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from tests.fixtures_slurm import SLURM_USER
 
 
+class MockFractalSSHList:
+    """
+    Implement the only method which is used from within the API.
+    """
+
+    def get(self, *args, **kwargs):
+        return None
+
+
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_deactivate_task_group_api(
+    app,
     client,
     MockCurrentUser,
     db,
     task_factory_v2,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
 ):
     """
     This tests _only_ the API of the `deactivate` endpoint.
     """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
+
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
             user_id=different_user.id, name="task"
@@ -25,7 +46,19 @@ async def test_deactivate_task_group_api(
             TaskGroupV2, non_accessible_task.taskgroupv2_id
         )
 
-    async with MockCurrentUser() as user:
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
+
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(user_id=user.id, name="task")
         task_other = await task_factory_v2(
@@ -95,19 +128,31 @@ async def test_deactivate_task_group_api(
         # Check that background task failed
         res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
         assert res.json()["status"] == "failed"
-        assert "does not exist" in res.json()["log"]
+        if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            assert "Cannot establish SSH connection" in res.json()["log"]
+        else:
+            assert "does not exist" in res.json()["log"]
 
 
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_reactivate_task_group_api(
+    app,
     client,
     MockCurrentUser,
     db,
     task_factory_v2,
     current_py_version,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
 ):
     """
     This tests _only_ the API of the `reactivate` endpoint.
     """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
+
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
             user_id=different_user.id, name="task"
@@ -116,7 +161,18 @@ async def test_reactivate_task_group_api(
             TaskGroupV2, non_accessible_task.taskgroupv2_id
         )
 
-    async with MockCurrentUser() as user:
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
         task_other = await task_factory_v2(
@@ -208,20 +264,60 @@ async def test_reactivate_task_group_api(
         assert res.json()["status"] == "failed"
 
 
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_lifecycle(
     client,
     MockCurrentUser,
     db,
     testdata_path,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
+    app,
+    tmp777_path: Path,
+    request,
+    current_py_version,
 ):
-    # Absolute path to wheel file
-    wheel_path = (
+    overrides = dict(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # Setup remote Python interpreter
+        current_py_version_underscore = current_py_version.replace(".", "_")
+        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+        python_value = (
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
+        overrides[python_key] = python_value
+    override_settings_factory(**overrides)
+
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = request.getfixturevalue(
+            "fractal_ssh_list"
+        )
+        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
+        ssh_keys = request.getfixturevalue("ssh_keys")
+        user_settings_dict = dict(
+            ssh_host=slurmlogin_ip,
+            ssh_username=SLURM_USER,
+            ssh_private_key_path=ssh_keys["private"],
+            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+        )
+    else:
+        user_settings_dict = {}
+
+    # Absolute path to wheel file (use a path in tmp77_path, so that it is
+    # also accessible on the SSH remote host)
+    old_wheel_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
+    wheel_path = tmp777_path / old_wheel_path.name
+    shutil.copy(old_wheel_path, wheel_path)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
@@ -298,7 +394,7 @@ async def test_lifecycle(
         assert Path(task_group.wheel_path).exists()
 
 
-async def test_ongoing_activities(
+async def test_fail_due_to_ongoing_activities(
     client,
     MockCurrentUser,
     db,

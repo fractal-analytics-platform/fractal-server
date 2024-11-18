@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.logger import get_logger
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import execute_command_sync
@@ -43,3 +44,27 @@ def _customize_and_run_template(
     stdout = execute_command_sync(command=cmd, logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - END")
     return stdout
+
+
+def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
+    """
+    Check that the modules listed in task commands point to existing files.
+
+    Args:
+        task_list:
+    """
+    for _task in task_list:
+        if _task.command_non_parallel is not None:
+            _task_path = _task.command_non_parallel.split()[1]
+            if not Path(_task_path).exists():
+                raise FileNotFoundError(
+                    f"Task `{_task.name}` has `command_non_parallel` "
+                    f"pointing to missing file `{_task_path}`."
+                )
+        if _task.command_parallel is not None:
+            _task_path = _task.command_parallel.split()[1]
+            if not Path(_task_path).exists():
+                raise FileNotFoundError(
+                    f"Task `{_task.name}` has `command_parallel` "
+                    f"pointing to missing file `{_task_path}`."
+                )
