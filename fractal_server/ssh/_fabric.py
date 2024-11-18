@@ -389,6 +389,16 @@ class FractalSSH(object):
                 label=f"send_file {local=} {remote=}",
             )
             self.logger.info(f"{prefix} END transfer of '{local}' over SSH.")
+
+        except NoValidConnectionsError as e:
+            logger.error("NoValidConnectionError")
+            logger.error(f"{str(e)=}")
+            logger.error(f"{e.errors=}")
+            for err in e.errors:
+                logger.error(f"{str(err)}")
+
+            raise e
+
         except Exception as e:
             self.logger.error(
                 f"Transferring {local=} to {remote=} over SSH failed.\n"
