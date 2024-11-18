@@ -16,7 +16,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
-from fractal_server.app.routes.aux import _has_timezone
+from fractal_server.app.routes.aux import _raise_if_naive
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -67,7 +67,7 @@ async def view_job(
             `job.log` is set to `None`.
     """
 
-    _has_timezone(
+    _raise_if_naive(
         start_timestamp_min,
         start_timestamp_max,
         end_timestamp_min,
