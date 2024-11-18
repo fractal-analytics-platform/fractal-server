@@ -61,7 +61,10 @@ async def test_deactivate_task_group_api(
             user_id=user.id, name="task", task_group_kwargs=dict(active=False)
         )
         task_other = await task_factory_v2(
-            user_id=user.id, version=None, name="task"
+            user_id=user.id,
+            version=None,
+            name="task",
+            task_group_kwargs=dict(origin="other"),
         )
         task_pypi = await task_factory_v2(
             user_id=user.id,
@@ -166,11 +169,6 @@ async def test_reactivate_task_group_api(
             version=None,
             name="task",
             task_group_kwargs=dict(active=False),
-        )
-        task_pypi = await task_factory_v2(
-            user_id=user.id,
-            name="task",
-            version="1.2.3",
         )
         task_pypi = await task_factory_v2(
             user_id=user.id,
