@@ -229,7 +229,7 @@ async def deactivate_task_group(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
-    user: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
     """
@@ -291,12 +291,11 @@ async def deactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         # Validate user settings (backend-specific)
+        user = await db.get(UserOAuth, task_group.user_id)
         user_settings = await validate_user_settings(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
-
         # User appropriate FractalSSH object
         ssh_credentials = dict(
             user=user_settings.ssh_username,
@@ -337,7 +336,7 @@ async def reactivate_task_group(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
-    user: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
     """
@@ -408,10 +407,10 @@ async def reactivate_task_group(
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # Validate user settings (backend-specific)
+        user = await db.get(UserOAuth, task_group.user_id)
         user_settings = await validate_user_settings(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
-
         # Use appropriate FractalSSH object
         ssh_credentials = dict(
             user=user_settings.ssh_username,
