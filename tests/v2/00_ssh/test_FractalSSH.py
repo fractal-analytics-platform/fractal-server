@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from fabric import Connection
+from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
 from fractal_server.logger import set_logger
@@ -149,6 +149,30 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
             remote="missing_remote_file",
             local=(tmp_path / "local_version").as_posix(),
             lock_timeout=1.0,
+        )
+
+
+def test_file_tranfer_no_connection(tmp_path: Path):
+    """
+    test NoValidConnectionError exception of `send_file`
+    """
+    local_file_old = (tmp_path / "local_old").as_posix()
+    with open(local_file_old, "w") as f:
+        f.write("hi there\n")
+
+    with Connection(
+        host="localhost",
+        user="invalid",
+        forward_agent=False,
+        connect_kwargs={"password": "invalid"},
+    ) as connection:
+        fractal_ssh = FractalSSH(connection=connection)
+
+    # Fail in send_file because connection is closed
+    with pytest.raises(NoValidConnectionsError):
+        fractal_ssh.send_file(
+            local=local_file_old,
+            remote="remote_file",
         )
 
 
