@@ -10,7 +10,6 @@ from pydantic import validator
 from .._validators import val_absolute_path
 from .._validators import valdictkeys
 from .._validators import valstr
-from .._validators import valutc
 from .task import TaskReadV2
 
 
@@ -90,14 +89,7 @@ class TaskGroupReadV2(BaseModel):
 
     active: bool
     timestamp_created: datetime
-    timestamp_last_used: Optional[datetime] = None
-
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
-        valutc("timestamp_created")
-    )
-    _timestamp_last_used = validator("timestamp_last_used", allow_reuse=True)(
-        valutc("timestamp_last_used")
-    )
+    timestamp_last_used: datetime
 
 
 class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):

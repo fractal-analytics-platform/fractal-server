@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any
 from typing import Optional
 
+from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -49,9 +51,16 @@ class TaskGroupV2(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     timestamp_last_used: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+
+    @validator("timestamp_last_used", always=True)
+    def _init_timestamp_last_used(
+        cls, v: Optional[datetime], values: dict[str, Any]
+    ) -> datetime:
+        if v is None:
+            return values["timestamp_created"]
+        return v
 
     @property
     def pip_install_string(self) -> str:
