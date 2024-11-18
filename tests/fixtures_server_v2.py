@@ -20,6 +20,7 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
+from fractal_server.utils import get_timestamp
 
 
 @pytest.fixture
@@ -240,6 +241,7 @@ async def task_factory_v2(db: AsyncSession):
                 user_id=user_id, user_group_id=user_group_id, db=db
             )
 
+        timestamp = get_timestamp()
         task_group = TaskGroupV2(
             user_id=user_id,
             user_group_id=user_group_id,
@@ -251,6 +253,8 @@ async def task_factory_v2(db: AsyncSession):
             venv_path=task_group_kwargs.get("venv_path", None),
             python_version=task_group_kwargs.get("python_version", None),
             task_list=[task],
+            timestamp_created=timestamp,
+            timestamp_last_used=timestamp,
         )
         db.add(task_group)
         await db.commit()
