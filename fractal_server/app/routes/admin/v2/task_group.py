@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from sqlalchemy.sql.operators import is_
@@ -27,6 +28,9 @@ from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.routes.aux.validate_user_settings import (
+    validate_user_settings,
+)
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -38,6 +42,8 @@ from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import reactivate_local
+from fractal_server.tasks.v2.ssh import deactivate_ssh
+from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()
@@ -222,6 +228,7 @@ async def deactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
+    request: Request,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
@@ -284,9 +291,27 @@ async def deactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Not implemented (yet) for SSH.",
+
+        # Validate user settings (backend-specific)
+        user_settings = await validate_user_settings(
+            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        )
+
+        # User appropriate FractalSSH object
+        ssh_credentials = dict(
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
+        )
+        fractal_ssh_list = request.app.state.fractal_ssh_list
+        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
+
+        background_tasks.add_task(
+            deactivate_ssh,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            fractal_ssh=fractal_ssh,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
         )
     else:
         background_tasks.add_task(
@@ -311,6 +336,7 @@ async def reactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
+    request: Request,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
@@ -381,9 +407,26 @@ async def reactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Not implemented (yet) for SSH.",
+        # Validate user settings (backend-specific)
+        user_settings = await validate_user_settings(
+            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        )
+
+        # Use appropriate FractalSSH object
+        ssh_credentials = dict(
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
+        )
+        fractal_ssh_list = request.app.state.fractal_ssh_list
+        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
+
+        background_tasks.add_task(
+            reactivate_ssh,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            fractal_ssh=fractal_ssh,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
         )
     else:
         background_tasks.add_task(
