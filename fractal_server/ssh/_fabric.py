@@ -321,8 +321,10 @@ class FractalSSH(object):
                     f"{prefix} END   running '{cmd}' over SSH, "
                     f"elapsed {t_1-t_0:.3f}"
                 )
-                self.logger.debug(f"STDOUT: {res.stdout}")
-                self.logger.debug(f"STDERR: {res.stderr}")
+                self.logger.debug("STDOUT:")
+                self.logger.debug(res.stdout)
+                self.logger.debug("STDERR:")
+                self.logger.debug(res.stderr)
                 return res.stdout
             except NoValidConnectionsError as e:
                 # Case 2: Command fails with a connection error

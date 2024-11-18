@@ -6,7 +6,6 @@ from pydantic import Extra
 from pydantic import validator
 
 from .._validators import valstr
-from .._validators import valutc
 
 
 class ProjectCreateV2(BaseModel, extra=Extra.forbid):
@@ -21,10 +20,6 @@ class ProjectReadV2(BaseModel):
     id: int
     name: str
     timestamp_created: datetime
-    # Validators
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
-        valutc("timestamp_created")
-    )
 
 
 class ProjectUpdateV2(BaseModel, extra=Extra.forbid):
