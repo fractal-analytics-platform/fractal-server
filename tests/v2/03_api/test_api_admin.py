@@ -231,28 +231,44 @@ async def test_view_job(
         assert len(res.json()) == 1
 
         job1_timestamp = job1.start_timestamp.isoformat()
-        ny_job1_timestamp = job1.start_timestamp.replace(
-            tzinfo=ZoneInfo("America/New_York")
-        ).isoformat()
-        tokyo_job1_timestamp = job1.start_timestamp.replace(
-            tzinfo=ZoneInfo("Asia/Tokyo")
-        ).isoformat()
-
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote(job1_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_min={quote(job1_timestamp)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
+        ny_job1_timestamp = job1.start_timestamp.replace(
+            tzinfo=ZoneInfo("America/New_York")
+        ).isoformat()
+        res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote(ny_job1_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_min={quote(ny_job1_timestamp)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+
+        tokyo_job1_timestamp = job1.start_timestamp.replace(
+            tzinfo=ZoneInfo("Asia/Tokyo")
+        ).isoformat()
+        res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote(tokyo_job1_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_min={quote(tokyo_job1_timestamp)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_view_single_job(
