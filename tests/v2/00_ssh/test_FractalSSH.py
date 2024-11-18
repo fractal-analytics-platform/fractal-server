@@ -150,7 +150,6 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
             local=(tmp_path / "local_version").as_posix(),
             lock_timeout=1.0,
         )
-    fractal_ssh.close()
 
 
 def test_file_tranfer_no_connection(tmp_path: Path):
@@ -163,6 +162,7 @@ def test_file_tranfer_no_connection(tmp_path: Path):
 
     with Connection(
         host="localhost",
+        port="8022",
         user="invalid",
         forward_agent=False,
         connect_kwargs={"password": "invalid"},
