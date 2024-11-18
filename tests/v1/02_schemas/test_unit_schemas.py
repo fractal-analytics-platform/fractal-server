@@ -143,8 +143,8 @@ def test_apply_workflow_read():
 
     job3 = ApplyWorkflowReadV1(
         id=1,
-        start_timestamp=datetime(2000, 1, 1, tzinfo=None),
-        end_timestamp=datetime(2000, 1, 2, tzinfo=None),
+        start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
+        end_timestamp=datetime(2000, 1, 2, tzinfo=timezone.utc),
         status="good",
         project_dump=PROJECT_DUMP,
         workflow_dump=WORKFLOW_DUMP,
@@ -152,8 +152,8 @@ def test_apply_workflow_read():
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
-    assert job3.start_timestamp.tzinfo == timezone.utc  # because of valutc
-    assert job3.end_timestamp.tzinfo == timezone.utc  # because of valutc
+    assert job3.start_timestamp.tzinfo == timezone.utc
+    assert job3.end_timestamp.tzinfo == timezone.utc
 
 
 def test_dataset_create():
@@ -181,16 +181,16 @@ def test_dataset_read():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime(1999, 1, 1, tzinfo=None),
+            timestamp_created=datetime(1999, 1, 1, tzinfo=timezone.utc),
         ),
         resource_list=[],
         name="n",
         read_only=True,
-        timestamp_created=datetime(2000, 1, 1, tzinfo=None),
+        timestamp_created=datetime(2000, 1, 1, tzinfo=timezone.utc),
     )
     debug(d)
-    assert d.timestamp_created.tzinfo == timezone.utc  # because of valutc
-    assert d.project.timestamp_created.tzinfo == timezone.utc  # valutc
+    assert d.timestamp_created.tzinfo == timezone.utc
+    assert d.project.timestamp_created.tzinfo == timezone.utc
     # Successful creation - non-trivial resource_list
     r1 = ResourceReadV1(id=1, dataset_id=1, path="/something")
     r2 = ResourceReadV1(id=1, dataset_id=1, path="/something")
@@ -322,11 +322,12 @@ def test_project_create():
 
 def test_state_read():
     s = StateRead(
-        data={"some": "thing"}, timestamp=datetime(2000, 1, 1, tzinfo=None)
+        data={"some": "thing"},
+        timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
     )
     debug(s)
     assert s.id is None
-    assert s.timestamp.tzinfo == timezone.utc  # because of valutc
+    assert s.timestamp.tzinfo == timezone.utc
 
     s = StateRead(data={"some": "thing"}, timestamp=get_timestamp(), id=1)
     debug(s)
@@ -491,10 +492,10 @@ def test_workflow_read_empty_task_list():
             read_only=False,
             timestamp_created=get_timestamp(),
         ),
-        timestamp_created=datetime(2000, 1, 1, tzinfo=None),
+        timestamp_created=datetime(2000, 1, 1, tzinfo=timezone.utc),
     )
     debug(w)
-    assert w.timestamp_created.tzinfo == timezone.utc  # because of valutc
+    assert w.timestamp_created.tzinfo == timezone.utc
 
 
 def test_workflow_read_non_empty_task_list():
