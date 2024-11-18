@@ -1002,7 +1002,7 @@ async def test_admin_deactivate_task_group_api(
     else:
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser() as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id, name="task", task_group_kwargs=dict(active=False)
@@ -1021,7 +1021,10 @@ async def test_admin_deactivate_task_group_api(
             ),
         )
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(
+        user_kwargs={"is_superuser": True},
+        user_settings_dict=user_settings_dict,
+    ):
 
         # API failure: Non-active task group cannot be deactivated
         res = await client.post(
