@@ -20,6 +20,7 @@ from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
+
 backends_available = list(_backends.keys())
 
 PREFIX = "/admin/v2"
@@ -963,17 +964,45 @@ async def test_get_task_group_activity(
         assert len(res.json()) == 2
 
 
+class MockFractalSSHList:
+    """
+    Implement the only method which is used from within the API.
+    """
+
+    def get(self, *args, **kwargs):
+        return None
+
+
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_admin_deactivate_task_group_api(
+    app,
     client,
     MockCurrentUser,
     db,
     task_factory_v2,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
 ):
     """
     This tests _only_ the API of the admin's `deactivate` endpoint.
     """
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
 
-    async with MockCurrentUser() as user:
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
+
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id, name="task", task_group_kwargs=dict(active=False)
@@ -1020,6 +1049,7 @@ async def test_admin_deactivate_task_group_api(
         res = await client.post(
             f"{PREFIX}/task-group/{task_pypi.taskgroupv2_id}/deactivate/"
         )
+        debug(res.json())
         assert res.status_code == 202
         activity = res.json()
         task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
@@ -1034,19 +1064,30 @@ async def test_admin_deactivate_task_group_api(
         # Check that background task failed
         res = await db.get(TaskGroupActivityV2, activity_id)
         assert res.status == "failed"
-        assert "does not exist" in res.log
+        if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            assert "Cannot establish SSH connection" in res.log
+        else:
+            assert "does not exist" in res.log
 
 
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_reactivate_task_group_api(
+    app,
     client,
     MockCurrentUser,
     db,
     task_factory_v2,
     current_py_version,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
 ):
     """
     This tests _only_ the API of the admin `reactivate` endpoint.
     """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
 
     async with MockCurrentUser() as user:
         # Create mock task groups
@@ -1071,8 +1112,22 @@ async def test_reactivate_task_group_api(
             ),
         )
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
 
+    async with MockCurrentUser(
+        user_kwargs={"is_superuser": True},
+        user_settings_dict=user_settings_dict,
+    ):
         # API failure: Active task group cannot be reactivated
         res = await client.post(
             f"{PREFIX}/task-group/{active_task.taskgroupv2_id}/reactivate/"
