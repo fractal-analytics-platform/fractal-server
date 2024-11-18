@@ -13,7 +13,7 @@
     * Remove `active` property from `PATCH /api/v2/task-group/{task_group_id}/` (\#2033).
     * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
-    * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
+    * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066).
     * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062).
     * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
