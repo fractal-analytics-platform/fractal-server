@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Create an empty db
+# Create and init db
+createdb fractal-examples-test
 poetry run fractalctl set-db
 
 # Start the server

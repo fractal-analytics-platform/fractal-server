@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Literal
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -73,7 +73,7 @@ class TaskGroupReadV2(BaseModel):
     user_id: int
     user_group_id: int | None = None
 
-    origin: Literal["pypi", "wheel-file", "other"]
+    origin: TaskGroupV2OriginEnum
     pkg_name: str
     version: str | None = None
     python_version: str | None = None
@@ -89,6 +89,7 @@ class TaskGroupReadV2(BaseModel):
 
     active: bool
     timestamp_created: datetime
+    timestamp_last_used: Optional[datetime] = None
 
 
 class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):

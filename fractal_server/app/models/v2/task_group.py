@@ -49,6 +49,10 @@ class TaskGroupV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+    timestamp_last_used: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
 
     @property
     def pip_install_string(self) -> str:

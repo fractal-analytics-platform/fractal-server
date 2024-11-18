@@ -6,7 +6,6 @@ from pydantic import Field
 from pydantic import validator
 
 from .._validators import valstr
-from .._validators import valutc
 from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
@@ -60,11 +59,6 @@ class DatasetReadV2(BaseModel):
 
     zarr_dir: str
     filters: Filters = Field(default_factory=Filters)
-
-    # Validators
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
-        valutc("timestamp_created")
-    )
 
 
 class DatasetUpdateV2(BaseModel, extra=Extra.forbid):

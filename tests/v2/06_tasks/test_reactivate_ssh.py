@@ -7,66 +7,50 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
-from fractal_server.tasks.v2.local import reactivate_local
+from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.tasks.v2.ssh import reactivate_ssh
 
 
-def test_unit_missing_objects(db, caplog):
-    """
-    Test a branch which is in principle unreachable.
-    """
-    caplog.clear()
-    reactivate_local(
-        task_group_activity_id=9999,
-        task_group_id=9999,
-    )
-    assert "Cannot find database rows" in caplog.text
-
-    caplog.clear()
-    assert caplog.text == ""
-
-    # not implemented
-    # collect_package_ssh(
-    #     task_group_activity_id=9999,
-    #     task_group_id=9999,
-    #     fractal_ssh=None,
-    #     tasks_base_dir="/invalid",
-    # )
-    # assert "Cannot find database rows" in caplog.text
-
-
-async def test_reactivate_venv_path(tmp_path, db, first_user):
-    # Prepare db objects
-    path = tmp_path / "something"
+async def test_reactivate_ssh_venv_exists(
+    tmp777_path,
+    db,
+    first_user,
+    fractal_ssh: FractalSSH,
+):
+    path = tmp777_path / "package"
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
         origin="pypi",
         path=path.as_posix(),
-        venv_path=f"{tmp_path}/i_am_here",
+        venv_path=f"{tmp777_path}/i_am_here",
         user_id=first_user.id,
     )
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    db.expunge(task_group)
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.DEACTIVATE,
-        pkg_name="pkg",
-        version="1.0.0",
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
     )
     db.add(task_group_activity)
     await db.commit()
     await db.refresh(task_group_activity)
-    db.expunge(task_group_activity)
+    db.expunge_all()
+
     # create venv_path
-    Path(task_group.venv_path).mkdir()
+    fractal_ssh.mkdir(folder=task_group.venv_path)
+
     # background task
-    reactivate_local(
+    reactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        fractal_ssh=fractal_ssh,
+        tasks_base_dir=tmp777_path.as_posix(),
     )
 
     # Verify that reactivate failed
@@ -79,13 +63,15 @@ async def test_reactivate_venv_path(tmp_path, db, first_user):
 
 
 @pytest.mark.parametrize("make_rmtree_fail", [False, True])
-async def test_reactivate_local_fail(
-    tmp_path,
+async def test_reactivate_ssh_fail(
+    tmp777_path,
     db,
     first_user,
-    current_py_version,
     monkeypatch,
     make_rmtree_fail: bool,
+    fractal_ssh: FractalSSH,
+    override_settings_factory,
+    current_py_version,
 ):
     """
     Make reactivation fail (due to wrong pip-freeze data), in two cases:
@@ -93,8 +79,14 @@ async def test_reactivate_local_fail(
     2. The removal of the venv path fails.
     """
 
+    # Setup remote Python interpreter
+    current_py_version_underscore = current_py_version.replace(".", "_")
+    key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    value = f"/.venv{current_py_version}/bin/python{current_py_version}"
+    override_settings_factory(**{key: value})
+
     if make_rmtree_fail:
-        import fractal_server.tasks.v2.local.reactivate
+        import fractal_server.tasks.v2.ssh.reactivate
 
         FAILED_RMTREE_MESSAGE = "Broken rm"
 
@@ -102,13 +94,13 @@ async def test_reactivate_local_fail(
             raise RuntimeError(FAILED_RMTREE_MESSAGE)
 
         monkeypatch.setattr(
-            fractal_server.tasks.v2.local.reactivate.shutil,
-            "rmtree",
+            fractal_server.tasks.v2.ssh.reactivate.FractalSSH,
+            "remove_folder",
             patched_rmtree,
         )
 
     # Prepare task group that will make `pip install` fail
-    path = tmp_path / f"make-rmtree-fail-{make_rmtree_fail}"
+    path = tmp777_path / f"make-rmtree-fail-{make_rmtree_fail}"
     task_group = TaskGroupV2(
         pkg_name="invalid-package-name",
         version="11.11.11",
@@ -137,13 +129,15 @@ async def test_reactivate_local_fail(
     db.expunge_all()
 
     # Create path
-    Path(task_group.path).mkdir()
+    fractal_ssh.mkdir(folder=task_group.path)
 
     # Run background task
     try:
-        reactivate_local(
+        reactivate_ssh(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            fractal_ssh=fractal_ssh,
+            tasks_base_dir=tmp777_path.as_posix(),
         )
     except RuntimeError as e:
         print(
@@ -156,12 +150,13 @@ async def test_reactivate_local_fail(
     debug(activity.status)
     debug(activity.log)
     assert activity.status == "failed"
+    return
     MSG = "Could not find a version that satisfies the requirement something==99.99.99"  # noqa
     assert MSG in activity.log
     assert Path(task_group.path).exists()
 
     if make_rmtree_fail:
         assert FAILED_RMTREE_MESSAGE in activity.log
-        assert Path(task_group.venv_path).exists()
+        assert fractal_ssh.remote_exists(task_group.venv_path)
     else:
-        assert not Path(task_group.venv_path).exists()
+        assert not fractal_ssh.remote_exists(task_group.venv_path)

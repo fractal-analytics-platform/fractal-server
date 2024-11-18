@@ -2,7 +2,10 @@
 
 # 2.9.0 (unreleased)
 
-> WARNING: This version removes the `CollectionStateV2` database table.
+> WARNING 1: This version drops support for sqlite, and removes the
+> configuration variables `DB_ENGINE` and `SQLITE_PATH`.
+
+> WARNING 2: This version removes the `CollectionStateV2` database table.
 > Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
 
 * API
@@ -11,13 +14,17 @@
     * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
-    * Add `POST /admin/v2/task-group/{task_group_id}/deactivate` endpoint (\#2033).
-    * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033).
+    * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066).
+    * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062).
+    * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
+    * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
 * Database
+    * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
     * Add  `venv_size_in_kB` and `venv_file_number` to `TaskGroupV2` (\#2034).
+    * Add `TaskGroupV2.timestamp_last_used` column, updated on job submission (\#2049).
 * Task-lifecycle internals:
     * Refactor task collection and database-session management in background tasks (\#2030).
     * Update `TaskGroupActivityV2` objects (\#2005).
@@ -26,12 +33,18 @@
     * Set `TaskGroupActivityV2.timestamp_ended` when collections terminate (\#2026).
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
     * Introduce background operations for _local_ reactivate/deactivate (\#2033).
+    * Introduce background operations for _SSH_ reactivate/deactivate (\#2066).
+    * Fix escaping of newlines within f-strings, in logs (\#2028).
+    * Improve handling of task groups created before 2.9.0 (\#2050).
+* Runner:
+    * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+    * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
-* Internal:
-    * Fix escaping of newlines within f-strings (\#2028).
+* Scripts:
+    * Introduce `scripts/export_v1_workflows.py` (\#2043).
 
 # 2.8.1
 

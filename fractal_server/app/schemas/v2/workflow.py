@@ -5,7 +5,6 @@ from pydantic import Extra
 from pydantic import validator
 
 from .._validators import valstr
-from .._validators import valutc
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
@@ -29,10 +28,6 @@ class WorkflowReadV2(BaseModel):
     task_list: list[WorkflowTaskReadV2]
     project: ProjectReadV2
     timestamp_created: datetime
-
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
-        valutc("timestamp_created")
-    )
 
 
 class WorkflowReadV2WithWarnings(WorkflowReadV2):

@@ -1,9 +1,9 @@
 import pytest
 
-from fractal_server.tasks.v2.local.collect import (
+from fractal_server.tasks.v2.local._utils import (
     _customize_and_run_template as _customize_and_run_template_local,
 )
-from fractal_server.tasks.v2.ssh.collect import (
+from fractal_server.tasks.v2.ssh._utils import (
     _customize_and_run_template as _customize_and_run_template_ssh,
 )
 

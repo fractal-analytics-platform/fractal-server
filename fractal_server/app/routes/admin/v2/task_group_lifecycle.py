@@ -6,14 +6,20 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
-from ...aux.validate_user_settings import validate_user_settings
-from ._aux_functions_task_lifecycle import check_no_ongoing_activity
-from ._aux_functions_tasks import _get_task_group_full_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
+    check_no_ongoing_activity,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_task_group_or_404,
+)
+from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.aux.validate_user_settings import (
+    validate_user_settings,
+)
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -30,7 +36,6 @@ from fractal_server.utils import get_timestamp
 
 router = APIRouter()
 
-
 logger = set_logger(__name__)
 
 
@@ -43,17 +48,14 @@ async def deactivate_task_group(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
-    user: UserOAuth = Depends(current_active_user),
+    superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
     """
     Deactivate task-group venv
     """
-    # Check access
-    task_group = await _get_task_group_full_access(
-        task_group_id=task_group_id,
-        user_id=user.id,
-        db=db,
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
     )
 
     # Check no other activity is ongoing
@@ -108,12 +110,11 @@ async def deactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         # Validate user settings (backend-specific)
+        user = await db.get(UserOAuth, task_group.user_id)
         user_settings = await validate_user_settings(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
-
         # User appropriate FractalSSH object
         ssh_credentials = dict(
             user=user_settings.ssh_username,
@@ -130,7 +131,6 @@ async def deactivate_task_group(
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
-
     else:
         background_tasks.add_task(
             deactivate_local,
@@ -139,7 +139,7 @@ async def deactivate_task_group(
         )
 
     logger.debug(
-        "Task group deactivation endpoint: start deactivate "
+        "Admin task group deactivation endpoint: start deactivate "
         "and return task_group_activity"
     )
     response.status_code = status.HTTP_202_ACCEPTED
@@ -155,18 +155,15 @@ async def reactivate_task_group(
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
-    user: UserOAuth = Depends(current_active_user),
+    superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
     """
     Deactivate task-group venv
     """
 
-    # Check access
-    task_group = await _get_task_group_full_access(
-        task_group_id=task_group_id,
-        user_id=user.id,
-        db=db,
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
     )
 
     # Check that task-group is not active
@@ -228,12 +225,11 @@ async def reactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         # Validate user settings (backend-specific)
+        user = await db.get(UserOAuth, task_group.user_id)
         user_settings = await validate_user_settings(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
-
         # Use appropriate FractalSSH object
         ssh_credentials = dict(
             user=user_settings.ssh_username,
@@ -250,7 +246,6 @@ async def reactivate_task_group(
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
-
     else:
         background_tasks.add_task(
             reactivate_local,
@@ -258,7 +253,7 @@ async def reactivate_task_group(
             task_group_activity_id=task_group_activity.id,
         )
     logger.debug(
-        "Task group reactivation endpoint: start reactivate "
+        "Admin task group reactivation endpoint: start reactivate "
         "and return task_group_activity"
     )
     response.status_code = status.HTTP_202_ACCEPTED
