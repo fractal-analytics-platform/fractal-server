@@ -61,6 +61,25 @@ def _acquire_lock_with_timeout(
             logger.info(f"Lock for '{label}' was released.")
 
 
+def log_and_raise(
+    *, e: Exception, logger_name: str, message: Optional[str]
+) -> None:
+    """
+    Log the exception from FractalSSH methods.
+
+    Arguments:
+        e:
+        logger_name:
+        message:
+    """
+    logger = get_logger(logger_name)
+    logger.error(f"Original Error: \n{str(e)}")
+    if message:
+        logger.error(f"\n{message}\n")
+
+    raise e
+
+
 class FractalSSH(object):
     """
     Wrapper of `fabric.Connection` object, enriched with locks.
