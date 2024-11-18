@@ -14,9 +14,10 @@
     * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
-    * Add `POST /admin/v2/task-group/{task_group_id}/deactivate` endpoint (\#2033).
-    * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033).
+    * Add `POST /admin/v2/task-group/{task_group_id}/deactivate` endpoint (\#2033, \#2066).
+    * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033, \#2066).
     * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
+    * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
 * Database
     * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).
@@ -32,6 +33,7 @@
     * Set `TaskGroupActivityV2.timestamp_ended` when collections terminate (\#2026).
     * Refactor bash templates and add `install_from_freeze.sh` (\#2029).
     * Introduce background operations for _local_ reactivate/deactivate (\#2033).
+    * Introduce background operations for _SSH_ reactivate/deactivate (\#2066).
     * Fix escaping of newlines within f-strings, in logs (\#2028).
     * Improve handling of task groups created before 2.9.0 (\#2050).
 * Runner:
