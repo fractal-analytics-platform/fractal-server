@@ -336,7 +336,7 @@ async def test_admin_deactivate_task_group_api(
     else:
         user_settings_dict = {}
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id, name="task", task_group_kwargs=dict(active=False)
@@ -357,7 +357,6 @@ async def test_admin_deactivate_task_group_api(
 
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True},
-        user_settings_dict=user_settings_dict,
     ):
 
         # API failure: Non-active task group cannot be deactivated
@@ -426,7 +425,19 @@ async def test_reactivate_task_group_api(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
     )
 
-    async with MockCurrentUser() as user:
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
+
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
 
@@ -449,21 +460,8 @@ async def test_reactivate_task_group_api(
             ),
         )
 
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        app.state.fractal_ssh_list = MockFractalSSHList()
-        user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
-            ssh_tasks_dir="/invalid/ssh_tasks_dir",
-            ssh_jobs_dir="/invalid/ssh_jobs_dir",
-        )
-    else:
-        user_settings_dict = {}
-
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True},
-        user_settings_dict=user_settings_dict,
     ):
         # API failure: Active task group cannot be reactivated
         res = await client.post(
