@@ -274,8 +274,6 @@ async def test_lifecycle(
     override_settings_factory,
     app,
     tmp777_path: Path,
-    slurmlogin_ip,
-    ssh_keys,
     request,
     current_py_version,
 ):
@@ -294,6 +292,8 @@ async def test_lifecycle(
         app.state.fractal_ssh_list = request.getfixturevalue(
             "fractal_ssh_list"
         )
+        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
+        ssh_keys = request.getfixturevalue("ssh_keys")
         user_settings_dict = dict(
             ssh_host=slurmlogin_ip,
             ssh_username=SLURM_USER,
