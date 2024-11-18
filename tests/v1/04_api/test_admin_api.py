@@ -56,6 +56,7 @@ async def test_view_project(client, MockCurrentUser, project_factory):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
         project = await project_factory(user)
         prj_id = project.id
+        project_2_timestamp = project.timestamp_created.isoformat()
         await project_factory(user)
         user_id = user.id
 
@@ -80,30 +81,16 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         assert res.status_code == 200
         assert len(res.json()) == 1
 
-        ts = project.timestamp_created.replace(tzinfo=None).isoformat()
         res = await client.get(
-            f"{PREFIX}/project/?timestamp_created_min={quote(ts)}"
-        )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
-
-        ts = project.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
-        res = await client.get(
-            f"{PREFIX}/project/?timestamp_created_min={quote(ts)}"
+            f"{PREFIX}/project/"
+            f"?timestamp_created_min={quote(project_2_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
 
-        ts = project.timestamp_created.replace(tzinfo=None).isoformat()
         res = await client.get(
-            f"{PREFIX}/project/?timestamp_created_max={quote(ts)}"
-        )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
-
-        ts = project.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
-        res = await client.get(
-            f"{PREFIX}/project/?timestamp_created_max={quote(ts)}"
+            f"{PREFIX}/project/"
+            f"?timestamp_created_max={quote(project_2_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -189,8 +176,8 @@ async def test_view_workflow(
             f"{PREFIX}/workflow/?timestamp_created_min="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert res.status_code == 200
+        assert len(res.json()) == 4
 
         res = await client.get(
             f"{PREFIX}/workflow/?timestamp_created_min=2000-01-01T01:01:01Z"
@@ -213,11 +200,10 @@ async def test_view_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 4
 
-        ts = workflow1b.timestamp_created.replace(
-            tzinfo=timezone.utc
-        ).isoformat()
+        workflow1b_timestamp_created = workflow1b.timestamp_created.isoformat()
         res = await client.get(
-            f"{PREFIX}/workflow/?timestamp_created_min={quote(ts)}"
+            f"{PREFIX}/workflow/"
+            f"?timestamp_created_min={quote(workflow1b_timestamp_created)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 3
@@ -226,14 +212,12 @@ async def test_view_workflow(
             f"{PREFIX}/workflow/?timestamp_created_max="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
-        ts = workflow1b.timestamp_created.replace(
-            tzinfo=timezone.utc
-        ).isoformat()
         res = await client.get(
-            f"{PREFIX}/workflow/?timestamp_created_max={quote(ts)}"
+            f"{PREFIX}/workflow/"
+            f"?timestamp_created_max={quote(workflow1b_timestamp_created)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -330,12 +314,12 @@ async def test_view_dataset(
             f"{PREFIX}/dataset/?timestamp_created_min="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert res.status_code == 200
+        assert len(res.json()) == 4
 
-        ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
+        ds1b_timestamp = ds1b.timestamp_created.isoformat()
         res = await client.get(
-            f"{PREFIX}/dataset/?timestamp_created_min={quote(ts)}"
+            f"{PREFIX}/dataset/?timestamp_created_min={quote(ds1b_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 3
@@ -344,12 +328,11 @@ async def test_view_dataset(
             f"{PREFIX}/dataset/?timestamp_created_max="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
-        ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
         res = await client.get(
-            f"{PREFIX}/dataset/?timestamp_created_max={quote(ts)}"
+            f"{PREFIX}/dataset/?timestamp_created_max={quote(ds1b_timestamp)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -474,8 +457,8 @@ async def test_view_job(
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min={quote('1999-01-01T00:00:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min="
@@ -493,8 +476,8 @@ async def test_view_job(
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
         )
-        assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max="
