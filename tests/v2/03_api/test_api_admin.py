@@ -961,3 +961,167 @@ async def test_get_task_group_activity(
             f"{PREFIX}/task-group/activity/?status=OK&pkg_name=O"
         )
         assert len(res.json()) == 2
+
+
+async def test_admin_deactivate_task_group_api(
+    client,
+    MockCurrentUser,
+    db,
+    task_factory_v2,
+):
+    """
+    This tests _only_ the API of the admin's `deactivate` endpoint.
+    """
+
+    async with MockCurrentUser() as user:
+        # Create mock task groups
+        non_active_task = await task_factory_v2(
+            user_id=user.id, name="task", task_group_kwargs=dict(active=False)
+        )
+        task_other = await task_factory_v2(
+            user_id=user.id,
+            version=None,
+            name="task",
+        )
+        task_pypi = await task_factory_v2(
+            user_id=user.id,
+            name="task",
+            version="1.2.3",
+            task_group_kwargs=dict(
+                origin=False, venv_path="/invalid/so/it/fails"
+            ),
+        )
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        # API failure: Non-active task group cannot be deactivated
+        res = await client.post(
+            f"{PREFIX}/task-group/{non_active_task.taskgroupv2_id}/deactivate/"
+        )
+        assert res.status_code == 422
+
+        # API success with `origin="other"`
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_other.taskgroupv2_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity = res.json()
+        task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
+        assert activity["version"] == "N/A"
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
+        assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
+        assert activity["timestamp_started"] is not None
+        assert activity["timestamp_ended"] is not None
+        assert task_group_other.active is False
+
+        # API success with `origin="pypi"`
+        debug(task_pypi)
+        debug(f"{PREFIX}/task-group/{task_pypi.taskgroupv2_id}/deactivate/")
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_pypi.taskgroupv2_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity = res.json()
+        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
+        activity_id = activity["id"]
+        assert activity["version"] == task_group_pypi.version
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
+        assert activity["timestamp_started"] is not None
+        assert activity["timestamp_ended"] is None
+        assert task_group_pypi.active is False
+
+        # Check that background task failed
+        res = await db.get(TaskGroupActivityV2, activity_id)
+        assert res.status == "failed"
+        assert "does not exist" in res.log
+
+
+async def test_reactivate_task_group_api(
+    client,
+    MockCurrentUser,
+    db,
+    task_factory_v2,
+    current_py_version,
+):
+    """
+    This tests _only_ the API of the admin `reactivate` endpoint.
+    """
+
+    async with MockCurrentUser() as user:
+        # Create mock task groups
+        active_task = await task_factory_v2(user_id=user.id, name="task")
+
+        task_other = await task_factory_v2(
+            user_id=user.id,
+            version=None,
+            name="task",
+            task_group_kwargs=dict(active=False),
+        )
+
+        task_pypi = await task_factory_v2(
+            user_id=user.id,
+            name="task",
+            version="1.2.3",
+            task_group_kwargs=dict(
+                origin="pypi",
+                active=False,
+                venv_path="/invalid/so/it/fails",
+                python_version=current_py_version,
+            ),
+        )
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        # API failure: Active task group cannot be reactivated
+        res = await client.post(
+            f"{PREFIX}/task-group/{active_task.taskgroupv2_id}/reactivate/"
+        )
+        assert res.status_code == 422
+
+        # API success with `origin="other"`
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_other.taskgroupv2_id}/reactivate/"
+        )
+        activity = res.json()
+        assert res.status_code == 202
+        assert activity["version"] == "N/A"
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
+        assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
+        assert activity["timestamp_started"] is not None
+        assert activity["timestamp_ended"] is not None
+        task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
+        assert task_group_other.active is True
+
+        # API success with `origin="pypi"`, but no `pip_freeze`
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_pypi.taskgroupv2_id}/reactivate/"
+        )
+        assert res.status_code == 422
+        assert "task_group.pip_freeze=None" in res.json()["detail"]
+
+        # Set pip_freeze
+        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
+        task_group_pypi.pip_freeze = "devtools==0.12.0"
+        db.add(task_group_pypi)
+        await db.commit()
+        await db.refresh(task_group_pypi)
+
+        # API success with `origin="pypi"`
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group_pypi.id}/reactivate/"
+        )
+        activity = res.json()
+        debug(activity)
+        activity_id = activity["id"]
+        assert res.status_code == 202
+        assert activity["version"] == task_group_pypi.version
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
+        assert activity["timestamp_started"] is not None
+        assert activity["timestamp_ended"] is None
+        await db.refresh(task_group_pypi)
+
+        # Check that background task failed
+        activity = await db.get(TaskGroupActivityV2, activity_id)
+        assert activity.status == "failed"

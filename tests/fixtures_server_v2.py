@@ -247,6 +247,7 @@ async def task_factory_v2(db: AsyncSession):
             version=task_group_kwargs.get("version", task.version),
             origin=task_group_kwargs.get("origin", "other"),
             pkg_name=task_group_kwargs.get("pkg_name", task.name),
+            venv_path=task_group_kwargs.get("venv_path", task.name),
             task_list=[task],
         )
         db.add(task_group)
