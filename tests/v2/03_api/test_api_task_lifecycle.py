@@ -42,9 +42,6 @@ async def test_deactivate_task_group_api(
         non_accessible_task = await task_factory_v2(
             user_id=different_user.id, name="task"
         )
-        non_accessible_task_group = await db.get(
-            TaskGroupV2, non_accessible_task.taskgroupv2_id
-        )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         app.state.fractal_ssh_list = MockFractalSSHList()
@@ -60,45 +57,40 @@ async def test_deactivate_task_group_api(
 
     async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
-        non_active_task = await task_factory_v2(user_id=user.id, name="task")
+        non_active_task = await task_factory_v2(
+            user_id=user.id, name="task", task_group_kwargs=dict(active=False)
+        )
         task_other = await task_factory_v2(
-            user_id=user.id, version=None, name="task"
+            user_id=user.id,
+            version=None,
+            name="task",
+            task_group_kwargs=dict(origin="other"),
         )
         task_pypi = await task_factory_v2(
-            user_id=user.id, name="task", version="1.2.3"
+            user_id=user.id,
+            name="task",
+            version="1.2.3",
+            task_group_kwargs=dict(
+                origin="pypi", venv_path="/invalid/so/it/fails"
+            ),
         )
-        non_active_task_group = await db.get(
-            TaskGroupV2, non_active_task.taskgroupv2_id
-        )
-        task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
-        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
-        non_active_task_group.active = False
-        task_group_other.origin = "other"
-        task_group_pypi.origin = "pypi"
-        task_group_pypi.venv_path = "/invalid/so/it/fails"
-        db.add(non_active_task_group)
-        db.add(task_group_other)
-        db.add(task_group_pypi)
-        await db.commit()
-        await db.refresh(non_active_task_group)
-        await db.refresh(task_group_other)
-        await db.refresh(task_group_pypi)
 
         # API failure: Not full access to another user's task group
         res = await client.post(
-            f"api/v2/task-group/{non_accessible_task_group.id}/deactivate/"
+            "api/v2/task-group/"
+            f"{non_accessible_task.taskgroupv2_id}/deactivate/"
         )
         assert res.status_code == 403
 
         # API failure: Non-active task group cannot be deactivated
         res = await client.post(
-            f"api/v2/task-group/{non_active_task_group.id}/deactivate/"
+            f"api/v2/task-group/{non_active_task.taskgroupv2_id}/deactivate/"
         )
         assert res.status_code == 422
 
         # API success with `origin="other"`
         res = await client.post(
-            f"api/v2/task-group/{task_group_other.id}/deactivate/"
+            f"api/v2/task-group/{task_other.taskgroupv2_id}/deactivate/"
         )
         activity = res.json()
         assert res.status_code == 202
@@ -107,22 +99,22 @@ async def test_deactivate_task_group_api(
         assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is not None
-        await db.refresh(task_group_other)
+        task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
         assert task_group_other.active is False
 
         # API success with `origin="pypi"`
         res = await client.post(
-            f"api/v2/task-group/{task_group_pypi.id}/deactivate/"
+            f"api/v2/task-group/{task_pypi.taskgroupv2_id}/deactivate/"
         )
         activity = res.json()
         assert res.status_code == 202
         activity_id = activity["id"]
-        assert activity["version"] == task_group_pypi.version
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
         assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
-        await db.refresh(task_group_pypi)
+        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
+        assert activity["version"] == task_group_pypi.version
         assert task_group_pypi.active is False
 
         # Check that background task failed
@@ -157,9 +149,6 @@ async def test_reactivate_task_group_api(
         non_accessible_task = await task_factory_v2(
             user_id=different_user.id, name="task"
         )
-        non_accessible_task_group = await db.get(
-            TaskGroupV2, non_accessible_task.taskgroupv2_id
-        )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         app.state.fractal_ssh_list = MockFractalSSHList()
@@ -176,51 +165,39 @@ async def test_reactivate_task_group_api(
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
         task_other = await task_factory_v2(
-            user_id=user.id, version=None, name="task"
+            user_id=user.id,
+            version=None,
+            name="task",
+            task_group_kwargs=dict(active=False),
         )
         task_pypi = await task_factory_v2(
             user_id=user.id,
             name="task",
             version="1.2.3",
+            task_group_kwargs=dict(
+                origin="pypi",
+                active=False,
+                venv_path="/invalid/so/it/fails",
+                python_version=current_py_version,
+            ),
         )
-        task_pypi = await task_factory_v2(
-            user_id=user.id, name="task", version="1.2.3"
-        )
-        active_task_group = await db.get(
-            TaskGroupV2, active_task.taskgroupv2_id
-        )
-        task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
-        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
-        active_task_group.active = True
-        task_group_other.origin = "other"
-        task_group_other.active = False
-        task_group_pypi.origin = "pypi"
-        task_group_pypi.active = False
-        task_group_pypi.venv_path = "/invalid/so/it/fails"
-        task_group_pypi.python_version = current_py_version
-        db.add(active_task_group)
-        db.add(task_group_other)
-        db.add(task_group_pypi)
-        await db.commit()
-        await db.refresh(active_task_group)
-        await db.refresh(task_group_other)
-        await db.refresh(task_group_pypi)
 
         # API failure: Not full access to another user's task group
         res = await client.post(
-            f"api/v2/task-group/{non_accessible_task_group.id}/reactivate/"
+            "api/v2/task-group/"
+            f"{non_accessible_task.taskgroupv2_id}/reactivate/"
         )
         assert res.status_code == 403
 
         # API failure: Active task group cannot be reactivated
         res = await client.post(
-            f"api/v2/task-group/{active_task_group.id}/reactivate/"
+            f"api/v2/task-group/{active_task.taskgroupv2_id}/reactivate/"
         )
         assert res.status_code == 422
 
         # API success with `origin="other"`
         res = await client.post(
-            f"api/v2/task-group/{task_group_other.id}/reactivate/"
+            f"api/v2/task-group/{task_other.taskgroupv2_id}/reactivate/"
         )
         activity = res.json()
         assert res.status_code == 202
@@ -229,17 +206,18 @@ async def test_reactivate_task_group_api(
         assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is not None
-        await db.refresh(task_group_other)
+        task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
         assert task_group_other.active is True
 
         # API success with `origin="pypi"`, but no `pip_freeze`
         res = await client.post(
-            f"api/v2/task-group/{task_group_pypi.id}/reactivate/"
+            f"api/v2/task-group/{task_pypi.taskgroupv2_id}/reactivate/"
         )
         assert res.status_code == 422
         assert "task_group.pip_freeze=None" in res.json()["detail"]
 
         # Set pip_freeze
+        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
         task_group_pypi.pip_freeze = "devtools==0.12.0"
         db.add(task_group_pypi)
         await db.commit()
