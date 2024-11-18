@@ -31,7 +31,6 @@ def _customize_and_run_template(
     """
     logger = get_logger(logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
-
     # Prepare name and path of script
     if not template_filename.endswith(".sh"):
         raise ValueError(

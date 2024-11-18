@@ -114,24 +114,6 @@ def reactivate_ssh(
                     ),
                 )
 
-                # Prepare common arguments for `_customize_and_run_template``
-                script_dir_remote = (
-                    Path(task_group.path) / SCRIPTS_SUBFOLDER
-                ).as_posix()
-                common_args = dict(
-                    replacements=replacements,
-                    script_dir_local=(
-                        Path(tmpdir) / SCRIPTS_SUBFOLDER
-                    ).as_posix(),
-                    script_dir_remote=script_dir_remote,
-                    prefix=(
-                        f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT}_"
-                    ),
-                    fractal_ssh=fractal_ssh,
-                    logger_name=LOGGER_NAME,
-                )
-
                 # Prepare replacements for templates
                 pip_freeze_file_local = f"{tmpdir}/pip_freeze.txt"
                 pip_freeze_file_remote = (
@@ -147,15 +129,20 @@ def reactivate_ssh(
                 )
 
                 # Prepare common arguments for `_customize_and_run_template``
+                script_dir_remote = (
+                    Path(task_group.path) / SCRIPTS_SUBFOLDER
+                ).as_posix()
                 common_args = dict(
                     replacements=replacements,
-                    script_dir=(
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    script_dir_local=(
+                        Path(tmpdir) / SCRIPTS_SUBFOLDER
                     ).as_posix(),
+                    script_dir_remote=script_dir_remote,
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.REACTIVATE}_"
+                        f"{TaskGroupActivityActionV2.REACTIVATE}"
                     ),
+                    fractal_ssh=fractal_ssh,
                     logger_name=LOGGER_NAME,
                 )
 
