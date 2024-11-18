@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -89,7 +88,7 @@ class TaskGroupReadV2(BaseModel):
 
     active: bool
     timestamp_created: datetime
-    timestamp_last_used: Optional[datetime] = None
+    timestamp_last_used: datetime | None = None
 
 
 class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
