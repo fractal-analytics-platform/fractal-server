@@ -177,13 +177,13 @@ async def test_view_workflow(
             f"{quote('2000-01-01T01:01:01')}"
         )
         assert res.status_code == 422
-        assert "timezone aware" in res.json()["detail"]
+        assert "naive" in res.json()["detail"]
         res = await client.get(
             f"{PREFIX}/workflow/?timestamp_created_max="
             f"{quote('2000-01-01T01:01:01')}"
         )
         assert res.status_code == 422
-        assert "timezone aware" in res.json()["detail"]
+        assert "naive" in res.json()["detail"]
 
         res = await client.get(
             f"{PREFIX}/workflow/?timestamp_created_min=2000-01-01T01:01:01Z"
@@ -314,13 +314,13 @@ async def test_view_dataset(
             f"{quote('2000-01-01T01:01:01')}"
         )
         assert res.status_code == 422
-        assert "timezone aware" in res.json()["detail"]
+        assert "naive" in res.json()["detail"]
         res = await client.get(
             f"{PREFIX}/dataset/?timestamp_created_max="
             f"{quote('2000-01-01T01:01:01')}"
         )
         assert res.status_code == 422
-        assert "timezone aware" in res.json()["detail"]
+        assert "naive" in res.json()["detail"]
 
         ds1b_timestamp = ds1b.timestamp_created.isoformat()
         res = await client.get(
@@ -456,12 +456,12 @@ async def test_view_job(
             f"{PREFIX}/job/?start_timestamp_min={quote('1999-01-01T00:00:01')}"
         )
         assert res.status_code == 422
-        assert "timezone aware" in res.json()["detail"]
+        assert "naive" in res.json()["detail"]
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
         )
         assert res.status_code == 422
-        assert "timezone aware" in res.json()["detail"]
+        assert "naive" in res.json()["detail"]
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min="
