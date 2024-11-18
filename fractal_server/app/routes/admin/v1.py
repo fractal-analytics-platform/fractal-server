@@ -33,7 +33,7 @@ from ..aux._job import _write_shutdown_file
 from ..aux._runner import _check_shutdown_is_supported
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_superuser
-from fractal_server.app.routes.aux import _raise_if_naive
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 
 router_admin_v1 = APIRouter()
 
@@ -54,7 +54,7 @@ async def view_project(
         id: If not `None`, select a given `project.id`.
         user_id: If not `None`, select a given `project.user_id`.
     """
-    _raise_if_naive(timestamp_created_min, timestamp_created_max)
+    _raise_if_naive_datetime(timestamp_created_min, timestamp_created_max)
 
     stm = select(Project)
 
@@ -95,7 +95,7 @@ async def view_workflow(
         name_contains: If not `None`, select workflows such that their
             `name` attribute contains `name_contains` (case-insensitive).
     """
-    _raise_if_naive(timestamp_created_min, timestamp_created_max)
+    _raise_if_naive_datetime(timestamp_created_min, timestamp_created_max)
 
     stm = select(Workflow)
 
@@ -146,7 +146,7 @@ async def view_dataset(
             `name` attribute contains `name_contains` (case-insensitive).
         type: If not `None`, select a given `dataset.type`.
     """
-    _raise_if_naive(timestamp_created_min, timestamp_created_max)
+    _raise_if_naive_datetime(timestamp_created_min, timestamp_created_max)
 
     stm = select(Dataset)
 
@@ -217,7 +217,7 @@ async def view_job(
         log: If `True`, include `job.log`, if `False`
             `job.log` is set to `None`.
     """
-    _raise_if_naive(
+    _raise_if_naive_datetime(
         start_timestamp_min,
         start_timestamp_max,
         end_timestamp_min,
