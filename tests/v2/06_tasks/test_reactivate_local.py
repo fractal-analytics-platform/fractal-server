@@ -10,7 +10,7 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import reactivate_local
 
 
-async def test_reactivate_venv_path(tmp_path, db, first_user):
+async def test_reactivate_local_venv_exists(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
