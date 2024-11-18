@@ -17,6 +17,7 @@
     * Add `POST /admin/v2/task-group/{task_group_id}/deactivate` endpoint (\#2033).
     * Add `POST /admin/v2/task-group/{task_group_id}/reactivate` endpoint (\#2033).
     * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
+    * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
 * Database
     * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).

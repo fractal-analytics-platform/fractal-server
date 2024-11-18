@@ -1,6 +1,4 @@
 import os
-from datetime import datetime
-from datetime import timezone
 from typing import Any
 from typing import Optional
 
@@ -101,17 +99,5 @@ def val_unique_list(attribute: str):
             if len(set(must_be_unique)) != len(must_be_unique):
                 raise ValueError(f"`{attribute}` list has repetitions")
         return must_be_unique
-
-    return val
-
-
-def valutc(attribute: str):
-    def val(timestamp: Optional[datetime]) -> Optional[datetime]:
-        """
-        Replace `tzinfo` with `timezone.utc`.
-        """
-        if timestamp is not None:
-            return timestamp.replace(tzinfo=timezone.utc)
-        return None
 
     return val
