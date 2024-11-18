@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from tests.fixtures_slurm import SLURM_USER
 
 
 class MockFractalSSHList:
@@ -262,20 +264,60 @@ async def test_reactivate_task_group_api(
         assert res.json()["status"] == "failed"
 
 
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
 async def test_lifecycle(
     client,
     MockCurrentUser,
     db,
     testdata_path,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
+    app,
+    tmp777_path: Path,
+    slurmlogin_ip,
+    ssh_keys,
+    request,
+    current_py_version,
 ):
-    # Absolute path to wheel file
-    wheel_path = (
+    overrides = dict(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # Setup remote Python interpreter
+        current_py_version_underscore = current_py_version.replace(".", "_")
+        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+        python_value = (
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
+        overrides[python_key] = python_value
+    override_settings_factory(**overrides)
+
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = request.getfixturevalue(
+            "fractal_ssh_list"
+        )
+        user_settings_dict = dict(
+            ssh_host=slurmlogin_ip,
+            ssh_username=SLURM_USER,
+            ssh_private_key_path=ssh_keys["private"],
+            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+        )
+    else:
+        user_settings_dict = {}
+
+    # Absolute path to wheel file (use a path in tmp77_path, so that it is
+    # also accessible on the SSH remote host)
+    old_wheel_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
+    wheel_path = tmp777_path / old_wheel_path.name
+    shutil.copy(old_wheel_path, wheel_path)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
