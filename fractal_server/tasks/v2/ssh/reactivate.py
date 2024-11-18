@@ -146,6 +146,9 @@ def reactivate_ssh(
                     logger_name=LOGGER_NAME,
                 )
 
+                # Create remote directory for scripts
+                fractal_ssh.mkdir(folder=script_dir_remote)
+
                 logger.debug("start - create venv")
                 _customize_and_run_template(
                     template_filename="1_create_venv.sh",
