@@ -3,6 +3,7 @@ from datetime import timezone
 from pathlib import Path
 from urllib.parse import quote
 from zipfile import ZipFile
+from zoneinfo import ZoneInfo
 
 import pytest
 from devtools import debug
@@ -228,6 +229,30 @@ async def test_view_job(
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+        job1_timestamp = job1.start_timestamp.isoformat()
+        ny_job1_timestamp = job1.start_timestamp.replace(
+            tzinfo=ZoneInfo("America/New_York")
+        ).isoformat()
+        tokyo_job1_timestamp = job1.start_timestamp.replace(
+            tzinfo=ZoneInfo("Asia/Tokyo")
+        ).isoformat()
+
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_max={quote(job1_timestamp)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_max={quote(ny_job1_timestamp)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_max={quote(tokyo_job1_timestamp)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
 
 async def test_view_single_job(
