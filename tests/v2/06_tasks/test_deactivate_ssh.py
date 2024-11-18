@@ -10,12 +10,12 @@ from fractal_server.tasks.v2.ssh import deactivate_ssh
 
 
 async def test_deactivate_fail_no_venv_path(
-    tmp_path,
+    tmp777_path,
     db,
     first_user,
     fractal_ssh,
 ):
-    path = tmp_path / "something"
+    path = tmp777_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
@@ -45,7 +45,7 @@ async def test_deactivate_fail_no_venv_path(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         fractal_ssh=fractal_ssh,
-        tasks_base_dir=tmp_path.as_posix(),
+        tasks_base_dir=tmp777_path.as_posix(),
     )
 
     # Verify that deactivate failed
@@ -58,7 +58,7 @@ async def test_deactivate_fail_no_venv_path(
 
 
 async def test_deactivate_ssh_fail(
-    tmp_path,
+    tmp777_path,
     db,
     first_user,
     monkeypatch,
@@ -77,7 +77,7 @@ async def test_deactivate_ssh_fail(
         fail_function,
     )
 
-    path = tmp_path / "something"
+    path = tmp777_path / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -111,7 +111,7 @@ async def test_deactivate_ssh_fail(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         fractal_ssh=fractal_ssh,
-        tasks_base_dir=tmp_path.as_posix(),
+        tasks_base_dir=tmp777_path.as_posix(),
     )
 
     # Verify that deactivate failed
