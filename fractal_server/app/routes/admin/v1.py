@@ -64,10 +64,8 @@ async def view_project(
     if user_id is not None:
         stm = stm.where(Project.user_list.any(UserOAuth.id == user_id))
     if timestamp_created_min is not None:
-        timestamp_created_min = timestamp_created_min
         stm = stm.where(Project.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        timestamp_created_max = timestamp_created_max
         stm = stm.where(Project.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -115,10 +113,8 @@ async def view_workflow(
             func.lower(Workflow.name).contains(name_contains.lower())
         )
     if timestamp_created_min is not None:
-        timestamp_created_min = timestamp_created_min
         stm = stm.where(Workflow.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        timestamp_created_max = timestamp_created_max
         stm = stm.where(Workflow.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -170,10 +166,8 @@ async def view_dataset(
     if type is not None:
         stm = stm.where(Dataset.type == type)
     if timestamp_created_min is not None:
-        timestamp_created_min = timestamp_created_min
         stm = stm.where(Dataset.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        timestamp_created_max = timestamp_created_max
         stm = stm.where(Dataset.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -249,16 +243,12 @@ async def view_job(
     if status is not None:
         stm = stm.where(ApplyWorkflow.status == status)
     if start_timestamp_min is not None:
-        start_timestamp_min = start_timestamp_min
         stm = stm.where(ApplyWorkflow.start_timestamp >= start_timestamp_min)
     if start_timestamp_max is not None:
-        start_timestamp_max = start_timestamp_max
         stm = stm.where(ApplyWorkflow.start_timestamp <= start_timestamp_max)
     if end_timestamp_min is not None:
-        end_timestamp_min = end_timestamp_min
         stm = stm.where(ApplyWorkflow.end_timestamp >= end_timestamp_min)
     if end_timestamp_max is not None:
-        end_timestamp_max = end_timestamp_max
         stm = stm.where(ApplyWorkflow.end_timestamp <= end_timestamp_max)
 
     res = await db.execute(stm)
