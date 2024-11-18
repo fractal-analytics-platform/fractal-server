@@ -988,7 +988,7 @@ async def test_admin_deactivate_task_group_api(
             name="task",
             version="1.2.3",
             task_group_kwargs=dict(
-                origin=False, venv_path="/invalid/so/it/fails"
+                origin="pypi", venv_path="/invalid/so/it/fails"
             ),
         )
 
