@@ -7,6 +7,7 @@ from devtools import debug
 from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
+import fractal_server
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
@@ -31,6 +32,48 @@ def test_acquire_lock():
             ):
                 pass
         print(e)
+
+
+def test_fail_and_raise(tmp_path: Path, caplog, monkeypatch):
+    """
+    test NoValidConnectionError exception of `send_file`
+    """
+
+    local_file_old = (tmp_path / "local_old").as_posix()
+    with open(local_file_old, "w") as f:
+        f.write("hi there\n")
+
+    def mock_errors():
+        errors = 1
+        return errors
+
+    monkeypatch.setattr(
+        fractal_server.ssh._fabric.NoValidConnectionsError,
+        "errors",
+        mock_errors,
+    ),
+
+    with Connection(
+        host="localhost",
+        port="8022",
+        user="invalid",
+        forward_agent=False,
+        connect_kwargs={"password": "invalid"},
+    ) as connection:
+        LOGGER_NAME = "invalid_ssh"
+        fractal_ssh = FractalSSH(
+            connection=connection, logger_name=LOGGER_NAME
+        )
+        logger = logging.getLogger(LOGGER_NAME)
+        logger.propagate = True
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.send_file(
+                local=local_file_old,
+                remote="remote_file",
+            )
+    log_text = caplog.text
+    fractal_ssh.close()
+    assert "NoValidConnectionsError" in log_text
 
 
 def test_run_command(fractal_ssh: FractalSSH):
