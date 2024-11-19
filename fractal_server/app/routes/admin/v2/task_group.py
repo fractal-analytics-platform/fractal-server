@@ -112,7 +112,10 @@ async def query_task_group_list(
     if user_group_id is not None and private is True:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Cannot set `user_group_id` with {private=}",
+            detail=(
+                "Cannot get task groups with both "
+                f"{user_group_id=} and {private=}."
+            ),
         )
     if user_id is not None:
         stm = stm.where(TaskGroupV2.user_id == user_id)
