@@ -306,7 +306,6 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 
 def test_closed_socket(
     fractal_ssh: FractalSSH,
-    run_in_container: callable,
     tmp777_path: Path,
 ):
     """
