@@ -169,13 +169,13 @@ def test_file_tranfer_no_connection(tmp_path: Path):
     ) as connection:
         fractal_ssh = FractalSSH(connection=connection)
 
-    # Fail in send_file because connection is closed
-    with pytest.raises(NoValidConnectionsError):
-        fractal_ssh.send_file(
-            local=local_file_old,
-            remote="remote_file",
-        )
-    fractal_ssh.close()
+        # Fail in send_file because connection is closed
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.send_file(
+                local=local_file_old,
+                remote="remote_file",
+            )
+        fractal_ssh.close()
 
 
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
