@@ -16,9 +16,11 @@
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066).
     * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062).
-    * Fix bug `_get_collection_task_group_activity_status_message` (\#2047).
-    * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
-    * Add query parameters `timestamp_last_used_{min|max}` to `GET /admin/v2/task-group/` (\#2061).
+    * Internals:
+      * Fix bug in `_get_collection_task_group_activity_status_message` (\#2047).
+      * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
+      * Add query parameters `timestamp_last_used_{min|max}` to `GET /admin/v2/task-group/` (\#2061).
+      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: API only accepts timezone-aware datetimes as query parameters (\#2068).
 * Database
     * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).
