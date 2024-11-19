@@ -61,25 +61,6 @@ def _acquire_lock_with_timeout(
             logger.info(f"Lock for '{label}' was released.")
 
 
-def log_and_raise(
-    *, e: Exception, logger_name: str, message: Optional[str]
-) -> None:
-    """
-    Log the exception from FractalSSH methods.
-
-    Arguments:
-        e:
-        logger_name:
-        message:
-    """
-    logger = get_logger(logger_name)
-    logger.error(f"Original Error: \n{str(e)}")
-    if message:
-        logger.error(f"\n{message}\n")
-
-    raise e
-
-
 class FractalSSH(object):
     """
     Wrapper of `fabric.Connection` object, enriched with locks.
@@ -134,6 +115,26 @@ class FractalSSH(object):
     @property
     def logger(self) -> logging.Logger:
         return get_logger(self.logger_name)
+
+    def log_and_raise(
+        self, *, e: Exception, message: Optional[str] = None
+    ) -> None:
+        """
+        Log the exception from FractalSSH methods.
+
+        Arguments:
+            e:
+            logger_name:
+            message:
+        """
+        self.logger.error(f"Original Error: \n{str(e)}")
+        if hasattr(e, "errors"):
+            for err in e.errors:
+                logger.error(f"{str(err)}")
+        if message:
+            self.logger.error(f"\n{message}\n")
+
+        raise e
 
     def _put(
         self,
@@ -410,9 +411,8 @@ class FractalSSH(object):
             self.logger.info(f"{prefix} END transfer of '{local}' over SSH.")
 
         except Exception as e:
-            log_and_raise(
+            self.log_and_raise(
                 e=e,
-                logger_name=logger.name,
                 message=(
                     "Failed in send_file function. "
                     f"Transferring {local=} to {remote=} "
@@ -447,9 +447,8 @@ class FractalSSH(object):
             )
             self.logger.info(f"{prefix} END fetching '{remote}' over SSH.")
         except Exception as e:
-            log_and_raise(
+            self.log_and_raise(
                 e=e,
-                logger_name=logger.name,
                 message=(
                     "Failed in fetch_file function. "
                     f"Transferring {remote=} to {local=} "
@@ -530,8 +529,12 @@ class FractalSSH(object):
             label=f"write_remote_file {path=}",
             timeout=actual_lock_timeout,
         ):
-            with self._sftp_unsafe().open(filename=path, mode="w") as f:
-                f.write(content)
+            try:
+                with self._sftp_unsafe().open(filename=path, mode="w") as f:
+                    f.write(content)
+            except Exception as e:
+                self.log_and_raise(e=e)
+
         self.logger.info(f"END writing to remote file {path}.")
 
     def remote_exists(self, path: str) -> bool:
@@ -551,6 +554,8 @@ class FractalSSH(object):
             except FileNotFoundError:
                 self.logger.info(f"END   remote_file_exists {path} / False")
                 return False
+            except Exception as e:
+                self.log_and_raise(e=e)
 
 
 class FractalSSHList(object):
