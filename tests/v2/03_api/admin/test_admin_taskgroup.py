@@ -73,29 +73,29 @@ async def test_task_group_admin(
 
         # Filter using `timestamp_last_used_min`
         res = await client.get(
-            f"{PREFIX}/task-group/"
-            f"?timestamp_last_used_min={quote(groups[1]['timestamp_created'])}"
+            f"{PREFIX}/task-group/?timestamp_last_used_min="
+            f"{quote(groups[1]['timestamp_last_used'])}"
         )
         debug(res.json())
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
-            f"{PREFIX}/task-group/"
-            f"?timestamp_last_used_min={quote(groups[0]['timestamp_created'])}"
+            f"{PREFIX}/task-group/?timestamp_last_used_min="
+            f"{quote(groups[0]['timestamp_last_used'])}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 3
 
         # Filter using `timestamp_last_used_max`
         res = await client.get(
-            f"{PREFIX}/task-group/"
-            f"?timestamp_last_used_max={quote(groups[1]['timestamp_created'])}"
+            f"{PREFIX}/task-group/?timestamp_last_used_max="
+            f"{quote(groups[1]['timestamp_last_used'])}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
-            f"{PREFIX}/task-group/"
-            f"?timestamp_last_used_max={quote(groups[0]['timestamp_created'])}"
+            f"{PREFIX}/task-group/?timestamp_last_used_max="
+            f"{quote(groups[0]['timestamp_last_used'])}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
