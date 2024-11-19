@@ -4,10 +4,16 @@ from fastapi import HTTPException
 from fastapi import status
 from httpx import AsyncClient
 from httpx import TimeoutException
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 
@@ -165,3 +171,38 @@ async def check_no_ongoing_activity(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail=msg,
     )
+
+
+async def check_no_submitted_job(
+    *,
+    task_id_list: list[int],
+    db: AsyncSession,
+) -> None:
+    """
+    Find submitted jobs which include tasks from a given task group.
+
+    Arguments:
+        task_group_id:
+        db:
+    """
+    stm = (
+        select(func.count(JobV2.id))
+        .join(WorkflowV2)
+        .join(WorkflowTaskV2)
+        .join(TaskV2)
+        .where(JobV2.workflow_id == WorkflowV2.id)
+        .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
+        .where(WorkflowTaskV2.task_id == TaskV2.id)
+        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(TaskV2.id.in_(task_id_list))
+    )
+    res = await db.execute(stm)
+    num_submitted_jobs = res.scalar()
+    if num_submitted_jobs > 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot act on task group because {num_submitted_jobs} "
+                "submitted jobs use its tasks"
+            ),
+        )
