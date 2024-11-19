@@ -37,6 +37,7 @@
     * Introduce background operations for _SSH_ reactivate/deactivate (\#2066).
     * Fix escaping of newlines within f-strings, in logs (\#2028).
     * Improve handling of task groups created before 2.9.0 (\#2050).
+    * Add `TaskGroupCreateV2Strict` for task collections (\#2080).
 * Runner:
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
 * SSH internals:
