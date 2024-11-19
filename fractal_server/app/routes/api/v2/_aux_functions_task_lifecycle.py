@@ -203,6 +203,6 @@ async def check_no_submitted_job(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot act on task group because {num_submitted_jobs} "
-                "submitted jobs use its tasks"
+                "submitted jobs use its tasks."
             ),
         )
