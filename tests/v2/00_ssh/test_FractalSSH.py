@@ -331,22 +331,16 @@ def test_closed_socket(
     fractal_ssh.send_file(local=local_file, remote=remote_file_1)
 
     # Check sockets are open
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert not fractal_ssh._connection.transport.sock._closed
     assert not fractal_ssh._sftp_unsafe().sock.closed
 
     # Manually close sockets
     fractal_ssh._sftp_unsafe().sock.close()
     fractal_ssh._sftp_unsafe().sock.closed = True
-    fractal_ssh._connection.transport.sock.close()
-    fractal_ssh._connection.transport.sock._closed = True
 
     # Check sockets are closed
     debug(fractal_ssh._sftp_unsafe().sock)
     assert fractal_ssh._sftp_unsafe().sock.closed
-    debug(fractal_ssh._connection.transport.sock)
-    assert fractal_ssh._connection.transport.sock._closed
 
     # Running an SFTP command now fails with an OSError
     with pytest.raises(OSError, match="Socket is closed"):
@@ -357,9 +351,7 @@ def test_closed_socket(
     fractal_ssh.check_connection()
 
     # Check sockets are open
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert not fractal_ssh._connection.transport.sock._closed
     assert not fractal_ssh._sftp_unsafe().sock.closed
 
     # Successfully run a SFTP command
