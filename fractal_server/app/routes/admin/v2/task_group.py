@@ -104,6 +104,11 @@ async def query_task_group_list(
 
     stm = select(TaskGroupV2)
 
+    _raise_if_naive_datetime(
+        timestamp_last_used_max,
+        timestamp_last_used_min,
+    )
+
     if user_group_id is not None and private is True:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -128,16 +133,10 @@ async def query_task_group_list(
     if pkg_name is not None:
         stm = stm.where(TaskGroupV2.pkg_name.icontains(pkg_name))
     if timestamp_last_used_min is not None:
-        timestamp_last_used_min = _convert_to_db_timestamp(
-            timestamp_last_used_min
-        )
         stm = stm.where(
             TaskGroupV2.timestamp_last_used >= timestamp_last_used_min
         )
     if timestamp_last_used_max is not None:
-        timestamp_last_used_max = _convert_to_db_timestamp(
-            timestamp_last_used_max
-        )
         stm = stm.where(
             TaskGroupV2.timestamp_last_used <= timestamp_last_used_max
         )
