@@ -15,9 +15,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
-from fractal_server.app.routes.aux._timestamp import _convert_to_db_timestamp
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
@@ -65,6 +65,14 @@ async def view_job(
         log: If `True`, include `job.log`, if `False`
             `job.log` is set to `None`.
     """
+
+    _raise_if_naive_datetime(
+        start_timestamp_min,
+        start_timestamp_max,
+        end_timestamp_min,
+        end_timestamp_max,
+    )
+
     stm = select(JobV2)
 
     if id is not None:
@@ -82,16 +90,16 @@ async def view_job(
     if status is not None:
         stm = stm.where(JobV2.status == status)
     if start_timestamp_min is not None:
-        start_timestamp_min = _convert_to_db_timestamp(start_timestamp_min)
+        start_timestamp_min = start_timestamp_min
         stm = stm.where(JobV2.start_timestamp >= start_timestamp_min)
     if start_timestamp_max is not None:
-        start_timestamp_max = _convert_to_db_timestamp(start_timestamp_max)
+        start_timestamp_max = start_timestamp_max
         stm = stm.where(JobV2.start_timestamp <= start_timestamp_max)
     if end_timestamp_min is not None:
-        end_timestamp_min = _convert_to_db_timestamp(end_timestamp_min)
+        end_timestamp_min = end_timestamp_min
         stm = stm.where(JobV2.end_timestamp >= end_timestamp_min)
     if end_timestamp_max is not None:
-        end_timestamp_max = _convert_to_db_timestamp(end_timestamp_max)
+        end_timestamp_max = end_timestamp_max
         stm = stm.where(JobV2.end_timestamp <= end_timestamp_max)
 
     res = await db.execute(stm)
