@@ -9,6 +9,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 
 
@@ -305,7 +306,9 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 
 
 def test_closed_socket(
-    fractal_ssh: FractalSSH,
+    slurmlogin_ip,
+    ssh_keys,
+    ssh_alive,
     tmp777_path: Path,
 ):
     """
@@ -319,6 +322,13 @@ def test_closed_socket(
     https://github.com/fractal-analytics-platform/fractal-server/issues/2019
     """
 
+    # Initialize new fractal_ssh object
+    fractal_ssh = FractalSSHList().get(
+        host=slurmlogin_ip,
+        user="fractal",
+        key_path=ssh_keys["private"],
+    )
+
     # Prepare local/remote files
     local_file = (tmp777_path / "local").as_posix()
     with open(local_file, "w") as f:
@@ -327,7 +337,6 @@ def test_closed_socket(
     remote_file_2 = (tmp777_path / "remote_2").as_posix()
 
     # Open connection and run an SFTP command
-    fractal_ssh.close()
     fractal_ssh.check_connection()
     fractal_ssh.send_file(local=local_file, remote=remote_file_1)
 
@@ -358,3 +367,5 @@ def test_closed_socket(
     # Successfully run a SFTP command
     fractal_ssh.send_file(local=local_file, remote=remote_file_2)
     assert fractal_ssh.remote_exists(remote_file_2)
+
+    fractal_ssh.close()
