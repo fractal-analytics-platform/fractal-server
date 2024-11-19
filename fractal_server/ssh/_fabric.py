@@ -116,23 +116,23 @@ class FractalSSH(object):
     def logger(self) -> logging.Logger:
         return get_logger(self.logger_name)
 
-    def log_and_raise(
-        self, *, e: Exception, message: Optional[str] = None
-    ) -> None:
+    def log_and_raise(self, *, e: Exception, message: str) -> None:
         """
         Log the exception from FractalSSH methods.
 
         Arguments:
             e:
-            logger_name:
             message:
         """
-        self.logger.error(f"Original Error: \n{str(e)}")
-        if hasattr(e, "errors"):
-            for err in e.errors:
-                logger.error(f"{str(err)}")
-        if message:
-            self.logger.error(f"\n{message}\n")
+        try:
+            self.logger.error(message)
+            self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
+            if hasattr(e, "errors"):
+                self.logger.error(f"{type(e)=}")
+                for err in e.errors:
+                    self.logger.error(f"{err}")
+        except Exception as exception:
+            self.logger.error(f"Unexpected Error: {str(exception)}")
 
         raise e
 
@@ -533,7 +533,9 @@ class FractalSSH(object):
                 with self._sftp_unsafe().open(filename=path, mode="w") as f:
                     f.write(content)
             except Exception as e:
-                self.log_and_raise(e=e)
+                self.log_and_raise(
+                    e=e, message=f"Write remote file failed, {path}"
+                )
 
         self.logger.info(f"END writing to remote file {path}.")
 
@@ -555,7 +557,9 @@ class FractalSSH(object):
                 self.logger.info(f"END   remote_file_exists {path} / False")
                 return False
             except Exception as e:
-                self.log_and_raise(e=e)
+                self.log_and_raise(
+                    e=e, message=("Remote exists failed with " f"path {path}")
+                )
 
 
 class FractalSSHList(object):

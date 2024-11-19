@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -152,7 +153,7 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
         )
 
 
-def test_file_tranfer_no_connection(tmp_path: Path):
+def test_file_tranfer_no_connection(tmp_path: Path, caplog):
     """
     test NoValidConnectionError exception of `send_file`
     """
@@ -167,15 +168,21 @@ def test_file_tranfer_no_connection(tmp_path: Path):
         forward_agent=False,
         connect_kwargs={"password": "invalid"},
     ) as connection:
-        fractal_ssh = FractalSSH(connection=connection)
-
-    # Fail in send_file because connection is closed
-    with pytest.raises(NoValidConnectionsError):
-        fractal_ssh.send_file(
-            local=local_file_old,
-            remote="remote_file",
+        LOGGER_NAME = "invalid_ssh"
+        fractal_ssh = FractalSSH(
+            connection=connection, logger_name=LOGGER_NAME
         )
-        fractal_ssh.close()
+        logger = logging.getLogger(LOGGER_NAME)
+        logger.propagate = True
+        # Fail in send_file because connection is closed
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.send_file(
+                local=local_file_old,
+                remote="remote_file",
+            )
+    log_text = caplog.text
+    fractal_ssh.close()
+    assert "NoValidConnectionsError" in log_text
 
 
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
