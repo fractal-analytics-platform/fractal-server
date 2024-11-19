@@ -327,6 +327,7 @@ def test_closed_socket(
     remote_file_2 = (tmp777_path / "remote_2").as_posix()
 
     # Open connection and run an SFTP command
+    fractal_ssh.close()
     fractal_ssh.check_connection()
     fractal_ssh.send_file(local=local_file, remote=remote_file_1)
 
