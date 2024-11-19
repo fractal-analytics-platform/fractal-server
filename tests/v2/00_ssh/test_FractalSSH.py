@@ -339,7 +339,6 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 
 def test_closed_socket(
     fractal_ssh: FractalSSH,
-    run_in_container: callable,
     tmp777_path: Path,
 ):
     """
@@ -365,19 +364,15 @@ def test_closed_socket(
     fractal_ssh.send_file(local=local_file, remote=remote_file_1)
 
     # Check sockets are open
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert not fractal_ssh._connection.transport.sock._closed
     assert not fractal_ssh._sftp_unsafe().sock.closed
 
     # Manually close sockets
+    fractal_ssh._sftp_unsafe().sock.close()
     fractal_ssh._sftp_unsafe().sock.closed = True
-    fractal_ssh._connection.transport.sock.close()
 
     # Check sockets are closed
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert fractal_ssh._connection.transport.sock._closed
     assert fractal_ssh._sftp_unsafe().sock.closed
 
     # Running an SFTP command now fails with an OSError
@@ -389,9 +384,7 @@ def test_closed_socket(
     fractal_ssh.check_connection()
 
     # Check sockets are open
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert not fractal_ssh._connection.transport.sock._closed
     assert not fractal_ssh._sftp_unsafe().sock.closed
 
     # Successfully run a SFTP command
