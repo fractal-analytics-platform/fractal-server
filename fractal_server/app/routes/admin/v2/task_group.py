@@ -20,6 +20,7 @@ from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -45,6 +46,8 @@ async def get_task_group_activity_list(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:
+
+    _raise_if_naive_datetime(timestamp_started_min)
 
     stm = select(TaskGroupActivityV2)
     if task_group_activity_id is not None:
