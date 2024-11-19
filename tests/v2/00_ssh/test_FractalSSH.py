@@ -320,6 +320,39 @@ def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
         assert f.read() == content
 
 
+def test_write_remote_fail(tmp777_path, caplog):
+    """
+    Test mkdir generic Exception, for example
+    NoValidConnectionError.
+    """
+
+    # Define folder
+    path = tmp777_path / "file"
+    content = "this is what goes into the file"
+
+    with Connection(
+        host="localhost",
+        port="8022",
+        user="invalid",
+        forward_agent=False,
+        connect_kwargs={"password": "invalid"},
+    ) as connection:
+        LOGGER_NAME = "invalid_ssh"
+        fractal_ssh = FractalSSH(
+            connection=connection, logger_name=LOGGER_NAME
+        )
+        logger = logging.getLogger(LOGGER_NAME)
+        logger.propagate = True
+        # Fail in send_file because connection is closed
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.write_remote_file(
+                path=path.as_posix(), content=content, lock_timeout=100
+            )
+        fractal_ssh.close()
+        log_text = caplog.text
+        assert "NoValidConnectionsError" in log_text
+
+
 def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
     remote_folder = (tmp777_path / "folder").as_posix()
     remote_file = (tmp777_path / "folder/file").as_posix()
