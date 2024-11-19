@@ -7,7 +7,6 @@ from devtools import debug
 from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
-import fractal_server
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
@@ -35,46 +34,53 @@ def test_acquire_lock():
         print(e)
 
 
-def test_fail_and_raise(tmp_path: Path, caplog, monkeypatch):
+def test_fail_and_raise(tmp_path: Path, caplog, fractal_ssh):
     """
-    test NoValidConnectionError exception of `send_file`
+    Test Exception when `e.errors` is not an iterable.
     """
 
     local_file_old = (tmp_path / "local_old").as_posix()
     with open(local_file_old, "w") as f:
         f.write("hi there\n")
 
-    def mock_errors():
-        errors = 1
-        return errors
+    class MyError(Exception):
+        def __init__(self):
+            self.errors = 0
 
-    monkeypatch.setattr(
-        fractal_server.ssh._fabric.NoValidConnectionsError,
-        "errors",
-        mock_errors,
-    ),
+    class MockFractalSSH(FractalSSH):
+        """
+        Mock FractalSSH object, such that the first call to `run` always fails.
+        """
 
-    with Connection(
-        host="localhost",
-        port="8022",
-        user="invalid",
-        forward_agent=False,
-        connect_kwargs={"password": "invalid"},
-    ) as connection:
-        LOGGER_NAME = "invalid_ssh"
-        fractal_ssh = FractalSSH(
-            connection=connection, logger_name=LOGGER_NAME
+        please_raise: bool
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.please_raise = True
+
+        # This mock modifies the _put behaviour
+        def _put(self, *args, **kwargs):
+            if self.please_raise:
+                # Set `please_raise=False`, so that next call will go through
+                self.please_raise = False
+                raise MyError()
+            return super()._run(*args, **kwargs)
+
+    LOGGER_NAME = "invalid_ssh"
+    mocked_fractal_ssh = MockFractalSSH(
+        connection=fractal_ssh._connection, logger_name=LOGGER_NAME
+    )
+
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.propagate = True
+    with pytest.raises(MyError):
+        mocked_fractal_ssh.send_file(
+            local=local_file_old,
+            remote="remote_file",
         )
-        logger = logging.getLogger(LOGGER_NAME)
-        logger.propagate = True
-        with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.send_file(
-                local=local_file_old,
-                remote="remote_file",
-            )
     log_text = caplog.text
     fractal_ssh.close()
-    assert "NoValidConnectionsError" in log_text
+    assert "Unexpected Error: 'int' object is not iterable" in log_text
 
 
 def test_run_command(fractal_ssh: FractalSSH):
@@ -143,6 +149,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
             super().__init__(*args, **kwargs)
             self.please_raise = True
 
+        # This mock modifies the _run behaviour
         def _run(self, *args, **kwargs):
             if self.please_raise:
                 # Set `please_raise=False`, so that next call will go through
