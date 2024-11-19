@@ -162,6 +162,7 @@ def test_file_tranfer_no_connection(tmp_path: Path):
 
     with Connection(
         host="localhost",
+        port="8022",
         user="invalid",
         forward_agent=False,
         connect_kwargs={"password": "invalid"},
@@ -174,6 +175,7 @@ def test_file_tranfer_no_connection(tmp_path: Path):
             local=local_file_old,
             remote="remote_file",
         )
+        fractal_ssh.close()
 
 
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
