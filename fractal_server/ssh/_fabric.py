@@ -409,21 +409,16 @@ class FractalSSH(object):
             )
             self.logger.info(f"{prefix} END transfer of '{local}' over SSH.")
 
-        except NoValidConnectionsError as e:
-            logger.error("NoValidConnectionError")
-            logger.error(f"{str(e)=}")
-            logger.error(f"{e.errors=}")
-            for err in e.errors:
-                logger.error(f"{str(err)}")
-
-            raise e
-
         except Exception as e:
-            self.logger.error(
-                f"Transferring {local=} to {remote=} over SSH failed.\n"
-                f"Original Error:\n{str(e)}."
+            log_and_raise(
+                e=e,
+                logger_name=logger.name,
+                message=(
+                    "Failed in send_file function. "
+                    f"Transferring {local=} to {remote=} "
+                    "over SSH"
+                ),
             )
-            raise e
 
     def fetch_file(
         self,
@@ -452,11 +447,15 @@ class FractalSSH(object):
             )
             self.logger.info(f"{prefix} END fetching '{remote}' over SSH.")
         except Exception as e:
-            self.logger.error(
-                f"Transferring {remote=} to {local=} over SSH failed.\n"
-                f"Original Error:\n{str(e)}."
+            log_and_raise(
+                e=e,
+                logger_name=logger.name,
+                message=(
+                    "Failed in fetch_file function. "
+                    f"Transferring {remote=} to {local=} "
+                    "over SSH"
+                ),
             )
-            raise e
 
     def mkdir(self, *, folder: str, parents: bool = True) -> None:
         """
