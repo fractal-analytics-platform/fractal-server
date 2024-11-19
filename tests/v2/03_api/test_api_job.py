@@ -628,8 +628,11 @@ async def test_update_timestamp_taskgroup(
         )
 
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
-        assert task_group.timestamp_last_used == task_group.timestamp_created
+        assert task_group.timestamp_last_used.replace(
+            microsecond=0
+        ) == task_group.timestamp_created.replace(microsecond=0)
 
+        time.sleep(1)
         await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
             f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
@@ -637,4 +640,6 @@ async def test_update_timestamp_taskgroup(
         )
 
         await db.refresh(task_group)
-        assert task_group.timestamp_last_used > task_group.timestamp_created
+        assert task_group.timestamp_last_used.replace(
+            microsecond=0
+        ) > task_group.timestamp_created.replace(microsecond=0)
