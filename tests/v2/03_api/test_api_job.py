@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 
 import pytest
 from devtools import debug
@@ -628,7 +629,12 @@ async def test_update_timestamp_taskgroup(
         )
 
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
-        assert task_group.timestamp_last_used is None
+        assert task_group.timestamp_last_used > task_group.timestamp_created
+        assert (
+            task_group.timestamp_last_used - task_group.timestamp_created
+            < timedelta(milliseconds=1)
+        )
+        original_timestamp_last_used = task_group.timestamp_last_used
 
         await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
@@ -637,4 +643,4 @@ async def test_update_timestamp_taskgroup(
         )
 
         await db.refresh(task_group)
-        assert task_group.timestamp_last_used is not None
+        assert task_group.timestamp_last_used > original_timestamp_last_used
