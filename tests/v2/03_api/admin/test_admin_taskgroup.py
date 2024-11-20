@@ -65,6 +65,9 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/")
         assert res.status_code == 200
         assert len(res.json()) == 3
+        groups = sorted(res.json(), key=lambda x: x["timestamp_last_used"])
+
+        # Filter using `user_id`
 
         res = await client.get(f"{PREFIX}/task-group/?user_id={user1.id}")
         assert res.status_code == 200
@@ -73,7 +76,36 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
-        # Include `origin`
+        # Filter using `timestamp_last_used_min`
+        res = await client.get(
+            f"{PREFIX}/task-group/?timestamp_last_used_min="
+            f"{quote(groups[1]['timestamp_last_used'])}"
+        )
+        debug(res.json())
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/task-group/?timestamp_last_used_min="
+            f"{quote(groups[0]['timestamp_last_used'])}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+
+        # Filter using `timestamp_last_used_max`
+        res = await client.get(
+            f"{PREFIX}/task-group/?timestamp_last_used_max="
+            f"{quote(groups[1]['timestamp_last_used'])}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/task-group/?timestamp_last_used_max="
+            f"{quote(groups[0]['timestamp_last_used'])}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+
+        # Filter using `origin`
         res = await client.get(f"{PREFIX}/task-group/?origin=other")
         assert res.status_code == 200
         assert len(res.json()) == 3
@@ -83,12 +115,12 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?origin=INVALID")
         assert res.status_code == 422
 
-        # Include `pkg_name`
+        # Filter using `pkg_name`
         res = await client.get(f"{PREFIX}/task-group/?pkg_name=bb")
         assert res.status_code == 200
         assert len(res.json()) == 2
 
-        # Include `active`
+        # Filter using `active`
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -103,7 +135,7 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
-        # Include `private`
+        # Filter using `private`
         res = await client.get(f"{PREFIX}/task-group/?private=true")
         assert res.status_code == 200
         assert len(res.json()) == 1
@@ -111,7 +143,7 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()) == 2
 
-        # Include `user_group_id` and/or `private`
+        # Filter using `user_group_id` and/or `private`
         res = await client.get(f"{PREFIX}/task-group/?user_group_id=1")
         assert res.status_code == 200
         assert len(res.json()) == 2

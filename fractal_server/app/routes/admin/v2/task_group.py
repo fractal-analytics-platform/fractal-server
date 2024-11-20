@@ -96,16 +96,26 @@ async def query_task_group_list(
     active: Optional[bool] = None,
     pkg_name: Optional[str] = None,
     origin: Optional[TaskGroupV2OriginEnum] = None,
+    timestamp_last_used_min: Optional[datetime] = None,
+    timestamp_last_used_max: Optional[datetime] = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
 
     stm = select(TaskGroupV2)
 
+    _raise_if_naive_datetime(
+        timestamp_last_used_max,
+        timestamp_last_used_min,
+    )
+
     if user_group_id is not None and private is True:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Cannot set `user_group_id` with {private=}",
+            detail=(
+                "Cannot get task groups with both "
+                f"{user_group_id=} and {private=}."
+            ),
         )
     if user_id is not None:
         stm = stm.where(TaskGroupV2.user_id == user_id)
@@ -125,6 +135,14 @@ async def query_task_group_list(
         stm = stm.where(TaskGroupV2.origin == origin)
     if pkg_name is not None:
         stm = stm.where(TaskGroupV2.pkg_name.icontains(pkg_name))
+    if timestamp_last_used_min is not None:
+        stm = stm.where(
+            TaskGroupV2.timestamp_last_used >= timestamp_last_used_min
+        )
+    if timestamp_last_used_max is not None:
+        stm = stm.where(
+            TaskGroupV2.timestamp_last_used <= timestamp_last_used_max
+        )
 
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()

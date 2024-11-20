@@ -49,8 +49,8 @@ class TaskGroupV2(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     timestamp_last_used: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
     @property
