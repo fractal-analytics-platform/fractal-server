@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 
 from devtools import debug
 from sqlmodel import select
@@ -9,6 +8,7 @@ from fractal_server.app.models.v1 import Resource
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
 from fractal_server.app.schemas.v1 import WorkflowTaskStatusTypeV1
 from fractal_server.app.schemas.v1.dataset import _DatasetHistoryItemV1
@@ -58,9 +58,8 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         res = await client.get(f"/api/v1/project/{p_id}/dataset/{ds_id}/")
         debug(res.json())
         assert res.status_code == 200
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        _raise_if_naive_datetime(
+            datetime.fromisoformat(res.json()["timestamp_created"])
         )
         assert res.json()["name"] == DATASET_NAME
         assert res.json()["project"] == EXPECTED_PROJECT

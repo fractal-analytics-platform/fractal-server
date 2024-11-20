@@ -10,7 +10,6 @@ from fractal_server.app.models.v1 import JobStatusTypeV1
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.routes.api.v1.project import _encode_as_utc as _utc
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
@@ -237,7 +236,9 @@ async def test_get_job(
             f"{PREFIX}/project/{y_project.id}/job/{y_job.id}/"
         )
         assert res.status_code == 200
-        assert res.json()["start_timestamp"] == _utc(y_job.start_timestamp)
+        assert (
+            res.json()["start_timestamp"] == y_job.start_timestamp.isoformat()
+        )
 
 
 async def test_get_job_list(
