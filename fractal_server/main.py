@@ -146,6 +146,14 @@ async def lifespan(app: FastAPI):
     reset_logger_handlers(logger)
 
 
+def set_spawn_start_method() -> None:
+    current_method = mp.get_start_method(allow_none=True)
+    if current_method is None:
+        mp.set_start_method("spawn")
+    elif current_method != "spawn":  # TODO remove this `elif`, only for tests
+        raise RuntimeError("Expected 'spawn'")
+
+
 def start_application() -> FastAPI:
     """
     Create the application, initialise it and collect all available routers.
@@ -154,7 +162,7 @@ def start_application() -> FastAPI:
         app:
             The fully initialised application.
     """
-    mp.set_start_method("spawn")
+    set_spawn_start_method()
     app = FastAPI(lifespan=lifespan)
     collect_routers(app)
     return app
