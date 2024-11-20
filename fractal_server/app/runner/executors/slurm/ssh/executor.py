@@ -26,7 +26,6 @@ from typing import Sequence
 
 import cloudpickle
 from cfut import SlurmExecutor
-from paramiko.ssh_exception import NoValidConnectionsError
 
 from ....filenames import SHUTDOWN_FILENAME
 from ....task_files import get_task_file_paths
@@ -409,15 +408,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             args=fun_args,
             kwargs=fun_kwargs,
         )
-        try:
-            self._put_subfolder_sftp(jobs=[job])
-        except NoValidConnectionsError as e:
-            logger.error("NoValidConnectionError")
-            logger.error(f"{str(e)=}")
-            logger.error(f"{e.errors=}")
-            for err in e.errors:
-                logger.error(f"{str(err)}")
-            raise e
+        self._put_subfolder_sftp(jobs=[job])
         future, job_id_str = self._submit_job(job)
         self.wait_thread.wait(job_id=job_id_str)
         return future
@@ -559,16 +550,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             current_component_index += batch_size
         logger.debug("[map] Job preparation - END")
 
-        try:
-            self._put_subfolder_sftp(jobs=jobs_to_submit)
-        except NoValidConnectionsError as e:
-            logger.error("NoValidConnectionError")
-            logger.error(f"{str(e)=}")
-            logger.error(f"{e.errors=}")
-            for err in e.errors:
-                logger.error(f"{str(err)}")
-
-            raise e
+        self._put_subfolder_sftp(jobs=jobs_to_submit)
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
         # FIXME SSH: we may create a single `_submit_many_jobs` method to
@@ -1073,16 +1055,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                     self.jobs_empty_cond.notify_all()
 
             # Fetch subfolder from remote host
-            try:
-                self._get_subfolder_sftp(jobs=jobs)
-            except NoValidConnectionsError as e:
-                logger.error("NoValidConnectionError")
-                logger.error(f"{str(e)=}")
-                logger.error(f"{e.errors=}")
-                for err in e.errors:
-                    logger.error(f"{str(err)}")
-
-                raise e
+            self._get_subfolder_sftp(jobs=jobs)
 
             # First round of checking whether all output files exist
             missing_out_paths = []
