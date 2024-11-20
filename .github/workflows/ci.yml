@@ -51,4 +51,4 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-v2-${{ matrix.python-version }}
-        run: poetry run pytest tests/v2/08_full_workflow/test_full_workflow_local_experimental_v2.py
+        run: poetry run pytest tests/v2/03_api/test_api_job.py::"test_stop_job[local_experimental]"
