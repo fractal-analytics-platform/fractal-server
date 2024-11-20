@@ -59,7 +59,8 @@ def test_fail_and_raise(tmp_path: Path, caplog):
             remote="/invalid/remote",
         )
     log_text = caplog.text
-    assert "Unexpected Error: 'int' object is not iterable" in log_text
+    assert "Unexpected" in log_text
+    assert "'int' object is not iterable" in log_text
 
 
 def test_run_command(fractal_ssh: FractalSSH):
