@@ -8,6 +8,8 @@
 > WARNING 2: This version removes the `CollectionStateV2` database table.
 > Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
 
+* App
+    * Force the multiprocessing context to use the "spawn" start method (\#2084).
 * API
     * Remove `GET /api/v2/task/collect/{state_id}/` endpoint (\#2010).
     * Remove `active` property from `PATCH /api/v2/task-group/{task_group_id}/` (\#2033).
