@@ -15,6 +15,7 @@
 
 This module sets up the FastAPI application that serves the Fractal Server.
 """
+import multiprocessing as mp
 import os
 from contextlib import asynccontextmanager
 
@@ -153,6 +154,7 @@ def start_application() -> FastAPI:
         app:
             The fully initialised application.
     """
+    mp.set_start_method("spawn")
     app = FastAPI(lifespan=lifespan)
     collect_routers(app)
     return app
