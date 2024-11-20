@@ -44,6 +44,7 @@
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
+    * Improve closed-socket testing (\#2076).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
 * Scripts:
