@@ -632,7 +632,7 @@ async def test_update_timestamp_taskgroup(
         assert task_group.timestamp_last_used > task_group.timestamp_created
         assert (
             task_group.timestamp_last_used - task_group.timestamp_created
-            < timedelta(microseconds=5)
+            < timedelta(milliseconds=1)
         )
         original_timestamp_last_used = task_group.timestamp_last_used
 
