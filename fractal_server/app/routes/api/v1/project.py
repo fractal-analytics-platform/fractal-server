@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import timedelta
 from datetime import timezone
@@ -388,21 +389,25 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         input_dataset_dump=dict(
-            **input_dataset.model_dump(exclude={"resource_list", "history"}),
+            **json.loads(
+                input_dataset.json(exclude={"resource_list", "history"})
+            ),
             resource_list=[
                 resource.model_dump()
                 for resource in input_dataset.resource_list
             ],
         ),
         output_dataset_dump=dict(
-            **output_dataset.model_dump(exclude={"resource_list", "history"}),
+            **json.loads(
+                output_dataset.json(exclude={"resource_list", "history"})
+            ),
             resource_list=[
                 resource.model_dump()
                 for resource in output_dataset.resource_list
             ],
         ),
-        workflow_dump=dict(**workflow.model_dump(exclude={"task_list"})),
-        project_dump=dict(**project.model_dump(exclude={"user_list"})),
+        workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
+        project_dump=json.loads(project.json(exclude={"user_list"})),
         **apply_workflow.dict(),
     )
 
