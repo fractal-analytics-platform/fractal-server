@@ -186,13 +186,10 @@ def test_slurm_ssh_executor_handshake_fail(
                 workflow_dir_remote=(tmp777_path / "remote_job_dir"),
                 slurm_poll_interval=1,
                 fractal_ssh=mocked_fractal_ssh,
-            ) as executor:
-                fut = executor.submit(lambda: 1)
-                debug(fut)
-                debug(fut.result())
+            ):
 
-            log_text = caplog.text
-            assert "Fractal server versions not available" in log_text
+                log_text = caplog.text
+                assert "Fractal server versions not available" in log_text
 
 
 def test_slurm_ssh_executor_submit(
