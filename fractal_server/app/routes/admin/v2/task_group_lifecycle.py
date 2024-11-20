@@ -74,10 +74,7 @@ async def deactivate_task_group(
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
 
     # Check no submitted jobs use tasks from this task group
-    await check_no_submitted_job(
-        task_id_list=[t.id for t in task_group.task_list],
-        db=db,
-    )
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:
@@ -188,10 +185,7 @@ async def reactivate_task_group(
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
 
     # Check no submitted jobs use tasks from this task group
-    await check_no_submitted_job(
-        task_id_list=[t.id for t in task_group.task_list],
-        db=db,
-    )
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:

@@ -175,7 +175,7 @@ async def check_no_ongoing_activity(
 
 async def check_no_submitted_job(
     *,
-    task_id_list: list[int],
+    task_group_id: int,
     db: AsyncSession,
 ) -> None:
     """
@@ -187,14 +187,13 @@ async def check_no_submitted_job(
     """
     stm = (
         select(func.count(JobV2.id))
-        .join(WorkflowV2)
-        .join(WorkflowTaskV2)
-        .join(TaskV2)
-        .where(JobV2.workflow_id == WorkflowV2.id)
-        .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
-        .where(WorkflowTaskV2.task_id == TaskV2.id)
+        .join(WorkflowV2, JobV2.workflow_id == WorkflowV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.workflow_id == WorkflowV2.id)
+        .where(WorkflowTaskV2.order >= JobV2.first_task_index)
+        .where(WorkflowTaskV2.order <= JobV2.last_task_index)
+        .join(TaskV2, WorkflowTaskV2.task_id == TaskV2.id)
         .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
-        .where(TaskV2.id.in_(task_id_list))
+        .where(TaskV2.taskgroupv2_id == task_group_id),
     )
     res = await db.execute(stm)
     num_submitted_jobs = res.scalar()
