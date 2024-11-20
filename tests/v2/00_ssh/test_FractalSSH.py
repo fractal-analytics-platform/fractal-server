@@ -10,6 +10,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 
 
@@ -31,6 +32,35 @@ def test_acquire_lock():
             ):
                 pass
         print(e)
+
+
+def test_fail_and_raise(tmp_path: Path, caplog):
+    """
+    Test Exception when `e.errors` is not an iterable.
+    """
+    LOGGER_NAME = "invalid_ssh"
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.propagate = True
+
+    class MyError(Exception):
+        errors = 0
+
+    class MockFractalSSH(FractalSSH):
+        def __init__(self, *args, **kwargs):
+            self.logger_name = LOGGER_NAME
+
+        def _put(self, *args, **kwargs):
+            raise MyError()
+
+    mocked_fractal_ssh = MockFractalSSH()
+    with pytest.raises(MyError):
+        mocked_fractal_ssh.send_file(
+            local="/invalid/local",
+            remote="/invalid/remote",
+        )
+    log_text = caplog.text
+    assert "Unexpected" in log_text
+    assert "'int' object is not iterable" in log_text
 
 
 def test_run_command(fractal_ssh: FractalSSH):
@@ -99,6 +129,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
             super().__init__(*args, **kwargs)
             self.please_raise = True
 
+        # This mock modifies the _run behaviour
         def _run(self, *args, **kwargs):
             if self.please_raise:
                 # Set `please_raise=False`, so that next call will go through
@@ -151,38 +182,6 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
             local=(tmp_path / "local_version").as_posix(),
             lock_timeout=1.0,
         )
-
-
-def test_file_tranfer_no_connection(tmp_path: Path, caplog):
-    """
-    test NoValidConnectionError exception of `send_file`
-    """
-    local_file_old = (tmp_path / "local_old").as_posix()
-    with open(local_file_old, "w") as f:
-        f.write("hi there\n")
-
-    with Connection(
-        host="localhost",
-        port="8022",
-        user="invalid",
-        forward_agent=False,
-        connect_kwargs={"password": "invalid"},
-    ) as connection:
-        LOGGER_NAME = "invalid_ssh"
-        fractal_ssh = FractalSSH(
-            connection=connection, logger_name=LOGGER_NAME
-        )
-        logger = logging.getLogger(LOGGER_NAME)
-        logger.propagate = True
-        # Fail in send_file because connection is closed
-        with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.send_file(
-                local=local_file_old,
-                remote="remote_file",
-            )
-    log_text = caplog.text
-    fractal_ssh.close()
-    assert "NoValidConnectionsError" in log_text
 
 
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
@@ -320,15 +319,10 @@ def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
         assert f.read() == content
 
 
-def test_write_remote_fail(tmp777_path, caplog):
+def test_novalidconnectionserror_in_sftp_methods(caplog):
     """
-    Test mkdir generic Exception, for example
-    NoValidConnectionError.
+    Test `NoValidConnectionError`s in SFTP-based methods.
     """
-
-    # Define folder
-    path = tmp777_path / "file"
-    content = "this is what goes into the file"
 
     with Connection(
         host="localhost",
@@ -343,14 +337,37 @@ def test_write_remote_fail(tmp777_path, caplog):
         )
         logger = logging.getLogger(LOGGER_NAME)
         logger.propagate = True
-        # Fail in send_file because connection is closed
+
+        # Fail in several methods, because connection is closed
+
+        caplog.clear
         with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.write_remote_file(
-                path=path.as_posix(), content=content, lock_timeout=100
+            fractal_ssh.write_remote_file(path="/invalid", content="..")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.send_file(local="/invalid", remote="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.fetch_file(local="/invalid", remote="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.remote_exists(path="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.read_remote_json_file(
+                filepath="/invalid",
             )
+        assert "NoValidConnectionsError" in caplog.text
+
         fractal_ssh.close()
-        log_text = caplog.text
-        assert "NoValidConnectionsError" in log_text
 
 
 def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
@@ -371,7 +388,9 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 
 
 def test_closed_socket(
-    fractal_ssh: FractalSSH,
+    slurmlogin_ip,
+    ssh_keys,
+    ssh_alive,
     tmp777_path: Path,
 ):
     """
@@ -384,6 +403,13 @@ def test_closed_socket(
 
     https://github.com/fractal-analytics-platform/fractal-server/issues/2019
     """
+
+    # Initialize new fractal_ssh object
+    fractal_ssh = FractalSSHList().get(
+        host=slurmlogin_ip,
+        user="fractal",
+        key_path=ssh_keys["private"],
+    )
 
     # Prepare local/remote files
     local_file = (tmp777_path / "local").as_posix()
@@ -423,3 +449,5 @@ def test_closed_socket(
     # Successfully run a SFTP command
     fractal_ssh.send_file(local=local_file, remote=remote_file_2)
     assert fractal_ssh.remote_exists(remote_file_2)
+
+    fractal_ssh.close()

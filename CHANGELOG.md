@@ -43,8 +43,8 @@
     * Add `FractalSSH.remote_exists` method (\#2008).
     * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
-    * Move `NoValidConnectionError` exception in `~/_fabric.py` module (\#2070).
-    * Add `log_and_raise` function (\#2070).
+    * Move `NoValidConnectionError` exception handling into `FractalSSH.log_and_raise` method (\#2070).
+    * Improve closed-socket testing (\#2076).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
 * Scripts:

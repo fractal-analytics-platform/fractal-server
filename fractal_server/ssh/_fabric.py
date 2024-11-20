@@ -117,21 +117,29 @@ class FractalSSH(object):
 
     def log_and_raise(self, *, e: Exception, message: str) -> None:
         """
-        Log the exception from FractalSSH methods.
+        Log and re-raise an exception from a FractalSSH method.
 
         Arguments:
-            e:
-            message:
+            message: Additional message to be logged.
+            e: Original exception
         """
         try:
             self.logger.error(message)
             self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
+            # Handle the specific case of `NoValidConnectionsError`s from
+            # paramiko, which store relevant information in the `errors`
+            # attribute
             if hasattr(e, "errors"):
                 self.logger.error(f"{type(e)=}")
                 for err in e.errors:
                     self.logger.error(f"{err}")
         except Exception as exception:
-            self.logger.error(f"Unexpected Error: {str(exception)}")
+            # Handle unexpected cases, e.g. (1) `e` has no `type`, or
+            # (2) `errors` is not iterable.
+            self.logger.error(
+                "Unexpected Error while handling exception above: "
+                f"{str(exception)}"
+            )
 
         raise e
 
@@ -162,8 +170,17 @@ class FractalSSH(object):
             label="read_remote_json_file",
             timeout=self.default_lock_timeout,
         ):
-            with self._sftp_unsafe().open(filepath, "r") as f:
-                data = json.load(f)
+
+            try:
+                with self._sftp_unsafe().open(filepath, "r") as f:
+                    data = json.load(f)
+            except Exception as e:
+                self.log_and_raise(
+                    e=e,
+                    message=(
+                        f"Error in `read_remote_json_file`, for {filepath=}."
+                    ),
+                )
         self.logger.info(f"END reading remote JSON file {filepath}.")
         return data
 
@@ -374,9 +391,8 @@ class FractalSSH(object):
             self.log_and_raise(
                 e=e,
                 message=(
-                    "Failed in send_file function. "
-                    f"Transferring {local=} to {remote=} "
-                    "over SSH"
+                    "Error in `send_file`, while "
+                    f"transferring {local=} to {remote=}."
                 ),
             )
 
@@ -418,9 +434,8 @@ class FractalSSH(object):
             self.log_and_raise(
                 e=e,
                 message=(
-                    "Failed in fetch_file function. "
-                    f"Transferring {remote=} to {local=} "
-                    "over SSH"
+                    "Error in `fetch_file`, while "
+                    f"Transferring {remote=} to {local=}."
                 ),
             )
 
@@ -502,7 +517,7 @@ class FractalSSH(object):
                     f.write(content)
             except Exception as e:
                 self.log_and_raise(
-                    e=e, message=f"Write remote file failed, {path}"
+                    e=e, message=f"Error in `write_remote_file`, for {path=}."
                 )
 
         self.logger.info(f"END writing to remote file {path}.")
@@ -526,7 +541,7 @@ class FractalSSH(object):
                 return False
             except Exception as e:
                 self.log_and_raise(
-                    e=e, message=("Remote exists failed with " f"path {path}")
+                    e=e, message=f"Error in `remote_exists`, for {path=}."
                 )
 
 
