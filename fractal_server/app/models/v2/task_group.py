@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 from typing import Optional
 
 from sqlalchemy import Column
@@ -48,9 +49,15 @@ class TaskGroupV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    timestamp_last_used: Optional[datetime] = Field(
+    timestamp_last_used: datetime = Field(
         default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            server_default=(
+                datetime(2024, 11, 20, tzinfo=timezone.utc).isoformat()
+            ),
+        ),
     )
 
     @property
