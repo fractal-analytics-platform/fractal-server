@@ -120,7 +120,6 @@ class FractalSSH(object):
         """
         Log and re-raise an exception from a FractalSSH method.
 
-
         Arguments:
             message: Additional message to be logged.
             e: Original exception
@@ -128,7 +127,7 @@ class FractalSSH(object):
         try:
             self.logger.error(message)
             self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
-            # Handle the specific case of `NoValidConnectionsError` from
+            # Handle the specific case of `NoValidConnectionsError`s from
             # paramiko, which store relevant information in the `errors`
             # attribute
             if hasattr(e, "errors"):
@@ -216,6 +215,7 @@ class FractalSSH(object):
             label="read_remote_json_file",
             timeout=self.default_lock_timeout,
         ):
+
             with self._sftp_unsafe().open(filepath, "r") as f:
                 data = json.load(f)
         self.logger.info(f"END reading remote JSON file {filepath}.")
@@ -423,9 +423,8 @@ class FractalSSH(object):
             self.log_and_raise(
                 e=e,
                 message=(
-                    "Failed in send_file function. "
-                    f"Transferring {local=} to {remote=} "
-                    "over SSH"
+                    "Error in `send_file`, while "
+                    f"transferring {local=} to {remote=}."
                 ),
             )
 
@@ -459,9 +458,8 @@ class FractalSSH(object):
             self.log_and_raise(
                 e=e,
                 message=(
-                    "Failed in fetch_file function. "
-                    f"Transferring {remote=} to {local=} "
-                    "over SSH"
+                    "Error in `fetch_file`, while "
+                    f"Transferring {remote=} to {local=}."
                 ),
             )
 
@@ -543,7 +541,7 @@ class FractalSSH(object):
                     f.write(content)
             except Exception as e:
                 self.log_and_raise(
-                    e=e, message=f"Write remote file failed, {path}"
+                    e=e, message=f"Error in `write_remote_file`, for {path=}."
                 )
 
         self.logger.info(f"END writing to remote file {path}.")
@@ -567,7 +565,7 @@ class FractalSSH(object):
                 return False
             except Exception as e:
                 self.log_and_raise(
-                    e=e, message=("Remote exists failed with " f"path {path}")
+                    e=e, message=f"Error in `remote_exists`, for {path=}."
                 )
 
 
