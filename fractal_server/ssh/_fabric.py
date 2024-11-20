@@ -216,8 +216,16 @@ class FractalSSH(object):
             timeout=self.default_lock_timeout,
         ):
 
-            with self._sftp_unsafe().open(filepath, "r") as f:
-                data = json.load(f)
+            try:
+                with self._sftp_unsafe().open(filepath, "r") as f:
+                    data = json.load(f)
+            except Exception as e:
+                self.log_and_raise(
+                    e=e,
+                    message=(
+                        f"Error in `read_remote_json_file`, for {filepath=}."
+                    ),
+                )
         self.logger.info(f"END reading remote JSON file {filepath}.")
         return data
 
