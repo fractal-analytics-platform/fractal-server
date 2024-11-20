@@ -14,8 +14,8 @@
     * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
-    * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066).
-    * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062).
+    * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066, \#2078).
+    * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062, \#2078).
     * Internals:
       * Fix bug in `_get_collection_task_group_activity_status_message` (\#2047).
       * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
@@ -44,7 +44,9 @@
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+    * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
+    * Move `NoValidConnectionError` exception handling into `FractalSSH.log_and_raise` method (\#2070).
     * Improve closed-socket testing (\#2076).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).

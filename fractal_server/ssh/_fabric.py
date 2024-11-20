@@ -11,7 +11,6 @@ from typing import Optional
 
 import paramiko.sftp_client
 from fabric import Connection
-from fabric import Result
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -116,49 +115,33 @@ class FractalSSH(object):
     def logger(self) -> logging.Logger:
         return get_logger(self.logger_name)
 
-    def _put(
-        self,
-        *,
-        local: str,
-        remote: str,
-        label: str,
-        lock_timeout: Optional[float] = None,
-    ) -> Result:
+    def log_and_raise(self, *, e: Exception, message: str) -> None:
         """
-        Transfer a local file to a remote path, via SFTP.
-        """
-        actual_lock_timeout = self.default_lock_timeout
-        if lock_timeout is not None:
-            actual_lock_timeout = lock_timeout
-        with _acquire_lock_with_timeout(
-            lock=self._lock,
-            label=label,
-            timeout=actual_lock_timeout,
-        ):
-            return self._sftp_unsafe().put(local, remote)
+        Log and re-raise an exception from a FractalSSH method.
 
-    def _get(
-        self,
-        *,
-        local: str,
-        remote: str,
-        label: str,
-        lock_timeout: Optional[float] = None,
-    ) -> Result:
-        actual_lock_timeout = self.default_lock_timeout
-        if lock_timeout is not None:
-            actual_lock_timeout = lock_timeout
-        with _acquire_lock_with_timeout(
-            lock=self._lock,
-            label=label,
-            timeout=actual_lock_timeout,
-        ):
-            return self._sftp_unsafe().get(
-                remote,
-                local,
-                prefetch=self.sftp_get_prefetch,
-                max_concurrent_prefetch_requests=self.sftp_get_max_requests,
+        Arguments:
+            message: Additional message to be logged.
+            e: Original exception
+        """
+        try:
+            self.logger.error(message)
+            self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
+            # Handle the specific case of `NoValidConnectionsError`s from
+            # paramiko, which store relevant information in the `errors`
+            # attribute
+            if hasattr(e, "errors"):
+                self.logger.error(f"{type(e)=}")
+                for err in e.errors:
+                    self.logger.error(f"{err}")
+        except Exception as exception:
+            # Handle unexpected cases, e.g. (1) `e` has no `type`, or
+            # (2) `errors` is not iterable.
+            self.logger.error(
+                "Unexpected Error while handling exception above: "
+                f"{str(exception)}"
             )
+
+        raise e
 
     def _run(
         self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
@@ -187,8 +170,17 @@ class FractalSSH(object):
             label="read_remote_json_file",
             timeout=self.default_lock_timeout,
         ):
-            with self._sftp_unsafe().open(filepath, "r") as f:
-                data = json.load(f)
+
+            try:
+                with self._sftp_unsafe().open(filepath, "r") as f:
+                    data = json.load(f)
+            except Exception as e:
+                self.log_and_raise(
+                    e=e,
+                    message=(
+                        f"Error in `read_remote_json_file`, for {filepath=}."
+                    ),
+                )
         self.logger.info(f"END reading remote JSON file {filepath}.")
         return data
 
@@ -380,21 +372,29 @@ class FractalSSH(object):
             logger_name: Name of the logger
         """
         try:
-            prefix = "[send_file]"
-            self.logger.info(f"{prefix} START transfer of '{local}' over SSH.")
-            self._put(
-                local=local,
-                remote=remote,
-                lock_timeout=lock_timeout,
+            self.logger.info(
+                f"[send_file] START transfer of '{local}' over SSH."
+            )
+            actual_lock_timeout = self.default_lock_timeout
+            if lock_timeout is not None:
+                actual_lock_timeout = lock_timeout
+            with _acquire_lock_with_timeout(
+                lock=self._lock,
                 label=f"send_file {local=} {remote=}",
+                timeout=actual_lock_timeout,
+            ):
+                self._sftp_unsafe().put(local, remote)
+            self.logger.info(
+                f"[send_file] END transfer of '{local}' over SSH."
             )
-            self.logger.info(f"{prefix} END transfer of '{local}' over SSH.")
         except Exception as e:
-            self.logger.error(
-                f"Transferring {local=} to {remote=} over SSH failed.\n"
-                f"Original Error:\n{str(e)}."
+            self.log_and_raise(
+                e=e,
+                message=(
+                    "Error in `send_file`, while "
+                    f"transferring {local=} to {remote=}."
+                ),
             )
-            raise e
 
     def fetch_file(
         self,
@@ -415,19 +415,29 @@ class FractalSSH(object):
         try:
             prefix = "[fetch_file] "
             self.logger.info(f"{prefix} START fetching '{remote}' over SSH.")
-            self._get(
-                local=local,
-                remote=remote,
-                lock_timeout=lock_timeout,
+            actual_lock_timeout = self.default_lock_timeout
+            if lock_timeout is not None:
+                actual_lock_timeout = lock_timeout
+            with _acquire_lock_with_timeout(
+                lock=self._lock,
                 label=f"fetch_file {local=} {remote=}",
-            )
+                timeout=actual_lock_timeout,
+            ):
+                self._sftp_unsafe().get(
+                    remote,
+                    local,
+                    prefetch=self.sftp_get_prefetch,
+                    max_concurrent_prefetch_requests=self.sftp_get_max_requests,  # noqa E501
+                )
             self.logger.info(f"{prefix} END fetching '{remote}' over SSH.")
         except Exception as e:
-            self.logger.error(
-                f"Transferring {remote=} to {local=} over SSH failed.\n"
-                f"Original Error:\n{str(e)}."
+            self.log_and_raise(
+                e=e,
+                message=(
+                    "Error in `fetch_file`, while "
+                    f"Transferring {remote=} to {local=}."
+                ),
             )
-            raise e
 
     def mkdir(self, *, folder: str, parents: bool = True) -> None:
         """
@@ -502,8 +512,14 @@ class FractalSSH(object):
             label=f"write_remote_file {path=}",
             timeout=actual_lock_timeout,
         ):
-            with self._sftp_unsafe().open(filename=path, mode="w") as f:
-                f.write(content)
+            try:
+                with self._sftp_unsafe().open(filename=path, mode="w") as f:
+                    f.write(content)
+            except Exception as e:
+                self.log_and_raise(
+                    e=e, message=f"Error in `write_remote_file`, for {path=}."
+                )
+
         self.logger.info(f"END writing to remote file {path}.")
 
     def remote_exists(self, path: str) -> bool:
@@ -523,6 +539,10 @@ class FractalSSH(object):
             except FileNotFoundError:
                 self.logger.info(f"END   remote_file_exists {path} / False")
                 return False
+            except Exception as e:
+                self.log_and_raise(
+                    e=e, message=f"Error in `remote_exists`, for {path=}."
+                )
 
 
 class FractalSSHList(object):
