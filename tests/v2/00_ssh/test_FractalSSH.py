@@ -319,11 +319,10 @@ def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
         assert f.read() == content
 
 
-def test_novalidconnectionserror_in_sftp_methods(tmp777_path, caplog):
+def test_novalidconnectionserror_in_sftp_methods(caplog):
     """
     Test `NoValidConnectionError`s in SFTP-based methods.
     """
-    path = tmp777_path / "file"
 
     with Connection(
         host="localhost",
@@ -343,41 +342,30 @@ def test_novalidconnectionserror_in_sftp_methods(tmp777_path, caplog):
 
         caplog.clear
         with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.write_remote_file(
-                path=path.as_posix(), content="random stuff"
-            )
-        log_text = caplog.text
-        assert "NoValidConnectionsError" in log_text
+            fractal_ssh.write_remote_file(path="/invalid", content="..")
+        assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
         with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.send_file(
-                local="/invalid/local", remote="/invalid/remote"
-            )
-        log_text = caplog.text
-        assert "NoValidConnectionsError" in log_text
+            fractal_ssh.send_file(local="/invalid", remote="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
         with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.fetch_file(
-                local="/invalid/local", remote="/invalid/remote"
-            )
-        log_text = caplog.text
-        assert "NoValidConnectionsError" in log_text
+            fractal_ssh.fetch_file(local="/invalid", remote="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
         with pytest.raises(NoValidConnectionsError):
-            fractal_ssh.remote_exists(path="/invalid/local")
-        log_text = caplog.text
-        assert "NoValidConnectionsError" in log_text
+            fractal_ssh.remote_exists(path="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
         with pytest.raises(NoValidConnectionsError):
             fractal_ssh.read_remote_json_file(
-                filepath=path.as_posix(),
+                filepath="/invalid",
             )
-        log_text = caplog.text
-        assert "NoValidConnectionsError" in log_text
+        assert "NoValidConnectionsError" in caplog.text
 
         fractal_ssh.close()
 
