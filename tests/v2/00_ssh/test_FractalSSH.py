@@ -34,52 +34,31 @@ def test_acquire_lock():
         print(e)
 
 
-def test_fail_and_raise(tmp_path: Path, caplog, fractal_ssh):
+def test_fail_and_raise(tmp_path: Path, caplog):
     """
     Test Exception when `e.errors` is not an iterable.
     """
-
-    local_file_old = (tmp_path / "local_old").as_posix()
-    with open(local_file_old, "w") as f:
-        f.write("hi there\n")
-
-    class MyError(Exception):
-        def __init__(self):
-            self.errors = 0
-
-    class MockFractalSSH(FractalSSH):
-        """
-        Mock FractalSSH object, such that the first call to `run` always fails.
-        """
-
-        please_raise: bool
-
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.please_raise = True
-
-        # This mock modifies the _put behaviour
-        def _put(self, *args, **kwargs):
-            if self.please_raise:
-                # Set `please_raise=False`, so that next call will go through
-                self.please_raise = False
-                raise MyError()
-            return super()._run(*args, **kwargs)
-
     LOGGER_NAME = "invalid_ssh"
-    mocked_fractal_ssh = MockFractalSSH(
-        connection=fractal_ssh._connection, logger_name=LOGGER_NAME
-    )
-
     logger = logging.getLogger(LOGGER_NAME)
     logger.propagate = True
+
+    class MyError(Exception):
+        errors = 0
+
+    class MockFractalSSH(FractalSSH):
+        def __init__(self, *args, **kwargs):
+            self.logger_name = LOGGER_NAME
+
+        def _put(self, *args, **kwargs):
+            raise MyError()
+
+    mocked_fractal_ssh = MockFractalSSH()
     with pytest.raises(MyError):
         mocked_fractal_ssh.send_file(
-            local=local_file_old,
-            remote="remote_file",
+            local="/invalid/local",
+            remote="/invalid/remote",
         )
     log_text = caplog.text
-    fractal_ssh.close()
     assert "Unexpected Error: 'int' object is not iterable" in log_text
 
 
