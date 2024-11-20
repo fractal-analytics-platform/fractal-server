@@ -187,12 +187,9 @@ async def check_no_submitted_job(
     """
     stm = (
         select(func.count(JobV2.id))
-        .join(WorkflowV2)
-        .join(WorkflowTaskV2)
-        .join(TaskV2)
-        .where(JobV2.workflow_id == WorkflowV2.id)
-        .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
-        .where(WorkflowTaskV2.task_id == TaskV2.id)
+        .join(WorkflowV2, JobV2.workflow_id == WorkflowV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.workflow_id == WorkflowV2.id)
+        .join(TaskV2, WorkflowTaskV2.task_id == TaskV2.id)
         .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
         .where(TaskV2.id.in_(task_id_list))
     )
