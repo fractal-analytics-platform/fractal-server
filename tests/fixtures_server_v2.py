@@ -12,7 +12,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.api.v2.submit import _encode_as_utc
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -147,20 +146,13 @@ async def job_factory_v2(db: AsyncSession):
             dataset_id=dataset_id,
             workflow_id=workflow_id,
             dataset_dump=dict(
-                dataset.model_dump(
-                    exclude={"timestamp_created", "history", "images"}
-                ),
-                timestamp_created=_encode_as_utc(dataset.timestamp_created),
+                dataset.model_dump(exclude={"history", "images"}),
             ),
             workflow_dump=dict(
-                workflow.model_dump(
-                    exclude={"task_list", "timestamp_created"}
-                ),
-                timestamp_created=_encode_as_utc(workflow.timestamp_created),
+                workflow.model_dump(exclude={"task_list"}),
             ),
             project_dump=dict(
-                project.model_dump(exclude={"user_list", "timestamp_created"}),
-                timestamp_created=_encode_as_utc(project.timestamp_created),
+                project.model_dump(exclude={"user_list"}),
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,

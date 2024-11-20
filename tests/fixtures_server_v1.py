@@ -3,8 +3,6 @@ from pathlib import Path
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fractal_server.app.routes.api.v1.project import _encode_as_utc
-
 
 @pytest.fixture
 async def project_factory(db):
@@ -167,12 +165,7 @@ async def job_factory(db: AsyncSession):
             output_dataset_id=output_dataset_id,
             workflow_id=workflow_id,
             input_dataset_dump=dict(
-                input_dataset.model_dump(
-                    exclude={"resource_list", "timestamp_created", "history"}
-                ),
-                timestamp_created=_encode_as_utc(
-                    input_dataset.timestamp_created
-                ),
+                input_dataset.model_dump(exclude={"resource_list", "history"}),
                 resource_list=[
                     resource.model_dump()
                     for resource in input_dataset.resource_list
@@ -180,10 +173,7 @@ async def job_factory(db: AsyncSession):
             ),
             output_dataset_dump=dict(
                 output_dataset.model_dump(
-                    exclude={"resource_list", "timestamp_created", "history"}
-                ),
-                timestamp_created=_encode_as_utc(
-                    output_dataset.timestamp_created
+                    exclude={"resource_list", "history"}
                 ),
                 resource_list=[
                     resource.model_dump()
@@ -191,10 +181,7 @@ async def job_factory(db: AsyncSession):
                 ],
             ),
             workflow_dump=dict(
-                workflow.model_dump(
-                    exclude={"task_list", "timestamp_created"}
-                ),
-                timestamp_created=_encode_as_utc(workflow.timestamp_created),
+                workflow.model_dump(exclude={"task_list"}),
                 task_list=[
                     dict(
                         wf_task.model_dump(exclude={"task"}),
@@ -203,10 +190,7 @@ async def job_factory(db: AsyncSession):
                     for wf_task in workflow.task_list
                 ],
             ),
-            project_dump=dict(
-                project.model_dump(exclude={"user_list", "timestamp_created"}),
-                timestamp_created=_encode_as_utc(project.timestamp_created),
-            ),
+            project_dump=dict(project.model_dump(exclude={"user_list"})),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,
