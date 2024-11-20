@@ -118,21 +118,30 @@ class FractalSSH(object):
 
     def log_and_raise(self, *, e: Exception, message: str) -> None:
         """
-        Log the exception from FractalSSH methods.
+        Log and re-raise an exception from a FractalSSH method.
+
 
         Arguments:
-            e:
-            message:
+            message: Additional message to be logged.
+            e: Original exception
         """
         try:
             self.logger.error(message)
             self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
+            # Handle the specific case of `NoValidConnectionsError` from
+            # paramiko, which store relevant information in the `errors`
+            # attribute
             if hasattr(e, "errors"):
                 self.logger.error(f"{type(e)=}")
                 for err in e.errors:
                     self.logger.error(f"{err}")
         except Exception as exception:
-            self.logger.error(f"Unexpected Error: {str(exception)}")
+            # Handle unexpected cases, e.g. (1) `e` has no `type`, or
+            # (2) `errors` is not iterable.
+            self.logger.error(
+                "Unexpected Error while handling exception above: "
+                f"{str(exception)}"
+            )
 
         raise e
 
