@@ -193,7 +193,7 @@ async def check_no_submitted_job(
         .where(WorkflowTaskV2.order <= JobV2.last_task_index)
         .join(TaskV2, WorkflowTaskV2.task_id == TaskV2.id)
         .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
-        .where(TaskV2.taskgroupv2_id == task_group_id),
+        .where(TaskV2.taskgroupv2_id == task_group_id)
     )
     res = await db.execute(stm)
     num_submitted_jobs = res.scalar()
