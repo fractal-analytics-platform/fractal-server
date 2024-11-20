@@ -474,10 +474,13 @@ async def test_lifecycle_actions_with_submitted_jobs(
         await db.commit()
 
         res = await client.post(
+            f"api/v2/task-group/{active_task.taskgroupv2_id}/deactivate/"
+        )
+        assert res.status_code == 422
+        assert "submitted jobs use its tasks" in res.json()["detail"]
+
+        res = await client.post(
             f"api/v2/task-group/{non_active_task.taskgroupv2_id}/reactivate/"
         )
         assert res.status_code == 422
-        res = await client.post(
-            f"api/v2/task-group/{active_task.taskgroupv2_id}/reactivate/"
-        )
-        assert res.status_code == 422
+        assert "submitted jobs use its tasks" in res.json()["detail"]
