@@ -9,6 +9,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 
 
@@ -305,8 +306,9 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 
 
 def test_closed_socket(
-    fractal_ssh: FractalSSH,
-    run_in_container: callable,
+    slurmlogin_ip,
+    ssh_keys,
+    ssh_alive,
     tmp777_path: Path,
 ):
     """
@@ -320,6 +322,13 @@ def test_closed_socket(
     https://github.com/fractal-analytics-platform/fractal-server/issues/2019
     """
 
+    # Initialize new fractal_ssh object
+    fractal_ssh = FractalSSHList().get(
+        host=slurmlogin_ip,
+        user="fractal",
+        key_path=ssh_keys["private"],
+    )
+
     # Prepare local/remote files
     local_file = (tmp777_path / "local").as_posix()
     with open(local_file, "w") as f:
@@ -332,19 +341,15 @@ def test_closed_socket(
     fractal_ssh.send_file(local=local_file, remote=remote_file_1)
 
     # Check sockets are open
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert not fractal_ssh._connection.transport.sock._closed
     assert not fractal_ssh._sftp_unsafe().sock.closed
 
     # Manually close sockets
+    fractal_ssh._sftp_unsafe().sock.close()
     fractal_ssh._sftp_unsafe().sock.closed = True
-    fractal_ssh._connection.transport.sock.close()
 
     # Check sockets are closed
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert fractal_ssh._connection.transport.sock._closed
     assert fractal_ssh._sftp_unsafe().sock.closed
 
     # Running an SFTP command now fails with an OSError
@@ -356,11 +361,11 @@ def test_closed_socket(
     fractal_ssh.check_connection()
 
     # Check sockets are open
-    debug(fractal_ssh._connection.transport.sock)
     debug(fractal_ssh._sftp_unsafe().sock)
-    assert not fractal_ssh._connection.transport.sock._closed
     assert not fractal_ssh._sftp_unsafe().sock.closed
 
     # Successfully run a SFTP command
     fractal_ssh.send_file(local=local_file, remote=remote_file_2)
     assert fractal_ssh.remote_exists(remote_file_2)
+
+    fractal_ssh.close()

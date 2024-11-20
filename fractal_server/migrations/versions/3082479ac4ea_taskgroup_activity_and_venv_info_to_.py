@@ -71,7 +71,7 @@ def upgrade() -> None:
             sa.Column(
                 "timestamp_last_used",
                 sa.DateTime(timezone=True),
-                nullable=True,
+                nullable=False,
             )
         )
 

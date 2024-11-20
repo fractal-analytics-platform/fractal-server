@@ -14,7 +14,6 @@ from sqlmodel import select
 from .....config import get_settings
 from .....logger import set_logger
 from .....syringe import Inject
-from .....utils import get_timestamp
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
@@ -60,8 +59,6 @@ async def apply_workflow(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2 | None:
-
-    now = get_timestamp()
 
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
@@ -193,12 +190,12 @@ async def apply_workflow(
     )
     used_task_groups = res.scalars().all()
     for used_task_group in used_task_groups:
-        used_task_group.timestamp_last_used = now
+        used_task_group.timestamp_last_used = job.start_timestamp
         db.add(used_task_group)
     await db.commit()
 
     # Define server-side job directory
-    timestamp_string = now.strftime("%Y%m%d_%H%M%S")
+    timestamp_string = job.start_timestamp.strftime("%Y%m%d_%H%M%S")
     WORKFLOW_DIR_LOCAL = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
