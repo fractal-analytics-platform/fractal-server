@@ -48,6 +48,7 @@ def test_fail_and_raise(tmp_path: Path, caplog):
     class MockFractalSSH(FractalSSH):
         def __init__(self, *args, **kwargs):
             self.logger_name = LOGGER_NAME
+            self.default_lock_timeout = 1.0
 
         def _put(self, *args, **kwargs):
             raise MyError()
