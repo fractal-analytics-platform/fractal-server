@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -158,9 +159,9 @@ async def apply_workflow(
         dataset_id=dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        dataset_dump=dict(**dataset.model_dump(exclude={"images", "history"})),
-        workflow_dump=dict(**workflow.model_dump(exclude={"task_list"})),
-        project_dump=dict(**project.model_dump(exclude={"user_list"})),
+        dataset_dump=json.loads(dataset.json(exclude={"images", "history"})),
+        workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
+        project_dump=json.loads(project.json(exclude={"user_list"})),
         **job_create.dict(),
     )
 

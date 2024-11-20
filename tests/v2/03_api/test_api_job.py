@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import timedelta
 
@@ -346,13 +347,13 @@ async def test_project_apply_workflow_subset(
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDumpV2(
-            **project.model_dump(exclude={"user_list"})
+            **json.loads(project.json(exclude={"user_list"}))
         ).dict()
         expected_workflow_dump = WorkflowDumpV2(
-            **workflow.model_dump(exclude={"task_list"}),
+            **json.loads(workflow.json(exclude={"task_list"}))
         ).dict()
         expected_dataset_dump = DatasetDumpV2(
-            **dataset1.model_dump(exclude={"history", "images"}),
+            **json.loads(dataset1.json(exclude={"history", "images"}))
         ).dict()
         assert res.json()["project_dump"] == expected_project_dump
         assert res.json()["workflow_dump"] == expected_workflow_dump
