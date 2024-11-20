@@ -41,6 +41,7 @@
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+    * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
     * Move `NoValidConnectionError` exception handling into `FractalSSH.log_and_raise` method (\#2070).
     * Improve closed-socket testing (\#2076).
