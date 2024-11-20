@@ -150,8 +150,6 @@ def set_spawn_start_method() -> None:
     current_method = mp.get_start_method(allow_none=True)
     if current_method is None:
         mp.set_start_method("spawn")
-    elif current_method != "spawn":  # TODO remove this `elif`, only for tests
-        raise RuntimeError("Expected 'spawn'")
 
 
 def start_application() -> FastAPI:
