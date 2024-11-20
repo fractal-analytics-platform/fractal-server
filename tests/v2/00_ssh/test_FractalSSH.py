@@ -38,30 +38,37 @@ def test_fail_and_raise(tmp_path: Path, caplog):
     """
     Test Exception when `e.errors` is not an iterable.
     """
-    LOGGER_NAME = "invalid_ssh"
-    logger = logging.getLogger(LOGGER_NAME)
-    logger.propagate = True
 
     class MyError(Exception):
         errors = 0
 
     class MockFractalSSH(FractalSSH):
-        def __init__(self, *args, **kwargs):
-            self.logger_name = LOGGER_NAME
-            self.default_lock_timeout = 1.0
-
-        def _put(self, *args, **kwargs):
+        @property
+        def _sftp_unsafe(self):
             raise MyError()
 
-    mocked_fractal_ssh = MockFractalSSH()
-    with pytest.raises(MyError):
-        mocked_fractal_ssh.send_file(
-            local="/invalid/local",
-            remote="/invalid/remote",
+    LOGGER_NAME = "invalid_ssh"
+    with Connection(
+        host="localhost",
+        user="invalid",
+        forward_agent=False,
+        connect_kwargs={"password": "invalid"},
+    ) as connection:
+        mocked_fractal_ssh = MockFractalSSH(
+            connection=connection, logger_name=LOGGER_NAME
         )
-    log_text = caplog.text
-    assert "Unexpected" in log_text
-    assert "'int' object is not iterable" in log_text
+
+        logger = logging.getLogger(LOGGER_NAME)
+        logger.propagate = True
+
+        with pytest.raises(MyError):
+            mocked_fractal_ssh.send_file(
+                local="/invalid/local",
+                remote="/invalid/remote",
+            )
+        log_text = caplog.text
+        assert "Unexpected" in log_text
+        assert "'int' object is not iterable" in log_text
 
 
 def test_run_command(fractal_ssh: FractalSSH):
