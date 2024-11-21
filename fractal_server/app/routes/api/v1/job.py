@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
@@ -17,12 +18,13 @@ from ....models.v1 import Project
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v1 import ApplyWorkflowReadV1
 from ...aux._job import _write_shutdown_file
-from ...aux._runner import _check_shutdown_is_supported
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 router = APIRouter()
 
@@ -179,7 +181,16 @@ async def stop_job(
     Stop execution of a workflow job.
     """
 
-    _check_shutdown_is_supported()
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if "slurm" not in backend:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Stopping a job execution is not implemented for "
+                f"FRACTAL_RUNNER_BACKEND={backend}."
+            ),
+        )
 
     # Get job from DB
     output = await _get_job_check_owner(
