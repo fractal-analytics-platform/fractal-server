@@ -54,6 +54,7 @@ jobs:
         export JWT_SECRET_KEY=secret
         export JWT_EXPIRE_SECONDS=84600
         export FRACTAL_API_SUBMIT_RATE_LIMIT=0
+        export FRACTAL_LOCAL_CONFIG_FILE=runner_config.json
         cd benchmarks/
         poetry run fractalctl set-db
         poetry run python populate_db/populate_db_script.py
