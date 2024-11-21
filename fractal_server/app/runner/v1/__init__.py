@@ -53,7 +53,7 @@ from fractal_server.config import get_settings
 
 
 _backends = {}
-_backends["local"] = local_process_workflow
+_backends["local_experimental"] = local_process_workflow
 _backends["slurm"] = slurm_process_workflow
 
 

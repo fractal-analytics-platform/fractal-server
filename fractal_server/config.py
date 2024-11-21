@@ -287,7 +287,7 @@ class Settings(BaseSettings):
         "local_experimental",
         "slurm",
         "slurm_ssh",
-    ] = "local"
+    ] = "local_experimental"
     """
     Select which runner backend to use.
     """
