@@ -131,25 +131,28 @@ async def get_current_user_allowed_viewer_paths(
 
     authorized_paths = []
 
-    # Load current user settings
-    if current_user.user_settings_id is not None:
-        current_user_settings = await db.get(
-            UserSettings, current_user.user_settings_id
-        )
-        # If project_dir is set, append it to the list of authorized paths
-        if current_user_settings.project_dir is not None:
-            authorized_paths.append(current_user_settings.project_dir)
+    # Respond with 422 error if user has no settings
+    verify_user_has_settings(current_user)
 
-        # If auth scheme is "users-folders", build and append the user folder
-        if (
-            settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "users-folders"
-            and current_user_settings.slurm_user is not None
-        ):
-            base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
-            user_folder = os.path.join(
-                base_folder, current_user_settings.slurm_user
-            )
-            authorized_paths.append(user_folder)
+    # Load current user settings
+    current_user_settings = await db.get(
+        UserSettings, current_user.user_settings_id
+    )
+    # If project_dir is set, append it to the list of authorized paths
+    if current_user_settings.project_dir is not None:
+        authorized_paths.append(current_user_settings.project_dir)
+
+    # If auth scheme is "users-folders" and `slurm_user` is set,
+    # build and append the user folder
+    if (
+        settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "users-folders"
+        and current_user_settings.slurm_user is not None
+    ):
+        base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
+        user_folder = os.path.join(
+            base_folder, current_user_settings.slurm_user
+        )
+        authorized_paths.append(user_folder)
 
     if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "viewer-paths":
         # Returns the union of `viewer_paths` for all user's groups
