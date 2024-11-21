@@ -25,7 +25,9 @@ class MockFractalSSHList:
         return None
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", ["local_experimental", "slurm_ssh"]
+)
 async def test_deactivate_task_group_api(
     app,
     client,
@@ -131,7 +133,9 @@ async def test_deactivate_task_group_api(
             assert "does not exist" in res.json()["log"]
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", ["local_experimental", "slurm_ssh"]
+)
 async def test_reactivate_task_group_api(
     app,
     client,
@@ -247,7 +251,9 @@ async def test_reactivate_task_group_api(
         assert res.json()["status"] == "failed"
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", ["local_experimental", "slurm_ssh"]
+)
 async def test_lifecycle(
     client,
     MockCurrentUser,

@@ -122,7 +122,7 @@ async def test_runner(
 
     # Create working folder(s)
     subfolder_names = []
-    if backend == "local":
+    if backend == "local_experimental":
         workflow_dir_local = tmp777_path / "server"  # OK 777 here
         workflow_dir_remote = workflow_dir_local
         umask = os.umask(0)

@@ -131,9 +131,9 @@ async def test_validate_user_settings(db):
             user=user_without_settings, backend="slurm_ssh", db=db
         )
 
-    # User with empty settings: backend="local"
+    # User with empty settings: backend="local_experimental"
     await validate_user_settings(
-        user=user_with_invalid_settings, backend="local", db=db
+        user=user_with_invalid_settings, backend="local_experimental", db=db
     )
     # User with empty settings: backend="slurm_ssh"
     with pytest.raises(
