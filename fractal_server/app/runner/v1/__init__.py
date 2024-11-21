@@ -128,18 +128,12 @@ async def submit_workflow(
 
         settings = Inject(get_settings)
         FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-        if FRACTAL_RUNNER_BACKEND == "local":
+        if FRACTAL_RUNNER_BACKEND == "local_experimental":
             process_workflow = local_process_workflow
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             process_workflow = slurm_process_workflow
         else:
-
-            if FRACTAL_RUNNER_BACKEND == "local_experimental":
-                log_msg = (
-                    f"{FRACTAL_RUNNER_BACKEND=} is not available for v1 jobs."
-                )
-            else:
-                log_msg = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+            log_msg = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
 
             fail_job(
                 job=job,
@@ -204,7 +198,7 @@ async def submit_workflow(
         os.umask(original_umask)
 
         # Define and create WORKFLOW_DIR_REMOTE
-        if FRACTAL_RUNNER_BACKEND == "local":
+        if FRACTAL_RUNNER_BACKEND == "local_experimental":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             WORKFLOW_DIR_REMOTE = (
