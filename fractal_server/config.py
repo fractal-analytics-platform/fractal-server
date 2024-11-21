@@ -502,14 +502,21 @@ class Settings(BaseSettings):
         "viewer-paths", "users-folders", "none"
     ] = "none"
     """
-    Defines how the list of allowed viewer paths is built. This variable
-    operates as follows:
-    - "viewer-paths": The list of allowed viewer paths will include the project
-       directory along with any defined viewer paths.
-    - "users-folders": The list will consist of the project directory and a
+    Defines how the list of allowed viewer paths is built.
+
+    This variable affects the `GET /auth/current-user/allowed-viewer-paths/`
+    response, which is then consumed by
+    [fractal-vizarr-viewer](https://github.com/fractal-analytics-platform/fractal-vizarr-viewer).
+
+    Options:
+
+    - "viewer-paths": The list of allowed viewer paths will include the user's
+      `project_dir` along with any path defined in user groups' `viewer_paths`
+      attributes.
+    - "users-folders": The list will consist of the user's `project_dir` and a
        user-specific folder. The user folder is constructed by concatenating
-       the base folder (defined by the environment variable
-       FRACTAL_VIEWER_BASE_FOLDER) with the SLURM user.
+       the base folder `FRACTAL_VIEWER_BASE_FOLDER` with the user's
+       `slurm_user`.
     - "none": An empty list will be returned, indicating no access to
        viewer paths. Useful when vizarr viewer is not used.
     """
