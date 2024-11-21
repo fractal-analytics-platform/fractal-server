@@ -2,8 +2,6 @@ import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from devtools import debug
-
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import DatasetV2
@@ -26,7 +24,7 @@ async def prepare_data():
         await db.refresh(workflow)
 
         dataset = DatasetV2(
-            name="my dataset", project_id=project.id, zarr_dir="/tmp/invalid"
+            name="OLD NAME", project_id=project.id, zarr_dir="/invalid"
         )
         db.add(dataset)
         await db.commit()
@@ -53,27 +51,45 @@ async def prepare_data():
 
 
 def function1(dataset_id, job_id):
-    with next(get_sync_db) as db_sync:
+    with next(get_sync_db()) as db_sync:
+
         dataset = db_sync.get(DatasetV2, dataset_id)
-        job = db_sync.get(JobV2, job_id)
-
-        dataset.name = "New name"
+        dataset.name = "NEW NAME"
         db_sync.merge(dataset)
+        print(time.perf_counter(), "function1", "merged dataset")
+        print(time.perf_counter(), "function1", "now sleep 4")
 
-        time.sleep(10)
+        time.sleep(4)
 
-        # Update job DB entry
+        job = db_sync.get(JobV2, job_id)
         job.status = JobStatusTypeV2.DONE
         job.log = "asdasdadasda"
         db_sync.merge(job)
+        print(time.perf_counter(), "function1", "merged job")
+
         db_sync.commit()
+        print(time.perf_counter(), "function1", "commit")
 
 
-def function2(dataset_id, job_id):
-    with next(get_sync_db) as db_sync:
-        time.sleep(5)
+def function2(dataset_id):
+    time.sleep(2)
+    with next(get_sync_db()) as db_sync:
         dataset = db_sync.get(DatasetV2, dataset_id)
-        debug("f2", dataset)
+        print(
+            time.perf_counter(),
+            "function2",
+            "current dataset name:",
+            dataset.name,
+        )
+    time.sleep(4)
+    with next(get_sync_db()) as db_sync:
+        dataset = db_sync.get(DatasetV2, dataset_id)
+        print(
+            time.perf_counter(),
+            "function2",
+            "current dataset name:",
+            dataset.name,
+        )
 
 
 async def main():
@@ -81,7 +97,7 @@ async def main():
 
     with ThreadPoolExecutor() as executor:
         executor.submit(function1, dataset_id, job_id)
-        # executor.submit(function2, dataset_id, job_id)
+        executor.submit(function2, dataset_id)
 
 
 if __name__ == "__main__":
