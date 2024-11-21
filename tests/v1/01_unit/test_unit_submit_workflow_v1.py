@@ -2,7 +2,6 @@ import datetime
 import time
 from pathlib import Path
 
-import pytest
 from devtools import debug
 
 from fractal_server.app.db import get_sync_db
@@ -136,10 +135,7 @@ async def test_fail_submit_workflows_at_same_time(
         )
         await db.refresh(job)
 
-        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
-            assert "already exists" in job.log
-        else:
-            assert "is not available for v1 jobs" in job.log
+        assert "already exists" in job.log
 
 
 async def test_fail_submit_workflows_wrong_IDs(
@@ -188,10 +184,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         await db.refresh(job)
         assert job.status == JobStatusTypeV1.FAILED
-        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
-            assert job.log == "Cannot fetch workflow 1234 from database\n"
-        else:
-            assert "is not available for v1 jobs" in job.log
+        assert job.log == "Cannot fetch workflow 1234 from database\n"
 
         await submit_workflow(
             workflow_id=workflow.id,
@@ -202,16 +195,12 @@ async def test_fail_submit_workflows_wrong_IDs(
         await db.refresh(job)
         debug(job)
         assert job.status == JobStatusTypeV1.FAILED
-        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
-            assert job.log == (
-                "Cannot fetch input_dataset 1111 from database\n"
-                "Cannot fetch output_dataset 2222 from database\n"
-            )
-        else:
-            assert "is not available for v1 jobs" in job.log
+        assert job.log == (
+            "Cannot fetch input_dataset 1111 from database\n"
+            "Cannot fetch output_dataset 2222 from database\n"
+        )
 
 
-@pytest.mark.parametrize("invalid_backend", ("local_experimental", "foo"))
 async def test_fail_submit_workflows_wrong_backend(
     MockCurrentUser,
     project_factory,
@@ -222,11 +211,9 @@ async def test_fail_submit_workflows_wrong_backend(
     task_factory,
     tmp_path,
     db,
-    invalid_backend,
     override_settings_factory,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=invalid_backend)
-
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="INVALID")
     async with MockCurrentUser() as user:
 
         project = await project_factory(user)
@@ -252,7 +239,4 @@ async def test_fail_submit_workflows_wrong_backend(
             job_id=job.id,
         )
         await db.refresh(job)
-        if invalid_backend == "local_experimental":
-            assert "is not available for v1 jobs" in job.log
-        else:
-            assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log
+        assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log
