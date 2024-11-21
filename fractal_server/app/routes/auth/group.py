@@ -249,7 +249,7 @@ async def post_user_group_link(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    group = await _usergroup_or_404(group_id, db)
+    await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)
     link = await db.get(LinkUserGroup, (group_id, user_id))
     if link is None:
@@ -262,7 +262,7 @@ async def post_user_group_link(
                 f"User '{user.email}' is already a member of group {group_id}."
             ),
         )
-    await db.refresh(group)
+    group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
     return group
 
 
@@ -273,7 +273,7 @@ async def delete_user_group_link(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-    group = await _usergroup_or_404(group_id, db)
+    await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)
     link = await db.get(LinkUserGroup, (group_id, user_id))
     if link is None:
@@ -284,5 +284,5 @@ async def delete_user_group_link(
     else:
         db.delete(link)
         await db.commit()
-    await db.refresh(group)
+    group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
     return group
