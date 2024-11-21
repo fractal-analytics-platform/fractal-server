@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import timedelta
 
@@ -8,7 +9,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.routes.api.v2.submit import _encode_as_utc
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v2 import _backends
@@ -347,18 +347,13 @@ async def test_project_apply_workflow_subset(
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDumpV2(
-            **project.model_dump(exclude={"user_list", "timestamp_created"}),
-            timestamp_created=_encode_as_utc(project.timestamp_created),
+            **json.loads(project.json(exclude={"user_list"}))
         ).dict()
         expected_workflow_dump = WorkflowDumpV2(
-            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=_encode_as_utc(workflow.timestamp_created),
+            **json.loads(workflow.json(exclude={"task_list"}))
         ).dict()
         expected_dataset_dump = DatasetDumpV2(
-            **dataset1.model_dump(
-                exclude={"timestamp_created", "history", "images"}
-            ),
-            timestamp_created=_encode_as_utc(dataset1.timestamp_created),
+            **json.loads(dataset1.json(exclude={"history", "images"}))
         ).dict()
         assert res.json()["project_dump"] == expected_project_dump
         assert res.json()["workflow_dump"] == expected_workflow_dump

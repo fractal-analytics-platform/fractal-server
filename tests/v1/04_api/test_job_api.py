@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -10,7 +9,7 @@ from fractal_server.app.models.v1 import JobStatusTypeV1
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.routes.api.v1.project import _encode_as_utc as _utc
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
@@ -237,7 +236,9 @@ async def test_get_job(
             f"{PREFIX}/project/{y_project.id}/job/{y_job.id}/"
         )
         assert res.status_code == 200
-        assert res.json()["start_timestamp"] == _utc(y_job.start_timestamp)
+        assert (
+            res.json()["start_timestamp"] == y_job.start_timestamp.isoformat()
+        )
 
 
 async def test_get_job_list(
@@ -282,19 +283,14 @@ async def test_get_job_list(
         assert res.status_code == 200
         assert len(res.json()) == N
         for job in res.json():
-            assert job["start_timestamp"].endswith("+00:00")
-            assert (
-                datetime.fromisoformat(job["start_timestamp"]).tzinfo
-                == timezone.utc
-            )
-            assert job["project_dump"]["timestamp_created"].endswith("+00:00")
-            assert job["workflow_dump"]["timestamp_created"].endswith("+00:00")
-            assert job["input_dataset_dump"]["timestamp_created"].endswith(
-                "+00:00"
-            )
-            assert job["output_dataset_dump"]["timestamp_created"].endswith(
-                "+00:00"
-            )
+            for dt in [
+                job["start_timestamp"],
+                job["project_dump"]["timestamp_created"],
+                job["workflow_dump"]["timestamp_created"],
+                job["input_dataset_dump"]["timestamp_created"],
+                job["output_dataset_dump"]["timestamp_created"],
+            ]:
+                _raise_if_naive_datetime(datetime.fromisoformat(dt))
 
         res = await client.get(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/job/"

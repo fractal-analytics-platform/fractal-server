@@ -20,7 +20,8 @@
       * Fix bug in `_get_collection_task_group_activity_status_message` (\#2047).
       * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
       * Add query parameters `timestamp_last_used_{min|max}` to `GET /admin/v2/task-group/` (\#2061).
-      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: API only accepts timezone-aware datetimes as query parameters (\#2068).
+      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: now API only accepts timezone-aware datetimes as query parameters (\#2068).
+      * Remove `_encode_as_utc`: now timestamps are serialized in JSONs with their own timezone (\#2081).
 * Database
     * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).

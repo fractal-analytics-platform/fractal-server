@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -12,7 +13,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.api.v2.submit import _encode_as_utc
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -146,22 +146,11 @@ async def job_factory_v2(db: AsyncSession):
             project_id=project_id,
             dataset_id=dataset_id,
             workflow_id=workflow_id,
-            dataset_dump=dict(
-                dataset.model_dump(
-                    exclude={"timestamp_created", "history", "images"}
-                ),
-                timestamp_created=_encode_as_utc(dataset.timestamp_created),
+            dataset_dump=json.loads(
+                dataset.json(exclude={"history", "images"})
             ),
-            workflow_dump=dict(
-                workflow.model_dump(
-                    exclude={"task_list", "timestamp_created"}
-                ),
-                timestamp_created=_encode_as_utc(workflow.timestamp_created),
-            ),
-            project_dump=dict(
-                project.model_dump(exclude={"user_list", "timestamp_created"}),
-                timestamp_created=_encode_as_utc(project.timestamp_created),
-            ),
+            workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
+            project_dump=json.loads(project.json(exclude={"user_list"})),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,
