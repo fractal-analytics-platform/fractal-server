@@ -8,8 +8,6 @@
 > WARNING 2: This version removes the `CollectionStateV2` database table.
 > Make sure you have a database dump before running `fractalctl set-db`, since this operation cannot be undone.
 
-* App
-    * Set the "spawn" start method for the multiprocessing context (\#2084).
 * API
     * Remove `GET /api/v2/task/collect/{state_id}/` endpoint (\#2010).
     * Remove `active` property from `PATCH /api/v2/task-group/{task_group_id}/` (\#2033).
@@ -44,6 +42,7 @@
     * Add `TaskGroupCreateV2Strict` for task collections (\#2080).
 * Runner:
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
+    * Use the "spawn" start method for the multiprocessing context, for the `ProcessPoolExecutor`-based runner (\#2084).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
     * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).
