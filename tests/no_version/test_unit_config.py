@@ -31,7 +31,6 @@ def test_settings_injection(override_settings):
                 FRACTAL_TASKS_DIR="/tmp",
                 POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
             ),
             False,
         ),
@@ -40,7 +39,6 @@ def test_settings_injection(override_settings):
             dict(
                 FRACTAL_TASKS_DIR="/tmp",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
                 POSTGRES_DB="test",
             ),
             True,
@@ -50,7 +48,6 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
                 POSTGRES_DB="test",
             ),
             True,
@@ -62,7 +59,6 @@ def test_settings_injection(override_settings):
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
             ),
             True,
         ),
@@ -72,7 +68,6 @@ def test_settings_injection(override_settings):
                 FRACTAL_TASKS_DIR="/tmp",
                 POSTGRES_DB="fractal",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
             ),
             False,
         ),
@@ -82,7 +77,6 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
                 POSTGRES_DB="test",
             ),
             True,
@@ -91,7 +85,6 @@ def test_settings_injection(override_settings):
             dict(
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
                 POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             ),
@@ -192,7 +185,6 @@ def test_settings_check_wrong_python():
             JWT_SECRET_KEY="secret",
             FRACTAL_TASKS_DIR="/tmp",
             FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-            FRACTAL_RUNNER_BACKEND="local",
             POSTGRES_DB="db-name",
             FRACTAL_TASKS_PYTHON_3_12=None,
             FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.12",
@@ -269,7 +261,6 @@ def test_collect_oauth_clients(monkeypatch):
         JWT_SECRET_KEY="secret",
         FRACTAL_TASKS_DIR="/tmp",
         FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-        FRACTAL_RUNNER_BACKEND="local",
         POSTGRES_DB="db-name",
     )
     debug(settings.OAUTH_CLIENTS_CONFIG)
@@ -282,7 +273,6 @@ def test_collect_oauth_clients(monkeypatch):
             JWT_SECRET_KEY="secret",
             FRACTAL_TASKS_DIR="/tmp",
             FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-            FRACTAL_RUNNER_BACKEND="local",
             POSTGRES_DB="db-name",
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
@@ -302,7 +292,6 @@ def test_collect_oauth_clients(monkeypatch):
             JWT_SECRET_KEY="secret",
             FRACTAL_TASKS_DIR="/tmp",
             FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-            FRACTAL_RUNNER_BACKEND="local",
             POSTGRES_DB="db-name",
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
