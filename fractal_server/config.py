@@ -283,7 +283,6 @@ class Settings(BaseSettings):
         return FRACTAL_RUNNER_WORKING_BASE_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal[
-        "local",
         "local_experimental",
         "slurm",
         "slurm_ssh",
@@ -568,7 +567,7 @@ class Settings(BaseSettings):
                     raise FractalConfigurationError(
                         f"{info} but `ssh` command not found."
                     )
-        else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
+        else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local_experimental"
             if self.FRACTAL_LOCAL_CONFIG_FILE:
                 if not self.FRACTAL_LOCAL_CONFIG_FILE.exists():
                     raise FractalConfigurationError(

@@ -54,7 +54,7 @@ async def validate_user_settings(
     elif backend == "slurm":
         UserSettingsValidationModel = SlurmSudoUserSettings
     else:
-        # For other backends, we don't validate anything
+        # For "local_experimental", we don't validate anything
         UserSettingsValidationModel = BaseModel
 
     try:
