@@ -87,7 +87,7 @@ class Settings(BaseSettings):
     """
     Contains all the configuration variables for Fractal Server
 
-    The attributes of this class are set from the environtment.
+    The attributes of this class are set from the environment.
     """
 
     class Config:
@@ -383,7 +383,7 @@ class Settings(BaseSettings):
     @root_validator(pre=True)
     def check_tasks_python(cls, values) -> None:
         """
-        Perform multiple checks of the Python-intepreter variables.
+        Perform multiple checks of the Python-interpreter variables.
 
         1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
             if set.
@@ -432,7 +432,7 @@ class Settings(BaseSettings):
                 f"{current_version_dot}"
             )
 
-            # Unset all existing intepreters variable
+            # Unset all existing interpreters variable
             for _version in ["3_9", "3_10", "3_11", "3_12"]:
                 key = f"FRACTAL_TASKS_PYTHON_{_version}"
                 if _version == current_version:
@@ -496,6 +496,29 @@ class Settings(BaseSettings):
     FRACTAL_MAX_PIP_VERSION: str = "24.0"
     """
     Maximum value at which to update `pip` before performing task collection.
+    """
+
+    FRACTAL_VIEWER_AUTHORIZATION_SCHEME: Literal[
+        "viewer-paths", "users-folders", "none"
+    ] = "none"
+    """
+    Defines how the list of allowed viewer paths is built. This variable
+    operates as follows:
+    - "viewer-paths": The list of allowed viewer paths will include the project
+       directory along with any defined viewer paths.
+    - "users-folders": The list will consist of the project directory and a
+       user-specific folder. The user folder is constructed by concatenating
+       the base folder (defined by the environment variable
+       FRACTAL_VIEWER_BASE_FOLDER) with the SLURM user.
+    - "none": An empty list will be returned, indicating no access to
+       viewer paths. Useful when vizarr viewer is not used.
+    """
+
+    FRACTAL_VIEWER_BASE_FOLDER: Optional[str] = None
+    """
+    Base path to Zarr files that will be served by fractal-vizarr-viewer;
+    This variable is required and used only when
+    FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders".
     """
 
     ###########################################################################
@@ -588,6 +611,23 @@ class Settings(BaseSettings):
 
         if not self.FRACTAL_TASKS_DIR:
             raise FractalConfigurationError("FRACTAL_TASKS_DIR cannot be None")
+
+        # FRACTAL_VIEWER_BASE_FOLDER is required when
+        # FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders"
+        # and it must be an absolute path
+        if self.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "users-folders":
+            viewer_base_folder = self.FRACTAL_VIEWER_BASE_FOLDER
+            if viewer_base_folder is None:
+                raise FractalConfigurationError(
+                    "FRACTAL_VIEWER_BASE_FOLDER is required when "
+                    "FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "
+                    "users-folders"
+                )
+            if not Path(viewer_base_folder).is_absolute():
+                raise FractalConfigurationError(
+                    f"Non-absolute value for "
+                    f"FRACTAL_VIEWER_BASE_FOLDER={viewer_base_folder}"
+                )
 
         self.check_db()
         self.check_runner()

@@ -1,6 +1,8 @@
 """
 Definition of `/auth/current-user/` endpoints
 """
+import os
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi_users import schemas
@@ -22,6 +24,8 @@ from fractal_server.app.schemas import UserSettingsReadStrict
 from fractal_server.app.schemas import UserSettingsUpdateStrict
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 router_current_user = APIRouter()
 
@@ -109,26 +113,62 @@ async def patch_current_user_settings(
 
 
 @router_current_user.get(
-    "/current-user/viewer-paths/", response_model=list[str]
+    "/current-user/allowed-viewer-paths/", response_model=list[str]
 )
-async def get_current_user_viewer_paths(
+async def get_current_user_allowed_viewer_paths(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
-    """Returns the union of `viewer_paths` for all user's groups"""
-    cmd = (
-        select(UserGroup.viewer_paths)
-        .join(LinkUserGroup)
-        .where(LinkUserGroup.group_id == UserGroup.id)
-        .where(LinkUserGroup.user_id == current_user.id)
-    )
-    res = await db.execute(cmd)
-    viewer_paths_nested = res.scalars().all()
+    """
+    Returns the allowed viewer paths for current user, according to the
+    selected FRACTAL_VIEWER_AUTHORIZATION_SCHEME
+    """
 
-    # Flatten a nested object and make its elements unique
-    all_viewer_paths_set = set(
-        path for _viewer_paths in viewer_paths_nested for path in _viewer_paths
-    )
-    all_viewer_paths = list(all_viewer_paths_set)
+    settings = Inject(get_settings)
 
-    return all_viewer_paths
+    if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "none":
+        return []
+
+    authorized_paths = []
+
+    # Load current user settings
+    if current_user.user_settings_id is not None:
+        current_user_settings = await db.get(
+            UserSettings, current_user.user_settings_id
+        )
+        # If project_dir is set, append it to the list of authorized paths
+        if current_user_settings.project_dir is not None:
+            authorized_paths.append(current_user_settings.project_dir)
+
+        # If auth scheme is "users-folders", build and append the user folder
+        if (
+            settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "users-folders"
+            and current_user_settings.slurm_user is not None
+        ):
+            base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
+            user_folder = os.path.join(
+                base_folder, current_user_settings.slurm_user
+            )
+            authorized_paths.append(user_folder)
+
+    if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "viewer-paths":
+        # Returns the union of `viewer_paths` for all user's groups
+        cmd = (
+            select(UserGroup.viewer_paths)
+            .join(LinkUserGroup)
+            .where(LinkUserGroup.group_id == UserGroup.id)
+            .where(LinkUserGroup.user_id == current_user.id)
+        )
+        res = await db.execute(cmd)
+        viewer_paths_nested = res.scalars().all()
+
+        # Flatten a nested object and make its elements unique
+        all_viewer_paths_set = set(
+            path
+            for _viewer_paths in viewer_paths_nested
+            for path in _viewer_paths
+        )
+
+        authorized_paths.extend(all_viewer_paths_set)
+
+    return authorized_paths
