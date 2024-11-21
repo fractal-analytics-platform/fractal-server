@@ -41,9 +41,12 @@ class LocalBackendConfig(BaseModel, extra=Extra.forbid):
             Maximum number of tasks to be run in parallel as part of a call to
             `FractalThreadPoolExecutor.map`; if `None`, then all tasks will
             start at the same time.
+        max_workers:
+            This is ignored, and only introduced for compatibility with V2.
     """
 
     parallel_tasks_per_job: Optional[int]
+    max_workers: Optional[int] = None
 
 
 def get_default_local_backend_config():

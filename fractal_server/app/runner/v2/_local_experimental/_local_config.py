@@ -32,9 +32,13 @@ class LocalBackendConfig(BaseModel, extra=Extra.forbid):
             Maximum number of tasks to be run in parallel as part of a call to
             `FractalProcessPoolExecutor.map`; if `None`, then all tasks will
             start at the same time.
+        max_workers;
+            From `ProcessPoolExecutor` docs: "If max_workers is None or not
+            given, it will default to `os.process_cpu_count()`."
     """
 
     parallel_tasks_per_job: Optional[int]
+    max_workers: Optional[int] = None
 
 
 def get_default_local_backend_config():
@@ -72,9 +76,6 @@ def get_local_backend_config(
         A local-backend configuration object
     """
 
-    key = "parallel_tasks_per_job"
-    default_value = None
-
     if which_type == "non_parallel":
         wftask_meta = wftask.meta_non_parallel
     elif which_type == "parallel":
@@ -85,24 +86,25 @@ def get_local_backend_config(
             f" {which_type=}."
         )
 
-    if wftask_meta and key in wftask_meta:
-        parallel_tasks_per_job = wftask_meta[key]
-    else:
-        if not config_path:
-            settings = Inject(get_settings)
-            config_path = settings.FRACTAL_LOCAL_CONFIG_FILE
-        if config_path is None:
-            parallel_tasks_per_job = default_value
+    config_dict = {}
+    for key in ["parallel_tasks_per_job", "max_workers"]:
+        if wftask_meta and key in wftask_meta:
+            config_dict[key] = wftask_meta[key]
         else:
-            with config_path.open("r") as f:
-                env = json.load(f)
-            try:
-                _ = LocalBackendConfig(**env)
-            except ValidationError as e:
-                raise LocalBackendConfigError(
-                    f"Error while loading {config_path=}. "
-                    f"Original error:\n{str(e)}"
-                )
-
-            parallel_tasks_per_job = env.get(key, default_value)
-    return LocalBackendConfig(parallel_tasks_per_job=parallel_tasks_per_job)
+            if not config_path:
+                settings = Inject(get_settings)
+                config_path = settings.FRACTAL_LOCAL_CONFIG_FILE
+            if config_path is None:
+                config_dict[key] = None
+            else:
+                with config_path.open("r") as f:
+                    env = json.load(f)
+                try:
+                    _ = LocalBackendConfig(**env)
+                except ValidationError as e:
+                    raise LocalBackendConfigError(
+                        f"Error while loading {config_path=}. "
+                        f"Original error:\n{str(e)}"
+                    )
+                config_dict[key] = env.get(key, None)
+    return LocalBackendConfig(**config_dict)
