@@ -432,7 +432,9 @@ async def test_admin_deactivate_task_group_api(
         assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
-        assert task_group_pypi.active is False
+
+        # Background deactivation failed early
+        assert task_group_pypi.active is True
 
         # Check that background task failed
         res = await db.get(TaskGroupActivityV2, activity_id)
