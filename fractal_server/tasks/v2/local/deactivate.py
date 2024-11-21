@@ -109,11 +109,12 @@ def deactivate_local(
                         ),
                         logger_name=LOGGER_NAME,
                     )
+
+                    # Update pip-freeze data
                     pip_freeze_stdout = _customize_and_run_template(
                         template_filename="3_pip_freeze.sh",
                         **common_args,
                     )
-                    # Update pip-freeze data
                     logger.info("Add pip freeze stdout to TaskGroupV2 - start")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
