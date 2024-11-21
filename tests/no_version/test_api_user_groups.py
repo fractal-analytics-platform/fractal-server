@@ -173,6 +173,17 @@ async def test_user_group_crud(
     assert res.status_code == 200
     assert user_A_id not in res.json()["user_ids"]
 
+    # Remove users B from group 2, twice
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_2_id}/remove-user/{user_B_id}/"
+    )
+    assert res.status_code == 200
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_2_id}/remove-user/{user_B_id}/"
+    )
+    assert res.status_code == 422
+    assert "is not a member" in res.json()["detail"]
+
     # DELETE (and cascade operations)
 
     task_group = TaskGroupV2(
