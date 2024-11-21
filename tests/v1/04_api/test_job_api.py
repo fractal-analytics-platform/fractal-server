@@ -54,14 +54,11 @@ async def test_stop_job(
         res = await client.get(
             f"api/v1/project/{project.id}/job/{job.id}/stop/"
         )
-        if backend == "slurm":
-            assert res.status_code == 202
 
-            shutdown_file = tmp_path / SHUTDOWN_FILENAME
-            debug(shutdown_file)
-            assert shutdown_file.exists()
-        else:
-            assert res.status_code == 422
+        assert res.status_code == 202
+        shutdown_file = tmp_path / SHUTDOWN_FILENAME
+        debug(shutdown_file)
+        assert shutdown_file.exists()
 
 
 async def test_job_list(
