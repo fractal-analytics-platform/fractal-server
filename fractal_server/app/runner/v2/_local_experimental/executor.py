@@ -140,6 +140,10 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         if parallel_tasks_per_job is None:
             parallel_tasks_per_job = n_elements
 
+        max_workers = local_backend_config.max_workers
+        # FIXME
+        self._max_workers = max_workers
+
         # Execute tasks, in chunks of size parallel_tasks_per_job
         results = []
         for ind_chunk in range(0, n_elements, parallel_tasks_per_job):

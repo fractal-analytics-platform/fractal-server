@@ -45,7 +45,10 @@ def get_default_local_backend_config():
     """
     Return a default `LocalBackendConfig` configuration object
     """
-    return LocalBackendConfig(parallel_tasks_per_job=None)
+    return LocalBackendConfig(
+        parallel_tasks_per_job=None,
+        max_workers=None,
+    )
 
 
 def get_local_backend_config(
