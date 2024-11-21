@@ -14,6 +14,7 @@ from sqlmodel import select
 
 from . import current_active_superuser
 from ._aux_auth import _get_single_usergroup_with_user_ids
+from ._aux_auth import _user_or_404
 from ._aux_auth import _usergroup_or_404
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -239,3 +240,49 @@ async def patch_user_settings_bulk(
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
+
+
+@router_group.post("/group/{group_id}/user/{user_id}/", status_code=201)
+async def post_user_group_link(
+    group_id: int,
+    user_id: int,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserGroupRead:
+    group = await _usergroup_or_404(group_id, db)
+    user = await _user_or_404(user_id, db)
+    link = await db.get(LinkUserGroup, (group_id, user_id))
+    if link is None:
+        db.add(LinkUserGroup(group_id=group_id, user_id=user_id))
+        await db.commit()
+    else:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"User '{user.email}' is already a member of group {group_id}."
+            ),
+        )
+    await db.refresh(group)
+    return group
+
+
+@router_group.delete("/group/{group_id}/user/{user_id}/", status_code=204)
+async def delete_user_group_link(
+    group_id: int,
+    user_id: int,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserGroupRead:
+    group = await _usergroup_or_404(group_id, db)
+    user = await _user_or_404(user_id, db)
+    link = await db.get(LinkUserGroup, (group_id, user_id))
+    if link is None:
+        raise HTTPException(
+            status_code=422,
+            detail=f"User '{user.email}' is not a member of group {group_id}.",
+        )
+    else:
+        db.delete(link)
+        await db.commit()
+    await db.refresh(group)
+    return group
