@@ -108,8 +108,6 @@ async def deactivate_task_group(
         version=task_group.version,
         timestamp_started=get_timestamp(),
     )
-    task_group.active = False
-    db.add(task_group)
     db.add(task_group_activity)
     await db.commit()
 
