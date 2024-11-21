@@ -1,5 +1,5 @@
+import json
 import os
-from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from typing import Optional
@@ -48,10 +48,6 @@ from fractal_server.app.routes.auth import current_active_verified_user
 
 router = APIRouter()
 logger = set_logger(__name__)
-
-
-def _encode_as_utc(dt: datetime):
-    return dt.replace(tzinfo=timezone.utc).isoformat()
 
 
 @router.get("/", response_model=list[ProjectReadV1])
@@ -393,33 +389,25 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         input_dataset_dump=dict(
-            **input_dataset.model_dump(
-                exclude={"resource_list", "history", "timestamp_created"}
+            **json.loads(
+                input_dataset.json(exclude={"resource_list", "history"})
             ),
-            timestamp_created=_encode_as_utc(input_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in input_dataset.resource_list
             ],
         ),
         output_dataset_dump=dict(
-            **output_dataset.model_dump(
-                exclude={"resource_list", "history", "timestamp_created"}
+            **json.loads(
+                output_dataset.json(exclude={"resource_list", "history"})
             ),
-            timestamp_created=_encode_as_utc(output_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in output_dataset.resource_list
             ],
         ),
-        workflow_dump=dict(
-            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=_encode_as_utc(workflow.timestamp_created),
-        ),
-        project_dump=dict(
-            **project.model_dump(exclude={"user_list", "timestamp_created"}),
-            timestamp_created=_encode_as_utc(project.timestamp_created),
-        ),
+        workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
+        project_dump=json.loads(project.json(exclude={"user_list"})),
         **apply_workflow.dict(),
     )
 

@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 
 import pytest
 from devtools import debug
@@ -12,6 +11,7 @@ from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
 
 PREFIX = "/api/v1"
@@ -43,9 +43,8 @@ async def test_get_project(client, db, project_factory, MockCurrentUser):
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
         assert res.json()["id"] == project_id
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        _raise_if_naive_datetime(
+            datetime.fromisoformat(res.json()["timestamp_created"])
         )
 
         # fail on non existent project

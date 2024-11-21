@@ -1500,7 +1500,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
         cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
         stdout = self.fractal_ssh.run_command(cmd=cmd)
-        remote_versions = json.loads(stdout.strip("\n"))
+        try:
+            remote_versions = json.loads(stdout.strip("\n"))
+        except json.decoder.JSONDecodeError as e:
+            logger.error("Fractal server versions not available")
+            raise e
 
         # Check compatibility with local versions
         local_versions = get_versions()

@@ -119,10 +119,13 @@ def deactivate_ssh(
                         python_bin="/not/applicable",
                     )
 
-                    # Prepare arguments for `_customize_and_run_template`
+                    # Define script_dir_remote and create it if missing
                     script_dir_remote = (
                         Path(task_group.path) / SCRIPTS_SUBFOLDER
                     ).as_posix()
+                    fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
+
+                    # Prepare arguments for `_customize_and_run_template`
                     common_args = dict(
                         replacements=replacements,
                         script_dir_local=(

@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timezone
 from typing import Literal
 
 from devtools import debug  # noqa
@@ -11,6 +10,7 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 
@@ -265,9 +265,8 @@ async def test_get_workflow(
         assert res.status_code == 200
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        _raise_if_naive_datetime(
+            datetime.fromisoformat(res.json()["timestamp_created"])
         )
 
         # Assert warnings

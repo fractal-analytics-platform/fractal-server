@@ -20,14 +20,15 @@
       * Fix bug in `_get_collection_task_group_activity_status_message` (\#2047).
       * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
       * Add query parameters `timestamp_last_used_{min|max}` to `GET /admin/v2/task-group/` (\#2061).
-      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: API only accepts timezone-aware datetimes as query parameters (\#2068).
+      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: now API only accepts timezone-aware datetimes as query parameters (\#2068).
+      * Remove `_encode_as_utc`: now timestamps are serialized in JSONs with their own timezone (\#2081).
 * Database
     * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
     * Add  `venv_size_in_kB` and `venv_file_number` to `TaskGroupV2` (\#2034).
-    * Add `TaskGroupV2.timestamp_last_used` column, updated on job submission (\#2049, \#2061).
+    * Add `TaskGroupV2.timestamp_last_used` column, updated on job submission (\#2049, \#2061, \#2086).
 * Task-lifecycle internals:
     * Refactor task collection and database-session management in background tasks (\#2030).
     * Update `TaskGroupActivityV2` objects (\#2005).
@@ -40,8 +41,10 @@
     * Fix escaping of newlines within f-strings, in logs (\#2028).
     * Improve handling of task groups created before 2.9.0 (\#2050).
     * Add `TaskGroupCreateV2Strict` for task collections (\#2080).
+    * Always create `script_dir_remote` in SSH lifecycle background tasks (\#2089).
 * Runner:
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
+    * Improve error handling in `FractalSlurmSSHExecutor` `handshake` method (\#2083).
     * Use the "spawn" start method for the multiprocessing context, for the `ProcessPoolExecutor`-based runner (\#2084).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).

@@ -128,10 +128,13 @@ def reactivate_ssh(
                     ("__PIP_FREEZE_FILE__", pip_freeze_file_remote)
                 )
 
-                # Prepare common arguments for `_customize_and_run_template``
+                # Define script_dir_remote and create it if missing
                 script_dir_remote = (
                     Path(task_group.path) / SCRIPTS_SUBFOLDER
                 ).as_posix()
+                fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
+
+                # Prepare common arguments for `_customize_and_run_template`
                 common_args = dict(
                     replacements=replacements,
                     script_dir_local=(
