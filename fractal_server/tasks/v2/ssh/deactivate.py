@@ -224,7 +224,8 @@ def deactivate_ssh(
                 # We now have all required information for reactivating the
                 # virtual environment at a later point
 
-                # Actually mark the task group as non-active:
+                # Actually mark the task group as non-active
+                logger.info("Now setting `active=False`.")
                 task_group.active = False
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
