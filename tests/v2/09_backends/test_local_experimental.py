@@ -1,4 +1,5 @@
 import json
+import multiprocessing as mp
 import os
 import shlex
 import subprocess
@@ -301,7 +302,7 @@ def test_count_threads_and_processes(tmp_path):
     assert executor._processes is None
 
     # `concurrent.futures.process.ProcessPoolExecutor`
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(mp_context=mp.get_context("spawn")) as executor:
         # --- Threads
         threads = threading.enumerate()
         assert threads == new_initial_threads
