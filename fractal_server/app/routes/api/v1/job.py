@@ -183,12 +183,12 @@ async def stop_job(
 
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
-    if "slurm" not in backend:
+    if backend != "slurm":
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Stopping a job execution is not implemented for "
-                f"FRACTAL_RUNNER_BACKEND={backend}."
+                f"FRACTAL_RUNNER_BACKEND=''{backend}''."
             ),
         )
 
