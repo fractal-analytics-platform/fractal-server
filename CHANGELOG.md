@@ -43,6 +43,7 @@
     * Improve handling of task groups created before 2.9.0 (\#2050).
     * Add `TaskGroupCreateV2Strict` for task collections (\#2080).
     * Always create `script_dir_remote` in SSH lifecycle background tasks (\#2089).
+    * Postpone setting `active=False` in task-group deactivation to after all preliminary checks (\#2100).
 * Runner:
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
     * Improve error handling in `FractalSlurmSSHExecutor` `handshake` method (\#2083).

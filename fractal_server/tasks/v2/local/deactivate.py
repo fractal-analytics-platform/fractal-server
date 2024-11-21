@@ -191,6 +191,13 @@ def deactivate_local(
 
                 # We now have all required information for reactivating the
                 # virtual environment at a later point
+
+                # Actually mark the task group as non-active
+                logger.info("Now setting `active=False`.")
+                task_group.active = False
+                task_group = add_commit_refresh(obj=task_group, db=db)
+
+                # Proceed with deactivation
                 logger.info(f"Now removing {task_group.venv_path}.")
                 shutil.rmtree(task_group.venv_path)
                 logger.info(f"All good, {task_group.venv_path} removed.")
