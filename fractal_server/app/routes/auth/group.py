@@ -272,8 +272,8 @@ async def delete_user_group_link(
     user_id: int,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> UserGroupRead:
-    group = await _usergroup_or_404(group_id, db)
+):
+    await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)
     link = await db.get(LinkUserGroup, (group_id, user_id))
     if link is None:
@@ -284,5 +284,3 @@ async def delete_user_group_link(
     else:
         db.delete(link)
         await db.commit()
-    await db.refresh(group)
-    return group
