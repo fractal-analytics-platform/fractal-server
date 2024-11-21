@@ -242,8 +242,8 @@ async def patch_user_settings_bulk(
     return Response(status_code=status.HTTP_200_OK)
 
 
-@router_group.post("/group/{group_id}/user/{user_id}/", status_code=201)
-async def post_user_group_link(
+@router_group.post("/group/{group_id}/add-user/{user_id}/", status_code=200)
+async def add_user_to_group(
     group_id: int,
     user_id: int,
     superuser: UserOAuth = Depends(current_active_superuser),
@@ -266,8 +266,8 @@ async def post_user_group_link(
     return group
 
 
-@router_group.delete("/group/{group_id}/user/{user_id}/", status_code=204)
-async def delete_user_group_link(
+@router_group.post("/group/{group_id}/remove-user/{user_id}/", status_code=200)
+async def remove_user_from_group(
     group_id: int,
     user_id: int,
     superuser: UserOAuth = Depends(current_active_superuser),
