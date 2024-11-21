@@ -34,6 +34,7 @@ from ....versions import get_versions
 from ...slurm._slurm_config import get_default_slurm_config
 from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
+from ..utils_executors import get_default_task_files
 from ._executor_wait_thread import FractalSlurmWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
@@ -363,7 +364,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 `get_default_slurm_config()`.
             task_files:
                 A `TaskFiles` object; if `None`, use
-                `self.get_default_task_files()`.
+                `get_default_task_files()`.
 
         Returns:
             Future representing the execution of the current SLURM job.
@@ -379,7 +380,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if slurm_config is None:
             slurm_config = get_default_slurm_config()
         if task_files is None:
-            task_files = self.get_default_task_files()
+            task_files = get_default_task_files()
 
         # Set slurm_file_prefix
         slurm_file_prefix = task_files.file_prefix
@@ -446,7 +447,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 `get_default_slurm_config()`.
             task_files:
                 A `TaskFiles` object; if `None`, use
-                `self.get_default_task_files()`.
+                `get_default_task_files()`.
 
         """
 
@@ -476,7 +477,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if not slurm_config:
             slurm_config = get_default_slurm_config()
         if task_files is None:
-            task_files = self.get_default_task_files()
+            task_files = get_default_task_files()
 
         # Include common_script_lines in extra_lines
         logger.debug(
@@ -1346,18 +1347,18 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         script = "\n".join(script_lines)
         return script
 
-    def get_default_task_files(self) -> TaskFiles:
-        """
-        This will be called when self.submit or self.map are called from
-        outside fractal-server, and then lack some optional arguments.
-        """
-        task_files = TaskFiles(
-            workflow_dir_local=self.workflow_dir_local,
-            workflow_dir_remote=self.workflow_dir_remote,
-            task_order=None,
-            task_name="name",
-        )
-        return task_files
+    # def get_default_task_files(self) -> TaskFiles:
+    #     """
+    #     This will be called when self.submit or self.map are called from
+    #     outside fractal-server, and then lack some optional arguments.
+    #     """
+    #     task_files = TaskFiles(
+    #         workflow_dir_local=self.workflow_dir_local,
+    #         workflow_dir_remote=self.workflow_dir_remote,
+    #         task_order=None,
+    #         task_name="name",
+    #     )
+    #     return task_files
 
     def shutdown(self, wait=True, *, cancel_futures=False):
         """
