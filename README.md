@@ -66,7 +66,7 @@
 | fractal\_server/app/routes/api/v2/workflowtask.py                              |       70 |        2 |       24 |        2 |     96% |  168, 178 |
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                                |       23 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/\_aux\_auth.py                                 |       59 |        0 |       14 |        0 |    100% |           |
-| fractal\_server/app/routes/auth/current\_user.py                               |       58 |        0 |        4 |        0 |    100% |           |
+| fractal\_server/app/routes/auth/current\_user.py                               |       74 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/group.py                                       |      104 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/login.py                                       |       10 |        0 |        4 |        1 |     93% |    24->23 |
 | fractal\_server/app/routes/auth/oauth.py                                       |       21 |       12 |       10 |        2 |     35% |24-47, 62-63 |
@@ -164,7 +164,7 @@
 | fractal\_server/app/schemas/v2/workflowtask.py                                 |      107 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/app/security/\_\_init\_\_.py                                   |      161 |       29 |       32 |        1 |     79% |111-124, 143-144, 149-158, 163-171, 190, 308-312 |
 | fractal\_server/app/user\_settings.py                                          |       12 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/config.py                                                      |      230 |        6 |       70 |        6 |     95% |541-542, 547, 556, 561, 568, 573->exit |
+| fractal\_server/config.py                                                      |      240 |        6 |       76 |        6 |     96% |571-572, 577, 586, 591, 598, 603->exit |
 | fractal\_server/images/\_\_init\_\_.py                                         |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                               |       64 |        1 |       20 |        1 |     98% |        58 |
 | fractal\_server/images/tools.py                                                |       29 |        0 |       12 |        0 |    100% |           |
@@ -201,7 +201,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **11307** |  **431** | **2342** |  **193** | **95%** |           |
+|                                                                      **TOTAL** | **11333** |  **431** | **2356** |  **193** | **95%** |           |
 
 
 ## Setup coverage badge
