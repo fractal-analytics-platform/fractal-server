@@ -191,12 +191,16 @@ async def test_get_and_patch_current_user_settings(registered_client):
             assert v is None
 
 
-async def test_get_current_user_viewer_paths(
-    registered_client, registered_superuser_client
+async def test_get_current_user_allowed_viewer_paths(
+    registered_client, registered_superuser_client, override_settings_factory
 ):
+    # Start test with "viewer-paths" auth scheme
+    override_settings_factory(
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME="viewer-paths"
+    )
 
     # Check that a vanilla user has no viewer_paths
-    res = await registered_client.get(f"{PREFIX}viewer-paths/")
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
     assert res.json() == []
 
@@ -219,7 +223,7 @@ async def test_get_current_user_viewer_paths(
     assert res.status_code == 200
 
     # Check current-user viewer-paths again
-    res = await registered_client.get(f"{PREFIX}viewer-paths/")
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
     assert set(res.json()) == {"/a", "/b"}
 
@@ -230,13 +234,50 @@ async def test_get_current_user_viewer_paths(
     assert res.status_code == 201
     group2_id = res.json()["id"]
 
-    # Add user to group1
+    # Add user to group2
     res = await registered_superuser_client.patch(
         f"/auth/group/{group2_id}/", json=dict(new_user_ids=[user_id])
     )
     assert res.status_code == 200
 
-    # Check current-user viewer-paths again
-    res = await registered_client.get(f"{PREFIX}viewer-paths/")
+    # Update user settings defining project_dir
+    res = await registered_superuser_client.patch(
+        f"/auth/users/{user_id}/settings/",
+        json=dict(project_dir="/path/to/project_dir"),
+    )
     assert res.status_code == 200
-    assert set(res.json()) == {"/a", "/b", "/c"}
+
+    # Check that project_dir is used by "viewer-paths" auth scheme
+    override_settings_factory(
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME="viewer-paths"
+    )
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/path/to/project_dir", "/a", "/b", "/c"}
+
+    # Test with "users-folders" scheme
+    override_settings_factory(FRACTAL_VIEWER_BASE_FOLDER="/path/to/base")
+    override_settings_factory(
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders"
+    )
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/path/to/project_dir"}
+
+    # Update user settings adding the slurm_user
+    res = await registered_superuser_client.patch(
+        f"/auth/users/{user_id}/settings/",
+        json=dict(project_dir="/path/to/project_dir", slurm_user="foo"),
+    )
+    assert res.status_code == 200
+
+    # Test that user dir is added when using "users-folders" scheme
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/path/to/project_dir", "/path/to/base/foo"}
+
+    # Verify that scheme "none" returns an empty list
+    override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert res.json() == []
