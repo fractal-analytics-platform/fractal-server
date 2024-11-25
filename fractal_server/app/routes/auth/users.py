@@ -10,7 +10,6 @@ from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import col
 from sqlmodel import func
 from sqlmodel import select
 
@@ -131,50 +130,61 @@ async def list_users(
     return user_list
 
 
-class UserSetGroups(BaseModel):
+class UserUpdateGroups(BaseModel):
     group_ids: list[int]
 
 
 @router_users.post("/users/{user_id}/set-groups/", response_model=UserRead)
 async def set_user_groups(
     user_id: int,
-    set_groups: UserSetGroups,
+    user_update: UserUpdateGroups,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
 
+    # Preliminary check that all objects exist in the db
     user = await _user_or_404(user_id=user_id, db=db)
-
-    res = await db.execute(
-        select(func.count()).where(col(UserGroup.id).in_(set_groups.group_ids))
+    target_group_ids = user_update.group_ids
+    stm = select(func.count(UserGroup.id)).where(
+        UserGroup.id.in_(target_group_ids)
     )
+    res = await db.execute(stm)
     count = res.scalar()
-    if count != len(set_groups.group_ids):
+    if count != len(target_group_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Some UserGroups in {set_groups.group_ids} do not exist.",
+            detail=f"Some UserGroups in {target_group_ids} do not exist.",
         )
 
+    # Prepare lists of links to be removed
     res = await db.execute(
         select(LinkUserGroup)
-        .where(LinkUserGroup.user_id)
-        .where(LinkUserGroup.group_id.not_in(set_groups.group_ids))
+        .where(LinkUserGroup.user_id == user_id)
+        .where(LinkUserGroup.group_id.not_in(target_group_ids))
     )
     links_to_remove = res.scalars().all()
 
+    # Prepare lists of links to be added
     res = await db.execute(
         select(LinkUserGroup.group_id)
-        .where(LinkUserGroup.user_id)
-        .where(LinkUserGroup.group_id._in(set_groups.group_ids))
+        .where(LinkUserGroup.user_id == user_id)
+        .where(LinkUserGroup.group_id.in_(target_group_ids))
     )
-    ids_links_already_in = res.scalars.all()
-    ids_links_to_add = set(set_groups.group_ids) - set(ids_links_already_in)
+    ids_links_already_in = res.scalars().all()
+    ids_links_to_add = set(target_group_ids) - set(ids_links_already_in)
 
+    # Remove/create links as needed
     for link in links_to_remove:
+        logger.info(
+            f"Removing LinkUserGroup with {link.user_id=} "
+            f"and {link.group_id=}."
+        )
         await db.delete(link)
     for group_id in ids_links_to_add:
+        logger.info(
+            f"Creating new LinkUserGroup with {user_id=} " f"and {group_id=}."
+        )
         db.add(LinkUserGroup(user_id=user_id, group_id=group_id))
-
     await db.commit()
 
     user_with_groups = await _get_single_user_with_groups(user, db)
