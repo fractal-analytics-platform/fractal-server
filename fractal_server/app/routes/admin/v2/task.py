@@ -7,6 +7,7 @@ from fastapi import status
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -60,6 +61,9 @@ async def query_tasks(
     version: Optional[str] = None,
     name: Optional[str] = None,
     max_number_of_results: int = 25,
+    category: Optional[str] = None,
+    modality: Optional[str] = None,
+    author: Optional[str] = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
@@ -86,6 +90,12 @@ async def query_tasks(
         stm = stm.where(TaskV2.version == version)
     if name is not None:
         stm = stm.where(TaskV2.name.icontains(name))
+    if category is not None:
+        stm = stm.where(func.lower(TaskV2.category) == category.lower())
+    if modality is not None:
+        stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
+    if author is not None:
+        stm = stm.where(TaskV2.authors.icontains(author))
 
     res = await db.execute(stm)
     task_list = res.scalars().all()
