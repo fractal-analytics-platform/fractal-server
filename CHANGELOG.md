@@ -55,6 +55,8 @@
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
     * Move `NoValidConnectionError` exception handling into `FractalSSH.log_and_raise` method (\#2070).
     * Improve closed-socket testing (\#2076).
+* App:
+   * Add `FRACTAL_VIEWER_AUTHORIZATION_SCHEME` and `FRACTAL_VIEWER_BASE_FOLDER` configuration variables (\#2096).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
 * Scripts:
