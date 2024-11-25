@@ -8,6 +8,7 @@ from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
+from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
@@ -201,6 +202,57 @@ async def list_users(
         )
 
     return user_list
+
+
+class UserSetGroups(BaseModel):
+    group_ids: list[int]
+
+
+@router_users.post("/users/{user_id}/set-groups/", response_model=UserRead)
+async def set_user_groups(
+    user_id: int,
+    set_groups: UserSetGroups,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserRead:
+
+    user = await _user_or_404(user_id=user_id, db=db)
+
+    res = await db.execute(
+        select(func.count()).where(col(UserGroup.id).in_(set_groups.group_ids))
+    )
+    count = res.scalar()
+    if count != len(set_groups.group_ids):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Some UserGroups in {set_groups.group_ids} do not exist.",
+        )
+
+    res = await db.execute(
+        select(LinkUserGroup)
+        .where(LinkUserGroup.user_id)
+        .where(LinkUserGroup.group_id.not_in(set_groups.group_ids))
+    )
+    links_to_remove = res.scalars().all()
+
+    res = await db.execute(
+        select(LinkUserGroup.group_id)
+        .where(LinkUserGroup.user_id)
+        .where(LinkUserGroup.group_id._in(set_groups.group_ids))
+    )
+    ids_links_already_in = res.scalars.all()
+    ids_links_to_add = set(set_groups.group_ids) - set(ids_links_already_in)
+
+    for link in links_to_remove:
+        await db.delete(link)
+    for group_id in ids_links_to_add:
+        db.add(LinkUserGroup(user_id=user_id, group_id=group_id))
+
+    await db.commit()
+
+    user_with_groups = await _get_single_user_with_groups(user, db)
+
+    return user_with_groups
 
 
 @router_users.get(
