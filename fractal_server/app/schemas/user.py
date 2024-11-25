@@ -5,14 +5,12 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import validator
 
-from ._validators import val_unique_list
 from ._validators import valstr
 
 __all__ = (
     "UserRead",
     "UserUpdate",
     "UserCreate",
-    "UserUpdateWithNewGroupIds",
 )
 
 
@@ -80,14 +78,6 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
 
     pass
-
-
-class UserUpdateWithNewGroupIds(UserUpdate):
-    new_group_ids: Optional[list[int]] = None
-
-    _val_unique = validator("new_group_ids", allow_reuse=True)(
-        val_unique_list("new_group_ids")
-    )
 
 
 class UserCreate(schemas.BaseUserCreate):
