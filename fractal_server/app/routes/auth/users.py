@@ -164,6 +164,8 @@ async def set_user_groups(
     )
     links_to_remove = res.scalars().all()
 
+    # TODO: check that "All" is not in here...
+
     # Prepare lists of links to be added
     res = await db.execute(
         select(LinkUserGroup.group_id)
