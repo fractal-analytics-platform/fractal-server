@@ -19,6 +19,9 @@
     * Remove `GET /auth/current-user/viewer-paths/` (\#2096).
     * Add `GET /auth/current-user/allowed-viewer-paths/`, with logic for `fractal-vizarr-viewer` authorization (\#2096).
     * Add `category`, `modality` and `author` query parameters to `GET /admin/v2/task/` (\#2102).
+    * Add `POST /auth/group/{group_id}/add-user/{user_id}/` (\#2101).
+    * Add `POST /auth/group/{group_id}/remove-user/{user_id}/` (\#2101).
+    * Remove `new_user_ids` property from `PATCH /auth/group/{group_id}/` (\#2101).
     * Internals:
       * Fix bug in `_get_collection_task_group_activity_status_message` (\#2047).
       * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
@@ -56,6 +59,8 @@
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
     * Move `NoValidConnectionError` exception handling into `FractalSSH.log_and_raise` method (\#2070).
     * Improve closed-socket testing (\#2076).
+* App:
+   * Add `FRACTAL_VIEWER_AUTHORIZATION_SCHEME` and `FRACTAL_VIEWER_BASE_FOLDER` configuration variables (\#2096).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
 * Scripts:

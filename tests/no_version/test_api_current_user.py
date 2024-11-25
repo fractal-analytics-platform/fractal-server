@@ -217,8 +217,8 @@ async def test_get_current_user_allowed_viewer_paths(
     group1_id = res.json()["id"]
 
     # Add user to group1
-    res = await registered_superuser_client.patch(
-        f"/auth/group/{group1_id}/", json=dict(new_user_ids=[user_id])
+    res = await registered_superuser_client.post(
+        f"/auth/group/{group1_id}/add-user/{user_id}/"
     )
     assert res.status_code == 200
 
@@ -235,8 +235,8 @@ async def test_get_current_user_allowed_viewer_paths(
     group2_id = res.json()["id"]
 
     # Add user to group2
-    res = await registered_superuser_client.patch(
-        f"/auth/group/{group2_id}/", json=dict(new_user_ids=[user_id])
+    res = await registered_superuser_client.post(
+        f"/auth/group/{group2_id}/add-user/{user_id}/"
     )
     assert res.status_code == 200
 
