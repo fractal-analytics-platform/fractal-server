@@ -43,7 +43,7 @@ class UserRead(schemas.BaseUser[int]):
     oauth_accounts: list[OAuthAccountRead]
 
 
-class UserUpdate(schemas.BaseUserUpdate):
+class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
     """
     Schema for `User` update.
 
