@@ -20,7 +20,9 @@ def test_get_default_task_files():
     local_dir = Path("/tmp/local_workflow")
     remote_dir = Path("/tmp/remote_workflow")
 
-    result = get_default_task_files(local_dir, remote_dir)
+    result = get_default_task_files(
+        workflow_dir_local=local_dir, workflow_dir_remote=remote_dir
+    )
 
     assert result.workflow_dir_local == local_dir
     assert result.workflow_dir_remote == remote_dir
