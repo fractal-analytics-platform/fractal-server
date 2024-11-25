@@ -78,6 +78,9 @@ async def query_tasks(
         version: If not `None`, query for matching `task.version`.
         name: If not `None`, query for contained case insensitive `task.name`.
         max_number_of_results: The maximum length of the response.
+        category:
+        modality:
+        author:
     """
 
     stm = select(TaskV2)
