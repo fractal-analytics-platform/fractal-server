@@ -42,6 +42,7 @@ from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ..utils_executors import get_default_task_files
 from ..utils_executors import get_pickle_file_path
+from ..utils_executors import get_slurm_file_path
 from ..utils_executors import get_slurm_script_file_path
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._subprocess_run_as_user import _glob_as_user
@@ -339,33 +340,33 @@ class FractalSlurmExecutor(SlurmExecutor):
     #         subfolder_name / f"{prefix}_slurm_submit.sbatch"
     #     )
 
-    def get_slurm_stdout_file_path(
-        self,
-        *,
-        subfolder_name: str,
-        arg: str = "%j",
-        prefix: Optional[str] = None,
-    ) -> Path:
-        prefix = prefix or "slurmpy.stdout"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_slurm_{arg}.out"
-        )
-
-    def get_slurm_stderr_file_path(
-        self,
-        *,
-        subfolder_name: str,
-        arg: str = "%j",
-        prefix: Optional[str] = None,
-    ) -> Path:
-        prefix = prefix or "slurmpy.stderr"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_slurm_{arg}.err"
-        )
+    # def get_slurm_stdout_file_path(
+    #     self,
+    #     *,
+    #     subfolder_name: str,
+    #     arg: str = "%j",
+    #     prefix: Optional[str] = None,
+    # ) -> Path:
+    #     prefix = prefix or "slurmpy.stdout"
+    #     return (
+    #         self.workflow_dir_remote
+    #         / subfolder_name
+    #         / f"{prefix}_slurm_{arg}.out"
+    #     )
+    #
+    # def get_slurm_stderr_file_path(
+    #     self,
+    #     *,
+    #     subfolder_name: str,
+    #     arg: str = "%j",
+    #     prefix: Optional[str] = None,
+    # ) -> Path:
+    #     prefix = prefix or "slurmpy.stderr"
+    #     return (
+    #         self.workflow_dir_remote
+    #         / subfolder_name
+    #         / f"{prefix}_slurm_{arg}.err"
+    #     )
 
     def submit(
         self,
@@ -746,12 +747,16 @@ class FractalSlurmExecutor(SlurmExecutor):
             subfolder_name=job.wftask_subfolder_name,
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stdout = self.get_slurm_stdout_file_path(
+        job.slurm_stdout = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="out",
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stderr = self.get_slurm_stderr_file_path(
+        job.slurm_stderr = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="err",
             prefix=job.slurm_file_prefix,
         )
 

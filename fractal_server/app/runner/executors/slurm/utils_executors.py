@@ -48,3 +48,24 @@ def get_slurm_script_file_path(
 ) -> Path:
     prefix = prefix or "_temp"
     return workflow_dir / subfolder_name / f"{prefix}_slurm_submit.sbatch"
+
+
+def get_slurm_file_path(
+    *,
+    workflow_dir: Path,
+    subfolder_name: str,
+    arg: str = "%j",
+    out_or_err=Literal["out", "err"],
+    prefix: Optional[str] = None,
+) -> Path:
+    if out_or_err == "out":
+        prefix = prefix or "slurmpy.stdout"
+        return workflow_dir / subfolder_name / f"{prefix}_slurm_{arg}.out"
+    elif out_or_err == "err":
+        prefix = prefix or "slurmpy.stderr"
+        return workflow_dir / subfolder_name / f"{prefix}_slurm_{arg}.err"
+    else:
+        raise ValueError(
+            "Missing or unexpected value out_or_err argument, "
+            f"{out_or_err=}"
+        )
