@@ -12,6 +12,9 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
+from fractal_server.app.runner.executors.slurm.utils_executors import (
+    get_default_task_files,
+)
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 
@@ -25,13 +28,19 @@ class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
     """
 
     def _create_local_folder_structure(self):
-        task_files = self.get_default_task_files()
+        task_files = get_default_task_files(
+            workflow_dir_local=self.workflow_dir_local,
+            workflow_dir_remote=self.workflow_dir_remote,
+        )
         local_subfolder = self.workflow_dir_local / task_files.subfolder_name
         logging.info(f"Now locally creating {local_subfolder.as_posix()}")
         local_subfolder.mkdir(parents=True)
 
     def _create_remote_folder_structure(self):
-        task_files = self.get_default_task_files()
+        task_files = get_default_task_files(
+            workflow_dir_local=self.workflow_dir_local,
+            workflow_dir_remote=self.workflow_dir_remote,
+        )
         remote_subfolder = self.workflow_dir_remote / task_files.subfolder_name
 
         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
@@ -187,7 +196,6 @@ def test_slurm_ssh_executor_handshake_fail(
                 slurm_poll_interval=1,
                 fractal_ssh=mocked_fractal_ssh,
             ):
-
                 log_text = caplog.text
                 assert "Fractal server versions not available" in log_text
 

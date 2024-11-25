@@ -383,7 +383,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if slurm_config is None:
             slurm_config = get_default_slurm_config()
         if task_files is None:
-            task_files = get_default_task_files()
+            task_files = get_default_task_files(
+                workflow_dir_local=self.workflow_dir_local,
+                workflow_dir_remote=self.workflow_dir_remote,
+            )
 
         # Set slurm_file_prefix
         slurm_file_prefix = task_files.file_prefix
@@ -480,7 +483,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if not slurm_config:
             slurm_config = get_default_slurm_config()
         if task_files is None:
-            task_files = get_default_task_files()
+            task_files = get_default_task_files(
+                workflow_dir_local=self.workflow_dir_local,
+                workflow_dir_remote=self.workflow_dir_remote,
+            )
 
         # Include common_script_lines in extra_lines
         logger.debug(

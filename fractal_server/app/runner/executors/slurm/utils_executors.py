@@ -6,7 +6,7 @@ from ...task_files import TaskFiles
 
 
 def get_default_task_files(
-    workflow_dir_local: Path, workflow_dir_remote: Path
+    *, workflow_dir_local: Path, workflow_dir_remote: Path
 ) -> TaskFiles:
     """
     This will be called when self.submit or self.map are called from
