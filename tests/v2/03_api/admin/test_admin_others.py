@@ -74,12 +74,22 @@ async def test_task_query(
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
         task1 = await task_factory_v2(
-            user_id=user.id, name="Foo", source="xxx"
+            user_id=user.id,
+            name="Foo",
+            source="xxx",
+            category="Conversion",
+            modality="HCS",
+            authors="Name1 Surname1,Name2 Surname2...",
         )
         task2 = await task_factory_v2(
-            user_id=user.id, name="abcdef", source="yyy"
+            user_id=user.id,
+            name="abcdef",
+            source="yyy",
+            category="Conversion",
+            modality="EM",
+            authors="Name1 Surname3,Name3 Surname2...",
         )
-        task3 = await task_factory_v2(user_id=user.id, index=3)
+        task3 = await task_factory_v2(user_id=user.id, index=3, modality="EM")
 
         # task1 to workflow 1 and 2
         await _workflow_insert_task(
@@ -190,6 +200,33 @@ async def test_task_query(
         assert len(res.json()) == 2
 
         res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
+        assert len(res.json()) == 2
+
+        # Query by CATEGORY
+
+        res = await client.get(f"{PREFIX}/task/?category=Conversion")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/task/?category=conversion")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/task/?category=conversio")
+        assert len(res.json()) == 0
+
+        # Query by MODALITY
+
+        res = await client.get(f"{PREFIX}/task/?modality=HCS")
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/task/?modality=em")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/task/?modality=foo")
+        assert len(res.json()) == 0
+
+        # Query by AUTHOR
+
+        res = await client.get(f"{PREFIX}/task/?author=name1")
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/task/?author=surname1")
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/task/?author=,")
         assert len(res.json()) == 2
 
         # --------------------------

@@ -18,6 +18,7 @@
     * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062, \#2078).
     * Remove `GET /auth/current-user/viewer-paths/` (\#2096).
     * Add `GET /auth/current-user/allowed-viewer-paths/`, with logic for `fractal-vizarr-viewer` authorization (\#2096).
+    * Add `category`, `modality` and `author` query parameters to `GET /admin/v2/task/` (\#2102).
     * Add `POST /auth/group/{group_id}/add-user/{user_id}/` (\#2101).
     * Add `POST /auth/group/{group_id}/remove-user/{user_id}/` (\#2101).
     * Remove `new_user_ids` property from `PATCH /auth/group/{group_id}/` (\#2101).
