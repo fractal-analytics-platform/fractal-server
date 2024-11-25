@@ -36,6 +36,8 @@ from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ..utils_executors import get_default_task_files
 from ..utils_executors import get_pickle_file_path
+from ..utils_executors import get_slurm_file_path
+from ..utils_executors import get_slurm_script_file_path
 from ._executor_wait_thread import FractalSlurmWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
@@ -269,25 +271,25 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     #         / f"{prefix}_out_{arg}.pickle"
     #     )
 
-    def get_slurm_script_file_path_local(
-        self, *, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "_temp"
-        return (
-            self.workflow_dir_local
-            / subfolder_name
-            / f"{prefix}_slurm_submit.sbatch"
-        )
-
-    def get_slurm_script_file_path_remote(
-        self, *, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "_temp"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_slurm_submit.sbatch"
-        )
+    # def get_slurm_script_file_path_local(
+    #     self, *, subfolder_name: str, prefix: Optional[str] = None
+    # ) -> Path:
+    #     prefix = prefix or "_temp"
+    #     return (
+    #         self.workflow_dir_local
+    #         / subfolder_name
+    #         / f"{prefix}_slurm_submit.sbatch"
+    #     )
+    #
+    # def get_slurm_script_file_path_remote(
+    #     self, *, subfolder_name: str, prefix: Optional[str] = None
+    # ) -> Path:
+    #     prefix = prefix or "_temp"
+    #     return (
+    #         self.workflow_dir_remote
+    #         / subfolder_name
+    #         / f"{prefix}_slurm_submit.sbatch"
+    #     )
 
     def get_slurm_stdout_file_path_local(
         self,
@@ -787,28 +789,38 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             for ind in range(job.num_tasks_tot)
         )
         # define slurm-job file local/remote paths
-        job.slurm_script_local = self.get_slurm_script_file_path_local(
+        job.slurm_script_local = get_slurm_script_file_path(
+            workflow_dir=self.workflow_dir_local,
             subfolder_name=job.wftask_subfolder_name,
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_script_remote = self.get_slurm_script_file_path_remote(
+        job.slurm_script_remote = get_slurm_script_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stdout_local = self.get_slurm_stdout_file_path_local(
+        job.slurm_stdout_local = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_local,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="out",
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stdout_remote = self.get_slurm_stdout_file_path_remote(
+        job.slurm_stdout_remote = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="out",
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stderr_local = self.get_slurm_stderr_file_path_local(
+        job.slurm_stderr_local = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_local,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="err",
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stderr_remote = self.get_slurm_stderr_file_path_remote(
+        job.slurm_stderr_remote = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="err",
             prefix=job.slurm_file_prefix,
         )
 
