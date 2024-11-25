@@ -45,26 +45,12 @@ def test_user_group_create():
 
 def test_user_group_update():
     g1 = UserGroupUpdate()
-    assert g1.new_user_ids == []
     assert g1.viewer_paths is None
-    g2 = UserGroupUpdate(new_user_ids=[1])
-    assert g2.new_user_ids == [1]
-    g3 = UserGroupUpdate(new_user_ids=[1, 2])
-    assert g3.new_user_ids == [1, 2]
     g4 = UserGroupUpdate(viewer_paths=["/a", "/b", "/c"])
     assert g4.viewer_paths == ["/a", "/b", "/c"]
 
     with pytest.raises(ValidationError):
-        UserGroupUpdate(name="new name")
-    with pytest.raises(ValidationError):
-        UserGroupUpdate(name="new name", new_user_ids=[1, 2, 3])
-    with pytest.raises(ValidationError):
         UserGroupUpdate(arbitrary_key="something")
-    with pytest.raises(ValidationError):
-        UserGroupUpdate(new_user_ids=["user@example.org"])
-    with pytest.raises(ValidationError):
-        UserGroupUpdate(new_user_ids=[dict(email="user@example.org")])
-
     with pytest.raises(ValidationError):
         UserGroupUpdate(viewer_paths=None)
     with pytest.raises(ValidationError):

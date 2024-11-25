@@ -54,15 +54,8 @@ async def test_update_group(registered_superuser_client):
 
     invalid_id = 99999
     # Path a non existing group
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{invalid_id}/",
-        json=dict(new_user_ids=[user_A_id]),
-    )
-    assert res.status_code == 404
-    # Patch an existing group by adding both valid and invalid users
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_id}/",
-        json=dict(new_user_ids=[user_A_id, invalid_id]),
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{invalid_id}/add-user/{user_A_id}/"
     )
     assert res.status_code == 404
 
@@ -74,9 +67,8 @@ async def test_update_group(registered_superuser_client):
     assert res.json()["user_ids"] == []
 
     # Patch an existing group by adding a valid user
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_id}/",
-        json=dict(new_user_ids=[user_A_id]),
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_id}/add-user/{user_A_id}/",
     )
     assert res.status_code == 200
     assert res.json()["user_ids"] == [user_A_id]
@@ -127,14 +119,17 @@ async def test_user_group_crud(
     group_2_id = res.json()["id"]
 
     # Add user A and B to group 1
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_1_id}/",
-        json=dict(new_user_ids=[user_A_id, user_B_id]),
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_1_id}/add-user/{user_A_id}/"
+    )
+    assert res.status_code == 200
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_1_id}/add-user/{user_B_id}/"
     )
     assert res.status_code == 200
     # Add user B to group 2
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_2_id}/", json=dict(new_user_ids=[user_B_id])
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_2_id}/add-user/{user_B_id}/"
     )
     assert res.status_code == 200
 
@@ -163,14 +158,12 @@ async def test_user_group_crud(
     for group in groups_data:
         assert group["user_ids"] is None
 
-    # Add users A and B to group 2, and fail because user B is already there
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_2_id}/",
-        json=dict(new_user_ids=[user_A_id, user_B_id]),
+    # Add users B to group 2, and fail because user B is already there
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_2_id}/add-user/{user_B_id}/"
     )
     assert res.status_code == 422
-    hint_msg = "Likely reason: one of these links already exists"
-    assert hint_msg in res.json()["detail"]
+    assert "is already a member" in res.json()["detail"]
 
     # After the previous 422, verify that user A was not added to group 2
     # (that is, verify that `db.commit` is atomic)
@@ -180,13 +173,16 @@ async def test_user_group_crud(
     assert res.status_code == 200
     assert user_A_id not in res.json()["user_ids"]
 
-    # Create user/group link and fail because of repeated IDs
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_1_id}/",
-        json=dict(new_user_ids=[99, 99]),
+    # Remove users B from group 2, twice
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_2_id}/remove-user/{user_B_id}/"
+    )
+    assert res.status_code == 200
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{group_2_id}/remove-user/{user_B_id}/"
     )
     assert res.status_code == 422
-    assert "`new_user_ids` list has repetitions'" in str(res.json())
+    assert "is not a member" in res.json()["detail"]
 
     # DELETE (and cascade operations)
 
@@ -267,9 +263,8 @@ async def test_get_user_optional_group_info(
     current_user_id = res.json()["id"]
 
     # Add current user to group A
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{GROUP_A_ID}/",
-        json=dict(new_user_ids=[current_user_id]),
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{GROUP_A_ID}/add-user/{current_user_id}/"
     )
     assert res.status_code == 200
 
