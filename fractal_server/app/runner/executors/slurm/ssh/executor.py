@@ -35,6 +35,7 @@ from ...slurm._slurm_config import get_default_slurm_config
 from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ..utils_executors import get_default_task_files
+from ..utils_executors import get_pickle_file_path
 from ._executor_wait_thread import FractalSlurmWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
@@ -224,49 +225,49 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         with self.jobs_lock:
             self.map_jobid_to_slurm_files_local.pop(jobid)
 
-    def get_input_pickle_file_path_local(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-
-        prefix = prefix or "cfut"
-        output = (
-            self.workflow_dir_local
-            / subfolder_name
-            / f"{prefix}_in_{arg}.pickle"
-        )
-        return output
-
-    def get_input_pickle_file_path_remote(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-
-        prefix = prefix or "cfut"
-        output = (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_in_{arg}.pickle"
-        )
-        return output
-
-    def get_output_pickle_file_path_local(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "cfut"
-        return (
-            self.workflow_dir_local
-            / subfolder_name
-            / f"{prefix}_out_{arg}.pickle"
-        )
-
-    def get_output_pickle_file_path_remote(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "cfut"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_out_{arg}.pickle"
-        )
+    # def get_input_pickle_file_path_local(
+    #     self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+    # ) -> Path:
+    #
+    #     prefix = prefix or "cfut"
+    #     output = (
+    #         self.workflow_dir_local
+    #         / subfolder_name
+    #         / f"{prefix}_in_{arg}.pickle"
+    #     )
+    #     return output
+    #
+    # def get_input_pickle_file_path_remote(
+    #     self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+    # ) -> Path:
+    #
+    #     prefix = prefix or "cfut"
+    #     output = (
+    #         self.workflow_dir_remote
+    #         / subfolder_name
+    #         / f"{prefix}_in_{arg}.pickle"
+    #     )
+    #     return output
+    #
+    # def get_output_pickle_file_path_local(
+    #     self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+    # ) -> Path:
+    #     prefix = prefix or "cfut"
+    #     return (
+    #         self.workflow_dir_local
+    #         / subfolder_name
+    #         / f"{prefix}_out_{arg}.pickle"
+    #     )
+    #
+    # def get_output_pickle_file_path_remote(
+    #     self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
+    # ) -> Path:
+    #     prefix = prefix or "cfut"
+    #     return (
+    #         self.workflow_dir_remote
+    #         / subfolder_name
+    #         / f"{prefix}_out_{arg}.pickle"
+    #     )
 
     def get_slurm_script_file_path_local(
         self, *, subfolder_name: str, prefix: Optional[str] = None
@@ -712,40 +713,80 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
 
         # Define I/O pickle file local/remote paths
+        # job.input_pickle_files_local = tuple(
+        #     self.get_input_pickle_file_path_local(
+        #         arg=job.workerids[ind],
+        #         subfolder_name=job.wftask_subfolder_name,
+        #         prefix=job.wftask_file_prefixes[ind],
+        #     )
+        #     for ind in range(job.num_tasks_tot)
+        # )
         job.input_pickle_files_local = tuple(
-            self.get_input_pickle_file_path_local(
+            get_pickle_file_path(
                 arg=job.workerids[ind],
+                workflow_dir=self.workflow_dir_local,
                 subfolder_name=job.wftask_subfolder_name,
-                prefix=job.wftask_file_prefixes[ind],
-            )
-            for ind in range(job.num_tasks_tot)
-        )
-        job.input_pickle_files_remote = tuple(
-            self.get_input_pickle_file_path_remote(
-                arg=job.workerids[ind],
-                subfolder_name=job.wftask_subfolder_name,
-                prefix=job.wftask_file_prefixes[ind],
-            )
-            for ind in range(job.num_tasks_tot)
-        )
-        job.output_pickle_files_local = tuple(
-            self.get_output_pickle_file_path_local(
-                arg=job.workerids[ind],
-                subfolder_name=job.wftask_subfolder_name,
-                prefix=job.wftask_file_prefixes[ind],
-            )
-            for ind in range(job.num_tasks_tot)
-        )
-        job.output_pickle_files_remote = tuple(
-            self.get_output_pickle_file_path_remote(
-                arg=job.workerids[ind],
-                subfolder_name=job.wftask_subfolder_name,
+                in_or_out="in",
                 prefix=job.wftask_file_prefixes[ind],
             )
             for ind in range(job.num_tasks_tot)
         )
 
-        # Define SLURM-job file local/remote paths
+        # job.input_pickle_files_remote = tuple(
+        #     self.get_input_pickle_file_path_remote(
+        #         arg=job.workerids[ind],
+        #         subfolder_name=job.wftask_subfolder_name,
+        #         prefix=job.wftask_file_prefixes[ind],
+        #     )
+        #     for ind in range(job.num_tasks_tot)
+        # )
+        job.input_pickle_files_remote = tuple(
+            get_pickle_file_path(
+                arg=job.workerids[ind],
+                workflow_dir=self.workflow_dir_remote,
+                subfolder_name=job.wftask_subfolder_name,
+                in_or_out="in",
+                prefix=job.wftask_file_prefixes[ind],
+            )
+            for ind in range(job.num_tasks_tot)
+        )
+        # job.output_pickle_files_local = tuple(
+        #     self.get_output_pickle_file_path_local(
+        #         arg=job.workerids[ind],
+        #         subfolder_name=job.wftask_subfolder_name,
+        #         prefix=job.wftask_file_prefixes[ind],
+        #     )
+        #     for ind in range(job.num_tasks_tot)
+        # )
+        job.output_pickle_files_local = tuple(
+            get_pickle_file_path(
+                arg=job.workerids[ind],
+                workflow_dir=self.workflow_dir_local,
+                subfolder_name=job.wftask_subfolder_name,
+                in_or_out="out",
+                prefix=job.wftask_file_prefixes[ind],
+            )
+            for ind in range(job.num_tasks_tot)
+        )
+        # job.output_pickle_files_remote = tuple(
+        #     self.get_output_pickle_file_path_remote(
+        #         arg=job.workerids[ind],
+        #         subfolder_name=job.wftask_subfolder_name,
+        #         prefix=job.wftask_file_prefixes[ind],
+        #     )
+        #     for ind in range(job.num_tasks_tot)
+        # )
+        job.output_pickle_files_remote = tuple(
+            get_pickle_file_path(
+                arg=job.workerids[ind],
+                workflow_dir=self.workflow_dir_remote,
+                subfolder_name=job.wftask_subfolder_name,
+                in_or_out="out",
+                prefix=job.wftask_file_prefixes[ind],
+            )
+            for ind in range(job.num_tasks_tot)
+        )
+        # define slurm-job file local/remote paths
         job.slurm_script_local = self.get_slurm_script_file_path_local(
             subfolder_name=job.wftask_subfolder_name,
             prefix=job.slurm_file_prefix,
@@ -771,7 +812,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             prefix=job.slurm_file_prefix,
         )
 
-        # Dump serialized versions+function+args+kwargs to pickle file(s)
+        # dump serialized versions+function+args+kwargs to pickle file(s)
         versions = get_versions()
         if job.single_task_submission:
             _args = args or []
@@ -1295,7 +1336,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         slurm_err_path: str,
         slurm_config: SlurmConfig,
     ):
-
         num_tasks_max_running = slurm_config.parallel_tasks_per_job
         mem_per_task_MB = slurm_config.mem_per_task_MB
 
