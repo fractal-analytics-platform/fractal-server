@@ -228,12 +228,12 @@ async def test_delete_user(registered_client, registered_superuser_client):
     assert res.status_code == 404
 
 
-async def test_add_groups_to_user_as_superuser(
+async def test_set_groups_endpoint(
     registered_superuser_client,
     default_user_group,
 ):
 
-    # Create user
+    # Preliminary step: create a user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(
@@ -247,20 +247,20 @@ async def test_add_groups_to_user_as_superuser(
     res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
     assert res.status_code == 200
     user = res.json()
-    debug(user)
     assert user["group_ids_names"] == [
         [default_user_group.id, default_user_group.name]
     ]
 
-    # Create group
+    # Preliminary step: create a user group
+    GROUP_NAME = "my group"
     res = await registered_superuser_client.post(
         f"{PREFIX}/group/",
-        json=dict(name="groupname"),
+        json=dict(name=GROUP_NAME),
     )
     assert res.status_code == 201
     group_id = res.json()["id"]
 
-    # Setu user/group links
+    # Test `/users/{user_id}/set-groups/`
 
     # Failure: Empty request body
     res = await registered_superuser_client.post(
@@ -268,6 +268,7 @@ async def test_add_groups_to_user_as_superuser(
         json=dict(group_ids=[]),
     )
     assert res.status_code == 422
+    assert "empty" in str(res.json()["detail"])
 
     # Failure: Repeated request-body values
     res = await registered_superuser_client.post(
@@ -275,12 +276,21 @@ async def test_add_groups_to_user_as_superuser(
         json=dict(new_group_ids=[99, 99]),
     )
     assert res.status_code == 422
+    assert "are not unique" in str(res.json()["detail"])
 
     # Failure: Invalid group_id
     invalid_group_id = 999999
     res = await registered_superuser_client.post(
         f"{PREFIX}/users/{user_id}/set-groups/",
         json=dict(group_ids=[invalid_group_id]),
+    )
+    assert res.status_code == 404
+
+    # Failure: Invalid user_id
+    invalid_user_id = 999999
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{invalid_user_id}/set-groups/",
+        json=dict(group_ids=[default_user_group.id]),
     )
     assert res.status_code == 404
 
@@ -297,7 +307,10 @@ async def test_add_groups_to_user_as_superuser(
         json=dict(group_ids=[group_id, default_user_group.id]),
     )
     assert res.status_code == 200
-    assert res.json()["group_ids_names"] == [[group_id, "groupname"]]
+    assert res.json()["group_ids_names"] == [
+        [default_user_group.id, default_user_group.name],
+        [group_id, GROUP_NAME],
+    ]
 
 
 async def test_oauth_accounts_list(
