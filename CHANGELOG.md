@@ -55,6 +55,7 @@
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
     * Improve error handling in `FractalSlurmSSHExecutor` `handshake` method (\#2083).
     * Use the "spawn" start method for the multiprocessing context, for the `ProcessPoolExecutor`-based runner (\#2084).
+    * Extract common functionalities from SLURM/sudo and SLURM/SSH executors (\#2107).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
     * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).
