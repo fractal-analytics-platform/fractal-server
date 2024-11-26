@@ -27,9 +27,8 @@ def get_pickle_file_path(
     workflow_dir: Path,
     subfolder_name: str,
     in_or_out: Literal["in", "out"],
-    prefix: Optional[str] = None,
+    prefix: str,
 ) -> Path:
-    prefix = prefix or "cfut"
     if in_or_out in ["in", "out"]:
         output = (
             workflow_dir
@@ -56,17 +55,15 @@ def get_slurm_file_path(
     subfolder_name: str,
     arg: str = "%j",
     out_or_err: Literal["out", "err"],
-    prefix: Optional[str] = None,
+    prefix: str,
 ) -> Path:
     if out_or_err == "out":
-        prefix = prefix or "slurmpy.stdout"
         return (
             workflow_dir
             / subfolder_name
             / f"{prefix}_slurm_{arg}.{out_or_err}"
         )
     elif out_or_err == "err":
-        prefix = prefix or "slurmpy.stderr"
         return (
             workflow_dir
             / subfolder_name
