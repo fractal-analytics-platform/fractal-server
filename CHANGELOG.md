@@ -20,7 +20,7 @@
     * Add `GET /auth/current-user/allowed-viewer-paths/`, with logic for `fractal-vizarr-viewer` authorization (\#2096).
     * Add `category`, `modality` and `author` query parameters to `GET /admin/v2/task/` (\#2102).
     * Add `POST /auth/group/{group_id}/add-user/{user_id}/` (\#2101).
-    * Add `POST /auth/group/{group_id}/remove-user/{user_id}/` (\#2101).
+    * Add `POST /auth/group/{group_id}/remove-user/{user_id}/` (\#2101, \#2111).
     * Add `POST /auth/users/{user_id}/set-groups/` (\#2106).
     * Remove `new_user_ids` property from `PATCH /auth/group/{group_id}/` (\#2101).
     * Remove `new_group_ids` property from `PATCH /auth/users/{user_id}/` (\#2106).
@@ -55,6 +55,7 @@
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
     * Improve error handling in `FractalSlurmSSHExecutor` `handshake` method (\#2083).
     * Use the "spawn" start method for the multiprocessing context, for the `ProcessPoolExecutor`-based runner (\#2084).
+    * Extract common functionalities from SLURM/sudo and SLURM/SSH executors (\#2107).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
     * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).

@@ -173,6 +173,13 @@ async def test_user_group_crud(
     assert res.status_code == 200
     assert user_A_id not in res.json()["user_ids"]
 
+    # Try to remove user from 'All' group and fail
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/group/{default_user_group.id}/remove-user/{user_A_id}/"
+    )
+    assert res.status_code == 422
+    assert "Cannot remove user from 'All' group" in str(res.json()["detail"])
+
     # Remove users B from group 2, twice
     res = await registered_superuser_client.post(
         f"{PREFIX}/group/{group_2_id}/remove-user/{user_B_id}/"
