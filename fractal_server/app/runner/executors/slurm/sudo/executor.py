@@ -669,7 +669,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             prefix=job.slurm_file_prefix,
         )
 
-        # dump serialized versions+function+args+kwargs to pickle file
+        # Dump serialized versions+function+args+kwargs to pickle
         versions = dict(
             python=sys.version_info[:3],
             cloudpickle=cloudpickle.__version__,
