@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from . import current_active_superuser
+from ._aux_auth import _get_default_usergroup_id
 from ._aux_auth import _get_single_usergroup_with_user_ids
 from ._aux_auth import _user_or_404
 from ._aux_auth import _usergroup_or_404
@@ -234,16 +235,35 @@ async def remove_user_from_group(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
+
+    # Check that user and group exist
     await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)
+
+    # Check that group is not the default one
+    default_user_group_id = await _get_default_usergroup_id(db=db)
+    if default_user_group_id == group_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot remove user from '{FRACTAL_DEFAULT_GROUP_NAME}' "
+                "group.",
+            ),
+        )
+
     link = await db.get(LinkUserGroup, (group_id, user_id))
     if link is None:
+        # If user and group are not linked, fail
         raise HTTPException(
             status_code=422,
             detail=f"User '{user.email}' is not a member of group {group_id}.",
         )
     else:
+        # If user and group are linked, delete the link
         await db.delete(link)
         await db.commit()
+
+    # Enrich the response object with user_ids
     group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
+
     return group
