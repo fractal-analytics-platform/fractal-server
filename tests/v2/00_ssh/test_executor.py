@@ -12,6 +12,9 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
+from fractal_server.app.runner.executors.slurm._slurm_config import (
+    get_default_slurm_config,
+)
 from fractal_server.app.runner.executors.slurm.utils_executors import (
     get_default_task_files,
 )
@@ -219,7 +222,14 @@ def test_slurm_ssh_executor_submit(
         slurm_poll_interval=1,
         fractal_ssh=fractal_ssh,
     ) as executor:
-        fut = executor.submit(lambda: 1)
+        fut = executor.submit(
+            lambda: 1,
+            slurm_config=get_default_slurm_config(),
+            task_files=get_default_task_files(
+                workflow_dir_local=executor.workflow_dir_local,
+                workflow_dir_remote=executor.workflow_dir_remote,
+            ),
+        )
         debug(fut)
         debug(fut.result())
 
@@ -248,7 +258,15 @@ def test_slurm_ssh_executor_map(
         slurm_poll_interval=1,
         fractal_ssh=fractal_ssh,
     ) as executor:
-        res = executor.map(lambda x: x * 2, [1, 2, 3])
+        res = executor.map(
+            lambda x: x * 2,
+            [1, 2, 3],
+            slurm_config=get_default_slurm_config(),
+            task_files=get_default_task_files(
+                workflow_dir_local=executor.workflow_dir_local,
+                workflow_dir_remote=executor.workflow_dir_remote,
+            ),
+        )
         results = list(res)
         assert results == [2, 4, 6]
 
@@ -280,7 +298,14 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
         slurm_poll_interval=1,
         fractal_ssh=fractal_ssh,
     ) as executor:
-        fut = executor.submit(lambda: 1, slurm_config=slurm_config)
+        fut = executor.submit(
+            lambda: 1,
+            slurm_config=slurm_config,
+            task_files=get_default_task_files(
+                workflow_dir_local=executor.workflow_dir_local,
+                workflow_dir_remote=executor.workflow_dir_remote,
+            ),
+        )
         debug(fut)
         debug(fut.result())
 
@@ -312,7 +337,14 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
     ) as executor:
         executor.shutdown()
         with pytest.raises(JobExecutionError) as exc_info:
-            fut = executor.submit(lambda: 1)
+            fut = executor.submit(
+                lambda: 1,
+                slurm_config=get_default_slurm_config(),
+                task_files=get_default_task_files(
+                    workflow_dir_local=executor.workflow_dir_local,
+                    workflow_dir_remote=executor.workflow_dir_remote,
+                ),
+            )
             fut.result()
         debug(exc_info.value)
 
@@ -367,9 +399,7 @@ def test_slurm_ssh_executor_error_in_calllback(
 
     def _get_subfolder_sftp_patched(*args, **kwargs):
         debug("NOW RUNNING _get_subfolder_sftp_patched")
-        raise RuntimeError(
-            "This is an error from `_get_subfolder_sftp_patched`"
-        )
+        raise RuntimeError("This is an error from `_get_subfolder_sftp_patched`")
 
     monkeypatch.setattr(
         MockFractalSlurmSSHExecutor,
@@ -383,7 +413,14 @@ def test_slurm_ssh_executor_error_in_calllback(
         slurm_poll_interval=1,
         fractal_ssh=fractal_ssh,
     ) as executor:
-        fut = executor.submit(lambda: 1)
+        fut = executor.submit(
+            lambda: 1,
+            slurm_config=get_default_slurm_config(),
+            task_files=get_default_task_files(
+                workflow_dir_local=executor.workflow_dir_local,
+                workflow_dir_remote=executor.workflow_dir_remote,
+            ),
+        )
         debug(fut)
 
         TIMEOUT = 5
