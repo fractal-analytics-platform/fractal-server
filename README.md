@@ -72,7 +72,7 @@
 | fractal\_server/app/routes/auth/oauth.py                                       |       21 |       12 |       10 |        2 |     35% |24-47, 62-63 |
 | fractal\_server/app/routes/auth/register.py                                    |       11 |        0 |        4 |        1 |     93% |    22->21 |
 | fractal\_server/app/routes/auth/router.py                                      |       14 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/routes/auth/users.py                                       |      103 |        0 |       16 |        0 |    100% |           |
+| fractal\_server/app/routes/auth/users.py                                       |      105 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_\_init\_\_.py                                 |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_job.py                                        |        9 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_runner.py                                     |       13 |        0 |        4 |        0 |    100% |           |
@@ -137,7 +137,7 @@
 | fractal\_server/app/runner/versions.py                                         |       11 |        2 |        2 |        1 |     77% |     29-30 |
 | fractal\_server/app/schemas/\_\_init\_\_.py                                    |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_validators.py                                    |       54 |        0 |       30 |        1 |     99% |   98->101 |
-| fractal\_server/app/schemas/user.py                                            |       32 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/app/schemas/user.py                                            |       33 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/schemas/user\_group.py                                     |       32 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/user\_settings.py                                  |       72 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/schemas/v1/\_\_init\_\_.py                                 |       34 |        0 |        0 |        0 |    100% |           |
@@ -201,7 +201,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **11344** |  **431** | **2362** |  **194** | **95%** |           |
+|                                                                      **TOTAL** | **11347** |  **431** | **2360** |  **194** | **95%** |           |
 
 
 ## Setup coverage badge
