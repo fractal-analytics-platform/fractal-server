@@ -268,15 +268,16 @@ async def test_set_groups_endpoint(
         json=dict(group_ids=[]),
     )
     assert res.status_code == 422
-    assert "empty" in str(res.json()["detail"])
+    MSG = "ensure this value has at least 1 items"
+    assert MSG in str(res.json()["detail"])
 
     # Failure: Repeated request-body values
     res = await registered_superuser_client.post(
-        f"{PREFIX}/users/{user_id}/",
-        json=dict(new_group_ids=[99, 99]),
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[99, 99]),
     )
     assert res.status_code == 422
-    assert "are not unique" in str(res.json()["detail"])
+    assert "has repetitions" in str(res.json()["detail"])
 
     # Failure: Invalid group_id
     invalid_group_id = 999999
@@ -300,6 +301,8 @@ async def test_set_groups_endpoint(
         json=dict(group_ids=[group_id]),
     )
     assert res.status_code == 422
+    MSG = "Cannot remove user from 'All' group"
+    assert MSG in str(res.json()["detail"])
 
     # Success
     res = await registered_superuser_client.post(

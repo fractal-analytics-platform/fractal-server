@@ -8,7 +8,6 @@ from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
 from sqlmodel import select
@@ -18,7 +17,9 @@ from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ..aux.validate_user_settings import verify_user_has_settings
+from ._aux_auth import _get_default_usergroup_id
 from ._aux_auth import _get_single_user_with_groups
+from ._aux_auth import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -26,6 +27,7 @@ from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas import UserSettingsRead
 from fractal_server.app.schemas import UserSettingsUpdate
+from fractal_server.app.schemas.user import UserUpdateGroups
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
 from fractal_server.logger import set_logger
@@ -130,10 +132,6 @@ async def list_users(
     return user_list
 
 
-class UserUpdateGroups(BaseModel):
-    group_ids: list[int]
-
-
 @router_users.post("/users/{user_id}/set-groups/", response_model=UserRead)
 async def set_user_groups(
     user_id: int,
@@ -156,6 +154,17 @@ async def set_user_groups(
             detail=f"Some UserGroups in {target_group_ids} do not exist.",
         )
 
+    # Check that default group is not being removed
+    default_group_id = await _get_default_usergroup_id(db=db)
+    if default_group_id not in target_group_ids:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot remove user from "
+                f"'{FRACTAL_DEFAULT_GROUP_NAME}' group.",
+            ),
+        )
+
     # Prepare lists of links to be removed
     res = await db.execute(
         select(LinkUserGroup)
@@ -163,8 +172,6 @@ async def set_user_groups(
         .where(LinkUserGroup.group_id.not_in(target_group_ids))
     )
     links_to_remove = res.scalars().all()
-
-    # TODO: check that "All" is not in here...
 
     # Prepare lists of links to be added
     res = await db.execute(
