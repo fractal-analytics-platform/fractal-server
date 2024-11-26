@@ -229,8 +229,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *fun_args: Sequence[Any],
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
+        slurm_config: SlurmConfig,
+        task_files: TaskFiles,
         **fun_kwargs: dict,
     ) -> Future:
         """
@@ -292,8 +292,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         fn: Callable[..., Any],
         iterable: list[Sequence[Any]],
         *,
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
+        slurm_config: SlurmConfig,
+        task_files: TaskFiles,
     ):
         """
         Return an iterator with the results of several execution of a function
