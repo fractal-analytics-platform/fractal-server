@@ -9,12 +9,12 @@ from devtools import debug
 from fabric.connection import Connection
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.ssh.executor import (
-    FractalSlurmSSHExecutor,
-)  # noqa
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     get_default_slurm_config,
 )
+from fractal_server.app.runner.executors.slurm.ssh.executor import (
+    FractalSlurmSSHExecutor,
+)  # noqa
 from fractal_server.app.runner.executors.slurm.utils_executors import (
     get_default_task_files,
 )
@@ -399,7 +399,9 @@ def test_slurm_ssh_executor_error_in_calllback(
 
     def _get_subfolder_sftp_patched(*args, **kwargs):
         debug("NOW RUNNING _get_subfolder_sftp_patched")
-        raise RuntimeError("This is an error from `_get_subfolder_sftp_patched`")
+        raise RuntimeError(
+            "This is an error from `_get_subfolder_sftp_patched`"
+        )
 
     monkeypatch.setattr(
         MockFractalSlurmSSHExecutor,
