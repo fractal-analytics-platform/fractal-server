@@ -9,14 +9,14 @@ from devtools import debug
 from fabric.connection import Connection
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm._slurm_config import (
-    get_default_slurm_config,
-)
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
+from tests.v2._aux_runner import (
+    get_default_slurm_config,
+)
 from tests.v2._aux_runner import (
     get_default_task_files,
 )
@@ -283,7 +283,7 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         )
     )
-    from fractal_server.app.runner.executors.slurm._slurm_config import (
+    from tests.v2._aux_runner import (
         get_default_slurm_config,
     )
 
