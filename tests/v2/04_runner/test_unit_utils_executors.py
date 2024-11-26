@@ -3,9 +3,6 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.runner.executors.slurm.utils_executors import (
-    get_default_task_files,
-)
-from fractal_server.app.runner.executors.slurm.utils_executors import (
     get_pickle_file_path,
 )
 from fractal_server.app.runner.executors.slurm.utils_executors import (
@@ -13,6 +10,9 @@ from fractal_server.app.runner.executors.slurm.utils_executors import (
 )
 from fractal_server.app.runner.executors.slurm.utils_executors import (
     get_slurm_script_file_path,
+)
+from tests.v2._aux_runner import (
+    get_default_task_files,
 )
 
 

@@ -15,11 +15,11 @@ from fractal_server.app.runner.executors.slurm._slurm_config import (
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
-from fractal_server.app.runner.executors.slurm.utils_executors import (
-    get_default_task_files,
-)
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
+from tests.v2._aux_runner import (
+    get_default_task_files,
+)
 
 logger = set_logger(__file__)
 
