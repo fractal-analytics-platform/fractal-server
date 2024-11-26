@@ -55,7 +55,7 @@ def get_slurm_file_path(
     workflow_dir: Path,
     subfolder_name: str,
     arg: str = "%j",
-    out_or_err=Literal["out", "err"],
+    out_or_err: Literal["out", "err"],
     prefix: Optional[str] = None,
 ) -> Path:
     if out_or_err == "out":
