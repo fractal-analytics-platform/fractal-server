@@ -190,7 +190,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
         Override `__init__` of `BaseUserManager` to define custom
         `password_helper`.
         """
-        self.super().__init__(
+        super().__init__(
             user_db=user_db,
             password_helper=password_helper,
         )
