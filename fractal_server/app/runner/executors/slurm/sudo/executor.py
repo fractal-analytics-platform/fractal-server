@@ -180,7 +180,9 @@ class SlurmJob:
             )
         else:
             self.wftask_file_prefixes = wftask_file_prefixes
-        self.workerids = tuple(random_string() for i in range(self.num_tasks_tot))
+        self.workerids = tuple(
+            random_string() for i in range(self.num_tasks_tot)
+        )
         self.slurm_config = slurm_config
 
     def get_clean_output_pickle_files(self) -> tuple[str, ...]:
@@ -240,7 +242,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
 
         if not slurm_user:
-            raise RuntimeError("Missing attribute FractalSlurmExecutor.slurm_user")
+            raise RuntimeError(
+                "Missing attribute FractalSlurmExecutor.slurm_user"
+            )
 
         super().__init__(*args, **kwargs)
 
@@ -291,7 +295,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.wait_thread.slurm_user = self.slurm_user
 
         self.wait_thread.shutdown_file = (
-            shutdown_file or (self.workflow_dir_local / SHUTDOWN_FILENAME).as_posix()
+            shutdown_file
+            or (self.workflow_dir_local / SHUTDOWN_FILENAME).as_posix()
         )
 
     def _cleanup(self, jobid: str) -> None:
@@ -337,7 +342,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             f"{slurm_config.extra_lines=}, from submit method."
         )
         current_extra_lines = slurm_config.extra_lines or []
-        slurm_config.extra_lines = current_extra_lines + self.common_script_lines
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
 
         # Adapt slurm_config to the fact that this is a single-task SlurmJob
         # instance
@@ -414,7 +421,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             f"{slurm_config.extra_lines=}, from map method."
         )
         current_extra_lines = slurm_config.extra_lines or []
-        slurm_config.extra_lines = current_extra_lines + self.common_script_lines
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
 
         # Set file prefixes
         general_slurm_file_prefix = str(task_files.task_order)
@@ -559,7 +568,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 slurm_config=slurm_config,
             )
             if job.num_tasks_tot > 1:
-                raise ValueError("{single_task_submission=} but {job.num_tasks_tot=}")
+                raise ValueError(
+                    "{single_task_submission=} but {job.num_tasks_tot=}"
+                )
             job.single_task_submission = True
             job.wftask_file_prefixes = (task_files.file_prefix,)
             job.wftask_subfolder_name = task_files.subfolder_name
@@ -567,7 +578,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             if not components or len(components) < 1:
                 raise ValueError(
-                    "In FractalSlurmExecutor._submit_job, given " f"{components=}."
+                    "In FractalSlurmExecutor._submit_job, given "
+                    f"{components=}."
                 )
             num_tasks_tot = len(components)
             job = SlurmJob(
@@ -614,7 +626,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Check that server-side subfolder exists
         subfolder_path = self.workflow_dir_local / job.wftask_subfolder_name
         if not subfolder_path.exists():
-            raise FileNotFoundError(f"Missing folder {subfolder_path.as_posix()}.")
+            raise FileNotFoundError(
+                f"Missing folder {subfolder_path.as_posix()}."
+            )
 
         job.input_pickle_files = tuple(
             get_pickle_file_path(
@@ -655,7 +669,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             prefix=job.slurm_file_prefix,
         )
 
-        # Dump serialized versions+function+args+kwargs to pickle file
+        # dump serialized versions+function+args+kwargs to pickle file
         versions = dict(
             python=sys.version_info[:3],
             cloudpickle=cloudpickle.__version__,
@@ -698,7 +712,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    def _prepare_JobExecutionError(self, jobid: str, info: str) -> JobExecutionError:
+    def _prepare_JobExecutionError(
+        self, jobid: str, info: str
+    ) -> JobExecutionError:
         """
         Prepare the `JobExecutionError` for a given job
 
@@ -944,7 +960,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             return
 
         subfolder_name = job.wftask_subfolder_name
-        prefixes = set([job.slurm_file_prefix] + list(job.wftask_file_prefixes))
+        prefixes = set(
+            [job.slurm_file_prefix] + list(job.wftask_file_prefixes)
+        )
 
         logger.debug(
             "[_copy_files_from_remote_to_local] "
@@ -952,7 +970,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         logger.debug(f"[_copy_files_from_remote_to_local] {prefixes=}")
         logger.debug(
-            "[_copy_files_from_remote_to_local] " f"{str(self.workflow_dir_remote)=}"
+            "[_copy_files_from_remote_to_local] "
+            f"{str(self.workflow_dir_remote)=}"
         )
 
         for prefix in prefixes:
@@ -977,17 +996,22 @@ class FractalSlurmExecutor(SlurmExecutor):
             for source_file_name in files_to_copy:
                 if " " in source_file_name:
                     raise ValueError(
-                        f'source_file_name="{source_file_name}" ' "contains whitespaces"
+                        f'source_file_name="{source_file_name}" '
+                        "contains whitespaces"
                     )
                 source_file_path = str(
-                    self.workflow_dir_remote / subfolder_name / source_file_name
+                    self.workflow_dir_remote
+                    / subfolder_name
+                    / source_file_name
                 )
 
                 # Read source_file_path (requires sudo)
                 # NOTE: By setting encoding=None, we read/write bytes instead
                 # of strings; this is needed to also handle pickle files.
                 cmd = f"cat {source_file_path}"
-                res = _run_command_as_user(cmd=cmd, user=self.slurm_user, encoding=None)
+                res = _run_command_as_user(
+                    cmd=cmd, user=self.slurm_user, encoding=None
+                )
                 if res.returncode != 0:
                     info = (
                         f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
@@ -1041,7 +1065,9 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Print warning for ignored parameter
         if len(job.slurm_config.pre_submission_commands) > 0:
-            logger.warning(f"Ignoring {job.slurm_config.pre_submission_commands=}.")
+            logger.warning(
+                f"Ignoring {job.slurm_config.pre_submission_commands=}."
+            )
 
         # Submit job via sbatch, and retrieve jobid
 
@@ -1069,8 +1095,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         jobid_str = str(jobid)
 
         # Plug SLURM job id in stdout/stderr file paths
-        job.slurm_stdout = Path(job.slurm_stdout.as_posix().replace("%j", jobid_str))
-        job.slurm_stderr = Path(job.slurm_stderr.as_posix().replace("%j", jobid_str))
+        job.slurm_stdout = Path(
+            job.slurm_stdout.as_posix().replace("%j", jobid_str)
+        )
+        job.slurm_stderr = Path(
+            job.slurm_stderr.as_posix().replace("%j", jobid_str)
+        )
 
         return jobid_str, job
 
@@ -1151,7 +1181,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 self.map_jobid_to_slurm_files.pop(jobid)
                 if not fut.cancelled():
                     fut.set_exception(
-                        JobExecutionError("Job cancelled due to executor shutdown.")
+                        JobExecutionError(
+                            "Job cancelled due to executor shutdown."
+                        )
                     )
                     fut.cancel()
 
@@ -1190,6 +1222,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         See
         https://github.com/fractal-analytics-platform/fractal-server/issues/1508
         """
-        logger.debug("[FractalSlurmExecutor.__exit__] Stop and join `wait_thread`")
+        logger.debug(
+            "[FractalSlurmExecutor.__exit__] Stop and join `wait_thread`"
+        )
         self._stop_and_join_wait_thread()
         logger.debug("[FractalSlurmExecutor.__exit__] End")
