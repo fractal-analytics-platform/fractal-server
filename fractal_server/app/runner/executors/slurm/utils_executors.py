@@ -21,8 +21,6 @@ def get_pickle_file_path(
     else:
         raise ValueError(
             f"Missing or unexpected value in_or_out argument, {in_or_out=}"
-            "Missing or unexpected value in_or_out argument, "
-            f"{in_or_out=}"
         )
 
 
