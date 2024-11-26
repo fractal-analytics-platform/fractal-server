@@ -56,6 +56,24 @@ def test_get_pickle_file_path(tmp_path, in_or_out, expected_suffix):
     assert result == workflow_dir / subfolder / f"{prefix}{expected_suffix}"
 
 
+def test_get_pickle_file_path_invalid(tmp_path):
+    workflow_dir = tmp_path
+    subfolder = "subfolder"
+    arg = "test"
+    prefix = "prefix"
+
+    (workflow_dir / subfolder).mkdir()
+
+    with pytest.raises(ValueError):
+        get_pickle_file_path(
+            arg=arg,
+            workflow_dir=workflow_dir,
+            subfolder_name=subfolder,
+            in_or_out="invalid",
+            prefix=prefix,
+        )
+
+
 def test_get_slurm_script_file_path(tmp_path):
     workflow_dir = tmp_path
     subfolder = "subfolder"
