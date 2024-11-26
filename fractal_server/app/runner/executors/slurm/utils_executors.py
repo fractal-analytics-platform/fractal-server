@@ -60,10 +60,18 @@ def get_slurm_file_path(
 ) -> Path:
     if out_or_err == "out":
         prefix = prefix or "slurmpy.stdout"
-        return workflow_dir / subfolder_name / f"{prefix}_slurm_{arg}.out"
+        return (
+            workflow_dir
+            / subfolder_name
+            / f"{prefix}_slurm_{arg}.{out_or_err}"
+        )
     elif out_or_err == "err":
         prefix = prefix or "slurmpy.stderr"
-        return workflow_dir / subfolder_name / f"{prefix}_slurm_{arg}.err"
+        return (
+            workflow_dir
+            / subfolder_name
+            / f"{prefix}_slurm_{arg}.{out_or_err}"
+        )
     else:
         raise ValueError(
             "Missing or unexpected value out_or_err argument, "
