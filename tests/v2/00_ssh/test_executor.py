@@ -356,7 +356,15 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
     ) as executor:
         executor.shutdown()
         with pytest.raises(JobExecutionError) as exc_info:
-            fut = executor.map(lambda x: 1, [1, 2, 3])
+            fut = executor.map(
+                lambda x: 1,
+                [1, 2, 3],
+                slurm_config=get_default_slurm_config(),
+                task_files=get_default_task_files(
+                    workflow_dir_local=executor.workflow_dir_local,
+                    workflow_dir_remote=executor.workflow_dir_remote,
+                ),
+            )
             fut.result()
         debug(exc_info.value)
 
