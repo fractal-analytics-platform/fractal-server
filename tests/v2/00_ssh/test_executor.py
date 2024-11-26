@@ -21,7 +21,7 @@ from fractal_server.ssh._fabric import FractalSSH
 logger = set_logger(__file__)
 
 
-class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
+class MockFractalSlurmSSHExecutor(FractalSlurmSSHExecutor):
     """
     When running from outside Fractal runner, task-specific subfolders
     must be created by hand.
@@ -71,7 +71,7 @@ def test_errors_failed_init_1(
         ValueError,
         match="FRACTAL_SLURM_WORKER_PYTHON is not set",
     ):
-        with MockFractalSSHSlurmExecutor(
+        with MockFractalSlurmSSHExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
@@ -101,7 +101,7 @@ def test_errors_failed_init_2(
     )
     threads_pre = threading.enumerate()
     with pytest.raises(RuntimeError, match="SLURM account must be set"):
-        with MockFractalSSHSlurmExecutor(
+        with MockFractalSlurmSSHExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
@@ -142,7 +142,7 @@ def test_errors_failed_init_3(
         RuntimeError,
         match="Cannot open SSH connection",
     ) as exc_info:
-        with MockFractalSSHSlurmExecutor(
+        with MockFractalSlurmSSHExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
@@ -190,7 +190,7 @@ def test_slurm_ssh_executor_handshake_fail(
         logger.propagate = True
 
         with pytest.raises(json.decoder.JSONDecodeError):
-            with MockFractalSSHSlurmExecutor(
+            with MockFractalSlurmSSHExecutor(
                 workflow_dir_local=tmp_path / "job_dir",
                 workflow_dir_remote=(tmp777_path / "remote_job_dir"),
                 slurm_poll_interval=1,
@@ -213,7 +213,7 @@ def test_slurm_ssh_executor_submit(
         )
     )
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir",
         workflow_dir_remote=(tmp777_path / "remote_job_dir"),
         slurm_poll_interval=1,
@@ -242,7 +242,7 @@ def test_slurm_ssh_executor_map(
         )
     )
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir",
         workflow_dir_remote=(tmp777_path / "remote_job_dir"),
         slurm_poll_interval=1,
@@ -274,7 +274,7 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
     slurm_config.pre_submission_commands = [f"touch {auxfile.as_posix()}"]
     debug(slurm_config)
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir",
         workflow_dir_remote=(tmp777_path / "remote_job_dir"),
         slurm_poll_interval=1,
@@ -304,7 +304,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
         )
     )
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir1",
         workflow_dir_remote=(tmp777_path / "remote_job_dir1"),
         slurm_poll_interval=1,
@@ -316,7 +316,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
             fut.result()
         debug(exc_info.value)
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir2",
         workflow_dir_remote=(tmp777_path / "remote_job_dir2"),
         slurm_poll_interval=1,
@@ -328,7 +328,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
             fut.result()
         debug(exc_info.value)
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir3",
         workflow_dir_remote=(tmp777_path / "remote_job_dir3"),
         slurm_poll_interval=1,
@@ -339,7 +339,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
             executor.wait_thread.wait(job_id=1)
         debug(exc_info.value)
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir4",
         workflow_dir_remote=(tmp777_path / "remote_job_dir4"),
         slurm_poll_interval=1,
@@ -372,12 +372,12 @@ def test_slurm_ssh_executor_error_in_calllback(
         )
 
     monkeypatch.setattr(
-        MockFractalSSHSlurmExecutor,
+        MockFractalSlurmSSHExecutor,
         "_get_subfolder_sftp",
         _get_subfolder_sftp_patched,
     )
 
-    with MockFractalSSHSlurmExecutor(
+    with MockFractalSlurmSSHExecutor(
         workflow_dir_local=tmp_path / "job_dir",
         workflow_dir_remote=(tmp777_path / "remote_job_dir"),
         slurm_poll_interval=1,
