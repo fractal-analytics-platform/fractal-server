@@ -323,11 +323,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             fun_args: Function positional arguments
             fun_kwargs: Function keyword arguments
             slurm_config:
-                A `SlurmConfig` object; if `None`, use
-                `get_default_slurm_config()`.
+                A `SlurmConfig` object.
             task_files:
-                A `TaskFiles` object; if `None`, use
-                `get_default_task_files()`.
+                A `TaskFiles` object.
 
         Returns:
             Future representing the execution of the current SLURM job.
