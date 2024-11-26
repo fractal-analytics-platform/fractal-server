@@ -185,7 +185,7 @@ password_helper = PasswordHelper(password_hash=password_hash)
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
-    def __init__(self, *, user_db):
+    def __init__(self, user_db):
         """
         Override `__init__` of `BaseUserManager` to define custom
         `password_helper`.
