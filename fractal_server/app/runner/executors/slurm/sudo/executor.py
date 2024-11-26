@@ -389,11 +389,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 An iterable such that each element is the list of arguments to
                 be passed to `fn`, as in `fn(*args)`.
             slurm_config:
-                A `SlurmConfig` object; if `None`, use
-                `get_default_slurm_config()`.
+                A `SlurmConfig` object.
             task_files:
-                A `TaskFiles` object; if `None`, use
-                `get_default_task_files()`.
+                A `TaskFiles` object.
 
         """
 
