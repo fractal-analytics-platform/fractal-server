@@ -68,6 +68,9 @@
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
 * Scripts:
     * Introduce `scripts/export_v1_workflows.py` (\#2043).
+* Dependencies:
+    * Remove `passlib` dependency (\#2112).
+    * Bump `fastapi-users` to v14, which includes switch to `pwdlib` (\#2112).
 
 # 2.8.1
 
