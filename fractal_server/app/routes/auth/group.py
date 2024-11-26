@@ -246,8 +246,8 @@ async def remove_user_from_group(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Cannot remove user from "
-                f"'{FRACTAL_DEFAULT_GROUP_NAME}' group.",
+                f"Cannot remove user from '{FRACTAL_DEFAULT_GROUP_NAME}' "
+                "group.",
             ),
         )
 
