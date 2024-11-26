@@ -124,4 +124,5 @@ def test_get_slurm_file_path_invalid_out_or_err(tmp_path):
             subfolder_name=subfolder,
             arg="%j",
             out_or_err="invalid",
+            prefix="prefix",
         )
