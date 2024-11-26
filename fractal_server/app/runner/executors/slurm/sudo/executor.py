@@ -37,9 +37,11 @@ from ....exceptions import TaskExecutionError
 from ....filenames import SHUTDOWN_FILENAME
 from ....task_files import get_task_file_paths
 from ....task_files import TaskFiles
-from ...slurm._slurm_config import get_default_slurm_config
 from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
+from ..utils_executors import get_pickle_file_path
+from ..utils_executors import get_slurm_file_path
+from ..utils_executors import get_slurm_script_file_path
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
@@ -305,72 +307,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         with self.jobs_lock:
             self.map_jobid_to_slurm_files.pop(jobid)
 
-    def get_input_pickle_file_path(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-
-        prefix = prefix or "cfut"
-        output = (
-            self.workflow_dir_local
-            / subfolder_name
-            / f"{prefix}_in_{arg}.pickle"
-        )
-        return output
-
-    def get_output_pickle_file_path(
-        self, *, arg: str, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "cfut"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_out_{arg}.pickle"
-        )
-
-    def get_slurm_script_file_path(
-        self, *, subfolder_name: str, prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "_temp"
-        return (
-            self.workflow_dir_local
-            / subfolder_name
-            / f"{prefix}_slurm_submit.sbatch"
-        )
-
-    def get_slurm_stdout_file_path(
-        self,
-        *,
-        subfolder_name: str,
-        arg: str = "%j",
-        prefix: Optional[str] = None,
-    ) -> Path:
-        prefix = prefix or "slurmpy.stdout"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_slurm_{arg}.out"
-        )
-
-    def get_slurm_stderr_file_path(
-        self,
-        *,
-        subfolder_name: str,
-        arg: str = "%j",
-        prefix: Optional[str] = None,
-    ) -> Path:
-        prefix = prefix or "slurmpy.stderr"
-        return (
-            self.workflow_dir_remote
-            / subfolder_name
-            / f"{prefix}_slurm_{arg}.err"
-        )
-
     def submit(
         self,
         fun: Callable[..., Any],
         *fun_args: Sequence[Any],
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
+        slurm_config: SlurmConfig,
+        task_files: TaskFiles,
         **fun_kwargs: dict,
     ) -> Future:
         """
@@ -381,21 +323,13 @@ class FractalSlurmExecutor(SlurmExecutor):
             fun_args: Function positional arguments
             fun_kwargs: Function keyword arguments
             slurm_config:
-                A `SlurmConfig` object; if `None`, use
-                `get_default_slurm_config()`.
+                A `SlurmConfig` object.
             task_files:
-                A `TaskFiles` object; if `None`, use
-                `self.get_default_task_files()`.
+                A `TaskFiles` object.
 
         Returns:
             Future representing the execution of the current SLURM job.
         """
-
-        # Set defaults, if needed
-        if slurm_config is None:
-            slurm_config = get_default_slurm_config()
-        if task_files is None:
-            task_files = self.get_default_task_files()
 
         # Set slurm_file_prefix
         slurm_file_prefix = task_files.file_prefix
@@ -431,8 +365,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         fn: Callable[..., Any],
         iterable: list[Sequence[Any]],
         *,
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
+        slurm_config: SlurmConfig,
+        task_files: TaskFiles,
     ):
         """
         Return an iterator with the results of several execution of a function
@@ -455,11 +389,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 An iterable such that each element is the list of arguments to
                 be passed to `fn`, as in `fn(*args)`.
             slurm_config:
-                A `SlurmConfig` object; if `None`, use
-                `get_default_slurm_config()`.
+                A `SlurmConfig` object.
             task_files:
-                A `TaskFiles` object; if `None`, use
-                `self.get_default_task_files()`.
+                A `TaskFiles` object.
 
         """
 
@@ -478,12 +410,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # Break a reference cycle with the exception in
                 # self._exception
                 del fut
-
-        # Set defaults, if needed
-        if not slurm_config:
-            slurm_config = get_default_slurm_config()
-        if task_files is None:
-            task_files = self.get_default_task_files()
 
         # Include common_script_lines in extra_lines
         logger.debug(
@@ -700,39 +626,46 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f"Missing folder {subfolder_path.as_posix()}."
             )
 
-        # Define I/O pickle file names/paths
         job.input_pickle_files = tuple(
-            self.get_input_pickle_file_path(
+            get_pickle_file_path(
                 arg=job.workerids[ind],
+                workflow_dir=self.workflow_dir_local,
                 subfolder_name=job.wftask_subfolder_name,
+                in_or_out="in",
                 prefix=job.wftask_file_prefixes[ind],
             )
             for ind in range(job.num_tasks_tot)
         )
         job.output_pickle_files = tuple(
-            self.get_output_pickle_file_path(
+            get_pickle_file_path(
                 arg=job.workerids[ind],
+                workflow_dir=self.workflow_dir_remote,
                 subfolder_name=job.wftask_subfolder_name,
+                in_or_out="out",
                 prefix=job.wftask_file_prefixes[ind],
             )
             for ind in range(job.num_tasks_tot)
         )
-
         # Define SLURM-job file names/paths
-        job.slurm_script = self.get_slurm_script_file_path(
+        job.slurm_script = get_slurm_script_file_path(
+            workflow_dir=self.workflow_dir_local,
             subfolder_name=job.wftask_subfolder_name,
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stdout = self.get_slurm_stdout_file_path(
+        job.slurm_stdout = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="out",
             prefix=job.slurm_file_prefix,
         )
-        job.slurm_stderr = self.get_slurm_stderr_file_path(
+        job.slurm_stderr = get_slurm_file_path(
+            workflow_dir=self.workflow_dir_remote,
             subfolder_name=job.wftask_subfolder_name,
+            out_or_err="err",
             prefix=job.slurm_file_prefix,
         )
 
-        # Dump serialized versions+function+args+kwargs to pickle file
+        # Dump serialized versions+function+args+kwargs to pickle
         versions = dict(
             python=sys.version_info[:3],
             cloudpickle=cloudpickle.__version__,
@@ -824,7 +757,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         # Handle all uncaught exceptions in this broad try/except block
         try:
-
             # Retrieve job
             with self.jobs_lock:
                 try:
@@ -1039,7 +971,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         for prefix in prefixes:
-
             if prefix == job.slurm_file_prefix:
                 files_to_copy = _glob_as_user(
                     folder=str(self.workflow_dir_remote / subfolder_name),
@@ -1177,7 +1108,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_err_path: str,
         slurm_config: SlurmConfig,
     ):
-
         num_tasks_max_running = slurm_config.parallel_tasks_per_job
         mem_per_task_MB = slurm_config.mem_per_task_MB
 
@@ -1228,19 +1158,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         script = "\n".join(script_lines)
         return script
-
-    def get_default_task_files(self) -> TaskFiles:
-        """
-        This will be called when self.submit or self.map are called from
-        outside fractal-server, and then lack some optional arguments.
-        """
-        task_files = TaskFiles(
-            workflow_dir_local=self.workflow_dir_local,
-            workflow_dir_remote=self.workflow_dir_remote,
-            task_order=None,
-            task_name="name",
-        )
-        return task_files
 
     def shutdown(self, wait=True, *, cancel_futures=False):
         """

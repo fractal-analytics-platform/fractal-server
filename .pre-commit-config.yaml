@@ -15,7 +15,7 @@ repos:
     - id: black
       args: [--line-length=79]
 -   repo: https://github.com/PyCQA/flake8
-    rev: 3.9.2
+    rev: 7.1.1
     hooks:
     - id: flake8
       args: ["--exclude", "examples/*"]
