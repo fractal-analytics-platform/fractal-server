@@ -315,6 +315,16 @@ async def test_set_groups_endpoint(
         [group_id, GROUP_NAME],
     ]
 
+    # Success
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[default_user_group.id]),
+    )
+    assert res.status_code == 200
+    assert res.json()["group_ids_names"] == [
+        [default_user_group.id, default_user_group.name],
+    ]
+
 
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
