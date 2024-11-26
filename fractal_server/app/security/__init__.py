@@ -43,6 +43,9 @@ from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
 from fastapi_users.models import UP
+from fastapi_users.password import PasswordHelper
+from pwdlib import PasswordHash
+from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import func
@@ -177,7 +180,21 @@ async def get_user_db(
     yield SQLModelUserDatabaseAsync(session, UserOAuth, OAuthAccount)
 
 
+password_hash = PasswordHash(hashers=(BcryptHasher(),))
+password_helper = PasswordHelper(password_hash=password_hash)
+
+
 class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
+    def __init__(self, *, user_db):
+        """
+        Override `__init__` of `BaseUserManager` to define custom
+        `password_helper`.
+        """
+        self.super().__init__(
+            user_db=user_db,
+            password_helper=password_helper,
+        )
+
     async def validate_password(self, password: str, user: UserOAuth) -> None:
         # check password length
         min_length = 4
