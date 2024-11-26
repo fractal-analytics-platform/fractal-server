@@ -12,7 +12,7 @@ from fractal_server.syringe import Inject
 
 def test_settings_injection(override_settings):
     """
-    GIVEN an Inject object with a Settigns object registered to it
+    GIVEN an Inject object with a Settings object registered to it
     WHEN I ask for the Settings object
     THEN it gets returned
     """
@@ -152,6 +152,44 @@ def test_settings_injection(override_settings):
                 POSTGRES_DB="test",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_LOCAL_CONFIG_FILE="/not/existing/file.xyz",
+            ),
+            True,
+        ),
+        # valid FRACTAL_VIEWER_BASE_FOLDER
+        # (FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders")
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                POSTGRES_DB="test",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders",
+                FRACTAL_VIEWER_BASE_FOLDER="/path/to/base",
+            ),
+            False,
+        ),
+        # missing FRACTAL_VIEWER_BASE_FOLDER
+        # (FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders")
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                POSTGRES_DB="test",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders",
+            ),
+            True,
+        ),
+        # not absolute FRACTAL_VIEWER_BASE_FOLDER
+        # (FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders")
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                POSTGRES_DB="test",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders",
+                FRACTAL_VIEWER_BASE_FOLDER="invalid/relative/path",
             ),
             True,
         ),

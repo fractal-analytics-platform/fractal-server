@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import Field
 from pydantic import validator
 
 from ._validators import val_unique_list
@@ -11,8 +12,8 @@ from ._validators import valstr
 __all__ = (
     "UserRead",
     "UserUpdate",
+    "UserUpdateGroups",
     "UserCreate",
-    "UserUpdateWithNewGroupIds",
 )
 
 
@@ -45,7 +46,7 @@ class UserRead(schemas.BaseUser[int]):
     oauth_accounts: list[OAuthAccountRead]
 
 
-class UserUpdate(schemas.BaseUserUpdate):
+class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
     """
     Schema for `User` update.
 
@@ -82,14 +83,6 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     pass
 
 
-class UserUpdateWithNewGroupIds(UserUpdate):
-    new_group_ids: Optional[list[int]] = None
-
-    _val_unique = validator("new_group_ids", allow_reuse=True)(
-        val_unique_list("new_group_ids")
-    )
-
-
 class UserCreate(schemas.BaseUserCreate):
     """
     Schema for `User` creation.
@@ -103,3 +96,16 @@ class UserCreate(schemas.BaseUserCreate):
     # Validators
 
     _username = validator("username", allow_reuse=True)(valstr("username"))
+
+
+class UserUpdateGroups(BaseModel, extra=Extra.forbid):
+    """
+    Schema for `POST /auth/users/{user_id}/set-groups/`
+
+    """
+
+    group_ids: list[int] = Field(min_items=1)
+
+    _group_ids = validator("group_ids", allow_reuse=True)(
+        val_unique_list("group_ids")
+    )

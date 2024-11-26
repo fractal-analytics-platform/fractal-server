@@ -59,20 +59,9 @@ class UserGroupCreate(BaseModel, extra=Extra.forbid):
 class UserGroupUpdate(BaseModel, extra=Extra.forbid):
     """
     Schema for `UserGroup` update
-
-    NOTE: `new_user_ids` does not correspond to a column of the `UserGroup`
-    table, but it is rather used to create new `LinkUserGroup` rows.
-
-    Attributes:
-        new_user_ids: IDs of groups to be associated to user.
     """
 
-    new_user_ids: list[int] = Field(default_factory=list)
     viewer_paths: Optional[list[str]] = None
-
-    _val_unique = validator("new_user_ids", allow_reuse=True)(
-        val_unique_list("new_user_ids")
-    )
 
     @validator("viewer_paths")
     def viewer_paths_validator(cls, value):
