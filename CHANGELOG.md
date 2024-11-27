@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.9.0 (unreleased)
+# 2.9.0
 
 > WARNING 1: This version drops support for sqlite, and removes the
 > configuration variables `DB_ENGINE` and `SQLITE_PATH`.
