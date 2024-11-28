@@ -85,6 +85,8 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     def package_version_validator(
         cls, v: Optional[str], values
     ) -> Optional[str]:
+        if v is None:
+            return v
         v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
             raise ValueError(

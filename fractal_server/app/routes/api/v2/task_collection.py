@@ -1,13 +1,17 @@
 from pathlib import Path
+from typing import Literal
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from fastapi import UploadFile
 from pydantic import ValidationError
 from sqlmodel import select
 
@@ -44,9 +48,47 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
 
+
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+#
+# @router.post("/collect/upload-form/")
+# async def collect_upload_form(
+#     response: Response,
+#     name: str = Form(...),
+#     is_accepted: Optional[bool] = Form(None),
+#     files: Optional[list[UploadFile]] = File(None),
+# ):
+#     if files:
+#         filename = files[0].filename
+#     else:
+#         filename = None
+#     response.status_code = status.HTTP_200_OK
+#     return {
+#         "payload": {"name": name, "is_accepted": is_accepted},
+#         "filename": filename,
+#     }
+#
+
+
+def parse_task_collect(
+    package: str = Form(...),
+    package_version: Optional[str] = Form(None),
+    package_extras: Optional[str] = Form(None),
+    python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = Form(
+        None
+    ),
+    pinned_package_versions: Optional[dict[str, str]] = Form(None),
+) -> TaskCollectPipV2:
+    return TaskCollectPipV2(
+        package=package,
+        package_version=package_version,
+        package_extras=package_extras,
+        python_version=python_version,
+        pinned_package_versions=pinned_package_versions,
+    )
 
 
 @router.post(
@@ -54,12 +96,13 @@ logger = set_logger(__name__)
     response_model=TaskGroupActivityV2Read,
 )
 async def collect_tasks_pip(
-    task_collect: TaskCollectPipV2,
     background_tasks: BackgroundTasks,
     response: Response,
     request: Request,
-    private: bool = False,
-    user_group_id: Optional[int] = None,
+    task_collect: TaskCollectPipV2 = Depends(parse_task_collect),
+    private: bool = Form(False),
+    user_group_id: Optional[int] = Form(None),
+    files: Optional[list[UploadFile]] = File(None),
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
@@ -106,14 +149,15 @@ async def collect_tasks_pip(
     # Set pkg_name, version, origin and wheel_path
     if task_collect.package.endswith(".whl"):
         try:
-            task_group_attrs["wheel_path"] = task_collect.package
-            wheel_filename = Path(task_group_attrs["wheel_path"]).name
-            wheel_info = _parse_wheel_filename(wheel_filename)
+            whl_buff = await files[0].read()
+
+            # task_group_attrs["wheel_path"] = files[0].filename
+            wheel_info = _parse_wheel_filename(files[0].filename)
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Invalid wheel-file name {wheel_filename}. "
+                    f"Invalid wheel-file name {files[0].filename}"
                     f"Original error: {str(e)}",
                 ),
             )
@@ -202,7 +246,6 @@ async def collect_tasks_pip(
     # On-disk checks
 
     if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
-
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -210,14 +253,14 @@ async def collect_tasks_pip(
                 detail=f"{task_group_path} already exists.",
             )
 
-        # Verify that wheel file exists
-        wheel_path = task_group_attrs.get("wheel_path", None)
-        if wheel_path is not None:
-            if not Path(wheel_path).exists():
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"No such file: {wheel_path}.",
-                )
+        # # Verify that wheel file exists
+        # wheel_path = task_group_attrs.get("wheel_path", None)
+        # if wheel_path is not None:
+        #     if not Path(wheel_path).exists():
+        #         raise HTTPException(
+        #             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        #             detail=f"No such file: {wheel_path}.",
+        #         )
 
     # Create TaskGroupV2 object
     task_group = TaskGroupV2(**task_group_attrs)
@@ -263,10 +306,13 @@ async def collect_tasks_pip(
 
     else:
         # Local task collection
+
         background_tasks.add_task(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            wheel_buffer=whl_buff or None,
+            wheel_filename=files[0].filename,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "

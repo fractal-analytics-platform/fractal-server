@@ -4,6 +4,7 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group
 from ._utils import _customize_and_run_template
@@ -35,15 +36,26 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
-def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
+# def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
+#     logger = get_logger(LOGGER_NAME)
+#     source = task_group.wheel_path
+#     dest = (Path(task_group.path) /
+#               Path(task_group.wheel_path).name).as_posix().name).as_posix()
+#     logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
+#     shutil.copy(task_group.wheel_path, task_group.path)
+#     logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
+#     return dest
+
+
+def _write_wheel_file_local(
+    wheel_buffer: str, wheel_filename: str, task_group: TaskGroupV2
+) -> str:
     logger = get_logger(LOGGER_NAME)
-    source = task_group.wheel_path
-    dest = (
-        Path(task_group.path) / Path(task_group.wheel_path).name
-    ).as_posix()
-    logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
-    shutil.copy(task_group.wheel_path, task_group.path)
-    logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
+    dest = (Path(task_group.path) / wheel_filename).as_posix()
+    logger.debug(f"[_write_wheel_file] START {dest=}")
+    with open(dest, "wb") as wheel_file:
+        wheel_file.write(wheel_buffer)
+    logger.debug(f"[_write_wheel_file] END {dest=}")
     return dest
 
 
@@ -51,6 +63,8 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    wheel_buffer: Optional[str],
+    wheel_filename: Optional[str],
 ) -> None:
     """
     Collect a task package.
@@ -76,7 +90,6 @@ def collect_local(
         )
 
         with next(get_sync_db()) as db:
-
             # Get main objects from db
             activity = db.get(TaskGroupActivityV2, task_group_activity_id)
             task_group = db.get(TaskGroupV2, task_group_id)
@@ -109,15 +122,21 @@ def collect_local(
                 return
 
             try:
-
                 # Create task_group.path folder
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
 
                 # Copy wheel file into task group path
-                if task_group.wheel_path:
-                    new_wheel_path = _copy_wheel_file_local(
-                        task_group=task_group
+                # if task_group.wheel_path:
+                #     new_wheel_path = _copy_wheel_file_local(
+                #                                       task_group=task_group)
+                #     task_group.wheel_path = new_wheel_path
+                #     task_group = add_commit_refresh(obj=task_group, db=db)
+                if wheel_buffer:
+                    new_wheel_path = _write_wheel_file_local(
+                        wheel_buffer=wheel_buffer,
+                        wheel_filename=wheel_filename,
+                        task_group=task_group,
                     )
                     task_group.wheel_path = new_wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)

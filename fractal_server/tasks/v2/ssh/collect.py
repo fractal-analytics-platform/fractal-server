@@ -69,7 +69,6 @@ def collect_ssh(
         )
 
         with next(get_sync_db()) as db:
-
             # Get main objects from db
             activity = db.get(TaskGroupActivityV2, task_group_activity_id)
             task_group = db.get(TaskGroupV2, task_group_id)
@@ -117,7 +116,6 @@ def collect_ssh(
                 return
 
             try:
-
                 # Prepare replacements for templates
                 replacements = get_collection_replacements(
                     task_group=task_group,
