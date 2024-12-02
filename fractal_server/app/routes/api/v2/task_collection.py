@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -73,6 +74,22 @@ logger = set_logger(__name__)
 #
 
 
+def parse_pinned_package_versions(
+    pinned_package_versions: str = Form(None),
+) -> dict | None:
+    if pinned_package_versions:
+        try:
+            data = json.loads(pinned_package_versions)
+            return data
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"{str(e)}",
+            )
+    else:
+        return None
+
+
 def parse_task_collect(
     package: str = Form(...),
     package_version: Optional[str] = Form(None),
@@ -80,15 +97,27 @@ def parse_task_collect(
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = Form(
         None
     ),
-    pinned_package_versions: Optional[dict[str, str]] = Form(None),
+    # For http protocol this is sent as JSON, so it is no compatible with
+    # form-data, for this reason we need another "dependency injection" to
+    # parse the payload and return a valid dict.
+    pinned_package_versions: Optional[dict[str, str]] = Depends(
+        parse_pinned_package_versions
+    ),
 ) -> TaskCollectPipV2:
-    return TaskCollectPipV2(
-        package=package,
-        package_version=package_version,
-        package_extras=package_extras,
-        python_version=python_version,
-        pinned_package_versions=pinned_package_versions,
-    )
+    try:
+        task_collect_pip = TaskCollectPipV2(
+            package=package,
+            package_version=package_version,
+            package_extras=package_extras,
+            python_version=python_version,
+            pinned_package_versions=pinned_package_versions,
+        )
+        return task_collect_pip
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{str(e)}",
+        )
 
 
 @router.post(
@@ -156,13 +185,10 @@ async def collect_tasks_pip(
 
             # task_group_attrs["wheel_path"] = files[0].filename
             wheel_info = _parse_wheel_filename(files[0].filename)
-        except ValueError as e:
+        except TypeError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Invalid wheel-file name {files[0].filename}"
-                    f"Original error: {str(e)}",
-                ),
+                detail=f"Missing valid wheel-file, {str(e)}",
             )
         task_group_attrs["pkg_name"] = normalize_package_name(
             wheel_info["distribution"]
