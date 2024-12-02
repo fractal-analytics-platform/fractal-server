@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Testing:
+    * Re-include a specific test previously skipped for Python 3.12 (\#2114).
+* Docs:
+    * Add info about working versions.
+
 # 2.9.0
 
 > WARNING 1: This version drops support for sqlite, and removes the
