@@ -1,5 +1,6 @@
 {
   "args_schema_version": "pydantic_v1",
+  "authors": "name1 surname1, name2 surname2",
   "has_args_schemas": true,
   "manifest_version": "2",
   "task_list": [
@@ -83,6 +84,7 @@
         "title": "FillCellvoyagerOmeZarr",
         "type": "object"
       },
+      "category": "Conversion",
       "docs_info": "This is task create_ome_zarr_compound.",
       "docs_link": "https://example.org",
       "executable_non_parallel": "create_cellvoyager_ome_zarr.py",
@@ -93,7 +95,12 @@
       "meta_parallel": {
         "key2": "value2"
       },
-      "name": "create_ome_zarr_compound"
+      "modality": "HCS",
+      "name": "create_ome_zarr_compound",
+      "tags": [
+        "Yokogawa",
+        "Cellvoyager"
+      ]
     },
     {
       "args_schema_non_parallel": {
@@ -169,11 +176,17 @@
         "title": "FillCellvoyagerOmeZarr",
         "type": "object"
       },
+      "category": "Conversion",
       "docs_info": "This is task create_ome_zarr_multiplex_compound.",
       "docs_link": "https://example.org",
       "executable_non_parallel": "create_cellvoyager_ome_zarr_multiplex.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
-      "name": "create_ome_zarr_multiplex_compound"
+      "modality": "HCS",
+      "name": "create_ome_zarr_multiplex_compound",
+      "tags": [
+        "Yokogawa",
+        "Cellvoyager"
+      ]
     },
     {
       "args_schema_non_parallel": {
@@ -250,6 +263,7 @@
         "title": "MaximumIntensityProjection",
         "type": "object"
       },
+      "category": "Image Processing",
       "docs_info": "This is task MIP_compound.",
       "docs_link": "https://example.org",
       "executable_non_parallel": "new_ome_zarr.py",
@@ -257,10 +271,14 @@
       "input_types": {
         "3D": true
       },
+      "modality": "HCS",
       "name": "MIP_compound",
       "output_types": {
         "3D": false
-      }
+      },
+      "tags": [
+        "Preprocessing"
+      ]
     },
     {
       "args_schema_parallel": {
@@ -284,6 +302,7 @@
         "title": "IlluminationCorrection",
         "type": "object"
       },
+      "category": "Image Processing",
       "docs_info": "This is task illumination_correction.",
       "docs_link": "https://example.org",
       "executable_parallel": "illumination_correction.py",
@@ -293,7 +312,10 @@
       "name": "illumination_correction",
       "output_types": {
         "illumination_correction": true
-      }
+      },
+      "tags": [
+        "Preprocessing"
+      ]
     },
     {
       "args_schema_non_parallel": {
@@ -378,6 +400,7 @@
         "title": "IlluminationCorrectionCompute",
         "type": "object"
       },
+      "category": "Image Processing",
       "docs_info": "This is task illumination_correction_compound.",
       "docs_link": "https://example.org",
       "executable_non_parallel": "illumination_correction_init.py",
@@ -388,7 +411,10 @@
       "name": "illumination_correction_compound",
       "output_types": {
         "illumination_correction": true
-      }
+      },
+      "tags": [
+        "Preprocessing"
+      ]
     },
     {
       "args_schema_parallel": {
@@ -406,10 +432,16 @@
         "title": "CellposeSegmentation",
         "type": "object"
       },
+      "category": "Segmentation",
       "docs_info": "This is task cellpose_segmentation.",
       "docs_link": "https://example.org",
       "executable_parallel": "cellpose_segmentation.py",
-      "name": "cellpose_segmentation"
+      "name": "cellpose_segmentation",
+      "tags": [
+        "Deep Learning",
+        "Convolutional Neural Network",
+        "Instance Segmentation"
+      ]
     },
     {
       "args_schema_non_parallel": {
@@ -480,11 +512,16 @@
         "title": "CalculateRegistrationCompute",
         "type": "object"
       },
+      "category": "Registration",
       "docs_info": "This is task calculate_registration_compound.",
       "docs_link": "https://example.org",
       "executable_non_parallel": "calculate_registration_init.py",
       "executable_parallel": "calculate_registration_compute.py",
-      "name": "calculate_registration_compound"
+      "modality": "HCS",
+      "name": "calculate_registration_compound",
+      "tags": [
+        "Multiplexing"
+      ]
     },
     {
       "args_schema_non_parallel": {
@@ -511,10 +548,15 @@
         "title": "FindRegistrationConsensus",
         "type": "object"
       },
+      "category": "Registration",
       "docs_info": "This is task find_registration_consensus.",
       "docs_link": "https://example.org",
       "executable_non_parallel": "find_registration_consensus.py",
-      "name": "find_registration_consensus"
+      "modality": "HCS",
+      "name": "find_registration_consensus",
+      "tags": [
+        "Multiplexing"
+      ]
     },
     {
       "args_schema_parallel": {
@@ -538,16 +580,21 @@
         "title": "ApplyRegistrationToImage",
         "type": "object"
       },
+      "category": "Registration",
       "docs_info": "This is task apply_registration_to_image.",
       "docs_link": "https://example.org",
       "executable_parallel": "apply_registration_to_image.py",
       "input_types": {
         "registration": false
       },
+      "modality": "HCS",
       "name": "apply_registration_to_image",
       "output_types": {
         "registration": true
-      }
+      },
+      "tags": [
+        "Multiplexing"
+      ]
     },
     {
       "args_schema_non_parallel": {

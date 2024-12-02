@@ -4,6 +4,7 @@
 
 * Testing:
     * Re-include a specific test previously skipped for Python 3.12 (\#2114).
+    * Add metadata to `fractal-tasks-mock` package (\#2117).
 * Docs:
     * Add info about working versions.
 
