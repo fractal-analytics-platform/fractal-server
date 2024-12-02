@@ -96,7 +96,7 @@ async def test_task_collection_from_pypi(
     current_py_version,
     package_version,
 ):
-  if (
+    if (
         current_py_version == "3.12"
         and package_version == OLD_FRACTAL_TASKS_CORE_VERSION
     ):
@@ -108,7 +108,6 @@ async def test_task_collection_from_pypi(
             "1.0.2."
         )
         return
-
 
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
