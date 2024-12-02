@@ -296,85 +296,95 @@ async def test_lifecycle(
     )
     wheel_path = tmp777_path / old_wheel_path.name
     shutil.copy(old_wheel_path, wheel_path)
+    with open(wheel_path, "rb") as f:
+        files = {"files": (wheel_path.name, f, "application/zip")}
+        async with MockCurrentUser(
+            user_kwargs=dict(is_verified=True),
+            user_settings_dict=user_settings_dict,
+        ):
+            # STEP 1: Task collection
+            res = await client.post(
+                "api/v2/task/collect/pip/",
+                data=dict(package=wheel_path.as_posix()),
+                files=files,
+            )
+            assert res.status_code == 202
+            activity = res.json()
+            activity_id = activity["id"]
+            task_group_id = activity["taskgroupv2_id"]
+            res = await client.get(
+                f"/api/v2/task-group/activity/{activity_id}/"
+            )
+            assert res.status_code == 200
+            task_group_activity = res.json()
+            assert task_group_activity["status"] == "OK"
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict=user_settings_dict,
-    ):
-        # STEP 1: Task collection
-        res = await client.post(
-            "api/v2/task/collect/pip/",
-            json=dict(package=wheel_path.as_posix()),
-        )
-        assert res.status_code == 202
-        activity = res.json()
-        activity_id = activity["id"]
-        task_group_id = activity["taskgroupv2_id"]
-        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
-        assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "OK"
+            # STEP 2: Deactivate task group
+            res = await client.post(
+                f"api/v2/task-group/{task_group_id}/deactivate/"
+            )
+            assert res.status_code == 202
+            activity_id = res.json()["id"]
+            res = await client.get(
+                f"api/v2/task-group/activity/{activity_id}/"
+            )
+            activity = res.json()
+            debug(activity["log"])
+            assert res.json()["status"] == "OK"
 
-        # STEP 2: Deactivate task group
-        res = await client.post(
-            f"api/v2/task-group/{task_group_id}/deactivate/"
-        )
-        assert res.status_code == 202
-        activity_id = res.json()["id"]
-        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
-        activity = res.json()
-        debug(activity["log"])
-        assert res.json()["status"] == "OK"
+            # Assertions
+            task_group = await db.get(TaskGroupV2, task_group_id)
+            assert task_group.active is False
+            assert Path(task_group.path).exists()
+            assert not Path(task_group.venv_path).exists()
+            assert Path(task_group.wheel_path).exists()
 
-        # Assertions
-        task_group = await db.get(TaskGroupV2, task_group_id)
-        assert task_group.active is False
-        assert Path(task_group.path).exists()
-        assert not Path(task_group.venv_path).exists()
-        assert Path(task_group.wheel_path).exists()
+            # STEP 3: Reactivate task group
+            res = await client.post(
+                f"api/v2/task-group/{task_group_id}/reactivate/"
+            )
+            assert res.status_code == 202
+            activity_id = res.json()["id"]
+            res = await client.get(
+                f"api/v2/task-group/activity/{activity_id}/"
+            )
+            activity = res.json()
+            debug(activity["log"])
+            assert res.json()["status"] == "OK"
 
-        # STEP 3: Reactivate task group
-        res = await client.post(
-            f"api/v2/task-group/{task_group_id}/reactivate/"
-        )
-        assert res.status_code == 202
-        activity_id = res.json()["id"]
-        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
-        activity = res.json()
-        debug(activity["log"])
-        assert res.json()["status"] == "OK"
+            # Assertions
+            await db.refresh(task_group)
+            assert task_group.active is True
+            assert Path(task_group.path).exists()
+            assert Path(task_group.venv_path).exists()
+            assert Path(task_group.wheel_path).exists()
 
-        # Assertions
-        await db.refresh(task_group)
-        assert task_group.active is True
-        assert Path(task_group.path).exists()
-        assert Path(task_group.venv_path).exists()
-        assert Path(task_group.wheel_path).exists()
+            # STEP 4: Deactivate a task group created before 2.9.0,
+            # which has no pip-freeze informationre 2.9.0, which has no
+            task_group.pip_freeze = None
+            db.add(task_group)
+            await db.commit()
+            await db.refresh(task_group)
+            res = await client.post(
+                f"api/v2/task-group/{task_group_id}/deactivate/"
+            )
+            assert res.status_code == 202
+            activity_id = res.json()["id"]
+            res = await client.get(
+                f"api/v2/task-group/activity/{activity_id}/"
+            )
+            activity = res.json()
+            debug(activity["log"])
+            assert res.json()["status"] == "OK"
 
-        # STEP 4: Deactivate a task group created before 2.9.0, which has no
-        # pip-freeze information
-        task_group.pip_freeze = None
-        db.add(task_group)
-        await db.commit()
-        await db.refresh(task_group)
-        res = await client.post(
-            f"api/v2/task-group/{task_group_id}/deactivate/"
-        )
-        assert res.status_code == 202
-        activity_id = res.json()["id"]
-        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
-        activity = res.json()
-        debug(activity["log"])
-        assert res.json()["status"] == "OK"
-
-        # Assertions
-        db.expunge(task_group)
-        task_group = await db.get(TaskGroupV2, task_group_id)
-        assert task_group.active is False
-        assert task_group.pip_freeze is not None
-        assert Path(task_group.path).exists()
-        assert not Path(task_group.venv_path).exists()
-        assert Path(task_group.wheel_path).exists()
+            # Assertions
+            db.expunge(task_group)
+            task_group = await db.get(TaskGroupV2, task_group_id)
+            assert task_group.active is False
+            assert task_group.pip_freeze is not None
+            assert Path(task_group.path).exists()
+            assert not Path(task_group.venv_path).exists()
+            assert Path(task_group.wheel_path).exists()
 
 
 async def test_fail_due_to_ongoing_activities(

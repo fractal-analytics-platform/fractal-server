@@ -17,10 +17,18 @@ def test_unit_missing_objects(db, caplog):
     ]:
         caplog.clear()
         assert caplog.text == ""
-        function(
-            task_group_activity_id=9999,
-            task_group_id=9999,
-        )
+        if function == collect_local:
+            function(
+                task_group_activity_id=9999,
+                task_group_id=9999,
+                wheel_buffer=None,
+                wheel_filename=None,
+            )
+        else:
+            function(
+                task_group_activity_id=9999,
+                task_group_id=9999,
+            )
         assert "Cannot find database rows" in caplog.text
 
     for function in [

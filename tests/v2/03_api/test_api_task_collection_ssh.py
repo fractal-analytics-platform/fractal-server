@@ -75,7 +75,7 @@ async def test_task_collection_ssh_from_pypi(
         package_version = "1.3.2"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
+            data=dict(
                 package="fractal-tasks-core",
                 package_version=package_version,
                 python_version=current_py_version,
@@ -106,7 +106,7 @@ async def test_task_collection_ssh_from_pypi(
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
+            data=dict(
                 package="fractal-tasks-core",
                 package_version=package_version,
                 python_version=current_py_version,
@@ -118,7 +118,7 @@ async def test_task_collection_ssh_from_pypi(
         # API FAILURE 2: invalid package name and no version
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
+            data=dict(
                 package="fractal-tasks-core-invalid",
                 python_version=current_py_version,
             ),
@@ -135,7 +135,7 @@ async def test_task_collection_ssh_from_pypi(
         package_version = "9.9.9"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
+            data=dict(
                 package="fractal-tasks-core",
                 package_version=package_version,
                 python_version=current_py_version,
@@ -159,7 +159,7 @@ async def test_task_collection_ssh_from_pypi(
         # Run task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
+            data=dict(
                 package="fractal-tasks-core",
                 package_version=package_version,
                 python_version=current_py_version,
