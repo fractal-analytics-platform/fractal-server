@@ -97,6 +97,8 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
 
     @validator("package_extras")
     def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
         value = valstr("package_extras")(value)
         validate_cmd(value, attribute_name="package_extras")
         return value

@@ -113,6 +113,9 @@ async def collect_tasks_pip(
     # Get settings
     settings = Inject(get_settings)
 
+    # Initialize whl_buff as None
+    whl_buff = None
+
     # Initialize task-group attributes
     task_group_attrs = dict(user_id=user.id)
 
@@ -311,8 +314,8 @@ async def collect_tasks_pip(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            wheel_buffer=whl_buff or None,
-            wheel_filename=files[0].filename,
+            wheel_buffer=whl_buff,
+            wheel_filename=files[0].filename if files else None,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "
