@@ -172,7 +172,7 @@ async def test_task_collection_from_wheel_non_canonical(
         assert task_group_activity["timestamp_ended"] is not None
 
 
-OLD_FRACTAL_TASKS_CORE_VERSION = "1.0.2"
+OLD_FRACTAL_TASKS_CORE_VERSION = "1.3.2"
 
 
 @pytest.mark.parametrize(
@@ -187,19 +187,6 @@ async def test_task_collection_from_pypi(
     current_py_version,
     package_version,
 ):
-
-    if (
-        current_py_version == "3.12"
-        and package_version == OLD_FRACTAL_TASKS_CORE_VERSION
-    ):
-        logging.warning(
-            f"SKIP test_task_collection_from_pypi with {current_py_version=}. "
-            "This is because fractal-tasks-core has a single version (1.3.2) "
-            "which works with python3.12 (due to pandas required version). "
-            "This means we cannot test the install of an old version like "
-            "1.0.2."
-        )
-        return
 
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
