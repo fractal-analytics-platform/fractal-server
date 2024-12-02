@@ -50,7 +50,7 @@ async def test_task_collection_from_wheel_non_canonical(
     )
     payload_package = wheel_path.as_posix()
     with open(wheel_path, "rb") as f:
-        files = {"files": (wheel_path.name, f, "text/plain")}
+        files = {"files": (wheel_path.name, f, "application/zip")}
 
         # Prepare and validate payload
         payload = dict(package=payload_package, package_extras="my_extra")
@@ -338,7 +338,7 @@ async def test_task_collection_from_wheel_file(
     # payload_package = wheel_path.as_posix()
     debug(wheel_path)
     with open(wheel_path, "rb") as f:
-        files = {"files": (wheel_path.name, f, "text/plain")}
+        files = {"files": (wheel_path.name, f, "application/zip")}
 
         # Prepare and validate payload
         payload = dict(
