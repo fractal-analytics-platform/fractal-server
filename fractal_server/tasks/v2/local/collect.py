@@ -48,7 +48,7 @@ LOGGER_NAME = __name__
 
 
 def _write_wheel_file_local(
-    wheel_buffer: str, wheel_filename: str, task_group: TaskGroupV2
+    wheel_buffer: bytes, wheel_filename: str, task_group: TaskGroupV2
 ) -> str:
     logger = get_logger(LOGGER_NAME)
     dest = (Path(task_group.path) / wheel_filename).as_posix()
@@ -63,7 +63,7 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_buffer: Optional[str],
+    wheel_buffer: Optional[bytes],
     wheel_filename: Optional[str],
 ) -> None:
     """
