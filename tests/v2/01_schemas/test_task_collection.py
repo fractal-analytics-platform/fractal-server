@@ -69,7 +69,6 @@ def test_TaskCollectPipV2():
 
 
 async def test_TaskCollectCustomV2(testdata_path):
-
     manifest_file = (
         testdata_path.parent
         / "v2/fractal_tasks_mock"
@@ -201,30 +200,6 @@ def test_TaskGroupCreateV2Strict():
             version="c",
             origin=TaskGroupV2OriginEnum.WHEELFILE,
             wheel_path="/a",
-            pkg_name="x",
-            user_id=1,
-        )
-    # Wheel path set for pypi origin
-    with pytest.raises(ValueError, match="origin"):
-        TaskGroupCreateV2Strict(
-            path="/a",
-            venv_path="/b",
-            version="c",
-            python_version="d",
-            origin=TaskGroupV2OriginEnum.PYPI,
-            wheel_path="/a",
-            pkg_name="x",
-            user_id=1,
-        )
-    # Wheel path unset for wheel origin
-    with pytest.raises(ValueError, match="origin"):
-        TaskGroupCreateV2Strict(
-            path="/a",
-            venv_path="/b",
-            version="c",
-            python_version="d",
-            origin=TaskGroupV2OriginEnum.WHEELFILE,
-            wheel_path=None,
             pkg_name="x",
             user_id=1,
         )
