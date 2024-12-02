@@ -142,3 +142,20 @@ To build the documentation
 poetry run mkdocs serve --config-file mkdocs.yml
 ```
 and browse the documentation at `http://127.0.0.1:8000`.
+
+
+## Known working versions
+
+As an example of working versions, one of the Fractal instances runs with
+```
+$ psql --version
+psql (PostgreSQL) 14.13 (Ubuntu 14.13-0ubuntu0.22.04.1)
+
+$ pip show psycopg-binary
+Name: psycopg-binary
+Version: 3.2.3
+[...]
+
+$ sinfo --version
+slurm 24.05.1
+```
