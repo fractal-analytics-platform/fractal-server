@@ -1,7 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.9.2
 
+* API
+    * Remove `cache_dir` and use `project_dir/.fractal_cache` (\#2121).
 * Docs
     * Improve docstrings and reduce mkdocs warnings (\#2122).
 

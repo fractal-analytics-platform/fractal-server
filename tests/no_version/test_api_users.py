@@ -437,7 +437,6 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
         # missing "ssh_jobs_dir"
         slurm_user="fractal",
         slurm_accounts=["foo", "bar"],
-        cache_dir="/tmp/cache",
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/settings/", json=patch
