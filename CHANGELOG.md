@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API
+    * Remove `cache_dir` and use `project_dir/.fractal_cache` (\#2121).
 * Testing:
     * Re-include a specific test previously skipped for Python 3.12 (\#2114).
     * Add metadata to `fractal-tasks-mock` package (\#2117).
