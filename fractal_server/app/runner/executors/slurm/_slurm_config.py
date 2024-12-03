@@ -327,7 +327,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         script.
 
         Arguments:
-            user_cache_dir:
+            remote_export_dir:
                 Base directory for exports defined in
                 `self.user_local_exports`.
         """
@@ -378,7 +378,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         if self.user_local_exports:
             if remote_export_dir is None:
                 raise ValueError(
-                    f"user_cache_dir=None but {self.user_local_exports=}"
+                    f"remote_export_dir=None but {self.user_local_exports=}"
                 )
             for key, value in self.user_local_exports.items():
                 tmp_value = str(Path(remote_export_dir) / value)

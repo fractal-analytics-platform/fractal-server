@@ -302,8 +302,7 @@ class Settings(BaseSettings):
     """
     Logging-level threshold for logging
 
-    Only logs of with this level (or higher) will appear in the console logs;
-    see details [here](../internals/logs/).
+    Only logs of with this level (or higher) will appear in the console logs.
     """
 
     FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]

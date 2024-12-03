@@ -917,7 +917,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         thread via `fut.set_exception(...)`.
 
         Arguments:
-            jobid: ID of the SLURM job
+            job_ids: IDs of the SLURM jobs to handle.
         """
         # Handle all uncaught exceptions in this broad try/except block
         try:
@@ -1109,8 +1109,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Fetch a remote folder via tar+sftp+tar
 
         Arguments:
-            job:
-                `SlurmJob` object (needed for its prefixes-related attributes).
+            jobs:
+                List of `SlurmJob` object (needed for their prefix-related
+                attributes).
         """
 
         # Check that the subfolder is unique

@@ -8,10 +8,10 @@ def get_python_interpreter_v2(
     python_version: Literal["3.9", "3.10", "3.11", "3.12"]
 ) -> str:
     """
-    Return the path to the python interpreter
+    Return the path to the Python interpreter
 
     Args:
-        version: Python version
+        python_version: Python version
 
     Raises:
         ValueError: If the python version requested is not available on the

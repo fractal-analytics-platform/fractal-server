@@ -366,10 +366,9 @@ class FractalSSH(object):
         Transfer a file via SSH
 
         Args:
-            local: Local path to file
-            remote: Target path on remote host
-            fractal_ssh: FractalSSH connection object with custom lock
-            logger_name: Name of the logger
+            local: Local path to file.
+            remote: Target path on remote host.
+            lock_timeout: Timeout for lock acquisition (overrides default).
         """
         try:
             self.logger.info(
@@ -407,10 +406,9 @@ class FractalSSH(object):
         Transfer a file via SSH
 
         Args:
-            local: Local path to file
-            remote: Target path on remote host
-            logger_name: Name of the logger
-            lock_timeout:
+            local: Local path to file.
+            remote: Target path on remote host.
+            lock_timeout: Timeout for lock acquisition (overrides default).
         """
         try:
             prefix = "[fetch_file] "
@@ -499,9 +497,9 @@ class FractalSSH(object):
         Open a remote file via SFTP and write it.
 
         Args:
-            path: Absolute path
-            contents: File contents
-            lock_timeout:
+            path: Absolute path of remote file.
+            content: Contents to be written to file.
+            lock_timeout: Timeout for lock acquisition (overrides default).
         """
         self.logger.info(f"START writing to remote file {path}.")
         actual_lock_timeout = self.default_lock_timeout
