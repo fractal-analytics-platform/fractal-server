@@ -275,7 +275,7 @@ async def test_task_collection_ssh_from_wheel(
             pip_freeze = res.json()["pip_freeze"]
             assert wheel_path != remote_wheel_path
             assert f"fractal-tasks-mock @ file://{wheel_path}" in pip_freeze
-            
+
             # API FAILURE: wheel file and version set
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
