@@ -187,7 +187,7 @@ async def apply_workflow(
     )
 
     cache_dir = (
-        f"{user_settings.project_dir}/.fractal_cache"
+        Path(user_settings.project_dir) / ".fractal_cache"
         if user_settings.project_dir is not None
         else None
     )
@@ -198,7 +198,7 @@ async def apply_workflow(
     elif FRACTAL_RUNNER_BACKEND == "local_experimental":
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
     elif FRACTAL_RUNNER_BACKEND == "slurm":
-        WORKFLOW_DIR_REMOTE = Path(cache_dir) / WORKFLOW_DIR_LOCAL.name
+        WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
             Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
@@ -233,7 +233,7 @@ async def apply_workflow(
         user_settings=user_settings,
         worker_init=job.worker_init,
         slurm_user=user_settings.slurm_user,
-        user_cache_dir=cache_dir,
+        user_cache_dir=cache_dir.as_posix() if cache_dir else None,
         fractal_ssh=fractal_ssh,
     )
     request.app.state.jobsV2.append(job.id)

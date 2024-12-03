@@ -20,6 +20,7 @@ class UserSettings(SQLModel, table=True):
         ssh_tasks_dir: Task-venvs base folder on `ssh_host`.
         ssh_jobs_dir: Jobs base folder on `ssh_host`.
         slurm_user: Local user, to be impersonated via `sudo -u`
+        project_dir: Folder where `slurm_user` can write.
     """
 
     __tablename__ = "user_settings"
