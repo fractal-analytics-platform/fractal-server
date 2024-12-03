@@ -448,6 +448,12 @@ async def apply_workflow(
     await db.commit()
     await db.refresh(job)
 
+    cache_dir = (
+        f"{user_settings.project_dir}/.fractal_cache"
+        if user_settings.project_dir is not None
+        else None
+    )
+
     background_tasks.add_task(
         submit_workflow,
         workflow_id=workflow.id,
@@ -456,7 +462,7 @@ async def apply_workflow(
         job_id=job.id,
         worker_init=apply_workflow.worker_init,
         slurm_user=user_settings.slurm_user,
-        user_cache_dir=user_settings.cache_dir,
+        user_cache_dir=cache_dir,
     )
     request.app.state.jobsV1.append(job.id)
     logger.info(
