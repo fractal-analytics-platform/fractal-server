@@ -109,11 +109,12 @@ def deactivate_local(
                         ),
                         logger_name=LOGGER_NAME,
                     )
+
+                    # Update pip-freeze data
                     pip_freeze_stdout = _customize_and_run_template(
                         template_filename="3_pip_freeze.sh",
                         **common_args,
                     )
-                    # Update pip-freeze data
                     logger.info("Add pip freeze stdout to TaskGroupV2 - start")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
@@ -190,6 +191,13 @@ def deactivate_local(
 
                 # We now have all required information for reactivating the
                 # virtual environment at a later point
+
+                # Actually mark the task group as non-active
+                logger.info("Now setting `active=False`.")
+                task_group.active = False
+                task_group = add_commit_refresh(obj=task_group, db=db)
+
+                # Proceed with deactivation
                 logger.info(f"Now removing {task_group.venv_path}.")
                 shutil.rmtree(task_group.venv_path)
                 logger.info(f"All good, {task_group.venv_path} removed.")

@@ -13,6 +13,9 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     check_no_ongoing_activity,
 )
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
+    check_no_submitted_job,
+)
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_group_or_404,
 )
@@ -58,9 +61,6 @@ async def deactivate_task_group(
         task_group_id=task_group_id, db=db
     )
 
-    # Check no other activity is ongoing
-    await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
-
     # Check that task-group is active
     if not task_group.active:
         raise HTTPException(
@@ -69,6 +69,12 @@ async def deactivate_task_group(
                 f"Cannot deactivate a task group with {task_group.active=}."
             ),
         )
+
+    # Check no other activity is ongoing
+    await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
+
+    # Check no submitted jobs use tasks from this task group
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:
@@ -102,8 +108,6 @@ async def deactivate_task_group(
         version=task_group.version,
         timestamp_started=get_timestamp(),
     )
-    task_group.active = False
-    db.add(task_group)
     db.add(task_group_activity)
     await db.commit()
 
@@ -177,6 +181,9 @@ async def reactivate_task_group(
 
     # Check no other activity is ongoing
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
+
+    # Check no submitted jobs use tasks from this task group
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:

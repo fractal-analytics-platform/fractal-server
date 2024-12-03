@@ -49,9 +49,6 @@ def _process_workflow(
     workflow working dir and user to impersonate. It then schedules the
     workflow tasks and returns the new dataset attributes
 
-    Cf.
-    [process_workflow][fractal_server.app.runner.v2._local.process_workflow]
-
     Returns:
         new_dataset_attributes:
     """
@@ -104,10 +101,7 @@ async def process_workflow(
     worker_init: str | None = None,
 ) -> dict:
     """
-    Process workflow (SLURM backend public interface)
-
-    Cf.
-    [process_workflow][fractal_server.app.runner.v2._local.process_workflow]
+    Process workflow (SLURM backend public interface).
     """
 
     # Set values of first_task_index and last_task_index

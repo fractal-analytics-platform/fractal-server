@@ -1,9 +1,10 @@
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 from devtools import debug
-from fabric import Connection
+from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
 from fractal_server.logger import set_logger
@@ -31,6 +32,43 @@ def test_acquire_lock():
             ):
                 pass
         print(e)
+
+
+def test_fail_and_raise(tmp_path: Path, caplog):
+    """
+    Test Exception when `e.errors` is not an iterable.
+    """
+
+    class MyError(Exception):
+        errors = 0
+
+    class MockFractalSSH(FractalSSH):
+        @property
+        def _sftp_unsafe(self):
+            raise MyError()
+
+    LOGGER_NAME = "invalid_ssh"
+    with Connection(
+        host="localhost",
+        user="invalid",
+        forward_agent=False,
+        connect_kwargs={"password": "invalid"},
+    ) as connection:
+        mocked_fractal_ssh = MockFractalSSH(
+            connection=connection, logger_name=LOGGER_NAME
+        )
+
+        logger = logging.getLogger(LOGGER_NAME)
+        logger.propagate = True
+
+        with pytest.raises(MyError):
+            mocked_fractal_ssh.send_file(
+                local="/invalid/local",
+                remote="/invalid/remote",
+            )
+        log_text = caplog.text
+        assert "Unexpected" in log_text
+        assert "'int' object is not iterable" in log_text
 
 
 def test_run_command(fractal_ssh: FractalSSH):
@@ -99,6 +137,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
             super().__init__(*args, **kwargs)
             self.please_raise = True
 
+        # This mock modifies the _run behaviour
         def _run(self, *args, **kwargs):
             if self.please_raise:
                 # Set `please_raise=False`, so that next call will go through
@@ -286,6 +325,57 @@ def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
     assert path.exists()
     with path.open("r") as f:
         assert f.read() == content
+
+
+def test_novalidconnectionserror_in_sftp_methods(caplog):
+    """
+    Test `NoValidConnectionError`s in SFTP-based methods.
+    """
+
+    with Connection(
+        host="localhost",
+        port="8022",
+        user="invalid",
+        forward_agent=False,
+        connect_kwargs={"password": "invalid"},
+    ) as connection:
+        LOGGER_NAME = "invalid_ssh"
+        fractal_ssh = FractalSSH(
+            connection=connection, logger_name=LOGGER_NAME
+        )
+        logger = logging.getLogger(LOGGER_NAME)
+        logger.propagate = True
+
+        # Fail in several methods, because connection is closed
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.write_remote_file(path="/invalid", content="..")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.send_file(local="/invalid", remote="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.fetch_file(local="/invalid", remote="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.remote_exists(path="/invalid")
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.read_remote_json_file(
+                filepath="/invalid",
+            )
+        assert "NoValidConnectionsError" in caplog.text
+
+        fractal_ssh.close()
 
 
 def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):

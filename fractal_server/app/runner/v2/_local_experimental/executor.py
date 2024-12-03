@@ -2,6 +2,7 @@
 Custom version of Python
 [ProcessPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor)).
 """
+import multiprocessing as mp
 import threading
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -31,7 +32,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(
         self, shutdown_file: Path, interval: float = 1.0, *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, mp_context=mp.get_context("spawn"))
         self.shutdown_file = Path(shutdown_file)
         self.interval = float(interval)
         logger.debug(

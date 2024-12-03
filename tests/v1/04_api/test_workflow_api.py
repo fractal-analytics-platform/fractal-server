@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime
-from datetime import timezone
 
 import pytest
 from devtools import debug  # noqa
@@ -12,6 +11,7 @@ from fractal_server.app.models.v1 import WorkflowTask
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
 from fractal_server.app.schemas.v1 import WorkflowExportV1
 from fractal_server.app.schemas.v1 import WorkflowImportV1
@@ -233,9 +233,8 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
         debug(res.json())
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
-        assert (
-            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
-            == timezone.utc
+        _raise_if_naive_datetime(
+            datetime.fromisoformat(res.json()["timestamp_created"])
         )
 
         # Get list of project workflows

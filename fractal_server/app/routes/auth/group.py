@@ -6,14 +6,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import col
-from sqlmodel import func
 from sqlmodel import select
 
 from . import current_active_superuser
+from ._aux_auth import _get_default_usergroup_id
 from ._aux_auth import _get_single_usergroup_with_user_ids
+from ._aux_auth import _user_or_404
 from ._aux_auth import _usergroup_or_404
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -126,42 +125,6 @@ async def update_single_group(
 
     group = await _usergroup_or_404(group_id, db)
 
-    # Check that all required users exist
-    # Note: The reason for introducing `col` is as in
-    # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors,
-    stm = select(func.count()).where(
-        col(UserOAuth.id).in_(group_update.new_user_ids)
-    )
-    res = await db.execute(stm)
-    number_matching_users = res.scalar()
-    if number_matching_users != len(group_update.new_user_ids):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=(
-                f"Not all requested users (IDs {group_update.new_user_ids}) "
-                "exist."
-            ),
-        )
-
-    # Add new users to existing group
-    for user_id in group_update.new_user_ids:
-        link = LinkUserGroup(user_id=user_id, group_id=group_id)
-        db.add(link)
-    try:
-        await db.commit()
-    except IntegrityError as e:
-        error_msg = (
-            f"Cannot link users with IDs {group_update.new_user_ids} "
-            f"to group {group_id}. "
-            "Likely reason: one of these links already exists.\n"
-            f"Original error: {str(e)}"
-        )
-        logger.info(error_msg)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=error_msg,
-        )
-
     # Patch `viewer_paths`
     if group_update.viewer_paths is not None:
         group.viewer_paths = group_update.viewer_paths
@@ -239,3 +202,68 @@ async def patch_user_settings_bulk(
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
+
+
+@router_group.post("/group/{group_id}/add-user/{user_id}/", status_code=200)
+async def add_user_to_group(
+    group_id: int,
+    user_id: int,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserGroupRead:
+    await _usergroup_or_404(group_id, db)
+    user = await _user_or_404(user_id, db)
+    link = await db.get(LinkUserGroup, (group_id, user_id))
+    if link is None:
+        db.add(LinkUserGroup(group_id=group_id, user_id=user_id))
+        await db.commit()
+    else:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"User '{user.email}' is already a member of group {group_id}."
+            ),
+        )
+    group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
+    return group
+
+
+@router_group.post("/group/{group_id}/remove-user/{user_id}/", status_code=200)
+async def remove_user_from_group(
+    group_id: int,
+    user_id: int,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserGroupRead:
+
+    # Check that user and group exist
+    await _usergroup_or_404(group_id, db)
+    user = await _user_or_404(user_id, db)
+
+    # Check that group is not the default one
+    default_user_group_id = await _get_default_usergroup_id(db=db)
+    if default_user_group_id == group_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot remove user from '{FRACTAL_DEFAULT_GROUP_NAME}' "
+                "group.",
+            ),
+        )
+
+    link = await db.get(LinkUserGroup, (group_id, user_id))
+    if link is None:
+        # If user and group are not linked, fail
+        raise HTTPException(
+            status_code=422,
+            detail=f"User '{user.email}' is not a member of group {group_id}.",
+        )
+    else:
+        # If user and group are linked, delete the link
+        await db.delete(link)
+        await db.commit()
+
+    # Enrich the response object with user_ids
+    group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
+
+    return group

@@ -69,7 +69,6 @@ def collect_ssh(
         )
 
         with next(get_sync_db()) as db:
-
             # Get main objects from db
             activity = db.get(TaskGroupActivityV2, task_group_activity_id)
             task_group = db.get(TaskGroupV2, task_group_id)
@@ -117,33 +116,9 @@ def collect_ssh(
                 return
 
             try:
-
-                # Prepare replacements for templates
-                replacements = get_collection_replacements(
-                    task_group=task_group,
-                    python_bin=get_python_interpreter_v2(
-                        python_version=task_group.python_version
-                    ),
-                )
-
-                # Prepare common arguments for `_customize_and_run_template``
                 script_dir_remote = (
                     Path(task_group.path) / SCRIPTS_SUBFOLDER
                 ).as_posix()
-                common_args = dict(
-                    replacements=replacements,
-                    script_dir_local=(
-                        Path(tmpdir) / SCRIPTS_SUBFOLDER
-                    ).as_posix(),
-                    script_dir_remote=script_dir_remote,
-                    prefix=(
-                        f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT}"
-                    ),
-                    fractal_ssh=fractal_ssh,
-                    logger_name=LOGGER_NAME,
-                )
-
                 # Create remote `task_group.path` and `script_dir_remote`
                 # folders (note that because of `parents=True` we  are in
                 # the `no error if existing, make parent directories as
@@ -160,6 +135,29 @@ def collect_ssh(
                     )
                     task_group.wheel_path = new_wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
+
+                # Prepare replacements for templates
+                replacements = get_collection_replacements(
+                    task_group=task_group,
+                    python_bin=get_python_interpreter_v2(
+                        python_version=task_group.python_version
+                    ),
+                )
+
+                # Prepare common arguments for `_customize_and_run_template``
+                common_args = dict(
+                    replacements=replacements,
+                    script_dir_local=(
+                        Path(tmpdir) / SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    script_dir_remote=script_dir_remote,
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
+                    ),
+                    fractal_ssh=fractal_ssh,
+                    logger_name=LOGGER_NAME,
+                )
 
                 logger.debug("installing - START")
 

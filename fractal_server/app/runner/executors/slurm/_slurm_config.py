@@ -325,7 +325,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         script.
 
         Arguments:
-            user_cache_dir:
+            remote_export_dir:
                 Base directory for exports defined in
                 `self.user_local_exports`.
         """
@@ -376,7 +376,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         if self.user_local_exports:
             if remote_export_dir is None:
                 raise ValueError(
-                    f"user_cache_dir=None but {self.user_local_exports=}"
+                    f"remote_export_dir=None but {self.user_local_exports=}"
                 )
             for key, value in self.user_local_exports.items():
                 tmp_value = str(Path(remote_export_dir) / value)
@@ -454,20 +454,3 @@ def _parse_mem_value(raw_mem: str | int) -> int:
 
     logger.debug(f"{info}, return {mem_MB}")
     return mem_MB
-
-
-def get_default_slurm_config():
-    """
-    Return a default `SlurmConfig` configuration object
-    """
-    return SlurmConfig(
-        partition="main",
-        cpus_per_task=1,
-        mem_per_task_MB=100,
-        target_cpus_per_job=1,
-        max_cpus_per_job=2,
-        target_mem_per_job=100,
-        max_mem_per_job=500,
-        target_num_jobs=2,
-        max_num_jobs=4,
-    )

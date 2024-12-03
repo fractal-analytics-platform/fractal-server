@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "2.9.0a4"
+version = "2.9.1"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Tommaso Comparin <tommaso.comparin@exact-lab.it>",
@@ -29,11 +29,10 @@ python-dotenv = "^1.0.0"
 fastapi = "^0.115.0"
 sqlmodel = "^0.0.21"
 sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
-fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
+fastapi-users = {extras = ["oauth"], version = ">=14,<15"}
 alembic = "^1.13.1"
 uvicorn = "^0.29.0"
 pydantic = ">=1.10.8,<2"
-bcrypt = "4.0.1"
 packaging = "^23.2"
 clusterfutures = "^0.5"
 cloudpickle = ">=3.0.0,<3.1.0"
@@ -86,7 +85,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "2.9.0a4"
+current_version = "2.9.1"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

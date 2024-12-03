@@ -5,7 +5,12 @@ from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
@@ -427,7 +432,9 @@ async def test_admin_deactivate_task_group_api(
         assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
-        assert task_group_pypi.active is False
+
+        # Background deactivation failed early
+        assert task_group_pypi.active is True
 
         # Check that background task failed
         res = await db.get(TaskGroupActivityV2, activity_id)
@@ -547,3 +554,65 @@ async def test_reactivate_task_group_api(
         # Check that background task failed
         activity = await db.get(TaskGroupActivityV2, activity_id)
         assert activity.status == "failed"
+
+
+async def test_lifecycle_actions_with_submitted_jobs(
+    db,
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+):
+    async with MockCurrentUser() as user:
+        # Create mock task groups
+        active_task = await task_factory_v2(
+            user_id=user.id,
+            name="task-active",
+            task_group_kwargs=dict(active=True),
+        )
+        non_active_task = await task_factory_v2(
+            user_id=user.id,
+            name="task-non-active",
+            task_group_kwargs=dict(active=False),
+        )
+        p = await project_factory_v2(user=user)
+        wf = await workflow_factory_v2()
+        ds = await dataset_factory_v2()
+        for task in [active_task, non_active_task]:
+            await _workflow_insert_task(
+                workflow_id=wf.id,
+                task_id=task.id,
+                db=db,
+            )
+        db.add(
+            JobV2(
+                project_id=p.id,
+                workflow_id=wf.id,
+                dataset_id=ds.id,
+                user_email=user.email,
+                dataset_dump={},
+                workflow_dump={},
+                project_dump={},
+                status=JobStatusTypeV2.SUBMITTED,
+                first_task_index=0,
+                last_task_index=1,
+            )
+        )
+        await db.commit()
+
+    async with MockCurrentUser(
+        user_kwargs={"is_superuser": True},
+    ):
+        res = await client.post(
+            f"{PREFIX}/task-group/{active_task.taskgroupv2_id}/deactivate/"
+        )
+        assert res.status_code == 422
+        assert "submitted jobs use its tasks" in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{non_active_task.taskgroupv2_id}/reactivate/"
+        )
+        assert res.status_code == 422
+        assert "submitted jobs use its tasks" in res.json()["detail"]

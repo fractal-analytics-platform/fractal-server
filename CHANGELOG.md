@@ -1,6 +1,21 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.9.0 (unreleased)
+# Unreleased
+
+* Docs
+    * Improve docstrings and reduce mkdocs warnings (\#2122).
+
+# 2.9.1
+
+* Task collection:
+    * Fix bug in wheel-based SSH task-collection (\#2119).
+* Testing:
+    * Re-include a specific test previously skipped for Python 3.12 (\#2114).
+    * Add metadata to `fractal-tasks-mock` package (\#2117).
+* Docs:
+    * Add info about working versions.
+
+# 2.9.0
 
 > WARNING 1: This version drops support for sqlite, and removes the
 > configuration variables `DB_ENGINE` and `SQLITE_PATH`.
@@ -14,20 +29,29 @@
     * Add `GET /api/v2/task-group/activity/` endpoint (\#2005, \#2027).
     * Add `GET /api/v2/task-group/activity/{task_group_activity_id}/` endpoint (\#2005).
     * Add `GET /admin/v2/task-group/activity/` endpoint (\#2005, \#2027).
-    * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066).
-    * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062).
+    * Add `POST /api/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2033, \#2066, \#2078).
+    * Add `POST /admin/v2/task-group/{task_group_id}/{deactivate|reactivate}` endpoints (\#2062, \#2078).
+    * Remove `GET /auth/current-user/viewer-paths/` (\#2096).
+    * Add `GET /auth/current-user/allowed-viewer-paths/`, with logic for `fractal-vizarr-viewer` authorization (\#2096).
+    * Add `category`, `modality` and `author` query parameters to `GET /admin/v2/task/` (\#2102).
+    * Add `POST /auth/group/{group_id}/add-user/{user_id}/` (\#2101).
+    * Add `POST /auth/group/{group_id}/remove-user/{user_id}/` (\#2101, \#2111).
+    * Add `POST /auth/users/{user_id}/set-groups/` (\#2106).
+    * Remove `new_user_ids` property from `PATCH /auth/group/{group_id}/` (\#2101).
+    * Remove `new_group_ids` property from `PATCH /auth/users/{user_id}/` (\#2106).
     * Internals:
       * Fix bug in `_get_collection_task_group_activity_status_message` (\#2047).
       * Remove `valutc` validator for timestamps from API schemas, since it does not match with `psycopg3` behavior (\#2064).
       * Add query parameters `timestamp_last_used_{min|max}` to `GET /admin/v2/task-group/` (\#2061).
-      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: API only accepts timezone-aware datetimes as query parameters (\#2068).
+      * Remove `_convert_to_db_timestamp` and add `_raise_if_naive_datetime`: now API only accepts timezone-aware datetimes as query parameters (\#2068).
+      * Remove `_encode_as_utc`: now timestamps are serialized in JSONs with their own timezone (\#2081).
 * Database
     * Drop support for sqlite, and remove the `DB_ENGINE` and `SQLITE_PATH` configuration variables (\#2052).
     * Add `TaskGroupActivityV2` table (\#2005).
     * Drop `CollectionStateV2` table (\#2010).
     * Add `TaskGroupV2.pip_freeze` nullable column (\#2017).
     * Add  `venv_size_in_kB` and `venv_file_number` to `TaskGroupV2` (\#2034).
-    * Add `TaskGroupV2.timestamp_last_used` column, updated on job submission (\#2049, \#2061).
+    * Add `TaskGroupV2.timestamp_last_used` column, updated on job submission (\#2049, \#2061, \#2086).
 * Task-lifecycle internals:
     * Refactor task collection and database-session management in background tasks (\#2030).
     * Update `TaskGroupActivityV2` objects (\#2005).
@@ -39,16 +63,29 @@
     * Introduce background operations for _SSH_ reactivate/deactivate (\#2066).
     * Fix escaping of newlines within f-strings, in logs (\#2028).
     * Improve handling of task groups created before 2.9.0 (\#2050).
+    * Add `TaskGroupCreateV2Strict` for task collections (\#2080).
+    * Always create `script_dir_remote` in SSH lifecycle background tasks (\#2089).
+    * Postpone setting `active=False` in task-group deactivation to after all preliminary checks (\#2100).
 * Runner:
     * Improve error handling in `_zip_folder_to_file_and_remove` (\#2057).
+    * Improve error handling in `FractalSlurmSSHExecutor` `handshake` method (\#2083).
+    * Use the "spawn" start method for the multiprocessing context, for the `ProcessPoolExecutor`-based runner (\#2084).
+    * Extract common functionalities from SLURM/sudo and SLURM/SSH executors (\#2107).
 * SSH internals:
     * Add `FractalSSH.remote_exists` method (\#2008).
+    * Drop `FractalSSH.{_get,_put}` wrappers of `SFTPClient` methods (\#2077).
     * Try re-opening the connection in `FractalSSH.check_connection` when an error occurs (\#2035).
+    * Move `NoValidConnectionError` exception handling into `FractalSSH.log_and_raise` method (\#2070).
     * Improve closed-socket testing (\#2076).
+* App:
+   * Add `FRACTAL_VIEWER_AUTHORIZATION_SCHEME` and `FRACTAL_VIEWER_BASE_FOLDER` configuration variables (\#2096).
 * Testing:
     * Drop `fetch-depth` from `checkout` in GitHub actions (\#2039).
 * Scripts:
     * Introduce `scripts/export_v1_workflows.py` (\#2043).
+* Dependencies:
+    * Remove `passlib` dependency (\#2112).
+    * Bump `fastapi-users` to v14, which includes switch to `pwdlib` (\#2112).
 
 # 2.8.1
 

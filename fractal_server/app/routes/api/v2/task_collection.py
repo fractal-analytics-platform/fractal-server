@@ -20,7 +20,7 @@ from ....models.v2 import TaskGroupV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
-from ....schemas.v2 import TaskGroupCreateV2
+from ....schemas.v2 import TaskGroupCreateV2Strict
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -163,7 +163,7 @@ async def collect_tasks_pip(
 
     # Validate TaskGroupV2 attributes
     try:
-        TaskGroupCreateV2(**task_group_attrs)
+        TaskGroupCreateV2Strict(**task_group_attrs)
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

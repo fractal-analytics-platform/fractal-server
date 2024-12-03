@@ -523,8 +523,7 @@ def execute_tasks(
 
     **Note:** At the end of each task, write current metadata to
     `workflow_dir_local / METADATA_FILENAME`, so that they can be read as part
-    of the [`get_job`
-    endpoint](../../api/v1/job/#fractal_server.app.routes.api.v1.job.get_job).
+    of the `get_job` endpoint.
 
     Arguments:
         executor:

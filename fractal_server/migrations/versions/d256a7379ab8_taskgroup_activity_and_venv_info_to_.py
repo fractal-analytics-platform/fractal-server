@@ -1,16 +1,17 @@
 """TaskGroup Activity and venv-info to TaskGroup
 
-Revision ID: 3082479ac4ea
+Revision ID: d256a7379ab8
 Revises: 19eca0dd47a9
-Create Date: 2024-11-12 14:39:34.035859
+Create Date: 2024-11-20 15:01:52.659832
 
 """
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "3082479ac4ea"
+revision = "d256a7379ab8"
 down_revision = "19eca0dd47a9"
 branch_labels = None
 depends_on = None
@@ -71,6 +72,7 @@ def upgrade() -> None:
             sa.Column(
                 "timestamp_last_used",
                 sa.DateTime(timezone=True),
+                server_default="2024-11-20T00:00:00+00:00",
                 nullable=False,
             )
         )
@@ -91,12 +93,14 @@ def downgrade() -> None:
         sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
         sa.Column(
             "data",
-            sa.JSON(),
+            postgresql.JSON(astext_type=sa.Text()),
+            autoincrement=False,
             nullable=True,
         ),
         sa.Column(
             "timestamp",
-            sa.DateTime(timezone=True),
+            postgresql.TIMESTAMP(timezone=True),
+            autoincrement=False,
             nullable=True,
         ),
         sa.Column(

@@ -4,6 +4,7 @@ from enum import Enum
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
 from .._validators import val_absolute_path
@@ -63,6 +64,32 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     _python_version = validator("python_version", allow_reuse=True)(
         valstr("python_version")
     )
+
+
+class TaskGroupCreateV2Strict(TaskGroupCreateV2):
+    """
+    A strict version of TaskGroupCreateV2, to be used for task collection.
+    """
+
+    path: str
+    venv_path: str
+    version: str
+    python_version: str
+
+    @root_validator
+    def check_wheel_file(cls, values):
+        origin = values.get("origin")
+        wheel_path = values.get("wheel_path")
+        bad_condition_1 = (
+            origin == TaskGroupV2OriginEnum.WHEELFILE and wheel_path is None
+        )
+        bad_condition_2 = (
+            origin != TaskGroupV2OriginEnum.WHEELFILE
+            and wheel_path is not None
+        )
+        if bad_condition_1 or bad_condition_2:
+            raise ValueError(f"Cannot have {origin=} and {wheel_path=}.")
+        return values
 
 
 class TaskGroupReadV2(BaseModel):

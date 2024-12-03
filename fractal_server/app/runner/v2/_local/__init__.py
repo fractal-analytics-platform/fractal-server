@@ -43,10 +43,6 @@ def _process_workflow(
     Internal processing routine
 
     Schedules the workflow using a `FractalThreadPoolExecutor`.
-
-    Cf.
-    [process_workflow][fractal_server.app.runner.v2._local.process_workflow]
-    for the call signature.
     """
 
     with FractalThreadPoolExecutor() as executor:

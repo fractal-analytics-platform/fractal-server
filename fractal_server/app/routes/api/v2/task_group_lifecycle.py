@@ -8,6 +8,7 @@ from fastapi import status
 
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import check_no_ongoing_activity
+from ._aux_functions_task_lifecycle import check_no_submitted_job
 from ._aux_functions_tasks import _get_task_group_full_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -58,6 +59,9 @@ async def deactivate_task_group(
 
     # Check no other activity is ongoing
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
+
+    # Check no submitted jobs use tasks from this task group
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Check that task-group is active
     if not task_group.active:
@@ -180,6 +184,9 @@ async def reactivate_task_group(
 
     # Check no other activity is ongoing
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
+
+    # Check no submitted jobs use tasks from this task group
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:

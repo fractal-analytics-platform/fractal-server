@@ -6,6 +6,8 @@ from pydantic import ValidationError
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCollectPipV2
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
+from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 
 
 def test_TaskCollectPipV2():
@@ -133,3 +135,96 @@ async def test_TaskCollectCustomV2(testdata_path):
     # Check that trailing whitespace characters were removed
     assert collection.python_interpreter == "/some/python"
     assert collection.package_root == "/somewhere"
+
+
+def test_TaskGroupCreateV2Strict():
+    # Success
+    TaskGroupCreateV2Strict(
+        path="/a",
+        venv_path="/b",
+        version="/c",
+        python_version="/d",
+        origin=TaskGroupV2OriginEnum.WHEELFILE,
+        wheel_path="/a",
+        pkg_name="x",
+        user_id=1,
+    )
+    # Validators from parent class
+    with pytest.raises(ValueError, match="absolute path"):
+        TaskGroupCreateV2Strict(
+            path="a",
+            venv_path="b",
+            version="c",
+            python_version="d",
+            origin=TaskGroupV2OriginEnum.PYPI,
+            pkg_name="x",
+            user_id=1,
+        )
+    # No path
+    with pytest.raises(ValidationError):
+        TaskGroupCreateV2Strict(
+            venv_path="/b",
+            version="c",
+            python_version="d",
+            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            wheel_path="/a",
+            pkg_name="x",
+            user_id=1,
+        )
+    # No venv_path
+    with pytest.raises(ValidationError):
+        TaskGroupCreateV2Strict(
+            path="/a",
+            version="c",
+            python_version="d",
+            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            wheel_path="/a",
+            pkg_name="x",
+            user_id=1,
+        )
+    # No version
+    with pytest.raises(ValidationError):
+        TaskGroupCreateV2Strict(
+            path="/a",
+            venv_path="/b",
+            python_version="d",
+            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            wheel_path="/a",
+            pkg_name="x",
+            user_id=1,
+        )
+    # No python_version
+    with pytest.raises(ValidationError):
+        TaskGroupCreateV2Strict(
+            path="/a",
+            venv_path="/b",
+            version="c",
+            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            wheel_path="/a",
+            pkg_name="x",
+            user_id=1,
+        )
+    # Wheel path set for pypi origin
+    with pytest.raises(ValueError, match="origin"):
+        TaskGroupCreateV2Strict(
+            path="/a",
+            venv_path="/b",
+            version="c",
+            python_version="d",
+            origin=TaskGroupV2OriginEnum.PYPI,
+            wheel_path="/a",
+            pkg_name="x",
+            user_id=1,
+        )
+    # Wheel path unset for wheel origin
+    with pytest.raises(ValueError, match="origin"):
+        TaskGroupCreateV2Strict(
+            path="/a",
+            venv_path="/b",
+            version="c",
+            python_version="d",
+            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            wheel_path=None,
+            pkg_name="x",
+            user_id=1,
+        )

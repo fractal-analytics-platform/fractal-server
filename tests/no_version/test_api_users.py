@@ -228,9 +228,12 @@ async def test_delete_user(registered_client, registered_superuser_client):
     assert res.status_code == 404
 
 
-async def test_add_groups_to_user_as_superuser(registered_superuser_client):
+async def test_set_groups_endpoint(
+    registered_superuser_client,
+    default_user_group,
+):
 
-    # Create user
+    # Preliminary step: create a user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(
@@ -244,84 +247,83 @@ async def test_add_groups_to_user_as_superuser(registered_superuser_client):
     res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
     assert res.status_code == 200
     user = res.json()
-    debug(user)
-    assert user["group_ids_names"] == []
+    assert user["group_ids_names"] == [
+        [default_user_group.id, default_user_group.name]
+    ]
 
-    # Create group
+    # Preliminary step: create a user group
+    GROUP_NAME = "my group"
     res = await registered_superuser_client.post(
         f"{PREFIX}/group/",
-        json=dict(name="groupname"),
+        json=dict(name=GROUP_NAME),
     )
     assert res.status_code == 201
     group_id = res.json()["id"]
 
-    # Create user/group link and fail because of invalid `group_id``
+    # Test `/users/{user_id}/set-groups/`
+
+    # Failure: Empty request body
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[]),
+    )
+    assert res.status_code == 422
+    MSG = "ensure this value has at least 1 items"
+    assert MSG in str(res.json()["detail"])
+
+    # Failure: Repeated request-body values
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[99, 99]),
+    )
+    assert res.status_code == 422
+    assert "has repetitions" in str(res.json()["detail"])
+
+    # Failure: Invalid group_id
     invalid_group_id = 999999
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json=dict(new_group_ids=[invalid_group_id]),
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[invalid_group_id]),
     )
     assert res.status_code == 404
 
-    # Create user/group link and succeed
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json=dict(new_group_ids=[group_id]),
-    )
-    assert res.status_code == 200
-    assert res.json()["group_ids_names"] == [[group_id, "groupname"]]
-
-    # Create user/group link and fail because it already exists
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json=dict(new_group_ids=[group_id]),
-    )
-    assert res.status_code == 422
-    hint_msg = "Likely reason: one of these links already exists"
-    assert hint_msg in res.json()["detail"]
-
-    # Create user/group link and fail because of repeated IDs
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json=dict(new_group_ids=[99, 99]),
-    )
-    assert res.status_code == 422
-    assert "`new_group_ids` list has repetitions'" in str(res.json())
-
-
-async def test_edit_user_and_fail(registered_superuser_client):
-
-    # Create user
+    # Failure: Invalid user_id
+    invalid_user_id = 999999
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/",
-        json=dict(
-            email="test@fractal.xy",
-            password="12345",
-        ),
+        f"{PREFIX}/users/{invalid_user_id}/set-groups/",
+        json=dict(group_ids=[default_user_group.id]),
     )
-    assert res.status_code == 201
-    user_id = res.json()["id"]
+    assert res.status_code == 404
 
-    # Patch both user attributes and user/group relationship, and fail
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json=dict(
-            username="pippo",
-            new_group_ids=[],
-        ),
+    # Failure: you cannot remove the link to `All`
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[group_id]),
     )
     assert res.status_code == 422
-    expected_detail = (
-        "Cannot modify both user attributes and group membership."
-    )
-    assert expected_detail in res.json()["detail"]
+    MSG = "Cannot remove user from 'All' group"
+    assert MSG in str(res.json()["detail"])
 
-    # Make a dummy patch to user, and succeed
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={},
+    # Success
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[group_id, default_user_group.id]),
     )
     assert res.status_code == 200
+    assert res.json()["group_ids_names"] == [
+        [default_user_group.id, default_user_group.name],
+        [group_id, GROUP_NAME],
+    ]
+
+    # Success
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/users/{user_id}/set-groups/",
+        json=dict(group_ids=[default_user_group.id]),
+    )
+    assert res.status_code == 200
+    assert res.json()["group_ids_names"] == [
+        [default_user_group.id, default_user_group.name],
+    ]
 
 
 async def test_oauth_accounts_list(

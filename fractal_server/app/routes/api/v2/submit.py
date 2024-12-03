@@ -1,6 +1,5 @@
+import json
 import os
-from datetime import datetime
-from datetime import timezone
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -34,10 +33,6 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
 from fractal_server.app.routes.auth import current_active_verified_user
-
-
-def _encode_as_utc(dt: datetime):
-    return dt.replace(tzinfo=timezone.utc).isoformat()
 
 
 router = APIRouter()
@@ -163,20 +158,9 @@ async def apply_workflow(
         dataset_id=dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        dataset_dump=dict(
-            **dataset.model_dump(
-                exclude={"images", "history", "timestamp_created"}
-            ),
-            timestamp_created=_encode_as_utc(dataset.timestamp_created),
-        ),
-        workflow_dump=dict(
-            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=_encode_as_utc(workflow.timestamp_created),
-        ),
-        project_dump=dict(
-            **project.model_dump(exclude={"user_list", "timestamp_created"}),
-            timestamp_created=_encode_as_utc(project.timestamp_created),
-        ),
+        dataset_dump=json.loads(dataset.json(exclude={"images", "history"})),
+        workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
+        project_dump=json.loads(project.json(exclude={"user_list"})),
         **job_create.dict(),
     )
 
