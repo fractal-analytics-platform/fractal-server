@@ -218,7 +218,7 @@ async def test_project_apply_missing_user_attributes(
             in res.json()["detail"]
         )
 
-        user.settings.cache_dir = "/tmp"
+        user.settings.project_dir = "/tmp"
         user.settings.slurm_user = None
         await db.commit()
 
