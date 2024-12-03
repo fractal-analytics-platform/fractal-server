@@ -1,7 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.9.1
 
+* Task collection:
+    * Fix bug in wheel-based SSH task-collection (\#2119).
 * Testing:
     * Re-include a specific test previously skipped for Python 3.12 (\#2114).
     * Add metadata to `fractal-tasks-mock` package (\#2117).
