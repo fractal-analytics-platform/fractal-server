@@ -1,5 +1,4 @@
 import string
-from typing import Optional
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
 
@@ -57,7 +56,7 @@ def slugify_task_name_for_source_v1(task_name: str) -> str:
 def validate_cmd(
     command: str,
     *,
-    allow_char: Optional[str] = None,
+    allow_char: str | None = None,
     attribute_name: str = "Command",
 ):
     """

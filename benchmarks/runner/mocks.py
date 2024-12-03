@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -9,7 +8,7 @@ from pydantic import validator
 
 
 class DatasetV2Mock(BaseModel):
-    id: Optional[int] = None
+    id: int | None = None
     name: str
     zarr_dir: str
     images: list[dict[str, Any]] = Field(default_factory=list)
@@ -36,11 +35,11 @@ class TaskV2Mock(BaseModel):
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
 
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
-    meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
+    meta_non_parallel: dict[str, Any] | None = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] | None = Field(default_factory=dict)
+    type: str | None
 
     @root_validator(pre=False)
     def _not_both_commands_none(cls, values):
@@ -74,8 +73,8 @@ class WorkflowTaskV2Mock(BaseModel):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    meta_parallel: dict[str, Any] | None = Field()
+    meta_non_parallel: dict[str, Any] | None = Field()
     task: TaskV2Mock = None
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int

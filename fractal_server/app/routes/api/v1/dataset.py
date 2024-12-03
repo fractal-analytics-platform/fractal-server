@@ -1,7 +1,6 @@
 import json
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -48,7 +47,7 @@ async def create_dataset(
     dataset: DatasetCreateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV1]:
+) -> DatasetReadV1 | None:
     """
     Add new dataset to current project
     """
@@ -74,7 +73,7 @@ async def read_dataset_list(
     history: bool = True,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[DatasetReadV1]]:
+) -> list[DatasetReadV1] | None:
     """
     Get dataset list for given project
     """
@@ -105,7 +104,7 @@ async def read_dataset(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV1]:
+) -> DatasetReadV1 | None:
     """
     Get info on a dataset associated to the current project
     """
@@ -130,7 +129,7 @@ async def update_dataset(
     dataset_update: DatasetUpdateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV1]:
+) -> DatasetReadV1 | None:
     """
     Edit a dataset associated to the current project
     """
@@ -241,7 +240,7 @@ async def create_resource(
     resource: ResourceCreateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ResourceReadV1]:
+) -> ResourceReadV1 | None:
     """
     Add resource to an existing dataset
     """
@@ -270,7 +269,7 @@ async def get_resource_list(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[ResourceReadV1]]:
+) -> list[ResourceReadV1] | None:
     """
     Get resources from a dataset
     """
@@ -298,7 +297,7 @@ async def update_resource(
     resource_update: ResourceUpdateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ResourceReadV1]:
+) -> ResourceReadV1 | None:
     """
     Edit a resource of a dataset
     """
@@ -373,7 +372,7 @@ async def export_history_as_workflow(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowExportV1]:
+) -> WorkflowExportV1 | None:
     """
     Extract a reproducible workflow from the dataset history.
     """
@@ -441,7 +440,7 @@ async def get_workflowtask_status(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetStatusReadV1]:
+) -> DatasetStatusReadV1 | None:
     """
     Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
     """

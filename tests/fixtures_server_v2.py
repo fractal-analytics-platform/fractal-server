@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -175,7 +174,7 @@ async def task_factory_v2(db: AsyncSession):
 
     async def __task_factory(
         user_id: int,
-        task_group_kwargs: Optional[dict[str, str]] = None,
+        task_group_kwargs: dict[str, str] | None = None,
         db: AsyncSession = db,
         index: int = 0,
         type: Literal["parallel", "non_parallel", "compound"] = "compound",

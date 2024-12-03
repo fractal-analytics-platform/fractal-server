@@ -3,7 +3,6 @@ Submodule to define _local_submit_setup
 """
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 from ....models.v2 import WorkflowTaskV2
 from ._local_config import get_local_backend_config
@@ -12,8 +11,8 @@ from ._local_config import get_local_backend_config
 def _local_submit_setup(
     *,
     wftask: WorkflowTaskV2,
-    workflow_dir_local: Optional[Path] = None,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_local: Path | None = None,
+    workflow_dir_remote: Path | None = None,
     which_type: Literal["non_parallel", "parallel"],
 ) -> dict[str, object]:
     """

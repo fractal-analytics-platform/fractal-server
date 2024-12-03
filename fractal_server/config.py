@@ -18,7 +18,6 @@ from os import environ
 from os import getenv
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 from typing import TypeVar
 
 from dotenv import load_dotenv
@@ -69,8 +68,8 @@ class OAuthClientConfig(BaseModel):
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
-    OIDC_CONFIGURATION_ENDPOINT: Optional[str]
-    REDIRECT_URL: Optional[str] = None
+    OIDC_CONFIGURATION_ENDPOINT: str | None
+    REDIRECT_URL: str | None = None
 
     @root_validator
     def check_configuration(cls, values):
@@ -108,7 +107,7 @@ class Settings(BaseSettings):
     JWT token lifetime, in seconds.
     """
 
-    JWT_SECRET_KEY: Optional[str]
+    JWT_SECRET_KEY: str | None
     """
     JWT secret
 
@@ -170,23 +169,23 @@ class Settings(BaseSettings):
     """
     If `True`, make database operations verbose.
     """
-    POSTGRES_USER: Optional[str]
+    POSTGRES_USER: str | None
     """
     User to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_PASSWORD: Optional[str]
+    POSTGRES_PASSWORD: str | None
     """
     Password to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_HOST: Optional[str] = "localhost"
+    POSTGRES_HOST: str | None = "localhost"
     """
     URL to the PostgreSQL server or path to a UNIX domain socket.
     """
-    POSTGRES_PORT: Optional[str] = "5432"
+    POSTGRES_PORT: str | None = "5432"
     """
     Port number to use when connecting to the PostgreSQL server.
     """
-    POSTGRES_DB: Optional[str]
+    POSTGRES_DB: str | None
     """
     Name of the PostgreSQL database to connect to.
     """
@@ -238,7 +237,7 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[Path]
+    FRACTAL_TASKS_DIR: Path | None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
@@ -292,7 +291,7 @@ class Settings(BaseSettings):
     Select which runner backend to use.
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path]
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Path | None
     """
     Base directory for running jobs / workflows. All artifacts required to set
     up, run and tear down jobs are placed in subdirs of this directory.
@@ -305,7 +304,7 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
+    FRACTAL_LOCAL_CONFIG_FILE: Path | None
     """
     Path of JSON file with configuration for the local backend.
     """
@@ -321,12 +320,12 @@ class Settings(BaseSettings):
     Waiting time for the shutdown phase of executors
     """
 
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
+    FRACTAL_SLURM_CONFIG_FILE: Path | None
     """
     Path of JSON file with configuration for the SLURM backend.
     """
 
-    FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
+    FRACTAL_SLURM_WORKER_PYTHON: str | None = None
     """
     Absolute path to Python interpreter that will run the jobs on the SLURM
     nodes. If not specified, the same interpreter that runs the server is used.
@@ -346,16 +345,16 @@ class Settings(BaseSettings):
         else:
             return v
 
-    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Optional[
-        Literal["3.9", "3.10", "3.11", "3.12"]
-    ] = None
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Literal[
+        "3.9", "3.10", "3.11", "3.12"
+    ] | None = None
     """
     Default Python version to be used for task collection. Defaults to the
     current version. Requires the corresponding variable (e.g
     `FRACTAL_TASKS_PYTHON_3_10`) to be set.
     """
 
-    FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_9: str | None = None
     """
     Absolute path to the Python 3.9 interpreter that serves as base for virtual
     environments tasks. Note that this interpreter must have the `venv` module
@@ -364,17 +363,17 @@ class Settings(BaseSettings):
     unset, `sys.executable` is used as a default.
     """
 
-    FRACTAL_TASKS_PYTHON_3_10: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_10: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.10.
     """
 
-    FRACTAL_TASKS_PYTHON_3_11: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_11: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
     """
 
-    FRACTAL_TASKS_PYTHON_3_12: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_12: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
@@ -520,7 +519,7 @@ class Settings(BaseSettings):
        viewer paths. Useful when vizarr viewer is not used.
     """
 
-    FRACTAL_VIEWER_BASE_FOLDER: Optional[str] = None
+    FRACTAL_VIEWER_BASE_FOLDER: str | None = None
     """
     Base path to Zarr files that will be served by fractal-vizarr-viewer;
     This variable is required and used only when

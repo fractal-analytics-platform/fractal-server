@@ -10,7 +10,6 @@
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 from datetime import datetime
-from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import Column
@@ -45,13 +44,13 @@ class OAuthAccount(SQLModel, table=True):
 
     __tablename__ = "oauthaccount"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
+    user: "UserOAuth" | None = Relationship(back_populates="oauth_accounts")
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
-    expires_at: Optional[int] = Field(nullable=True)
-    refresh_token: Optional[str] = Field(nullable=True)
+    expires_at: int | None = Field(nullable=True)
+    refresh_token: str | None = Field(nullable=True)
     account_id: str = Field(index=True, nullable=False)
     account_email: str = Field(nullable=False)
 
@@ -82,7 +81,7 @@ class UserOAuth(SQLModel, table=True):
 
     __tablename__ = "user_oauth"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     email: EmailStr = Field(
         sa_column_kwargs={"unique": True, "index": True}, nullable=False
@@ -92,17 +91,17 @@ class UserOAuth(SQLModel, table=True):
     is_superuser: bool = Field(False, nullable=False)
     is_verified: bool = Field(False, nullable=False)
 
-    username: Optional[str]
+    username: str | None
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
     )
 
-    user_settings_id: Optional[int] = Field(
+    user_settings_id: int | None = Field(
         foreign_key="user_settings.id", default=None
     )
-    settings: Optional[UserSettings] = Relationship(
+    settings: UserSettings | None = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")
     )
 
@@ -120,7 +119,7 @@ class UserGroup(SQLModel, table=True):
         timestamp_created: Time of creation
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,

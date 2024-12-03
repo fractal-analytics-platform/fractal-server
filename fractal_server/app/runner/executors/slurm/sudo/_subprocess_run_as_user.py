@@ -17,7 +17,6 @@ another user. Note that this requires appropriate sudo permissions.
 """
 import shlex
 import subprocess  # nosec
-from typing import Optional
 
 from ......logger import set_logger
 from fractal_server.string_tools import validate_cmd
@@ -28,8 +27,8 @@ logger = set_logger(__name__)
 def _run_command_as_user(
     *,
     cmd: str,
-    user: Optional[str] = None,
-    encoding: Optional[str] = "utf-8",
+    user: str | None = None,
+    encoding: str | None = "utf-8",
     check: bool = False,
 ) -> subprocess.CompletedProcess:
     """
@@ -94,7 +93,7 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
 
 
 def _glob_as_user(
-    *, folder: str, user: str, startswith: Optional[str] = None
+    *, folder: str, user: str, startswith: str | None = None
 ) -> list[str]:
     """
     Run `ls` in a folder (as a user) and filter results
@@ -156,7 +155,7 @@ def _glob_as_user_strict(
     return new_output
 
 
-def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
+def _path_exists_as_user(*, path: str, user: str | None = None) -> bool:
     """
     Impersonate a user and check if `path` exists via `ls`
 

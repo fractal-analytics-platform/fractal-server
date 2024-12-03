@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -41,19 +40,19 @@ class TaskManifestV2(BaseModel):
     """
 
     name: str
-    executable_non_parallel: Optional[str] = None
-    executable_parallel: Optional[str] = None
+    executable_non_parallel: str | None = None
+    executable_parallel: str | None = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
+    docs_info: str | None = None
+    docs_link: HttpUrl | None = None
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
+    category: str | None = None
+    modality: str | None = None
     tags: list[str] = Field(default_factory=list)
 
     @root_validator
@@ -134,8 +133,8 @@ class ManifestV2(BaseModel):
     manifest_version: str
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str] = None
-    authors: Optional[str] = None
+    args_schema_version: str | None = None
+    authors: str | None = None
 
     @root_validator()
     def _check_args_schemas_are_present(cls, values):

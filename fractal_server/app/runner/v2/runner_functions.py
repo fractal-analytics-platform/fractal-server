@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import Literal
-from typing import Optional
 
 from pydantic import ValidationError
 
@@ -33,7 +32,7 @@ MAX_PARALLELIZATION_LIST_SIZE = 20_000
 
 def _cast_and_validate_TaskOutput(
     task_output: dict[str, Any]
-) -> Optional[TaskOutput]:
+) -> TaskOutput | None:
     try:
         validated_task_output = TaskOutput(**task_output)
         return validated_task_output
@@ -47,7 +46,7 @@ def _cast_and_validate_TaskOutput(
 
 def _cast_and_validate_InitTaskOutput(
     init_task_output: dict[str, Any],
-) -> Optional[InitTaskOutput]:
+) -> InitTaskOutput | None:
     try:
         validated_init_task_output = InitTaskOutput(**init_task_output)
         return validated_init_task_output
@@ -113,9 +112,9 @@ def run_v2_task_non_parallel(
     task: TaskV2,
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_remote: Path | None = None,
     executor: Executor,
-    logger_name: Optional[str] = None,
+    logger_name: str | None = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
     """
@@ -167,8 +166,8 @@ def run_v2_task_parallel(
     wftask: WorkflowTaskV2,
     executor: Executor,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_dir_remote: Path | None = None,
+    logger_name: str | None = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 
@@ -228,8 +227,8 @@ def run_v2_task_compound(
     wftask: WorkflowTaskV2,
     executor: Executor,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_dir_remote: Path | None = None,
+    logger_name: str | None = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 

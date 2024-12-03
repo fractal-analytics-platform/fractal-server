@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
@@ -16,14 +15,14 @@ class WorkflowTaskV2(SQLModel, table=True):
         arbitrary_types_allowed = True
         fields = {"parent": {"exclude": True}}
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     workflow_id: int = Field(foreign_key="workflowv2.id")
-    order: Optional[int]
-    meta_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    meta_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    args_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    args_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
+    order: int | None
+    meta_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    meta_non_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    args_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
+    args_non_parallel: dict[str, Any] | None = Field(sa_column=Column(JSON))
 
     input_filters: dict[
         Literal["attributes", "types"], dict[str, Any]

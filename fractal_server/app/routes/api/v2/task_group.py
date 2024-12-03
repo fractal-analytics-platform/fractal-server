@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -38,12 +37,12 @@ logger = set_logger(__name__)
 
 @router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
 async def get_task_group_activity_list(
-    task_group_activity_id: Optional[int] = None,
-    taskgroupv2_id: Optional[int] = None,
-    pkg_name: Optional[str] = None,
-    status: Optional[TaskGroupActivityStatusV2] = None,
-    action: Optional[TaskGroupActivityActionV2] = None,
-    timestamp_started_min: Optional[datetime] = None,
+    task_group_activity_id: int | None = None,
+    taskgroupv2_id: int | None = None,
+    pkg_name: str | None = None,
+    status: TaskGroupActivityStatusV2 | None = None,
+    action: TaskGroupActivityActionV2 | None = None,
+    timestamp_started_min: datetime | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:

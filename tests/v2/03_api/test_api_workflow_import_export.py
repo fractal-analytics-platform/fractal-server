@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 
 from devtools import debug  # noqa
 
@@ -26,7 +25,7 @@ async def test_import_export(
         workflow_from_file = json.load(f)
 
     # Aux function
-    def wf_modify(task_import: dict, new_name: Optional[str] = None):
+    def wf_modify(task_import: dict, new_name: str | None = None):
         wf_from_file = workflow_from_file.copy()
         wf_from_file["name"] = new_name
         wf_from_file["task_list"][0]["task"] = task_import

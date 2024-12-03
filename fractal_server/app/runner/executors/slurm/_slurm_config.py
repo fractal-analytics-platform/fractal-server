@@ -14,7 +14,6 @@ Submodule to handle the SLURM configuration for a WorkflowTask
 """
 import json
 from pathlib import Path
-from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
@@ -54,16 +53,16 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
         extra_lines:
     """
 
-    partition: Optional[str]
-    cpus_per_task: Optional[int]
-    mem: Optional[Union[int, str]]
-    constraint: Optional[str]
-    gres: Optional[str]
-    time: Optional[str]
-    account: Optional[str]
-    extra_lines: Optional[list[str]]
-    pre_submission_commands: Optional[list[str]]
-    gpus: Optional[str]
+    partition: str | None
+    cpus_per_task: int | None
+    mem: Union[int, str] | None
+    constraint: str | None
+    gres: str | None
+    time: str | None
+    account: str | None
+    extra_lines: list[str] | None
+    pre_submission_commands: list[str] | None
+    gpus: str | None
 
 
 class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
@@ -137,13 +136,13 @@ class SlurmConfigFile(BaseModel, extra=Extra.forbid):
     """
 
     default_slurm_config: _SlurmConfigSet
-    gpu_slurm_config: Optional[_SlurmConfigSet]
+    gpu_slurm_config: _SlurmConfigSet | None
     batching_config: _BatchingConfigSet
-    user_local_exports: Optional[dict[str, str]]
+    user_local_exports: dict[str, str] | None
 
 
 def load_slurm_config_file(
-    config_path: Optional[Path] = None,
+    config_path: Path | None = None,
 ) -> SlurmConfigFile:
     """
     Load a SLURM configuration file and validate its content with
@@ -256,23 +255,23 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     shebang_line: str = "#!/bin/sh"
 
     # Optional SLURM parameters
-    job_name: Optional[str] = None
-    constraint: Optional[str] = None
-    gres: Optional[str] = None
-    gpus: Optional[str] = None
-    time: Optional[str] = None
-    account: Optional[str] = None
+    job_name: str | None = None
+    constraint: str | None = None
+    gres: str | None = None
+    gpus: str | None = None
+    time: str | None = None
+    account: str | None = None
 
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble
-    extra_lines: Optional[list[str]] = Field(default_factory=list)
+    extra_lines: list[str] | None = Field(default_factory=list)
 
     # Variables that will be `export`ed in the SLURM submission script
-    user_local_exports: Optional[dict[str, str]] = None
+    user_local_exports: dict[str, str] | None = None
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
-    tasks_per_job: Optional[int] = None
-    parallel_tasks_per_job: Optional[int] = None
+    tasks_per_job: int | None = None
+    parallel_tasks_per_job: int | None = None
     target_cpus_per_job: int
     max_cpus_per_job: int
     target_mem_per_job: int
@@ -320,7 +319,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     def to_sbatch_preamble(
         self,
-        remote_export_dir: Optional[str] = None,
+        remote_export_dir: str | None = None,
     ) -> list[str]:
         """
         Compile `SlurmConfig` object into the preamble of a SLURM submission

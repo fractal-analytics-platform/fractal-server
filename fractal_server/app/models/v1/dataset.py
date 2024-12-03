@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -16,7 +15,7 @@ from ...schemas.v1.dataset import _ResourceBaseV1
 
 
 class Resource(_ResourceBaseV1, SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     dataset_id: int = Field(foreign_key="dataset.id")
 
 
@@ -38,7 +37,7 @@ class Dataset(_DatasetBaseV1, SQLModel, table=True):
 
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     project: "Project" = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(lazy="selectin"),

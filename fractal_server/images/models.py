@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
@@ -23,7 +22,7 @@ class SingleImageBase(BaseModel):
     """
 
     zarr_url: str
-    origin: Optional[str] = None
+    origin: str | None = None
 
     attributes: dict[str, Any] = Field(default_factory=dict)
     types: dict[str, bool] = Field(default_factory=dict)
@@ -39,7 +38,7 @@ class SingleImageBase(BaseModel):
         return normalize_url(v)
 
     @validator("origin")
-    def normalize_orig(cls, v: Optional[str]) -> Optional[str]:
+    def normalize_orig(cls, v: str | None) -> str | None:
         if v is not None:
             return normalize_url(v)
 
@@ -83,8 +82,8 @@ class SingleImage(SingleImageBase):
 
 class SingleImageUpdate(BaseModel):
     zarr_url: str
-    attributes: Optional[dict[str, Any]]
-    types: Optional[dict[str, bool]]
+    attributes: dict[str, Any] | None
+    types: dict[str, bool] | None
 
     @validator("zarr_url")
     def normalize_zarr_url(cls, v: str) -> str:

@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 import pytest
 from devtools import debug
@@ -28,7 +27,7 @@ class TaskV1Mock(BaseModel, extra=Extra.forbid):
     source: str = "source_t1"
     input_type: str
     output_type: str
-    meta: Optional[dict[str, Any]] = Field(default_factory=dict)
+    meta: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class TaskV2Mock(BaseModel, extra=Extra.forbid):
@@ -38,11 +37,11 @@ class TaskV2Mock(BaseModel, extra=Extra.forbid):
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
 
-    command_non_parallel: Optional[str] = "cmd_t2_non_parallel"
-    command_parallel: Optional[str] = None
-    meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    command_non_parallel: str | None = "cmd_t2_non_parallel"
+    command_parallel: str | None = None
+    meta_parallel: dict[str, Any] | None = Field(default_factory=dict)
+    meta_non_parallel: dict[str, Any] | None = Field(default_factory=dict)
+    type: str | None
 
 
 class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
@@ -50,8 +49,8 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    meta_parallel: dict[str, Any] | None = Field()
+    meta_non_parallel: dict[str, Any] | None = Field()
     task: TaskV2Mock
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int = 0

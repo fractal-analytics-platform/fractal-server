@@ -16,7 +16,6 @@ from pathlib import Path
 from shlex import split as shlex_split
 from typing import Any
 from typing import Callable
-from typing import Optional
 
 from ....config import get_settings
 from ....logger import get_logger
@@ -116,8 +115,8 @@ def call_single_task(
     wftask: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_dir_remote: Path | None = None,
+    logger_name: str | None = None,
 ) -> TaskParameters:
     """
     Call a single task
@@ -251,7 +250,7 @@ def call_single_parallel_task(
     wftask: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_remote: Path | None = None,
 ) -> Any:
     """
     Call a single instance of a parallel task
@@ -367,9 +366,9 @@ def call_parallel_task(
     wftask: WorkflowTask,
     task_pars_depend: TaskParameters,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_remote: Path | None = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-    logger_name: Optional[str] = None,
+    logger_name: str | None = None,
 ) -> TaskParameters:
     """
     Collect results from the parallel instances of a parallel task
@@ -515,7 +514,7 @@ def execute_tasks(
     task_list: list[WorkflowTask],
     task_pars: TaskParameters,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_remote: Path | None = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     logger_name: str,
 ) -> TaskParameters:

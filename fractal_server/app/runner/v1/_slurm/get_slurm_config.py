@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from fractal_server.app.models.v1 import WorkflowTask
 from fractal_server.app.runner.executors.slurm._slurm_config import (
@@ -19,7 +18,7 @@ def get_slurm_config(
     wftask: WorkflowTask,
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
-    config_path: Optional[Path] = None,
+    config_path: Path | None = None,
 ) -> SlurmConfig:
     """
     Prepare a `SlurmConfig` configuration object

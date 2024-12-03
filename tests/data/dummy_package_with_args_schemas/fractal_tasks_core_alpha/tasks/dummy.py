@@ -23,7 +23,6 @@ from json.decoder import JSONDecodeError
 from pathlib import Path
 from sys import stdout
 from typing import Any
-from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -41,7 +40,7 @@ def dummy(
     *,
     input_paths: list[str],
     output_path: str,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
     # arguments of this task
     message: str = "default_message",
     index: int = 0,

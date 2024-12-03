@@ -1,10 +1,7 @@
-from typing import Optional
-
-
 def set_start_and_last_task_index(
     num_tasks: int,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
+    first_task_index: int | None = None,
+    last_task_index: int | None = None,
 ) -> tuple[int, int]:
     """
     Handle `first_task_index` and `last_task_index`, by setting defaults and

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -63,7 +61,7 @@ async def _get_user_accessible_taskgroups(
 async def _get_task_by_source(
     source: str,
     task_groups_list: list[TaskGroupV2],
-) -> Optional[int]:
+) -> int | None:
     """
     Find task with a given source.
 
@@ -92,7 +90,7 @@ async def _disambiguate_task_groups(
     user_id: int,
     db: AsyncSession,
     default_group_id: int,
-) -> Optional[TaskV2]:
+) -> TaskV2 | None:
     """
     Disambiguate task groups based on ownership information.
     """
@@ -163,7 +161,7 @@ async def _get_task_by_taskimport(
     user_id: int,
     default_group_id: int,
     db: AsyncSession,
-) -> Optional[int]:
+) -> int | None:
     """
     Find a task based on `task_import`.
 

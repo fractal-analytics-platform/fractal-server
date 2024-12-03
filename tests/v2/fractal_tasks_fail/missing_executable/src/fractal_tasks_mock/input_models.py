@@ -1,5 +1,4 @@
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -26,7 +25,7 @@ class InitArgsCellVoyager(BaseModel):
     """
 
     raw_zarr_url: str
-    acquisition: Optional[int]
+    acquisition: int | None
 
 
 class InitArgsIllumination(BaseModel):

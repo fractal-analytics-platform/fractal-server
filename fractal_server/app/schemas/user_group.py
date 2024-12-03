@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -33,7 +32,7 @@ class UserGroupRead(BaseModel):
     id: int
     name: str
     timestamp_created: datetime
-    user_ids: Optional[list[int]] = None
+    user_ids: list[int] | None = None
     viewer_paths: list[str]
 
 
@@ -61,7 +60,7 @@ class UserGroupUpdate(BaseModel, extra=Extra.forbid):
     Schema for `UserGroup` update
     """
 
-    viewer_paths: Optional[list[str]] = None
+    viewer_paths: list[str] | None = None
 
     @validator("viewer_paths")
     def viewer_paths_validator(cls, value):

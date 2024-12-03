@@ -4,7 +4,6 @@ import sys
 import time
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 import httpx
 from httpx import Client
@@ -20,7 +19,7 @@ FRACTAL_SERVER_URL = "http://localhost:8000"
 class UserBench(BaseModel):
     name: str
     password: str
-    token: Optional[str]
+    token: str | None
 
 
 USERS = [

@@ -18,7 +18,6 @@ Executor objects.
 """
 from pathlib import Path
 from typing import Any
-from typing import Optional
 from typing import Union
 
 from ...async_wrap import async_wrap
@@ -54,10 +53,10 @@ def _process_workflow(
     workflow_dir_remote: Path,
     first_task_index: int,
     last_task_index: int,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
+    slurm_user: str | None = None,
+    slurm_account: str | None = None,
     user_cache_dir: str,
-    worker_init: Optional[Union[str, list[str]]] = None,
+    worker_init: Union[str, list[str]] | None = None,
 ) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend
@@ -122,13 +121,13 @@ async def process_workflow(
     input_history: list[dict[str, Any]],
     logger_name: str,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    user_cache_dir: Optional[str] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    worker_init: Optional[str] = None,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
+    workflow_dir_remote: Path | None = None,
+    user_cache_dir: str | None = None,
+    slurm_user: str | None = None,
+    slurm_account: str | None = None,
+    worker_init: str | None = None,
+    first_task_index: int | None = None,
+    last_task_index: int | None = None,
 ) -> dict[str, Any]:
     """
     Process workflow (SLURM backend public interface)
@@ -168,7 +167,7 @@ def get_slurm_config(
     wftask: WorkflowTask,
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
-    config_path: Optional[Path] = None,
+    config_path: Path | None = None,
 ) -> SlurmConfig:
     """
     Prepare a `SlurmConfig` configuration object

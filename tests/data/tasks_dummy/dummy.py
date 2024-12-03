@@ -24,7 +24,6 @@ from pathlib import Path
 from sys import stdout
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -42,7 +41,7 @@ def dummy(
     *,
     input_paths: list[str],
     output_path: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Dict[str, Any] | None = None,
     # arguments of this task
     message: str = "default message",
     index: int = 0,

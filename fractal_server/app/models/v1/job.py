@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -62,15 +61,15 @@ class ApplyWorkflow(_ApplyWorkflowBaseV1, SQLModel, table=True):
     class Config:
         arbitrary_types_allowed = True
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
-    project_id: Optional[int] = Field(foreign_key="project.id")
-    workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-    input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
-    output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
+    project_id: int | None = Field(foreign_key="project.id")
+    workflow_id: int | None = Field(foreign_key="workflow.id")
+    input_dataset_id: int | None = Field(foreign_key="dataset.id")
+    output_dataset_id: int | None = Field(foreign_key="dataset.id")
 
     user_email: str = Field(nullable=False)
-    slurm_account: Optional[str]
+    slurm_account: str | None
 
     input_dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
@@ -85,8 +84,8 @@ class ApplyWorkflow(_ApplyWorkflowBaseV1, SQLModel, table=True):
         sa_column=Column(JSON, nullable=False)
     )
 
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
+    working_dir: str | None
+    working_dir_user: str | None
     first_task_index: int
     last_task_index: int
 
@@ -94,8 +93,8 @@ class ApplyWorkflow(_ApplyWorkflowBaseV1, SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    end_timestamp: Optional[datetime] = Field(
+    end_timestamp: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
     status: str = JobStatusTypeV1.SUBMITTED
-    log: Optional[str] = None
+    log: str | None = None

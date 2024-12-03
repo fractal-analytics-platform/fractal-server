@@ -12,7 +12,6 @@
 Submodule to determine the number of total/parallel tasks per SLURM job.
 """
 import math
-from typing import Optional
 
 from .....logger import set_logger
 
@@ -58,8 +57,8 @@ def heuristics(
     # Number of parallel components (always known)
     tot_tasks: int,
     # Optional WorkflowTask attributes:
-    tasks_per_job: Optional[int] = None,
-    parallel_tasks_per_job: Optional[int] = None,
+    tasks_per_job: int | None = None,
+    parallel_tasks_per_job: int | None = None,
     # Task requirements (multiple possible sources):
     cpus_per_task: int,
     mem_per_task: int,

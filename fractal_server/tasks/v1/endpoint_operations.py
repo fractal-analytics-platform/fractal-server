@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
@@ -40,7 +39,7 @@ async def download_package(
 
 
 def _load_manifest_from_wheel(
-    path: Path, wheel: ZipFile, logger_name: Optional[str] = None
+    path: Path, wheel: ZipFile, logger_name: str | None = None
 ) -> ManifestV1:
     logger = get_logger(logger_name)
     namelist = wheel.namelist()
@@ -64,7 +63,7 @@ def _load_manifest_from_wheel(
         raise ValueError(msg)
 
 
-def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
+def inspect_package(path: Path, logger_name: str | None = None) -> dict:
     """
     Inspect task package to extract version, name and manifest
 

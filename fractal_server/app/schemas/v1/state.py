@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -13,6 +12,6 @@ class StateRead(BaseModel):
         id:
     """
 
-    id: Optional[int]
+    id: int | None
     data: dict[str, Any]
     timestamp: datetime

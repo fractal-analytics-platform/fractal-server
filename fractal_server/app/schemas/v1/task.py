@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -50,17 +49,17 @@ class TaskUpdateV1(_TaskBaseV1):
         docs_link:
     """
 
-    name: Optional[str]
-    input_type: Optional[str]
-    output_type: Optional[str]
-    command: Optional[str]
-    source: Optional[str]
-    meta: Optional[dict[str, Any]]
-    version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    name: str | None
+    input_type: str | None
+    output_type: str | None
+    command: str | None
+    source: str | None
+    meta: dict[str, Any] | None
+    version: str | None
+    args_schema: dict[str, Any] | None
+    args_schema_version: str | None
+    docs_info: str | None
+    docs_link: HttpUrl | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -115,13 +114,13 @@ class TaskReadV1(_TaskBaseV1):
     command: str
     input_type: str
     output_type: str
-    meta: Optional[dict[str, Any]] = Field(default={})
-    owner: Optional[str]
-    version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    meta: dict[str, Any] | None = Field(default={})
+    owner: str | None
+    version: str | None
+    args_schema: dict[str, Any] | None
+    args_schema_version: str | None
+    docs_info: str | None
+    docs_link: HttpUrl | None
 
 
 class TaskCreateV1(_TaskBaseV1):
@@ -145,12 +144,12 @@ class TaskCreateV1(_TaskBaseV1):
     command: str
     input_type: str
     output_type: str
-    meta: Optional[dict[str, Any]] = Field(default={})
-    version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    meta: dict[str, Any] | None = Field(default={})
+    version: str | None
+    args_schema: dict[str, Any] | None
+    args_schema_version: str | None
+    docs_info: str | None
+    docs_link: HttpUrl | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

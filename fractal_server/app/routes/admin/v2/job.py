@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -31,16 +30,16 @@ router = APIRouter()
 
 @router.get("/", response_model=list[JobReadV2])
 async def view_job(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    project_id: Optional[int] = None,
-    dataset_id: Optional[int] = None,
-    workflow_id: Optional[int] = None,
-    status: Optional[JobStatusTypeV2] = None,
-    start_timestamp_min: Optional[datetime] = None,
-    start_timestamp_max: Optional[datetime] = None,
-    end_timestamp_min: Optional[datetime] = None,
-    end_timestamp_max: Optional[datetime] = None,
+    id: int | None = None,
+    user_id: int | None = None,
+    project_id: int | None = None,
+    dataset_id: int | None = None,
+    workflow_id: int | None = None,
+    status: JobStatusTypeV2 | None = None,
+    start_timestamp_min: datetime | None = None,
+    start_timestamp_max: datetime | None = None,
+    end_timestamp_min: datetime | None = None,
+    end_timestamp_max: datetime | None = None,
     log: bool = True,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
@@ -145,7 +144,7 @@ async def update_job(
     job_id: int,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[JobReadV2]:
+) -> JobReadV2 | None:
     """
     Change the status of an existing job.
 

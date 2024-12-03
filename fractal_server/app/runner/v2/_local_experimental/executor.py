@@ -10,7 +10,6 @@ from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Callable
 from typing import Iterable
-from typing import Optional
 from typing import Sequence
 
 import psutil
@@ -87,7 +86,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
     def submit(
         self,
         *args,
-        local_backend_config: Optional[LocalBackendConfig] = None,
+        local_backend_config: LocalBackendConfig | None = None,
         **kwargs,
     ):
         """
@@ -101,7 +100,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         self,
         fn: Callable,
         *iterables: Sequence[Iterable],
-        local_backend_config: Optional[LocalBackendConfig] = None,
+        local_backend_config: LocalBackendConfig | None = None,
     ):
         """
         Custom version of the `Executor.map` method

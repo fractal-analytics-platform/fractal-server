@@ -1,5 +1,4 @@
 from copy import deepcopy  # noqa
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -73,7 +72,7 @@ async def patch_task(
     task_update: TaskUpdateV1,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskReadV1]:
+) -> TaskReadV1 | None:
     """
     Edit a specific task (restricted to superusers and task owner)
     """
@@ -119,7 +118,7 @@ async def create_task(
     task: TaskCreateV1,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskReadV1]:
+) -> TaskReadV1 | None:
     """
     Create a new task
     """

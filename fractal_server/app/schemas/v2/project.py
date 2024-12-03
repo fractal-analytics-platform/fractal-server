@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -24,6 +23,6 @@ class ProjectReadV2(BaseModel):
 
 class ProjectUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str]
+    name: str | None
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

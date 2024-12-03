@@ -1,7 +1,6 @@
 from copy import copy
 from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import Union
 
 from fractal_server.images import Filters
@@ -14,7 +13,7 @@ def find_image_by_zarr_url(
     *,
     images: list[dict[str, Any]],
     zarr_url: str,
-) -> Optional[ImageSearch]:
+) -> ImageSearch | None:
     """
     Return a copy of the image with a given zarr_url, and its positional index.
 

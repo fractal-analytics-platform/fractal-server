@@ -1,7 +1,6 @@
 import json
 import os
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -54,7 +53,7 @@ async def apply_workflow(
     request: Request,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[JobReadV2]:
+) -> JobReadV2 | None:
 
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold

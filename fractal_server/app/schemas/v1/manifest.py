@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -48,10 +47,10 @@ class _TaskManifestBaseV1(BaseModel):
     executable: str
     input_type: str
     output_type: str
-    meta: Optional[dict[str, Any]] = Field(default_factory=dict)
-    args_schema: Optional[dict[str, Any]]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    meta: dict[str, Any] | None = Field(default_factory=dict)
+    args_schema: dict[str, Any] | None
+    docs_info: str | None
+    docs_link: HttpUrl | None
 
 
 TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBaseV1)
@@ -86,7 +85,7 @@ class _ManifestBaseV1(BaseModel):
     manifest_version: str
     task_list: list[TaskManifestType]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str]
+    args_schema_version: str | None
 
     @root_validator()
     def _check_args_schemas_are_present(cls, values):

@@ -15,7 +15,6 @@ Custom version of Python
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 from typing import Iterable
-from typing import Optional
 from typing import Sequence
 
 from ._local_config import get_default_local_backend_config
@@ -32,7 +31,7 @@ class FractalThreadPoolExecutor(ThreadPoolExecutor):
     def submit(
         self,
         *args,
-        local_backend_config: Optional[LocalBackendConfig] = None,
+        local_backend_config: LocalBackendConfig | None = None,
         **kwargs,
     ):
         """
@@ -46,7 +45,7 @@ class FractalThreadPoolExecutor(ThreadPoolExecutor):
         self,
         fn: Callable,
         *iterables: Sequence[Iterable],
-        local_backend_config: Optional[LocalBackendConfig] = None,
+        local_backend_config: LocalBackendConfig | None = None,
     ):
         """
         Custom version of the `Executor.map` method

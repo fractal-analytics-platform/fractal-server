@@ -1,7 +1,6 @@
 import json
 import logging
 from typing import Any
-from typing import Optional
 
 from pydantic import HttpUrl
 from sqlalchemy import Column
@@ -32,24 +31,24 @@ class Task(_TaskBaseV1, SQLModel, table=True):
             generated
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     command: str
     source: str = Field(unique=True)
     input_type: str
     output_type: str
-    meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
-    owner: Optional[str] = None
-    version: Optional[str] = None
-    args_schema: Optional[dict[str, Any]] = Field(
+    meta: dict[str, Any] | None = Field(sa_column=Column(JSON), default={})
+    owner: str | None = None
+    version: str | None = None
+    args_schema: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
-    args_schema_version: Optional[str]
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    args_schema_version: str | None
+    docs_info: str | None = None
+    docs_link: HttpUrl | None = None
 
     @property
-    def parallelization_level(self) -> Optional[str]:
+    def parallelization_level(self) -> str | None:
         try:
             return self.meta["parallelization_level"]
         except KeyError:

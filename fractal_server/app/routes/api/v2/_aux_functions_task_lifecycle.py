@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import HTTPException
 from fastapi import status
 from httpx import AsyncClient
@@ -23,7 +21,7 @@ logger = set_logger(__name__)
 
 async def get_package_version_from_pypi(
     name: str,
-    version: Optional[str] = None,
+    version: str | None = None,
 ) -> str:
     """
     Make a GET call to PyPI JSON API and get latest *compatible* version.

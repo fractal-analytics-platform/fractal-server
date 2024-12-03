@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 
 class TaskExecutionError(RuntimeError):
@@ -20,16 +19,16 @@ class TaskExecutionError(RuntimeError):
             Human readable name of the failing task.
     """
 
-    workflow_task_id: Optional[int] = None
-    workflow_task_order: Optional[int] = None
-    task_name: Optional[str] = None
+    workflow_task_id: int | None = None
+    workflow_task_order: int | None = None
+    task_name: str | None = None
 
     def __init__(
         self,
         *args,
-        workflow_task_id: Optional[int] = None,
-        workflow_task_order: Optional[int] = None,
-        task_name: Optional[str] = None,
+        workflow_task_id: int | None = None,
+        workflow_task_order: int | None = None,
+        task_name: str | None = None,
     ):
         super().__init__(*args)
         self.workflow_task_id = workflow_task_id
@@ -64,18 +63,18 @@ class JobExecutionError(RuntimeError):
             Path to the file with the command stderr
     """
 
-    cmd_file: Optional[str] = None
-    stdout_file: Optional[str] = None
-    stderr_file: Optional[str] = None
-    info: Optional[str] = None
+    cmd_file: str | None = None
+    stdout_file: str | None = None
+    stderr_file: str | None = None
+    info: str | None = None
 
     def __init__(
         self,
         *args,
-        cmd_file: Optional[str] = None,
-        stdout_file: Optional[str] = None,
-        stderr_file: Optional[str] = None,
-        info: Optional[str] = None,
+        cmd_file: str | None = None,
+        stdout_file: str | None = None,
+        stderr_file: str | None = None,
+        info: str | None = None,
     ):
         super().__init__(*args)
         self.cmd_file = cmd_file

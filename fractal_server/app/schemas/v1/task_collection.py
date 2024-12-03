@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -43,10 +42,10 @@ class TaskCollectPipV1(BaseModel):
     """
 
     package: str
-    package_version: Optional[str] = None
-    package_extras: Optional[str] = None
-    python_version: Optional[str] = None
-    pinned_package_versions: Optional[dict[str, str]] = None
+    package_version: str | None = None
+    package_extras: str | None = None
+    python_version: str | None = None
+    pinned_package_versions: dict[str, str] | None = None
 
     _package_extras = validator("package_extras", allow_reuse=True)(
         valstr("package_extras")
@@ -97,9 +96,9 @@ class TaskCollectStatusV1(BaseModel):
     status: Literal["pending", "installing", "collecting", "fail", "OK"]
     package: str
     venv_path: Path
-    task_list: Optional[list[TaskReadV1]] = Field(default=[])
-    log: Optional[str]
-    info: Optional[str]
+    task_list: list[TaskReadV1] | None = Field(default=[])
+    log: str | None
+    info: str | None
 
     def sanitised_dict(self):
         """

@@ -24,7 +24,6 @@ from pathlib import Path
 from sys import stdout
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -41,11 +40,11 @@ def dummy_parallel(
     input_paths: list[str],
     output_path: str,
     component: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Dict[str, Any] | None = None,
     # arguments of this task
     message: str = "default message",
     raise_error: bool = False,
-    sleep_time: Optional[int] = None,
+    sleep_time: int | None = None,
 ) -> Dict[str, Any]:
     """
     Dummy task to be run in parallel

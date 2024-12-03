@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -37,8 +36,8 @@ class WorkflowReadV2WithWarnings(WorkflowReadV2):
 
 class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str]
-    reordered_workflowtask_ids: Optional[list[int]]
+    name: str | None
+    reordered_workflowtask_ids: list[int] | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 
 def get_pickle_file_path(
@@ -25,7 +24,7 @@ def get_pickle_file_path(
 
 
 def get_slurm_script_file_path(
-    *, workflow_dir: Path, subfolder_name: str, prefix: Optional[str] = None
+    *, workflow_dir: Path, subfolder_name: str, prefix: str | None = None
 ) -> Path:
     prefix = prefix or "_temp"
     return workflow_dir / subfolder_name / f"{prefix}_slurm_submit.sbatch"

@@ -5,7 +5,6 @@ import subprocess  # nosec
 from pathlib import Path
 from shlex import split as shlex_split
 from typing import Any
-from typing import Optional
 
 from ..components import _COMPONENT_KEY_
 from ..exceptions import JobExecutionError
@@ -64,8 +63,8 @@ def run_single_task(
     command: str,
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_dir_remote: Path | None = None,
+    logger_name: str | None = None,
 ) -> dict[str, Any]:
     """
     Runs within an executor.

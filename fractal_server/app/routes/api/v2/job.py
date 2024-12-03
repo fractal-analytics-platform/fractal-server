@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -60,7 +59,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[JobReadV2]]:
+) -> list[JobReadV2] | None:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -83,7 +82,7 @@ async def read_job(
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[JobReadV2]:
+) -> JobReadV2 | None:
     """
     Return info on an existing job
     """
@@ -144,7 +143,7 @@ async def get_job_list(
     user: UserOAuth = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[JobReadV2]]:
+) -> list[JobReadV2] | None:
     """
     Get job list for given project
     """

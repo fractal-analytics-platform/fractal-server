@@ -12,7 +12,6 @@
 Submodule to define _local_submit_setup
 """
 from pathlib import Path
-from typing import Optional
 
 from ....models.v1 import WorkflowTask
 from ._local_config import get_local_backend_config
@@ -21,8 +20,8 @@ from ._local_config import get_local_backend_config
 def _local_submit_setup(
     *,
     wftask: WorkflowTask,
-    workflow_dir_local: Optional[Path] = None,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_local: Path | None = None,
+    workflow_dir_remote: Path | None = None,
 ) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different

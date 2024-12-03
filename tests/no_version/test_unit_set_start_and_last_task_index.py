@@ -1,4 +1,3 @@
-from typing import Optional
 from typing import Union
 
 import pytest
@@ -26,8 +25,8 @@ cases = [
 )
 def test_set_start_and_last_task_index(
     num_tasks: int,
-    first_task_index: Optional[int],
-    last_task_index: Optional[int],
+    first_task_index: int | None,
+    last_task_index: int | None,
     expected: Union[tuple[int, int], str],
 ):
     if isinstance(expected, tuple):

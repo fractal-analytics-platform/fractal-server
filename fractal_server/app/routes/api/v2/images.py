@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -37,7 +36,7 @@ class ImagePage(BaseModel):
 
 
 class ImageQuery(BaseModel):
-    zarr_url: Optional[str]
+    zarr_url: str | None
     filters: Filters = Field(default_factory=Filters)
 
 
@@ -102,8 +101,8 @@ async def query_dataset_images(
     dataset_id: int,
     use_dataset_filters: bool = False,  # query param
     page: int = 1,  # query param
-    page_size: Optional[int] = None,  # query param
-    query: Optional[ImageQuery] = None,  # body
+    page_size: int | None = None,  # query param
+    query: ImageQuery | None = None,  # body
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:

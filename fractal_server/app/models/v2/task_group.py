@@ -1,6 +1,5 @@
 from datetime import datetime
 from datetime import timezone
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -14,7 +13,7 @@ from fractal_server.utils import get_timestamp
 
 
 class TaskGroupV2(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     task_list: list[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin", cascade="all, delete-orphan"
@@ -22,15 +21,15 @@ class TaskGroupV2(SQLModel, table=True):
     )
 
     user_id: int = Field(foreign_key="user_oauth.id")
-    user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
+    user_group_id: int | None = Field(foreign_key="usergroup.id")
 
     origin: str
     pkg_name: str
-    version: Optional[str] = None
-    python_version: Optional[str] = None
-    path: Optional[str] = None
-    wheel_path: Optional[str] = None
-    pip_extras: Optional[str] = None
+    version: str | None = None
+    python_version: str | None = None
+    path: str | None = None
+    wheel_path: str | None = None
+    pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
             JSON,
@@ -39,10 +38,10 @@ class TaskGroupV2(SQLModel, table=True):
             nullable=True,
         ),
     )
-    pip_freeze: Optional[str] = None
-    venv_path: Optional[str] = None
-    venv_size_in_kB: Optional[int] = None
-    venv_file_number: Optional[int] = None
+    pip_freeze: str | None = None
+    venv_path: str | None = None
+    venv_size_in_kB: int | None = None
+    venv_file_number: int | None = None
 
     active: bool = True
     timestamp_created: datetime = Field(
@@ -95,9 +94,9 @@ class TaskGroupV2(SQLModel, table=True):
 
 class TaskGroupActivityV2(SQLModel, table=True):
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id")
-    taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
+    taskgroupv2_id: int | None = Field(foreign_key="taskgroupv2.id")
     timestamp_started: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -106,8 +105,8 @@ class TaskGroupActivityV2(SQLModel, table=True):
     version: str
     status: str
     action: str
-    log: Optional[str] = None
-    timestamp_ended: Optional[datetime] = Field(
+    log: str | None = None
+    timestamp_ended: datetime | None = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True)),
     )

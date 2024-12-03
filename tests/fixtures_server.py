@@ -6,7 +6,6 @@ from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
-from typing import Optional
 
 import pytest
 from asgi_lifespan import LifespanManager
@@ -240,9 +239,9 @@ async def MockCurrentUser(app, db, default_user_group):
         Context managed user override
         """
 
-        user_kwargs: Optional[dict[str, Any]] = None
-        user_settings_dict: Optional[dict[str, Any]] = None
-        email: Optional[str] = field(default_factory=_random_email)
+        user_kwargs: dict[str, Any] | None = None
+        user_settings_dict: dict[str, Any] | None = None
+        email: str | None = field(default_factory=_random_email)
         previous_dependencies: dict = field(default_factory=dict)
 
         async def __aenter__(self):

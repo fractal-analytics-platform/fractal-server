@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import validator
@@ -48,7 +47,7 @@ class _ApplyWorkflowBaseV1(BaseModel):
         worker_init:
     """
 
-    worker_init: Optional[str]
+    worker_init: str | None
 
 
 class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
@@ -61,9 +60,9 @@ class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
         slurm_account:
     """
 
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
-    slurm_account: Optional[StrictStr] = None
+    first_task_index: int | None = None
+    last_task_index: int | None = None
+    slurm_account: StrictStr | None = None
 
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
@@ -130,24 +129,24 @@ class ApplyWorkflowReadV1(_ApplyWorkflowBaseV1):
     """
 
     id: int
-    project_id: Optional[int]
+    project_id: int | None
     project_dump: ProjectDumpV1
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
+    slurm_account: str | None
+    workflow_id: int | None
     workflow_dump: WorkflowDumpV1
-    input_dataset_id: Optional[int]
+    input_dataset_id: int | None
     input_dataset_dump: DatasetDumpV1
-    output_dataset_id: Optional[int]
+    output_dataset_id: int | None
     output_dataset_dump: DatasetDumpV1
     start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    end_timestamp: datetime | None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
+    log: str | None
+    working_dir: str | None
+    working_dir_user: str | None
+    first_task_index: int | None
+    last_task_index: int | None
 
 
 class ApplyWorkflowUpdateV1(BaseModel):

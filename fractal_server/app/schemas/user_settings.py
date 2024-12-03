@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import validator
@@ -24,21 +22,21 @@ class UserSettingsRead(BaseModel):
     """
 
     id: int
-    ssh_host: Optional[str] = None
-    ssh_username: Optional[str] = None
-    ssh_private_key_path: Optional[str] = None
-    ssh_tasks_dir: Optional[str] = None
-    ssh_jobs_dir: Optional[str] = None
-    slurm_user: Optional[str] = None
+    ssh_host: str | None = None
+    ssh_username: str | None = None
+    ssh_private_key_path: str | None = None
+    ssh_tasks_dir: str | None = None
+    ssh_jobs_dir: str | None = None
+    slurm_user: str | None = None
     slurm_accounts: list[str]
-    project_dir: Optional[str] = None
+    project_dir: str | None = None
 
 
 class UserSettingsReadStrict(BaseModel):
-    slurm_user: Optional[str] = None
+    slurm_user: str | None = None
     slurm_accounts: list[str]
-    ssh_username: Optional[str] = None
-    project_dir: Optional[str] = None
+    ssh_username: str | None = None
+    project_dir: str | None = None
 
 
 class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
@@ -46,14 +44,14 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
     Schema reserved for superusers
     """
 
-    ssh_host: Optional[str] = None
-    ssh_username: Optional[str] = None
-    ssh_private_key_path: Optional[str] = None
-    ssh_tasks_dir: Optional[str] = None
-    ssh_jobs_dir: Optional[str] = None
-    slurm_user: Optional[str] = None
-    slurm_accounts: Optional[list[StrictStr]] = None
-    project_dir: Optional[str] = None
+    ssh_host: str | None = None
+    ssh_username: str | None = None
+    ssh_private_key_path: str | None = None
+    ssh_tasks_dir: str | None = None
+    ssh_jobs_dir: str | None = None
+    slurm_user: str | None = None
+    slurm_accounts: list[StrictStr] | None = None
+    project_dir: str | None = None
 
     _ssh_host = validator("ssh_host", allow_reuse=True)(
         valstr("ssh_host", accept_none=True)
@@ -93,7 +91,7 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
 
 
 class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
-    slurm_accounts: Optional[list[StrictStr]] = None
+    slurm_accounts: list[StrictStr] | None = None
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
         val_unique_list("slurm_accounts")

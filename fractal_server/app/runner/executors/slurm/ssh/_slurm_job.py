@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from cfut.util import random_string
 
@@ -88,9 +87,9 @@ class SlurmJob:
         self,
         num_tasks_tot: int,
         slurm_config: SlurmConfig,
-        workflow_task_file_prefix: Optional[str] = None,
-        slurm_file_prefix: Optional[str] = None,
-        wftask_file_prefixes: Optional[tuple[str, ...]] = None,
+        workflow_task_file_prefix: str | None = None,
+        slurm_file_prefix: str | None = None,
+        wftask_file_prefixes: tuple[str, ...] | None = None,
         single_task_submission: bool = False,
     ):
         if single_task_submission and num_tasks_tot > 1:

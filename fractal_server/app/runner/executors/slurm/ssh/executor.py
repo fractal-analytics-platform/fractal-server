@@ -21,7 +21,6 @@ from copy import copy
 from pathlib import Path
 from typing import Any
 from typing import Callable
-from typing import Optional
 from typing import Sequence
 
 import cloudpickle
@@ -87,7 +86,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     keep_pickle_files: bool
 
     common_script_lines: list[str]
-    slurm_account: Optional[str]
+    slurm_account: str | None
 
     jobs: dict[str, tuple[Future, SlurmJob]]
     map_jobid_to_slurm_files_local: dict[str, tuple[str, str, str]]
@@ -103,10 +102,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Runner options
         keep_pickle_files: bool = False,
         # Monitoring options
-        slurm_poll_interval: Optional[int] = None,
+        slurm_poll_interval: int | None = None,
         # SLURM submission script options
-        common_script_lines: Optional[list[str]] = None,
-        slurm_account: Optional[str] = None,
+        common_script_lines: list[str] | None = None,
+        slurm_account: str | None = None,
         # Other kwargs are ignored
         **kwargs,
     ):
@@ -464,9 +463,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         single_task_submission: bool = False,
-        args: Optional[Sequence[Any]] = None,
-        kwargs: Optional[dict] = None,
-        components: Optional[list[Any]] = None,
+        args: Sequence[Any] | None = None,
+        kwargs: dict | None = None,
+        components: list[Any] | None = None,
     ) -> SlurmJob:
         """
         Prepare a SLURM job locally, without submitting it

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
@@ -41,8 +39,8 @@ class UserRead(schemas.BaseUser[int]):
         username:
     """
 
-    username: Optional[str]
-    group_ids_names: Optional[list[tuple[int, str]]] = None
+    username: str | None
+    group_ids_names: list[tuple[int, str]] = None
     oauth_accounts: list[OAuthAccountRead]
 
 
@@ -54,7 +52,7 @@ class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
         username:
     """
 
-    username: Optional[str]
+    username: str | None
 
     # Validators
     _username = validator("username", allow_reuse=True)(valstr("username"))
@@ -91,7 +89,7 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[str]
+    username: str | None
 
     # Validators
 

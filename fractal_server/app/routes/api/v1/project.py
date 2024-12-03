@@ -2,7 +2,6 @@ import json
 import os
 from datetime import timedelta
 from datetime import timezone
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -74,7 +73,7 @@ async def create_project(
     project: ProjectCreateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ProjectReadV1]:
+) -> ProjectReadV1 | None:
     """
     Create new poject
     """
@@ -100,7 +99,7 @@ async def read_project(
     project_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ProjectReadV1]:
+) -> ProjectReadV1 | None:
     """
     Return info on an existing project
     """
@@ -248,7 +247,7 @@ async def apply_workflow(
     request: Request,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ApplyWorkflowReadV1]:
+) -> ApplyWorkflowReadV1 | None:
     _raise_if_v1_is_read_only()
     settings = Inject(get_settings)
 

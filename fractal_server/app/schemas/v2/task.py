@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -19,25 +18,25 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    version: Optional[str] = None
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[str] = None
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    version: str | None = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
+    args_schema_version: str | None = None
+    docs_info: str | None = None
+    docs_link: HttpUrl | None = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
+    category: str | None = None
+    modality: str | None = None
     tags: list[str] = Field(default_factory=list)
-    authors: Optional[str] = None
+    authors: str | None = None
 
     # Validators
     @root_validator
@@ -109,40 +108,40 @@ class TaskReadV2(BaseModel):
     id: int
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
-    source: Optional[str] = None
-    version: Optional[str] = None
+    source: str | None = None
+    version: str | None = None
 
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
     meta_parallel: dict[str, Any]
     meta_non_parallel: dict[str, Any]
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[str] = None
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
+    args_schema_version: str | None = None
+    docs_info: str | None = None
+    docs_link: HttpUrl | None = None
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 
-    taskgroupv2_id: Optional[int] = None
+    taskgroupv2_id: int | None = None
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
-    authors: Optional[str] = None
+    category: str | None = None
+    modality: str | None = None
+    authors: str | None = None
     tags: list[str]
 
 
 class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 
-    command_parallel: Optional[str] = None
-    command_non_parallel: Optional[str] = None
-    input_types: Optional[dict[str, bool]] = None
-    output_types: Optional[dict[str, bool]] = None
+    command_parallel: str | None = None
+    command_non_parallel: str | None = None
+    input_types: dict[str, bool] | None = None
+    output_types: dict[str, bool] | None = None
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
-    authors: Optional[str] = None
-    tags: Optional[list[str]] = None
+    category: str | None = None
+    modality: str | None = None
+    authors: str | None = None
+    tags: list[str] | None = None
 
     # Validators
     @validator("input_types", "output_types")
@@ -184,7 +183,7 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
 class TaskImportV2(BaseModel, extra=Extra.forbid):
 
     pkg_name: str
-    version: Optional[str] = None
+    version: str | None = None
     name: str
     _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
     _version = validator("version", allow_reuse=True)(
@@ -201,7 +200,7 @@ class TaskImportV2Legacy(BaseModel):
 class TaskExportV2(BaseModel):
 
     pkg_name: str
-    version: Optional[str] = None
+    version: str | None = None
     name: str
 
     _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))

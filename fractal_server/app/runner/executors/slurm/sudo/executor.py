@@ -22,7 +22,6 @@ from pathlib import Path
 from subprocess import CompletedProcess  # nosec
 from typing import Any
 from typing import Callable
-from typing import Optional
 from typing import Sequence
 
 import cloudpickle
@@ -55,7 +54,7 @@ from fractal_server.string_tools import validate_cmd
 logger = set_logger(__name__)
 
 
-def _subprocess_run_or_raise(full_command: str) -> Optional[CompletedProcess]:
+def _subprocess_run_or_raise(full_command: str) -> CompletedProcess | None:
     """
     Wrap `subprocess.run` and raise  appropriate `JobExecutionError` if needed.
 
@@ -161,9 +160,9 @@ class SlurmJob:
         self,
         num_tasks_tot: int,
         slurm_config: SlurmConfig,
-        workflow_task_file_prefix: Optional[str] = None,
-        slurm_file_prefix: Optional[str] = None,
-        wftask_file_prefixes: Optional[tuple[str, ...]] = None,
+        workflow_task_file_prefix: str | None = None,
+        slurm_file_prefix: str | None = None,
+        wftask_file_prefixes: tuple[str, ...] | None = None,
         single_task_submission: bool = False,
     ):
         if single_task_submission and num_tasks_tot > 1:
@@ -220,7 +219,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     workflow_dir_remote: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
     keep_pickle_files: bool
-    slurm_account: Optional[str]
+    slurm_account: str | None
     jobs: dict[str, tuple[Future, SlurmJob]]
 
     def __init__(
@@ -228,12 +227,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_user: str,
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
-        shutdown_file: Optional[str] = None,
-        user_cache_dir: Optional[str] = None,
-        common_script_lines: Optional[list[str]] = None,
-        slurm_poll_interval: Optional[int] = None,
+        shutdown_file: str | None = None,
+        user_cache_dir: str | None = None,
+        common_script_lines: list[str] | None = None,
+        slurm_poll_interval: int | None = None,
         keep_pickle_files: bool = False,
-        slurm_account: Optional[str] = None,
+        slurm_account: str | None = None,
         *args,
         **kwargs,
     ):
@@ -516,9 +515,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         single_task_submission: bool = False,
-        args: Optional[Sequence[Any]] = None,
-        kwargs: Optional[dict] = None,
-        components: Optional[list[Any]] = None,
+        args: Sequence[Any] | None = None,
+        kwargs: dict | None = None,
+        components: list[Any] | None = None,
     ) -> Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the

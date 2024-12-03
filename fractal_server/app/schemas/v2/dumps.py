@@ -8,8 +8,6 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of Job models;
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Extra
 
@@ -28,10 +26,10 @@ class TaskDumpV2(BaseModel):
     name: str
     type: str
 
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
-    source: Optional[str] = None
-    version: Optional[str]
+    command_non_parallel: str | None
+    command_parallel: str | None
+    source: str | None = None
+    version: str | None
 
     input_types: dict[str, bool]
     output_types: dict[str, bool]
@@ -49,12 +47,12 @@ class WorkflowTaskDumpV2(BaseModel):
 
     id: int
     workflow_id: int
-    order: Optional[int]
+    order: int | None
 
     input_filters: Filters
 
-    task_id: Optional[int]
-    task: Optional[TaskDumpV2]
+    task_id: int | None
+    task: TaskDumpV2 | None
 
 
 class WorkflowDumpV2(BaseModel, extra=Extra.forbid):

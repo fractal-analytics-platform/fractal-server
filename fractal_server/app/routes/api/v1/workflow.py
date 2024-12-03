@@ -10,8 +10,6 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -54,7 +52,7 @@ async def get_workflow_list(
     project_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[WorkflowReadV1]]:
+) -> list[WorkflowReadV1] | None:
     """
     Get workflow list for given project
     """
@@ -81,7 +79,7 @@ async def create_workflow(
     workflow: WorkflowCreateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV1]:
+) -> WorkflowReadV1 | None:
     """
     Create a workflow, associate to a project
     """
@@ -112,7 +110,7 @@ async def read_workflow(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV1]:
+) -> WorkflowReadV1 | None:
     """
     Get info on an existing workflow
     """
@@ -134,7 +132,7 @@ async def update_workflow(
     patch: WorkflowUpdateV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV1]:
+) -> WorkflowReadV1 | None:
     """
     Edit a workflow
     """
@@ -238,7 +236,7 @@ async def export_worfklow(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowExportV1]:
+) -> WorkflowExportV1 | None:
     """
     Export an existing workflow, after stripping all IDs
     """
@@ -271,7 +269,7 @@ async def import_workflow(
     workflow: WorkflowImportV1,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV1]:
+) -> WorkflowReadV1 | None:
     """
     Import an existing workflow into a project
 

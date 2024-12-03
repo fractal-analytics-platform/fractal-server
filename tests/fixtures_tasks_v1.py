@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from typing import AsyncGenerator
-from typing import Optional
 
 import pytest
 from devtools import debug  # noqa
@@ -16,13 +15,13 @@ from tests.execute_command import execute_command
 class MockTask(BaseModel):
     name: str
     command: str
-    meta: Optional[dict] = {}
+    meta: dict | None = {}
 
     def model_dump(self, *args, **kwargs):
         return self.dict(*args, **kwargs)
 
     @property
-    def parallelization_level(self) -> Optional[str]:
+    def parallelization_level(self) -> str | None:
         try:
             return self.meta["parallelization_level"]
         except KeyError:
@@ -39,7 +38,7 @@ class MockWorkflowTask(BaseModel):
     task: MockTask
     args: dict = {}
     meta: dict = {}
-    executor: Optional[str] = "default"
+    executor: str | None = "default"
 
     def model_dump(self, *args, **kwargs):
         return self.dict(*args, **kwargs)
@@ -60,7 +59,7 @@ class MockWorkflowTask(BaseModel):
         return self.task.is_parallel
 
     @property
-    def parallelization_level(self) -> Optional[str]:
+    def parallelization_level(self) -> str | None:
         return self.task.parallelization_level
 
 

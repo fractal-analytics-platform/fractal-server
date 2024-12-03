@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -40,10 +39,10 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     """
 
     package: str
-    package_version: Optional[str] = None
-    package_extras: Optional[str] = None
-    python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[dict[str, str]] = None
+    package_version: str | None = None
+    package_extras: str | None = None
+    python_version: Literal["3.9", "3.10", "3.11", "3.12"] | None = None
+    pinned_package_versions: dict[str, str] | None = None
 
     @validator("pinned_package_versions")
     def pinned_package_versions_validator(cls, value):
@@ -82,9 +81,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
         return value
 
     @validator("package_version")
-    def package_version_validator(
-        cls, v: Optional[str], values
-    ) -> Optional[str]:
+    def package_version_validator(cls, v: str | None, values) -> str | None:
         v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
             raise ValueError(
@@ -94,7 +91,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
         return v
 
     @validator("package_extras")
-    def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
+    def package_extras_validator(cls, value: str | None) -> str | None:
         value = valstr("package_extras")(value)
         validate_cmd(value, attribute_name="package_extras")
         return value
@@ -121,9 +118,9 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
     manifest: ManifestV2
     python_interpreter: str
     label: str
-    package_root: Optional[str]
-    package_name: Optional[str]
-    version: Optional[str]
+    package_root: str | None
+    package_name: str | None
+    version: str | None
 
     # Valstr
     _python_interpreter = validator("python_interpreter", allow_reuse=True)(

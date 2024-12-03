@@ -3,7 +3,6 @@ Definition of `/admin` routes.
 """
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -40,10 +39,10 @@ router_admin_v1 = APIRouter()
 
 @router_admin_v1.get("/project/", response_model=list[ProjectReadV1])
 async def view_project(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
+    id: int | None = None,
+    user_id: int | None = None,
+    timestamp_created_min: datetime | None = None,
+    timestamp_created_max: datetime | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectReadV1]:
@@ -77,12 +76,12 @@ async def view_project(
 
 @router_admin_v1.get("/workflow/", response_model=list[WorkflowReadV1])
 async def view_workflow(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    project_id: Optional[int] = None,
-    name_contains: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
+    id: int | None = None,
+    user_id: int | None = None,
+    project_id: int | None = None,
+    name_contains: str | None = None,
+    timestamp_created_min: datetime | None = None,
+    timestamp_created_max: datetime | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowReadV1]:
@@ -126,13 +125,13 @@ async def view_workflow(
 
 @router_admin_v1.get("/dataset/", response_model=list[DatasetReadV1])
 async def view_dataset(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    project_id: Optional[int] = None,
-    name_contains: Optional[str] = None,
-    type: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
+    id: int | None = None,
+    user_id: int | None = None,
+    project_id: int | None = None,
+    name_contains: str | None = None,
+    type: str | None = None,
+    timestamp_created_min: datetime | None = None,
+    timestamp_created_max: datetime | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetReadV1]:
@@ -179,17 +178,17 @@ async def view_dataset(
 
 @router_admin_v1.get("/job/", response_model=list[ApplyWorkflowReadV1])
 async def view_job(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    project_id: Optional[int] = None,
-    input_dataset_id: Optional[int] = None,
-    output_dataset_id: Optional[int] = None,
-    workflow_id: Optional[int] = None,
-    status: Optional[JobStatusTypeV1] = None,
-    start_timestamp_min: Optional[datetime] = None,
-    start_timestamp_max: Optional[datetime] = None,
-    end_timestamp_min: Optional[datetime] = None,
-    end_timestamp_max: Optional[datetime] = None,
+    id: int | None = None,
+    user_id: int | None = None,
+    project_id: int | None = None,
+    input_dataset_id: int | None = None,
+    output_dataset_id: int | None = None,
+    workflow_id: int | None = None,
+    status: JobStatusTypeV1 | None = None,
+    start_timestamp_min: datetime | None = None,
+    start_timestamp_max: datetime | None = None,
+    end_timestamp_min: datetime | None = None,
+    end_timestamp_max: datetime | None = None,
     log: bool = True,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
@@ -296,7 +295,7 @@ async def update_job(
     job_id: int,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ApplyWorkflowReadV1]:
+) -> ApplyWorkflowReadV1 | None:
     """
     Change the status of an existing job.
 

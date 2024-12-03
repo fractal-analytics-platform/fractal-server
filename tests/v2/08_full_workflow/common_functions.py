@@ -2,7 +2,6 @@ import os
 import shutil
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 from devtools import debug
 
@@ -24,8 +23,8 @@ async def full_workflow(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -201,8 +200,8 @@ async def full_workflow_TaskExecutionError(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
 
     if user_kwargs is None:
@@ -332,8 +331,8 @@ async def non_executable_task_command(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -407,8 +406,8 @@ async def failing_workflow_UnknownError(
     workflow_factory_v2,
     task_factory,
     task_factory_v2,
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -506,7 +505,7 @@ async def workflow_with_non_python_task(
     tmp777_path: Path,
     additional_user_kwargs=None,
     this_should_fail: bool = False,
-    user_settings_dict: Optional[dict] = None,
+    user_settings_dict: dict | None = None,
 ) -> str:
     """
     Run a non-python-task Fractal job.

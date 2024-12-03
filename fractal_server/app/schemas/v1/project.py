@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import validator
@@ -59,8 +58,8 @@ class ProjectUpdateV1(_ProjectBaseV1):
         read_only:
     """
 
-    name: Optional[str]
-    read_only: Optional[bool]
+    name: str | None
+    read_only: bool | None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

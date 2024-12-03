@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -10,7 +9,7 @@ def create_cellvoyager_ome_zarr(
     zarr_urls: list[str],
     zarr_dir: str,
     image_dir: str,
-    fake_list_relative_paths: Optional[list[str]] = None,
+    fake_list_relative_paths: list[str] | None = None,
 ) -> dict:
     """
     Dummy task description.

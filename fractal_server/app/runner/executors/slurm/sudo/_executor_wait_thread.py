@@ -3,7 +3,6 @@ import time
 import traceback
 from itertools import count
 from typing import Callable
-from typing import Optional
 
 from cfut import FileWaitThread
 
@@ -35,7 +34,7 @@ class FractalFileWaitThread(FileWaitThread):
     """
 
     slurm_user: str
-    shutdown_file: Optional[str] = None
+    shutdown_file: str | None = None
     shutdown_callback: Callable
 
     def __init__(self, *args, **kwargs):

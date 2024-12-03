@@ -14,7 +14,6 @@ This module provides logging utilities
 """
 import logging
 from pathlib import Path
-from typing import Optional
 from typing import Union
 
 from .config import get_settings
@@ -25,7 +24,7 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
 
 
-def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
+def get_logger(logger_name: str | None = None) -> logging.Logger:
     """
     Wrap the
     [`logging.getLogger`](https://docs.python.org/3/library/logging.html#logging.getLogger)
@@ -57,7 +56,7 @@ def get_logger(logger_name: Optional[str] = None) -> logging.Logger:
 def set_logger(
     logger_name: str,
     *,
-    log_file_path: Optional[Union[str, Path]] = None,
+    log_file_path: Union[str, Path] | None = None,
 ) -> logging.Logger:
     """
     Set up a `fractal-server` logger

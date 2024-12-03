@@ -16,7 +16,6 @@ import json
 import logging
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
@@ -32,8 +31,8 @@ def assemble_history_failed_job(
     job: JobV2,
     dataset: DatasetV2,
     workflow: WorkflowV2,
-    logger_name: Optional[str] = None,
-    failed_wftask: Optional[WorkflowTaskV2] = None,
+    logger_name: str | None = None,
+    failed_wftask: WorkflowTaskV2 | None = None,
 ) -> list[dict[str, Any]]:
     """
     Assemble `history` after a workflow-execution job fails.
@@ -108,7 +107,7 @@ def assemble_history_failed_job(
     return new_history
 
 
-def assemble_images_failed_job(job: JobV2) -> Optional[dict[str, Any]]:
+def assemble_images_failed_job(job: JobV2) -> dict[str, Any] | None:
     """
     Assemble `DatasetV2.images` for a failed workflow-execution.
 
@@ -133,7 +132,7 @@ def assemble_images_failed_job(job: JobV2) -> Optional[dict[str, Any]]:
         return None
 
 
-def assemble_filters_failed_job(job: JobV2) -> Optional[dict[str, Any]]:
+def assemble_filters_failed_job(job: JobV2) -> dict[str, Any] | None:
     """
     Assemble `DatasetV2.filters` for a failed workflow-execution.
 

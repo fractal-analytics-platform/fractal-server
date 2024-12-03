@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import Any
-from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
@@ -39,10 +38,10 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 
 class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
-    args_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
+    meta_non_parallel: dict[str, Any] | None
+    meta_parallel: dict[str, Any] | None
+    args_non_parallel: dict[str, Any] | None
+    args_parallel: dict[str, Any] | None
     input_filters: Filters = Field(default_factory=Filters)
 
     # Validators
@@ -87,12 +86,12 @@ class WorkflowTaskReadV2(BaseModel):
     id: int
 
     workflow_id: int
-    order: Optional[int]
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
+    order: int | None
+    meta_non_parallel: dict[str, Any] | None
+    meta_parallel: dict[str, Any] | None
 
-    args_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
+    args_non_parallel: dict[str, Any] | None
+    args_parallel: dict[str, Any] | None
 
     input_filters: Filters
 
@@ -102,16 +101,16 @@ class WorkflowTaskReadV2(BaseModel):
 
 
 class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
-    warning: Optional[str] = None
+    warning: str | None = None
 
 
 class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
-    args_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
-    input_filters: Optional[Filters]
+    meta_non_parallel: dict[str, Any] | None
+    meta_parallel: dict[str, Any] | None
+    args_non_parallel: dict[str, Any] | None
+    args_parallel: dict[str, Any] | None
+    input_filters: Filters | None
 
     # Validators
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
@@ -152,12 +151,12 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
 class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
 
-    input_filters: Optional[Filters] = None
+    input_filters: Filters | None = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
@@ -177,10 +176,10 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
     input_filters: Filters = Field(default_factory=Filters)
 
     task: TaskExportV2
