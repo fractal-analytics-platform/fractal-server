@@ -119,7 +119,7 @@ async def test_collect_pip_local_fail_rmtree(
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
-                wheel_buffer=whl,
+                wheel_buffer=whl.read(),
                 wheel_filename=wheel_path.name,
             )
         except RuntimeError as e:

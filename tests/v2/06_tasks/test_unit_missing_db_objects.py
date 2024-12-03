@@ -38,10 +38,20 @@ def test_unit_missing_objects(db, caplog):
     ]:
         caplog.clear()
         assert caplog.text == ""
-        function(
-            task_group_activity_id=9999,
-            task_group_id=9999,
-            fractal_ssh=None,
-            tasks_base_dir="/invalid",
-        )
+        if function == collect_ssh:
+            function(
+                task_group_activity_id=9999,
+                task_group_id=9999,
+                fractal_ssh=None,
+                tasks_base_dir="/invalid",
+                wheel_buffer=None,
+                wheel_filename=None,
+            )
+        else:
+            function(
+                task_group_activity_id=9999,
+                task_group_id=9999,
+                fractal_ssh=None,
+                tasks_base_dir="/invalid",
+            )
         assert "Cannot find database rows" in caplog.text

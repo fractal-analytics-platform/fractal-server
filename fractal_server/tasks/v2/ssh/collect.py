@@ -142,7 +142,6 @@ def collect_ssh(
                 return
 
             try:
-
                 # Prepare replacements for templates
                 script_dir_remote = (
                     Path(task_group.path) / SCRIPTS_SUBFOLDER
@@ -190,7 +189,9 @@ def collect_ssh(
                 )
 
                 logger.debug("installing - START")
-                # Set status to ONGOING and refresh logs
+                logger.debug(
+                    f"{common_args=}"
+                )  # Set status to ONGOING and refresh logs
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
