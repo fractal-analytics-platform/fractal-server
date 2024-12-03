@@ -240,6 +240,7 @@ async def test_task_collection_ssh_from_wheel(
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
     remote_wheel_path = (tmp777_path / Path(local_wheel_path).name).as_posix()
+
     with open(local_wheel_path, "rb") as f:
         files = {"files": (Path(local_wheel_path).name, f, "application/zip")}
         async with MockCurrentUser(
@@ -265,8 +266,16 @@ async def test_task_collection_ssh_from_wheel(
             task_group_activity = res.json()
 
             assert task_group_activity["status"] == "OK"
-            # FIXME: add assert for new wheel_path
+            task_group_id = res.json()["taskgroupv2_id"]
 
+            # Check task-group
+            res = await client.get(f"/api/v2/task-group/{task_group_id}/")
+            assert res.status_code == 200
+            wheel_path = res.json()["wheel_path"]
+            pip_freeze = res.json()["pip_freeze"]
+            assert wheel_path != remote_wheel_path
+            assert f"fractal-tasks-mock @ file://{wheel_path}" in pip_freeze
+            
             # API FAILURE: wheel file and version set
             res = await client.post(
                 f"{PREFIX}/collect/pip/",

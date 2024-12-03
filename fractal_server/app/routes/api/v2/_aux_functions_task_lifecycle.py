@@ -182,8 +182,8 @@ async def check_no_submitted_job(
     Find submitted jobs which include tasks from a given task group.
 
     Arguments:
-        task_id_list: List of TaskV2 IDs
-        db: Database session
+        task_group_id: ID of the `TaskGroupV2` object.
+        db: Asynchronous database session.
     """
     stm = (
         select(func.count(JobV2.id))

@@ -2,8 +2,16 @@
 
 # Unreleased
 
+* Docs
+    * Improve docstrings and reduce mkdocs warnings (\#2122).
+
+# 2.9.1
+
+* Task collection:
+    * Fix bug in wheel-based SSH task-collection (\#2119).
 * Testing:
     * Re-include a specific test previously skipped for Python 3.12 (\#2114).
+    * Add metadata to `fractal-tasks-mock` package (\#2117).
 * Docs:
     * Add info about working versions.
 

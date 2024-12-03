@@ -142,6 +142,7 @@ def collect_ssh(
                 return
 
             try:
+
                 # Prepare replacements for templates
                 script_dir_remote = (
                     Path(task_group.path) / SCRIPTS_SUBFOLDER

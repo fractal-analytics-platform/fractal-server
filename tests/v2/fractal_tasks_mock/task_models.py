@@ -2,6 +2,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class _BaseTask(BaseModel):
@@ -11,9 +12,12 @@ class _BaseTask(BaseModel):
 
     name: str
     executable: str
-    meta: Optional[dict[str, Any]]
-    input_types: Optional[dict[str, bool]]
-    output_types: Optional[dict[str, bool]]
+    meta: Optional[dict[str, Any]] = None
+    input_types: Optional[dict[str, bool]] = None
+    output_types: Optional[dict[str, bool]] = None
+    category: Optional[str] = None
+    modality: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
 
 
 class CompoundTask(_BaseTask):

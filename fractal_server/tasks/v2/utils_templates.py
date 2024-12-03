@@ -19,9 +19,9 @@ def customize_template(
     Customize a bash-script template and write it to disk.
 
     Args:
-        template_filename:
-        templates_folder:
-        replacements:
+        template_name: Name of the template that will be customized.
+        replacements: List of replacements for template customization.
+        script_path: Local path where the customized template will be written.
     """
     # Read template
     template_path = TEMPLATES_DIR / template_name
