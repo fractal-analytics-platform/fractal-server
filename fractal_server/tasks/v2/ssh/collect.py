@@ -2,6 +2,7 @@ import logging
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
@@ -12,9 +13,9 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
+from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.v2.ssh._utils import _copy_wheel_file_ssh
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
@@ -32,12 +33,37 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
+def _write_wheel_file_and_send(
+    wheel_buffer: bytes,
+    wheel_filename: str,
+    task_group: TaskGroupV2,
+    fractal_ssh: FractalSSH,
+    tmpdir: str,
+):
+    logger = get_logger(LOGGER_NAME)
+
+    tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
+    logger.debug(f"[_write_wheel_file] START {tmp_wheel_path=}")
+    with open(tmp_wheel_path, "wb") as wheel_file:
+        wheel_file.write(wheel_buffer)
+
+    dest = (Path(task_group.path) / wheel_filename).as_posix()
+    logger.debug(f"[_send_wheel_file] START {dest=}")
+    fractal_ssh.send_file(
+        local=tmp_wheel_path,
+        remote=dest,
+    )
+    return dest
+
+
 def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
+    wheel_buffer: Optional[bytes],
+    wheel_filename: Optional[str],
 ) -> None:
     """
     Collect a task package over SSH
@@ -117,6 +143,29 @@ def collect_ssh(
 
             try:
                 # Prepare replacements for templates
+                script_dir_remote = (
+                    Path(task_group.path) / SCRIPTS_SUBFOLDER
+                ).as_posix()
+                # Create remote `task_group.path` and `script_dir_remote`
+                # folders (note that because of `parents=True` we  are in
+                # the `no error if existing, make parent directories as
+                # needed` scenario for `mkdir`)
+                fractal_ssh.mkdir(folder=task_group.path, parents=True)
+                fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
+
+                # Create wheel file in a local tmp dir
+                # then send the file via ssh to the remote path
+                if wheel_buffer:
+                    new_wheel_path = _write_wheel_file_and_send(
+                        wheel_buffer=wheel_buffer,
+                        wheel_filename=wheel_filename,
+                        task_group=task_group,
+                        fractal_ssh=fractal_ssh,
+                        tmpdir=tmpdir,
+                    )
+                    task_group.wheel_path = new_wheel_path
+                    task_group = add_commit_refresh(obj=task_group, db=db)
+
                 replacements = get_collection_replacements(
                     task_group=task_group,
                     python_bin=get_python_interpreter_v2(
@@ -125,9 +174,6 @@ def collect_ssh(
                 )
 
                 # Prepare common arguments for `_customize_and_run_template``
-                script_dir_remote = (
-                    Path(task_group.path) / SCRIPTS_SUBFOLDER
-                ).as_posix()
                 common_args = dict(
                     replacements=replacements,
                     script_dir_local=(
@@ -142,25 +188,7 @@ def collect_ssh(
                     logger_name=LOGGER_NAME,
                 )
 
-                # Create remote `task_group.path` and `script_dir_remote`
-                # folders (note that because of `parents=True` we  are in
-                # the `no error if existing, make parent directories as
-                # needed` scenario for `mkdir`)
-                fractal_ssh.mkdir(folder=task_group.path, parents=True)
-                fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
-
-                # Copy wheel file into task group path
-                if task_group.wheel_path:
-                    new_wheel_path = _copy_wheel_file_ssh(
-                        task_group=task_group,
-                        fractal_ssh=fractal_ssh,
-                        logger_name=LOGGER_NAME,
-                    )
-                    task_group.wheel_path = new_wheel_path
-                    task_group = add_commit_refresh(obj=task_group, db=db)
-
                 logger.debug("installing - START")
-
                 # Set status to ONGOING and refresh logs
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity.log = get_current_log(log_file_path)
@@ -173,7 +201,6 @@ def collect_ssh(
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
-
                 # Run script 2
                 stdout = _customize_and_run_template(
                     template_filename="2_pip_install.sh",

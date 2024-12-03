@@ -240,51 +240,50 @@ async def test_task_collection_ssh_from_wheel(
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
     remote_wheel_path = (tmp777_path / Path(local_wheel_path).name).as_posix()
-    fractal_ssh.send_file(
-        local=local_wheel_path,
-        remote=remote_wheel_path,
-    )
+    with open(local_wheel_path, "rb") as f:
+        files = {"files": (Path(local_wheel_path).name, f, "application/zip")}
+        async with MockCurrentUser(
+            user_kwargs=dict(is_verified=True),
+            user_settings_dict=user_settings_dict,
+        ):
+            # SUCCESSFUL COLLECTION
+            res = await client.post(
+                f"{PREFIX}/collect/pip/",
+                data=dict(
+                    package=remote_wheel_path,
+                    python_version=current_py_version,
+                ),
+                files=files,
+            )
+            assert res.status_code == 202
+            assert res.json()["status"] == "pending"
+            task_group_activity_id = res.json()["id"]
+            res = await client.get(
+                f"/api/v2/task-group/activity/{task_group_activity_id}/"
+            )
+            assert res.status_code == 200
+            task_group_activity = res.json()
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict=user_settings_dict,
-    ):
-        # SUCCESSFUL COLLECTION
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                package=remote_wheel_path,
-                python_version=current_py_version,
-            ),
-        )
-        assert res.status_code == 202
-        assert res.json()["status"] == "pending"
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        assert res.status_code == 200
-        task_group_activity = res.json()
+            assert task_group_activity["status"] == "OK"
+            # FIXME: add assert for new wheel_path
 
-        assert task_group_activity["status"] == "OK"
-        # FIXME: add assert for new wheel_path
+            # API FAILURE: wheel file and version set
+            res = await client.post(
+                f"{PREFIX}/collect/pip/",
+                data=dict(
+                    package=remote_wheel_path,
+                    package_version="1.2.3",
+                    python_version=current_py_version,
+                ),
+                files=files,
+            )
+            assert res.status_code == 422
+            error_msg = (
+                "Cannot provide package version when package is a wheel file."
+            )
+            assert error_msg in str(res.json()["detail"])
 
-        # API FAILURE: wheel file and version set
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                package=remote_wheel_path,
-                package_version="1.2.3",
-                python_version=current_py_version,
-            ),
-        )
-        assert res.status_code == 422
-        error_msg = (
-            "Cannot provide package version when package " "is a wheel file."
-        )
-        assert error_msg in str(res.json()["detail"])
-
-        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+            _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
 
 async def test_task_collection_ssh_failure(
@@ -351,52 +350,58 @@ async def test_task_collection_ssh_failure(
         package=remote_wheel_path,
         python_version=current_py_version,
     )
+    with open(local_wheel_path, "rb") as f:
+        files = {"files": (Path(local_wheel_path).name, f, "application/zip")}
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict=user_settings_dict,
-    ):
-        # Trigger task collection (first time)
-        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        assert res.status_code == 200
-        task_group_activity = res.json()
+        async with MockCurrentUser(
+            user_kwargs=dict(is_verified=True),
+            user_settings_dict=user_settings_dict,
+        ):
+            # Trigger task collection (first time)
+            res = await client.post(
+                f"{PREFIX}/collect/pip/", data=payload, files=files
+            )
+            assert res.status_code == 202
+            task_group_activity_id = res.json()["id"]
+            res = await client.get(
+                f"/api/v2/task-group/activity/{task_group_activity_id}/"
+            )
+            assert res.status_code == 200
+            task_group_activity = res.json()
+            debug(res.json())
+            assert task_group_activity["status"] == "failed"
+            assert "No such file or directory" in task_group_activity["log"]
 
-        assert task_group_activity["status"] == "failed"
-        assert "No such file or directory" in task_group_activity["log"]
+            # Patch ssh.remove_folder
+            import fractal_server.tasks.v2.ssh.collect
 
-        # Patch ssh.remove_folder
-        import fractal_server.tasks.v2.ssh.collect
+            ERROR_MSG = "Could not remove folder!"
 
-        ERROR_MSG = "Could not remove folder!"
+            def patched_remove_folder(*args, **kwargs):
+                raise RuntimeError(ERROR_MSG)
 
-        def patched_remove_folder(*args, **kwargs):
-            raise RuntimeError(ERROR_MSG)
+            monkeypatch.setattr(
+                fractal_server.tasks.v2.ssh.collect.FractalSSH,
+                "remove_folder",
+                patched_remove_folder,
+            )
 
-        monkeypatch.setattr(
-            fractal_server.tasks.v2.ssh.collect.FractalSSH,
-            "remove_folder",
-            patched_remove_folder,
-        )
+            # Trigger task collection (first time)
+            res = await client.post(
+                f"{PREFIX}/collect/pip/", data=payload, files=files
+            )
+            assert res.status_code == 202
+            task_group_activity_id = res.json()["id"]
+            res = await client.get(
+                f"/api/v2/task-group/activity/{task_group_activity_id}/"
+            )
+            assert res.status_code == 200
+            task_group_activity = res.json()
+            assert task_group_activity["status"] == "failed"
+            assert "Removing folder failed" in task_group_activity["log"]
+            assert ERROR_MSG in task_group_activity["log"]
 
-        # Trigger task collection (first time)
-        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
-        assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "failed"
-        assert "Removing folder failed" in task_group_activity["log"]
-        assert ERROR_MSG in task_group_activity["log"]
-
-        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+            _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
 
 async def test_task_collection_ssh_failure_no_connection(
@@ -439,7 +444,7 @@ async def test_task_collection_ssh_failure_no_connection(
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
+            data=dict(
                 package="fractal-tasks-core",
                 python_version=current_py_version,
             ),

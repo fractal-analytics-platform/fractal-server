@@ -331,6 +331,8 @@ async def collect_tasks_pip(
             task_group_activity_id=task_group_activity.id,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
+            wheel_buffer=whl_buff,
+            wheel_filename=files[0].filename if files else None,
         )
 
     else:

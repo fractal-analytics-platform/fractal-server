@@ -126,12 +126,7 @@ def collect_local(
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
 
-                # Copy wheel file into task group path
-                # if task_group.wheel_path:
-                #     new_wheel_path = _copy_wheel_file_local(
-                #                                       task_group=task_group)
-                #     task_group.wheel_path = new_wheel_path
-                #     task_group = add_commit_refresh(obj=task_group, db=db)
+                # Write the wheel file in the task_group.path
                 if wheel_buffer:
                     new_wheel_path = _write_wheel_file_local(
                         wheel_buffer=wheel_buffer,
