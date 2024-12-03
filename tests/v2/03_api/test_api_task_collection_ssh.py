@@ -242,7 +242,7 @@ async def test_task_collection_ssh_from_wheel(
     remote_wheel_path = (tmp777_path / Path(local_wheel_path).name).as_posix()
 
     with open(local_wheel_path, "rb") as f:
-        files = {"files": (Path(local_wheel_path).name, f, "application/zip")}
+        files = {"file": (Path(local_wheel_path).name, f, "application/zip")}
         async with MockCurrentUser(
             user_kwargs=dict(is_verified=True),
             user_settings_dict=user_settings_dict,
@@ -360,7 +360,7 @@ async def test_task_collection_ssh_failure(
         python_version=current_py_version,
     )
     with open(local_wheel_path, "rb") as f:
-        files = {"files": (Path(local_wheel_path).name, f, "application/zip")}
+        files = {"file": (Path(local_wheel_path).name, f, "application/zip")}
 
         async with MockCurrentUser(
             user_kwargs=dict(is_verified=True),

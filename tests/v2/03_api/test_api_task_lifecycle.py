@@ -297,7 +297,7 @@ async def test_lifecycle(
     wheel_path = tmp777_path / old_wheel_path.name
     shutil.copy(old_wheel_path, wheel_path)
     with open(wheel_path, "rb") as f:
-        files = {"files": (wheel_path.name, f, "application/zip")}
+        files = {"file": (wheel_path.name, f, "application/zip")}
         async with MockCurrentUser(
             user_kwargs=dict(is_verified=True),
             user_settings_dict=user_settings_dict,
