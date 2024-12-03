@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Docs
+    * Improve docstrings and reduce mkdocs warnings (\#2122).
+
 # 2.9.1
 
 * Task collection:
