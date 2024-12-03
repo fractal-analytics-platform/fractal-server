@@ -357,36 +357,28 @@ async def test_task_collection_ssh_failure(
             user_kwargs=dict(is_verified=True),
             user_settings_dict=user_settings_dict,
         ):
-            # Trigger task collection (first time)
-            res = await client.post(
-                f"{PREFIX}/collect/pip/", data=payload, files=files
-            )
-            assert res.status_code == 202
-            task_group_activity_id = res.json()["id"]
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            assert res.status_code == 200
-            task_group_activity = res.json()
-            debug(res.json())
-            assert task_group_activity["status"] == "failed"
-            assert "No such file or directory" in task_group_activity["log"]
-
             # Patch ssh.remove_folder
             import fractal_server.tasks.v2.ssh.collect
 
             ERROR_MSG = "Could not remove folder!"
+            ERROR_SEND = "Failed to send file!"
 
             def patched_remove_folder(*args, **kwargs):
                 raise RuntimeError(ERROR_MSG)
+
+            def patched_send_file(*args, **kwargs):
+                raise RuntimeError(ERROR_SEND)
 
             monkeypatch.setattr(
                 fractal_server.tasks.v2.ssh.collect.FractalSSH,
                 "remove_folder",
                 patched_remove_folder,
             )
-
-            # Trigger task collection (first time)
+            monkeypatch.setattr(
+                fractal_server.tasks.v2.ssh.collect.FractalSSH,
+                "send_file",
+                patched_send_file,
+            )
             res = await client.post(
                 f"{PREFIX}/collect/pip/", data=payload, files=files
             )
