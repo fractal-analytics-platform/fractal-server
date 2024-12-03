@@ -66,10 +66,8 @@ def set_logger(
 
     * The attribute `Logger.propagate` set to `False`;
     * One and only one `logging.StreamHandler` handler, with severity level set
-    to
-    [`FRACTAL_LOGGING_LEVEL`](../../../../configuration/#fractal_server.config.Settings.FRACTAL_LOGGING_LEVEL)
-    and formatter set as in the `logger.LOG_FORMAT` variable from the current
-    module;
+    to `FRACTAL_LOGGING_LEVEL` and formatter set as in the `logger.LOG_FORMAT`
+    variable from the current module;
     * One or many `logging.FileHandler` handlers, including one pointint to
     `log_file_path` (if set); all these handlers have severity level set to
     `logging.DEBUG`.
