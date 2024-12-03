@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API
+    * Remove `cache_dir` and use `project_dir/.fractal_cache` (\#2121).
 * Docs
     * Improve docstrings and reduce mkdocs warnings (\#2122).
 

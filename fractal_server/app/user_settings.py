@@ -32,11 +32,11 @@ class SlurmSudoUserSettings(BaseModel):
 
     Attributes:
         slurm_user: User to be impersonated via `sudo -u`.
-        cache_dir: Folder where `slurm_user` can write.
+        project_dir: Folder where `slurm_user` can write.
         slurm_accounts:
             List of SLURM accounts, to be used upon Fractal job submission.
     """
 
     slurm_user: str
-    cache_dir: str
+    project_dir: str
     slurm_accounts: list[str]

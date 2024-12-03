@@ -260,16 +260,16 @@ async def test_project_apply_missing_user_attributes(
 ):
     """
     When using the slurm backend, `user.settings.slurm_user` and
-    `user.settings.cache_dir` become required attributes.
+    `user.settings.project_dir` become required attributes.
     If they are missing, the apply endpoint fails with a 422 error.
     """
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        # Make sure that user.settings.cache_dir was not set
+        # Make sure that user.settings.project_dir was not set
         debug(user)
-        assert user.settings.cache_dir is None
+        assert user.settings.project_dir is None
 
         # Create project, datasets, workflow, task, workflowtask
         project = await project_factory(user)
@@ -303,7 +303,7 @@ async def test_project_apply_missing_user_attributes(
         assert res.status_code == 422
         assert "User settings are not valid" in res.json()["detail"]
 
-        user.settings.cache_dir = "/tmp"
+        user.settings.project_dir = "/tmp"
         user.settings.slurm_user = None
         await db.merge(user)
         await db.commit()
