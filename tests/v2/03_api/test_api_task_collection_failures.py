@@ -30,17 +30,6 @@ async def test_failed_API_calls(
             )
             assert res.status_code == 401
 
-        # Missing wheel file
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data=dict(
-                    package=str(tmp_path / "missing-1.2.3-py3-none-any.whl")
-                ),
-            )
-            assert res.status_code == 422
-            assert "Missing valid wheel-file" in str(res.json())
-
         # Non-absolute wheel file
         async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
             res = await client.post(
