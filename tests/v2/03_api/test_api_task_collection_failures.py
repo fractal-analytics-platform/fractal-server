@@ -18,7 +18,7 @@ async def test_non_verified_user(client, MockCurrentUser, testdata_path):
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
     with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f, "application/zip")}
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
         # Task collection triggered by non-verified user
         async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
             res = await client.post(
@@ -51,7 +51,7 @@ async def test_invalid_manifest(
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
     with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f, "application/zip")}
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
         async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
             # API call is successful
             res = await client.post(
@@ -78,7 +78,7 @@ async def test_invalid_manifest(
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
     with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f, "application/zip")}
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
         async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
             # API call is successful
             res = await client.post(
@@ -119,7 +119,7 @@ async def test_missing_task_executable(
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
     with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f, "application/zip")}
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
         async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
             # Trigger collection
             res = await client.post(
@@ -162,7 +162,7 @@ async def test_folder_already_exists(
             / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
         )
         with open(wheel_path, "rb") as f:
-            files = {"file": (wheel_path.name, f, "application/zip")}
+            files = {"file": (wheel_path.name, f.read(), "application/zip")}
             # Fail because folder already exists
             res = await client.post(
                 f"{PREFIX}/collect/pip/", data={}, files=files
@@ -201,7 +201,7 @@ async def test_failure_cleanup(
             / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
         )
         with open(wheel_path, "rb") as f:
-            files = {"file": (wheel_path.name, f, "application/zip")}
+            files = {"file": (wheel_path.name, f.read(), "application/zip")}
             TASK_GROUP_PATH = (
                 tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
             )
