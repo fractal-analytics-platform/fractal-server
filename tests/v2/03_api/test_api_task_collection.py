@@ -62,6 +62,7 @@ async def test_task_collection_from_wheel_non_canonical(
             res = await client.post(
                 f"{PREFIX}/collect/pip/", data=payload, files=files
             )
+            debug(res.json())
             assert res.status_code == 202
             assert res.json()["status"] == "pending"
             task_group_activity_id = res.json()["id"]

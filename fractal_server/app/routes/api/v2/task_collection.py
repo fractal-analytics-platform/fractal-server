@@ -55,22 +55,6 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-def parse_pinned_package_versions(
-    pinned_package_versions: str = Form(None),
-) -> dict | None:
-    if pinned_package_versions:
-        try:
-            data = json.loads(pinned_package_versions)
-            return data
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"{str(e)}",
-            )
-    else:
-        return None
-
-
 def parse_task_collect(
     package: str = Form(...),
     package_version: Optional[str] = Form(None),
@@ -81,18 +65,22 @@ def parse_task_collect(
     # For http protocol this is sent as JSON, so it is no compatible with
     # form-data, for this reason we need another "dependency injection" to
     # parse the payload and return a valid dict.
-    pinned_package_versions: Optional[dict[str, str]] = Depends(
-        parse_pinned_package_versions
-    ),
+    pinned_package_versions: Optional[str] = Form(None),
 ) -> TaskCollectPipV2:
     try:
+        dict_pinned_pkg = (
+            json.loads(pinned_package_versions)
+            if pinned_package_versions
+            else None
+        )
         task_collect_pip = TaskCollectPipV2(
             package=package,
             package_version=package_version,
             package_extras=package_extras,
             python_version=python_version,
-            pinned_package_versions=pinned_package_versions,
+            pinned_package_versions=dict_pinned_pkg,
         )
+
         return task_collect_pip
     except ValidationError as e:
         raise HTTPException(
@@ -119,7 +107,6 @@ async def collect_tasks_pip(
     """
     Task-collection endpoint
     """
-
     # Get settings
     settings = Inject(get_settings)
 
@@ -262,15 +249,6 @@ async def collect_tasks_pip(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"{task_group_path} already exists.",
             )
-
-        # # Verify that wheel file exists
-        # wheel_path = task_group_attrs.get("wheel_path", None)
-        # if wheel_path is not None:
-        #     if not Path(wheel_path).exists():
-        #         raise HTTPException(
-        #             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        #             detail=f"No such file: {wheel_path}.",
-        #         )
 
     # Create TaskGroupV2 object
     task_group = TaskGroupV2(**task_group_attrs)
