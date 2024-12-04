@@ -25,7 +25,7 @@ async def test_failed_API_calls(
         async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
-                data={"package": "fractal-tasks-core"},
+                data={},
                 files=files,
             )
             assert res.status_code == 401
@@ -34,7 +34,7 @@ async def test_failed_API_calls(
         async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
-                data=dict(package=str("something.whl")),
+                data={},
                 files=files,
             )
             assert res.status_code == 422
@@ -68,7 +68,7 @@ async def test_invalid_manifest(
             # API call is successful
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
-                data=dict(package=wheel_path.as_posix()),
+                data={},
                 files=files,
             )
 
@@ -95,7 +95,7 @@ async def test_invalid_manifest(
             # API call is successful
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
-                data=dict(package=wheel_path.as_posix()),
+                data={},
                 files=files,
             )
 
@@ -136,7 +136,7 @@ async def test_missing_task_executable(
             # Trigger collection
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
-                data=dict(package=wheel_path.as_posix()),
+                data={},
                 files=files,
             )
 
@@ -176,15 +176,8 @@ async def test_folder_already_exists(
         with open(wheel_path, "rb") as f:
             files = {"file": (wheel_path.name, f, "application/zip")}
             # Fail because folder already exists
-            payload = dict(
-                package=(
-                    testdata_path.parent
-                    / "v2/fractal_tasks_mock/dist"
-                    / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-                ).as_posix(),
-            )
             res = await client.post(
-                f"{PREFIX}/collect/pip/", data=payload, files=files
+                f"{PREFIX}/collect/pip/", data={}, files=files
             )
             assert res.status_code == 422
             assert "already exists" in res.json()["detail"]
@@ -211,14 +204,7 @@ async def test_failure_cleanup(
     )
 
     # Valid part of the payload
-    payload = dict(
-        package=(
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        ).as_posix(),
-        package_extras="my_extra",
-    )
+    payload = dict(package_extras="my_extra")
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         wheel_path = (
