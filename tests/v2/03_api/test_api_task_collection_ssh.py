@@ -250,10 +250,7 @@ async def test_task_collection_ssh_from_wheel(
             # SUCCESSFUL COLLECTION
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
-                data=dict(
-                    package=remote_wheel_path,
-                    python_version=current_py_version,
-                ),
+                data=dict(python_version=current_py_version),
                 files=files,
             )
             assert res.status_code == 202
@@ -280,7 +277,6 @@ async def test_task_collection_ssh_from_wheel(
             res = await client.post(
                 f"{PREFIX}/collect/pip/",
                 data=dict(
-                    package=remote_wheel_path,
                     package_version="1.2.3",
                     python_version=current_py_version,
                 ),

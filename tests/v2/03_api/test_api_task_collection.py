@@ -48,12 +48,11 @@ async def test_task_collection_from_wheel_non_canonical(
         / "v2/fractal_tasks_non_canonical/dist"
         / "FrAcTaL_TaSkS_NoN_CaNoNiCaL-0.0.1-py3-none-any.whl"
     )
-    payload_package = wheel_path.as_posix()
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f, "application/zip")}
 
         # Prepare and validate payload
-        payload = dict(package=payload_package, package_extras="my_extra")
+        payload = dict(package_extras="my_extra")
         payload["python_version"] = current_py_version
         debug(payload)
 
@@ -330,9 +329,7 @@ async def test_task_collection_from_wheel_file(
         files = {"file": (wheel_path.name, f, "application/zip")}
 
         # Prepare and validate payload
-        payload = dict(
-            package=wheel_path.as_posix(), package_extras="my_extras"
-        )
+        payload = dict(package_extras="my_extras")
 
         async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
             # Trigger task collection

@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Literal
 from typing import Optional
 
 from fastapi import APIRouter
@@ -13,6 +12,8 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
+from pydantic import BaseModel
+from pydantic import root_validator
 from pydantic import ValidationError
 from sqlmodel import select
 
@@ -55,24 +56,62 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-def parse_task_collect(
-    package: str = Form(...),
+class CollectionRequestData(BaseModel):
+    """
+    Validate form data _and_ wheel file.
+    """
+
+    task_collect: TaskCollectPipV2
+    file: Optional[UploadFile] = None
+    origin: TaskGroupV2OriginEnum
+
+    @root_validator(pre=True)
+    def validate_data(cls, values):
+        file = values.get("file")
+        package = values.get("task_collect").package
+        package_version = values.get("task_collect").package_version
+
+        if file is None:
+            if package is None:
+                raise ValueError(
+                    "When no `file` is provided, `package` is required."
+                )
+            values["origin"] = TaskGroupV2OriginEnum.PYPI
+        else:
+            if package is not None:
+                raise ValueError(
+                    "Cannot set `package` when `file` is provided "
+                    f"(given package='{package}')."
+                )
+            if package_version is not None:
+                raise ValueError(
+                    "Cannot set `package_version` when `file` is "
+                    f"provided (given package_version='{package_version}')."
+                )
+            values["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+        return values
+
+
+def parse_request_data(
+    package: Optional[str] = Form(None),
     package_version: Optional[str] = Form(None),
     package_extras: Optional[str] = Form(None),
-    python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = Form(
-        None
-    ),
-    # For http protocol this is sent as JSON, so it is no compatible with
-    # form-data, for this reason we need another "dependency injection" to
-    # parse the payload and return a valid dict.
+    python_version: Optional[str] = Form(None),
     pinned_package_versions: Optional[str] = Form(None),
-) -> TaskCollectPipV2:
+    file: Optional[UploadFile] = File(None),
+) -> CollectionRequestData:
+    """
+    Expand the parsing/validation of `parse_form_data`, based on `file`.
+    """
+
     try:
+        # Convert dict_pinned_pkg from a JSON string into a Python dictionary
         dict_pinned_pkg = (
             json.loads(pinned_package_versions)
             if pinned_package_versions
             else None
         )
+        # Validate and coerce form data
         task_collect_pip = TaskCollectPipV2(
             package=package,
             package_version=package_version,
@@ -81,12 +120,18 @@ def parse_task_collect(
             pinned_package_versions=dict_pinned_pkg,
         )
 
-        return task_collect_pip
-    except ValidationError as e:
+    except (ValidationError, json.JSONDecodeError) as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"{str(e)}",
+            detail=f"Invalid request-body\n{str(e)}",
         )
+
+    data = CollectionRequestData(
+        task_collect=task_collect_pip,
+        file=file,
+    )
+
+    return data
 
 
 @router.post(
@@ -94,13 +139,12 @@ def parse_task_collect(
     response_model=TaskGroupActivityV2Read,
 )
 async def collect_tasks_pip(
-    background_tasks: BackgroundTasks,
-    response: Response,
     request: Request,
-    task_collect: TaskCollectPipV2 = Depends(parse_task_collect),
+    response: Response,
+    background_tasks: BackgroundTasks,
+    request_data: CollectionRequestData = Depends(parse_request_data),
     private: bool = Form(False),
     user_group_id: Optional[int] = Form(None),
-    file: Optional[UploadFile] = File(None),
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
@@ -110,11 +154,14 @@ async def collect_tasks_pip(
     # Get settings
     settings = Inject(get_settings)
 
-    # Initialize whl_buff as None
-    whl_buff = None
+    # Get some validated request data
+    task_collect = request_data.task_collect
 
     # Initialize task-group attributes
-    task_group_attrs = dict(user_id=user.id)
+    task_group_attrs = dict(
+        user_id=user.id,
+        origin=request_data.origin,
+    )
 
     # Set/check python version
     if task_collect.python_version is None:
@@ -146,27 +193,30 @@ async def collect_tasks_pip(
             "pinned_package_versions"
         ] = task_collect.pinned_package_versions
 
-    # Set pkg_name, version, origin and wheel_path
-    if task_collect.package.endswith(".whl"):
-        try:
-            whl_buff = await file.read()
+    # Initialize wheel_file_content as None
+    wheel_file_content = None
 
-            # task_group_attrs["wheel_path"] = files[0].filename
-            wheel_info = _parse_wheel_filename(file.filename)
-        except TypeError as e:
+    # Set pkg_name, version, origin and wheel_path
+    if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
+        try:
+            wheel_filename = request_data.file.filename
+            wheel_info = _parse_wheel_filename(wheel_filename)
+            wheel_file_content = await request_data.file.read()
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Missing valid wheel-file, {str(e)}",
+                detail=(
+                    f"Invalid wheel-file name {wheel_filename}. "
+                    f"Original error: {str(e)}",
+                ),
             )
         task_group_attrs["pkg_name"] = normalize_package_name(
             wheel_info["distribution"]
         )
         task_group_attrs["version"] = wheel_info["version"]
-        task_group_attrs["origin"] = TaskGroupV2OriginEnum.WHEELFILE
-    else:
+    elif request_data.origin == TaskGroupV2OriginEnum.PYPI:
         pkg_name = task_collect.package
         task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
-        task_group_attrs["origin"] = TaskGroupV2OriginEnum.PYPI
         latest_version = await get_package_version_from_pypi(
             task_collect.package,
             task_collect.package_version,
@@ -290,8 +340,10 @@ async def collect_tasks_pip(
             task_group_activity_id=task_group_activity.id,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
-            wheel_buffer=whl_buff,
-            wheel_filename=file.filename if file else None,
+            wheel_buffer=wheel_file_content,
+            wheel_filename=request_data.file.filename
+            if request_data.file
+            else None,
         )
 
     else:
@@ -301,8 +353,10 @@ async def collect_tasks_pip(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            wheel_buffer=whl_buff,
-            wheel_filename=file.filename if file else None,
+            wheel_buffer=wheel_file_content,
+            wheel_filename=request_data.file.filename
+            if request_data.file
+            else None,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "
