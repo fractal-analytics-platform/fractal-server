@@ -305,7 +305,7 @@ async def test_lifecycle(
             # STEP 1: Task collection
             res = await client.post(
                 "api/v2/task/collect/pip/",
-                data=dict(package=wheel_path.as_posix()),
+                data={},
                 files=files,
             )
             assert res.status_code == 202
