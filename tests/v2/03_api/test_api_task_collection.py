@@ -51,34 +51,34 @@ async def test_task_collection_from_wheel_non_canonical(
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f.read(), "application/zip")}
 
-        # Prepare and validate payload
-        payload = dict(package_extras="my_extra")
-        payload["python_version"] = current_py_version
-        debug(payload)
+    # Prepare and validate payload
+    payload = dict(package_extras="my_extra")
+    payload["python_version"] = current_py_version
+    debug(payload)
 
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            # Trigger task collection
-            res = await client.post(
-                f"{PREFIX}/collect/pip/", data=payload, files=files
-            )
-            debug(res.json())
-            assert res.status_code == 202
-            assert res.json()["status"] == "pending"
-            task_group_activity_id = res.json()["id"]
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            task_group_activity = res.json()
-            # Get collection info
-            assert res.status_code == 200
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/", data=payload, files=files
+        )
+        debug(res.json())
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        # Get collection info
+        assert res.status_code == 200
 
-            # Check that log were written, even with CRITICAL logging level
-            log = task_group_activity["log"]
-            assert log is not None
-            # Check that my_extra was included, in a local-package collection
-            assert ".whl[my_extra]" in log
-            assert task_group_activity["status"] == "OK"
-            assert task_group_activity["timestamp_ended"] is not None
+        # Check that log were written, even with CRITICAL logging level
+        log = task_group_activity["log"]
+        assert log is not None
+        # Check that my_extra was included, in a local-package collection
+        assert ".whl[my_extra]" in log
+        assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
 
 
 OLD_FRACTAL_TASKS_CORE_VERSION = "1.3.2"
@@ -328,48 +328,48 @@ async def test_task_collection_from_wheel_file(
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f.read(), "application/zip")}
 
-        # Prepare and validate payload
-        payload = dict(package_extras="my_extras")
+    # Prepare and validate payload
+    payload = dict(package_extras="my_extras")
 
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            # Trigger task collection
-            res = await client.post(
-                f"{PREFIX}/collect/pip/", data=payload, files=files
-            )
-            debug(res.json())
-            assert res.status_code == 202
-            assert res.json()["status"] == "pending"
-            assert res.json()["log"] is None
-            task_group_activity_id = res.json()["id"]
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            assert res.status_code == 200
-            task_group_activity = res.json()
-            debug(task_group_activity)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/", data=payload, files=files
+        )
+        debug(res.json())
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        assert res.json()["log"] is None
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        debug(task_group_activity)
 
-            assert task_group_activity["log"].count("\n") > 0
-            assert task_group_activity["log"].count("\\n") == 0
+        assert task_group_activity["log"].count("\n") > 0
+        assert task_group_activity["log"].count("\\n") == 0
 
-            assert task_group_activity["status"] == "OK"
-            assert task_group_activity["timestamp_ended"] is not None
-            # Check that log were written, even with CRITICAL logging level
-            log = task_group_activity["log"]
-            assert log is not None
-            # Check that my_extra was included, in a local-package collection
-            task_groupv2_id = task_group_activity["taskgroupv2_id"]
-            # Check pip_freeze attribute in TaskGroupV2
-            res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
-            assert res.status_code == 200
-            task_group = res.json()
-            pip_version = next(
-                line
-                for line in task_group["pip_freeze"].split("\n")
-                if line.startswith("pip")
-            ).split("==")[1]
-            assert Version(pip_version) <= Version(
-                settings.FRACTAL_MAX_PIP_VERSION
-            )
-            assert (
-                Path(res.json()["path"]) / Path(wheel_path).name
-            ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
+        assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
+        # Check that log were written, even with CRITICAL logging level
+        log = task_group_activity["log"]
+        assert log is not None
+        # Check that my_extra was included, in a local-package collection
+        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        # Check pip_freeze attribute in TaskGroupV2
+        res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
+        assert res.status_code == 200
+        task_group = res.json()
+        pip_version = next(
+            line
+            for line in task_group["pip_freeze"].split("\n")
+            if line.startswith("pip")
+        ).split("==")[1]
+        assert Version(pip_version) <= Version(
+            settings.FRACTAL_MAX_PIP_VERSION
+        )
+        assert (
+            Path(res.json()["path"]) / Path(wheel_path).name
+        ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())

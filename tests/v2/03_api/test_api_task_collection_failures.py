@@ -19,14 +19,14 @@ async def test_non_verified_user(client, MockCurrentUser, testdata_path):
     )
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f.read(), "application/zip")}
-        # Task collection triggered by non-verified user
-        async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data={},
-                files=files,
-            )
-            assert res.status_code == 401
+    # Task collection triggered by non-verified user
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 401
 
 
 async def test_invalid_manifest(
@@ -52,24 +52,24 @@ async def test_invalid_manifest(
     )
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f.read(), "application/zip")}
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            # API call is successful
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data={},
-                files=files,
-            )
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # API call is successful
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
 
-            assert res.status_code == 202
-            task_group_activity_id = res.json()["id"]
-            # Background task failed
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            task_group_activity = res.json()
-            assert task_group_activity["status"] == "failed"
-            assert task_group_activity["timestamp_ended"] is not None
-            assert "Wrong manifest version" in task_group_activity["log"]
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
+        assert "Wrong manifest version" in task_group_activity["log"]
 
     # Missing manifest
     wheel_path = (
@@ -79,24 +79,24 @@ async def test_invalid_manifest(
     )
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f.read(), "application/zip")}
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            # API call is successful
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data={},
-                files=files,
-            )
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # API call is successful
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
 
-            assert res.status_code == 202
-            task_group_activity_id = res.json()["id"]
-            # Background task failed
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            task_group_activity = res.json()
-            assert task_group_activity["status"] == "failed"
-            assert task_group_activity["timestamp_ended"] is not None
-            assert "manifest path not found" in task_group_activity["log"]
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
+        assert "manifest path not found" in task_group_activity["log"]
 
 
 async def test_missing_task_executable(
@@ -120,27 +120,27 @@ async def test_missing_task_executable(
     )
     with open(wheel_path, "rb") as f:
         files = {"file": (wheel_path.name, f.read(), "application/zip")}
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            # Trigger collection
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data={},
-                files=files,
-            )
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
 
-            assert res.status_code == 202
-            assert res.json()["status"] == "pending"
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
 
-            task_group_activity_id = res.json()["id"]
-            # Background task failed
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            assert res.status_code == 200
-            task_group_activity = res.json()
-            assert task_group_activity["status"] == "failed"
-            assert task_group_activity["timestamp_ended"] is not None
-            assert "missing file" in task_group_activity["log"]
+        task_group_activity_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
+        assert "missing file" in task_group_activity["log"]
 
 
 async def test_folder_already_exists(
@@ -163,12 +163,10 @@ async def test_folder_already_exists(
         )
         with open(wheel_path, "rb") as f:
             files = {"file": (wheel_path.name, f.read(), "application/zip")}
-            # Fail because folder already exists
-            res = await client.post(
-                f"{PREFIX}/collect/pip/", data={}, files=files
-            )
-            assert res.status_code == 422
-            assert "already exists" in res.json()["detail"]
+        # Fail because folder already exists
+        res = await client.post(f"{PREFIX}/collect/pip/", data={}, files=files)
+        assert res.status_code == 422
+        assert "already exists" in res.json()["detail"]
 
     # Failed task collection did not remove an existing folder
     assert expected_path.exists()
@@ -202,41 +200,37 @@ async def test_failure_cleanup(
         )
         with open(wheel_path, "rb") as f:
             files = {"file": (wheel_path.name, f.read(), "application/zip")}
-            TASK_GROUP_PATH = (
-                tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
-            )
-            assert not TASK_GROUP_PATH.exists()
+        TASK_GROUP_PATH = tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
+        assert not TASK_GROUP_PATH.exists()
 
-            # Endpoint returns correctly,
-            # despite invalid `pinned_package_versions`
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data=dict(
-                    **payload,
-                    pinned_package_versions=json.dumps(
-                        {"pydantic": "99.99.99"}
-                    ),
-                ),
-                files=files,
-            )
-            assert res.status_code == 202
-            task_group_activity_id = res.json()["id"]
-            # Background task failed
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity_id}/"
-            )
-            task_group_activity = res.json()
-            assert task_group_activity["status"] == "failed"
-            assert task_group_activity["timestamp_ended"] is not None
-            assert (
-                "No matching distribution found for pydantic==99.99.99"
-                in task_group_activity["log"]
-            )
+        # Endpoint returns correctly,
+        # despite invalid `pinned_package_versions`
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(
+                **payload,
+                pinned_package_versions=json.dumps({"pydantic": "99.99.99"}),
+            ),
+            files=files,
+        )
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        # Background task failed
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "failed"
+        assert task_group_activity["timestamp_ended"] is not None
+        assert (
+            "No matching distribution found for pydantic==99.99.99"
+            in task_group_activity["log"]
+        )
 
-            # Cleanup was performed correctly
-            assert not TASK_GROUP_PATH.exists()
-            res = await db.execute(select(TaskGroupV2))
-            assert len(res.scalars().all()) == 0
+        # Cleanup was performed correctly
+        assert not TASK_GROUP_PATH.exists()
+        res = await db.execute(select(TaskGroupV2))
+        assert len(res.scalars().all()) == 0
 
 
 async def test_invalid_python_version(
