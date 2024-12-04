@@ -54,25 +54,6 @@ router = APIRouter()
 
 logger = set_logger(__name__)
 
-#
-# @router.post("/collect/upload-form/")
-# async def collect_upload_form(
-#     response: Response,
-#     name: str = Form(...),
-#     is_accepted: Optional[bool] = Form(None),
-#     files: Optional[list[UploadFile]] = File(None),
-# ):
-#     if files:
-#         filename = files[0].filename
-#     else:
-#         filename = None
-#     response.status_code = status.HTTP_200_OK
-#     return {
-#         "payload": {"name": name, "is_accepted": is_accepted},
-#         "filename": filename,
-#     }
-#
-
 
 def parse_pinned_package_versions(
     pinned_package_versions: str = Form(None),
@@ -131,7 +112,7 @@ async def collect_tasks_pip(
     task_collect: TaskCollectPipV2 = Depends(parse_task_collect),
     private: bool = Form(False),
     user_group_id: Optional[int] = Form(None),
-    file: Optional[list[UploadFile]] = File(None),
+    file: Optional[UploadFile] = File(None),
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
@@ -181,10 +162,10 @@ async def collect_tasks_pip(
     # Set pkg_name, version, origin and wheel_path
     if task_collect.package.endswith(".whl"):
         try:
-            whl_buff = await file[0].read()
+            whl_buff = await file.read()
 
             # task_group_attrs["wheel_path"] = files[0].filename
-            wheel_info = _parse_wheel_filename(file[0].filename)
+            wheel_info = _parse_wheel_filename(file.filename)
         except TypeError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -332,7 +313,7 @@ async def collect_tasks_pip(
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
             wheel_buffer=whl_buff,
-            wheel_filename=file[0].filename if file else None,
+            wheel_filename=file.filename if file else None,
         )
 
     else:
@@ -343,7 +324,7 @@ async def collect_tasks_pip(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             wheel_buffer=whl_buff,
-            wheel_filename=file[0].filename if file else None,
+            wheel_filename=file.filename if file else None,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "
