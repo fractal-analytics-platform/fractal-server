@@ -348,9 +348,7 @@ async def test_task_collection_ssh_failure(
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
-    remote_wheel_path = (tmp777_path / Path(local_wheel_path).name).as_posix()
     payload = dict(
-        package=remote_wheel_path,
         python_version=current_py_version,
     )
     with open(local_wheel_path, "rb") as f:
