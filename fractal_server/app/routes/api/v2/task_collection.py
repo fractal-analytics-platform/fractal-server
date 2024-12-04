@@ -120,16 +120,16 @@ def parse_request_data(
             pinned_package_versions=dict_pinned_pkg,
         )
 
+        data = CollectionRequestData(
+            task_collect=task_collect_pip,
+            file=file,
+        )
+
     except (ValidationError, json.JSONDecodeError) as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid request-body\n{str(e)}",
         )
-
-    data = CollectionRequestData(
-        task_collect=task_collect_pip,
-        file=file,
-    )
 
     return data
 
