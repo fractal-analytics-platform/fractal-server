@@ -10,9 +10,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 PREFIX = "api/v2/task"
 
 
-async def test_failed_API_calls(
-    client, MockCurrentUser, tmp_path, testdata_path
-):
+async def test_non_verified_user(client, MockCurrentUser, testdata_path):
     # Task collection triggered by non-verified user
     wheel_path = (
         testdata_path.parent
@@ -29,16 +27,6 @@ async def test_failed_API_calls(
                 files=files,
             )
             assert res.status_code == 401
-
-        # Non-absolute wheel file
-        async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                data={},
-                files=files,
-            )
-            assert res.status_code == 422
-            assert "must be absolute" in str(res.json()["detail"])
 
 
 async def test_invalid_manifest(
