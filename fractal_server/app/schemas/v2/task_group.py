@@ -12,8 +12,6 @@ from .._validators import valdictkeys
 from .._validators import valstr
 from .task import TaskReadV2
 
-# from pydantic import root_validator
-
 
 class TaskGroupV2OriginEnum(str, Enum):
     PYPI = "pypi"
