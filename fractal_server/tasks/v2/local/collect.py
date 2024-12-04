@@ -36,26 +36,17 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
-# def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
-#     logger = get_logger(LOGGER_NAME)
-#     source = task_group.wheel_path
-#     dest = (Path(task_group.path) /
-#               Path(task_group.wheel_path).name).as_posix().name).as_posix()
-#     logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
-#     shutil.copy(task_group.wheel_path, task_group.path)
-#     logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
-#     return dest
-
-
 def _write_wheel_file_local(
-    wheel_buffer: bytes, wheel_filename: str, task_group: TaskGroupV2
+    wheel_buffer: bytes,
+    wheel_filename: str,
+    task_group: TaskGroupV2,
 ) -> str:
     logger = get_logger(LOGGER_NAME)
     dest = (Path(task_group.path) / wheel_filename).as_posix()
-    logger.debug(f"[_write_wheel_file] START {dest=}")
+    logger.debug(f"[_write_wheel_file_local] START {dest=}")
     with open(dest, "wb") as wheel_file:
         wheel_file.write(wheel_buffer)
-    logger.debug(f"[_write_wheel_file] END {dest=}")
+    logger.debug(f"[_write_wheel_file_local] END {dest=}")
     return dest
 
 

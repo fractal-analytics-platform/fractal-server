@@ -43,16 +43,15 @@ def _write_wheel_file_and_send(
     logger = get_logger(LOGGER_NAME)
 
     tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
-    logger.debug(f"[_write_wheel_file] START {tmp_wheel_path=}")
+    logger.debug(f"[_write_wheel_file_and_send] START {tmp_wheel_path=}")
     with open(tmp_wheel_path, "wb") as wheel_file:
         wheel_file.write(wheel_buffer)
-
     dest = (Path(task_group.path) / wheel_filename).as_posix()
-    logger.debug(f"[_send_wheel_file] START {dest=}")
     fractal_ssh.send_file(
         local=tmp_wheel_path,
         remote=dest,
     )
+    logger.debug(f"[_write_wheel_file_and_send] END {dest=}")
     return dest
 
 

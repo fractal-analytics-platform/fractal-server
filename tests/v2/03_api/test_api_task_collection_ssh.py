@@ -283,9 +283,7 @@ async def test_task_collection_ssh_from_wheel(
                 files=files,
             )
             assert res.status_code == 422
-            error_msg = (
-                "Cannot provide package version when package is a wheel file."
-            )
+            error_msg = "Cannot set `package_version` when `file` is provided"
             assert error_msg in str(res.json()["detail"])
 
             _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
