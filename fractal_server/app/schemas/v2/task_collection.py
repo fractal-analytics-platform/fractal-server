@@ -42,6 +42,22 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
+    @validator("package")
+    def package_validator(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        value = valstr("package")(value)
+        validate_cmd(value, attribute_name="package")
+        return value
+
+    @validator("package_version")
+    def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        value = valstr("package_version")(value)
+        validate_cmd(value, attribute_name="package_version")
+        return value
+
     @validator("pinned_package_versions")
     def pinned_package_versions_validator(cls, value):
         if value is None:
