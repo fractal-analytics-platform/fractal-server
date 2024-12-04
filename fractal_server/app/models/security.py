@@ -76,7 +76,6 @@ class UserOAuth(SQLModel, table=True):
         is_verified:
         slurm_user:
         slurm_accounts:
-        cache_dir:
         username:
         oauth_accounts:
     """

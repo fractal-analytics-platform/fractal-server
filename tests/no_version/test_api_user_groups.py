@@ -332,7 +332,6 @@ async def test_patch_user_settings_bulk(
             ssh_jobs_dir=None,
             slurm_user="test01",
             slurm_accounts=[],
-            cache_dir=None,
             project_dir=None,
         ) == user.settings.dict(exclude={"id"})
 
@@ -353,7 +352,6 @@ async def test_patch_user_settings_bulk(
         ssh_jobs_dir="/tmp/job",
         # missing `slurm_user`
         slurm_accounts=["foo", "bar"],
-        cache_dir="/tmp/cache",
         project_dir="/foo",
     )
     res = await registered_superuser_client.patch(
@@ -376,7 +374,6 @@ async def test_patch_user_settings_bulk(
         ssh_jobs_dir=None,
         slurm_user="test01",
         slurm_accounts=[],
-        cache_dir=None,
         project_dir=None,
     ) == user4.settings.dict(exclude={"id"})
 

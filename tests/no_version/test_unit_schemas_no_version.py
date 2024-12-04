@@ -114,24 +114,12 @@ def test_user_settings_update():
     )
     assert update_request_body.slurm_accounts is None
 
-    update_request_body = UserSettingsUpdate(cache_dir=None)
-    assert update_request_body.cache_dir is None
-    assert "cache_dir" in update_request_body.dict(exclude_unset=True).keys()
-
-    update_request_body = UserSettingsUpdateStrict(cache_dir=None)
-    assert update_request_body.cache_dir is None
-    assert "cache_dir" in update_request_body.dict(exclude_unset=True).keys()
-
     with pytest.raises(ValidationError):
         UserSettingsUpdate(slurm_accounts=[""])
     with pytest.raises(ValidationError):
         UserSettingsUpdate(slurm_accounts=["a", "a"])
     with pytest.raises(ValidationError):
         UserSettingsUpdate(slurm_accounts=["a", "a "])
-    with pytest.raises(ValidationError):
-        UserSettingsUpdate(cache_dir="non/absolute/path")
-    with pytest.raises(ValidationError):
-        UserSettingsUpdate(cache_dir="/invalid;command; $(ls)")
     with pytest.raises(ValidationError):
         UserSettingsUpdateStrict(ssh_host="NEW_HOST")
     with pytest.raises(ValidationError):
@@ -145,19 +133,9 @@ def test_user_settings_update():
         "ssh_tasks_dir",
         "ssh_jobs_dir",
         "slurm_user",
-        "cache_dir",
-    ]
-    nullable_attributes_strict = [
-        "cache_dir",
     ]
     for key in nullable_attributes:
         update_request_body = UserSettingsUpdate(**{key: None})
-        assert getattr(update_request_body, key) is None
-        assert key in update_request_body.dict(exclude_unset=True)
-        assert key not in update_request_body.dict(exclude_none=True)
-
-    for key in nullable_attributes_strict:
-        update_request_body = UserSettingsUpdateStrict(**{key: None})
         assert getattr(update_request_body, key) is None
         assert key in update_request_body.dict(exclude_unset=True)
         assert key not in update_request_body.dict(exclude_none=True)

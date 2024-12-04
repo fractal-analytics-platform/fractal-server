@@ -63,7 +63,7 @@ async def test_full_workflow(
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
 
-        user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["project_dir"] = user_cache_dir
         user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
@@ -274,7 +274,7 @@ async def test_failing_workflow_UnknownError(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["project_dir"] = user_cache_dir
         user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
@@ -373,7 +373,7 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["project_dir"] = user_cache_dir
         user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
@@ -533,7 +533,9 @@ async def test_failing_workflow_JobExecutionError_slurm(
 
     user_cache_dir = str(tmp777_path / "user_cache_dir")
     user_kwargs = dict(is_verified=True)
-    user_settings_dict = dict(cache_dir=user_cache_dir, slurm_user=SLURM_USER)
+    user_settings_dict = dict(
+        project_dir=user_cache_dir, slurm_user=SLURM_USER
+    )
     async with MockCurrentUser(
         user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
     ) as user:
@@ -920,7 +922,7 @@ async def test_non_executable_task_command(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_settings_dict["cache_dir"] = user_cache_dir
+        user_settings_dict["project_dir"] = user_cache_dir
         user_settings_dict["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(
