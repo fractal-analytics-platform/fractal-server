@@ -3,7 +3,9 @@
 # 2.10.0
 
 * API:
-    * Major update of `POST /api/v2/task/collect/pip/`, to support wheel-file upload (\#7270).
+    * Major update of `POST /api/v2/task/collect/pip/`, to support wheel-file upload (\#2113).
+* Testing:
+    * Add test of private task collection (\#2126).
 
 # 2.9.2
 

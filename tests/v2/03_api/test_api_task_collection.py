@@ -128,7 +128,7 @@ async def test_task_collection_from_pypi(
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # Trigger task collection
         res = await client.post(
-            f"{PREFIX}/collect/pip/",
+            f"{PREFIX}/collect/pip/?private=true",
             data=payload,
         )
         assert res.status_code == 202
@@ -142,9 +142,13 @@ async def test_task_collection_from_pypi(
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
         assert task_group_activity["timestamp_ended"] is not None
-        # Check that log were written, even with CRITICAL logging level
-        log = task_group_activity["log"]
-        assert log is not None
+        assert task_group_activity["log"] is not None
+
+        # Get task-group info
+        task_group_id = res.json()["taskgroupv2_id"]
+        res = await client.get(f"/api/v2/task-group/{task_group_id}/")
+        task_group = res.json()
+        assert task_group["user_group_id"] is None
 
         # Collect again and fail due to non-duplication constraint
         res = await client.post(f"{PREFIX}/collect/pip/", data=payload)
