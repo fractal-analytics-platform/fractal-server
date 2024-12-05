@@ -143,8 +143,8 @@ async def collect_tasks_pip(
     response: Response,
     background_tasks: BackgroundTasks,
     request_data: CollectionRequestData = Depends(parse_request_data),
-    private: bool = Form(False),
-    user_group_id: Optional[int] = Form(None),
+    private: bool = False,
+    user_group_id: Optional[int] = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
