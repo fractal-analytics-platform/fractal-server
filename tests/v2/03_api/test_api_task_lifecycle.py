@@ -354,7 +354,7 @@ async def test_lifecycle(
         assert Path(task_group.wheel_path).exists()
 
         # STEP 4: Deactivate a task group created before 2.9.0,
-        # which has no pip-freeze informationre 2.9.0, which has no
+        # which has no pip-freeze information
         task_group.pip_freeze = None
         db.add(task_group)
         await db.commit()
