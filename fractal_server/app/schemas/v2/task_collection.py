@@ -12,6 +12,15 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 
 
+class WheelFile(BaseModel):
+    """
+    Model for data sent from the endpoint to the background task.
+    """
+
+    filename: str
+    contents: bytes
+
+
 class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     """
     TaskCollectPipV2 class
@@ -22,14 +31,11 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
 
     Two cases are supported:
 
-        1. `package` is the path of a local wheel file;
-        2. `package` is the name of a package that can be installed via `pip`.
-
+        1. `package` is the name of a package that can be installed via `pip`.
+        1. `package=None`, and a wheel file is uploaded within the API request.
 
     Attributes:
-        package:
-            The name of a `pip`-installable package, or the path to a local
-            wheel file.
+        package: The name of a `pip`-installable package, or `None`.
         package_version: Version of the package
         package_extras: Package extras to include in the `pip install` command
         python_version: Python version to install and run the package tasks
@@ -39,11 +45,27 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
 
     """
 
-    package: str
+    package: Optional[str] = None
     package_version: Optional[str] = None
     package_extras: Optional[str] = None
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
+
+    @validator("package")
+    def package_validator(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        value = valstr("package")(value)
+        validate_cmd(value, attribute_name="package")
+        return value
+
+    @validator("package_version")
+    def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        value = valstr("package_version")(value)
+        validate_cmd(value, attribute_name="package_version")
+        return value
 
     @validator("pinned_package_versions")
     def pinned_package_versions_validator(cls, value):
@@ -65,36 +87,10 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
             validate_cmd(version)
         return value
 
-    @validator("package")
-    def package_validator(cls, value):
-        value = valstr("package")(value)
-        if "/" in value or value.endswith(".whl"):
-            if not value.endswith(".whl"):
-                raise ValueError(
-                    "Local-package path must be a wheel file "
-                    f"(given {value})."
-                )
-            if not Path(value).is_absolute():
-                raise ValueError(
-                    f"Local-package path must be absolute: (given {value})."
-                )
-        validate_cmd(value, attribute_name="package")
-        return value
-
-    @validator("package_version")
-    def package_version_validator(
-        cls, v: Optional[str], values
-    ) -> Optional[str]:
-        v = valstr("package_version")(v)
-        if values["package"].endswith(".whl"):
-            raise ValueError(
-                "Cannot provide package version when package is a wheel file."
-            )
-        validate_cmd(v, attribute_name="package_version")
-        return v
-
     @validator("package_extras")
     def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
         value = valstr("package_extras")(value)
         validate_cmd(value, attribute_name="package_extras")
         return value

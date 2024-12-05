@@ -207,6 +207,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     collect_local(
         task_group_id=task_group.id,
         task_group_activity_id=activity_collect.id,
+        wheel_file=None,
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK

@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.10.0
+
+* API:
+    * Major update of `POST /api/v2/task/collect/pip/`, to support wheel-file upload (\#7270).
+
 # 2.9.2
 
 * API

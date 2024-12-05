@@ -2,6 +2,7 @@ import logging
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
@@ -11,10 +12,10 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.v2.ssh._utils import _copy_wheel_file_ssh
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
@@ -38,14 +39,15 @@ def collect_ssh(
     task_group_activity_id: int,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
+    wheel_file: Optional[WheelFile] = None,
 ) -> None:
     """
     Collect a task package over SSH
 
-    This function is run as a background task, therefore exceptions must be
+    This function runs as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it runs within a thread - due to
+    NOTE: since this function is sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
@@ -57,6 +59,7 @@ def collect_ssh(
         tasks_base_dir:
             Only used as a `safe_root` in `remove_dir`, and typically set to
             `user_settings.ssh_tasks_dir`.
+        wheel_file:
     """
 
     # Work within a temporary folder, where also logs will be placed
@@ -116,27 +119,36 @@ def collect_ssh(
                 return
 
             try:
-                script_dir_remote = (
-                    Path(task_group.path) / SCRIPTS_SUBFOLDER
-                ).as_posix()
                 # Create remote `task_group.path` and `script_dir_remote`
                 # folders (note that because of `parents=True` we  are in
                 # the `no error if existing, make parent directories as
                 # needed` scenario for `mkdir`)
+                script_dir_remote = (
+                    Path(task_group.path) / SCRIPTS_SUBFOLDER
+                ).as_posix()
                 fractal_ssh.mkdir(folder=task_group.path, parents=True)
                 fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
-                # Copy wheel file into task group path
-                if task_group.wheel_path:
-                    new_wheel_path = _copy_wheel_file_ssh(
-                        task_group=task_group,
-                        fractal_ssh=fractal_ssh,
-                        logger_name=LOGGER_NAME,
+                # Write wheel file locally and send it to remote path,
+                # and set task_group.wheel_path
+                if wheel_file is not None:
+                    wheel_filename = wheel_file.filename
+                    wheel_path = (
+                        Path(task_group.path) / wheel_filename
+                    ).as_posix()
+                    tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
+                    logger.debug(
+                        f"Write wheel-file contents into {tmp_wheel_path}"
                     )
-                    task_group.wheel_path = new_wheel_path
+                    with open(tmp_wheel_path, "wb") as f:
+                        f.write(wheel_file.contents)
+                    fractal_ssh.send_file(
+                        local=tmp_wheel_path,
+                        remote=wheel_path,
+                    )
+                    task_group.wheel_path = wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
-                # Prepare replacements for templates
                 replacements = get_collection_replacements(
                     task_group=task_group,
                     python_bin=get_python_interpreter_v2(
@@ -173,7 +185,6 @@ def collect_ssh(
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
-
                 # Run script 2
                 stdout = _customize_and_run_template(
                     template_filename="2_pip_install.sh",

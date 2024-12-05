@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
@@ -184,7 +187,6 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     tmp777_path,
     override_settings_factory,
 ):
-
     # Setup remote Python interpreter
     current_py_version_underscore = current_py_version.replace(".", "_")
     key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
@@ -202,9 +204,10 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         )
     ).as_posix()
     wheel_path = (
-        tmp777_path / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        path / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
-    fractal_ssh.send_file(local=local_wheel_path, remote=wheel_path)
+    with open(local_wheel_path, "rb") as wheel_file:
+        wheel_buffer = wheel_file.read()
     task_group = TaskGroupV2(
         pkg_name="fractal_tasks_mock",
         version="0.0.1",
@@ -237,6 +240,10 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         task_group_activity_id=activity_collect.id,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=tmp777_path.as_posix(),
+        wheel_file=WheelFile(
+            contents=wheel_buffer,
+            filename=Path(wheel_path).name,
+        ),
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK
