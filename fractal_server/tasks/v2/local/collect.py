@@ -56,8 +56,7 @@ def collect_local(
     Arguments:
         task_group_id:
         task_group_activity_id:
-        wheel_buffer:
-        wheel_filename:
+        wheel_file:
     """
 
     with TemporaryDirectory() as tmpdir:

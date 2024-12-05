@@ -59,8 +59,7 @@ def collect_ssh(
         tasks_base_dir:
             Only used as a `safe_root` in `remove_dir`, and typically set to
             `user_settings.ssh_tasks_dir`.
-        wheel_buffer:
-        wheel_filename:
+        wheel_file:
     """
 
     # Work within a temporary folder, where also logs will be placed
