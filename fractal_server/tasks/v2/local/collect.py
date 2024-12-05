@@ -109,7 +109,9 @@ def collect_local(
                     wheel_path = (
                         Path(task_group.path) / wheel_file.filename
                     ).as_posix()
-                    logger.debug(f"Write wheel_buffer into {wheel_path}")
+                    logger.debug(
+                        f"Write wheel-file contents into {wheel_path}"
+                    )
                     with open(wheel_path, "wb") as f:
                         f.write(wheel_file.contents)
                     task_group.wheel_path = wheel_path

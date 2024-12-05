@@ -137,7 +137,9 @@ def collect_ssh(
                         Path(task_group.path) / wheel_filename
                     ).as_posix()
                     tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
-                    logger.debug(f"Write wheel_buffer into {tmp_wheel_path}")
+                    logger.debug(
+                        f"Write wheel-file contents into {tmp_wheel_path}"
+                    )
                     with open(tmp_wheel_path, "wb") as f:
                         f.write(wheel_file.contents)
                     fractal_ssh.send_file(
@@ -170,9 +172,8 @@ def collect_ssh(
                 )
 
                 logger.debug("installing - START")
-                logger.debug(
-                    f"{common_args=}"
-                )  # Set status to ONGOING and refresh logs
+
+                # Set status to ONGOING and refresh logs
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)

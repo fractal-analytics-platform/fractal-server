@@ -13,6 +13,10 @@ from fractal_server.string_tools import validate_cmd
 
 
 class WheelFile(BaseModel):
+    """
+    Model for data sent from the endpoint to the background task.
+    """
+
     filename: str
     contents: bytes
 
