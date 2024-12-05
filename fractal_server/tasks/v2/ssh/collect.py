@@ -139,7 +139,7 @@ def collect_ssh(
                     tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
                     logger.debug(f"Write wheel_buffer into {tmp_wheel_path}")
                     with open(tmp_wheel_path, "wb") as f:
-                        f.write(wheel_file.contens)
+                        f.write(wheel_file.contents)
                     fractal_ssh.send_file(
                         local=tmp_wheel_path,
                         remote=wheel_path,
