@@ -272,6 +272,15 @@ async def test_wheel_collection_failures(
 
         res = await client.post(
             f"{PREFIX}/collect/pip/",
+            data={},
+            files={},
+        )
+        assert res.status_code == 422
+        MSG = "When no `file` is provided, `package` is required."
+        assert MSG in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
             data=dict(package="fractal_tasks_mock"),
             files=files,
         )
