@@ -250,3 +250,62 @@ async def test_invalid_python_version(
         assert res.status_code == 422
         assert "Python version 3.9 is not available" in res.json()["detail"]
         debug(res.json()["detail"])
+
+
+async def test_wheel_collection_failures(
+    client,
+    MockCurrentUser,
+    testdata_path: Path,
+):
+
+    wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    with open(wheel_path, "rb") as f:
+        wheel_file_content = f.read()
+
+    files = {"file": (wheel_path.name, wheel_file_content, "application/zip")}
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(package="fractal_tasks_mock"),
+            files=files,
+        )
+        assert res.status_code == 422
+        MSG = "Cannot set `package` when `file` is provided"
+        assert MSG in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(package_version="0.0.1"),
+            files=files,
+        )
+        assert res.status_code == 422
+        MSG = "Cannot set `package_version` when `file` is provided"
+        assert MSG in res.json()["detail"]
+
+        files = {"file": ("something", wheel_file_content, "application/zip")}
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "Invalid wheel-file name" in str(res.json()["detail"])
+        debug(res.json())
+
+        files = {
+            "file": ("something.whl", wheel_file_content, "application/zip")
+        }
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "Invalid wheel-file name" in str(res.json()["detail"])
+        debug(res.json())
