@@ -21,8 +21,7 @@ def test_unit_missing_objects(db, caplog):
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                wheel_buffer=None,
-                wheel_filename=None,
+                wheel_file=None,
             )
         else:
             function(
@@ -44,8 +43,7 @@ def test_unit_missing_objects(db, caplog):
                 task_group_id=9999,
                 fractal_ssh=None,
                 tasks_base_dir="/invalid",
-                wheel_buffer=None,
-                wheel_filename=None,
+                wheel_file=None,
             )
         else:
             function(
