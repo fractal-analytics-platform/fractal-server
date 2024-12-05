@@ -28,6 +28,7 @@ from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
+from ....schemas.v2 import WheelFile
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -194,7 +195,7 @@ async def collect_tasks_pip(
         ] = task_collect.pinned_package_versions
 
     # Initialize wheel_file_content as None
-    wheel_file_content = None
+    wheel_file = None
 
     # Set pkg_name, version, origin and wheel_path
     if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
@@ -202,6 +203,10 @@ async def collect_tasks_pip(
             wheel_filename = request_data.file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
             wheel_file_content = await request_data.file.read()
+            wheel_file = WheelFile(
+                filename=wheel_filename,
+                contents=wheel_file_content,
+            )
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -340,10 +345,7 @@ async def collect_tasks_pip(
             task_group_activity_id=task_group_activity.id,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
-            wheel_buffer=wheel_file_content,
-            wheel_filename=request_data.file.filename
-            if request_data.file
-            else None,
+            wheel_file=wheel_file,
         )
 
     else:
@@ -353,10 +355,7 @@ async def collect_tasks_pip(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            wheel_buffer=wheel_file_content,
-            wheel_filename=request_data.file.filename
-            if request_data.file
-            else None,
+            wheel_file=wheel_file,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "

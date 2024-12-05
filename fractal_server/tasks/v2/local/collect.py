@@ -13,6 +13,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
@@ -39,8 +40,7 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_buffer: Optional[bytes] = None,
-    wheel_filename: Optional[str] = None,
+    wheel_file: Optional[WheelFile] = None,
 ) -> None:
     """
     Collect a task package.
@@ -105,23 +105,14 @@ def collect_local(
                 logger.debug(f"Created {task_group.path}")
 
                 # Write wheel file and set task_group.wheel_path
-                if wheel_buffer is not None:
-
-                    # Consistency check about wheel-file arguments
-                    if wheel_filename is None:
-                        msg = (
-                            f"Invalid wheel-file arguments: "
-                            f"wheel_buffer is set but {wheel_filename=}."
-                        )
-                        logger.error(msg)
-                        raise ValueError(msg)
+                if wheel_file is not None:
 
                     wheel_path = (
-                        Path(task_group.path) / wheel_filename
+                        Path(task_group.path) / wheel_file.filename
                     ).as_posix()
                     logger.debug(f"Write wheel_buffer into {wheel_path}")
                     with open(wheel_path, "wb") as f:
-                        f.write(wheel_buffer)
+                        f.write(wheel_file.contents)
                     task_group.wheel_path = wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 

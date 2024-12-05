@@ -12,6 +12,11 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 
 
+class WheelFile(BaseModel):
+    filename: str
+    contents: bytes
+
+
 class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     """
     TaskCollectPipV2 class
