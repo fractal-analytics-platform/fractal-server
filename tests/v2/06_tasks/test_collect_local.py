@@ -2,9 +2,8 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import (
-    TaskGroupActivityStatusV2,
-)
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import collect_local
 
@@ -42,8 +41,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
     collect_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        wheel_buffer=None,
-        wheel_filename=None,
+        wheel_file=None,
     )
     # Verify that collection failed
     task_group_activity_v2 = await db.get(
@@ -119,8 +117,10 @@ async def test_collect_pip_local_fail_rmtree(
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
-                wheel_buffer=whl.read(),
-                wheel_filename=wheel_path.name,
+                wheel_file=WheelFile(
+                    contents=whl.read(),
+                    filename=wheel_path.name,
+                ),
             )
         except RuntimeError as e:
             print(
@@ -203,8 +203,10 @@ async def test_bad_wheel_file_arguments(
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
-                wheel_buffer=whl.read(),
-                wheel_filename=wheel_path.name,
+                wheel_file=WheelFile(
+                    contents=whl.read(),
+                    filename=wheel_path.name,
+                ),
             )
         except RuntimeError as e:
             print(

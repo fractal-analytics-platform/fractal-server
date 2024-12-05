@@ -6,6 +6,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
@@ -239,8 +240,10 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         task_group_activity_id=activity_collect.id,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=tmp777_path.as_posix(),
-        wheel_buffer=wheel_buffer,
-        wheel_filename=Path(wheel_path).name,
+        wheel_file=WheelFile(
+            contents=wheel_buffer,
+            filename=Path(wheel_path).name,
+        ),
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK
