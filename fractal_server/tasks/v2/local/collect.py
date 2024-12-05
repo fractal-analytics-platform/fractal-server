@@ -14,7 +14,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
@@ -36,34 +35,20 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
-def _write_wheel_file_local(
-    wheel_buffer: bytes,
-    wheel_filename: str,
-    task_group: TaskGroupV2,
-) -> str:
-    logger = get_logger(LOGGER_NAME)
-    dest = (Path(task_group.path) / wheel_filename).as_posix()
-    logger.debug(f"[_write_wheel_file_local] START {dest=}")
-    with open(dest, "wb") as wheel_file:
-        wheel_file.write(wheel_buffer)
-    logger.debug(f"[_write_wheel_file_local] END {dest=}")
-    return dest
-
-
 def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_buffer: Optional[bytes],
-    wheel_filename: Optional[str],
+    wheel_buffer: Optional[bytes] = None,
+    wheel_filename: Optional[str] = None,
 ) -> None:
     """
     Collect a task package.
 
-    This function is run as a background task, therefore exceptions must be
+    This function runs as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it runs within a thread - due to
+    NOTE:  since this function is sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
@@ -71,6 +56,8 @@ def collect_local(
     Arguments:
         task_group_id:
         task_group_activity_id:
+        wheel_buffer:
+        wheel_filename:
     """
 
     with TemporaryDirectory() as tmpdir:
@@ -117,14 +104,25 @@ def collect_local(
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
 
-                # Write the wheel file in the task_group.path
-                if wheel_buffer:
-                    new_wheel_path = _write_wheel_file_local(
-                        wheel_buffer=wheel_buffer,
-                        wheel_filename=wheel_filename,
-                        task_group=task_group,
-                    )
-                    task_group.wheel_path = new_wheel_path
+                # Write wheel file and set task_group.wheel_path
+                if wheel_buffer is not None:
+
+                    # Consistency check about wheel-file arguments
+                    if wheel_filename is None:
+                        msg = (
+                            f"Invalid wheel-file arguments: "
+                            f"wheel_buffer is set but {wheel_filename=}."
+                        )
+                        logger.error(msg)
+                        raise ValueError(msg)
+
+                    wheel_path = (
+                        Path(task_group.path) / wheel_filename
+                    ).as_posix()
+                    logger.debug(f"Write wheel_buffer into {wheel_path}")
+                    with open(wheel_path, "wb") as f:
+                        f.write(wheel_buffer)
+                    task_group.wheel_path = wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates

@@ -13,7 +13,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
@@ -33,44 +32,22 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
-def _write_wheel_file_and_send(
-    wheel_buffer: bytes,
-    wheel_filename: str,
-    task_group: TaskGroupV2,
-    fractal_ssh: FractalSSH,
-    tmpdir: str,
-):
-    logger = get_logger(LOGGER_NAME)
-
-    tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
-    logger.debug(f"[_write_wheel_file_and_send] START {tmp_wheel_path=}")
-    with open(tmp_wheel_path, "wb") as wheel_file:
-        wheel_file.write(wheel_buffer)
-    dest = (Path(task_group.path) / wheel_filename).as_posix()
-    fractal_ssh.send_file(
-        local=tmp_wheel_path,
-        remote=dest,
-    )
-    logger.debug(f"[_write_wheel_file_and_send] END {dest=}")
-    return dest
-
-
 def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
-    wheel_buffer: Optional[bytes],
-    wheel_filename: Optional[str],
+    wheel_buffer: Optional[bytes] = None,
+    wheel_filename: Optional[str] = None,
 ) -> None:
     """
     Collect a task package over SSH
 
-    This function is run as a background task, therefore exceptions must be
+    This function runs as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it runs within a thread - due to
+    NOTE: since this function is sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
@@ -82,6 +59,8 @@ def collect_ssh(
         tasks_base_dir:
             Only used as a `safe_root` in `remove_dir`, and typically set to
             `user_settings.ssh_tasks_dir`.
+        wheel_buffer:
+        wheel_filename:
     """
 
     # Work within a temporary folder, where also logs will be placed
@@ -141,28 +120,41 @@ def collect_ssh(
                 return
 
             try:
-                # Prepare replacements for templates
-                script_dir_remote = (
-                    Path(task_group.path) / SCRIPTS_SUBFOLDER
-                ).as_posix()
                 # Create remote `task_group.path` and `script_dir_remote`
                 # folders (note that because of `parents=True` we  are in
                 # the `no error if existing, make parent directories as
                 # needed` scenario for `mkdir`)
+                script_dir_remote = (
+                    Path(task_group.path) / SCRIPTS_SUBFOLDER
+                ).as_posix()
                 fractal_ssh.mkdir(folder=task_group.path, parents=True)
                 fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
-                # Create wheel file in a local tmp dir
-                # then send the file via ssh to the remote path
-                if wheel_buffer:
-                    new_wheel_path = _write_wheel_file_and_send(
-                        wheel_buffer=wheel_buffer,
-                        wheel_filename=wheel_filename,
-                        task_group=task_group,
-                        fractal_ssh=fractal_ssh,
-                        tmpdir=tmpdir,
+                # Write wheel file locally and send it to remote path,
+                # and set task_group.wheel_path
+                if wheel_buffer is not None:
+
+                    # Consistency check about wheel-file arguments
+                    if wheel_filename is None:
+                        msg = (
+                            f"Invalid wheel-file arguments: "
+                            f"wheel_buffer is set but {wheel_filename=}."
+                        )
+                        logger.error(msg)
+                        raise ValueError(msg)
+
+                    wheel_path = (
+                        Path(task_group.path) / wheel_filename
+                    ).as_posix()
+                    tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
+                    logger.debug(f"Write wheel_buffer into {tmp_wheel_path}")
+                    with open(tmp_wheel_path, "wb") as f:
+                        f.write(wheel_buffer)
+                    fractal_ssh.send_file(
+                        local=tmp_wheel_path,
+                        remote=wheel_path,
                     )
-                    task_group.wheel_path = new_wheel_path
+                    task_group.wheel_path = wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 replacements = get_collection_replacements(
