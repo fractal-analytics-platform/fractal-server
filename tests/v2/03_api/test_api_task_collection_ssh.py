@@ -365,14 +365,14 @@ async def test_task_collection_ssh_failure(
         # Patch ssh.remove_folder
         import fractal_server.tasks.v2.ssh.collect
 
-        ERROR_MSG = "Could not remove folder!"
-        ERROR_SEND = "Failed to send file!"
-
-        def patched_remove_folder(*args, **kwargs):
-            raise RuntimeError(ERROR_MSG)
+        ERROR_MSG_1 = "Failed to send file!"
+        ERROR_MSG_2 = "Could not remove folder!"
 
         def patched_send_file(*args, **kwargs):
-            raise RuntimeError(ERROR_SEND)
+            raise RuntimeError(ERROR_MSG_1)
+
+        def patched_remove_folder(*args, **kwargs):
+            raise RuntimeError(ERROR_MSG_2)
 
         monkeypatch.setattr(
             fractal_server.tasks.v2.ssh.collect.FractalSSH,
@@ -395,8 +395,9 @@ async def test_task_collection_ssh_failure(
         assert res.status_code == 200
         task_group_activity = res.json()
         assert task_group_activity["status"] == "failed"
+        assert ERROR_MSG_1 in task_group_activity["log"]
         assert "Removing folder failed" in task_group_activity["log"]
-        assert ERROR_MSG in task_group_activity["log"]
+        assert ERROR_MSG_2 in task_group_activity["log"]
 
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
