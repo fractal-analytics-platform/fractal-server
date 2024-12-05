@@ -94,7 +94,7 @@
 | fractal\_server/app/runner/executors/slurm/sudo/\_check\_jobs\_status.py       |       24 |       11 |       10 |        1 |     47% |12-31, 55-62 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_executor\_wait\_thread.py    |       47 |        5 |       12 |        3 |     86% |75-78, 93->exit, 121->exit, 124-127 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_subprocess\_run\_as\_user.py |       46 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      424 |       54 |       98 |       24 |     85% |170, 182, 245, 269-270, 283, 291->294, 460, 553, 558, 567, 576, 608-619, 625, 764-765, 840-849, 865-869, 884->879, 889->904, 897->900, 904->807, 913-918, 951-956, 994, 1012-1018, 1064, 1083-1090, 1117-1119, 1150->1149, 1179-1184, 1202-1208 |
+| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      424 |       61 |       98 |       23 |     83% |170, 182, 245, 269-270, 283, 291->294, 460, 553, 558, 567, 576, 608-619, 625, 764-765, 840-849, 865-869, 884->879, 889->904, 891-901, 904->807, 913-918, 951-956, 994, 1012-1018, 1064, 1083-1090, 1117-1119, 1150->1149, 1179-1184, 1202-1208 |
 | fractal\_server/app/runner/executors/slurm/utils\_executors.py                 |       17 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/runner/extract\_archive.py                                 |       32 |        2 |        8 |        2 |     90% |    25, 85 |
 | fractal\_server/app/runner/filenames.py                                        |        6 |        0 |        0 |        0 |    100% |           |
@@ -202,7 +202,7 @@
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **11320** |  **437** | **2350** |  **190** | **95%** |           |
+|                                                                      **TOTAL** | **11320** |  **444** | **2350** |  **189** | **95%** |           |
 
 
 ## Setup coverage badge
