@@ -9,17 +9,58 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....schemas.v2 import WorkflowTaskCreateV2
-from ....schemas.v2 import WorkflowTaskReadV2
-from ....schemas.v2 import WorkflowTaskUpdateV2
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
+from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
 
 router = APIRouter()
+
+
+@router.post(
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/"
+    "replace-task/",
+    response_model=WorkflowTaskReadV2,
+    status_code=status.HTTP_201_CREATED,
+)
+async def replace_workflowtask(
+    project_id: int,
+    workflow_id: int,
+    workflow_task_id: int,
+    task_id: int,
+    replace: WorkflowTaskReplaceV2,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    workflow_task, _ = await _get_workflow_task_check_owner(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        workflow_task_id=workflow_task_id,
+        user_id=user.id,
+        db=db,
+    )
+    new_task = await _get_task_read_access(
+        task_id=task_id, user_id=user.id, db=db, require_active=True
+    )
+
+    workflow_task.task = new_task
+
+    if replace.args_parallel is not None:
+        workflow_task.args_parallel = replace.args_parallel
+    if replace.args_non_parallel is not None:
+        workflow_task.args_non_parallel = replace.args_non_parallel
+
+    db.add(workflow_task)
+    await db.commit()
+    await db.refresh(workflow_task)
+
+    return workflow_task
 
 
 @router.post(
