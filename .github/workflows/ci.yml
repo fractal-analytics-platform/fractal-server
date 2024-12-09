@@ -24,6 +24,7 @@ jobs:
         run: |
           sudo systemctl start postgresql.service
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
 
       - name: Cache SLURM Docker images
         id: cache-docker-slurm-multipy
@@ -81,6 +82,7 @@ jobs:
         run: |
           sudo systemctl start postgresql.service
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
 
       - name: Cache SLURM Docker images
         id: cache-docker-slurm-multipy
