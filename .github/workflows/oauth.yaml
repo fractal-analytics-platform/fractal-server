@@ -26,8 +26,7 @@ jobs:
         - name: Start Postgres
           run: |
             sudo systemctl start postgresql.service
-            sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-            sudo -u postgres createdb fractal_test
+            sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 
         - name: Set up Python 3.10
           uses: actions/setup-python@v5
