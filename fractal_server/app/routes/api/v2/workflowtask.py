@@ -37,7 +37,7 @@ async def replace_workflowtask(
     replace: WorkflowTaskReplaceV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> WorkflowTaskReadV2:
     workflow_task, _ = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_id=workflow_id,
