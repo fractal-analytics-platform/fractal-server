@@ -45,5 +45,6 @@ from .workflowtask import WorkflowTaskExportV2  # noqa F401
 from .workflowtask import WorkflowTaskImportV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2WithWarning  # noqa F401
+from .workflowtask import WorkflowTaskReplaceV2  # noqa F401
 from .workflowtask import WorkflowTaskStatusTypeV2  # noqa F401
 from .workflowtask import WorkflowTaskUpdateV2  # noqa F401

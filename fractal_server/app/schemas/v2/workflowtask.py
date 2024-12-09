@@ -184,3 +184,9 @@ class WorkflowTaskExportV2(BaseModel):
     input_filters: Filters = Field(default_factory=Filters)
 
     task: TaskExportV2
+
+
+class WorkflowTaskReplaceV2(BaseModel):
+
+    args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
