@@ -12,24 +12,15 @@ jobs:
     name: Benchmarks
     runs-on: ubuntu-22.04
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: fractal_test
-          FRACTAL_API_SUBMIT_RATE_LIMIT: 0
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
 
      - uses: actions/checkout@v4
+
+     - name: Start Postgres
+       run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo -u postgres createdb fractal_test
 
      - name: Install poetry
        run: pipx install poetry==1.8.2
@@ -93,24 +84,15 @@ jobs:
     name: Benchmark Runner
     runs-on: ubuntu-22.04
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: fractal_test
-          FRACTAL_API_SUBMIT_RATE_LIMIT: 0
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
 
      - uses: actions/checkout@v4
+
+     - name: Start Postgres
+       run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo -u postgres createdb fractal_test
 
      - name: Install poetry
        run: pipx install poetry==1.8.2
