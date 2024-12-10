@@ -772,57 +772,68 @@ async def test_replace_task_in_workflowtask(
 
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task1 = await task_factory_v2(user_id=user.id, source="source")
-        task2 = await task_factory_v2(user_id=user.id, source="source")
+        assert workflow.task_list == []
 
-        wftask = await workflowtask_factory_v2(
+        task1 = await task_factory_v2(user_id=user.id)
+        task2 = await task_factory_v2(user_id=user.id)
+        task3 = await task_factory_v2(user_id=user.id, type="parallel")
+
+        wft1 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task1.id,
-            args_parallel={"a": "b"},
-            args_non_parallel={"c": "d"},
+            args_parallel={"a": "a"},
+            args_non_parallel={"b": "b"},
+        )
+        wft2 = await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task2.id,
+            args_parallel={"c": "c"},
+            args_non_parallel={"d": "d"},
+        )
+        wft3 = await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task3.id,
+            args_parallel={"e": "e"},
+            args_non_parallel={"f": "f"},
         )
 
-        res = await client.get(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
-            f"wftask/{wftask.id}/"
-        )
-        wft0 = res.json()
-        assert wft0["task"] == task1.dict()
-        assert wft0["task_id"] == task1.id
-        assert wft0["args_parallel"] == {"a": "b"}
-        assert wft0["args_non_parallel"] == {"c": "d"}
+        await db.refresh(workflow)
+        assert [wft.id for wft in workflow.task_list] == [
+            task1.id,
+            task2.id,
+            task3.id,
+        ]
 
+        task4 = await task_factory_v2(user_id=user.id)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?task_id={task2.id}&workflow_task_id={wftask.id}",
+            f"replace-task/?workflow_task_id={wft2.id}&task_id={task4.id}",
+            json=dict(args_non_parallel={"foo": "bar"}),
         )
         assert res.status_code == 201
-        wft1 = res.json()
-        assert wft1["task"] == task2.dict()
-        assert wft1["task_id"] == task2.id
-        assert wft1["args_parallel"] == {"a": "b"}
-        assert wft1["args_non_parallel"] == {"c": "d"}
+        wft4 = res.json()
+        assert wft4["task"] == task4.dict()
+        assert wft4["task_id"] == task4.id
+        assert wft4["args_parallel"] == wft2.args_parallel
+        assert wft4["args_non_parallel"] == {"foo": "bar"}
 
+        await db.refresh(workflow)
+        assert [wft.id for wft in workflow.task_list] == [
+            task1.id,
+            task4.id,
+            task3.id,
+        ]
+
+        # replace parallel with non_parallel
+        task5 = await task_factory_v2(user_id=user.id, type="non_parallel")
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?task_id={task2.id}&workflow_task_id={wft1['id']}",
-            json=dict(args_parallel={"X": "Y"}),
+            f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
         )
-        assert res.status_code == 201
-        wft2 = res.json()
-        assert wft2["task"] == task2.dict()
-        assert wft2["task_id"] == task2.id
-        assert wft2["args_parallel"] == {"X": "Y"}
-        assert wft2["args_non_parallel"] == {"c": "d"}
-
+        assert res.status_code == 422
+        # replace non_parallel with parallel
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?task_id={task2.id}&workflow_task_id={wft2['id']}",
-            json=dict(args_parallel={"A": "C"}, args_non_parallel={"D": "C"}),
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task3.id}",
         )
-        assert res.status_code == 201
-        wft3 = res.json()
-        assert wft3["task"] == task2.dict()
-        assert wft3["task_id"] == task2.id
-        assert wft3["args_parallel"] == {"A": "C"}
-        assert wft3["args_non_parallel"] == {"D": "C"}
+        assert res.status_code == 422
