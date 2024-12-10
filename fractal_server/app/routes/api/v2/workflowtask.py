@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlalchemy.orm.attributes import flag_modified
 
 from ....db import AsyncSession
 from ....db import get_async_db
@@ -14,6 +15,7 @@ from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
@@ -24,8 +26,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/"
-    "replace-task/",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/replace-task/",
     response_model=WorkflowTaskReadV2,
     status_code=status.HTTP_201_CREATED,
 )
@@ -34,33 +35,77 @@ async def replace_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     task_id: int,
-    replace: WorkflowTaskReplaceV2,
+    replace: Optional[WorkflowTaskReplaceV2] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTaskReadV2:
-    workflow_task, _ = await _get_workflow_task_check_owner(
+
+    old_workflow_task, workflow = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_id=workflow_id,
         workflow_task_id=workflow_task_id,
         user_id=user.id,
         db=db,
     )
-    new_task = await _get_task_read_access(
+    order = old_workflow_task.order
+
+    task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True
     )
 
-    workflow_task.task = new_task
+    new_workflow_task = WorkflowTaskV2(
+        # new values
+        task_type=task.type,
+        task_id=task.id,
+        task=task,
+        # old values
+        meta_non_parallel=old_workflow_task.meta_non_parallel,
+        meta_parallel=old_workflow_task.meta_parallel,
+        input_filters=old_workflow_task.input_filters,
+        # possibly new values
+        args_non_parallel=replace.args_non_parallel
+        if ((replace is not None) and (replace.args_non_parallel is not None))
+        else old_workflow_task.args_non_parallel,
+        args_parallel=replace.args_parallel
+        if ((replace is not None) and (replace.args_parallel is not None))
+        else old_workflow_task.args_parallel,
+    )
 
-    if replace.args_parallel is not None:
-        workflow_task.args_parallel = replace.args_parallel
-    if replace.args_non_parallel is not None:
-        workflow_task.args_non_parallel = replace.args_non_parallel
+    if new_workflow_task.task_type == "parallel" and (
+        new_workflow_task.meta_non_parallel is not None
+        or new_workflow_task.args_non_parallel is not None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
+                "`WorkflowTask.args_non_parallel` if the associated Task "
+                "is `parallel`."
+            ),
+        )
+    elif task.type == "non_parallel" and (
+        new_workflow_task.meta_parallel is not None
+        or new_workflow_task.args_parallel is not None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot set `WorkflowTaskV2.meta_parallel` or "
+                "`WorkflowTask.args_parallel` if the associated Task "
+                "is `non_parallel`."
+            ),
+        )
 
-    db.add(workflow_task)
+    await db.delete(old_workflow_task)
     await db.commit()
-    await db.refresh(workflow_task)
+    await db.refresh(workflow)
+    workflow.task_list.reorder()
 
-    return workflow_task
+    workflow.task_list.insert(order, new_workflow_task)
+    flag_modified(workflow, "task_list")
+    await db.commit()
+
+    return new_workflow_task
 
 
 @router.post(
@@ -114,7 +159,6 @@ async def create_workflowtask(
                     "is `non_parallel`."
                 ),
             )
-
     workflow_task = await _workflow_insert_task(
         workflow_id=workflow.id,
         task_id=task_id,

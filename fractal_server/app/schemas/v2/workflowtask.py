@@ -82,6 +82,13 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
         return value
 
 
+class WorkflowTaskReplaceV2(BaseModel):
+    """Used by 'replace-task' endpoint"""
+
+    args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
+
+
 class WorkflowTaskReadV2(BaseModel):
 
     id: int
@@ -184,9 +191,3 @@ class WorkflowTaskExportV2(BaseModel):
     input_filters: Filters = Field(default_factory=Filters)
 
     task: TaskExportV2
-
-
-class WorkflowTaskReplaceV2(BaseModel):
-
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
