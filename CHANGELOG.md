@@ -1,10 +1,5 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
-
-* Testing:
-    * Use system postgresql in GitHub actions, rather than independent container (\#2199).
-
 # 2.10.0
 
 * API:
