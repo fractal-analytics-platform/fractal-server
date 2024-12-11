@@ -52,57 +52,71 @@ async def replace_workflowtask(
         task_id=task_id, user_id=user.id, db=db, require_active=True
     )
 
-    _args_non_parallel = (
-        replace.args_non_parallel
-        if ((replace is not None) and (replace.args_non_parallel is not None))
-        else old_workflow_task.args_non_parallel
-    )
+    if task.type != old_workflow_task.task.type:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot replace a Task '{old_workflow_task.task.type}' with a"
+                f"  Task '{task.type}'."
+            ),
+        )
 
-    _args_parallel = (
-        replace.args_parallel
-        if ((replace is not None) and (replace.args_parallel is not None))
-        else old_workflow_task.args_parallel
-    )
+    if replace is not None:
+        if task.type == "parallel" and replace.args_non_parallel is not None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot set 'args_non_parallel' when Task is 'parallel'."
+                ),
+            )
+        elif task.type == "non_parallel" and replace.args_parallel is not None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot set 'args_parallel' when Task is 'non_parallel'."
+                ),
+            )
+
+    _args_non_parallel = old_workflow_task.args_non_parallel
+    _args_parallel = old_workflow_task.args_parallel
+    if replace is not None:
+        if replace.args_non_parallel is not None:
+            _args_non_parallel = replace.args_non_parallel
+        if replace.args_parallel is not None:
+            _args_parallel = replace.args_parallel
+
+    # If user's changes to `meta_non_parallel` are compatible with new task,
+    # keep them;
+    # else, get `meta_non_parallel` from new task
+    if (
+        old_workflow_task.meta_non_parallel
+        != old_workflow_task.task.meta_non_parallel
+    ) and (old_workflow_task.task.meta_non_parallel == task.meta_non_parallel):
+        _meta_non_parallel = old_workflow_task.meta_non_parallel
+    else:
+        _meta_non_parallel = task.meta_non_parallel
+    # Same for `meta_parallel`
+    if (
+        old_workflow_task.meta_parallel != old_workflow_task.task.meta_parallel
+    ) and (old_workflow_task.task.meta_parallel == task.meta_parallel):
+        _meta_parallel = old_workflow_task.meta_parallel
+    else:
+        _meta_parallel = task.meta_parallel
 
     new_workflow_task = WorkflowTaskV2(
-        # new values
+        # new task
         task_type=task.type,
         task_id=task.id,
         task=task,
+        # old values
+        order=old_workflow_task.order,
+        input_filters=old_workflow_task.input_filters,
         # possibly new values
         args_non_parallel=_args_non_parallel,
         args_parallel=_args_parallel,
-        # old values
-        order=old_workflow_task.order,
-        meta_non_parallel=old_workflow_task.meta_non_parallel,
-        meta_parallel=old_workflow_task.meta_parallel,
-        input_filters=old_workflow_task.input_filters,
+        meta_non_parallel=_meta_non_parallel,
+        meta_parallel=_meta_parallel,
     )
-
-    if new_workflow_task.task_type == "parallel" and (
-        new_workflow_task.meta_non_parallel is not None
-        or new_workflow_task.args_non_parallel is not None
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
-                "`WorkflowTask.args_non_parallel` if the associated Task "
-                "is `parallel`."
-            ),
-        )
-    elif task.type == "non_parallel" and (
-        new_workflow_task.meta_parallel is not None
-        or new_workflow_task.args_parallel is not None
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Cannot set `WorkflowTaskV2.meta_parallel` or "
-                "`WorkflowTask.args_parallel` if the associated Task "
-                "is `non_parallel`."
-            ),
-        )
 
     await db.delete(old_workflow_task)
     workflow.task_list.insert(new_workflow_task.order, new_workflow_task)
