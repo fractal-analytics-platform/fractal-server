@@ -53,22 +53,30 @@ async def replace_workflowtask(
         task_id=task_id, user_id=user.id, db=db, require_active=True
     )
 
+    _args_non_parallel = (
+        replace.args_non_parallel
+        if ((replace is not None) and (replace.args_non_parallel is not None))
+        else old_workflow_task.args_non_parallel
+    )
+
+    _args_parallel = (
+        replace.args_parallel
+        if ((replace is not None) and (replace.args_parallel is not None))
+        else old_workflow_task.args_parallel
+    )
+
     new_workflow_task = WorkflowTaskV2(
         # new values
         task_type=task.type,
         task_id=task.id,
         task=task,
+        # possibly new values
+        args_non_parallel=_args_non_parallel,
+        args_parallel=_args_parallel,
         # old values
         meta_non_parallel=old_workflow_task.meta_non_parallel,
         meta_parallel=old_workflow_task.meta_parallel,
         input_filters=old_workflow_task.input_filters,
-        # possibly new values
-        args_non_parallel=replace.args_non_parallel
-        if ((replace is not None) and (replace.args_non_parallel is not None))
-        else old_workflow_task.args_non_parallel,
-        args_parallel=replace.args_parallel
-        if ((replace is not None) and (replace.args_parallel is not None))
-        else old_workflow_task.args_parallel,
     )
 
     if new_workflow_task.task_type == "parallel" and (
