@@ -779,13 +779,12 @@ async def test_replace_task_in_workflowtask(
         task3 = await task_factory_v2(user_id=user.id)
         task4 = await task_factory_v2(user_id=user.id, type="non_parallel")
 
-        await workflowtask_factory_v2(
+        wft1 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task1.id,
-            args_parallel={"a": "a"},
             args_non_parallel={"b": "b"},
         )
-        await workflowtask_factory_v2(
+        wft2 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task2.id,
             args_parallel={"c": "c"},
@@ -798,7 +797,7 @@ async def test_replace_task_in_workflowtask(
         )
         await workflowtask_factory_v2(
             workflow_id=workflow.id,
-            task_id=task3.id,
+            task_id=task4.id,
             args_non_parallel={"f": "f"},
         )
 
@@ -840,21 +839,27 @@ async def test_replace_task_in_workflowtask(
             task4.id,
         ]
 
-        # replace compound with parallel
         task6 = await task_factory_v2(
             user_id=user.id,
             type="parallel",
             meta_parallel={"a": "b"},
             args_schema_parallel={"e": "f"},
         )
+        # replace compound (with non_parallel args) with parallel
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft5['id']}&task_id={task6.id}",
         )
         assert res.status_code == 422
         debug(res.json())
+        # replace compound (without non_parallel args) with parallel
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft2.id}&task_id={task6.id}",
+        )
+        assert res.status_code == 201
 
-        # replace compount with non_parallel
+        # replace compound (with parallel args) with non_parallel
         task7 = await task_factory_v2(
             user_id=user.id,
             type="non_parallel",
@@ -867,3 +872,9 @@ async def test_replace_task_in_workflowtask(
         )
         assert res.status_code == 422
         debug(res.json())
+        # replace compound (without parallel args) with non_parallel
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task7.id}",
+        )
+        assert res.status_code == 201
