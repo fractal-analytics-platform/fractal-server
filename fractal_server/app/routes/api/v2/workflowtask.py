@@ -47,7 +47,6 @@ async def replace_workflowtask(
         user_id=user.id,
         db=db,
     )
-    order = old_workflow_task.order
 
     task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True
@@ -74,6 +73,7 @@ async def replace_workflowtask(
         args_non_parallel=_args_non_parallel,
         args_parallel=_args_parallel,
         # old values
+        order=old_workflow_task.order,
         meta_non_parallel=old_workflow_task.meta_non_parallel,
         meta_parallel=old_workflow_task.meta_parallel,
         input_filters=old_workflow_task.input_filters,
@@ -105,11 +105,7 @@ async def replace_workflowtask(
         )
 
     await db.delete(old_workflow_task)
-    await db.commit()
-    await db.refresh(workflow)
-    workflow.task_list.reorder()
-
-    workflow.task_list.insert(order, new_workflow_task)
+    workflow.task_list.insert(new_workflow_task.order, new_workflow_task)
     flag_modified(workflow, "task_list")
     await db.commit()
 
