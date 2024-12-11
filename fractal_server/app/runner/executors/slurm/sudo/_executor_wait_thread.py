@@ -9,6 +9,7 @@ from cfut import FileWaitThread
 
 from ......logger import set_logger
 from ._check_jobs_status import _jobs_finished
+from fractal_server.app.runner.exceptions import JobExecutionError
 
 logger = set_logger(__name__)
 
@@ -56,6 +57,10 @@ class FractalFileWaitThread(FileWaitThread):
         Note that (with respect to clusterfutures) we replaced `filename` with
         `filenames`.
         """
+        if self.shutdown:
+            error_msg = "Cannot call `wait` method after executor shutdown."
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
         with self.lock:
             self.waiting[filenames] = jobid
 
