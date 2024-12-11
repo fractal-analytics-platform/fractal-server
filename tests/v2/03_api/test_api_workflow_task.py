@@ -795,7 +795,7 @@ async def test_replace_task_in_workflowtask(
             args_parallel={"d": "d"},
             args_non_parallel={"e": "e"},
         )
-        await workflowtask_factory_v2(
+        wft4 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task4.id,
             args_non_parallel={"f": "f"},
@@ -803,10 +803,10 @@ async def test_replace_task_in_workflowtask(
 
         await db.refresh(workflow)
         assert [wft.id for wft in workflow.task_list] == [
-            task1.id,
-            task2.id,
-            task3.id,
-            task4.id,
+            wft1.id,
+            wft2.id,
+            wft3.id,
+            wft4.id,
         ]
 
         task5 = await task_factory_v2(
@@ -835,10 +835,10 @@ async def test_replace_task_in_workflowtask(
 
         await db.refresh(workflow)
         assert [wft.id for wft in workflow.task_list] == [
-            task1.id,
-            task2.id,
-            task5.id,
-            task4.id,
+            wft1.id,
+            wft2.id,
+            wft5["id"],
+            wft4.id,
         ]
 
         task6 = await task_factory_v2(
