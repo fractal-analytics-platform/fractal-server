@@ -4,6 +4,7 @@
 
 * API:
     * Major update of `POST /api/v2/task/collect/pip/`, to support wheel-file upload (\#2113).
+    * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
 * Testing:
     * Add test of private task collection (\#2126).
 
