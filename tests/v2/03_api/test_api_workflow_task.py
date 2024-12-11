@@ -775,25 +775,30 @@ async def test_replace_task_in_workflowtask(
         assert workflow.task_list == []
 
         task1 = await task_factory_v2(user_id=user.id)
-        task2 = await task_factory_v2(user_id=user.id)
-        task3 = await task_factory_v2(user_id=user.id, type="parallel")
+        task2 = await task_factory_v2(user_id=user.id, type="parallel")
+        task3 = await task_factory_v2(user_id=user.id)
+        task4 = await task_factory_v2(user_id=user.id, type="non_parallel")
 
-        wft1 = await workflowtask_factory_v2(
+        await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task1.id,
             args_parallel={"a": "a"},
             args_non_parallel={"b": "b"},
         )
-        wft2 = await workflowtask_factory_v2(
+        await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task2.id,
             args_parallel={"c": "c"},
-            args_non_parallel={"d": "d"},
         )
         wft3 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task3.id,
-            args_parallel={"e": "e"},
+            args_parallel={"d": "d"},
+            args_non_parallel={"e": "e"},
+        )
+        await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task3.id,
             args_non_parallel={"f": "f"},
         )
 
@@ -802,38 +807,63 @@ async def test_replace_task_in_workflowtask(
             task1.id,
             task2.id,
             task3.id,
+            task4.id,
         ]
 
-        task4 = await task_factory_v2(user_id=user.id)
+        task5 = await task_factory_v2(
+            user_id=user.id,
+            type="compound",
+            meta_parallel={"aaa": "bbb"},
+            meta_non_parallel={"ccc": "ddd"},
+            args_schema_parallel={"eee": "fff"},
+            args_schema_non_parallel={"ggg": "hhh"},
+        )
+
+        # replace task in wft3 (compound) with task5
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft2.id}&task_id={task4.id}",
+            f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
             json=dict(args_non_parallel={"foo": "bar"}),
         )
         assert res.status_code == 201
-        wft4 = res.json()
-        assert wft4["task"] == task4.dict()
-        assert wft4["task_id"] == task4.id
-        assert wft4["args_parallel"] == wft2.args_parallel
-        assert wft4["args_non_parallel"] == {"foo": "bar"}
+        wft5 = res.json()
+        assert wft5["task"] == task5.dict()
+        assert wft5["task_id"] == task5.id
+        assert wft5["args_parallel"] == wft3.args_parallel
+        assert wft5["args_non_parallel"] == {"foo": "bar"}
 
         await db.refresh(workflow)
         assert [wft.id for wft in workflow.task_list] == [
             task1.id,
+            task2.id,
+            task5.id,
             task4.id,
-            task3.id,
         ]
 
-        # replace parallel with non_parallel
-        task5 = await task_factory_v2(user_id=user.id, type="non_parallel")
+        # replace compound with parallel
+        task6 = await task_factory_v2(
+            user_id=user.id,
+            type="parallel",
+            meta_parallel={"a": "b"},
+            args_schema_parallel={"e": "f"},
+        )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
+            f"replace-task/?workflow_task_id={wft5['id']}&task_id={task6.id}",
         )
         assert res.status_code == 422
-        # replace non_parallel with parallel
+        debug(res.json())
+
+        # replace compount with non_parallel
+        task7 = await task_factory_v2(
+            user_id=user.id,
+            type="non_parallel",
+            meta_non_parallel={"a": "b"},
+            args_schema_non_parallel={"e": "f"},
+        )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1.id}&task_id={task3.id}",
+            f"replace-task/?workflow_task_id={wft5['id']}&task_id={task7.id}",
         )
         assert res.status_code == 422
+        debug(res.json())
