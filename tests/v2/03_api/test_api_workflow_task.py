@@ -830,6 +830,8 @@ async def test_replace_task_in_workflowtask(
         assert wft5["task_id"] == task5.id
         assert wft5["args_parallel"] == wft3.args_parallel
         assert wft5["args_non_parallel"] == {"foo": "bar"}
+        assert wft5["meta_parallel"] == wft3.meta_parallel
+        assert wft5["meta_non_parallel"] == wft3.meta_non_parallel
 
         await db.refresh(workflow)
         assert [wft.id for wft in workflow.task_list] == [
