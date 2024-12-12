@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API:
+    * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
 * Testing:
     * Use system postgresql in GitHub actions, rather than independent container (\#2199).
 
