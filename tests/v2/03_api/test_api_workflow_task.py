@@ -863,6 +863,21 @@ async def test_replace_task_in_workflowtask(
         wft7 = res.json()
         assert wft7["args_parallel"] == payload["args_parallel"]
         assert wft7["args_non_parallel"] == wft6["args_non_parallel"]
+        # case 3:
+        # Cannot set 'args_non_parallel' when Task is 'parallel', and v.v.
+        payload = dict(args_parallel={"1": "1"}, args_non_parallel={"2": "2"})
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft2.id}&task_id={task2.id}",
+            json=payload,
+        )
+        assert res.status_code == 422
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft4.id}&task_id={task4.id}",
+            json=payload,
+        )
+        assert res.status_code == 422
 
         # replace with different type
         res = await client.post(
