@@ -144,9 +144,7 @@ class Settings(BaseSettings):
         oauth_env_variable_keys = [
             key for key in environ.keys() if key.startswith("OAUTH_")
         ]
-        clients_available = {
-            var.split("_")[1] for var in oauth_env_variable_keys
-        }
+        clients_available = {var.split("_")[1] for var in oauth_env_variable_keys}
 
         values["OAUTH_CLIENTS_CONFIG"] = []
         for client in clients_available:
@@ -396,9 +394,7 @@ class Settings(BaseSettings):
             key = f"FRACTAL_TASKS_PYTHON_{version}"
             value = values.get(key)
             if value is not None and not Path(value).is_absolute():
-                raise FractalConfigurationError(
-                    f"Non-absolute value {key}={value}"
-                )
+                raise FractalConfigurationError(f"Non-absolute value {key}={value}")
 
         default_version = values.get("FRACTAL_TASKS_PYTHON_DEFAULT_VERSION")
 
@@ -423,9 +419,7 @@ class Settings(BaseSettings):
             _info = sys.version_info
             current_version = f"{_info.major}_{_info.minor}"
             current_version_dot = f"{_info.major}.{_info.minor}"
-            values[
-                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
-            ] = current_version_dot
+            values["FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"] = current_version_dot
             logging.info(
                 "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
                 f"{current_version_dot}"
@@ -485,11 +479,20 @@ class Settings(BaseSettings):
     attribute in their input-arguments JSON file.
     """
 
-    FRACTAL_API_V1_MODE: Literal[
-        "include", "include_read_only", "exclude"
-    ] = "include"
+    FRACTAL_API_V1_MODE: Literal["include", "include_read_only", "exclude"] = "include"
     """
     Whether to include the v1 API.
+    """
+
+    FRACTAL_PIP_CACHE_DIR: Optional[str] = None
+    """
+    If it is None, then we should use --no-cache-dir for pip commands in 
+    task-group-lifecycle commands.
+    
+    If set, it must be an absolute path.
+    
+    If set to e.g. /somewhere, then we should use --cache-dir /somewhere for
+    pip commands in task-group-lifecycle commands.
     """
 
     FRACTAL_MAX_PIP_VERSION: str = "24.0"
@@ -538,7 +541,6 @@ class Settings(BaseSettings):
             raise FractalConfigurationError("POSTGRES_DB cannot be None.")
 
     def check_runner(self) -> None:
-
         if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
             raise FractalConfigurationError(
                 "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
@@ -546,7 +548,6 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
-
             from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
@@ -641,8 +642,7 @@ class Settings(BaseSettings):
     def get_sanitized(self) -> dict:
         def _must_be_sanitized(string) -> bool:
             if not string.upper().startswith("FRACTAL") or any(
-                s in string.upper()
-                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
+                s in string.upper() for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
             ):
                 return True
             else:
