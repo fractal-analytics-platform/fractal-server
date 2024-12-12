@@ -223,7 +223,7 @@ def deactivate_ssh(
 
                 # Fail if `pip_freeze` includes "github", see
                 # https://github.com/fractal-analytics-platform/fractal-server/issues/2142
-                if "github" in task_group.pip_freeze:
+                if "github.com" in task_group.pip_freeze:
                     raise ValueError(
                         "Deactivation and reactivation of task packages which "
                         "depend directly on GitHub repositories is not "
