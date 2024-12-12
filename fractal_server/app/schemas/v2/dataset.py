@@ -41,7 +41,7 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
-            validate_cmd(v)
+            validate_cmd(v, attribute_name="zarr_dir")
             v = normalize_url(v)
             if " " in v:
                 raise ValueError(
