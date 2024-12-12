@@ -4,6 +4,11 @@
 
 * API:
     * Forbid whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
+
+# 2.10.1
+
+* API:
+    * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
 * Testing:
     * Use system postgresql in GitHub actions, rather than independent container (\#2199).
 
