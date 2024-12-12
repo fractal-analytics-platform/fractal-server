@@ -813,7 +813,8 @@ async def test_replace_task_in_workflowtask(
         task5 = await task_factory_v2(
             user_id=user.id,
             type="compound",
-            meta_parallel={"aaa": "bbb"},
+            meta_parallel={"a": 1},
+            meta_non_parallel={"b": 2},
             args_schema_parallel={"eee": "fff"},
             args_schema_non_parallel={"ggg": "hhh"},
         )
@@ -830,7 +831,7 @@ async def test_replace_task_in_workflowtask(
         assert wft5["args_parallel"] == wft3.args_parallel
         assert wft5["args_non_parallel"] == wft3.args_non_parallel
         assert wft5["meta_parallel"] == task5.meta_parallel
-        assert wft5["meta_non_parallel"] == wft3.meta_non_parallel
+        assert wft5["meta_non_parallel"] == task5.meta_non_parallel
 
         await db.refresh(workflow)
         assert [wft.id for wft in workflow.task_list] == [
@@ -839,6 +840,13 @@ async def test_replace_task_in_workflowtask(
             wft5["id"],
             wft4.id,
         ]
+
+        # replace with itself
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task1.id}",
+        )
+        wft1b = res.json()
 
         # replace with payload
         # case 1
@@ -882,7 +890,7 @@ async def test_replace_task_in_workflowtask(
         # replace with different type
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1.id}&task_id={task2.id}",
+            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task2.id}",
         )
         assert res.status_code == 422
         debug(res.json())
