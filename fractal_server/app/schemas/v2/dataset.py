@@ -43,10 +43,6 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
         if v is not None:
             validate_cmd(v, attribute_name="zarr_dir")
             v = normalize_url(v)
-            if " " in v:
-                raise ValueError(
-                    "White spaces are not allowed in DatasetCreateV2.zarr_dir."
-                )
         return v
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -78,7 +74,8 @@ class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
-            return normalize_url(v)
+            validate_cmd(v, attribute_name="zarr_dir")
+            v = normalize_url(v)
         return v
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
