@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.10.1
 
 * API:
     * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
