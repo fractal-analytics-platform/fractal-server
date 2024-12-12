@@ -24,6 +24,7 @@ if ["$FRACTAL_PIP_CACHE_DIR" != "" ]; then
 else
     "$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
     "$VENVPYTHON" -m pip install --no-cache-dir setuptools
+fi
 write_log "END   upgrade pip and install setuptools"
 echo
 

@@ -71,7 +71,11 @@ def get_collection_replacements(
     *, task_group: TaskGroupV2, python_bin: str
 ) -> dict[str, str]:
     settings = Inject(get_settings)
-
+    fractal_pip_cache_dir = (
+        settings.FRACTAL_PIP_CACHE_DIR
+        if settings.FRACTAL_PIP_CACHE_DIR is not None
+        else ""
+    )
     replacements = [
         ("__PACKAGE_NAME__", task_group.pkg_name),
         ("__PACKAGE_ENV_DIR__", task_group.venv_path),
@@ -81,7 +85,7 @@ def get_collection_replacements(
             "__FRACTAL_MAX_PIP_VERSION__",
             settings.FRACTAL_MAX_PIP_VERSION,
         ),
-        ("__FRACTAL_PIP_CACHE_DIR__", settings.FRACTAL_PIP_CACHE_DIR),
+        ("__FRACTAL_PIP_CACHE_DIR__", fractal_pip_cache_dir),
         (
             "__PINNED_PACKAGE_LIST__",
             task_group.pinned_package_versions_string,
