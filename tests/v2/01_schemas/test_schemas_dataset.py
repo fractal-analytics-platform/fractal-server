@@ -76,11 +76,15 @@ async def test_schemas_dataset_v2():
 
 
 def test_zarr_dir():
+
     with pytest.raises(ValidationError):
         DatasetCreateV2(name="foo", zarr_dir="")
-    DatasetCreateV2(name="foo", zarr_dir="/")
 
+    DatasetCreateV2(name="foo", zarr_dir="/")
     DatasetCreateV2(name="foo", zarr_dir="/foo/bar")
+    DatasetCreateV2(name="foo", zarr_dir="   /foo/bar")
+    DatasetCreateV2(name="foo", zarr_dir="/foo/bar   ")
+
     with pytest.raises(ValidationError):
         DatasetCreateV2(name="foo", zarr_dir="/ foo bar")
     with pytest.raises(ValidationError):
