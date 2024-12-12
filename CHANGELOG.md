@@ -4,6 +4,8 @@
 
 * API:
     * Forbid whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
+* Runner:
+    * Fix repeated setting of `timestamp_ended` in task-group reactivation (\#2140).
 
 # 2.10.1
 
