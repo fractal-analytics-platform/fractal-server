@@ -503,6 +503,29 @@ class Settings(BaseSettings):
     pip commands in task-group-lifecycle commands.
     """
 
+    @validator("FRACTAL_PIP_CACHE_DIR", always=True)
+    def absolute_FRACTAL_PIP_CACHE_DIR(cls, v):
+        """
+        If `FRACTAL_PIP_CACHE_DIR` is a relative path, fail.
+        """
+        if v is None:
+            return None
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_PIP_CACHE_DIR={v}"
+            )
+        else:
+            return v
+
+    def pip_cache_dir(self) -> str:
+        """
+        Prepare cache dir for task-lifecylce scripts' template
+        """
+        if self.FRACTAL_PIP_CACHE_DIR is not None:
+            return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR}"
+        else:
+            return "--no-cache-dir"
+
     FRACTAL_MAX_PIP_VERSION: str = "24.0"
     """
     Maximum value at which to update `pip` before performing task collection.

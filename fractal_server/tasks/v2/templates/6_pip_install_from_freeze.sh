@@ -17,13 +17,8 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Upgrade `pip` and install `setuptools`
 write_log "START upgrade pip and install setuptools"
-if ["$FRACTAL_PIP_CACHE_DIR" != "" ]; then
-    "$VENVPYTHON" -m pip install --cache-dir ${FRACTAL_PIP_CACHE_DIR} "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
-    "$VENVPYTHON" -m pip install --cache-dir ${FRACTAL_PIP_CACHE_DIR} setuptools
-else
-    "$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
-    "$VENVPYTHON" -m pip install --no-cache-dir setuptools
-fi
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR} "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR} setuptools
 write_log "END   upgrade pip and install setuptools"
 echo
 
