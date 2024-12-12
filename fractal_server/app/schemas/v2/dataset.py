@@ -12,6 +12,7 @@ from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
+from fractal_server.string_tools import validate_cmd
 from fractal_server.urls import normalize_url
 
 
@@ -40,7 +41,12 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
-            return normalize_url(v)
+            validate_cmd(v)
+            v = normalize_url(v)
+            if " " in v:
+                raise ValueError(
+                    "White spaces are not allowed in DatasetCreateV2.zarr_dir."
+                )
         return v
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
