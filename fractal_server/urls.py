@@ -1,10 +1,8 @@
 from os.path import normpath
 
 
-def normalize_url(url: str, allow_blanks: bool = False) -> str:
+def normalize_url(url: str) -> str:
     url = url.strip()
-    if (not allow_blanks) and (" " in url):
-        raise ValueError("White spaces are not allowed in URLs.")
     if url.startswith("/"):
         return normpath(url)
     elif url.startswith("s3"):
