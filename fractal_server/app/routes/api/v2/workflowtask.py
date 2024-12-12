@@ -61,29 +61,32 @@ async def replace_workflowtask(
             ),
         )
 
-    if replace is not None:
-        if task.type == "parallel" and replace.args_non_parallel is not None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot set 'args_non_parallel' when Task is 'parallel'."
-                ),
-            )
-        elif task.type == "non_parallel" and replace.args_parallel is not None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot set 'args_parallel' when Task is 'non_parallel'."
-                ),
-            )
-
     _args_non_parallel = old_workflow_task.args_non_parallel
     _args_parallel = old_workflow_task.args_parallel
     if replace is not None:
         if replace.args_non_parallel is not None:
-            _args_non_parallel = replace.args_non_parallel
+            if task.type == "parallel":
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        "Cannot set 'args_non_parallel' "
+                        "when Task is 'parallel'."
+                    ),
+                )
+            else:
+                _args_non_parallel = replace.args_non_parallel
+
         if replace.args_parallel is not None:
-            _args_parallel = replace.args_parallel
+            if task.type == "non_parallel":
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        "Cannot set 'args_parallel' "
+                        "when Task is 'non_parallel'."
+                    ),
+                )
+            else:
+                _args_parallel = replace.args_parallel
 
     # If user's changes to `meta_non_parallel` are compatible with new task,
     # keep them;
