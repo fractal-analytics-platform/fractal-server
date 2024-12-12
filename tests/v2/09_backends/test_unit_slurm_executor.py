@@ -76,7 +76,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
     ) as executor:
         executor.shutdown()
         with pytest.raises(JobExecutionError) as exc_info:
-            executor.wait_thread.wait(filenames=("something"), jobid=1)
+            executor.wait_thread.wait(filenames=("some", "thing"), jobid=1)
         debug(exc_info.value)
 
     with FractalSlurmExecutor(
