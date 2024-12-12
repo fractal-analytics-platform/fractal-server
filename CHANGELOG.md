@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Handle early shutdown for sudo SLURM executor (\#2132).
+
 # 2.10.1
 
 * API:
