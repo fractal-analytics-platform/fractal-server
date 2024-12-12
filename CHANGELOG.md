@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API:
+    * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
 * Testing:
     * Use system postgresql in GitHub actions, rather than independent container (\#2199).
 
@@ -9,7 +11,6 @@
 
 * API:
     * Major update of `POST /api/v2/task/collect/pip/`, to support wheel-file upload (\#2113).
-    * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
 * Testing:
     * Add test of private task collection (\#2126).
 
