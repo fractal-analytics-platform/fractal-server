@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API:
+    * Forbid whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
 * Testing:
     * Use system postgresql in GitHub actions, rather than independent container (\#2199).
 
