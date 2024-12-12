@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Fix repeated setting of `timestamp_ended` in task-group reactivation (\#2140).
+
 # 2.10.1
 
 * API:
