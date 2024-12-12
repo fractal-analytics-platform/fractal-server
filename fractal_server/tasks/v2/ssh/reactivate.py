@@ -159,7 +159,6 @@ def reactivate_ssh(
                 )
                 logger.debug("end - create venv")
                 activity.log = get_current_log(log_file_path)
-                activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 logger.debug("start - install from pip freeze")
