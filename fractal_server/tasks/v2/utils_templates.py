@@ -81,7 +81,8 @@ def get_collection_replacements(
             "__FRACTAL_MAX_PIP_VERSION__",
             settings.FRACTAL_MAX_PIP_VERSION,
         ),
-        ("__FRACTAL_PIP_CACHE_DIR__", settings.FRACTAL_PIP_CACHE_DIR,)(
+        ("__FRACTAL_PIP_CACHE_DIR__", settings.FRACTAL_PIP_CACHE_DIR),
+        (
             "__PINNED_PACKAGE_LIST__",
             task_group.pinned_package_versions_string,
         ),
