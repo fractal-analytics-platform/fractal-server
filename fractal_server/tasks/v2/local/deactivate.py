@@ -15,6 +15,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
+from fractal_server.tasks.utils import FORBIDDEN_DEPENDENCY_STRINGS
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
@@ -189,14 +190,15 @@ def deactivate_local(
                             "task-group attributes."
                         )
 
-                # Fail if `pip_freeze` includes "github", see
+                # Fail if `pip_freeze` includes "github.com", see
                 # https://github.com/fractal-analytics-platform/fractal-server/issues/2142
-                if "github.com" in task_group.pip_freeze:
-                    raise ValueError(
-                        "Deactivation and reactivation of task packages which "
-                        "depend directly on GitHub repositories is not "
-                        "currently supported. Exit."
-                    )
+                for forbidden_string in FORBIDDEN_DEPENDENCY_STRINGS:
+                    if forbidden_string in task_group.pip_freeze:
+                        raise ValueError(
+                            "Deactivation and reactivation of task packages "
+                            f"with direct {forbidden_string} dependencies "
+                            "are not currently supported. Exit."
+                        )
 
                 # We now have all required information for reactivating the
                 # virtual environment at a later point
