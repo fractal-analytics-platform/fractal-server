@@ -348,4 +348,5 @@ async def test_deactivate_ssh_github_dependency(
     # Verify that deactivate failed
     activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
     assert activity.status == "failed"
-    assert "GitHub repositories" in activity.log
+    assert "github.com" in activity.log
+    assert "not currently supported" in activity.log
