@@ -3,6 +3,7 @@
 # Unreleased
 
 * Runner:
+    * Handle early shutdown for sudo SLURM executor (\#2132).
     * Fix repeated setting of `timestamp_ended` in task-group reactivation (\#2140).
 * App:
     * Add FRACTAL_PIP_CACHE_DIR configuration variable (\#2141).
