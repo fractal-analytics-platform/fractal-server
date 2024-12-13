@@ -81,7 +81,7 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
         ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-        ("__FRACTAL_PIP_CACHE_DIR__", settings.pip_cache_dir()),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_good.sh"
     customize_template(
@@ -104,7 +104,7 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
         ("__FRACTAL_MAX_PIP_VERSION__", "25"),
-        ("__FRACTAL_PIP_CACHE_DIR__", Settings().pip_cache_dir()),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_bad_pkg.sh"
     customize_template(
@@ -207,7 +207,10 @@ def test_templates_freeze(tmp_path, current_py_version):
                 ("__INSTALL_STRING__", "pip"),
                 ("__FRACTAL_MAX_PIP_VERSION__", "99"),
                 ("__PINNED_PACKAGE_LIST__", ""),
-                ("__FRACTAL_PIP_CACHE_DIR__", Settings().pip_cache_dir()),
+                (
+                    "__FRACTAL_PIP_CACHE_DIR_ARG__",
+                    Settings().PIP_CACHE_DIR_ARG,
+                ),
             ],
             script_dir=tmp_path,
             logger_name=__name__,
@@ -222,7 +225,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__INSTALL_STRING__", "devtools"),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
             ("__PINNED_PACKAGE_LIST__", ""),
-            ("__FRACTAL_PIP_CACHE_DIR__", Settings().pip_cache_dir()),
+            ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
         ],
         script_dir=tmp_path,
         logger_name=__name__,
@@ -251,7 +254,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-            ("__FRACTAL_PIP_CACHE_DIR__", Settings().pip_cache_dir()),
+            ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
         ],
         script_dir=tmp_path,
         logger_name=__name__,

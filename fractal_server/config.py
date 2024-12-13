@@ -494,13 +494,7 @@ class Settings(BaseSettings):
 
     FRACTAL_PIP_CACHE_DIR: Optional[str] = None
     """
-    If it is None, then we should use --no-cache-dir for pip commands in
-    task-group-lifecycle commands.
-
-    If set, it must be an absolute path.
-
-    If set to e.g. /somewhere, then we should use --cache-dir /somewhere for
-    pip commands in task-group-lifecycle commands.
+    If set it must be a valid and absolute path
     """
 
     @validator("FRACTAL_PIP_CACHE_DIR", always=True)
@@ -517,9 +511,16 @@ class Settings(BaseSettings):
         else:
             return v
 
-    def pip_cache_dir(self) -> str:
+    @property
+    def PIP_CACHE_DIR_ARG(self) -> str:
         """
-        Prepare cache dir for task-lifecylce scripts' template
+        If it is None, then we should use --no-cache-dir for pip commands in
+        task-group-lifecycle commands.
+
+        If set, it must be an absolute path.
+
+        If set to /somewhere, then we should use --cache-dir /somewhere for
+        pip commands in task-group-lifecycle commands.
         """
         if self.FRACTAL_PIP_CACHE_DIR is not None:
             return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR}"
