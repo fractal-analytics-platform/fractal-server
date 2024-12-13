@@ -61,8 +61,10 @@ def test_template_1(tmp_path, current_py_version):
 def test_template_2(
     tmp_path, testdata_path, current_py_version, override_settings_factory
 ):
-    override_settings_factory(
-        FRACTAL_PIP_CACHE_DIR=(tmp_path / "CACHE_DIR").as_posix()
+    settings = Settings(
+        **Settings(
+            FRACTAL_PIP_CACHE_DIR=(tmp_path / "CACHE_DIR").as_posix()
+        ).dict()
     )
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
@@ -79,7 +81,7 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
         ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-        ("__FRACTAL_PIP_CACHE_DIR__", Settings().pip_cache_dir()),
+        ("__FRACTAL_PIP_CACHE_DIR__", settings.pip_cache_dir()),
     ]
     script_path = tmp_path / "2_good.sh"
     customize_template(
@@ -91,7 +93,6 @@ def test_template_2(
     assert "installing pinned versions fractal-tasks-mock==0.0.1" in stdout
 
     # create a wrong pinned_pkg_list
-    override_settings_factory(FRACTAL_PIP_CACHE_DIR=None)
     venv_path_bad = path / "bad_venv"
     pinned_pkg_list = "pkgA==0.1.0 "
 
