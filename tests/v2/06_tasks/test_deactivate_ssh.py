@@ -60,6 +60,69 @@ async def test_deactivate_fail_no_venv_path(
     assert "does not exist" in task_group_activity_v2.log
 
 
+async def test_deactivate_ssh_fail(
+    tmp777_path,
+    db,
+    first_user,
+    monkeypatch,
+    fractal_ssh,
+):
+    FAKE_ERROR_MSG = "this is some fake error message"
+
+    def fail_function(*args, **kwargs):
+        raise RuntimeError(FAKE_ERROR_MSG)
+
+    import fractal_server.tasks.v2.ssh.deactivate
+
+    monkeypatch.setattr(
+        fractal_server.tasks.v2.ssh.deactivate,
+        "_customize_and_run_template",
+        fail_function,
+    )
+
+    path = tmp777_path / "something"
+    venv_path = path / "venv"
+    task_group = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        origin="pypi",
+        path=path.as_posix(),
+        venv_path=venv_path.as_posix(),
+        user_id=first_user.id,
+    )
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.DEACTIVATE,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+    )
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+    db.expunge_all()
+
+    fractal_ssh.mkdir(folder=path)
+    fractal_ssh.mkdir(folder=venv_path)
+
+    # background task
+    deactivate_ssh(
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        fractal_ssh=fractal_ssh,
+        tasks_base_dir=tmp777_path.as_posix(),
+    )
+
+    # Verify that deactivate failed
+    activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
+    assert activity.status == "failed"
+    assert FAKE_ERROR_MSG in activity.log
+
+
 async def test_deactivate_wheel_no_wheel_path(
     tmp777_path,
     db,
