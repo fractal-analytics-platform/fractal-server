@@ -91,5 +91,5 @@ def test_zarr_dir():
 
     with pytest.raises(ValidationError):
         DatasetCreateV2(name="foo", zarr_dir="not/absolute")
-    with pytest.raises(ValidationError):
-        DatasetCreateV2(name="foo", zarr_dir="/#special/chars")
+
+    DatasetCreateV2(name="foo", zarr_dir="/#special/chars")
