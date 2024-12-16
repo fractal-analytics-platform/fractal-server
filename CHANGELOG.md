@@ -4,6 +4,9 @@
 
 * API:
     * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
+
+# 2.10.2
+
 * App:
     * Add `FRACTAL_PIP_CACHE_DIR` configuration variable (\#2141).
 * Tasks life cycle:
