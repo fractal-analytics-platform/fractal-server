@@ -6,6 +6,7 @@ from fractal_server.syringe import Inject
 COLLECTION_FILENAME = "collection.json"
 COLLECTION_LOG_FILENAME = "collection.log"
 COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
+FORBIDDEN_DEPENDENCY_STRINGS = ["github.com"]
 
 
 def get_absolute_venv_path_v1(venv_path: Path) -> Path:

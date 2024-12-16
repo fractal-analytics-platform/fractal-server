@@ -331,6 +331,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             Future representing the execution of the current SLURM job.
         """
 
+        # Do not continue if auxiliary thread was shut down
+        if self.wait_thread.shutdown:
+            error_msg = "Cannot call `submit` method after executor shutdown"
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
+
         # Set slurm_file_prefix
         slurm_file_prefix = task_files.file_prefix
 
@@ -394,6 +400,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                 A `TaskFiles` object.
 
         """
+
+        # Do not continue if auxiliary thread was shut down
+        if self.wait_thread.shutdown:
+            error_msg = "Cannot call `map` method after executor shutdown"
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
 
         def _result_or_cancel(fut):
             """
@@ -546,6 +558,15 @@ class FractalSlurmExecutor(SlurmExecutor):
         Returns:
             Future representing the execution of the current SLURM job.
         """
+
+        # Prevent calling sbatch if auxiliary thread was shut down
+        if self.wait_thread.shutdown:
+            error_msg = (
+                "Cannot call `_submit_job` method after executor shutdown"
+            )
+            logger.warning(error_msg)
+            raise JobExecutionError(info=error_msg)
+
         fut: Future = Future()
 
         # Inject SLURM account (if set) into slurm_config
@@ -1206,6 +1227,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
                 logger.error(error_msg)
                 raise JobExecutionError(info=error_msg)
+
+        # Redudantly set thread shutdown attribute to True
+        self.wait_thread.shutdown = True
 
         logger.debug("Executor shutdown: end")
 

@@ -492,6 +492,39 @@ class Settings(BaseSettings):
     Whether to include the v1 API.
     """
 
+    FRACTAL_PIP_CACHE_DIR: Optional[str] = None
+    """
+    Absolute path to the cache directory for `pip`; if unset,
+    `--no-cache-dir` is used.
+    """
+
+    @validator("FRACTAL_PIP_CACHE_DIR", always=True)
+    def absolute_FRACTAL_PIP_CACHE_DIR(cls, v):
+        """
+        If `FRACTAL_PIP_CACHE_DIR` is a relative path, fail.
+        """
+        if v is None:
+            return None
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_PIP_CACHE_DIR={v}"
+            )
+        else:
+            return v
+
+    @property
+    def PIP_CACHE_DIR_ARG(self) -> str:
+        """
+        Option for `pip install`, based on `FRACTAL_PIP_CACHE_DIR` value.
+
+        If `FRACTAL_PIP_CACHE_DIR` is set, then return
+        `--cache-dir /somewhere`; else return `--no-cache-dir`.
+        """
+        if self.FRACTAL_PIP_CACHE_DIR is not None:
+            return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR}"
+        else:
+            return "--no-cache-dir"
+
     FRACTAL_MAX_PIP_VERSION: str = "24.0"
     """
     Maximum value at which to update `pip` before performing task collection.
@@ -538,7 +571,6 @@ class Settings(BaseSettings):
             raise FractalConfigurationError("POSTGRES_DB cannot be None.")
 
     def check_runner(self) -> None:
-
         if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
             raise FractalConfigurationError(
                 "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
@@ -546,7 +578,6 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
-
             from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )

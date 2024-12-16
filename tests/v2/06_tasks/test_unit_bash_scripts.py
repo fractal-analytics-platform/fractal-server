@@ -1,5 +1,6 @@
 import pytest
 
+from fractal_server.config import Settings
 from fractal_server.tasks.v2.local.collect import _customize_and_run_template
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import (
@@ -57,7 +58,14 @@ def test_template_1(tmp_path, current_py_version):
     assert venv_path.exists()
 
 
-def test_template_2(tmp_path, testdata_path, current_py_version):
+def test_template_2(
+    tmp_path, testdata_path, current_py_version, override_settings_factory
+):
+    settings = Settings(
+        **Settings(
+            FRACTAL_PIP_CACHE_DIR=(tmp_path / "CACHE_DIR").as_posix()
+        ).dict()
+    )
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
     install_string = testdata_path.parent / (
@@ -73,6 +81,7 @@ def test_template_2(tmp_path, testdata_path, current_py_version):
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
         ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_good.sh"
     customize_template(
@@ -95,6 +104,7 @@ def test_template_2(tmp_path, testdata_path, current_py_version):
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
         ("__FRACTAL_MAX_PIP_VERSION__", "25"),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_bad_pkg.sh"
     customize_template(
@@ -176,7 +186,6 @@ def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
 
 
 def test_templates_freeze(tmp_path, current_py_version):
-
     # Create two venvs
     venv_path_1 = tmp_path / "venv1"
     venv_path_2 = tmp_path / "venv2"
@@ -198,6 +207,10 @@ def test_templates_freeze(tmp_path, current_py_version):
                 ("__INSTALL_STRING__", "pip"),
                 ("__FRACTAL_MAX_PIP_VERSION__", "99"),
                 ("__PINNED_PACKAGE_LIST__", ""),
+                (
+                    "__FRACTAL_PIP_CACHE_DIR_ARG__",
+                    Settings().PIP_CACHE_DIR_ARG,
+                ),
             ],
             script_dir=tmp_path,
             logger_name=__name__,
@@ -212,6 +225,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__INSTALL_STRING__", "devtools"),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
             ("__PINNED_PACKAGE_LIST__", ""),
+            ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
         ],
         script_dir=tmp_path,
         logger_name=__name__,
@@ -240,6 +254,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+            ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
         ],
         script_dir=tmp_path,
         logger_name=__name__,
@@ -260,7 +275,6 @@ def test_templates_freeze(tmp_path, current_py_version):
 
 
 def test_venv_size_and_file_number(tmp_path):
-
     # Create folders
     folder = tmp_path / "test"
     subfolder = folder / "subfolder"

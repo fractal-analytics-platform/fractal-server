@@ -9,6 +9,7 @@ write_log(){
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 PIP_FREEZE_FILE=__PIP_FREEZE_FILE__
 FRACTAL_MAX_PIP_VERSION=__FRACTAL_MAX_PIP_VERSION__
+FRACTAL_PIP_CACHE_DIR_ARG="__FRACTAL_PIP_CACHE_DIR_ARG__"
 
 TIME_START=$(date +%s)
 
@@ -16,14 +17,14 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Upgrade `pip` and install `setuptools`
 write_log "START upgrade pip and install setuptools"
-"$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
-"$VENVPYTHON" -m pip install --no-cache-dir setuptools
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} setuptools
 write_log "END   upgrade pip and install setuptools"
 echo
 
 # Install from pip-freeze file
 write_log "START installing requirements from ${PIP_FREEZE_FILE}"
-"$VENVPYTHON" -m pip install -r "${PIP_FREEZE_FILE}"
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} -r "${PIP_FREEZE_FILE}"
 write_log "END   installing requirements from ${PIP_FREEZE_FILE}"
 echo
 

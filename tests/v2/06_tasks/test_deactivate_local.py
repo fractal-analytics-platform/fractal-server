@@ -254,3 +254,57 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     assert activity_deactivate.status == TaskGroupActivityStatusV2.OK
     print(activity_deactivate.log)
     assert "Recreate pip-freeze information" in activity_deactivate.log
+
+
+async def test_deactivate_local_github_dependency(
+    tmp_path,
+    db,
+    first_user,
+):
+
+    path = tmp_path / "something"
+    venv_path = path / "venv"
+    task_group = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        origin="pypi",
+        path=path.as_posix(),
+        venv_path=venv_path.as_posix(),
+        user_id=first_user.id,
+        pip_freeze=(
+            "BaSiCPy @ "
+            "git+https://github.com/"
+            "peng-lab/BaSiCPy.git"
+            "@166bf6190c1827b5a5ece4a5542433c96a2bc997"
+            "\n"
+        ),
+    )
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.DEACTIVATE,
+        pkg_name="pkg",
+        version="1.0.0",
+    )
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+    db.expunge_all()
+
+    path.mkdir()
+    venv_path.mkdir()
+
+    deactivate_local(
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+    )
+
+    # Verify that deactivate failed
+    activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
+    assert activity.status == "failed"
+    assert "github.com" in activity.log
+    assert "not currently supported" in activity.log
