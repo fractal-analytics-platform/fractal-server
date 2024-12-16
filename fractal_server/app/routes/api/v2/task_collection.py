@@ -41,7 +41,6 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.string_tools import validate_cmd
 from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
@@ -56,6 +55,8 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+FORBIDDEN_CHAR_WHEEL = [";", "/"]
 
 
 class CollectionRequestData(BaseModel):
@@ -91,6 +92,14 @@ class CollectionRequestData(BaseModel):
                     f"provided (given package_version='{package_version}')."
                 )
             values["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+
+            for forbidden_char in FORBIDDEN_CHAR_WHEEL:
+                if forbidden_char in file.filename:
+                    raise ValueError(
+                        "Wheel filename has forbidden characters, "
+                        f"{FORBIDDEN_CHAR_WHEEL}"
+                    )
+
         return values
 
 
@@ -201,7 +210,6 @@ async def collect_tasks_pip(
     # Set pkg_name, version, origin and wheel_path
     if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
         try:
-            validate_cmd(request_data.file.filename)
             wheel_filename = request_data.file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
             wheel_file_content = await request_data.file.read()

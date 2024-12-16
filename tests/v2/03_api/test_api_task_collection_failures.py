@@ -257,7 +257,6 @@ async def test_wheel_collection_failures(
     MockCurrentUser,
     testdata_path: Path,
 ):
-
     wheel_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
@@ -269,7 +268,6 @@ async def test_wheel_collection_failures(
     files = {"file": (wheel_path.name, wheel_file_content, "application/zip")}
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data={},
@@ -317,4 +315,22 @@ async def test_wheel_collection_failures(
         )
         assert res.status_code == 422
         assert "Invalid wheel-file name" in str(res.json()["detail"])
+        debug(res.json())
+
+        files = {
+            "file": (
+                "something;rm /invalid/path.whl",
+                wheel_file_content,
+                "application/zip",
+            )
+        }
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "Wheel filename has forbidden characters" in str(
+            res.json()["detail"]
+        )
         debug(res.json())
