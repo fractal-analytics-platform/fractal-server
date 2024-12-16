@@ -198,7 +198,6 @@ def test_settings_injection(override_settings):
 def test_settings_check(
     settings_dict: dict[str, str], raises: bool, testdata_path: Path
 ):
-
     debug(settings_dict, raises)
 
     # Workaround to set FRACTAL_SLURM_CONFIG_FILE to a valid path, which
@@ -223,7 +222,6 @@ def test_settings_check(
 
 
 def test_settings_check_wrong_python():
-
     # Create a Settings instance
     with pytest.raises(FractalConfigurationError) as e:
         Settings(
@@ -270,8 +268,42 @@ def test_make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute():
     assert settings.FRACTAL_RUNNER_WORKING_BASE_DIR.is_absolute()
 
 
-def test_OAuthClientConfig():
+def test_FRACTAL_PIP_CACHE_DIR():
+    """
+    Test `Settings.pip_cache_dir` & absolute_FRACTAL_PIP_CACHE_DIR validator.
+    """
 
+    SOME_DIR = "/some/dir"
+
+    assert (
+        Settings(
+            JWT_SECRET_KEY="secret",
+            POSTGRES_DB="db-name",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+            FRACTAL_PIP_CACHE_DIR=SOME_DIR,
+        ).PIP_CACHE_DIR_ARG
+        == f"--cache-dir {SOME_DIR}"
+    )
+
+    assert (
+        Settings(
+            JWT_SECRET_KEY="secret",
+            POSTGRES_DB="db-name",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+        ).PIP_CACHE_DIR_ARG
+        == "--no-cache-dir"
+    )
+
+    with pytest.raises(FractalConfigurationError):
+        Settings(
+            JWT_SECRET_KEY="secret",
+            POSTGRES_DB="db-name",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+            FRACTAL_PIP_CACHE_DIR="~/CACHE_DIR",
+        )
+
+
+def test_OAuthClientConfig():
     config = OAuthClientConfig(
         CLIENT_NAME="GOOGLE",
         CLIENT_ID="123",

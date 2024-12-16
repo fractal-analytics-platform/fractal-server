@@ -2,9 +2,11 @@
 
 # Unreleased
 
-* Tasks lifecycle:
-    * Prevent deactivation of task groups with `"github.com"` in pip-freeze information (\#2144).
 
+* App:
+    * Add `FRACTAL_PIP_CACHE_DIR` configuration variable (\#2141).
+* Tasks life cycle:
+    * Prevent deactivation of task groups with `"github.com"` in pip-freeze information (\#2144).
 * Runner:
     * Handle early shutdown for sudo SLURM executor (\#2132).
     * Fix repeated setting of `timestamp_ended` in task-group reactivation (\#2140).
