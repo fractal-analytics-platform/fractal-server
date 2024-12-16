@@ -116,6 +116,33 @@ def test_template_2(
         execute_command_sync(command=f"bash {script_path.as_posix()}")
     assert "Package(s) not found: pkgA" in str(expinfo.value)
 
+    venv_path = path / "bad_wheel"
+    install_string = testdata_path.parent / (
+        "v2/fractal_tasks_valid/valid_tasks/dist/"
+        "fractal_tasks_mock-0.0.1-py3-none-any (2).whl"
+    )
+    execute_command_sync(
+        command=f"python{current_py_version} -m venv {venv_path}"
+    )
+    replacements = [
+        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
+        ("__INSTALL_STRING__", install_string.as_posix()),
+        ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
+    ]
+    script_path = tmp_path / "2_bad_whl.sh"
+    customize_template(
+        template_name="2_pip_install.sh",
+        replacements=replacements,
+        script_path=script_path.as_posix(),
+    )
+    with pytest.raises(RuntimeError) as expinfo:
+        execute_command_sync(command=f"bash {script_path.as_posix()}")
+    assert (
+        "ERROR: fractal_tasks_mock-0.0.1-py3-none-any (2).whl"
+        " is not a valid wheel filename"
+    ) in str(expinfo.value)
+
 
 def test_template_4(tmp_path, testdata_path, current_py_version):
     path = tmp_path / "unit_templates"
