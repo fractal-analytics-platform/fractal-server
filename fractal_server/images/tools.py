@@ -49,10 +49,11 @@ def match_filter(image: dict[str, Any], filters: Filters) -> bool:
         if image["types"].get(key, False) != value:
             return False
     # Verify match with attributes (only for non-None filters)
-    for key, value in filters.attributes.items():
-        if value is None:
-            continue
-        if image["attributes"].get(key) != value:
+    for key, values in filters.attributes_include.items():
+        if not any(value == image["attributes"].get(key) for value in values):
+            return False
+    for key, values in filters.attributes_exclude.items():
+        if any(value == image["attributes"].get(key) for value in values):
             return False
     return True
 

@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import filter_image_list
@@ -48,41 +51,37 @@ def test_match_filter():
         ),
     ).dict()
 
-    # Empty
-    assert match_filter(image, Filters()) is True
+    f = Filters(
+        attributes_include=dict(foo=["bar"])
+    )  # not existing attribute # TODO
 
-    # Attributes
-
-    f = Filters(attributes=dict(foo="bar"))  # not existing attribute
-    assert match_filter(image, f) is False
-
-    f = Filters(attributes=dict(name="a"))
+    f = Filters(attributes_include=dict(name=["a"]))
     assert match_filter(image, f) is True
 
-    f = Filters(attributes=dict(num=0))
+    f = Filters(attributes_include=dict(num=[0]))
     assert match_filter(image, f) is True
 
     f = Filters(
-        attributes=dict(
-            name="a",
-            num=0,
+        attributes_include=dict(
+            name=["a"],
+            num=[0],
         )
     )
     assert match_filter(image, f) is True
 
     f = Filters(
-        attributes=dict(
-            name="a",
-            num=0,
-            foo="bar",  # not existing attribute
+        attributes_include=dict(
+            name=["a"],
+            num=[0],
+            foo=["bar"],  # not existing attribute
         )
     )
     assert match_filter(image, f) is False
 
     f = Filters(
-        attributes=dict(
-            name="a",
-            num="0",  # int as string
+        attributes_include=dict(
+            name=["a"],
+            num=["0"],  # int as string
         )
     )
     assert match_filter(image, f) is False
@@ -145,30 +144,22 @@ def test_match_filter():
     # Both
 
     f = Filters(
-        attributes=dict(
-            name="a",
-        ),
+        attributes_include=dict(name=["a"]),
         types=dict(a=True),
     )
     assert match_filter(image, f) is True
     f = Filters(
-        attributes=dict(
-            name="a",
-        ),
+        attributes_include=dict(name=["a"]),
         types=dict(a=False),
     )
     assert match_filter(image, f) is False
     f = Filters(
-        attributes=dict(
-            name="b",
-        ),
+        attributes_include=dict(name=["b"]),
         types=dict(a=True),
     )
     assert match_filter(image, f) is False
     f = Filters(
-        attributes=dict(
-            name="a",
-        ),
+        attributes_include=dict(name=["a"]),
         types=dict(
             x=False,
             y=False,
@@ -177,9 +168,7 @@ def test_match_filter():
     )
     assert match_filter(image, f) is True
     f = Filters(
-        attributes=dict(
-            name="a",
-        ),
+        attributes_include=dict(name=["a"]),
         types=dict(
             x=False,
             y=False,
@@ -187,6 +176,45 @@ def test_match_filter():
         ),
     )
     assert match_filter(image, f) is False
+
+    image1 = SingleImage(
+        zarr_url="/image", attributes=dict(a="value1", b="value2")
+    ).dict()
+    image2 = SingleImage(
+        zarr_url="/image", attributes=dict(a="value3", b="value4")
+    ).dict()
+
+    # case 1
+    assert match_filter(image1, Filters()) is True
+
+    # case 2
+    with pytest.raises(ValidationError):
+        Filters(attributes_include=dict(a=[]))
+
+    # case 3
+    filter = Filters(attributes_include=dict(a=["value1"]))
+    assert match_filter(image1, filter) is True
+    assert match_filter(image2, filter) is False
+
+    # case 4
+    filter = Filters(attributes_include=dict(a=["value1", "value3"]))
+    assert match_filter(image1, filter) is True
+    assert match_filter(image2, filter) is True
+
+    # case 5
+    with pytest.raises(ValidationError):
+        Filters(
+            attributes_include=dict(a=["value1"]),
+            attributes_exclude=dict(a=["value2"]),
+        )
+
+    # case 6
+    filter = Filters(
+        attributes_include=dict(a=["value1"]),
+        attributes_exclude=dict(b=["value4"]),
+    )
+    assert match_filter(image1, filter) is True
+    assert match_filter(image2, filter) is False
 
 
 def test_filter_image_list():

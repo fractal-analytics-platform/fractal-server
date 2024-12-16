@@ -143,8 +143,9 @@ class Filters(BaseModel, extra=Extra.forbid):
 
     @root_validator
     def validate_attributes_keys(cls, values):
-        include = values["attributes_include"]
-        exclude = values["attributes_exclude"]
+
+        include = values.get("attributes_include", {})
+        exclude = values.get("attributes_exclude", {})
         common_keys = set(include.keys()).intersection(set(exclude.keys()))
         if common_keys:
             raise ValueError(
