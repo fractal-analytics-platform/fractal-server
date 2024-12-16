@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any
 from typing import Literal
@@ -41,11 +42,20 @@ class DatasetV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
 
-    filters: dict[Literal["attributes", "types"], dict[str, Any]] = Field(
+    filters: dict[
+        Literal["attributes_include", "attributes_exclude", "types"],
+        dict[str, Any],
+    ] = Field(
         sa_column=Column(
             JSON,
             nullable=False,
-            server_default='{"attributes": {}, "types": {}}',
+            server_default=json.dumps(
+                dict(
+                    attributes_include={},
+                    attributes_exclude={},
+                    types={},
+                )
+            ),
         )
     )
 

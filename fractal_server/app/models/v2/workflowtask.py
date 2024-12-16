@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from typing import Literal
 from typing import Optional
@@ -26,12 +27,19 @@ class WorkflowTaskV2(SQLModel, table=True):
     args_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
     input_filters: dict[
-        Literal["attributes", "types"], dict[str, Any]
+        Literal["attributes_include", "attributes_exclude", "types"],
+        dict[str, Any],
     ] = Field(
         sa_column=Column(
             JSON,
             nullable=False,
-            server_default='{"attributes": {}, "types": {}}',
+            server_default=json.dumps(
+                dict(
+                    attributes_include={},
+                    attributes_exclude={},
+                    types={},
+                )
+            ),
         )
     )
 

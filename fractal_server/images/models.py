@@ -131,7 +131,7 @@ class Filters(BaseModel, extra=Extra.forbid):
     ) -> dict[str, list[Union[int, float, str, bool, None]]]:
         for key, values in v.items():
             if len(values) == 0:
-                raise ValueError(f"Filer {key} ")
+                raise ValueError("No filter")
             for value in values:
                 if not isinstance(value, (int, float, str, bool, type(None))):
                     raise ValueError(
@@ -143,9 +143,8 @@ class Filters(BaseModel, extra=Extra.forbid):
 
     @root_validator
     def validate_attributes_keys(cls, values):
-
-        include = values.get("attributes_include", {})
-        exclude = values.get("attributes_exclude", {})
+        include = values.get("attributes_include") or {}
+        exclude = values.get("attributes_exclude") or {}
         common_keys = set(include.keys()).intersection(set(exclude.keys()))
         if common_keys:
             raise ValueError(
