@@ -32,7 +32,7 @@ async def test_schemas_dataset_v2():
 
     dataset_create = DatasetCreateV2(
         name="name",
-        filters={"attributes": {"x": 10}},
+        filters={"attributes_include": {"x": [10]}},
         zarr_dir="/tmp/",
     )
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
@@ -42,7 +42,7 @@ async def test_schemas_dataset_v2():
 
     dataset_import = DatasetImportV2(
         name="name",
-        filters={"attributes": {"x": 10}},
+        filters={"attributes_include": {"x": [10]}},
         zarr_dir="/tmp/",
         images=[{"zarr_url": "/tmp/image/"}],
     )
