@@ -296,7 +296,8 @@ async def test_patch_workflow_task(
             meta_non_parallel={"non": "parallel"},
             meta_parallel={"executor": "cpu-low"},
             input_filters={
-                "attributes": {"a": "b", "c": "d"},
+                "attributes_include": {"a1": ["b1"], "c1": ["d1"]},
+                "attributes_exclude": {"a2": ["b2"], "c1": ["d1"]},
                 "types": {"e": True, "f": False, "g": True},
             },
         )
@@ -383,7 +384,7 @@ async def test_patch_workflow_task(
         debug(patched_workflow_task["args_non_parallel"])
         assert patched_workflow_task["args_non_parallel"] is None
         assert patched_workflow_task["input_filters"] == dict(
-            attributes={}, types={}
+            attributes_include={}, attributes_exclude={}, types={}
         )
         assert res.status_code == 200
 
