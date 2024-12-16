@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
+
 # 2.10.2
 
 * App:
