@@ -41,6 +41,7 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.string_tools import validate_cmd
 from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
@@ -200,6 +201,7 @@ async def collect_tasks_pip(
     # Set pkg_name, version, origin and wheel_path
     if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
         try:
+            validate_cmd(request_data.file.filename)
             wheel_filename = request_data.file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
             wheel_file_content = await request_data.file.read()
