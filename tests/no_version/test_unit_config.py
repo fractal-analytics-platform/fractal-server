@@ -270,8 +270,29 @@ def test_make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute():
 
 def test_FRACTAL_PIP_CACHE_DIR():
     """
-    Test `Settings.pip_cache_dir()` & absolute_FRACTAL_PIP_CACHE_DIR validator.
+    Test `Settings.pip_cache_dir` & absolute_FRACTAL_PIP_CACHE_DIR validator.
     """
+
+    SOME_DIR = "/some/dir"
+
+    assert (
+        Settings(
+            JWT_SECRET_KEY="secret",
+            POSTGRES_DB="db-name",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+            FRACTAL_PIP_CACHE_DIR=SOME_DIR,
+        ).PIP_CACHE_DIR_ARG
+        == f"--cache-dir {SOME_DIR}"
+    )
+
+    assert (
+        Settings(
+            JWT_SECRET_KEY="secret",
+            POSTGRES_DB="db-name",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+        ).PIP_CACHE_DIR_ARG
+        == "--no-cache-dir"
+    )
 
     with pytest.raises(FractalConfigurationError):
         Settings(
