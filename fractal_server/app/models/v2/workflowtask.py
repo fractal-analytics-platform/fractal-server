@@ -28,7 +28,7 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     input_filters: dict[
         Literal["attributes_include", "attributes_exclude", "types"],
-        dict[str, Any],
+        dict[str, list[Any]],
     ] = Field(
         sa_column=Column(
             JSON,

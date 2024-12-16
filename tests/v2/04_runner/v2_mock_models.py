@@ -77,7 +77,7 @@ class WorkflowTaskV2Mock(BaseModel):
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
     task: TaskV2Mock
-    input_filters: dict[str, Any] = Field(default_factory=dict)
+    input_filters: dict[str, list[Any]] = Field(default_factory=dict)
     order: int
     id: int
     workflow_id: int = 0
