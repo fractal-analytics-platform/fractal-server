@@ -494,7 +494,8 @@ class Settings(BaseSettings):
 
     FRACTAL_PIP_CACHE_DIR: Optional[str] = None
     """
-    If set it must be a valid and absolute path
+    Absolute path to the cache directory for `pip`; if unset,
+    `--no-cache-dir` is used.
     """
 
     @validator("FRACTAL_PIP_CACHE_DIR", always=True)
