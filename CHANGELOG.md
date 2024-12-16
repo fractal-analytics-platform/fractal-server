@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Add validation for `.whl` filaname. (\#2147)
+
+
 # 2.10.2
 
 * App:
