@@ -50,8 +50,11 @@ def match_filter(image: dict[str, Any], filters: Filters) -> bool:
             return False
     # Verify match with attributes (only for non-None filters)
     for key, values in filters.attributes_include.items():
+        if values == [None]:
+            continue
         if not any(value == image["attributes"].get(key) for value in values):
             return False
+
     for key, values in filters.attributes_exclude.items():
         if any(value == image["attributes"].get(key) for value in values):
             return False
@@ -74,7 +77,11 @@ def filter_image_list(
     """
 
     # When no filter is provided, return all images
-    if filters.attributes == {} and filters.types == {}:
+    if (
+        filters.attributes_include == {}
+        and filters.attributes_exclude == {}
+        and filters.types == {}
+    ):
         return images
 
     filtered_images = [
