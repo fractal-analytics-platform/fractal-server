@@ -108,12 +108,14 @@ def test_filters_attributes_validation():
 
     for item in invalid:
         with pytest.raises(ValidationError) as e:
-            Filters(attributes={"key": item})
+            Filters(attributes_include={"key": [item]})
         debug(e)
 
     valid = ["string", -7, 3.14, True, None]
     for item in valid:
-        assert Filters(attributes={"key": item}).attributes["key"] == item
+        assert Filters(attributes_include={"key": [item]}).attributes_include[
+            "key"
+        ] == [item]
 
 
 @pytest.mark.parametrize(
@@ -122,12 +124,12 @@ def test_filters_attributes_validation():
         # No filter
         ({}, {}, 6),
         # Key is not part of attribute keys
-        ({"missing_key": "whatever"}, {}, 0),
+        ({"missing_key": ["whatever"]}, {}, 0),
         # Key is not part of type keys (default is False)
         ({}, {"missing_key": True}, 0),
         ({}, {"missing_key": False}, 6),
         # Key is part of attribute keys, but value is missing
-        ({"plate": "missing_plate.zarr"}, {}, 0),
+        ({"plate": ["missing_plate.zarr"]}, {}, 0),
         # Meaning of None for attributes: skip a given filter
         ({"plate": None}, {}, 6),
         # Single type filter
@@ -138,24 +140,24 @@ def test_filters_attributes_validation():
         ({}, {"3D": True, "illumination_correction": True}, 2),
         # Both attribute and type filters
         (
-            {"plate": "plate.zarr"},
+            {"plate": ["plate.zarr"]},
             {"3D": True, "illumination_correction": True},
             2,
         ),
         # Both attribute and type filters
         (
-            {"plate": "plate_2d.zarr"},
+            {"plate": ["plate_2d.zarr"]},
             {"3D": True, "illumination_correction": True},
             0,
         ),
         # Both attribute and type filters
         (
-            {"plate": "plate.zarr", "well": "A01"},
+            {"plate": ["plate.zarr"], "well": ["A01"]},
             {"3D": True, "illumination_correction": True},
             1,
         ),
         # Single attribute filter
-        ({"well": "A01"}, {}, 3),
+        ({"well": ["A01"]}, {}, 3),
     ],
 )
 def test_filter_image_list_SingleImage(
@@ -163,9 +165,12 @@ def test_filter_image_list_SingleImage(
     type_filters,
     expected_number,
 ):
+
     filtered_list = filter_image_list(
         images=IMAGES,
-        filters=Filters(attributes=attribute_filters, types=type_filters),
+        filters=Filters(
+            attributes_include=attribute_filters, types=type_filters
+        ),
     )
 
     debug(attribute_filters)
