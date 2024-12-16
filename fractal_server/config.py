@@ -515,13 +515,10 @@ class Settings(BaseSettings):
     @property
     def PIP_CACHE_DIR_ARG(self) -> str:
         """
-        If it is None, then we should use --no-cache-dir for pip commands in
-        task-group-lifecycle commands.
+        Option for `pip install`, based on `FRACTAL_PIP_CACHE_DIR` value.
 
-        If set, it must be an absolute path.
-
-        If set to /somewhere, then we should use --cache-dir /somewhere for
-        pip commands in task-group-lifecycle commands.
+        If `FRACTAL_PIP_CACHE_DIR` is set, then return
+        `--cache-dir /somewhere`; else return `--no-cache-dir`.
         """
         if self.FRACTAL_PIP_CACHE_DIR is not None:
             return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR}"
