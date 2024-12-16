@@ -5,6 +5,7 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
 from fractal_server.app.schemas._validators import valdictkeys
@@ -111,24 +112,43 @@ class SingleImageUpdate(BaseModel):
 
 
 class Filters(BaseModel, extra=Extra.forbid):
-    attributes: dict[str, Any] = Field(default_factory=dict)
+    attributes_include: dict[str, list[Any]] = Field(default_factory=dict)
+    attributes_exclude: dict[str, list[Any]] = Field(default_factory=dict)
     types: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        valdictkeys("attributes")
+    _attributes_include = validator("attributes_include", allow_reuse=True)(
+        valdictkeys("attributes_include")
+    )
+    _attributes_exclude = validator("attributes_exclude", allow_reuse=True)(
+        valdictkeys("attributes_exclude")
     )
     _types = validator("types", allow_reuse=True)(valdictkeys("types"))
 
-    @validator("attributes")
+    @validator("attributes_include", "attributes_exclude")
     def validate_attributes(
-        cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in v.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
-                raise ValueError(
-                    f"Filters.attributes[{key}] must be a scalar "
-                    "(int, float, str, bool, or None). "
-                    f"Given {value} ({type(value)})"
-                )
+        cls, v: dict[str, list[Any]]
+    ) -> dict[str, list[Union[int, float, str, bool, None]]]:
+        for key, values in v.items():
+            if len(values) == 0:
+                raise ValueError(f"Filer {key} ")
+            for value in values:
+                if not isinstance(value, (int, float, str, bool, type(None))):
+                    raise ValueError(
+                        "Filter attribute must be scalars "
+                        "(int, float, str, bool, or None). "
+                        f"For key '{key}' you provided {value} ({type(value)})"
+                    )
         return v
+
+    @root_validator
+    def validate_attributes_keys(cls, values):
+        include = values["attributes_include"]
+        exclude = values["attributes_exclude"]
+        common_keys = set(include.keys()).intersection(set(exclude.keys()))
+        if common_keys:
+            raise ValueError(
+                "Filters `attributes_include` and `attributes_exclude` should "
+                f"have different keys, but they both have '{common_keys}'."
+            )
+        return values
