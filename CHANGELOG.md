@@ -1,7 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
-
+# 2.10.2
 
 * App:
     * Add `FRACTAL_PIP_CACHE_DIR` configuration variable (\#2141).
