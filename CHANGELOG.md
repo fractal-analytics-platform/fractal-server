@@ -3,6 +3,7 @@
 # Unreleased
 
 * API:
+    * Add validation for `.whl` filename (\#2147).
     * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
 
 # 2.10.2
