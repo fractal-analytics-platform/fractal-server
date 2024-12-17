@@ -28,6 +28,6 @@ def report_to_mail(msg: str, mail_settings: MailSettings):
         )
         server.sendmail(
             from_addr=mail_settings.sender,
-            to_addrs=mail_settings.recipients.split(","),
+            to_addrs=mail_settings.recipients,
             msg=msg.as_string(),
         )

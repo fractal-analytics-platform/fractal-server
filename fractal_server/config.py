@@ -585,7 +585,7 @@ class Settings(BaseSettings):
     """
     FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
     """
-    List of email receivers
+    List of email receivers, separated with comas
     """
 
     @property
@@ -598,9 +598,9 @@ class Settings(BaseSettings):
             smpt_settings = jwt.decode(
                 self.FRACTAL_EMAIL_SETTINGS, self.FRACTAL_EMAIL_SETTINGS_KEY
             )
-            return MailSettings(
-                **smpt_settings, recipients=self.FRACTAL_EMAIL_RECIPIENTS
-            )
+            recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
+
+            return MailSettings(**smpt_settings, recipients=recipients)
         elif (
             self.FRACTAL_EMAIL_RECIPIENTS is None
             or self.FRACTAL_EMAIL_SETTINGS_KEY is None
