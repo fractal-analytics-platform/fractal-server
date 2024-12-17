@@ -27,7 +27,6 @@ registers the client and the relative routes.
 All routes are registerd under the `auth/` prefix.
 """
 import contextlib
-import smtplib
 from typing import Any
 from typing import AsyncGenerator
 from typing import Generic
@@ -60,14 +59,11 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
 FRACTAL_DEFAULT_GROUP_NAME = "All"
-settings = Inject(get_settings)
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -250,24 +246,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             logger.info(
                 f"Associated empty settings (id={this_user.user_settings_id}) "
                 f"to '{this_user.email}'."
-            )
-
-        # SEND EMAIL
-        recipient = settings.FRACTAL_DEFAULT_ADMIN_EMAIL
-        sender = "sender@localhost"
-        password = "fakepassword"  # nosec
-        with smtplib.SMTP("localhost", 2525) as server:
-            server.set_debuglevel(1)
-            server.ehlo()
-            # server.starttls()     # FIXME This fails on mailhog
-            server.login(
-                user=sender,
-                password=password,
-            )
-            server.sendmail(
-                from_addr=sender,
-                to_addrs=recipient,
-                msg=f"\nUser '{this_user.email}' just registered.",
             )
 
 
