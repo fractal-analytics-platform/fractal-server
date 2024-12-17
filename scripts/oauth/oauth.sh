@@ -54,7 +54,6 @@ assert_email_and_id(){
 }
 
 assert_messages(){
-    echo 🔥 $(curl --silent http://localhost:8025/api/v2/messages) 🚀
     NUM_MESSAGE=$(
         curl --silent http://localhost:8025/api/v2/messages | jq -r ".count"
     )
@@ -65,13 +64,13 @@ assert_messages(){
 
 # --- Test
 
-assert_messages 0
+assert_messages 1
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
 
 assert_users_and_oauth 1 0
-assert_messages 0
+assert_messages 1
 
 curl -X POST \
     http://127.0.0.1:8001/auth/register/ \
@@ -92,8 +91,9 @@ assert_email_and_id $USER_TOKEN "kilgore@kilgore.trout" $USER_ID
 # First oauth login:
 # - create "kilgore@kilgore.trout" oauth account,
 # - associate by email with existing user.
-USER_TOKEN_OAUTH=$(oauth_login)
 assert_messages 1
+USER_TOKEN_OAUTH=$(oauth_login)
+assert_messages 2
 
 assert_users_and_oauth 2 1
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $USER_ID
@@ -109,9 +109,9 @@ curl -X PATCH \
 USER_TOKEN=$(standard_login "kilgore@fractal.xy" "kilgore")
 assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
-assert_messages 1
+assert_messages 2
 USER_TOKEN_OAUTH=$(oauth_login)
-assert_messages 1
+assert_messages 2
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@fractal.xy" $USER_ID
 
 # Remove all oauth accounts from db.
@@ -125,9 +125,9 @@ assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
 # Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0
-assert_messages 1
+assert_messages 2
 USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
-assert_messages 2
+assert_messages 3
 
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
