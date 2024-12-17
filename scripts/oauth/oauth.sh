@@ -78,7 +78,7 @@ curl -X POST \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
     -d '{"email": "kilgore@kilgore.trout", "password": "kilgore"}'
 assert_users_and_oauth 2 0
-python3 scripts/oauth/send_email.py
+poetry run python scripts/oauth/send_email.py
 assert_email_count $((INIT_MESSAGES + 1))
 
 # Login with "kilgore@kilgore.trout" with standard login.
@@ -126,7 +126,7 @@ assert_users_and_oauth 2 0
 assert_email_count $((INIT_MESSAGES + 1))
 USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
-python3 scripts/oauth/send_email.py
+poetry run python scripts/oauth/send_email.py
 assert_email_count $((INIT_MESSAGES + 2))
 
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
