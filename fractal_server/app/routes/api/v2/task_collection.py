@@ -56,6 +56,8 @@ router = APIRouter()
 
 logger = set_logger(__name__)
 
+FORBIDDEN_CHAR_WHEEL = [";", "/"]
+
 
 class CollectionRequestData(BaseModel):
     """
@@ -90,6 +92,14 @@ class CollectionRequestData(BaseModel):
                     f"provided (given package_version='{package_version}')."
                 )
             values["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+
+            for forbidden_char in FORBIDDEN_CHAR_WHEEL:
+                if forbidden_char in file.filename:
+                    raise ValueError(
+                        "Wheel filename has forbidden characters, "
+                        f"{FORBIDDEN_CHAR_WHEEL}"
+                    )
+
         return values
 
 
