@@ -130,8 +130,8 @@ def test_filters_attributes_validation():
         ({}, {"missing_key": False}, 6),
         # Key is part of attribute keys, but value is missing
         ({"plate": ["missing_plate.zarr"]}, {}, 0),
-        # Meaning of None for attributes: skip a given filter
-        ({"plate": None}, {}, 6),
+        # Meaning of None in attributes_include: skip a given filter
+        ({"plate": [None]}, {}, 6),
         # Single type filter
         ({}, {"3D": True}, 4),
         # Single type filter

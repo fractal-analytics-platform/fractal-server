@@ -222,32 +222,32 @@ def test_filter_image_list():
     res = filter_image_list(images, Filters())
     assert res == images
     # Attributes
-    f = Filters(attributes=dict(name="a"))
+    f = Filters(attributes_include=dict(name=["a"]))
     res = filter_image_list(images, f)
     k = (N // 2) if not N % 2 else (N + 1) // 2
     assert len(res) == k
-    f = Filters(attributes=dict(name="b"))
+    f = Filters(attributes_include=dict(name=["b"]))
     res = filter_image_list(images, f)
     assert len(res) == N - k
-    f = Filters(attributes=dict(num=0))
+    f = Filters(attributes_include=dict(num=[0]))
     res = filter_image_list(images, f)
     assert len(res) == len([i for i in range(N) if i % 3 == 0])
-    f = Filters(attributes=dict(num=1))
+    f = Filters(attributes_include=dict(num=[1]))
     res = filter_image_list(images, f)
     assert len(res) == len([i for i in range(N) if i % 3 == 1])
-    f = Filters(attributes=dict(num=2))
+    f = Filters(attributes_include=dict(num=[2]))
     res = filter_image_list(images, f)
     assert len(res) == len([i for i in range(N) if i % 3 == 2])
-    f = Filters(attributes=dict(name="foo"))
+    f = Filters(attributes_include=dict(name=["foo"]))
     res = filter_image_list(images, f)
     assert len(res) == 0
-    f = Filters(attributes=dict(num=3))
+    f = Filters(attributes_include=dict(num=[3]))
     res = filter_image_list(images, f)
     assert len(res) == 0
-    f = Filters(attributes=dict(name="a", num=3))
+    f = Filters(attributes_include=dict(name=["a"], num=[3]))
     res = filter_image_list(images, f)
     assert len(res) == 0
-    f = Filters(attributes=dict(name="foo", num=0))
+    f = Filters(attributes_include=dict(name=["foo"], num=[0]))
     res = filter_image_list(images, f)
     assert len(res) == 0
     f = Filters(
