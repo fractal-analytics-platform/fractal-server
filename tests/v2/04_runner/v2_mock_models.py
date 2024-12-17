@@ -1,6 +1,6 @@
 from typing import Any
-from typing import Literal
 from typing import Optional
+from typing import TypedDict
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -8,30 +8,27 @@ from pydantic import root_validator
 from pydantic import validator
 
 
+class FiltersMock(TypedDict):
+    types: dict[str, bool]
+    attributes_include: dict[str, list[Any]]
+    attributes_exclude: dict[str, list[Any]]
+
+    @classmethod
+    def get_default(cls):
+        return cls(types={}, attributes_include={}, attributes_exclude={})
+
+
 class DatasetV2Mock(BaseModel):
     id: Optional[int] = None
     name: str
     zarr_dir: str
     images: list[dict[str, Any]] = Field(default_factory=list)
-    filters: dict[
-        Literal["types", "attributes_include", "attributes_exclude"],
-        dict[str, list[Any]],
-    ] = Field(default_factory=dict)
+    filters: FiltersMock = Field(default_factory=FiltersMock.get_default)
     history: list = Field(default_factory=list)
 
     @property
     def image_zarr_urls(self) -> list[str]:
         return [image["zarr_urls"] for image in self.images]
-
-    @validator("filters", always=True)
-    def _default_filters(cls, value):
-        if value == {}:
-            return {
-                "types": {},
-                "attributes_include": {},
-                "attributes_exclude": {},
-            }
-        return value
 
 
 class TaskV2Mock(BaseModel):
@@ -82,17 +79,8 @@ class WorkflowTaskV2Mock(BaseModel):
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
     task: TaskV2Mock
-    input_filters: dict[str, list[Any]] = Field(default_factory=dict)
+    input_filters: FiltersMock = Field(default_factory=FiltersMock.get_default)
     order: int
     id: int
     workflow_id: int = 0
     task_id: int
-
-    @validator("input_filters", always=True)
-    def _default_filters(cls, value):
-        if value == {}:
-            return {
-                "types": {},
-                "attributes_include": {},
-                "attributes_exclude": {},
-            }

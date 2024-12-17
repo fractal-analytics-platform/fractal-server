@@ -95,7 +95,8 @@ def test_fractal_demos_01(
     assert _task_names_from_history(dataset_attrs["history"]) == [
         "create_ome_zarr_compound"
     ]
-    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["attributes_include"] == {}
+    assert dataset_attrs["filters"]["attributes_exclude"] == {}
     assert dataset_attrs["filters"]["types"] == {}
     _assert_image_data_exist(dataset_attrs["images"])
     assert len(dataset_attrs["images"]) == 2
@@ -118,7 +119,8 @@ def test_fractal_demos_01(
     assert _task_names_from_history(dataset_attrs["history"]) == [
         "illumination_correction",
     ]
-    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["attributes_include"] == {}
+    assert dataset_attrs["filters"]["attributes_exclude"] == {}
     assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
@@ -168,7 +170,8 @@ def test_fractal_demos_01(
         "MIP_compound",
     ]
 
-    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["attributes_include"] == {}
+    assert dataset_attrs["filters"]["attributes_exclude"] == {}
     assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
         "3D": False,
@@ -271,7 +274,8 @@ def test_fractal_demos_01_no_overwrite(
     assert _task_names_from_history(dataset_attrs["history"]) == [
         "illumination_correction",
     ]
-    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["attributes_include"] == {}
+    assert dataset_attrs["filters"]["attributes_exclude"] == {}
     assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
@@ -348,7 +352,8 @@ def test_fractal_demos_01_no_overwrite(
     assert _task_names_from_history(dataset_attrs["history"]) == [
         "MIP_compound",
     ]
-    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["attributes_include"] == {}
+    assert dataset_attrs["filters"]["attributes_exclude"] == {}
     assert dataset_attrs["filters"]["types"] == {
         "3D": False,
         "illumination_correction": True,
@@ -387,7 +392,8 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
 
-    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["attributes_include"] == {}
+    assert dataset_attrs["filters"]["attributes_exclude"] == {}
     assert dataset_attrs["filters"]["types"] == {
         "3D": False,
         "illumination_correction": True,
