@@ -27,6 +27,7 @@ registers the client and the relative routes.
 All routes are registerd under the `auth/` prefix.
 """
 import contextlib
+import smtplib
 from typing import Any
 from typing import AsyncGenerator
 from typing import Generic
@@ -246,6 +247,25 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             logger.info(
                 f"Associated empty settings (id={this_user.user_settings_id}) "
                 f"to '{this_user.email}'."
+            )
+
+        # SEND EMAIL
+        sender = "sender@localhost"
+        recipient = "recipient@example.org"
+        password = "fakepassword"  # nosec
+        with smtplib.SMTP("localhost", 2525) as server:
+            server.set_debuglevel(1)
+            server.ehlo()
+            # server.starttls()   # This fails on mailhog
+            server.login(
+                sender,
+                password=password,
+                initial_response_ok=True,
+            )
+            server.sendmail(
+                from_addr=sender,
+                to_addrs=recipient,
+                msg="\nMessage contents",
             )
 
 
