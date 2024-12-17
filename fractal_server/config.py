@@ -36,7 +36,7 @@ import fractal_server
 
 class MailSettings(BaseModel):
     sender: str
-    recipients: Optional[list[EmailStr]] = Field(default=None)
+    recipients: list[EmailStr] = Field(min_items=1)
     smtp_server: str
     port: int
     password: str
