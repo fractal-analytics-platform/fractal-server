@@ -22,14 +22,14 @@ def upgrade() -> None:
         batch_op.alter_column(
             "filters",
             server_default=json.dumps(
-                attributes_include={}, attributes_exclude={}, types={}
+                dict(attributes_include={}, attributes_exclude={}, types={})
             ),
         )
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
         batch_op.alter_column(
             "input_filters",
             server_default=json.dumps(
-                attributes_include={}, attributes_exclude={}, types={}
+                dict(attributes_include={}, attributes_exclude={}, types={})
             ),
         )
 
@@ -37,9 +37,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
         batch_op.alter_column(
-            "input_filters", server_default=json.dumps(attributes={}, types={})
+            "input_filters",
+            server_default=json.dumps(dict(attributes={}, types={})),
         )
     with op.batch_alter_table("datasetv2", schema=None) as batch_op:
         batch_op.alter_column(
-            "filters", server_default=json.dumps(attributes={}, types={})
+            "filters", server_default=json.dumps(dict(attributes={}, types={}))
         )
