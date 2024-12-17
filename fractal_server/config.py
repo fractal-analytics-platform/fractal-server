@@ -25,13 +25,23 @@ import jwt
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
+from pydantic import Emailstr
 from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
 from sqlalchemy.engine import URL
 
 import fractal_server
-from fractal_server.app.schemas import MailSettings
+
+
+class MailSettings(BaseModel):
+    sender: str
+    recipients: Optional[list[Emailstr]] = Field(default=None)
+    smtp_server: str
+    port: int
+    password: str
+    instance_name: str
+    use_tls: bool
 
 
 class FractalConfigurationError(RuntimeError):
@@ -565,42 +575,42 @@ class Settings(BaseSettings):
     ###########################################################################
     # SMTP SERVICE
     ###########################################################################
-    SMPT_CONFIG_SETTINGS: Optional[str] = None
+    FRACTAL_EMAIL_SETTINGS: Optional[str] = None
     """
     JWT with SMPT configurations
     """
-    SMPT_SALT: Optional[str] = None
+    FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
     """
     Key value for JWT decode
     """
-    SMPT_RECIPIENTS: Optional[list[str]] = None
+    FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
     """
     List of email receivers
     """
 
     @property
-    def send_email(self):
+    def mail_settings(self) -> Optional[MailSettings]:
         if (
-            self.SMPT_CONFIG_SETTINGS is not None
-            and self.SMPT_SALT is not None
-            and self.SMPT_RECIPIENTS is not None
+            self.FRACTAL_EMAIL_SETTINGS is not None
+            and self.FRACTAL_EMAIL_SETTINGS_KEY is not None
+            and self.FRACTAL_EMAIL_RECIPIENTS is not None
         ):
             smpt_settings = jwt.decode(
-                self.SMPT_CONFIG_SETTINGS, self.SMPT_SALT
+                self.FRACTAL_EMAIL_SETTINGS, self.FRACTAL_EMAIL_SETTINGS_KEY
             )
             return MailSettings(
-                **smpt_settings, recipients=self.SMPT_RECIPIENTS
+                **smpt_settings, recipients=self.FRACTAL_EMAIL_RECIPIENTS
             )
         elif (
-            self.SMPT_RECIPIENTS is None
-            or self.SMPT_SALT is None
-            or self.SMPT_CONFIG_SETTINGS is None
+            self.FRACTAL_EMAIL_RECIPIENTS is None
+            or self.FRACTAL_EMAIL_SETTINGS_KEY is None
+            or self.FRACTAL_EMAIL_SETTINGS is None
         ):
             raise FractalConfigurationError(
                 "You must set all SMPT config variables: "
-                f"{self.SMPT_CONFIG_SETTINGS=}, "
-                f"{self.SMPT_RECIPIENTS=}, "
-                f"{self.SMPT_SALT}, "
+                f"{self.FRACTAL_EMAIL_SETTINGS=}, "
+                f"{self.FRACTAL_EMAIL_RECIPIENTS=}, "
+                f"{self.FRACTAL_EMAIL_SETTINGS_KEY}, "
             )
 
     ###########################################################################

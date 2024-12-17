@@ -1,7 +1,7 @@
 import smtplib
 from email.message import EmailMessage
 
-from fractal_server.app.schemas import MailSettings
+from fractal_server.config import MailSettings
 
 
 def report_to_mail(msg: str, mail_settings: MailSettings):
@@ -17,8 +17,10 @@ def report_to_mail(msg: str, mail_settings: MailSettings):
 
     with smtplib.SMTP(mail_settings.smtp_server, mail_settings.port) as server:
         server.ehlo()
-        server.starttls()
-        server.ehlo()
+        if mail_settings.use_tls:
+            server.starttls()
+            server.ehlo()
+
         server.login(
             user=mail_settings.sender,
             password=mail_settings.password,
@@ -26,6 +28,6 @@ def report_to_mail(msg: str, mail_settings: MailSettings):
         )
         server.sendmail(
             from_addr=mail_settings.sender,
-            to_addrs=mail_settings.recipients,
+            to_addrs=mail_settings.recipients.split(","),
             msg=msg.as_string(),
         )
