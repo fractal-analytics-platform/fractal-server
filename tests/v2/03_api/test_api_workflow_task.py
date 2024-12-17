@@ -297,7 +297,7 @@ async def test_patch_workflow_task(
             meta_parallel={"executor": "cpu-low"},
             input_filters={
                 "attributes_include": {"a1": ["b1"], "c1": ["d1"]},
-                "attributes_exclude": {"a2": ["b2"], "c1": ["d1"]},
+                "attributes_exclude": {"a2": ["b2"], "c2": ["d1"]},
                 "types": {"e": True, "f": False, "g": True},
             },
         )

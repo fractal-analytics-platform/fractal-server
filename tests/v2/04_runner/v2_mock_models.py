@@ -13,9 +13,10 @@ class DatasetV2Mock(BaseModel):
     name: str
     zarr_dir: str
     images: list[dict[str, Any]] = Field(default_factory=list)
-    filters: dict[Literal["types", "attributes"], dict[str, Any]] = Field(
-        default_factory=dict
-    )
+    filters: dict[
+        Literal["types", "attributes_include", "attributes_exclude"],
+        dict[str, list[Any]],
+    ] = Field(default_factory=dict)
     history: list = Field(default_factory=list)
 
     @property
@@ -25,7 +26,11 @@ class DatasetV2Mock(BaseModel):
     @validator("filters", always=True)
     def _default_filters(cls, value):
         if value == {}:
-            return {"types": {}, "attributes": {}}
+            return {
+                "types": {},
+                "attributes_include": {},
+                "attributes_exclude": {},
+            }
         return value
 
 
@@ -86,4 +91,8 @@ class WorkflowTaskV2Mock(BaseModel):
     @validator("input_filters", always=True)
     def _default_filters(cls, value):
         if value == {}:
-            return {"types": {}, "attributes": {}}
+            return {
+                "types": {},
+                "attributes_include": {},
+                "attributes_exclude": {},
+            }
