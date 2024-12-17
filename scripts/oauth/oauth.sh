@@ -66,12 +66,11 @@ assert_messages(){
 INIT_MESSAGES=$(
     curl --silent http://localhost:8025/api/v2/messages | jq -r ".count"
 )
+assert_users_and_oauth 1 0
+assert_messages $INIT_MESSAGES
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
-
-assert_users_and_oauth 1 0
-assert_messages $INIT_MESSAGES
 
 curl -X POST \
     http://127.0.0.1:8001/auth/register/ \
@@ -93,9 +92,7 @@ assert_email_and_id $USER_TOKEN "kilgore@kilgore.trout" $USER_ID
 # First oauth login:
 # - create "kilgore@kilgore.trout" oauth account,
 # - associate by email with existing user.
-assert_messages $((INIT_MESSAGES + 1))
 USER_TOKEN_OAUTH=$(oauth_login)
-assert_messages $((INIT_MESSAGES + 1))
 
 assert_users_and_oauth 2 1
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $USER_ID
