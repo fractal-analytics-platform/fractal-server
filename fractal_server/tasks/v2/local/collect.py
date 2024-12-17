@@ -4,6 +4,7 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group
 from ._utils import _customize_and_run_template
@@ -12,8 +13,8 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
@@ -35,30 +36,19 @@ from fractal_server.utils import get_timestamp
 LOGGER_NAME = __name__
 
 
-def _copy_wheel_file_local(task_group: TaskGroupV2) -> str:
-    logger = get_logger(LOGGER_NAME)
-    source = task_group.wheel_path
-    dest = (
-        Path(task_group.path) / Path(task_group.wheel_path).name
-    ).as_posix()
-    logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
-    shutil.copy(task_group.wheel_path, task_group.path)
-    logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
-    return dest
-
-
 def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    wheel_file: Optional[WheelFile] = None,
 ) -> None:
     """
     Collect a task package.
 
-    This function is run as a background task, therefore exceptions must be
+    This function runs as a background task, therefore exceptions must be
     handled.
 
-    NOTE: by making this function sync, it runs within a thread - due to
+    NOTE:  since this function is sync, it runs within a thread - due to
     starlette/fastapi handling of background tasks (see
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
@@ -66,6 +56,7 @@ def collect_local(
     Arguments:
         task_group_id:
         task_group_activity_id:
+        wheel_file:
     """
 
     with TemporaryDirectory() as tmpdir:
@@ -76,7 +67,6 @@ def collect_local(
         )
 
         with next(get_sync_db()) as db:
-
             # Get main objects from db
             activity = db.get(TaskGroupActivityV2, task_group_activity_id)
             task_group = db.get(TaskGroupV2, task_group_id)
@@ -109,17 +99,22 @@ def collect_local(
                 return
 
             try:
-
                 # Create task_group.path folder
                 Path(task_group.path).mkdir(parents=True)
                 logger.debug(f"Created {task_group.path}")
 
-                # Copy wheel file into task group path
-                if task_group.wheel_path:
-                    new_wheel_path = _copy_wheel_file_local(
-                        task_group=task_group
+                # Write wheel file and set task_group.wheel_path
+                if wheel_file is not None:
+
+                    wheel_path = (
+                        Path(task_group.path) / wheel_file.filename
+                    ).as_posix()
+                    logger.debug(
+                        f"Write wheel-file contents into {wheel_path}"
                     )
-                    task_group.wheel_path = new_wheel_path
+                    with open(wheel_path, "wb") as f:
+                        f.write(wheel_file.contents)
+                    task_group.wheel_path = wheel_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates

@@ -26,6 +26,7 @@ from .task import TaskReadV2  # noqa F401
 from .task import TaskUpdateV2  # noqa F401
 from .task_collection import TaskCollectCustomV2  # noqa F401
 from .task_collection import TaskCollectPipV2  # noqa F401
+from .task_collection import WheelFile  # noqa F401
 from .task_group import TaskGroupActivityActionV2  # noqa F401
 from .task_group import TaskGroupActivityStatusV2  # noqa F401
 from .task_group import TaskGroupActivityV2Read  # noqa F401
@@ -45,5 +46,6 @@ from .workflowtask import WorkflowTaskExportV2  # noqa F401
 from .workflowtask import WorkflowTaskImportV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2WithWarning  # noqa F401
+from .workflowtask import WorkflowTaskReplaceV2  # noqa F401
 from .workflowtask import WorkflowTaskStatusTypeV2  # noqa F401
 from .workflowtask import WorkflowTaskUpdateV2  # noqa F401

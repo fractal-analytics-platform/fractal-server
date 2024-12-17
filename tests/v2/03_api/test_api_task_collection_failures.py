@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -9,45 +10,23 @@ from fractal_server.app.models.v2 import TaskGroupV2
 PREFIX = "api/v2/task"
 
 
-async def test_failed_API_calls(
-    client, MockCurrentUser, tmp_path, testdata_path
-):
-
+async def test_non_verified_user(client, MockCurrentUser, testdata_path):
+    # Task collection triggered by non-verified user
+    wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    with open(wheel_path, "rb") as f:
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
     # Task collection triggered by non-verified user
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
         res = await client.post(
-            f"{PREFIX}/collect/pip/", json={"package": "fractal-tasks-core"}
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
         )
         assert res.status_code == 401
-
-    # Missing wheel file
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                package=str(tmp_path / "missing-1.2.3-py3-none-any.whl")
-            ),
-        )
-        assert res.status_code == 422
-        assert "No such file" in str(res.json())
-
-    # Non-absolute wheel file
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package=str("something.whl")),
-        )
-        assert res.status_code == 422
-        assert "must be absolute" in str(res.json()["detail"])
-
-    # Invalid wheel file
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package=str("/something/something.whl")),
-        )
-        assert res.status_code == 422
-        assert "Invalid wheel-file name" in str(res.json()["detail"])
 
 
 async def test_invalid_manifest(
@@ -71,11 +50,16 @@ async def test_invalid_manifest(
         / "v2/fractal_tasks_fail/invalid_manifest"
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
+    with open(wheel_path, "rb") as f:
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # API call is successful
         res = await client.post(
-            f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
         )
+
         assert res.status_code == 202
         task_group_activity_id = res.json()["id"]
         # Background task failed
@@ -93,12 +77,16 @@ async def test_invalid_manifest(
         / "v2/fractal_tasks_fail/missing_manifest"
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-
+    with open(wheel_path, "rb") as f:
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # API call is successful
         res = await client.post(
-            f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
         )
+
         assert res.status_code == 202
         task_group_activity_id = res.json()["id"]
         # Background task failed
@@ -130,12 +118,16 @@ async def test_missing_task_executable(
         / "v2/fractal_tasks_fail/missing_executable"
         / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-
+    with open(wheel_path, "rb") as f:
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # Trigger collection
         res = await client.post(
-            f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
         )
+
         assert res.status_code == 202
         assert res.json()["status"] == "pending"
 
@@ -164,19 +156,15 @@ async def test_folder_already_exists(
         expected_path = tmp_path / f"{user.id}/fractal-tasks-mock/0.0.1"
         expected_path.mkdir(parents=True, exist_ok=True)
         assert expected_path.exists()
-
+        wheel_path = (
+            testdata_path.parent
+            / "v2/fractal_tasks_mock/dist"
+            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        )
+        with open(wheel_path, "rb") as f:
+            files = {"file": (wheel_path.name, f.read(), "application/zip")}
         # Fail because folder already exists
-        payload = dict(
-            package=(
-                testdata_path.parent
-                / "v2/fractal_tasks_mock/dist"
-                / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-            ).as_posix()
-        )
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=payload,
-        )
+        res = await client.post(f"{PREFIX}/collect/pip/", data={}, files=files)
         assert res.status_code == 422
         assert "already exists" in res.json()["detail"]
 
@@ -202,26 +190,28 @@ async def test_failure_cleanup(
     )
 
     # Valid part of the payload
-    payload = dict(
-        package=(
+    payload = dict(package_extras="my_extra")
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        wheel_path = (
             testdata_path.parent
             / "v2/fractal_tasks_mock/dist"
             / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        ).as_posix(),
-        package_extras="my_extra",
-    )
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-
+        )
+        with open(wheel_path, "rb") as f:
+            files = {"file": (wheel_path.name, f.read(), "application/zip")}
         TASK_GROUP_PATH = tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
         assert not TASK_GROUP_PATH.exists()
 
-        # Endpoint returns correctly, despite invalid `pinned_package_versions`
+        # Endpoint returns correctly,
+        # despite invalid `pinned_package_versions`
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(
-                **payload, pinned_package_versions={"pydantic": "99.99.99"}
+            data=dict(
+                **payload,
+                pinned_package_versions=json.dumps({"pydantic": "99.99.99"}),
             ),
+            files=files,
         )
         assert res.status_code == 202
         task_group_activity_id = res.json()["id"]
@@ -255,8 +245,92 @@ async def test_invalid_python_version(
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(package="invalid-task-package", python_version="3.9"),
+            data=dict(package="invalid-task-package", python_version="3.9"),
         )
         assert res.status_code == 422
         assert "Python version 3.9 is not available" in res.json()["detail"]
         debug(res.json()["detail"])
+
+
+async def test_wheel_collection_failures(
+    client,
+    MockCurrentUser,
+    testdata_path: Path,
+):
+    wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    with open(wheel_path, "rb") as f:
+        wheel_file_content = f.read()
+
+    files = {"file": (wheel_path.name, wheel_file_content, "application/zip")}
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files={},
+        )
+        assert res.status_code == 422
+        MSG = "When no `file` is provided, `package` is required."
+        assert MSG in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(package="fractal_tasks_mock"),
+            files=files,
+        )
+        assert res.status_code == 422
+        MSG = "Cannot set `package` when `file` is provided"
+        assert MSG in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(package_version="0.0.1"),
+            files=files,
+        )
+        assert res.status_code == 422
+        MSG = "Cannot set `package_version` when `file` is provided"
+        assert MSG in res.json()["detail"]
+
+        files = {"file": ("something", wheel_file_content, "application/zip")}
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "Invalid wheel-file name" in str(res.json()["detail"])
+        debug(res.json())
+
+        files = {
+            "file": ("something.whl", wheel_file_content, "application/zip")
+        }
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "Invalid wheel-file name" in str(res.json()["detail"])
+        debug(res.json())
+
+        files = {
+            "file": (
+                "something;rm /invalid/path.whl",
+                wheel_file_content,
+                "application/zip",
+            )
+        }
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "Wheel filename has forbidden characters" in str(
+            res.json()["detail"]
+        )
+        debug(res.json())

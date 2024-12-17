@@ -31,14 +31,12 @@ class UserSettingsRead(BaseModel):
     ssh_jobs_dir: Optional[str] = None
     slurm_user: Optional[str] = None
     slurm_accounts: list[str]
-    cache_dir: Optional[str] = None
     project_dir: Optional[str] = None
 
 
 class UserSettingsReadStrict(BaseModel):
     slurm_user: Optional[str] = None
     slurm_accounts: list[str]
-    cache_dir: Optional[str] = None
     ssh_username: Optional[str] = None
     project_dir: Optional[str] = None
 
@@ -55,7 +53,6 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
     ssh_jobs_dir: Optional[str] = None
     slurm_user: Optional[str] = None
     slurm_accounts: Optional[list[StrictStr]] = None
-    cache_dir: Optional[str] = None
     project_dir: Optional[str] = None
 
     _ssh_host = validator("ssh_host", allow_reuse=True)(
@@ -87,13 +84,6 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
             value[i] = valstr(f"slurm_accounts[{i}]")(item)
         return val_unique_list("slurm_accounts")(value)
 
-    @validator("cache_dir")
-    def cache_dir_validator(cls, value):
-        if value is None:
-            return None
-        validate_cmd(value)
-        return val_absolute_path("cache_dir")(value)
-
     @validator("project_dir")
     def project_dir_validator(cls, value):
         if value is None:
@@ -104,15 +94,7 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
 
 class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
     slurm_accounts: Optional[list[StrictStr]] = None
-    cache_dir: Optional[str] = None
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
         val_unique_list("slurm_accounts")
     )
-
-    @validator("cache_dir")
-    def cache_dir_validator(cls, value):
-        if value is None:
-            return value
-        validate_cmd(value)
-        return val_absolute_path("cache_dir")(value)

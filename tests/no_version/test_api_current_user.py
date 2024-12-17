@@ -100,9 +100,7 @@ async def test_patch_current_user_no_extra(registered_client):
     """
     res = await registered_client.patch(PREFIX, json={})
     assert res.status_code == 200
-    res = await registered_client.patch(
-        PREFIX, json={"cache_dir": "/tmp", "foo": "bar"}
-    )
+    res = await registered_client.patch(PREFIX, json={"foo": "bar"})
     assert res.status_code == 422
 
 
@@ -178,7 +176,7 @@ async def test_get_and_patch_current_user_settings(registered_client):
         else:
             assert v is None
 
-    patch = dict(slurm_accounts=["foo", "bar"], cache_dir="/tmp/foo_cache")
+    patch = dict(slurm_accounts=["foo", "bar"])
     res = await registered_client.patch(f"{PREFIX}settings/", json=patch)
     assert res.status_code == 200
 

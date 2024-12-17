@@ -1,13 +1,19 @@
+import json
 from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from fastapi import UploadFile
+from pydantic import BaseModel
+from pydantic import root_validator
 from pydantic import ValidationError
 from sqlmodel import select
 
@@ -22,6 +28,7 @@ from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
+from ....schemas.v2 import WheelFile
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -44,9 +51,98 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
 )
 
+
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+FORBIDDEN_CHAR_WHEEL = [";", "/"]
+
+
+class CollectionRequestData(BaseModel):
+    """
+    Validate form data _and_ wheel file.
+    """
+
+    task_collect: TaskCollectPipV2
+    file: Optional[UploadFile] = None
+    origin: TaskGroupV2OriginEnum
+
+    @root_validator(pre=True)
+    def validate_data(cls, values):
+        file = values.get("file")
+        package = values.get("task_collect").package
+        package_version = values.get("task_collect").package_version
+
+        if file is None:
+            if package is None:
+                raise ValueError(
+                    "When no `file` is provided, `package` is required."
+                )
+            values["origin"] = TaskGroupV2OriginEnum.PYPI
+        else:
+            if package is not None:
+                raise ValueError(
+                    "Cannot set `package` when `file` is provided "
+                    f"(given package='{package}')."
+                )
+            if package_version is not None:
+                raise ValueError(
+                    "Cannot set `package_version` when `file` is "
+                    f"provided (given package_version='{package_version}')."
+                )
+            values["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+
+            for forbidden_char in FORBIDDEN_CHAR_WHEEL:
+                if forbidden_char in file.filename:
+                    raise ValueError(
+                        "Wheel filename has forbidden characters, "
+                        f"{FORBIDDEN_CHAR_WHEEL}"
+                    )
+
+        return values
+
+
+def parse_request_data(
+    package: Optional[str] = Form(None),
+    package_version: Optional[str] = Form(None),
+    package_extras: Optional[str] = Form(None),
+    python_version: Optional[str] = Form(None),
+    pinned_package_versions: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+) -> CollectionRequestData:
+    """
+    Expand the parsing/validation of `parse_form_data`, based on `file`.
+    """
+
+    try:
+        # Convert dict_pinned_pkg from a JSON string into a Python dictionary
+        dict_pinned_pkg = (
+            json.loads(pinned_package_versions)
+            if pinned_package_versions
+            else None
+        )
+        # Validate and coerce form data
+        task_collect_pip = TaskCollectPipV2(
+            package=package,
+            package_version=package_version,
+            package_extras=package_extras,
+            python_version=python_version,
+            pinned_package_versions=dict_pinned_pkg,
+        )
+
+        data = CollectionRequestData(
+            task_collect=task_collect_pip,
+            file=file,
+        )
+
+    except (ValidationError, json.JSONDecodeError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid request-body\n{str(e)}",
+        )
+
+    return data
 
 
 @router.post(
@@ -54,10 +150,10 @@ logger = set_logger(__name__)
     response_model=TaskGroupActivityV2Read,
 )
 async def collect_tasks_pip(
-    task_collect: TaskCollectPipV2,
-    background_tasks: BackgroundTasks,
-    response: Response,
     request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    request_data: CollectionRequestData = Depends(parse_request_data),
     private: bool = False,
     user_group_id: Optional[int] = None,
     user: UserOAuth = Depends(current_active_verified_user),
@@ -66,12 +162,17 @@ async def collect_tasks_pip(
     """
     Task-collection endpoint
     """
-
     # Get settings
     settings = Inject(get_settings)
 
+    # Get some validated request data
+    task_collect = request_data.task_collect
+
     # Initialize task-group attributes
-    task_group_attrs = dict(user_id=user.id)
+    task_group_attrs = dict(
+        user_id=user.id,
+        origin=request_data.origin,
+    )
 
     # Set/check python version
     if task_collect.python_version is None:
@@ -103,12 +204,19 @@ async def collect_tasks_pip(
             "pinned_package_versions"
         ] = task_collect.pinned_package_versions
 
+    # Initialize wheel_file_content as None
+    wheel_file = None
+
     # Set pkg_name, version, origin and wheel_path
-    if task_collect.package.endswith(".whl"):
+    if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
         try:
-            task_group_attrs["wheel_path"] = task_collect.package
-            wheel_filename = Path(task_group_attrs["wheel_path"]).name
+            wheel_filename = request_data.file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
+            wheel_file_content = await request_data.file.read()
+            wheel_file = WheelFile(
+                filename=wheel_filename,
+                contents=wheel_file_content,
+            )
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -121,11 +229,9 @@ async def collect_tasks_pip(
             wheel_info["distribution"]
         )
         task_group_attrs["version"] = wheel_info["version"]
-        task_group_attrs["origin"] = TaskGroupV2OriginEnum.WHEELFILE
-    else:
+    elif request_data.origin == TaskGroupV2OriginEnum.PYPI:
         pkg_name = task_collect.package
         task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
-        task_group_attrs["origin"] = TaskGroupV2OriginEnum.PYPI
         latest_version = await get_package_version_from_pypi(
             task_collect.package,
             task_collect.package_version,
@@ -202,22 +308,12 @@ async def collect_tasks_pip(
     # On-disk checks
 
     if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
-
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"{task_group_path} already exists.",
             )
-
-        # Verify that wheel file exists
-        wheel_path = task_group_attrs.get("wheel_path", None)
-        if wheel_path is not None:
-            if not Path(wheel_path).exists():
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"No such file: {wheel_path}.",
-                )
 
     # Create TaskGroupV2 object
     task_group = TaskGroupV2(**task_group_attrs)
@@ -259,14 +355,17 @@ async def collect_tasks_pip(
             task_group_activity_id=task_group_activity.id,
             fractal_ssh=fractal_ssh,
             tasks_base_dir=user_settings.ssh_tasks_dir,
+            wheel_file=wheel_file,
         )
 
     else:
         # Local task collection
+
         background_tasks.add_task(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            wheel_file=wheel_file,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "

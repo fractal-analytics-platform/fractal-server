@@ -296,7 +296,8 @@ async def test_lifecycle(
     )
     wheel_path = tmp777_path / old_wheel_path.name
     shutil.copy(old_wheel_path, wheel_path)
-
+    with open(wheel_path, "rb") as f:
+        files = {"file": (wheel_path.name, f.read(), "application/zip")}
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
@@ -304,7 +305,8 @@ async def test_lifecycle(
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
-            json=dict(package=wheel_path.as_posix()),
+            data={},
+            files=files,
         )
         assert res.status_code == 202
         activity = res.json()
@@ -351,8 +353,8 @@ async def test_lifecycle(
         assert Path(task_group.venv_path).exists()
         assert Path(task_group.wheel_path).exists()
 
-        # STEP 4: Deactivate a task group created before 2.9.0, which has no
-        # pip-freeze information
+        # STEP 4: Deactivate a task group created before 2.9.0,
+        # which has no pip-freeze information
         task_group.pip_freeze = None
         db.add(task_group)
         await db.commit()

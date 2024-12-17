@@ -68,11 +68,8 @@ async def _get_task_by_source(
     Find task with a given source.
 
     Args:
-        task_import: Info on task to be imported.
-        user_id: ID of current user.
-        default_group_id: ID of default user group.
-        task_group_list: Current list of valid task groups.
-        db: Asynchronous db session
+        source: `source` of the task to be imported.
+        task_groups_list: Current list of valid task groups.
 
     Return:
         `id` of the matching task, or `None`.
@@ -172,10 +169,10 @@ async def _get_task_by_taskimport(
 
     Args:
         task_import: Info on task to be imported.
+        task_groups_list: Current list of valid task groups.
         user_id: ID of current user.
         default_group_id: ID of default user group.
-        task_group_list: Current list of valid task groups.
-        db: Asynchronous db session
+        db: Asynchronous database session.
 
     Return:
         `id` of the matching task, or `None`.

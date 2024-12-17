@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
@@ -184,7 +187,6 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     tmp777_path,
     override_settings_factory,
 ):
-
     # Setup remote Python interpreter
     current_py_version_underscore = current_py_version.replace(".", "_")
     key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
@@ -202,9 +204,10 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         )
     ).as_posix()
     wheel_path = (
-        tmp777_path / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        path / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
-    fractal_ssh.send_file(local=local_wheel_path, remote=wheel_path)
+    with open(local_wheel_path, "rb") as wheel_file:
+        wheel_buffer = wheel_file.read()
     task_group = TaskGroupV2(
         pkg_name="fractal_tasks_mock",
         version="0.0.1",
@@ -237,6 +240,10 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         task_group_activity_id=activity_collect.id,
         fractal_ssh=fractal_ssh,
         tasks_base_dir=tmp777_path.as_posix(),
+        wheel_file=WheelFile(
+            contents=wheel_buffer,
+            filename=Path(wheel_path).name,
+        ),
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK
@@ -285,3 +292,61 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     assert activity_deactivate.status == TaskGroupActivityStatusV2.OK
     print(activity_deactivate.log)
     assert "Recreate pip-freeze information" in activity_deactivate.log
+
+
+async def test_deactivate_ssh_github_dependency(
+    tmp777_path,
+    db,
+    first_user,
+    fractal_ssh,
+):
+
+    path = tmp777_path / "something"
+    venv_path = path / "venv"
+    task_group = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        origin="pypi",
+        path=path.as_posix(),
+        venv_path=venv_path.as_posix(),
+        user_id=first_user.id,
+        pip_freeze=(
+            "BaSiCPy @ "
+            "git+https://github.com/"
+            "peng-lab/BaSiCPy.git"
+            "@166bf6190c1827b5a5ece4a5542433c96a2bc997"
+            "\n"
+        ),
+    )
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    task_group_activity = TaskGroupActivityV2(
+        user_id=first_user.id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.DEACTIVATE,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+    )
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+    db.expunge_all()
+
+    fractal_ssh.mkdir(folder=path)
+    fractal_ssh.mkdir(folder=venv_path)
+
+    # background task
+    deactivate_ssh(
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        fractal_ssh=fractal_ssh,
+        tasks_base_dir=tmp777_path.as_posix(),
+    )
+
+    # Verify that deactivate failed
+    activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
+    assert activity.status == "failed"
+    assert "github.com" in activity.log
+    assert "not currently supported" in activity.log

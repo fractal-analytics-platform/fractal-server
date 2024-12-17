@@ -24,7 +24,7 @@ def _customize_and_run_template(
     Args:
         template_filename: Filename of the template file (ends with ".sh").
         replacements: Dictionary of replacements.
-        script_dir: Local folder where the script will be placed.
+        script_dir_local: Local folder where the script will be placed.
         prefix: Prefix for the script filename.
         fractal_ssh: FractalSSH object
         script_dir_remote: Remote scripts directory

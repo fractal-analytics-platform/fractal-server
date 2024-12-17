@@ -7,9 +7,10 @@ write_log(){
 
 # Variables to be filled within fractal-server
 PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
-INSTALL_STRING=__INSTALL_STRING__
+INSTALL_STRING="__INSTALL_STRING__"
 PINNED_PACKAGE_LIST="__PINNED_PACKAGE_LIST__"
 FRACTAL_MAX_PIP_VERSION="__FRACTAL_MAX_PIP_VERSION__"
+FRACTAL_PIP_CACHE_DIR_ARG="__FRACTAL_PIP_CACHE_DIR_ARG__"
 
 TIME_START=$(date +%s)
 
@@ -17,8 +18,8 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 
 # Upgrade `pip` and install `setuptools`
 write_log "START upgrade pip and install setuptools"
-"$VENVPYTHON" -m pip install --no-cache-dir "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
-"$VENVPYTHON" -m pip install --no-cache-dir setuptools
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} "pip<=${FRACTAL_MAX_PIP_VERSION}" --upgrade
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} setuptools
 write_log "END   upgrade pip and install setuptools"
 echo
 
@@ -41,7 +42,7 @@ if [ "$PINNED_PACKAGE_LIST" != "" ]; then
     done
 
     write_log "All packages in ${PINNED_PACKAGE_LIST} are already installed, proceed with specific versions."
-    "$VENVPYTHON" -m pip install --no-cache-dir "$PINNED_PACKAGE_LIST"
+    "$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} "$PINNED_PACKAGE_LIST"
     write_log "END installing pinned versions $PINNED_PACKAGE_LIST"
 else
     write_log "SKIP installing pinned versions $PINNED_PACKAGE_LIST (empty list)"

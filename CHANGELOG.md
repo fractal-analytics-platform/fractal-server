@@ -1,5 +1,52 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Add validation for `.whl` filename (\#2147).
+    * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
+
+# 2.10.2
+
+* App:
+    * Add `FRACTAL_PIP_CACHE_DIR` configuration variable (\#2141).
+* Tasks life cycle:
+    * Prevent deactivation of task groups with `"github.com"` in pip-freeze information (\#2144).
+* Runner:
+    * Handle early shutdown for sudo SLURM executor (\#2132).
+    * Fix repeated setting of `timestamp_ended` in task-group reactivation (\#2140).
+
+# 2.10.1
+
+* API:
+    * Add `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2129).
+* Testing:
+    * Use system postgresql in GitHub actions, rather than independent container (\#2199).
+
+# 2.10.0
+
+* API:
+    * Major update of `POST /api/v2/task/collect/pip/`, to support wheel-file upload (\#2113).
+* Testing:
+    * Add test of private task collection (\#2126).
+
+# 2.9.2
+
+* API
+    * Remove `cache_dir` and use `project_dir/.fractal_cache` (\#2121).
+* Docs
+    * Improve docstrings and reduce mkdocs warnings (\#2122).
+
+# 2.9.1
+
+* Task collection:
+    * Fix bug in wheel-based SSH task-collection (\#2119).
+* Testing:
+    * Re-include a specific test previously skipped for Python 3.12 (\#2114).
+    * Add metadata to `fractal-tasks-mock` package (\#2117).
+* Docs:
+    * Add info about working versions.
+
 # 2.9.0
 
 > WARNING 1: This version drops support for sqlite, and removes the
