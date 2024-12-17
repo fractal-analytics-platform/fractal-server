@@ -11,6 +11,7 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import json
 import logging
 import shutil
 import sys
@@ -21,7 +22,7 @@ from typing import Literal
 from typing import Optional
 from typing import TypeVar
 
-import jwt
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
@@ -581,7 +582,7 @@ class Settings(BaseSettings):
     """
     FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
     """
-    Key value for JWT decode
+    Key value for cryptography.fernet decrypt
     """
     FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
     """
@@ -589,18 +590,23 @@ class Settings(BaseSettings):
     """
 
     @property
-    def mail_settings(self) -> Optional[MailSettings]:
+    def MAIL_SETTINGS(self) -> Optional[MailSettings]:
         if (
             self.FRACTAL_EMAIL_SETTINGS is not None
             and self.FRACTAL_EMAIL_SETTINGS_KEY is not None
             and self.FRACTAL_EMAIL_RECIPIENTS is not None
         ):
-            smpt_settings = jwt.decode(
-                self.FRACTAL_EMAIL_SETTINGS, self.FRACTAL_EMAIL_SETTINGS_KEY
+            smpt_settings = (
+                Fernet(self.FRACTAL_EMAIL_SETTINGS_KEY)
+                .decrypt(self.FRACTAL_EMAIL_SETTINGS)
+                .decode("utf-8")
             )
             recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
 
-            return MailSettings(**smpt_settings, recipients=recipients)
+            mail_settings = MailSettings(
+                **json.loads(smpt_settings), recipients=recipients
+            )
+            return mail_settings
         elif (
             self.FRACTAL_EMAIL_RECIPIENTS is None
             or self.FRACTAL_EMAIL_SETTINGS_KEY is None
