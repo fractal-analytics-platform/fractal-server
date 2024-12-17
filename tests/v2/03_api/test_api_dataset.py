@@ -58,7 +58,7 @@ async def test_new_dataset_v2(client, MockCurrentUser):
             f"api/v2/project/{p2_id}/dataset/",
             json=dict(
                 name="dataset",
-                filters={"attributes": {"x": 10}},
+                filters={"attributes_include": {"x": [10]}},
                 zarr_dir="/tmp",
             ),
         )
@@ -178,7 +178,6 @@ async def test_get_user_datasets(
         await dataset_factory_v2(project_id=project1.id, name="ds1a")
         await dataset_factory_v2(project_id=project1.id, name="ds1b")
         await dataset_factory_v2(project_id=project2.id, name="ds2a")
-
         res = await client.get(f"{PREFIX}/dataset/")
         assert res.status_code == 200
         datasets = res.json()
@@ -443,7 +442,8 @@ async def test_dataset_export(
         assert res_dataset["zarr_dir"] == "/zarr_dir"
         assert res_dataset["images"] == IMAGES
         assert res_dataset["filters"] == dict(
-            attributes={},
+            attributes_include={},
+            attributes_exclude={},
             types={},
         )
 
@@ -460,10 +460,6 @@ async def test_dataset_import(
             name="Dataset",
             zarr_dir="/somewhere/invalid/",
             images=IMAGES,
-            filters=dict(
-                attributes={},
-                types={},
-            ),
         )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
@@ -476,10 +472,6 @@ async def test_dataset_import(
             name="Dataset",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
-            filters=dict(
-                attributes={},
-                types={},
-            ),
         )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
@@ -490,6 +482,7 @@ async def test_dataset_import(
         assert res_dataset["name"] == "Dataset"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["filters"] == dict(
-            attributes={},
+            attributes_exclude={},
+            attributes_include={},
             types={},
         )

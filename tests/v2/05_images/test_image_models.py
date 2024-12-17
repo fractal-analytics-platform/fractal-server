@@ -91,8 +91,11 @@ def test_filters():
 
     Filters()
 
-    valid_attributes = dict(a="string", b=3, c=0.33, d=True, e=None)
-    assert Filters(attributes=valid_attributes).attributes == valid_attributes
+    valid_attributes = dict(a=["string", 3, 0.33, True, None])
+    assert (
+        Filters(attributes_include=valid_attributes).attributes_include
+        == valid_attributes
+    )
 
     invalid_attributes = [
         dict(a=["l", "i", "s", "t"]),

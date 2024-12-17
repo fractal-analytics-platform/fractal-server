@@ -60,10 +60,16 @@ def execute_tasks_v2(
         # Get filtered images
         pre_filters = dict(
             types=copy(tmp_filters["types"]),
-            attributes=copy(tmp_filters["attributes"]),
+            attributes_include=copy(tmp_filters["attributes_include"]),
+            attributes_exclude=copy(tmp_filters["attributes_exclude"]),
         )
         pre_filters["types"].update(wftask.input_filters["types"])
-        pre_filters["attributes"].update(wftask.input_filters["attributes"])
+        pre_filters["attributes_include"].update(
+            wftask.input_filters["attributes_include"]
+        )
+        pre_filters["attributes_exclude"].update(
+            wftask.input_filters["attributes_exclude"]
+        )
         filtered_images = filter_image_list(
             images=tmp_images,
             filters=Filters(**pre_filters),
@@ -252,8 +258,11 @@ def execute_tasks_v2(
         # Update filters.attributes:
         # current + (task_output: not really, in current examples..)
         if current_task_output.filters is not None:
-            tmp_filters["attributes"].update(
-                current_task_output.filters.attributes
+            tmp_filters["attributes_include"].update(
+                current_task_output.filters.attributes_include
+            )
+            tmp_filters["attributes_exclude"].update(
+                current_task_output.filters.attributes_exclude
             )
 
         # Find manifest ouptut types

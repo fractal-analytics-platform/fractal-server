@@ -290,7 +290,8 @@ async def full_workflow_TaskExecutionError(
         assert res.status_code == 200
         dataset = res.json()
         EXPECTED_FILTERS = {
-            "attributes": {},
+            "attributes_include": {},
+            "attributes_exclude": {},
             "types": {
                 "3D": False,
             },

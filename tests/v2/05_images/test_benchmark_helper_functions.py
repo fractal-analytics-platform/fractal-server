@@ -47,7 +47,7 @@ def test_filter_image_list_with_filters(
     new_list = filter_image_list(
         images=images,
         filters=Filters(
-            attributes=dict(a1=0, a2="a2", a3=None),
+            attributes_include=dict(a1=[0], a2=["a2"], a3=[None]),
             types=dict(t1=True, t2=False),
         ),
     )
@@ -65,7 +65,7 @@ def test_filter_image_list_few_filters(
 ):
     new_list = filter_image_list(
         images=images,
-        filters=Filters(attributes=dict(a1=0)),
+        filters=Filters(attributes_include=dict(a1=[0])),
     )
     debug(len(images), len(new_list))
     assert len(new_list) == len(images) // 2
