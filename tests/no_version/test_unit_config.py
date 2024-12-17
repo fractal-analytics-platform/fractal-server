@@ -411,9 +411,29 @@ def test_fractal_email():
         FRACTAL_EMAIL_RECIPIENTS="admin@fractal.xy",
         **common_attributes,
     )
-    debug(settings)
+
     mail_settings = settings.MAIL_SETTINGS
     assert mail_settings.recipients == ["admin@fractal.xy"]
+    assert mail_settings.sender == "sender"
+
+    # Fail with missing recipients
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="",
+    )
+    with pytest.raises(FractalConfigurationError):
+        mail_settings = bad_settings.MAIL_SETTINGS
+
+    # fail with missing settings
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="",
+    )
+    with pytest.raises(FractalConfigurationError):
+        mail_settings = bad_settings.MAIL_SETTINGS
 
 
 def test_python_interpreters():
