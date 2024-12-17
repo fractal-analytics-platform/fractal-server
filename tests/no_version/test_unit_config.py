@@ -423,8 +423,9 @@ def test_fractal_email():
         FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
         FRACTAL_EMAIL_RECIPIENTS="",
     )
-    with pytest.raises(FractalConfigurationError):
+    with pytest.raises(FractalConfigurationError) as expinfo:
         mail_settings = bad_settings.MAIL_SETTINGS
+    assert "Bad configuration settings" in str(expinfo.value)
 
     # fail with missing settings
 
@@ -432,8 +433,9 @@ def test_fractal_email():
         FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
         FRACTAL_EMAIL_RECIPIENTS="",
     )
-    with pytest.raises(FractalConfigurationError):
+    with pytest.raises(FractalConfigurationError) as expinfo:
         mail_settings = bad_settings.MAIL_SETTINGS
+    assert "You must set all SMPT config variables" in str(expinfo.value)
 
 
 def test_python_interpreters():
