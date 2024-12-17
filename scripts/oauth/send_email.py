@@ -15,5 +15,5 @@ with smtplib.SMTP("localhost", 2525) as server:
         server.sendmail(
             from_addr=sender,
             to_addrs=recipient,
-            msg="User 'x@y.z' just registered.",
+            msg="\nUser 'x@y.z' just registered.",
         )
