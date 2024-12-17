@@ -624,6 +624,9 @@ class Settings(BaseSettings):
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
+
+    # FIXME: ADD CHECK SMTP MAIL AT STARTUP
+    ############################################
     def check_db(self) -> None:
         """
         Checks that db environment variables are properly set.
