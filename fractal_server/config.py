@@ -21,6 +21,7 @@ from typing import Literal
 from typing import Optional
 from typing import TypeVar
 
+import jwt
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
@@ -30,6 +31,7 @@ from pydantic import validator
 from sqlalchemy.engine import URL
 
 import fractal_server
+from fractal_server.app.schemas import MailSettings
 
 
 class FractalConfigurationError(RuntimeError):
@@ -529,6 +531,47 @@ class Settings(BaseSettings):
     """
 
     ###########################################################################
+    # SMTP SERVICE
+    ###########################################################################
+    SMPT_CONFIG_SETTINGS: Optional[str] = None
+    """
+    JWT with SMPT configurations
+    """
+    SMPT_SALT: Optional[str] = None
+    """
+    Key value for JWT decode
+    """
+    SMPT_RECIPIENTS: Optional[list[str]] = None
+    """
+    List of email receivers
+    """
+
+    @property
+    def send_email(self):
+        if (
+            self.SMPT_CONFIG_SETTINGS is not None
+            and self.SMPT_SALT is not None
+            and self.SMPT_RECIPIENTS is not None
+        ):
+            smpt_settings = jwt.decode(
+                self.SMPT_CONFIG_SETTINGS, self.SMPT_SALT
+            )
+            return MailSettings(
+                **smpt_settings, recipients=self.SMPT_RECIPIENTS
+            )
+        elif (
+            self.SMPT_RECIPIENTS is None
+            or self.SMPT_SALT is None
+            or self.SMPT_CONFIG_SETTINGS is None
+        ):
+            raise FractalConfigurationError(
+                "You must set all SMPT config variables: "
+                f"{self.SMPT_CONFIG_SETTINGS=}, "
+                f"{self.SMPT_RECIPIENTS=}, "
+                f"{self.SMPT_SALT}, "
+            )
+
+    ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
     def check_db(self) -> None:
@@ -539,7 +582,6 @@ class Settings(BaseSettings):
             raise FractalConfigurationError("POSTGRES_DB cannot be None.")
 
     def check_runner(self) -> None:
-
         if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
             raise FractalConfigurationError(
                 "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
@@ -547,7 +589,6 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
-
             from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )

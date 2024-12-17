@@ -12,6 +12,7 @@ from .job import JobCreateV2  # noqa F401
 from .job import JobReadV2  # noqa F401
 from .job import JobStatusTypeV2  # noqa F401
 from .job import JobUpdateV2  # noqa F401
+from .mail_settings import MailSettings  # noqa F401
 from .manifest import ManifestV2  # noqa F401
 from .manifest import TaskManifestV2  # noqa F401
 from .project import ProjectCreateV2  # noqa F401
