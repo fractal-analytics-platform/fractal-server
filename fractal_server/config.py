@@ -25,7 +25,7 @@ import jwt
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
-from pydantic import Emailstr
+from pydantic import EmailStr
 from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
@@ -36,7 +36,7 @@ import fractal_server
 
 class MailSettings(BaseModel):
     sender: str
-    recipients: Optional[list[Emailstr]] = Field(default=None)
+    recipients: Optional[list[EmailStr]] = Field(default=None)
     smtp_server: str
     port: int
     password: str
