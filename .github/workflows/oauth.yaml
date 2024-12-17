@@ -19,6 +19,12 @@ jobs:
         ports:
           - 5556:5556
 
+      mailhog:
+        image: mailhog/mailhog
+        ports:
+          - 2525:1025
+          - 8025:8025
+
     steps:
 
         - uses: actions/checkout@v4
