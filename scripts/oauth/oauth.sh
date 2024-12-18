@@ -74,7 +74,7 @@ assert_email_count 0
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
 
-curl -X POST \
+curl --silent -X POST \
     http://127.0.0.1:8001/auth/register/ \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
@@ -99,7 +99,7 @@ assert_users_and_oauth 2 1
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $USER_ID
 
 # Change email into "kilgore@fractal.xy".
-curl -X PATCH \
+curl --silent -X PATCH \
     "http://127.0.0.1:8001/auth/users/$USER_ID/" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
