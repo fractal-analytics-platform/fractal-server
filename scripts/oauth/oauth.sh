@@ -128,7 +128,7 @@ USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
 assert_email_count 1
 # Print emails
-echo ✉️ Email list:
+echo EMAIL LIST
 curl --silent http://localhost:8025/api/v1/messages | jq
 
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
