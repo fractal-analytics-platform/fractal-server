@@ -758,7 +758,7 @@ class Settings(BaseSettings):
         def _must_be_sanitized(string) -> bool:
             if not string.upper().startswith("FRACTAL") or any(
                 s in string.upper()
-                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
+                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN", "KEY"]
             ):
                 return True
             else:
