@@ -22,7 +22,7 @@ def generate_email_settings():
             smtp_server=SERVER,
             port=PORT,
             instance_name="test",
-            use_tls=False,
+            use_starttls=False,
         )
     ).encode("utf-8")
     email_settings = Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")

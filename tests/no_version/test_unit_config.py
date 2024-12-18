@@ -399,7 +399,7 @@ def test_fractal_email():
             port=54321,
             password="password",
             instance_name="test",
-            use_tls=False,
+            use_starttls=False,
         )
     ).encode("utf-8")
     enc_fractal_mail_settings = (

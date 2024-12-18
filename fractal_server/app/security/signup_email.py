@@ -23,7 +23,7 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
 
     with smtplib.SMTP(mail_settings.smtp_server, mail_settings.port) as server:
         server.ehlo()
-        if mail_settings.use_tls:
+        if mail_settings.use_starttls:
             server.starttls()
             server.ehlo()
 
