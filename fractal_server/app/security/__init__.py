@@ -259,7 +259,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 and len(this_user.oauth_accounts) == 1
             ):
                 mail_new_oauth_signup(
-                    msg=f"New user registered {this_user}",
+                    msg=f"New user registered: '{this_user.email}'.",
                     mail_settings=settings.MAIL_SETTINGS,
                 )
 
