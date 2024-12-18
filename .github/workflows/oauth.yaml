@@ -19,8 +19,8 @@ jobs:
         ports:
           - 5556:5556
 
-      mailhog:
-        image: mailhog/mailhog
+      mailpit:
+        image: axllent/mailpit
         ports:
           - 2525:1025
           - 8025:8025
