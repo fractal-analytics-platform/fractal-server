@@ -33,7 +33,6 @@ from typing import Generic
 from typing import Optional
 from typing import Type
 
-from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import Request
 from fastapi_users import BaseUserManager
@@ -254,9 +253,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
             # Send mail section
             settings = Inject(get_settings)
-            background_task = BackgroundTasks()
-            background_task.add_task(
-                mail_new_oauth_signup,
+            mail_new_oauth_signup(
                 msg=f"New user registered {this_user}",
                 mail_settings=settings.MAIL_SETTINGS,
             )
