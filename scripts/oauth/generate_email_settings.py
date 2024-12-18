@@ -8,17 +8,17 @@ import json
 
 from cryptography.fernet import Fernet
 
+SENDER_CREDENTIAL = ("sender@localhost", "fakepassword")
+
 
 def generate_email_settings():
     key = Fernet.generate_key().decode("utf-8")
-    sender = "sender@localhost"
-    password = "fakepassword"  # nosec
     fractal_mail_settings = json.dumps(
         dict(
-            sender=sender,
+            sender=SENDER_CREDENTIAL[0],
+            password=SENDER_CREDENTIAL[1],
             smtp_server="localhost",
             port=2525,
-            password=password,
             instance_name="test",
             use_tls=False,
         )
