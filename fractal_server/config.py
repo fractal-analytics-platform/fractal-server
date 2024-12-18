@@ -625,8 +625,12 @@ class Settings(BaseSettings):
     # BUSINESS LOGIC
     ###########################################################################
 
-    # FIXME: ADD CHECK SMTP MAIL AT STARTUP
-    ############################################
+    def check_fractal_mail_settings(self):
+        """
+        Checks that the mail settings are properly set.
+        """
+        self.MAIL_SETTINGS
+
     def check_db(self) -> None:
         """
         Checks that db environment variables are properly set.
@@ -732,6 +736,7 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
+        self.check_fractal_mail_settings()
 
     def get_sanitized(self) -> dict:
         def _must_be_sanitized(string) -> bool:

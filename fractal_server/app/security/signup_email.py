@@ -4,9 +4,9 @@ from email.message import EmailMessage
 from fractal_server.config import MailSettings
 
 
-def report_to_mail(msg: str, mail_settings: MailSettings):
+def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
     """
-    Send a report via email using the specified settings.
+    Send an email using the specified settings to notify a new OAuth signup.
     """
 
     msg = EmailMessage()
