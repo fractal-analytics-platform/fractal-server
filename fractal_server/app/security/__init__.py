@@ -254,14 +254,18 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             # Send mail section
             settings = Inject(get_settings)
 
-            if (
-                settings.MAIL_SETTINGS is not None
-                and len(this_user.oauth_accounts) == 1
-            ):
-                mail_new_oauth_signup(
-                    msg=f"New user registered: '{this_user.email}'.",
-                    mail_settings=settings.MAIL_SETTINGS,
-                )
+            if settings.MAIL_SETTINGS is not None and this_user.oauth_accounts:
+                try:
+                    mail_new_oauth_signup(
+                        msg=f"New user registered: '{this_user.email}'.",
+                        mail_settings=settings.MAIL_SETTINGS,
+                    )
+                except Exception as e:
+                    logger.error(
+                        "ERROR sending notification email after oauth "
+                        f"registration of {this_user.email}. "
+                        f"Original error: '{e}'."
+                    )
 
 
 async def get_user_manager(
