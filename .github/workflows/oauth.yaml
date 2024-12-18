@@ -24,7 +24,7 @@ jobs:
           - 1025:1025
           - 8025:8025
         env:
-          MP_SMTP_AUTH: "sender@localhost:fakepassword"
+          MP_SMTP_AUTH: "sender@fractal.com:fakepassword"
           MP_SMTP_AUTH_ALLOW_INSECURE: true
 
     steps:
@@ -58,9 +58,9 @@ jobs:
             POSTGRES_DB: fractal_test
             POSTGRES_HOST: localhost
             POSTGRES_PORT: 5432
-            FRACTAL_EMAIL_SETTINGS: gAAAAABnYu7CrEUFjv-DybDtdPCq2IJaNZn3TpqE-d_F4q71TPpTdWaHvg-WoRu1t_m6Ydy83ryS45pNysIpoFMMq6e8I_kCRKysaeyfG5zaDfVhesBaU4C3HOG4FK-gN-tUFEwVD1Q_YIhIon5JnDrPE-N2WNqLOjQAkrFLGtZ6L8mmnNghLlqBdudAUtYT7wkfozWdSFUNMN1h9BGbwE0L2wcxvr_zEpp3FetWfj4hc5bnxMYC9r7A4FJyw6E_kG47VNXVluNMlP0ARuqTh_qlz-RyiOYCSw==
-            FRACTAL_EMAIL_SETTINGS_KEY: drAE-FXxK55us3Wg9jaG6XFad7YdekPngeRryT8dE4E=
-            FRACTAL_EMAIL_RECIPIENTS: recipient@example.org
+            FRACTAL_EMAIL_SETTINGS: gAAAAABnYvGlNZ5v4RnEpPgA6SQhEp5PMyYxHmyV_OFtvjcjnd_suYbELFWOQEjMskCEqBQWXg0hNhuNQ3E7IwpfAWBxV0gar1RlxP0HKyUgSv00ZPNcPKS79duV0BfiEaKoE7hCr7nbJEJA4ev5A0fDefDMOZwKN9ry0Kv1tevKo-0MuKtg4776Aeiwk4oTcyjrJ2StdK8VidnT4bmBjXIZ0pHRYCAdSRyLYNiOP1DRpFpldeSjXIoUIWdjXK--Oessfra8ZxI2I-RWeQJi7_dNfm5yhKXfNw==
+            FRACTAL_EMAIL_SETTINGS_KEY: XLvGFFhUcWrBC8skW07cI0fsY3PoU2V8yFGfN_OQh2Q=
+            FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
             OAUTH_DEXIDP_CLIENT_ID: client_test_id
             OAUTH_DEXIDP_CLIENT_SECRET: client_test_secret
             OAUTH_DEXIDP_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
