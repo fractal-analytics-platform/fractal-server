@@ -36,7 +36,20 @@ import fractal_server
 
 
 class MailSettings(BaseModel):
-    sender: str
+    """
+    Schema for `MailSettings`
+
+    Attributes:
+        sender: Sender email address
+        recipients: List of recipients email address
+        smtp_server: SMTP server address
+        port: SMTP server port
+        password: Sender password
+        instance_name: Name of SMTP server instance
+        use_starttls: Using or not security protocol
+    """
+
+    sender: EmailStr
     recipients: list[EmailStr] = Field(min_items=1)
     smtp_server: str
     port: int
@@ -578,15 +591,16 @@ class Settings(BaseSettings):
     ###########################################################################
     FRACTAL_EMAIL_SETTINGS: Optional[str] = None
     """
-    JWT with SMPT configurations
+    Encrypted version of settings dictionary, with keys `sender`, `password`,
+    `smtp_server`, `port`, `instance_name`, `use_starttls`.
     """
     FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
     """
-    Key value for cryptography.fernet decrypt
+    Key value for `cryptography.fernet` decrypt
     """
     FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
     """
-    List of email receivers, separated with comas
+    List of email receivers, separated with commas
     """
 
     @property
@@ -609,13 +623,7 @@ class Settings(BaseSettings):
                 return mail_settings
             except Exception:
                 raise FractalConfigurationError("Bad configuration settings")
-        elif any(
-            [
-                self.FRACTAL_EMAIL_RECIPIENTS is None,
-                self.FRACTAL_EMAIL_SETTINGS_KEY is None,
-                self.FRACTAL_EMAIL_SETTINGS is None,
-            ]
-        ) and not all(
+        elif not all(
             [
                 self.FRACTAL_EMAIL_RECIPIENTS is None,
                 self.FRACTAL_EMAIL_SETTINGS_KEY is None,
