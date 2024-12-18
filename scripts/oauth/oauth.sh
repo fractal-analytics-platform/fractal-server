@@ -59,7 +59,7 @@ assert_email_and_id(){
 
 assert_email_count(){
     NUM_MESSAGE=$(
-        curl --silent http://localhost:8025/api/v2/messages | jq -r ".count"
+        curl --silent http://localhost:8025/api/v1/messages | jq -r ".total"
     )
     if [ "$NUM_MESSAGE" -ne "$1" ]; then
         echo "❌ Expected email_count==${1}, got ${NUM_MESSAGE}."
