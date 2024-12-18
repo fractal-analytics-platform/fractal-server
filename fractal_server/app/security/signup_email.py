@@ -28,9 +28,7 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
             server.ehlo()
 
         server.login(
-            user=mail_settings.sender,
-            password=mail_settings.password,
-            initial_response_ok=True,
+            user=mail_settings.sender, password=mail_settings.password
         )
         server.sendmail(
             from_addr=mail_settings.sender,
