@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # --- Functions
 
@@ -31,6 +32,7 @@ assert_users_and_oauth() {
     USERS=$(psql -t -c "SELECT COUNT(*) FROM user_oauth;")
     OAUTH_ACCOUNTS=$(psql -t -c "SELECT COUNT(*) FROM oauthaccount;")
     if [ "$USERS" -ne "$1" ] || [ "$OAUTH_ACCOUNTS" -ne "$2" ]; then
+        echo "❌ Expected (users, oauth_accounts)==(${1}, ${2}), got (${USERS}, ${OAUTH_ACCOUNTS})."
         exit 1
     fi
 }
@@ -46,26 +48,39 @@ assert_email_and_id(){
     EMAIL=$(echo $USER | jq -r ".email")
     ID=$(echo $USER | jq -r ".id")
     if [ "$EMAIL" != "$2" ]; then
+        echo "❌ Expected email==${2}, got ${EMAIL}."
         exit 1
     fi
     if [ "$ID" != "$3" ]; then
+        echo "❌ Expected user_id==${3}, got ${ID}."
+        exit 1
+    fi
+}
+
+assert_email_count(){
+    NUM_MESSAGE=$(
+        curl --silent http://localhost:8025/api/v1/messages | jq -r ".total"
+    )
+    if [ "$NUM_MESSAGE" -ne "$1" ]; then
+        echo "❌ Expected email_count==${1}, got ${NUM_MESSAGE}."
         exit 1
     fi
 }
 
 # --- Test
-
+assert_users_and_oauth 1 0
+assert_email_count 0
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
 
-assert_users_and_oauth 1 0
 curl -X POST \
     http://127.0.0.1:8001/auth/register/ \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
     -d '{"email": "kilgore@kilgore.trout", "password": "kilgore"}'
 assert_users_and_oauth 2 0
+assert_email_count 1
 
 # Login with "kilgore@kilgore.trout" with standard login.
 USER_TOKEN=$(standard_login "kilgore@kilgore.trout" "kilgore")
@@ -109,7 +124,9 @@ assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
 # Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0
+assert_email_count 1
 USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
+assert_email_count 2
 
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
