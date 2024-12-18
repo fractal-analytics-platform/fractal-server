@@ -56,6 +56,9 @@ jobs:
             POSTGRES_DB: fractal_test
             POSTGRES_HOST: localhost
             POSTGRES_PORT: 5432
+            FRACTAL_EMAIL_SETTINGS: gAAAAABnYpVwtlzyveOV20LDG5MI_cPu1OQTKTCyCym-saI2jS7BsCsktx7fznJL2Eo3UoigUQgiQ6OHJLOZSTlLgqo9tkbT49YoWWN0-fSPjqrEtgH0x_v8P48W_A2Hyv7QV6mF5iXZceHTNKK3dJv-NcTpqnQmZ71QsulicQhEO0j__mPvaIzPtXkRCucoXETM1vXnQFTSkPRsNarg_rWufE9pzNoiq1YKLiS1CKdcjz2DT0juchxn73Y6cW7g_5H-GUIzR1fP
+            FRACTAL_EMAIL_SETTINGS_KEY: j9zo1QUe0SMYGVNDYfYnDvdEFKRq9ryaXcs7YdPTyGw=
+            FRACTAL_EMAIL_RECIPIENTS: recipient@example.org
             OAUTH_DEXIDP_CLIENT_ID: client_test_id
             OAUTH_DEXIDP_CLIENT_SECRET: client_test_secret
             OAUTH_DEXIDP_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
