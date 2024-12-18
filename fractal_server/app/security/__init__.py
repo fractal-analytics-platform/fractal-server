@@ -256,7 +256,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
             if (
                 settings.MAIL_SETTINGS is not None
-                and not this_user.is_verified
+                and len(this_user.oauth_accounts) == 1
             ):
                 mail_new_oauth_signup(
                     msg=f"New user registered {this_user}",
