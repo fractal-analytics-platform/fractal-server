@@ -63,11 +63,8 @@ assert_email_count(){
 }
 
 # --- Test
-INIT_MESSAGES=$(
-    curl --silent http://localhost:8025/api/v2/messages | jq -r ".count"
-)
 assert_users_and_oauth 1 0
-assert_email_count $INIT_MESSAGES
+assert_email_count 0
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
@@ -79,7 +76,7 @@ curl -X POST \
     -d '{"email": "kilgore@kilgore.trout", "password": "kilgore"}'
 assert_users_and_oauth 2 0
 python3 scripts/oauth/send_email.py
-assert_email_count $((INIT_MESSAGES + 1))
+assert_email_count 1
 
 # Login with "kilgore@kilgore.trout" with standard login.
 USER_TOKEN=$(standard_login "kilgore@kilgore.trout" "kilgore")
@@ -123,10 +120,10 @@ assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
 # Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0
-assert_email_count $((INIT_MESSAGES + 1))
+assert_email_count 1
 USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
 python3 scripts/oauth/send_email.py
-assert_email_count $((INIT_MESSAGES + 2))
+assert_email_count 2
 
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
