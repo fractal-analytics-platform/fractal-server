@@ -23,6 +23,9 @@ jobs:
         ports:
           - 2525:1025
           - 8025:8025
+        env:
+          MP_SMTP_AUTH: "sender@localhost:fakepassword"
+        options: --smtp-auth-allow-insecure
 
     steps:
 
