@@ -1,0 +1,106 @@
+name: migrations
+
+# Based on a dump of a existing postgresql database, valid for a given
+# fractal-server version, apply current migrations and verify that they go
+# through. The main goal is to identify cases where current data make a table
+# definition invalid in a way that wouldn't be detected when starting from an
+# empty database; typical example: a coulmn has a null value, and we later
+# alter it to make it non-nullable.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+
+env:
+  # The DB `${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql` is compatible
+  # with the SOURCE_VERSION of fractal-server.
+  # Here we test the script that upgrades the DB from SOURCE_VERSION to the
+  #current version.
+  SOURCE_VERSION: 2.9.0
+  ROOTDIR: tests/data/testing_databases
+
+jobs:
+
+  migrations:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Load database dump into postgres database
+        env:
+          PGPASSWORD: postgres
+        run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
+
+      - name: Install poetry
+        run: pipx install poetry==1.8.2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install fractal-server
+        run: |
+          poetry install --without dev --without docs --no-interaction
+          poetry add setuptools # required for py3.12
+
+      - name: Apply migration and fix-db script (postgres)
+        env:
+          FRACTAL_V27_DEFAULT_USER_EMAIL: admin@fractal.xy
+        run: |
+          cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
+          poetry run fractalctl set-db
+          echo -e "yes\nyes\nyes\nyes\nyes"| poetry run fractalctl update-db-data
+          poetry run python scripts/validate_db_data_with_read_schemas.py
+
+  downgrade:
+    name: "Alembic downgrade"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Install poetry
+        run: pipx install poetry==1.8.2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          cache: "poetry"
+
+      - name: Install fractal-server
+        run: |
+          poetry install --without dev --without docs --no-interaction
+
+      - name: Apply upgrade and downgrade
+        run: |
+          cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
+          cd fractal_server
+          poetry run alembic history
+          poetry run alembic upgrade head
+          poetry run alembic downgrade base
