@@ -12,11 +12,11 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
 
     mail_msg = EmailMessage()
     mail_msg.set_content(msg)
-    mail_msg["From"] = formataddr(("FOO", mail_settings.sender))
+    mail_msg["From"] = formataddr((mail_settings.sender, mail_settings.sender))
     mail_msg["To"] = ",".join(
         [
-            formataddr((f"BAR{i}", recipient))
-            for i, recipient in enumerate(mail_settings.recipients)
+            formataddr((recipient, recipient))
+            for recipient in mail_settings.recipients
         ]
     )
     mail_msg["Subject"] = f"Fractal {mail_settings.instance_name}: New Signup"
