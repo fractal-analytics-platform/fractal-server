@@ -609,16 +609,24 @@ class Settings(BaseSettings):
                 return mail_settings
             except Exception:
                 raise FractalConfigurationError("Bad configuration settings")
-        elif (
-            self.FRACTAL_EMAIL_RECIPIENTS is None
-            or self.FRACTAL_EMAIL_SETTINGS_KEY is None
-            or self.FRACTAL_EMAIL_SETTINGS is None
+        elif any(
+            [
+                self.FRACTAL_EMAIL_RECIPIENTS is None,
+                self.FRACTAL_EMAIL_SETTINGS_KEY is None,
+                self.FRACTAL_EMAIL_SETTINGS is None,
+            ]
+        ) and not all(
+            [
+                self.FRACTAL_EMAIL_RECIPIENTS is None,
+                self.FRACTAL_EMAIL_SETTINGS_KEY is None,
+                self.FRACTAL_EMAIL_SETTINGS is None,
+            ]
         ):
             raise FractalConfigurationError(
                 "You must set all SMPT config variables: "
                 f"{self.FRACTAL_EMAIL_SETTINGS=}, "
                 f"{self.FRACTAL_EMAIL_RECIPIENTS=}, "
-                f"{self.FRACTAL_EMAIL_SETTINGS_KEY}, "
+                f"{self.FRACTAL_EMAIL_SETTINGS_KEY=}, "
             )
 
     ###########################################################################
