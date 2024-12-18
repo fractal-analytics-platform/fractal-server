@@ -6,7 +6,7 @@ recipient = "recipient@example.org"
 with smtplib.SMTP("localhost", 2525) as server:
     server.set_debuglevel(1)
     server.ehlo()
-    # server.starttls() # FIXME This fails on mailhog
+    server.starttls()
     server.login(
         user=sender,
         password=password,
