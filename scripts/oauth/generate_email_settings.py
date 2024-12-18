@@ -9,6 +9,8 @@ import json
 from cryptography.fernet import Fernet
 
 SENDER_CREDENTIAL = ("sender@localhost", "fakepassword")
+SERVER = "localhost"
+PORT = 1025
 
 
 def generate_email_settings():
@@ -17,17 +19,15 @@ def generate_email_settings():
         dict(
             sender=SENDER_CREDENTIAL[0],
             password=SENDER_CREDENTIAL[1],
-            smtp_server="localhost",
-            port=2525,
+            smtp_server=SERVER,
+            port=PORT,
             instance_name="test",
             use_tls=False,
         )
     ).encode("utf-8")
-    enc_fractal_mail_settings = (
-        Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
-    )
+    email_settings = Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
 
-    print(f"FRACTAL_EMAIL_SETTINGS: {enc_fractal_mail_settings}")
+    print(f"FRACTAL_EMAIL_SETTINGS: {email_settings}")
     print(f"FRACTAL_EMAIL_SETTINGS_KEY: {key}")
 
 
