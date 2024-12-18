@@ -381,6 +381,63 @@ def test_collect_oauth_clients(monkeypatch):
         assert names == {"GITHUB", "MYCLIENT"}
 
 
+def test_fractal_email():
+    from cryptography.fernet import Fernet
+    import json
+
+    common_attributes = dict(
+        JWT_SECRET_KEY="something",
+        POSTGRES_DB="db-name",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
+        FRACTAL_TASKS_DIR="/something",
+    )
+    key = Fernet.generate_key().decode("utf-8")
+    fractal_mail_settings = json.dumps(
+        dict(
+            sender="sender",
+            smtp_server="smtp_server",
+            port=54321,
+            password="password",
+            instance_name="test",
+            use_tls=False,
+        )
+    ).encode("utf-8")
+    enc_fractal_mail_settings = (
+        Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
+    )
+    settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="admin@fractal.xy",
+        **common_attributes,
+    )
+
+    mail_settings = settings.MAIL_SETTINGS
+    assert mail_settings.recipients == ["admin@fractal.xy"]
+    assert mail_settings.sender == "sender"
+
+    # Fail with missing recipients
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="",
+    )
+    with pytest.raises(FractalConfigurationError) as expinfo:
+        mail_settings = bad_settings.MAIL_SETTINGS
+    assert "Bad configuration settings" in str(expinfo.value)
+
+    # fail with missing settings
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="",
+    )
+    with pytest.raises(FractalConfigurationError) as expinfo:
+        mail_settings = bad_settings.MAIL_SETTINGS
+    assert "You must set all SMPT config variables" in str(expinfo.value)
+
+
 def test_python_interpreters():
     common_attributes = dict(
         JWT_SECRET_KEY="something",

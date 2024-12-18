@@ -33,6 +33,7 @@ from typing import Generic
 from typing import Optional
 from typing import Type
 
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import Request
 from fastapi_users import BaseUserManager
@@ -59,7 +60,10 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
+from fractal_server.app.security.signup_email import mail_new_oauth_signup
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
@@ -246,6 +250,15 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             logger.info(
                 f"Associated empty settings (id={this_user.user_settings_id}) "
                 f"to '{this_user.email}'."
+            )
+
+            # Send mail section
+            settings = Inject(get_settings)
+            background_task = BackgroundTasks()
+            background_task.add_task(
+                mail_new_oauth_signup,
+                msg=f"New user registered {this_user}",
+                mail_settings=settings.MAIL_SETTINGS,
             )
 
 
