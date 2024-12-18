@@ -8,7 +8,7 @@ import json
 
 from cryptography.fernet import Fernet
 
-SENDER_CREDENTIAL = ("sender@fractal.com", "fakepassword")
+SENDER_CREDENTIAL = ("sender@example.org", "fakepassword")
 SERVER = "localhost"
 PORT = 1025
 
