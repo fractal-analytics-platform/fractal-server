@@ -69,7 +69,7 @@ assert_email_count(){
 
 # --- Test
 assert_users_and_oauth 1 0
-assert_email_count 1 # from `fractalctl set-db`
+assert_email_count 0
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
 SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
@@ -80,7 +80,7 @@ curl -X POST \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
     -d '{"email": "kilgore@kilgore.trout", "password": "kilgore"}'
 assert_users_and_oauth 2 0
-assert_email_count 2
+assert_email_count 1
 
 # Login with "kilgore@kilgore.trout" with standard login.
 USER_TOKEN=$(standard_login "kilgore@kilgore.trout" "kilgore")
@@ -124,9 +124,9 @@ assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
 
 # Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0
-assert_email_count 2
+assert_email_count 1
 USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 3 1
-assert_email_count 3
+assert_email_count 2
 
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
