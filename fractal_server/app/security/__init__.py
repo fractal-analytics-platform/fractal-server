@@ -253,10 +253,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
             # Send mail section
             settings = Inject(get_settings)
-            mail_new_oauth_signup(
-                msg=f"New user registered {this_user}",
-                mail_settings=settings.MAIL_SETTINGS,
-            )
+
+            if settings.MAIL_SETTINGS is not None:
+                mail_new_oauth_signup(
+                    msg=f"New user registered {this_user}",
+                    mail_settings=settings.MAIL_SETTINGS,
+                )
 
 
 async def get_user_manager(

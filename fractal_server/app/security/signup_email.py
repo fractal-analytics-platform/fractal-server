@@ -9,11 +9,11 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
     Send an email using the specified settings to notify a new OAuth signup.
     """
 
-    email_msg = EmailMessage()
-    email_msg.set_content(msg)
-    email_msg["From"] = mail_settings.sender
-    email_msg["To"] = ",".join(mail_settings.recipients)
-    email_msg["Subject"] = f"Fractal {mail_settings.instance_name}: New Signup"
+    mail_msg = EmailMessage()
+    mail_msg.set_content(msg)
+    mail_msg["From"] = mail_settings.sender
+    mail_msg["To"] = ",".join(mail_settings.recipients)
+    mail_msg["Subject"] = f"Fractal {mail_settings.instance_name}: New Signup"
 
     with smtplib.SMTP(mail_settings.smtp_server, mail_settings.port) as server:
 
@@ -30,5 +30,5 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
         server.sendmail(
             from_addr=mail_settings.sender,
             to_addrs=mail_settings.recipients,
-            msg=email_msg.as_string(),
+            msg=mail_msg.as_string(),
         )
