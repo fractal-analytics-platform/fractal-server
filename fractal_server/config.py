@@ -42,7 +42,7 @@ class MailSettings(BaseModel):
     port: int
     password: str
     instance_name: str
-    use_tls: bool
+    use_starttls: bool
 
 
 class FractalConfigurationError(RuntimeError):
