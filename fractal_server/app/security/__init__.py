@@ -254,7 +254,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             # Send mail section
             settings = Inject(get_settings)
 
-            if settings.MAIL_SETTINGS is not None:
+            if settings.MAIL_SETTINGS is not None and this_user.is_verified:
                 mail_new_oauth_signup(
                     msg=f"New user registered {this_user}",
                     mail_settings=settings.MAIL_SETTINGS,
