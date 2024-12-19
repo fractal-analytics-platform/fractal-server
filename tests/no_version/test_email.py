@@ -43,13 +43,11 @@ async def test_server_not_available(override_settings_factory, db, caplog):
 
     import logging
 
-    logger = logging.getLogger("fractal_server.on_after_register")
+    logger = logging.getLogger("fractal_server.app.security")
     logger.propagate = True
 
-    with caplog.at_level(
-        logging.DEBUG
-    ):  # , logger="fractal_server.on_after_register"):
-        async with contextlib.asynccontextmanager(get_user_manager)() as um:
-            await um.on_after_register(user)
+    async with contextlib.asynccontextmanager(get_user_manager)() as um:
+        await um.on_after_register(user)
 
-    print(caplog.records, caplog.text)
+    assert "ERROR sending notification email" in caplog.text
+    assert "[Errno 111] Connection refused" in caplog.text
