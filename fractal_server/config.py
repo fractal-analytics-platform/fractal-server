@@ -627,7 +627,7 @@ class Settings(BaseSettings):
                 self.FRACTAL_EMAIL_SETTINGS is None,
             ]
         ):
-            raise FractalConfigurationError(
+            raise ValueError(
                 "You must set all SMPT config variables: "
                 f"{self.FRACTAL_EMAIL_SETTINGS=}, "
                 f"{self.FRACTAL_EMAIL_RECIPIENTS=}, "
@@ -646,7 +646,7 @@ class Settings(BaseSettings):
             self.MAIL_SETTINGS
         except Exception as e:
             raise FractalConfigurationError(
-                f"Bad configuration settings. Original error: {e}"
+                f"Invalid email configuration settings. Original error: {e}"
             )
 
     def check_db(self) -> None:

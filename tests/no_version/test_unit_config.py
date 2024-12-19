@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
@@ -421,21 +422,27 @@ def test_fractal_email():
     bad_settings = Settings(
         FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
         FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
-        FRACTAL_EMAIL_RECIPIENTS="",
     )
-    with pytest.raises(FractalConfigurationError) as expinfo:
+    with pytest.raises(ValueError) as expinfo:
         mail_settings = bad_settings.MAIL_SETTINGS
-    assert "Bad configuration settings" in str(expinfo.value)
+    assert "You must set all SMPT config variables" in str(expinfo.value)
 
     # fail with missing settings
 
     bad_settings = Settings(
         FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
-        FRACTAL_EMAIL_RECIPIENTS="",
     )
-    with pytest.raises(FractalConfigurationError) as expinfo:
+    with pytest.raises(ValueError) as expinfo:
         mail_settings = bad_settings.MAIL_SETTINGS
     assert "You must set all SMPT config variables" in str(expinfo.value)
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="",
+    )
+    with pytest.raises(ValidationError) as expinfo:
+        mail_settings = bad_settings.MAIL_SETTINGS
 
 
 def test_python_interpreters():
