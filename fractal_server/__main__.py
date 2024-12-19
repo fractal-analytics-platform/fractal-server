@@ -224,7 +224,7 @@ def update_db_data():
     current_update_db_data_module.fix_db()
 
 
-def mail_settings(
+def print_mail_settings(
     sender: str,
     server: str,
     port: int,
@@ -268,7 +268,7 @@ def run():
             reload=args.reload,
         )
     elif args.cmd == "email-settings":
-        mail_settings(
+        print_mail_settings(
             sender=args.sender,
             server=args.server,
             port=args.port,
