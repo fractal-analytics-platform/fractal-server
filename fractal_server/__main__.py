@@ -4,7 +4,6 @@ import json
 import sys
 
 import uvicorn
-from cryptography.fernet import Fernet
 
 
 parser = ap.ArgumentParser(description="fractal-server commands")
@@ -66,33 +65,37 @@ update_db_data_parser = subparsers.add_parser(
 
 # fractalctl email-settings
 email_settings_parser = subparsers.add_parser(
-    "email-settings", description="TBD"
+    "email-settings",
+    description=(
+        "Generate valid values for environment variables "
+        "`FRACTAL_EMAIL_SETTINGS` and `FRACTAL_EMAIL_SETTINGS_KEY`."
+    ),
 )
 email_settings_parser.add_argument(
     "sender",
     type=str,
-    help="TBD",
+    help="Email of the sender",
 )
 email_settings_parser.add_argument(
     "server",
     type=str,
-    help="TBD",
+    help="SMPT server used to send emails",
 )
 email_settings_parser.add_argument(
     "port",
     type=int,
-    help="TBD",
+    help="Port of the SMPT server",
 )
 email_settings_parser.add_argument(
     "instance",
     type=str,
-    help="TBD",
+    help="Name of the Fractal instance sending emails",
 )
 email_settings_parser.add_argument(
     "--skip-starttls",
     action="store_true",
     default=False,
-    help="TBD",
+    help="If `True`, skip the execution of `starttls` when sending emails",
 )
 
 
@@ -228,8 +231,9 @@ def mail_settings(
     instance: str,
     skip_starttls: bool,
 ):
-    password = input(f"🔑 Insert email password for sender '{sender}': ")
+    from cryptography.fernet import Fernet
 
+    password = input(f"🔑 Insert email password for sender '{sender}': ")
     key = Fernet.generate_key().decode("utf-8")
     fractal_mail_settings = json.dumps(
         dict(
