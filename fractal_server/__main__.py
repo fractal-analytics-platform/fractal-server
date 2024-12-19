@@ -95,7 +95,7 @@ email_settings_parser.add_argument(
     "--skip-starttls",
     action="store_true",
     default=False,
-    help="If `True`, skip the execution of `starttls` when sending emails",
+    help="If set, skip the execution of `starttls` when sending emails",
 )
 
 
