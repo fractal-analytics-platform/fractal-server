@@ -22,7 +22,8 @@ async def test_unit_get_sanitized_settings():
     assert settings.dict().keys() == sanitized_settings.keys()
     for k in sanitized_settings.keys():
         if not k.upper().startswith("FRACTAL") or any(
-            s in k.upper() for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
+            s in k.upper()
+            for s in ["PASSWORD", "SECRET", "PWD", "TOKEN", "KEY"]
         ):
             assert sanitized_settings[k] == "***"
         else:
