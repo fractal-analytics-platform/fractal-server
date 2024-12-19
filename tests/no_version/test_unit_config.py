@@ -394,7 +394,7 @@ def test_fractal_email():
     key = Fernet.generate_key().decode("utf-8")
     fractal_mail_settings = json.dumps(
         dict(
-            sender="sender",
+            sender="sender@example.org",
             smtp_server="smtp_server",
             port=54321,
             password="password",
@@ -414,7 +414,7 @@ def test_fractal_email():
 
     mail_settings = settings.MAIL_SETTINGS
     assert mail_settings.recipients == ["admin@fractal.xy"]
-    assert mail_settings.sender == "sender"
+    assert mail_settings.sender == "sender@example.org"
 
     # Fail with missing recipients
 
