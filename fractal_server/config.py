@@ -610,19 +610,16 @@ class Settings(BaseSettings):
             and self.FRACTAL_EMAIL_SETTINGS_KEY is not None
             and self.FRACTAL_EMAIL_RECIPIENTS is not None
         ):
-            try:
-                smpt_settings = (
-                    Fernet(self.FRACTAL_EMAIL_SETTINGS_KEY)
-                    .decrypt(self.FRACTAL_EMAIL_SETTINGS)
-                    .decode("utf-8")
-                )
-                recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
-                mail_settings = MailSettings(
-                    **json.loads(smpt_settings), recipients=recipients
-                )
-                return mail_settings
-            except Exception:
-                raise FractalConfigurationError("Bad configuration settings")
+            smpt_settings = (
+                Fernet(self.FRACTAL_EMAIL_SETTINGS_KEY)
+                .decrypt(self.FRACTAL_EMAIL_SETTINGS)
+                .decode("utf-8")
+            )
+            recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
+            mail_settings = MailSettings(
+                **json.loads(smpt_settings), recipients=recipients
+            )
+            return mail_settings
         elif not all(
             [
                 self.FRACTAL_EMAIL_RECIPIENTS is None,
@@ -645,7 +642,12 @@ class Settings(BaseSettings):
         """
         Checks that the mail settings are properly set.
         """
-        self.MAIL_SETTINGS
+        try:
+            self.MAIL_SETTINGS
+        except Exception as e:
+            raise FractalConfigurationError(
+                f"Bad configuration settings. Original error: {e}"
+            )
 
     def check_db(self) -> None:
         """
