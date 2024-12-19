@@ -8,6 +8,8 @@
     * Support sending emails upon new OAuth signup (\#2150).
 * App:
     * Introduce configuration for email settings (\#2150).
+* Command-line interface:
+    * Add `fractalctl email-settings` (\#2150).
 * Dependencies:
     * Add direct dependency on `cryptography` (\#2150).
 * Testing:
