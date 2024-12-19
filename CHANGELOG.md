@@ -10,6 +10,8 @@
     * Introduce configuration for email settings (\#2150).
 * Dependencies:
     * Add direct dependency on `cryptography` (\#2150).
+* Testing:
+    * Introduce `mailpit`-based end-to-end test of email sending (\#2150).
 
 # 2.10.2
 
