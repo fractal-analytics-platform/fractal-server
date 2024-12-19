@@ -59,7 +59,10 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
+from fractal_server.app.security.signup_email import mail_new_oauth_signup
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
@@ -211,8 +214,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     async def on_after_register(
         self, user: UserOAuth, request: Optional[Request] = None
     ):
-        logger = set_logger("fractal_server.on_after_register")
-
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
         )
@@ -247,6 +248,22 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 f"Associated empty settings (id={this_user.user_settings_id}) "
                 f"to '{this_user.email}'."
             )
+
+            # Send mail section
+            settings = Inject(get_settings)
+
+            if this_user.oauth_accounts and settings.MAIL_SETTINGS is not None:
+                try:
+                    mail_new_oauth_signup(
+                        msg=f"New user registered: '{this_user.email}'.",
+                        mail_settings=settings.MAIL_SETTINGS,
+                    )
+                except Exception as e:
+                    logger.error(
+                        "ERROR sending notification email after oauth "
+                        f"registration of {this_user.email}. "
+                        f"Original error: '{e}'."
+                    )
 
 
 async def get_user_manager(

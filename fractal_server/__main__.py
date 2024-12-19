@@ -1,5 +1,6 @@
 import argparse as ap
 import asyncio
+import json
 import sys
 
 import uvicorn
@@ -60,6 +61,41 @@ set_db_parser.add_argument(
 update_db_data_parser = subparsers.add_parser(
     "update-db-data",
     description="Apply data-migration script to an existing database.",
+)
+
+# fractalctl email-settings
+email_settings_parser = subparsers.add_parser(
+    "email-settings",
+    description=(
+        "Generate valid values for environment variables "
+        "`FRACTAL_EMAIL_SETTINGS` and `FRACTAL_EMAIL_SETTINGS_KEY`."
+    ),
+)
+email_settings_parser.add_argument(
+    "sender",
+    type=str,
+    help="Email of the sender",
+)
+email_settings_parser.add_argument(
+    "server",
+    type=str,
+    help="SMPT server used to send emails",
+)
+email_settings_parser.add_argument(
+    "port",
+    type=int,
+    help="Port of the SMPT server",
+)
+email_settings_parser.add_argument(
+    "instance",
+    type=str,
+    help="Name of the Fractal instance sending emails",
+)
+email_settings_parser.add_argument(
+    "--skip-starttls",
+    action="store_true",
+    default=False,
+    help="If set, skip the execution of `starttls` when sending emails",
 )
 
 
@@ -188,6 +224,33 @@ def update_db_data():
     current_update_db_data_module.fix_db()
 
 
+def print_mail_settings(
+    sender: str,
+    server: str,
+    port: int,
+    instance: str,
+    skip_starttls: bool,
+):
+    from cryptography.fernet import Fernet
+
+    password = input(f"Insert email password for sender '{sender}': ")
+    key = Fernet.generate_key().decode("utf-8")
+    fractal_mail_settings = json.dumps(
+        dict(
+            sender=sender,
+            password=password,
+            smtp_server=server,
+            port=port,
+            instance_name=instance,
+            use_starttls=(not skip_starttls),
+        )
+    ).encode("utf-8")
+    email_settings = Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
+
+    print(f"\nFRACTAL_EMAIL_SETTINGS: {email_settings}")
+    print(f"FRACTAL_EMAIL_SETTINGS_KEY: {key}")
+
+
 def run():
     args = parser.parse_args(sys.argv[1:])
 
@@ -203,6 +266,14 @@ def run():
             host=args.host,
             port=args.port,
             reload=args.reload,
+        )
+    elif args.cmd == "email-settings":
+        print_mail_settings(
+            sender=args.sender,
+            server=args.server,
+            port=args.port,
+            instance=args.instance,
+            skip_starttls=args.skip_starttls,
         )
     else:
         sys.exit(f"Error: invalid command '{args.cmd}'.")

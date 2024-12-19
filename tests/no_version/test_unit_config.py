@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
@@ -379,6 +380,72 @@ def test_collect_oauth_clients(monkeypatch):
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
         names = set(c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG)
         assert names == {"GITHUB", "MYCLIENT"}
+
+
+def test_fractal_email():
+    from cryptography.fernet import Fernet
+    import json
+
+    common_attributes = dict(
+        JWT_SECRET_KEY="something",
+        POSTGRES_DB="db-name",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
+        FRACTAL_TASKS_DIR="/something",
+    )
+    key = Fernet.generate_key().decode("utf-8")
+    fractal_mail_settings = json.dumps(
+        dict(
+            sender="sender@example.org",
+            smtp_server="smtp_server",
+            port=54321,
+            password="password",
+            instance_name="test",
+            use_starttls=False,
+        )
+    ).encode("utf-8")
+    enc_fractal_mail_settings = (
+        Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
+    )
+    settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="admin@fractal.xy",
+        **common_attributes,
+    )
+
+    mail_settings = settings.MAIL_SETTINGS
+    assert mail_settings.recipients == ["admin@fractal.xy"]
+    assert mail_settings.sender == "sender@example.org"
+
+    # Fail with missing recipients
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+    )
+    with pytest.raises(ValueError) as expinfo:
+        mail_settings = bad_settings.MAIL_SETTINGS
+    assert "You must set all SMPT config variables" in str(expinfo.value)
+
+    # fail with missing settings
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+    )
+    with pytest.raises(ValueError) as expinfo:
+        mail_settings = bad_settings.MAIL_SETTINGS
+    assert "You must set all SMPT config variables" in str(expinfo.value)
+
+    bad_settings = Settings(
+        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
+        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+        FRACTAL_EMAIL_RECIPIENTS="",
+    )
+    with pytest.raises(ValidationError) as expinfo:
+        mail_settings = bad_settings.MAIL_SETTINGS
+
+    with pytest.raises(FractalConfigurationError) as expinfo:
+        bad_settings.check_fractal_mail_settings()
 
 
 def test_python_interpreters():

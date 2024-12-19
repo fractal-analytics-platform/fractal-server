@@ -11,6 +11,7 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import json
 import logging
 import shutil
 import sys
@@ -21,15 +22,40 @@ from typing import Literal
 from typing import Optional
 from typing import TypeVar
 
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
+from pydantic import EmailStr
 from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
 from sqlalchemy.engine import URL
 
 import fractal_server
+
+
+class MailSettings(BaseModel):
+    """
+    Schema for `MailSettings`
+
+    Attributes:
+        sender: Sender email address
+        recipients: List of recipients email address
+        smtp_server: SMTP server address
+        port: SMTP server port
+        password: Sender password
+        instance_name: Name of SMTP server instance
+        use_starttls: Using or not security protocol
+    """
+
+    sender: EmailStr
+    recipients: list[EmailStr] = Field(min_items=1)
+    smtp_server: str
+    port: int
+    password: str
+    instance_name: str
+    use_starttls: bool
 
 
 class FractalConfigurationError(RuntimeError):
@@ -561,8 +587,68 @@ class Settings(BaseSettings):
     """
 
     ###########################################################################
+    # SMTP SERVICE
+    ###########################################################################
+    FRACTAL_EMAIL_SETTINGS: Optional[str] = None
+    """
+    Encrypted version of settings dictionary, with keys `sender`, `password`,
+    `smtp_server`, `port`, `instance_name`, `use_starttls`.
+    """
+    FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
+    """
+    Key value for `cryptography.fernet` decrypt
+    """
+    FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
+    """
+    List of email receivers, separated with commas
+    """
+
+    @property
+    def MAIL_SETTINGS(self) -> Optional[MailSettings]:
+        if (
+            self.FRACTAL_EMAIL_SETTINGS is not None
+            and self.FRACTAL_EMAIL_SETTINGS_KEY is not None
+            and self.FRACTAL_EMAIL_RECIPIENTS is not None
+        ):
+            smpt_settings = (
+                Fernet(self.FRACTAL_EMAIL_SETTINGS_KEY)
+                .decrypt(self.FRACTAL_EMAIL_SETTINGS)
+                .decode("utf-8")
+            )
+            recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
+            mail_settings = MailSettings(
+                **json.loads(smpt_settings), recipients=recipients
+            )
+            return mail_settings
+        elif not all(
+            [
+                self.FRACTAL_EMAIL_RECIPIENTS is None,
+                self.FRACTAL_EMAIL_SETTINGS_KEY is None,
+                self.FRACTAL_EMAIL_SETTINGS is None,
+            ]
+        ):
+            raise ValueError(
+                "You must set all SMPT config variables: "
+                f"{self.FRACTAL_EMAIL_SETTINGS=}, "
+                f"{self.FRACTAL_EMAIL_RECIPIENTS=}, "
+                f"{self.FRACTAL_EMAIL_SETTINGS_KEY=}, "
+            )
+
+    ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
+
+    def check_fractal_mail_settings(self):
+        """
+        Checks that the mail settings are properly set.
+        """
+        try:
+            self.MAIL_SETTINGS
+        except Exception as e:
+            raise FractalConfigurationError(
+                f"Invalid email configuration settings. Original error: {e}"
+            )
+
     def check_db(self) -> None:
         """
         Checks that db environment variables are properly set.
@@ -668,12 +754,13 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
+        self.check_fractal_mail_settings()
 
     def get_sanitized(self) -> dict:
         def _must_be_sanitized(string) -> bool:
             if not string.upper().startswith("FRACTAL") or any(
                 s in string.upper()
-                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN"]
+                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN", "KEY"]
             ):
                 return True
             else:

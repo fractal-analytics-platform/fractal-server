@@ -5,6 +5,15 @@
 * API:
     * Add validation for `.whl` filename (\#2147).
     * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
+    * Support sending emails upon new OAuth signup (\#2150).
+* App:
+    * Introduce configuration for email settings (\#2150).
+* Command-line interface:
+    * Add `fractalctl email-settings` (\#2150).
+* Dependencies:
+    * Add direct dependency on `cryptography` (\#2150).
+* Testing:
+    * Introduce `mailpit`-based end-to-end test of email sending (\#2150).
 
 # 2.10.2
 
