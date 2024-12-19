@@ -22,27 +22,21 @@ async def test_server_not_available(override_settings_factory, db, caplog):
     user = UserOAuth(
         email="user@example.org",
         hashed_password="xxxxxx",
+        oauth_accounts=[
+            OAuthAccount(
+                oauth_name="oidc",
+                access_token="abcd",
+                account_id=1,
+                account_email="user@oidc.org",
+            ),
+            OAuthAccount(
+                oauth_name="google",
+                access_token="1234",
+                account_id=1,
+                account_email="user@gmail.com",
+            ),
+        ],
     )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-
-    user.oauth_accounts = [
-        OAuthAccount(
-            user_id=user.id,
-            oauth_name="oidc",
-            access_token="abcd",
-            account_id=1,
-            account_email="user@oidc.org",
-        ),
-        OAuthAccount(
-            user_id=user.id,
-            oauth_name="google",
-            access_token="1234",
-            account_id=1,
-            account_email="user@gmail.com",
-        ),
-    ]
     db.add(user)
     await db.commit()
     await db.refresh(user)
