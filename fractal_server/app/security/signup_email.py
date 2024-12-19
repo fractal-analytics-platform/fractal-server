@@ -19,7 +19,9 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
             for recipient in mail_settings.recipients
         ]
     )
-    mail_msg["Subject"] = f"Fractal {mail_settings.instance_name}: New Signup"
+    mail_msg[
+        "Subject"
+    ] = f"[Fractal, {mail_settings.instance_name}] New OAuth signup"
 
     with smtplib.SMTP(mail_settings.smtp_server, mail_settings.port) as server:
         server.ehlo()
