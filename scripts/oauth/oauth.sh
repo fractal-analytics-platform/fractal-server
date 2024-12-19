@@ -32,7 +32,7 @@ assert_users_and_oauth() {
     USERS=$(psql -t -c "SELECT COUNT(*) FROM user_oauth;")
     OAUTH_ACCOUNTS=$(psql -t -c "SELECT COUNT(*) FROM oauthaccount;")
     if [ "$USERS" -ne "$1" ] || [ "$OAUTH_ACCOUNTS" -ne "$2" ]; then
-        echo "❌ Expected (users, oauth_accounts)==(${1}, ${2}), got (${USERS}, ${OAUTH_ACCOUNTS})."
+        echo "ERROR: Expected (users, oauth_accounts)==(${1}, ${2}), got (${USERS}, ${OAUTH_ACCOUNTS})."
         exit 1
     fi
 }
@@ -48,11 +48,11 @@ assert_email_and_id(){
     EMAIL=$(echo $USER | jq -r ".email")
     ID=$(echo $USER | jq -r ".id")
     if [ "$EMAIL" != "$2" ]; then
-        echo "❌ Expected email==${2}, got ${EMAIL}."
+        echo "ERROR: Expected email==${2}, got ${EMAIL}."
         exit 1
     fi
     if [ "$ID" != "$3" ]; then
-        echo "❌ Expected user_id==${3}, got ${ID}."
+        echo "ERROR: Expected user_id==${3}, got ${ID}."
         exit 1
     fi
 }
@@ -62,7 +62,7 @@ assert_email_count(){
         curl --silent http://localhost:8025/api/v1/messages | jq -r ".total"
     )
     if [ "$NUM_MESSAGE" -ne "$1" ]; then
-        echo "❌ Expected email_count==${1}, got ${NUM_MESSAGE}."
+        echo "ERROR: Expected email_count==${1}, got ${NUM_MESSAGE}."
         exit 1
     fi
 }

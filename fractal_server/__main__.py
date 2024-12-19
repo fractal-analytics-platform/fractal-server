@@ -233,7 +233,7 @@ def print_mail_settings(
 ):
     from cryptography.fernet import Fernet
 
-    password = input(f"🔑 Insert email password for sender '{sender}': ")
+    password = input(f"Insert email password for sender '{sender}': ")
     key = Fernet.generate_key().decode("utf-8")
     fractal_mail_settings = json.dumps(
         dict(
