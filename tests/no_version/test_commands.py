@@ -113,10 +113,6 @@ def test_email_settings():
         cwd=FRACTAL_SERVER_DIR,
         shell=True,
     )
-    assert all(
-        [
-            var in res.stdout
-            for var in ["FRACTAL_EMAIL_SETTINGS", "FRACTAL_EMAIL_SETTINGS_KEY"]
-        ]
-    )
+    assert "FRACTAL_EMAIL_SETTINGS" in res.stdout
+    assert "FRACTAL_EMAIL_SETTINGS_KEY" in res.stdout
     assert not res.stderr
