@@ -214,8 +214,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     async def on_after_register(
         self, user: UserOAuth, request: Optional[Request] = None
     ):
-        logger = set_logger("fractal_server.on_after_register")
-
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
         )
