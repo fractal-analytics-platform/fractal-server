@@ -41,5 +41,15 @@ async def test_server_not_available(override_settings_factory, db, caplog):
     await db.commit()
     await db.refresh(user)
 
-    async with contextlib.asynccontextmanager(get_user_manager)() as um:
-        await um.on_after_register(user)
+    import logging
+
+    logger = logging.getLogger("fractal_server.on_after_register")
+    logger.propagate = True
+
+    with caplog.at_level(
+        logging.DEBUG
+    ):  # , logger="fractal_server.on_after_register"):
+        async with contextlib.asynccontextmanager(get_user_manager)() as um:
+            await um.on_after_register(user)
+
+    print(caplog.records, caplog.text)
