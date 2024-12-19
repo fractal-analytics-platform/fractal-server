@@ -444,6 +444,9 @@ def test_fractal_email():
     with pytest.raises(ValidationError) as expinfo:
         mail_settings = bad_settings.MAIL_SETTINGS
 
+    with pytest.raises(FractalConfigurationError) as expinfo:
+        bad_settings.check_fractal_mail_settings()
+
 
 def test_python_interpreters():
     common_attributes = dict(
