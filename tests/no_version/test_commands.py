@@ -87,3 +87,36 @@ def test_startup_commands(cmd, set_test_db):
     # Wait a bit, so that the killpg ends before pytest ends
     time.sleep(0.3)
     debug(e.value)
+
+
+def test_email_settings():
+
+    cmd = "poetry run fractalctl email-settings"
+    res = subprocess.run(
+        shlex.split(cmd),
+        encoding="utf-8",
+        capture_output=True,
+        cwd=FRACTAL_SERVER_DIR,
+    )
+    assert not res.stdout
+    assert "usage" in res.stderr
+
+    cmd = (
+        'printf "mypassword\n" | '
+        "poetry run fractalctl email-settings "
+        "sender@test.org localhost 1234 exact --skip-starttls"
+    )
+    res = subprocess.run(
+        cmd,
+        encoding="utf-8",
+        capture_output=True,
+        cwd=FRACTAL_SERVER_DIR,
+        shell=True,
+    )
+    assert all(
+        [
+            var in res.stdout
+            for var in ["FRACTAL_EMAIL_SETTINGS", "FRACTAL_EMAIL_SETTINGS_KEY"]
+        ]
+    )
+    assert not res.stderr
