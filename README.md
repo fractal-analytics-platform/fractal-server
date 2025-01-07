@@ -121,7 +121,7 @@
 | fractal\_server/app/runner/v2/\_local\_experimental/\_\_init\_\_.py            |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local\_experimental/\_local\_config.py         |       39 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local\_experimental/\_submit\_setup.py         |        8 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/\_local\_experimental/executor.py                |       74 |        1 |       16 |        3 |     96% |72->80, 77, 140->144 |
+| fractal\_server/app/runner/v2/\_local\_experimental/executor.py                |       74 |        0 |       16 |        2 |     98% |72->80, 140->144 |
 | fractal\_server/app/runner/v2/\_slurm\_common/\_\_init\_\_.py                  |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_slurm\_common/get\_slurm\_config.py            |       70 |        1 |       34 |        3 |     96% |60, 73->77, 104->108 |
 | fractal\_server/app/runner/v2/\_slurm\_ssh/\_\_init\_\_.py                     |       33 |        1 |        2 |        1 |     94% |        63 |
@@ -203,7 +203,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **11457** |  **450** | **2400** |  **187** | **95%** |           |
+|                                                                      **TOTAL** | **11457** |  **449** | **2400** |  **186** | **95%** |           |
 
 
 ## Setup coverage badge
