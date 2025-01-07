@@ -34,6 +34,9 @@ class WorkflowTaskV2(SQLModel, table=True):
             server_default='{"attributes": {}, "types": {}}',
         )
     )
+    type_filters: dict[str, bool] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
 
     # Task
     task_type: str
