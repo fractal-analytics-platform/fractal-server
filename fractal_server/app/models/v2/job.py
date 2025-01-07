@@ -49,3 +49,7 @@ class JobV2(SQLModel, table=True):
     )
     status: str = JobStatusTypeV2.SUBMITTED
     log: Optional[str] = None
+
+    attribute_filters: dict[str, list[Any]] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
