@@ -1,8 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.10.3
+
+Note: this version fixes a bug introduced in version 2.10.1.
 
 * API:
+    * Fix bug in `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2163).
     * Add validation for `.whl` filename (\#2147).
     * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
     * Support sending emails upon new OAuth signup (\#2150).
