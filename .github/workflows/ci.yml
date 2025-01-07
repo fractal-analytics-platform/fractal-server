@@ -42,7 +42,7 @@ jobs:
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
 
       - name: Install poetry
-        run: pipx install poetry==1.8.2
+        run: pipx install poetry==2.0.0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -52,7 +52,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --with dev --without docs --no-interaction
+          poetry install --with dev --no-interaction
 
       - name: Test with pytest
         env:
@@ -100,7 +100,7 @@ jobs:
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
 
       - name: Install poetry
-        run: pipx install poetry==1.8.2
+        run: pipx install poetry==2.0.0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -110,7 +110,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --with dev --without docs --no-interaction
+          poetry install --with dev --no-interaction
 
       - name: Test with pytest
         env:

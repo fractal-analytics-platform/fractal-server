@@ -23,7 +23,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
      - name: Install poetry
-       run: pipx install poetry==1.8.2
+       run: pipx install poetry==2.0.0
 
      - name: Set up Python 3.10
        uses: actions/setup-python@v5
@@ -32,7 +32,7 @@ jobs:
         cache: "poetry"
 
      - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction
+       run: poetry install --with dev --no-interaction
 
      - name: Run Fractal with Gunicorn
        run: |
@@ -95,7 +95,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
      - name: Install poetry
-       run: pipx install poetry==1.8.2
+       run: pipx install poetry==2.0.0
 
      - name: Set up Python 3.10
        uses: actions/setup-python@v5
@@ -104,7 +104,7 @@ jobs:
         cache: "poetry"
 
      - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction
+       run: poetry install --with dev --no-interaction
 
      - name: Benchmark
        run: |
