@@ -16,23 +16,28 @@ async def test_schemas_dataset_v2():
 
     # Create
     with pytest.raises(ValidationError):
+        # Not a list
+        DatasetCreateV2(
+            name="name",
+            zarr_dir="/zarr",
+            attribute_filters={"x": 1},
+        )
+    with pytest.raises(ValidationError):
         # Non-scalar attribute
         DatasetCreateV2(
             name="name",
             zarr_dir="/zarr",
-            filters={"attributes": {"x": [1, 0]}},
+            attribute_filters={"x": [{1, 0}]},
         )
     with pytest.raises(ValidationError):
         # Non-boolean types
-        DatasetCreateV2(
-            name="name", zarr_dir="/zarr", filters={"types": {"a": "b"}}
-        )
+        DatasetCreateV2(name="name", zarr_dir="/zarr", type_filters={"a": "b"})
     # Test zarr_dir=None is valid
     DatasetCreateV2(name="name", zarr_dir=None)
 
     dataset_create = DatasetCreateV2(
         name="name",
-        filters={"attributes": {"x": 10}},
+        attribute_filters={"x": [10, 11]},
         zarr_dir="/tmp/",
     )
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
@@ -42,7 +47,7 @@ async def test_schemas_dataset_v2():
 
     dataset_import = DatasetImportV2(
         name="name",
-        filters={"attributes": {"x": 10}},
+        attribute_filters={"x": [10]},
         zarr_dir="/tmp/",
         images=[{"zarr_url": "/tmp/image/"}],
     )
@@ -62,9 +67,9 @@ async def test_schemas_dataset_v2():
     # Update
 
     # validation accepts `zarr_dir` and `filters` as None, but not `name`
-    DatasetUpdateV2(zarr_dir=None, filters=None)
+    DatasetUpdateV2(zarr_dir=None, attribute_filters=None)
     with pytest.raises(ValidationError):
-        DatasetUpdateV2(name=None, zarr_dir=None, filters=None)
+        DatasetUpdateV2(name=None, zarr_dir=None, attribute_filters=None)
 
     dataset_update = DatasetUpdateV2(name="new name", zarr_dir="/zarr/")
     assert not dataset_update.zarr_dir.endswith("/")
