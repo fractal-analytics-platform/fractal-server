@@ -52,7 +52,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --extras dev --no-interaction
+          poetry install --with dev --no-interaction
 
       - name: Test with pytest
         env:
@@ -110,7 +110,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --extras dev --no-interaction
+          poetry install --with dev --no-interaction
 
       - name: Test with pytest
         env:
