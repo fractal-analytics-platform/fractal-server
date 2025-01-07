@@ -1,77 +1,83 @@
-[tool.poetry]
+[project]
 name = "fractal-server"
 version = "2.10.2"
 description = "Server component of the Fractal analytics platform"
 authors = [
-    "Tommaso Comparin <tommaso.comparin@exact-lab.it>",
-    "Marco Franzon <marco.franzon@exact-lab.it>",
-    "Yuri Chiucconi <yuri.chiucconi@exact-lab.it>",
-    "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
+    { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
+    { name="Marco Franzon", email="marco.franzon@exact-lab.it" },
+    { name="Yuri Chiucconi", email="yuri.chiucconi@exact-lab.it" },
+    { name="Jacopo Nespolo", email="jacopo.nespolo@exact-lab.it" },
 ]
 readme = "README.md"
-homepage = "https://github.com/fractal-analytics-platform/fractal-server"
-repository = "https://github.com/fractal-analytics-platform/fractal-server"
-documentation = "https://fractal-analytics-platform.github.io/fractal-server"
 license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
 "fractal_server/data_migrations/old",
 "fractal_server/json_schemas",
 ]
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv >=1.0.0,<1.1.0",
+    "fastapi >= 0.115.0, <0.116.0",
+    "sqlmodel == 0.0.21",
+    "sqlalchemy[asyncio] >=2.0.23,<2.1",
+    "fastapi-users[oauth] >=14,<15",
+    "alembic >=1.13.1, <2.0.0",
+    "uvicorn == 0.29.0",
+    "pydantic >=1.10.8,<2",
+    "packaging >= 23.2.0, <24.0.0",
+    "clusterfutures == 0.5",
+    "cloudpickle >=3.0.0,<3.1.0",
+    "fabric >= 3.2.2, <3.3.0",
+    "gunicorn >=21.2,<23.0",
+    "psycopg[binary] >= 3.1.0, <4.0.0",
+    "psutil == 5.9.8",
+    "uvicorn-worker == 0.2.0",
+    "cryptography >=44.0.0,<44.1.0",
+]
 
-[tool.poetry.urls]
-"Changelog" = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
+[project.optional-dependencies]
+dev = [
+    "asgi-lifespan >=2.0.0,<3.0.0",
+    "pytest >= 8.1.0, < 8.2.0",
+    "httpx >= 0.23.0, <0.24.0",
+    "devtools >=0.12.0,<0.13.0",
+    "pytest-asyncio >= 0.23.0, <0.24.0",
+    "bumpver >= 2022.1120.0, <2022.1121.0",
+    "pre-commit >= 2.19.0, <3.0.0",
+    "coverage[toml] >= 7.5.0, <7.6.0",
+    "pytest-docker >= 3.1.0, <3.2.0",
+    "mypy >= 1.9.0, <2.0.0",
+    "pytest-subprocess >= 1.5.0, <1.6.0",
+    "a2wsgi >= 1.10.0,<1.11.0",
+    "jinja2 >= 3.1.3, <3.2.0",
+    "pyyaml >= 6.0.1, <6.1.0",
+
+]
+docs = [
+    "mkdocs==1.5.3",
+    "mkdocstrings[python]==0.25.2",
+    "mkdocs-material==9.5.17",
+    "mkdocs-gen-files==0.5.0",
+    "mkdocs-literate-nav==0.6.1",
+    "mkdocs-section-index==0.3.8",
+    "mkdocs-render-swagger-plugin==0.1.1",
+    "pyyaml >= 6.0.1, <6.1.0",
+]
 
 
-[tool.poetry.dependencies]
-python = "^3.10"
-python-dotenv = "^1.0.0"
-fastapi = "^0.115.0"
-sqlmodel = "^0.0.21"
-sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
-fastapi-users = {extras = ["oauth"], version = ">=14,<15"}
-alembic = "^1.13.1"
-uvicorn = "^0.29.0"
-pydantic = ">=1.10.8,<2"
-packaging = "^23.2"
-clusterfutures = "^0.5"
-cloudpickle = ">=3.0.0,<3.1.0"
-fabric = "^3.2.2"
 
-gunicorn = { version = ">=21.2,<23.0" }
-psycopg = { version = "^3.1.0", extras=["binary"] }
-psutil = "^5.9.8"
-uvicorn-worker = "^0.2.0"
-cryptography = ">=44.0.0,<44.1.0"
 
-[tool.poetry.extras]
+[project.urls]
+homepage = "https://github.com/fractal-analytics-platform/fractal-server"
+repository = "https://github.com/fractal-analytics-platform/fractal-server"
+documentation = "https://fractal-analytics-platform.github.io/fractal-server"
+changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
 
-[tool.poetry.group.dev.dependencies]
-asgi-lifespan = "^2"
-pytest = "8.1.*"
-httpx = "^0.23"
-devtools = "^0.12"
-pytest-asyncio = "^0.23"
-bumpver = "^2022.1120"
-pre-commit = "^2.19"
-coverage = {extras = ["toml"], version = "7.5.*"}
-pytest-docker = {version = "3.1.*"}
-mypy = "^1.9"
-pytest-subprocess = "^1.5"
-pyyaml="^6.0.1"
-a2wsgi = "^1.10.0"
-jinja2 = "^3.1.3"
+[project.scripts]
+fractalctl = "fractal_server.__main__:run"
 
-[tool.poetry.group.docs.dependencies]
 
-mkdocs="1.5.3"
-mkdocstrings = { extras = ["python"], version = "0.25.2" }
-mkdocs-material="9.5.17"
-mkdocs-gen-files="0.5.0"
-mkdocs-literate-nav="0.6.1"
-mkdocs-section-index="0.3.8"
-mkdocs-render-swagger-plugin="0.1.1"
-pyyaml="^6.0.1"
 
 
 [build-system]
@@ -101,8 +107,6 @@ push = true
     '__VERSION__ = "{version}"$'
 ]
 
-[tool.poetry.scripts]
-fractalctl = "fractal_server.__main__:run"
 
 [tool.coverage.run]
 branch = true
