@@ -45,3 +45,7 @@ tests/data/ssh_config.json
 *.egg-info
 
 .DS_Store
+Temporary_folder_for_regression_test/
+monitoring.db
+jobs/wf*
+runinfo
