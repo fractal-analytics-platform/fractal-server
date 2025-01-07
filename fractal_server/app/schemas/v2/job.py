@@ -1,12 +1,16 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import Field
 from pydantic import validator
 from pydantic.types import StrictStr
 
+from .._validators import valdict_keys
+from .._validators import valdict_scalarvalues
 from .._validators import valstr
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
@@ -41,9 +45,17 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
     slurm_account: Optional[StrictStr] = None
     worker_init: Optional[str]
 
+    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
+
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
         valstr("worker_init")
+    )
+    _attribute_filters_1 = validator("attribute_filters", allow_reuse=True)(
+        valdict_keys("attribute_filters")
+    )
+    _attribute_filters_2 = validator("attribute_filters", allow_reuse=True)(
+        valdict_scalarvalues("attribute_filters")
     )
 
     @validator("first_task_index", always=True)
@@ -99,6 +111,7 @@ class JobReadV2(BaseModel):
     first_task_index: Optional[int]
     last_task_index: Optional[int]
     worker_init: Optional[str]
+    attribute_filters: dict[str, list[Any]]
 
 
 class JobUpdateV2(BaseModel, extra=Extra.forbid):
