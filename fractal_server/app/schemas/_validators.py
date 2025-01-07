@@ -59,12 +59,12 @@ def valdict_scalarvalues(attribute: str, accept_none: bool = True):
         d: dict[str, list[Any]]
     ) -> dict[str, list[Union[int, float, str, bool, None]]]:
         if accept_none:
-            accepted = (int, float, str, bool, type(None))
+            accepted_types = (int, float, str, bool, type(None))
         else:
-            accepted = (int, float, str, bool)
+            accepted_types = (int, float, str, bool)
         for key, values in d.items():
             for value in values:
-                if not isinstance(value, accepted):
+                if not isinstance(value, accepted_types):
                     raise ValueError(
                         f"{attribute}[{key}] values must be a scalars "
                         "(int, float, str, bool, or None). "
