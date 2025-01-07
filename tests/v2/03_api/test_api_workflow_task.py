@@ -856,7 +856,7 @@ async def test_replace_task_in_workflowtask(
         current_wft3 = await db.get(WorkflowTaskV2, wft3_id)
         assert current_wft3 is None
 
-        # Replace a with itself, and check that the workflowtask was updated
+        # Replace a workflowtask with itself, and check that it was updated
         wft1_id = wft1.id
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
