@@ -49,27 +49,28 @@ def valdict_keys(attribute: str):
     return val
 
 
-def valdict_scalarvalues(attribute: str, accept_none: bool = True):
+def valdict_scalarvalues(attribute: str, accept_type_none: bool = True):
     """
     Check that every value of a `dict[str, list[Any]]` is a list of scalar
     values (i.e. one of int, float, str, bool or None).
     """
 
     def val(
-        d: dict[str, list[Any]]
+        d: Optional[dict[str, list[Any]]]
     ) -> dict[str, list[Union[int, float, str, bool, None]]]:
-        if accept_none:
-            accepted_types = (int, float, str, bool, type(None))
-        else:
-            accepted_types = (int, float, str, bool)
-        for key, values in d.items():
-            for value in values:
-                if not isinstance(value, accepted_types):
-                    raise ValueError(
-                        f"{attribute}[{key}] values must be a scalars "
-                        "(int, float, str, bool, or None). "
-                        f"Given {value} ({type(value)})"
-                    )
+        if d is not None:
+            if accept_type_none:
+                accepted_types = (int, float, str, bool, type(None))
+            else:
+                accepted_types = (int, float, str, bool)
+            for key, values in d.items():
+                for value in values:
+                    if not isinstance(value, accepted_types):
+                        raise ValueError(
+                            f"{attribute}[{key}] values must be a scalars "
+                            "(int, float, str, bool, or None). "
+                            f"Given {value} ({type(value)})"
+                        )
         return d
 
     return val
