@@ -7,7 +7,7 @@ from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
-from fractal_server.app.schemas._validators import valdictkeys
+from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.urls import normalize_url
 
 
@@ -30,9 +30,9 @@ class SingleImageBase(BaseModel):
 
     # Validators
     _attributes = validator("attributes", allow_reuse=True)(
-        valdictkeys("attributes")
+        valdict_keys("attributes")
     )
-    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
 
     @validator("zarr_url")
     def normalize_zarr_url(cls, v: str) -> str:
@@ -96,7 +96,7 @@ class SingleImageUpdate(BaseModel):
     ) -> dict[str, Union[int, float, str, bool]]:
         if v is not None:
             # validate keys
-            valdictkeys("attributes")(v)
+            valdict_keys("attributes")(v)
             # validate values
             for key, value in v.items():
                 if not isinstance(value, (int, float, str, bool)):
@@ -107,7 +107,7 @@ class SingleImageUpdate(BaseModel):
                     )
         return v
 
-    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
 
 
 class Filters(BaseModel, extra=Extra.forbid):
@@ -116,9 +116,9 @@ class Filters(BaseModel, extra=Extra.forbid):
 
     # Validators
     _attributes = validator("attributes", allow_reuse=True)(
-        valdictkeys("attributes")
+        valdict_keys("attributes")
     )
-    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
 
     @validator("attributes")
     def validate_attributes(

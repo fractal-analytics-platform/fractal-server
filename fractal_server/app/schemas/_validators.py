@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from typing import Optional
+from typing import Union
 
 
 def valstr(attribute: str, accept_none: bool = False):
@@ -27,7 +28,7 @@ def valstr(attribute: str, accept_none: bool = False):
     return val
 
 
-def valdictkeys(attribute: str):
+def valdict_keys(attribute: str):
     def val(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
         """
         Apply valstr to every key of the dictionary, and fail if there are
@@ -43,6 +44,28 @@ def valdictkeys(attribute: str):
             for old_key, new_key in zip(old_keys, new_keys):
                 if new_key != old_key:
                     d[new_key] = d.pop(old_key)
+        return d
+
+    return val
+
+
+def valdict_scalarvalues(attribute: str):
+    """
+    Check that every value of a `dict[str, list[Any]]` is a list of scalar
+    values (i.e. one of int, float, str, bool or None).
+    """
+
+    def val(
+        d: dict[str, list[Any]]
+    ) -> dict[str, list[Union[int, float, str, bool, None]]]:
+        for key, values in d.items():
+            for value in values:
+                if not isinstance(value, (int, float, str, bool, type(None))):
+                    raise ValueError(
+                        f"{attribute}[{key}] values must be a scalars "
+                        "(int, float, str, bool, or None). "
+                        f"Given {value} ({type(value)})"
+                    )
         return d
 
     return val

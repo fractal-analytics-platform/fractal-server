@@ -8,7 +8,7 @@ from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
-from .._validators import valdictkeys
+from .._validators import valdict_keys
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
@@ -47,17 +47,17 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
 
     @validator("args_non_parallel")
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_non_parallel")(value)
+        valdict_keys("args_non_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -71,7 +71,7 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_parallel")(value)
+        valdict_keys("args_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -122,17 +122,17 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
 
     @validator("args_non_parallel")
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_non_parallel")(value)
+        valdict_keys("args_non_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -146,7 +146,7 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_parallel")(value)
+        valdict_keys("args_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -169,16 +169,16 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
     _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
-        valdictkeys("args_non_parallel")
+        valdict_keys("args_non_parallel")
     )
     _args_parallel = validator("args_parallel", allow_reuse=True)(
-        valdictkeys("args_parallel")
+        valdict_keys("args_parallel")
     )
 
 
