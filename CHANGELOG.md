@@ -3,6 +3,7 @@
 # Unreleased
 
 * API:
+    * Fix bug in `POST /api/v2/project/{p_id}/workflow/{w_id}/wftask/replace-task/` endpoint (\#2163).
     * Add validation for `.whl` filename (\#2147).
     * Trim whitespaces in `DatasetCreateV2.zarr_dir` (\#2138).
     * Support sending emails upon new OAuth signup (\#2150).
