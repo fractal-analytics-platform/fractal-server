@@ -11,7 +11,6 @@ from fractal_server.app.schemas.v2 import TaskUpdateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskDumpV2
-from fractal_server.images import Filters
 
 
 def test_extra_on_create_models():
@@ -103,7 +102,7 @@ def test_workflow_task_dump():
     WorkflowTaskDumpV2(
         id=1,
         workflow_id=1,
-        input_filters=Filters(),
+        type_filters={},
         task_id=1,
         task=TaskDumpV2(
             id=1,
