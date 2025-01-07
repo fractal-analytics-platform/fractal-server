@@ -48,6 +48,12 @@ class DatasetV2(SQLModel, table=True):
             server_default='{"attributes": {}, "types": {}}',
         )
     )
+    type_filters: dict[str, bool] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
+    attribute_filters: dict[str, list[Any]] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
 
     @property
     def image_zarr_urls(self) -> list[str]:
