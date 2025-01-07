@@ -73,8 +73,8 @@ class DatasetReadV2(BaseModel):
     timestamp_created: datetime
 
     zarr_dir: str
-    type_filters: dict[str, bool] = Field(default_factory=dict)
-    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
+    type_filters: dict[str, bool]
+    attribute_filters: dict[str, list[Any]]
 
 
 class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
