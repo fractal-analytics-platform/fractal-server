@@ -32,7 +32,7 @@ jobs:
         cache: "poetry"
 
      - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction
+       run: poetry install --extras dev --no-interaction
 
      - name: Run Fractal with Gunicorn
        run: |
@@ -104,7 +104,7 @@ jobs:
         cache: "poetry"
 
      - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction
+       run: poetry install --extras dev --no-interaction
 
      - name: Benchmark
        run: |

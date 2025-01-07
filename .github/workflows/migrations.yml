@@ -58,7 +58,7 @@ jobs:
 
       - name: Install fractal-server
         run: |
-          poetry install --without dev --without docs --no-interaction
+          poetry install --no-interaction
           poetry add setuptools # required for py3.12
 
       - name: Apply migration and fix-db script (postgres)
@@ -95,7 +95,7 @@ jobs:
 
       - name: Install fractal-server
         run: |
-          poetry install --without dev --without docs --no-interaction
+          poetry install --no-interaction
 
       - name: Apply upgrade and downgrade
         run: |
