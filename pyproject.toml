@@ -17,7 +17,7 @@ exclude = [
     "fractal_server/json_schemas",
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "python-dotenv >=1.0.0,<1.1.0",
     "fastapi >= 0.115.0, <0.116.0",
