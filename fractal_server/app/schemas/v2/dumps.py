@@ -14,8 +14,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 
-from fractal_server.images import Filters
-
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 
@@ -52,7 +50,7 @@ class WorkflowTaskDumpV2(BaseModel):
     workflow_id: int
     order: Optional[int]
 
-    input_filters: Filters
+    type_filters: dict[str, bool]
 
     task_id: Optional[int]
     task: Optional[TaskDumpV2]

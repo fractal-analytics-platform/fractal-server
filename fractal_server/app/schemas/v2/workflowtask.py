@@ -13,7 +13,6 @@ from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
 from .task import TaskReadV2
-from fractal_server.images import Filters
 
 RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
 
@@ -43,7 +42,7 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
-    input_filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
@@ -51,6 +50,9 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdict_keys("meta_parallel")
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        valdict_keys("type_filters")
     )
 
     @validator("args_non_parallel")
@@ -101,7 +103,7 @@ class WorkflowTaskReadV2(BaseModel):
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
 
-    input_filters: Filters
+    type_filters: dict[str, bool]
 
     task_type: str
     task_id: int
@@ -118,7 +120,7 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
-    input_filters: Optional[Filters]
+    type_filters: Optional[dict[str, bool]]
 
     # Validators
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
@@ -126,6 +128,9 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdict_keys("meta_parallel")
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        valdict_keys("type_filters")
     )
 
     @validator("args_non_parallel")
@@ -164,7 +169,7 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     args_non_parallel: Optional[dict[str, Any]] = None
     args_parallel: Optional[dict[str, Any]] = None
 
-    input_filters: Optional[Filters] = None
+    type_filters: Optional[dict[str, bool]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
@@ -180,6 +185,9 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     _args_parallel = validator("args_parallel", allow_reuse=True)(
         valdict_keys("args_parallel")
     )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        valdict_keys("type_filters")
+    )
 
 
 class WorkflowTaskExportV2(BaseModel):
@@ -188,6 +196,6 @@ class WorkflowTaskExportV2(BaseModel):
     meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None
     args_parallel: Optional[dict[str, Any]] = None
-    input_filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
 
     task: TaskExportV2
