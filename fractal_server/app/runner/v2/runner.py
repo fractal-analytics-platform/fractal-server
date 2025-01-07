@@ -1,4 +1,4 @@
-import json
+# import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
@@ -13,14 +13,12 @@ from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ....images.tools import match_filter
 from ..exceptions import JobExecutionError
-from ..filenames import FILTERS_FILENAME
-from ..filenames import HISTORY_FILENAME
-from ..filenames import IMAGES_FILENAME
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
@@ -36,7 +34,6 @@ def execute_tasks_v2(
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> DatasetV2:
-
     logger = logging.getLogger(logger_name)
 
     if (
@@ -297,12 +294,20 @@ def execute_tasks_v2(
         # temporary files which can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
-        with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
-            json.dump(tmp_history, f, indent=2)
-        with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
-            json.dump(tmp_filters, f, indent=2)
-        with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
-            json.dump(tmp_images, f, indent=2)
+
+        with next(get_sync_db()) as db:
+            dataset.history.extend(tmp_history)
+            dataset.filters = tmp_filters
+            dataset.images = tmp_images
+            db.add(dataset)
+            db.commit()
+
+        # with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
+        #     json.dump(tmp_history, f, indent=2)
+        # with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
+        #     json.dump(tmp_filters, f, indent=2)
+        # with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
+        #     json.dump(tmp_images, f, indent=2)
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
 

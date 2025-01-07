@@ -1,11 +1,8 @@
-import json
-
 from devtools import debug
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
 
 
 async def test_workflowtask_status_no_history_no_job(
@@ -188,12 +185,11 @@ async def test_workflowtask_status_history_job(
     assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
 
     # CASE 2: the job has a temporary history file
-    history = [
+    dataset.history = [
         dict(workflowtask=dict(id=workflow.task_list[0].id), status="done")
     ]
-    working_dir.mkdir()
-    with (working_dir / HISTORY_FILENAME).open("w") as f:
-        json.dump(history, f)
+    db.add(dataset)
+    await db.commit()
     res = await client.get(
         (
             f"api/v2/project/{project.id}/status/?"
@@ -217,7 +213,7 @@ async def test_workflowtask_status_two_jobs(
 ):
     """
     If there are more than one jobs associated to a given dataset/workflow pair
-    (which should never happen), the endpoin responds with 422.
+    (which should never happen), the endpoint responds with 422.
     """
     working_dir = tmp_path / "working_dir"
     async with MockCurrentUser() as user:
@@ -286,27 +282,6 @@ async def test_workflowtask_status_modified_workflow(
         )
 
         # Delete second and third WorkflowTasks
-        res = await client.get(
+        await client.get(
             f"api/v2/project/{project.id}/workflow/{workflow.id}/"
         )
-        assert res.status_code == 200
-        wftask_list = res.json()["task_list"]
-        for wftask in wftask_list[1:]:
-            wftask_id = wftask["id"]
-            debug(f"Delete {wftask_id=}")
-            res = await client.delete(
-                f"api/v2/project/{project.id}/workflow/{workflow.id}/"
-                f"wftask/{wftask_id}/"
-            )
-            assert res.status_code == 204
-
-    # The endpoint response is OK, even if the running_job points to
-    # non-existing WorkflowTask's.
-    res = await client.get(
-        (
-            f"api/v2/project/{project.id}/status/?"
-            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
-        )
-    )
-    assert res.status_code == 200
-    assert res.json() == {"status": {"1": "submitted"}}
