@@ -821,9 +821,10 @@ async def test_replace_task_in_workflowtask(
         )
 
         # replace task in wft3 with task5
+        wft3_id = wft3.id
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
+            f"replace-task/?workflow_task_id={wft3_id}&task_id={task5.id}",
         )
         assert res.status_code == 201
         wft5 = res.json()
@@ -834,25 +835,40 @@ async def test_replace_task_in_workflowtask(
         assert wft5["meta_parallel"] == task5.meta_parallel
         assert wft5["meta_non_parallel"] == task5.meta_non_parallel
 
-        db.expunge_all()
-        workflow_new = await db.get(WorkflowV2, workflow.id)
-        orders = [_wftask.order for _wftask in workflow_new.task_list]
-        assert orders == list(range(len(orders)))
+        # Get a fresh workflow from the database
+        db.expunge(workflow)
+        workflow = await db.get(WorkflowV2, workflow.id)
 
-        await db.refresh(workflow)
-        assert [wft.id for wft in workflow.task_list] == [
+        # Check that workflowtasks have the correct order and id lists
+        wft_orders = [_wftask.order for _wftask in workflow.task_list]
+        wft_ids = [_wftask.id for _wftask in workflow.task_list]
+        debug(wft_ids)
+        debug(wft_orders)
+        assert wft_orders == list(range(len(wft_orders)))
+        assert wft_ids == [
             wft1.id,
             wft2.id,
             wft5["id"],
             wft4.id,
         ]
 
-        # replace with itself
+        # Check that old workflowtask was removed
+        current_wft3 = await db.get(WorkflowTaskV2, wft3_id)
+        assert current_wft3 is None
+
+        # Replace a with itself, and check that the workflowtask was updated
+        wft1_id = wft1.id
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1.id}&task_id={task1.id}",
+            f"replace-task/?workflow_task_id={wft1_id}&task_id={task1.id}",
         )
+        assert res.status_code == 201
         wft1b = res.json()
+        assert wft1b["id"] != wft1_id
+        # Check that old workflowtask was removed
+        db.expunge_all()
+        current_wft1 = await db.get(WorkflowTaskV2, wft1_id)
+        assert current_wft1 is None
 
         # replace with payload
         # case 1
