@@ -7,6 +7,7 @@ from sqlmodel import select
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.images.models import Filters
 
 PREFIX = "api/v2"
@@ -832,6 +833,11 @@ async def test_replace_task_in_workflowtask(
         assert wft5["args_non_parallel"] == wft3.args_non_parallel
         assert wft5["meta_parallel"] == task5.meta_parallel
         assert wft5["meta_non_parallel"] == task5.meta_non_parallel
+
+        db.expunge_all()
+        workflow_new = await db.get(WorkflowV2, workflow.id)
+        orders = [_wftask.order for _wftask in workflow_new.task_list]
+        assert orders == list(range(len(orders)))
 
         await db.refresh(workflow)
         assert [wft.id for wft in workflow.task_list] == [
