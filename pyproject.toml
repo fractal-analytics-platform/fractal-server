@@ -1,7 +1,7 @@
 [project]
 name = "fractal-server"
 version = "2.10.2"
-description = "Server component of the Fractal analytics platform"
+description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
     { name="Marco Franzon", email="marco.franzon@exact-lab.it" },
@@ -10,11 +10,13 @@ authors = [
 ]
 readme = "README.md"
 license = "BSD-3-Clause"
+
 exclude = [
-"fractal_server/.gitignore",
-"fractal_server/data_migrations/old",
-"fractal_server/json_schemas",
+    "fractal_server/.gitignore",
+    "fractal_server/data_migrations/old",
+    "fractal_server/json_schemas",
 ]
+
 requires-python = ">=3.10"
 dependencies = [
     "python-dotenv >=1.0.0,<1.1.0",
@@ -66,8 +68,6 @@ docs = [
 ]
 
 
-
-
 [project.urls]
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
 repository = "https://github.com/fractal-analytics-platform/fractal-server"
@@ -77,12 +77,12 @@ changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/m
 [project.scripts]
 fractalctl = "fractal_server.__main__:run"
 
-
-
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+requires-poetry = ">=2.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -107,13 +107,12 @@ push = true
     '__VERSION__ = "{version}"$'
 ]
 
-
 [tool.coverage.run]
 branch = true
 parallel = true
 relative_files = true
 omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*"]
 
-[[tool.mypy.overrides]]
+[tool.mypy.overrides]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]
 ignore_missing_imports = true
