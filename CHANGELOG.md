@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.10.4
+
+* Switch to poetry v2 (\#2165).
+* Require Python <3.13 (\#2165).
+
 # 2.10.3
 
 Note: this version fixes a bug introduced in version 2.10.1.

@@ -1,50 +1,62 @@
-[tool.poetry]
+[project]
 name = "fractal-server"
-version = "2.10.3"
-description = "Server component of the Fractal analytics platform"
+version = "2.10.4"
+description = "Backend component of the Fractal analytics platform"
 authors = [
-    "Tommaso Comparin <tommaso.comparin@exact-lab.it>",
-    "Marco Franzon <marco.franzon@exact-lab.it>",
-    "Yuri Chiucconi <yuri.chiucconi@exact-lab.it>",
-    "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
+    { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
+    { name="Marco Franzon", email="marco.franzon@exact-lab.it" },
+    { name="Yuri Chiucconi", email="yuri.chiucconi@exact-lab.it" },
+    { name="Jacopo Nespolo", email="jacopo.nespolo@exact-lab.it" },
 ]
 readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "python-dotenv >=1.0.0,<1.1.0",
+    "fastapi >= 0.115.0, <0.116.0",
+    "sqlmodel == 0.0.21",
+    "sqlalchemy[asyncio] >=2.0.23,<2.1",
+    "fastapi-users[oauth] >=14,<15",
+    "alembic >=1.13.1, <2.0.0",
+    "uvicorn == 0.29.0",
+    "pydantic >=1.10.8,<2",
+    "packaging >= 23.2.0, <24.0.0",
+    "clusterfutures == 0.5",
+    "cloudpickle >=3.0.0,<3.1.0",
+    "fabric >= 3.2.2, <3.3.0",
+    "gunicorn >=21.2,<23.0",
+    "psycopg[binary] >= 3.1.0, <4.0.0",
+    "psutil == 5.9.8",
+    "uvicorn-worker == 0.2.0",
+    "cryptography >=44.0.0,<44.1.0",
+]
+
+[project.urls]
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
 repository = "https://github.com/fractal-analytics-platform/fractal-server"
 documentation = "https://fractal-analytics-platform.github.io/fractal-server"
-license = "BSD-3-Clause"
+changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
+
+[project.scripts]
+fractalctl = "fractal_server.__main__:run"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+requires-poetry = ">=2.0"
+packages = [
+    {include="fractal_server"}
+]
 exclude = [
-"fractal_server/.gitignore",
-"fractal_server/data_migrations/old",
-"fractal_server/json_schemas",
+    "fractal_server/data_migrations/old",
+    "fractal_server/json_schemas",
+    "fractal_server/migrations/script.py.mako",
 ]
 
-[tool.poetry.urls]
-"Changelog" = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
-
-
-[tool.poetry.dependencies]
-python = "^3.10"
-python-dotenv = "^1.0.0"
-fastapi = "^0.115.0"
-sqlmodel = "^0.0.21"
-sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
-fastapi-users = {extras = ["oauth"], version = ">=14,<15"}
-alembic = "^1.13.1"
-uvicorn = "^0.29.0"
-pydantic = ">=1.10.8,<2"
-packaging = "^23.2"
-clusterfutures = "^0.5"
-cloudpickle = ">=3.0.0,<3.1.0"
-fabric = "^3.2.2"
-
-gunicorn = { version = ">=21.2,<23.0" }
-psycopg = { version = "^3.1.0", extras=["binary"] }
-psutil = "^5.9.8"
-uvicorn-worker = "^0.2.0"
-cryptography = ">=44.0.0,<44.1.0"
-
-[tool.poetry.extras]
+[tool.poetry.group.dev]
+optional = true
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2"
@@ -62,8 +74,10 @@ pyyaml="^6.0.1"
 a2wsgi = "^1.10.0"
 jinja2 = "^3.1.3"
 
-[tool.poetry.group.docs.dependencies]
+[tool.poetry.group.docs]
+optional = true
 
+[tool.poetry.group.docs.dependencies]
 mkdocs="1.5.3"
 mkdocstrings = { extras = ["python"], version = "0.25.2" }
 mkdocs-material="9.5.17"
@@ -73,11 +87,6 @@ mkdocs-section-index="0.3.8"
 mkdocs-render-swagger-plugin="0.1.1"
 pyyaml="^6.0.1"
 
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 filterwarnings = [
@@ -86,7 +95,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "2.10.3"
+current_version = "2.10.4"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -101,15 +110,12 @@ push = true
     '__VERSION__ = "{version}"$'
 ]
 
-[tool.poetry.scripts]
-fractalctl = "fractal_server.__main__:run"
-
 [tool.coverage.run]
 branch = true
 parallel = true
 relative_files = true
 omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*"]
 
-[[tool.mypy.overrides]]
+[tool.mypy.overrides]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]
 ignore_missing_imports = true
