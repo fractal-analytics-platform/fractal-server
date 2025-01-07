@@ -6,7 +6,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlalchemy.orm.attributes import flag_modified
 
 from ....db import AsyncSession
 from ....db import get_async_db
@@ -89,8 +88,7 @@ async def replace_workflowtask(
                 _args_parallel = replace.args_parallel
 
     # If user's changes to `meta_non_parallel` are compatible with new task,
-    # keep them;
-    # else, get `meta_non_parallel` from new task
+    # keep them; else, get `meta_non_parallel` from new task
     if (
         old_workflow_task.meta_non_parallel
         != old_workflow_task.task.meta_non_parallel
@@ -107,12 +105,10 @@ async def replace_workflowtask(
         _meta_parallel = task.meta_parallel
 
     new_workflow_task = WorkflowTaskV2(
-        # new task
-        task_type=task.type,
         task_id=task.id,
+        task_type=task.type,
         task=task,
-        # old values
-        order=old_workflow_task.order,
+        # old-task values
         input_filters=old_workflow_task.input_filters,
         # possibly new values
         args_non_parallel=_args_non_parallel,
@@ -121,11 +117,11 @@ async def replace_workflowtask(
         meta_parallel=_meta_parallel,
     )
 
-    await db.delete(old_workflow_task)
-    workflow.task_list.insert(new_workflow_task.order, new_workflow_task)
-    flag_modified(workflow, "task_list")
+    workflow_task_order = old_workflow_task.order
+    workflow.task_list.remove(old_workflow_task)
+    workflow.task_list.insert(workflow_task_order, new_workflow_task)
     await db.commit()
-
+    await db.refresh(new_workflow_task)
     return new_workflow_task
 
 
