@@ -52,6 +52,7 @@ packages = [
 exclude = [
     "fractal_server/data_migrations/old",
     "fractal_server/json_schemas",
+    "fractal_server/migrations/script.py.mako",
 ]
 
 [tool.poetry.group.dev]
