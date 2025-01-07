@@ -8,6 +8,7 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of Job models;
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
+from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
@@ -71,4 +72,5 @@ class DatasetDumpV2(BaseModel, extra=Extra.forbid):
     timestamp_created: str
 
     zarr_dir: str
-    filters: Filters
+    type_filters: dict[str, bool]
+    attribute_filters: dict[str, list[Any]]
