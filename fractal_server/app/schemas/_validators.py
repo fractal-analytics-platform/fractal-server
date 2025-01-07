@@ -57,7 +57,7 @@ def valdict_scalarvalues(attribute: str, accept_type_none: bool = True):
 
     def val(
         d: Optional[dict[str, list[Any]]]
-    ) -> dict[str, list[Union[int, float, str, bool, None]]]:
+    ) -> Optional[dict[str, list[Union[int, float, str, bool, None]]]]:
         if d is not None:
             if accept_type_none:
                 accepted_types = (int, float, str, bool, type(None))
