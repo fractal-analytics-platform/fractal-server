@@ -21,7 +21,6 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
-from fractal_server.images import Filters
 
 
 async def _get_project_check_owner(
@@ -336,7 +335,7 @@ async def _workflow_insert_task(
     meta_non_parallel: Optional[dict[str, Any]] = None,
     args_non_parallel: Optional[dict[str, Any]] = None,
     args_parallel: Optional[dict[str, Any]] = None,
-    input_filters: Optional[Filters] = None,
+    type_filters: Optional[dict[str, bool]] = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -350,7 +349,7 @@ async def _workflow_insert_task(
         meta_non_parallel:
         args_non_parallel:
         args_parallel:
-        input_filters:
+        type_filters:
         db:
     """
     db_workflow = await db.get(WorkflowV2, workflow_id)
@@ -376,12 +375,6 @@ async def _workflow_insert_task(
     if final_meta_non_parallel == {}:
         final_meta_non_parallel = None
 
-    # Prepare input_filters attribute
-    if input_filters is None:
-        input_filters_kwarg = {}
-    else:
-        input_filters_kwarg = dict(input_filters=input_filters)
-
     # Create DB entry
     wf_task = WorkflowTaskV2(
         task_type=task_type,
@@ -390,7 +383,7 @@ async def _workflow_insert_task(
         args_parallel=args_parallel,
         meta_parallel=final_meta_parallel,
         meta_non_parallel=final_meta_non_parallel,
-        **input_filters_kwarg,
+        type_filters=(type_filters or dict()),
     )
     db_workflow.task_list.append(wf_task)
     flag_modified(db_workflow, "task_list")

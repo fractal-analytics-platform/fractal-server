@@ -109,7 +109,7 @@ async def replace_workflowtask(
         task_type=task.type,
         task=task,
         # old-task values
-        input_filters=old_workflow_task.input_filters,
+        type_filters=old_workflow_task.type_filters,
         # possibly new values
         args_non_parallel=_args_non_parallel,
         args_parallel=_args_parallel,
@@ -183,7 +183,7 @@ async def create_workflowtask(
         meta_parallel=new_task.meta_parallel,
         args_non_parallel=new_task.args_non_parallel,
         args_parallel=new_task.args_parallel,
-        input_filters=new_task.input_filters,
+        type_filters=new_task.type_filters,
         db=db,
     )
 
@@ -274,7 +274,7 @@ async def update_workflowtask(
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
-        elif key in ["meta_parallel", "meta_non_parallel", "input_filters"]:
+        elif key in ["meta_parallel", "meta_non_parallel", "type_filters"]:
             setattr(db_wf_task, key, value)
         else:
             raise HTTPException(
