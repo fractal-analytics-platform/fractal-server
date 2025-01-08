@@ -3,7 +3,6 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
-from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
@@ -108,27 +107,3 @@ class SingleImageUpdate(BaseModel):
         return v
 
     _types = validator("types", allow_reuse=True)(valdict_keys("types"))
-
-
-class Filters(BaseModel, extra=Extra.forbid):
-    attributes: dict[str, Any] = Field(default_factory=dict)
-    types: dict[str, bool] = Field(default_factory=dict)
-
-    # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        valdict_keys("attributes")
-    )
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
-
-    @validator("attributes")
-    def validate_attributes(
-        cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in v.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
-                raise ValueError(
-                    f"Filters.attributes[{key}] must be a scalar "
-                    "(int, float, str, bool, or None). "
-                    f"Given {value} ({type(value)})"
-                )
-        return v
