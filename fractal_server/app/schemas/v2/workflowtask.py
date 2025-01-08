@@ -6,8 +6,10 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import root_validate_dict_keys
 from .._validators import valdict_keys
 from .._validators import validate_type_filters
 from .task import TaskExportV2
@@ -46,14 +48,18 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdict_keys("meta_parallel")
-    )
-    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
-        validate_type_filters()
     )
 
     @validator("args_non_parallel")
@@ -124,14 +130,18 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     type_filters: Optional[dict[str, bool]]
 
     # Validators
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdict_keys("meta_parallel")
-    )
-    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
-        validate_type_filters()
     )
 
     @validator("args_non_parallel")
@@ -174,6 +184,13 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdict_keys("meta_non_parallel")
     )
@@ -185,9 +202,6 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     )
     _args_parallel = validator("args_parallel", allow_reuse=True)(
         valdict_keys("args_parallel")
-    )
-    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
-        validate_type_filters()
     )
 
 

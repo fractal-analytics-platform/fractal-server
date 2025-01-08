@@ -49,19 +49,6 @@ def valdict_keys(attribute: str):
     return val
 
 
-def valdict_keys_str():
-    def val(d: Optional[dict[Any, Any]]) -> Optional[dict[str, Any]]:
-
-        if d is not None:
-            if any(not isinstance(key, str) for key in d.keys()):
-                raise ValueError(
-                    f"Dictionary contains non-string keys: '{d}'."
-                )
-        return d
-
-    return val
-
-
 def valdict_scalarvalues(attribute: str, accept_type_none: bool = True):
     """
     Check that every value of a `dict[str, list[Any]]` is a list of scalar
@@ -144,27 +131,34 @@ def val_unique_list(attribute: str):
     return val
 
 
-def validate_type_filters():
-    def val(type_filters: dict) -> dict[str, Any]:
-        type_filters = valdict_keys_str()(type_filters)
+def validate_type_filters(
+    type_filters: Optional[dict],
+) -> Optional[dict[str, bool]]:
+    if type_filters is not None:
         type_filters = valdict_keys("type_filters")(type_filters)
-        return type_filters
-
-    return val
+    return type_filters
 
 
-def validate_attribute_filters(accept_type_none: bool = True):
-    def val(attribute_filters: dict) -> dict[str, Any]:
-        attribute_filters = valdict_keys_str()(attribute_filters)
+def validate_attribute_filters(
+    attribute_filters: Optional[dict[str, list[Any]]]
+) -> Optional[dict[str, list[Any]]]:
+    if attribute_filters is not None:
         attribute_filters = valdict_keys("attribute_filters")(
             attribute_filters
         )
-        for value in attribute_filters.values():
-            if not isinstance(value, list):
-                raise ValueError(f"Values must be a list. Given {type(value)}")
-        attribute_filters = valdict_scalarvalues(
-            "attribute_filters", accept_type_none=accept_type_none
-        )(attribute_filters)
-        return attribute_filters
+        for key, values in attribute_filters.items():
+            for value in values:
+                if not isinstance(value, (int, float, str, bool, type(None))):
+                    raise ValueError(
+                        f"{attribute_filters}[{key}] values must be a scalars "
+                        "(int, float, str, bool, or None). "
+                        f"Given {value} ({type(value)})"
+                    )
+    return attribute_filters
 
-    return val
+
+def root_validate_dict_keys(cls, object: dict) -> dict:
+    for dictionary in (v for v in object.values() if isinstance(v, dict)):
+        if not all(isinstance(key, str) for key in dictionary.keys()):
+            raise ValueError("Dictionary keys must be strings.")
+    return object

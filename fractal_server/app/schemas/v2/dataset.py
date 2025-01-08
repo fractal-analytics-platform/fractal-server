@@ -5,8 +5,10 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import root_validate_dict_keys
 from .._validators import validate_attribute_filters
 from .._validators import validate_type_filters
 from .._validators import valstr
@@ -41,14 +43,17 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-
-    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
-        validate_type_filters()
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
     )
-    _attribute_filters = validator(
-        "attribute_filters", pre=True, allow_reuse=True
-    )(validate_attribute_filters())
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
+
+    _name = validator("name", allow_reuse=True)(valstr("name"))
 
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
@@ -83,14 +88,17 @@ class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-
-    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
-        validate_type_filters()
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
     )
-    _attribute_filters = validator(
-        "attribute_filters", pre=True, allow_reuse=True
-    )(validate_attribute_filters())
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
+
+    _name = validator("name", allow_reuse=True)(valstr("name"))
 
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
@@ -119,12 +127,15 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
 
     # Validators
 
-    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
-        validate_type_filters()
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
     )
-    _attribute_filters = validator(
-        "attribute_filters", pre=True, allow_reuse=True
-    )(validate_attribute_filters())
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
 
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: str) -> str:
