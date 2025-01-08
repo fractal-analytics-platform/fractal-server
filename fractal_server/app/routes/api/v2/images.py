@@ -15,7 +15,6 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -38,7 +37,8 @@ class ImagePage(BaseModel):
 
 class ImageQuery(BaseModel):
     zarr_url: Optional[str]
-    filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
+    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
 
 
 @router.post(
@@ -124,7 +124,11 @@ async def query_dataset_images(
         images = [
             image
             for image in images
-            if match_filter(image, Filters(**dataset.filters))
+            if match_filter(
+                image,
+                type_filters=dataset.type_filters,
+                attribute_filters=dataset.attribute_filters,
+            )
         ]
 
     attributes = {}
@@ -160,7 +164,8 @@ async def query_dataset_images(
                 for image in images
                 if match_filter(
                     image,
-                    Filters(**query.filters.dict()),
+                    type_filters=query.type_filters,
+                    attribute_filters=query.attribute_filters,
                 )
             ]
 

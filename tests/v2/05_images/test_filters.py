@@ -2,7 +2,6 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import filter_image_list
 
@@ -96,26 +95,6 @@ def test_singleimage_attributes_validation():
         )
 
 
-def test_filters_attributes_validation():
-    invalid = [
-        ["l", "i", "s", "t"],
-        {"d": "i", "c": "t"},
-        {"s", "e", "t"},
-        ("t", "u", "p", "l", "e"),
-        bool,  # type
-        lambda x: x,  # function
-    ]
-
-    for item in invalid:
-        with pytest.raises(ValidationError) as e:
-            Filters(attributes={"key": item})
-        debug(e)
-
-    valid = ["string", -7, 3.14, True, None]
-    for item in valid:
-        assert Filters(attributes={"key": item}).attributes["key"] == item
-
-
 @pytest.mark.parametrize(
     "attribute_filters,type_filters,expected_number",
     [
@@ -165,7 +144,8 @@ def test_filter_image_list_SingleImage(
 ):
     filtered_list = filter_image_list(
         images=IMAGES,
-        filters=Filters(attributes=attribute_filters, types=type_filters),
+        attribute_filters=attribute_filters,
+        type_filters=type_filters,
     )
 
     debug(attribute_filters)

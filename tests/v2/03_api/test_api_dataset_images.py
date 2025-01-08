@@ -1,4 +1,3 @@
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
@@ -136,14 +135,14 @@ async def test_query_images(
     # use `query.attributes`
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
-        json=dict(filters=dict(types=dict(flag=False))),
+        json=dict(type_filters=dict(flag=False)),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == len(
         [
             image
             for image in images
-            if match_filter(image, Filters(types={"flag": False}))
+            if match_filter(image, type_filters={"flag": False})
         ]
     )
     assert res.json()["current_page"] == 1
@@ -154,14 +153,14 @@ async def test_query_images(
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         "?page_size=1000",
-        json=dict(filters=dict(types={"flag": True})),
+        json=dict(type_filters={"flag": True}),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == len(
         [
             image
             for image in images
-            if match_filter(image, filters=Filters(types={"flag": 1}))
+            if match_filter(image, type_filters={"flag": 1})
         ]
     )
     assert res.json()["page_size"] == 1000
@@ -171,7 +170,7 @@ async def test_query_images(
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         "?page_size=42",
-        json=dict(filters=dict(types={"foo": True})),
+        json=dict(type_filters={"foo": True}),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == 0
@@ -180,7 +179,7 @@ async def test_query_images(
     assert res.json()["images"] == []
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
-        json=dict(filters=dict(types={"foo": False})),
+        json=dict(type_filters={"foo": False}),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == N

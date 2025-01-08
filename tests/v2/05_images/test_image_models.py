@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageTaskOutput
 from fractal_server.images import SingleImageUpdate
@@ -85,29 +84,6 @@ def test_single_image_task_output():
     # SingleImage does not accept 'None' as value
     with pytest.raises(ValidationError):
         SingleImage(**base.dict())
-
-
-def test_filters():
-
-    Filters()
-
-    valid_attributes = dict(a="string", b=3, c=0.33, d=True, e=None)
-    assert Filters(attributes=valid_attributes).attributes == valid_attributes
-
-    invalid_attributes = [
-        dict(a=["l", "i", "s", "t"]),
-        dict(a={"d": "i", "c": "t"}),
-    ]
-    for attr in invalid_attributes:
-        with pytest.raises(ValidationError):
-            Filters(attributes=attr)
-
-    valid_types = dict(a=True, b=False)
-    assert Filters(types=valid_types).types == valid_types
-
-    invalid_types = dict(a="not a bool")
-    with pytest.raises(ValidationError):
-        Filters(types=invalid_types)
 
 
 def test_single_image_update():

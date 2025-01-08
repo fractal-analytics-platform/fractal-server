@@ -4,9 +4,6 @@ from typing import Literal
 from typing import Optional
 from typing import Union
 
-from fractal_server.images import Filters
-
-
 ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
 
 
@@ -33,33 +30,41 @@ def find_image_by_zarr_url(
     return dict(image=copy(images[ind]), index=ind)
 
 
-def match_filter(image: dict[str, Any], filters: Filters) -> bool:
+def match_filter(
+    image: dict[str, Any],
+    type_filters: Optional[dict[str, bool]] = None,
+    attribute_filters: Optional[dict[str, list[Any]]] = None,
+) -> bool:
     """
     Find whether an image matches a filter set.
 
     Arguments:
         image: A single image.
-        filters: A set of filters.
+        type_filters:
+        attribute_filters:
 
     Returns:
         Whether the image matches the filter set.
     """
-    # Verify match with types (using a False default)
-    for key, value in filters.types.items():
-        if image["types"].get(key, False) != value:
-            return False
-    # Verify match with attributes (only for non-None filters)
-    for key, value in filters.attributes.items():
-        if value is None:
-            continue
-        if image["attributes"].get(key) != value:
-            return False
+    if type_filters is not None:
+        # Verify match with types (using a False default)
+        for key, value in type_filters.items():
+            if image["types"].get(key, False) != value:
+                return False
+    if attribute_filters is not None:
+        # Verify match with attributes (only for not-None filters)
+        for key, values in attribute_filters.items():
+            if None in values:
+                continue
+            if not image["attributes"].get(key) in values:
+                return False
     return True
 
 
 def filter_image_list(
     images: list[dict[str, Any]],
-    filters: Filters,
+    type_filters: Optional[dict[str, bool]] = None,
+    attribute_filters: Optional[dict[str, list[Any]]] = None,
 ) -> list[dict[str, Any]]:
     """
     Compute a sublist with images that match a filter set.
@@ -73,12 +78,16 @@ def filter_image_list(
     """
 
     # When no filter is provided, return all images
-    if filters.attributes == {} and filters.types == {}:
+    if type_filters is None and attribute_filters is None:
         return images
 
     filtered_images = [
         copy(this_image)
         for this_image in images
-        if match_filter(this_image, filters=filters)
+        if match_filter(
+            this_image,
+            type_filters=type_filters,
+            attribute_filters=attribute_filters,
+        )
     ]
     return filtered_images
