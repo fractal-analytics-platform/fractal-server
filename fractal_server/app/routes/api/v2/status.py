@@ -140,9 +140,7 @@ async def get_workflowtask_status(
         #         history = json.load(f)
         # except FileNotFoundError:
         #     history = []
-        db_dataset = await db.get(
-            DatasetV2, dataset_id, populate_existing=True
-        )
+        db_dataset = await db.get(DatasetV2, dataset_id)
         for history_item in db_dataset.history:
             wftask_id = history_item["workflowtask"]["id"]
             wftask_status = history_item["status"]
