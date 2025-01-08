@@ -296,10 +296,11 @@ def execute_tasks_v2(
         # information
 
         with next(get_sync_db()) as db:
-            dataset.history.extend(tmp_history)
-            dataset.filters = tmp_filters
-            dataset.images = tmp_images
-            db.add(dataset)
+            db_dataset = db.get(DatasetV2, dataset.id)
+            db_dataset.history.extend(tmp_history)
+            db_dataset.filters = tmp_filters
+            db_dataset.images = tmp_images
+            db.add(db_dataset)
             db.commit()
 
         # with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
