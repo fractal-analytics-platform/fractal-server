@@ -9,6 +9,7 @@ from pydantic import Field
 from pydantic import validator
 
 from .._validators import valdict_keys
+from .._validators import validate_type_filters
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
@@ -51,8 +52,8 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdict_keys("meta_parallel")
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        valdict_keys("type_filters")
+    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
+        validate_type_filters()
     )
 
     @validator("args_non_parallel")
@@ -129,8 +130,8 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdict_keys("meta_parallel")
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        valdict_keys("type_filters")
+    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
+        validate_type_filters()
     )
 
     @validator("args_non_parallel")
@@ -185,8 +186,8 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     _args_parallel = validator("args_parallel", allow_reuse=True)(
         valdict_keys("args_parallel")
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        valdict_keys("type_filters")
+    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
+        validate_type_filters()
     )
 
 

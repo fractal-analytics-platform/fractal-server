@@ -9,8 +9,7 @@ from pydantic import Field
 from pydantic import validator
 from pydantic.types import StrictStr
 
-from .._validators import valdict_keys
-from .._validators import valdict_scalarvalues
+from .._validators import validate_attribute_filters
 from .._validators import valstr
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
@@ -51,12 +50,9 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
     _worker_init = validator("worker_init", allow_reuse=True)(
         valstr("worker_init")
     )
-    _attribute_filters_1 = validator("attribute_filters", allow_reuse=True)(
-        valdict_keys("attribute_filters")
-    )
-    _attribute_filters_2 = validator("attribute_filters", allow_reuse=True)(
-        valdict_scalarvalues("attribute_filters")
-    )
+    _attribute_filters = validator(
+        "attribute_filters", pre=True, allow_reuse=True
+    )(validate_attribute_filters())
 
     @validator("first_task_index", always=True)
     def first_task_index_non_negative(cls, v, values):

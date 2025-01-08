@@ -7,8 +7,8 @@ from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
-from .._validators import valdict_keys
-from .._validators import valdict_scalarvalues
+from .._validators import validate_attribute_filters
+from .._validators import validate_type_filters
 from .._validators import valstr
 from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
@@ -43,15 +43,12 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        valdict_keys("type_filters")
+    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
+        validate_type_filters()
     )
-    _attribute_filters_1 = validator("attribute_filters", allow_reuse=True)(
-        valdict_keys("attribute_filters")
-    )
-    _attribute_filters_2 = validator("attribute_filters", allow_reuse=True)(
-        valdict_scalarvalues("attribute_filters")
-    )
+    _attribute_filters = validator(
+        "attribute_filters", pre=True, allow_reuse=True
+    )(validate_attribute_filters())
 
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
@@ -88,15 +85,12 @@ class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        valdict_keys("type_filters")
+    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
+        validate_type_filters()
     )
-    _attribute_filters_1 = validator("attribute_filters", allow_reuse=True)(
-        valdict_keys("attribute_filters")
-    )
-    _attribute_filters_2 = validator("attribute_filters", allow_reuse=True)(
-        valdict_scalarvalues("attribute_filters")
-    )
+    _attribute_filters = validator(
+        "attribute_filters", pre=True, allow_reuse=True
+    )(validate_attribute_filters())
 
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
@@ -125,15 +119,12 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
 
     # Validators
 
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        valdict_keys("type_filters")
+    _type_filters = validator("type_filters", pre=True, allow_reuse=True)(
+        validate_type_filters()
     )
-    _attribute_filters_1 = validator("attribute_filters", allow_reuse=True)(
-        valdict_keys("attribute_filters")
-    )
-    _attribute_filters_2 = validator("attribute_filters", allow_reuse=True)(
-        valdict_scalarvalues("attribute_filters")
-    )
+    _attribute_filters = validator(
+        "attribute_filters", pre=True, allow_reuse=True
+    )(validate_attribute_filters())
 
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: str) -> str:

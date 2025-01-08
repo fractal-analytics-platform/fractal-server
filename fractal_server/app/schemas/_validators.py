@@ -39,11 +39,24 @@ def valdict_keys(attribute: str):
             new_keys = [valstr(f"{attribute}[{key}]")(key) for key in old_keys]
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
-                    f"Dictionary contains multiple identical keys: {d}."
+                    f"Dictionary contains multiple identical keys: '{d}'."
                 )
             for old_key, new_key in zip(old_keys, new_keys):
                 if new_key != old_key:
                     d[new_key] = d.pop(old_key)
+        return d
+
+    return val
+
+
+def valdict_keys_str():
+    def val(d: Optional[dict[Any, Any]]) -> Optional[dict[str, Any]]:
+
+        if d is not None:
+            if any(not isinstance(key, str) for key in d.keys()):
+                raise ValueError(
+                    f"Dictionary contains non-string keys: '{d}'."
+                )
         return d
 
     return val
@@ -127,5 +140,31 @@ def val_unique_list(attribute: str):
             if len(set(must_be_unique)) != len(must_be_unique):
                 raise ValueError(f"`{attribute}` list has repetitions")
         return must_be_unique
+
+    return val
+
+
+def validate_type_filters():
+    def val(type_filters: dict) -> dict[str, Any]:
+        type_filters = valdict_keys_str()(type_filters)
+        type_filters = valdict_keys("type_filters")(type_filters)
+        return type_filters
+
+    return val
+
+
+def validate_attribute_filters(accept_type_none: bool = True):
+    def val(attribute_filters: dict) -> dict[str, Any]:
+        attribute_filters = valdict_keys_str()(attribute_filters)
+        attribute_filters = valdict_keys("attribute_filters")(
+            attribute_filters
+        )
+        for value in attribute_filters.values():
+            if not isinstance(value, list):
+                raise ValueError(f"Values must be a list. Given {type(value)}")
+        attribute_filters = valdict_scalarvalues(
+            "attribute_filters", accept_type_none=accept_type_none
+        )(attribute_filters)
+        return attribute_filters
 
     return val

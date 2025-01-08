@@ -69,13 +69,8 @@ class WorkflowTaskV2Mock(BaseModel):
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
     task: TaskV2Mock = None
-    input_filters: dict[str, Any] = Field(default_factory=dict)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
     order: int
     id: int
     workflow_id: int = 0
     task_id: int
-
-    @validator("input_filters", always=True)
-    def _default_filters(cls, value):
-        if value == {}:
-            return {"types": {}, "attributes": {}}
