@@ -32,8 +32,8 @@ def find_image_by_zarr_url(
 
 def match_filter(
     image: dict[str, Any],
-    type_filters: Optional[dict[str, bool]] = None,
-    attribute_filters: Optional[dict[str, list[Any]]] = None,
+    type_filters: dict[str, bool],
+    attribute_filters: dict[str, list[Any]],
 ) -> bool:
     """
     Find whether an image matches a filter set.
@@ -46,18 +46,17 @@ def match_filter(
     Returns:
         Whether the image matches the filter set.
     """
-    if type_filters is not None:
-        # Verify match with types (using a False default)
-        for key, value in type_filters.items():
-            if image["types"].get(key, False) != value:
-                return False
-    if attribute_filters is not None:
-        # Verify match with attributes (only for not-None filters)
-        for key, values in attribute_filters.items():
-            if None in values:
-                continue
-            if not image["attributes"].get(key) in values:
-                return False
+
+    # Verify match with types (using a False default)
+    for key, value in type_filters.items():
+        if image["types"].get(key, False) != value:
+            return False
+
+    # Verify match with attributes (only for not-None filters)
+    for key, values in attribute_filters.items():
+        if not image["attributes"].get(key) in values:
+            return False
+
     return True
 
 
