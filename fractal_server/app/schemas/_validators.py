@@ -147,12 +147,15 @@ def validate_attribute_filters(
             attribute_filters
         )
         for key, values in attribute_filters.items():
-            for value in values:
-                if not isinstance(value, (int, float, str, bool, type(None))):
+            if values:
+                _type = type(values[0])
+                if (_type not in (int, float, str, bool, type(None))) or (
+                    not all(isinstance(value, _type) for value in values)
+                ):
                     raise ValueError(
-                        f"{attribute_filters}[{key}] values must be a scalars "
+                        f"List '{attribute_filters}[{key}] = {values}' "
+                        "does not contain homogeneus valid elements "
                         "(int, float, str, bool, or None). "
-                        f"Given {value} ({type(value)})"
                     )
     return attribute_filters
 
