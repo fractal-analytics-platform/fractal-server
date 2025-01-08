@@ -58,7 +58,7 @@ async def test_new_dataset_v2(client, MockCurrentUser):
             f"api/v2/project/{p2_id}/dataset/",
             json=dict(
                 name="dataset",
-                filters={"attributes": {"x": 10}},
+                attribute_filters={"x": [10]},
                 zarr_dir="/tmp",
             ),
         )
@@ -442,10 +442,8 @@ async def test_dataset_export(
         assert res_dataset["name"] == "My Dataset"
         assert res_dataset["zarr_dir"] == "/zarr_dir"
         assert res_dataset["images"] == IMAGES
-        assert res_dataset["filters"] == dict(
-            attributes={},
-            types={},
-        )
+        assert res_dataset["attribute_filters"] == dict()
+        assert res_dataset["type_filters"] == dict()
 
 
 async def test_dataset_import(
@@ -460,10 +458,8 @@ async def test_dataset_import(
             name="Dataset",
             zarr_dir="/somewhere/invalid/",
             images=IMAGES,
-            filters=dict(
-                attributes={},
-                types={},
-            ),
+            attribute_filters={},
+            type_filters={},
         )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
@@ -476,10 +472,8 @@ async def test_dataset_import(
             name="Dataset",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
-            filters=dict(
-                attributes={},
-                types={},
-            ),
+            attribute_filters=dict(),
+            type_filters=dict(),
         )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
@@ -489,7 +483,5 @@ async def test_dataset_import(
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset"
         assert res_dataset["zarr_dir"] == ZARR_DIR
-        assert res_dataset["filters"] == dict(
-            attributes={},
-            types={},
-        )
+        assert res_dataset["attribute_filters"] == dict()
+        assert res_dataset["type_filters"] == dict()
