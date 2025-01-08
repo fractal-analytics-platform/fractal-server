@@ -58,7 +58,7 @@ def assemble_history_failed_job(
     # information.
 
     with next(get_sync_db()) as db:
-        db_dataset = db.get(dataset)
+        db_dataset = db.get(DatasetV2, dataset.id)
 
         # Part 1/A: Identify failed task, if needed
         if failed_wftask is None:
