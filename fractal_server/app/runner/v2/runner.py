@@ -7,15 +7,14 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
-from ....images import Filters
 from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ....images.tools import match_filter
 from ..exceptions import JobExecutionError
-from ..filenames import FILTERS_FILENAME
 from ..filenames import HISTORY_FILENAME
 from ..filenames import IMAGES_FILENAME
+from ..filenames import TYPE_FILTERS_FILENAME
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
@@ -47,7 +46,7 @@ def execute_tasks_v2(
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    tmp_filters = deepcopy(dataset.filters)
+    tmp_type_filters = deepcopy(dataset.type_filters)
     tmp_history = []
 
     for wftask in wf_task_list:
@@ -58,19 +57,14 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        pre_filters = dict(
-            types=copy(tmp_filters["types"]),
-            attributes=copy(tmp_filters["attributes"]),
-        )
-        pre_filters["types"].update(wftask.input_filters["types"])
-        pre_filters["attributes"].update(wftask.input_filters["attributes"])
+        pre_type_filters = copy(tmp_type_filters)
+        pre_type_filters.update(wftask.type_filters)
         filtered_images = filter_image_list(
-            images=tmp_images,
-            filters=Filters(**pre_filters),
+            images=tmp_images, type_filters=pre_type_filters
         )
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
-            if not match_filter(image, Filters(types=task.input_types)):
+            if not match_filter(image, type_filters=task.input_types):
                 raise JobExecutionError(
                     "Invalid filtered image list\n"
                     f"Task input types: {task.input_types=}\n"
@@ -249,19 +243,12 @@ def execute_tasks_v2(
             else:
                 tmp_images.pop(img_search["index"])
 
-        # Update filters.attributes:
-        # current + (task_output: not really, in current examples..)
-        if current_task_output.filters is not None:
-            tmp_filters["attributes"].update(
-                current_task_output.filters.attributes
-            )
-
         # Find manifest ouptut types
         types_from_manifest = task.output_types
 
         # Find task-output types
-        if current_task_output.filters is not None:
-            types_from_task = current_task_output.filters.types
+        if current_task_output.type_filters is not None:
+            types_from_task = current_task_output.type_filters
         else:
             types_from_task = {}
 
@@ -279,8 +266,8 @@ def execute_tasks_v2(
             )
 
         # Update filters.types
-        tmp_filters["types"].update(types_from_manifest)
-        tmp_filters["types"].update(types_from_task)
+        tmp_type_filters.update(types_from_manifest)
+        tmp_type_filters.update(types_from_task)
 
         # Update history (based on _DatasetHistoryItemV2)
         history_item = _DatasetHistoryItemV2(
@@ -299,8 +286,8 @@ def execute_tasks_v2(
         # information
         with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
             json.dump(tmp_history, f, indent=2)
-        with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
-            json.dump(tmp_filters, f, indent=2)
+        with open(workflow_dir_local / TYPE_FILTERS_FILENAME, "w") as f:
+            json.dump(tmp_type_filters, f, indent=2)
         with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
             json.dump(tmp_images, f, indent=2)
 
@@ -311,7 +298,7 @@ def execute_tasks_v2(
     # represent the new attributes (to replace the original ones)
     result = dict(
         history=tmp_history,
-        filters=tmp_filters,
+        type_filters=tmp_type_filters,
         images=tmp_images,
     )
     return result
