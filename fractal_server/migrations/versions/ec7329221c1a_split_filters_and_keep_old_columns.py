@@ -33,11 +33,9 @@ def upgrade() -> None:
         )
         batch_op.alter_column(
             "filters",
-            existing_type=sa.JSON(astext_type=sa.Text()),
+            existing_type=sa.JSON(),
             nullable=True,
-            existing_server_default=sa.text(
-                '\'{"attributes": {}, "types": {}}\'::json'
-            ),
+            existing_server_default='{"attributes": {}, "types": {}}',
         )
 
     with op.batch_alter_table("jobv2", schema=None) as batch_op:
