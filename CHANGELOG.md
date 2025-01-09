@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* App:
+    * Add missing space in "To" field for email settings (\#2173).
+
 # 2.10.4
 
 * Switch to poetry v2 (\#2165).
