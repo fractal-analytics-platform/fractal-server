@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
+from sqlalchemy.orm.attributes import flag_modified
+
 from ....images import Filters
 from ....images import SingleImage
 from ....images.tools import filter_image_list
@@ -45,9 +47,9 @@ def execute_tasks_v2(
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
     tmp_filters = deepcopy(dataset.filters)
-    tmp_history = []
 
     for wftask in wf_task_list:
+        tmp_history = []
         task = wftask.task
         task_name = task.name
         logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
@@ -289,7 +291,6 @@ def execute_tasks_v2(
             ),
         ).dict()
         tmp_history.append(history_item)
-
         # Write current dataset attributes (history, images, filters) into
         # temporary files which can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
@@ -300,7 +301,9 @@ def execute_tasks_v2(
             db_dataset.history.extend(tmp_history)
             db_dataset.filters = tmp_filters
             db_dataset.images = tmp_images
-            db.add(db_dataset)
+            for attribute_name in ["filters", "history", "images"]:
+                flag_modified(db_dataset, attribute_name)
+            db.merge(db_dataset)
             db.commit()
 
         # with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
