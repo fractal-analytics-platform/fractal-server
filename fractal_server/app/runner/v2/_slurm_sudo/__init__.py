@@ -28,9 +28,7 @@ from ...executors.slurm.sudo.executor import FractalSlurmExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
-
-
-# FIXME: add job.attribute_filters
+from fractal_server.images.models import AttributeFiltersType
 
 
 def _process_workflow(
@@ -46,6 +44,7 @@ def _process_workflow(
     slurm_account: Optional[str] = None,
     user_cache_dir: str,
     worker_init: Optional[Union[str, list[str]]] = None,
+    job_attribute_filters: AttributeFiltersType,
 ) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend
@@ -86,6 +85,7 @@ def _process_workflow(
             workflow_dir_remote=workflow_dir_remote,
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
+            job_attribute_filters=job_attribute_filters,
         )
     return new_dataset_attributes
 
@@ -99,6 +99,7 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
+    job_attribute_filters: AttributeFiltersType,
     # Slurm-specific
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -129,5 +130,6 @@ async def process_workflow(
         slurm_user=slurm_user,
         slurm_account=slurm_account,
         worker_init=worker_init,
+        job_attribute_filters=job_attribute_filters,
     )
     return new_dataset_attributes
