@@ -89,8 +89,8 @@ def filter_image_list(
         for this_image in images
         if match_filter(
             this_image,
-            type_filters=type_filters,
-            attribute_filters=attribute_filters,
+            type_filters=type_filters or {},
+            attribute_filters=attribute_filters or {},
         )
     ]
     return filtered_images

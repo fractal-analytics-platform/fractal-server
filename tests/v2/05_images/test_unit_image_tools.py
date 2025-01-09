@@ -1,195 +1,156 @@
-from fractal_server.images import SingleImage
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
-N = 100
-images = [
-    SingleImage(
-        zarr_url=f"/a/b/c{i}.zarr",
-        attributes=dict(
-            name=("a" if i % 2 == 0 else "b"),
-            num=i % 3,
-        ),
-        types=dict(
-            a=(i <= N // 2),
-            b=(i >= N // 3),
-        ),
-    ).dict()
-    for i in range(N)
-]
-
 
 def test_find_image_by_zarr_url():
-
-    for i in range(N):
-        image_search = find_image_by_zarr_url(
-            zarr_url=f"/a/b/c{i}.zarr", images=images
-        )
-        assert image_search["image"]["zarr_url"] == f"/a/b/c{i}.zarr"
-        assert image_search["index"] == i
-
-    image_search = find_image_by_zarr_url(zarr_url="/xxx", images=images)
-    assert image_search is None
+    images = [{"zarr_url": "/x"}, {"zarr_url": "/y"}, {"zarr_url": "/z"}]
+    res = find_image_by_zarr_url(zarr_url="/x", images=images)
+    assert res == {
+        "index": 0,
+        "image": {"zarr_url": "/x"},
+    }
+    res = find_image_by_zarr_url(zarr_url="/y", images=images)
+    assert res == {
+        "index": 1,
+        "image": {"zarr_url": "/y"},
+    }
+    res = find_image_by_zarr_url(zarr_url="/z", images=images)
+    assert res == {
+        "index": 2,
+        "image": {"zarr_url": "/z"},
+    }
 
 
 def test_match_filter():
 
-    image = SingleImage(
-        zarr_url="/a/b/c0.zarr",
-        attributes=dict(
-            name="a",
-            num=0,
-        ),
-        types=dict(
-            a=True,
-            b=False,
-        ),
-    ).dict()
+    # empty filters (always match)
+    assert match_filter(image=..., type_filters={}, attribute_filters={})
 
-    # Empty
-    assert match_filter(image) is True
+    image = {"types": {"a": True, "b": False}, "attributes": {"a": 1, "b": 2}}
 
-    # Attributes
-
-    # not existing attribute
-    assert match_filter(image, attribute_filters=dict(foo="bar")) is False
-
-    assert match_filter(image, attribute_filters=dict(name="a")) is True
-
-    assert match_filter(image, attribute_filters=dict(num=0)) is True
-
-    assert (
-        match_filter(
-            image,
-            attribute_filters=dict(
-                name="a",
-                num=0,
-            ),
-        )
-        is True
+    # type filters
+    # a
+    assert match_filter(
+        image=image, type_filters={"a": True}, attribute_filters={}
     )
-
-    # not existing attribute
-    assert (
-        match_filter(image, attribute_filters=dict(name="a", num=0, foo="bar"))
-        is False
+    assert not match_filter(
+        image=image, type_filters={"a": False}, attribute_filters={}
     )
-
-    # int as string
-    assert (
-        match_filter(image, attribute_filters=dict(name="a", num="0")) is False
+    # b
+    assert not match_filter(
+        image=image, type_filters={"b": True}, attribute_filters={}
     )
-
-    # Types
-
-    assert match_filter(image, type_filters=dict(a=True)) is True
-    assert match_filter(image, type_filters=dict(b=False)) is True
-    assert match_filter(image, type_filters=dict(a=True, b=False)) is True
-    assert match_filter(image, type_filters=dict(a=False)) is False
-    assert match_filter(image, type_filters=dict(a=True, b=True)) is False
-    # not existing 'True' types are checked
-    assert match_filter(image, type_filters=dict(c=True)) is False
-    # not existing 'False' types are ignored
-    assert match_filter(image, type_filters=dict(c=False)) is True
-    assert (
-        match_filter(image, type_filters=dict(a=True, b=False, c=True))
-        is False
+    assert match_filter(
+        image=image, type_filters={"b": False}, attribute_filters={}
     )
-    assert (
-        match_filter(image, type_filters=dict(a=True, b=False, c=False))
-        is True
+    # c
+    assert not match_filter(
+        image=image, type_filters={"c": True}, attribute_filters={}
     )
-
-    # Both
-
-    assert (
-        match_filter(
-            image, attribute_filters=dict(name="a"), type_filters=dict(a=True)
-        )
-        is True
+    assert match_filter(
+        image=image, type_filters={"c": False}, attribute_filters={}
     )
-    assert (
-        match_filter(
-            image, attribute_filters=dict(name="a"), type_filters=dict(a=False)
-        )
-        is False
+    # a b c
+    assert match_filter(
+        image=image,
+        type_filters={"a": True, "b": False, "c": False},
+        attribute_filters={},
     )
-    assert (
-        match_filter(
-            image, attribute_filters=dict(name="b"), type_filters=dict(a=True)
-        )
-        is False
-    )
-    assert (
-        match_filter(
-            image,
-            attribute_filters=dict(name="a"),
-            type_filters=dict(x=False, y=False, z=False),
-        )
-        is True
-    )
-    assert (
-        match_filter(
-            image,
-            attribute_filters=dict(name="a"),
-            type_filters=dict(x=False, y=False, z=True),
-        )
-        is False
-    )
-
-
-def test_attribute_filters_set_to_none():
-    """
-    This test shows how to disable a previously-set attribute filter by just
-    using `dict.update` (that is, without e.g. `dict.pop`).
-    """
-    # Image not matching filter
-    image = dict(
-        types={},
-        attributes={"key2": "invalid-value2"},
-    )
-    attribute_filters = {"key2": ["value2"]}
     assert not match_filter(
         image=image,
-        type_filters={},
-        attribute_filters=attribute_filters,
+        type_filters={"a": False, "b": False, "c": False},
+        attribute_filters={},
+    )
+    assert not match_filter(
+        image=image,
+        type_filters={"a": True, "b": True, "c": False},
+        attribute_filters={},
+    )
+    assert not match_filter(
+        image=image,
+        type_filters={"a": False, "b": True, "c": False},
+        attribute_filters={},
     )
 
-    # Unset filter by replacing ["value2"] with None
-    attribute_filters.update({"key2": None})
-
-    # Image matches filter
+    # attribute filters
+    assert match_filter(
+        image=image, type_filters={}, attribute_filters={"a": [1]}
+    )
+    assert match_filter(
+        image=image, type_filters={}, attribute_filters={"a": [1], "b": [1, 2]}
+    )
+    assert not match_filter(
+        image=image, type_filters={}, attribute_filters={"a": [0], "b": [1, 2]}
+    )
     assert match_filter(
         image=image,
         type_filters={},
-        attribute_filters=attribute_filters,
+        attribute_filters={"a": None, "b": [1, 2]},
+    )
+
+    # both
+    assert match_filter(
+        image=image, type_filters={"a": True}, attribute_filters={"a": [1]}
+    )
+    assert not match_filter(
+        image=image, type_filters={"a": False}, attribute_filters={"a": [1]}
+    )
+    assert not match_filter(
+        image=image, type_filters={"a": True}, attribute_filters={"a": [0]}
     )
 
 
 def test_filter_image_list():
-    # Empty
+
+    images = [
+        {"types": {"a": True}, "attributes": {"a": 1, "b": 2}},
+        {"types": {"a": True}, "attributes": {"a": 2, "b": 2}},
+        {"types": {"a": False}, "attributes": {"a": 1, "b": 1}},
+        {"types": {}, "attributes": {"a": 1, "b": 1}},
+        {"types": {}, "attributes": {}},
+    ]
+
+    # empty
     res = filter_image_list(images)
     assert res == images
-    # Attributes
-    res = filter_image_list(images, attribute_filters=dict(name="a"))
-    k = (N // 2) if not N % 2 else (N + 1) // 2
-    assert len(res) == k
-    res = filter_image_list(images, attribute_filters=dict(name="b"))
-    assert len(res) == N - k
-    res = filter_image_list(images, attribute_filters=dict(num=0))
-    assert len(res) == len([i for i in range(N) if i % 3 == 0])
-    res = filter_image_list(images, attribute_filters=dict(num=1))
-    assert len(res) == len([i for i in range(N) if i % 3 == 1])
-    res = filter_image_list(images, attribute_filters=dict(num=2))
-    assert len(res) == len([i for i in range(N) if i % 3 == 2])
-    res = filter_image_list(images, attribute_filters=dict(name="foo"))
+    res = filter_image_list(images, type_filters={})
+    assert res == images
+    res = filter_image_list(images, attribute_filters={})
+    assert res == images
+    res = filter_image_list(images, type_filters={}, attribute_filters={})
+    assert res == images
+
+    # type filters
+    res = filter_image_list(images, type_filters={"a": True})
+    assert len(res) == 2
+    res = filter_image_list(images, type_filters={"a": False})
+    assert len(res) == 3  # complementary of 2
+    res = filter_image_list(images, type_filters={"b": True})
     assert len(res) == 0
-    res = filter_image_list(images, attribute_filters=dict(num=3))
+    res = filter_image_list(images, type_filters={"b": False})
+    assert len(res) == 5
+
+    # attribute filters
+    res = filter_image_list(images, attribute_filters={"a": [1]})
+    assert len(res) == 3
+    res = filter_image_list(images, attribute_filters={"a": [1, 2]})
+    assert len(res) == 4
+    res = filter_image_list(images, attribute_filters={"a": None, "b": None})
+    assert len(res) == 5
+
+    # both
+    res = filter_image_list(
+        images, type_filters={"a": True}, attribute_filters={"a": [1]}
+    )
+    assert len(res) == 1
+    res = filter_image_list(
+        images, type_filters={"a": True}, attribute_filters={"a": [1, 2]}
+    )
+    assert len(res) == 2
+    res = filter_image_list(
+        images,
+        type_filters={"a": True},
+        attribute_filters={"a": [1, 2], "b": [-1]},
+    )
     assert len(res) == 0
-    res = filter_image_list(images, attribute_filters=dict(name="a", num=3))
-    assert len(res) == 0
-    res = filter_image_list(images, attribute_filters=dict(name="foo", num=0))
-    assert len(res) == 0
-    res = filter_image_list(images, type_filters=dict(a=True, b=True))
-    assert len(res) == N // 2 - N // 3 + 1
