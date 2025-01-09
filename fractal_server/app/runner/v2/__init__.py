@@ -363,6 +363,7 @@ async def submit_workflow(
 
         # Read dataset attributes produced by the last successful task, and
         # update the DB dataset accordingly
+
         failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
         # dataset.history =
         assemble_history_failed_job(
@@ -392,7 +393,6 @@ async def submit_workflow(
     except JobExecutionError as e:
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
-
         # Read dataset attributes produced by the last successful task, and
         # update the DB dataset accordingly
         # dataset.history =

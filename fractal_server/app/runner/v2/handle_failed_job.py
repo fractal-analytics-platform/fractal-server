@@ -58,7 +58,6 @@ def assemble_history_failed_job(
     # The final value of the history attribute should include up to three
     # parts, coming from: the database, the temporary file, the failed-task
     # information.
-
     with next(get_sync_db()) as db:
         db_dataset = db.get(DatasetV2, dataset.id)
 
@@ -89,7 +88,6 @@ def assemble_history_failed_job(
             failed_wftask_dump["task"] = failed_wftask.task.model_dump()
 
             for ind, history_item in enumerate(db_dataset.history):
-
                 if (
                     history_item["workflowtask"]["task"]["id"]
                     == failed_wftask_dump["task"]["id"]
@@ -100,6 +98,11 @@ def assemble_history_failed_job(
                     db.merge(db_dataset)
                     db.commit()
                     break
-
-                else:
-                    pass
+        if (
+            db_dataset.history[-1]["status"]
+            == WorkflowTaskStatusTypeV2.SUBMITTED
+        ):
+            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.FAILED
+            flag_modified(db_dataset, "history")
+            db.merge(db_dataset)
+            db.commit()
