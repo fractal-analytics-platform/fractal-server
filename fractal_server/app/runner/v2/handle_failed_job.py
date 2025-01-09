@@ -15,6 +15,8 @@ Helper functions to handle Dataset history.
 import logging
 from typing import Optional
 
+from sqlalchemy.orm.attributes import flag_modified
+
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
 from ...models.v2 import WorkflowTaskV2
@@ -90,4 +92,8 @@ def assemble_history_failed_job(
                 status=WorkflowTaskStatusTypeV2.FAILED,
                 parallelization=dict(),  # FIXME: re-include parallelization
             )
-            db_dataset.history.extend(new_history_item)
+            db_dataset.history.append(new_history_item)
+
+            flag_modified(db_dataset, "history")
+            db.merge(db_dataset)
+            db.commit()
