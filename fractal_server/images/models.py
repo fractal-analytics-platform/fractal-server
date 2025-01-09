@@ -9,6 +9,8 @@ from pydantic import validator
 from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.urls import normalize_url
 
+AttributeFiltersType = dict[str, Optional[list[Any]]]
+
 
 class SingleImageBase(BaseModel):
     """

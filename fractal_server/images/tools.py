@@ -4,6 +4,8 @@ from typing import Literal
 from typing import Optional
 from typing import Union
 
+from fractal_server.images.models import AttributeFiltersType
+
 ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
 
 
@@ -33,7 +35,7 @@ def find_image_by_zarr_url(
 def match_filter(
     image: dict[str, Any],
     type_filters: dict[str, bool],
-    attribute_filters: dict[str, list[Any]],
+    attribute_filters: AttributeFiltersType,
 ) -> bool:
     """
     Find whether an image matches a filter set.
@@ -54,7 +56,9 @@ def match_filter(
 
     # Verify match with attributes (only for not-None filters)
     for key, values in attribute_filters.items():
-        if not image["attributes"].get(key) in values:
+        if values is None:
+            continue
+        if image["attributes"].get(key) not in values:
             return False
 
     return True
