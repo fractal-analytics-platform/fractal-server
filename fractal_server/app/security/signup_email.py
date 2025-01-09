@@ -13,7 +13,7 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
     mail_msg = EmailMessage()
     mail_msg.set_content(msg)
     mail_msg["From"] = formataddr((mail_settings.sender, mail_settings.sender))
-    mail_msg["To"] = ",".join(
+    mail_msg["To"] = ", ".join(
         [
             formataddr((recipient, recipient))
             for recipient in mail_settings.recipients

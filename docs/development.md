@@ -12,11 +12,11 @@ To contribute code, please fork the repository and submit a pull request.
 
 Fractal uses [poetry](https://python-poetry.org/docs) to manage the development
 environment and dependencies, and to streamline the build and release
-operations; at least version 1.3 is recommended.
+operations; at least version 2.0.0 is recommended.
 
 A simple way to install `poetry` is
 ```console
-pipx install poetry==1.8.2`
+pipx install poetry==2.0.0`
 ```
 while other options are described
 [here](https://python-poetry.org/docs#installing-with-the-official-installer).
