@@ -16,6 +16,7 @@ from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import SingleImage
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.urls import normalize_url
 
 
@@ -39,7 +40,7 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
     zarr_dir: Optional[str] = None
 
     type_filters: dict[str, bool] = Field(default_factory=dict)
-    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
 
@@ -76,7 +77,7 @@ class DatasetReadV2(BaseModel):
 
     zarr_dir: str
     type_filters: dict[str, bool]
-    attribute_filters: dict[str, list[Any]]
+    attribute_filters: AttributeFiltersType
 
 
 class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
@@ -123,7 +124,7 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     images: list[SingleImage] = Field(default_factory=list)
 
     type_filters: dict[str, bool] = Field(default_factory=dict)
-    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
 
@@ -157,4 +158,4 @@ class DatasetExportV2(BaseModel):
     zarr_dir: str
     images: list[SingleImage]
     type_filters: dict[str, bool]
-    attribute_filters: dict[str, list[Any]]
+    attribute_filters: AttributeFiltersType

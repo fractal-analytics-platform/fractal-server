@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
@@ -16,6 +15,7 @@ from .._validators import valstr
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
+from fractal_server.images.models import AttributeFiltersType
 
 
 class JobStatusTypeV2(str, Enum):
@@ -46,7 +46,7 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
     slurm_account: Optional[StrictStr] = None
     worker_init: Optional[str]
 
-    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
@@ -112,7 +112,7 @@ class JobReadV2(BaseModel):
     first_task_index: Optional[int]
     last_task_index: Optional[int]
     worker_init: Optional[str]
-    attribute_filters: dict[str, list[Any]]
+    attribute_filters: AttributeFiltersType
 
 
 class JobUpdateV2(BaseModel, extra=Extra.forbid):

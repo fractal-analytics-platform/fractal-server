@@ -8,11 +8,12 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of Job models;
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
-from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
+
+from fractal_server.images.models import AttributeFiltersType
 
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
@@ -71,4 +72,4 @@ class DatasetDumpV2(BaseModel, extra=Extra.forbid):
 
     zarr_dir: str
     type_filters: dict[str, bool]
-    attribute_filters: dict[str, list[Any]]
+    attribute_filters: AttributeFiltersType
