@@ -4,6 +4,8 @@
 
 * App:
     * Add missing space in "To" field for email settings (\#2173).
+* Testing:
+    * Improve configuration for coverage GitHub Action step (\#2175).
 
 # 2.10.4
 
