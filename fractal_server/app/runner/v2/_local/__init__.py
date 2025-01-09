@@ -20,7 +20,6 @@ to run tasks in several threads.
 Incidentally, it also represents the reference implementation for a backend.
 """
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 from ....models.v2 import DatasetV2
@@ -30,6 +29,7 @@ from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
+from fractal_server.images.models import AttributeFiltersType
 
 
 def _process_workflow(
@@ -40,7 +40,7 @@ def _process_workflow(
     workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
-    job_attribute_filters: dict[str, list[Any]],
+    job_attribute_filters: AttributeFiltersType,
 ) -> dict:
     """
     Internal processing routine
@@ -73,7 +73,7 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
-    job_attribute_filters: dict[str, list[Any]],
+    job_attribute_filters: AttributeFiltersType,
     # Slurm-specific
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,

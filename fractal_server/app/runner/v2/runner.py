@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
 from typing import Callable
 from typing import Optional
 
@@ -25,6 +24,7 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
+from fractal_server.images.models import AttributeFiltersType
 
 
 def execute_tasks_v2(
@@ -36,7 +36,7 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-    job_attribute_filters: dict[str, list[Any]],
+    job_attribute_filters: AttributeFiltersType,
 ) -> DatasetV2:
 
     logger = logging.getLogger(logger_name)

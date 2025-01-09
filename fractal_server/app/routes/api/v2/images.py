@@ -22,6 +22,7 @@ from fractal_server.app.schemas._validators import validate_attribute_filters
 from fractal_server.app.schemas._validators import validate_type_filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
@@ -43,7 +44,7 @@ class ImagePage(BaseModel):
 class ImageQuery(BaseModel):
     zarr_url: Optional[str]
     type_filters: dict[str, bool] = Field(default_factory=dict)
-    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     _dict_keys = root_validator(pre=True, allow_reuse=True)(
         root_validate_dict_keys
