@@ -99,7 +99,8 @@ def assemble_history_failed_job(
                     db.commit()
                     break
         if (
-            db_dataset.history[-1]["status"]
+            len(db_dataset.history) > 0
+            and db_dataset.history[-1]["status"]
             == WorkflowTaskStatusTypeV2.SUBMITTED
         ):
             db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.FAILED
