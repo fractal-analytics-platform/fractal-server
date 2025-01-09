@@ -89,9 +89,10 @@ def assemble_history_failed_job(
             failed_wftask_dump["task"] = failed_wftask.task.model_dump()
 
             for ind, history_item in enumerate(db_dataset.history):
+
                 if (
-                    history_item["workflowtask"]["task"]
-                    == failed_wftask_dump["task"]
+                    history_item["workflowtask"]["task"]["id"]
+                    == failed_wftask_dump["task"]["id"]
                 ):
                     history_item["status"] = WorkflowTaskStatusTypeV2.FAILED
                     db_dataset.history[ind] = history_item

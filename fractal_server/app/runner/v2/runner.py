@@ -296,17 +296,12 @@ def execute_tasks_v2(
         # temporary files which can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
-
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             for ind, history_item in enumerate(db_dataset.history):
-                if history_item["workflowtask"]["task"] == wftask["task"]:
-                    history_item["status"] = WorkflowTaskStatusTypeV2.DONE
-                    db_dataset.history[ind] = history_item
-                    break
+                history_item["status"] = WorkflowTaskStatusTypeV2.DONE
+                db_dataset.history[ind] = history_item
 
-                else:
-                    pass
             # Update history (based on _DatasetHistoryItemV2)
             # history_item = _DatasetHistoryItemV2(
             #     workflowtask=wftask,
