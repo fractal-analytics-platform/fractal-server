@@ -139,6 +139,34 @@ def test_match_filter():
     )
 
 
+def test_attribute_filters_set_to_none():
+    """
+    This test shows how to disable a previously-set attribute filter by just
+    using `dict.update` (that is, without e.g. `dict.pop`).
+    """
+    # Image not matching filter
+    image = dict(
+        types={},
+        attributes={"key2": "invalid-value2"},
+    )
+    attribute_filters = {"key2": ["value2"]}
+    assert not match_filter(
+        image=image,
+        type_filters={},
+        attribute_filters=attribute_filters,
+    )
+
+    # Unset filter by replacing ["value2"] with None
+    attribute_filters.update({"key2": None})
+
+    # Image matches filter
+    assert match_filter(
+        image=image,
+        type_filters={},
+        attribute_filters=attribute_filters,
+    )
+
+
 def test_filter_image_list():
     # Empty
     res = filter_image_list(images)
