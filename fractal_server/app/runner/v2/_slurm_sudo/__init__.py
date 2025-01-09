@@ -30,6 +30,9 @@ from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
 
 
+# FIXME: add job.attribute_filters
+
+
 def _process_workflow(
     *,
     workflow: WorkflowV2,

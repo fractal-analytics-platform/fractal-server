@@ -20,6 +20,7 @@ to run tasks in several threads.
 Incidentally, it also represents the reference implementation for a backend.
 """
 from pathlib import Path
+from typing import Any
 from typing import Optional
 
 from ....models.v2 import DatasetV2
@@ -39,6 +40,7 @@ def _process_workflow(
     workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
+    job_attribute_filters: dict[str, list[Any]],
 ) -> dict:
     """
     Internal processing routine
@@ -57,6 +59,7 @@ def _process_workflow(
             workflow_dir_remote=workflow_dir_local,
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
+            job_attribute_filters=job_attribute_filters,
         )
     return new_dataset_attributes
 
@@ -70,6 +73,7 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
+    job_attribute_filters: dict[str, list[Any]],
     # Slurm-specific
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -121,6 +125,7 @@ async def process_workflow(
             to the backend executor. This argument is present for compatibility
             with the standard backend interface, but is ignored in the `local`
             backend.
+        FIXME: FIXME
 
     Raises:
         TaskExecutionError: wrapper for errors raised during tasks' execution
@@ -155,5 +160,6 @@ async def process_workflow(
         workflow_dir_local=workflow_dir_local,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
+        job_attribute_filters=job_attribute_filters,
     )
     return new_dataset_attributes

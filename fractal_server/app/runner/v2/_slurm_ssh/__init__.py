@@ -32,7 +32,7 @@ from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
 from fractal_server.logger import set_logger
 
-
+# FIXME: add job.attribute_filters
 logger = set_logger(__name__)
 
 

@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
 from typing import Callable
 from typing import Optional
 
@@ -27,6 +28,7 @@ from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 
 
 def execute_tasks_v2(
+    *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
     executor: ThreadPoolExecutor,
@@ -34,6 +36,7 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
+    job_attribute_filters: dict[str, list[Any]],
 ) -> DatasetV2:
 
     logger = logging.getLogger(logger_name)
@@ -47,6 +50,7 @@ def execute_tasks_v2(
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
     tmp_type_filters = deepcopy(dataset.type_filters)
+    tmp_attribute_filters = deepcopy(dataset.attribute_filters)
     tmp_history = []
 
     for wftask in wf_task_list:
@@ -57,10 +61,14 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
+        pre_attribute_filters = deepcopy(tmp_attribute_filters)
+        pre_attribute_filters.update(job_attribute_filters)
         pre_type_filters = copy(tmp_type_filters)
         pre_type_filters.update(wftask.type_filters)
         filtered_images = filter_image_list(
-            images=tmp_images, type_filters=pre_type_filters
+            images=tmp_images,
+            type_filters=pre_type_filters,
+            attribute_filters=pre_attribute_filters,
         )
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
@@ -72,7 +80,7 @@ def execute_tasks_v2(
                     f'Image types: {image["types"]}\n'
                 )
 
-        # TASK EXECUTION (V2)
+        # TASK EXECUTION
         if task.type == "non_parallel":
             current_task_output = run_v2_task_non_parallel(
                 images=filtered_images,
@@ -243,31 +251,30 @@ def execute_tasks_v2(
             else:
                 tmp_images.pop(img_search["index"])
 
-        # Find manifest ouptut types
-        types_from_manifest = task.output_types
+        # Update type_filters
 
-        # Find task-output types
-        if current_task_output.type_filters is not None:
-            types_from_task = current_task_output.type_filters
-        else:
-            types_from_task = {}
+        # Assign the type filters based on different sources
+        # (task manifest and post-execution task output)
+        type_filters_from_task_manifest = task.output_types
+        type_filters_from_task_output = current_task_output.type_filters
 
         # Check that key sets are disjoint
-        set_types_from_manifest = set(types_from_manifest.keys())
-        set_types_from_task = set(types_from_task.keys())
-        if not set_types_from_manifest.isdisjoint(set_types_from_task):
-            overlap = set_types_from_manifest.intersection(set_types_from_task)
+        keys_from_manifest = set(type_filters_from_task_manifest.keys())
+        keys_from_task_output = set(type_filters_from_task_output.keys())
+        if not keys_from_manifest.isdisjoint(keys_from_task_output):
+            overlap = keys_from_manifest.intersection(keys_from_task_output)
             raise JobExecutionError(
                 "Some type filters are being set twice, "
                 f"for task '{task_name}'.\n"
-                f"Types from task output: {types_from_task}\n"
-                f"Types from task maniest: {types_from_manifest}\n"
+                f"Types from task output: {type_filters_from_task_output}\n"
+                "Types from task manifest: "
+                f"{type_filters_from_task_manifest}\n"
                 f"Overlapping keys: {overlap}"
             )
 
         # Update filters.types
-        tmp_type_filters.update(types_from_manifest)
-        tmp_type_filters.update(types_from_task)
+        tmp_type_filters.update(type_filters_from_task_manifest)
+        tmp_type_filters.update(type_filters_from_task_output)
 
         # Update history (based on _DatasetHistoryItemV2)
         history_item = _DatasetHistoryItemV2(

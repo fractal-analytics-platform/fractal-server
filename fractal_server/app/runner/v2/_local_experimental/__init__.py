@@ -12,6 +12,8 @@ from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
 from .executor import FractalProcessPoolExecutor
 
+# FIXME: add job.attribute_filters
+
 
 def _process_workflow(
     *,
