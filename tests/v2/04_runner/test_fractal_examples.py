@@ -101,7 +101,7 @@ async def test_fractal_demos_01(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
-
+        debug(dataset_attrs["history"])
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound"
         ]
@@ -128,6 +128,7 @@ async def test_fractal_demos_01(
             **execute_tasks_v2_args,
         )
         assert _task_names_from_history(dataset_attrs["history"]) == [
+            "create_ome_zarr_compound",
             "illumination_correction",
         ]
         assert dataset_attrs["filters"]["attributes"] == {}
@@ -177,6 +178,8 @@ async def test_fractal_demos_01(
         debug(dataset_attrs)
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
+            "create_ome_zarr_compound",
+            "illumination_correction",
             "MIP_compound",
         ]
 
@@ -224,6 +227,9 @@ async def test_fractal_demos_01(
         debug(dataset_attrs)
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
+            "create_ome_zarr_compound",
+            "illumination_correction",
+            "MIP_compound",
             "cellpose_segmentation",
         ]
 
@@ -296,6 +302,7 @@ async def test_fractal_demos_01_no_overwrite(
         )
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
+            "create_ome_zarr_compound",
             "illumination_correction",
         ]
         assert dataset_attrs["filters"]["attributes"] == {}
@@ -373,6 +380,8 @@ async def test_fractal_demos_01_no_overwrite(
         )
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
+            "create_ome_zarr_compound",
+            "illumination_correction",
             "MIP_compound",
         ]
         assert dataset_attrs["filters"]["attributes"] == {}
@@ -440,6 +449,9 @@ async def test_fractal_demos_01_no_overwrite(
         )
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
+            "create_ome_zarr_compound",
+            "illumination_correction",
+            "MIP_compound",
             "cellpose_segmentation",
         ]
 

@@ -49,7 +49,6 @@ def execute_tasks_v2(
     tmp_filters = deepcopy(dataset.filters)
 
     for wftask in wf_task_list:
-        tmp_history = []
         task = wftask.task
         task_name = task.name
         logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
@@ -76,7 +75,6 @@ def execute_tasks_v2(
                     f'Image zarr_url: {image["zarr_url"]}\n'
                     f'Image types: {image["types"]}\n'
                 )
-
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             new_history_item = _DatasetHistoryItemV2(
@@ -88,7 +86,6 @@ def execute_tasks_v2(
             flag_modified(db_dataset, "history")
             db.merge(db_dataset)
             db.commit()
-
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
             current_task_output = run_v2_task_non_parallel(
@@ -319,22 +316,20 @@ def execute_tasks_v2(
                 flag_modified(db_dataset, attribute_name)
             db.merge(db_dataset)
             db.commit()
+            db.refresh(db_dataset)
 
-        # with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
-        #     json.dump(tmp_history, f, indent=2)
-        # with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
-        #     json.dump(tmp_filters, f, indent=2)
-        # with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
-        #     json.dump(tmp_images, f, indent=2)
+            # with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
+            #     json.dump(tmp_history, f, indent=2)
+            # with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
+            #     json.dump(tmp_filters, f, indent=2)
+            # with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
+            #     json.dump(tmp_images, f, indent=2)
 
-        logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
+            logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
 
-    # NOTE: tmp_history only contains the newly-added history items (to be
-    # appended to the original history), while tmp_filters and tmp_images
-    # represent the new attributes (to replace the original ones)
-    result = dict(
-        history=tmp_history,
-        filters=tmp_filters,
-        images=tmp_images,
-    )
+            result = dict(
+                history=db_dataset.history,
+                filters=db_dataset.filters,
+                images=db_dataset.images,
+            )
     return result
