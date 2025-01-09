@@ -6,6 +6,8 @@
     * Add missing space in "To" field for email settings (\#2173).
 * Testing:
     * Improve configuration for coverage GitHub Action step (\#2175).
+    * Add `persist-credentials: false` to `actions/checkout@v4` GitHub Action steps (\#2176).
+
 
 # 2.10.4
 
