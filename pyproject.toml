@@ -114,7 +114,10 @@ push = true
 branch = true
 parallel = true
 relative_files = true
-omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*"]
+omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
+
+[tool.coverage.report]
+omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
 
 [tool.mypy.overrides]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]
