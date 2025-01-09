@@ -254,10 +254,15 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
             if this_user.oauth_accounts and settings.MAIL_SETTINGS is not None:
                 try:
+                    logger.info(
+                        "START sending email about new signup to "
+                        f"{settings.MAIL_SETTINGS.recipients}."
+                    )
                     mail_new_oauth_signup(
                         msg=f"New user registered: '{this_user.email}'.",
                         mail_settings=settings.MAIL_SETTINGS,
                     )
+                    logger.info("END sending email about new signup.")
                 except Exception as e:
                     logger.error(
                         "ERROR sending notification email after oauth "
