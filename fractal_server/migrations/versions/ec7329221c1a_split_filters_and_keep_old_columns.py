@@ -56,11 +56,9 @@ def upgrade() -> None:
         )
         batch_op.alter_column(
             "input_filters",
-            existing_type=sa.JSON(astext_type=sa.Text()),
+            existing_type=sa.JSON(),
             nullable=True,
-            existing_server_default=sa.text(
-                '\'{"attributes": {}, "types": {}}\'::json'
-            ),
+            existing_server_default='{"attributes": {}, "types": {}}',
         )
 
     # ### end Alembic commands ###
@@ -71,11 +69,9 @@ def downgrade() -> None:
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
         batch_op.alter_column(
             "input_filters",
-            existing_type=sa.JSON(astext_type=sa.Text()),
+            existing_type=sa.JSON(),
             nullable=False,
-            existing_server_default=sa.text(
-                '\'{"attributes": {}, "types": {}}\'::json'
-            ),
+            existing_server_default='{"attributes": {}, "types": {}}',
         )
         batch_op.drop_column("type_filters")
 
@@ -85,11 +81,9 @@ def downgrade() -> None:
     with op.batch_alter_table("datasetv2", schema=None) as batch_op:
         batch_op.alter_column(
             "filters",
-            existing_type=sa.JSON(astext_type=sa.Text()),
+            existing_type=sa.JSON(),
             nullable=False,
-            existing_server_default=sa.text(
-                '\'{"attributes": {}, "types": {}}\'::json'
-            ),
+            existing_server_default='{"attributes": {}, "types": {}}',
         )
         batch_op.drop_column("attribute_filters")
         batch_op.drop_column("type_filters")
