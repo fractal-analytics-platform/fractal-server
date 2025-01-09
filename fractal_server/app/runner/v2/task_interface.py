@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -14,26 +13,16 @@ from fractal_server.urls import normalize_url
 
 
 class LegacyFilters(BaseModel, extra=Extra.forbid):
-    attributes: dict[str, Any] = Field(default_factory=dict)
-    types: dict[str, bool] = Field(default_factory=dict)
-    # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        valdict_keys("attributes")
-    )
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
+    """
+    For fractal-server<2.11, task output could include both
+    `filters["attributes"]` and `filters["types"]`. In the new version
+    there is a single field, named `type_filters`.
+    The current schema is only used to convert old type filters into the
+    new form, but it will reject any attribute filters.
+    """
 
-    @validator("attributes")
-    def validate_attributes(
-        cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in v.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
-                raise ValueError(
-                    f"Filters.attributes[{key}] must be a scalar "
-                    "(int, float, str, bool, or None). "
-                    f"Given {value} ({type(value)})"
-                )
-        return v
+    types: dict[str, bool] = Field(default_factory=dict)
+    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
 
 
 class TaskOutput(BaseModel, extra=Extra.forbid):
@@ -44,7 +33,9 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
     image_list_removals: list[str] = Field(default_factory=list)
 
     filters: Optional[LegacyFilters] = None
-    type_filters: Optional[dict[str, bool]] = None
+    type_filters: dict[str, bool] = Field(default_factory=dict)
+
+    # FIXME: add the valdict_keys validator
 
     def check_zarr_urls_are_unique(self) -> None:
         zarr_urls = [img.zarr_url for img in self.image_list_updates]
@@ -68,16 +59,15 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
     @root_validator()
     def validate_filters(cls, values):
         if values["filters"] is not None:
-            if values["type_filters"] is not None:
+            if values["type_filters"] != {}:
                 raise ValueError(
                     "Cannot set both (legacy) 'filters' and 'type_filters'."
                 )
-            elif values["filters"].attributes:
-                raise ValueError(
-                    "Legacy 'filters' cannot contain 'attributes'."
-                )
             else:
+                # Convert legacy filters.types into new type_filters
                 values["type_filters"] = values["filters"].types
+                values["filters"] = None
+
         return values
 
     @validator("image_list_removals")
