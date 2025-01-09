@@ -77,6 +77,18 @@ def execute_tasks_v2(
                     f'Image types: {image["types"]}\n'
                 )
 
+        with next(get_sync_db()) as db:
+            db_dataset = db.get(DatasetV2, dataset.id)
+            new_history_item = _DatasetHistoryItemV2(
+                workflowtask=wftask,
+                status=WorkflowTaskStatusTypeV2.SUBMITTED,
+                parallelization=dict(),  # FIXME: re-include parallelization
+            ).dict()
+            db_dataset.history.append(new_history_item)
+            flag_modified(db_dataset, "history")
+            db.merge(db_dataset)
+            db.commit()
+
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
             current_task_output = run_v2_task_non_parallel(
@@ -280,17 +292,6 @@ def execute_tasks_v2(
         # Update filters.types
         tmp_filters["types"].update(types_from_manifest)
         tmp_filters["types"].update(types_from_task)
-
-        # Update history (based on _DatasetHistoryItemV2)
-        history_item = _DatasetHistoryItemV2(
-            workflowtask=wftask,
-            status=WorkflowTaskStatusTypeV2.DONE,
-            parallelization=dict(
-                # task_type=wftask.task.type,  # FIXME: breaks for V1 tasks
-                # component_list=fil, #FIXME
-            ),
-        ).dict()
-        tmp_history.append(history_item)
         # Write current dataset attributes (history, images, filters) into
         # temporary files which can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
@@ -298,7 +299,25 @@ def execute_tasks_v2(
 
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.history.extend(tmp_history)
+            for ind, history_item in enumerate(db_dataset.history):
+                if history_item["workflowtask"]["task"] == wftask["task"]:
+                    history_item["status"] = WorkflowTaskStatusTypeV2.DONE
+                    db_dataset.history[ind] = history_item
+                    break
+
+                else:
+                    pass
+            # Update history (based on _DatasetHistoryItemV2)
+            # history_item = _DatasetHistoryItemV2(
+            #     workflowtask=wftask,
+            #     status=WorkflowTaskStatusTypeV2.DONE,
+            #     parallelization=dict(
+            #         # task_type=wftask.task.type,# FIXME: breaks for V1 tasks
+            #         # component_list=fil, #FIXME
+            #     ),
+            # ).dict()
+            # tmp_history.append(history_item)
+            # db_dataset.history.extend(tmp_history)
             db_dataset.filters = tmp_filters
             db_dataset.images = tmp_images
             for attribute_name in ["filters", "history", "images"]:

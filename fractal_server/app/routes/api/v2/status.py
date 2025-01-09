@@ -8,7 +8,6 @@ from fastapi import status
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
 from ....schemas.v2.dataset import WorkflowTaskStatusTypeV2
 from ....schemas.v2.status import StatusReadV2
@@ -140,12 +139,12 @@ async def get_workflowtask_status(
         #         history = json.load(f)
         # except FileNotFoundError:
         #     history = []
-        db_dataset = await db.get(DatasetV2, dataset_id)
-        for history_item in db_dataset.history:
-            wftask_id = history_item["workflowtask"]["id"]
-            wftask_status = history_item["status"]
-            workflow_tasks_status_dict[wftask_id] = wftask_status
-
+        # db_dataset = await db.get(DatasetV2, dataset_id)
+        # for history_item in db_dataset.history:
+        #     wftask_id = history_item["workflowtask"]["id"]
+        #     wftask_status = history_item["status"]
+        #     workflow_tasks_status_dict[wftask_id] = wftask_status
+        #
     # Based on previously-gathered information, clean up the response body
     clean_workflow_tasks_status_dict = {}
     for wf_task in workflow.task_list:

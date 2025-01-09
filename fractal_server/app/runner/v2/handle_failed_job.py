@@ -62,11 +62,11 @@ def assemble_history_failed_job(
     with next(get_sync_db()) as db:
         db_dataset = db.get(DatasetV2, dataset.id)
 
+        job_wftasks = workflow.task_list[
+            job.first_task_index : (job.last_task_index + 1)  # noqa
+        ]
         # Part 1/A: Identify failed task, if needed
         if failed_wftask is None:
-            job_wftasks = workflow.task_list[
-                job.first_task_index : (job.last_task_index + 1)  # noqa
-            ]
             tmp_file_wftasks = [
                 history_item["workflowtask"]
                 for history_item in db_dataset.history
@@ -87,13 +87,18 @@ def assemble_history_failed_job(
         if failed_wftask is not None:
             failed_wftask_dump = failed_wftask.model_dump(exclude={"task"})
             failed_wftask_dump["task"] = failed_wftask.task.model_dump()
-            new_history_item = dict(
-                workflowtask=failed_wftask_dump,
-                status=WorkflowTaskStatusTypeV2.FAILED,
-                parallelization=dict(),  # FIXME: re-include parallelization
-            )
-            db_dataset.history.append(new_history_item)
 
-            flag_modified(db_dataset, "history")
-            db.merge(db_dataset)
-            db.commit()
+            for ind, history_item in enumerate(db_dataset.history):
+                if (
+                    history_item["workflowtask"]["task"]
+                    == failed_wftask_dump["task"]
+                ):
+                    history_item["status"] = WorkflowTaskStatusTypeV2.FAILED
+                    db_dataset.history[ind] = history_item
+                    flag_modified(db_dataset, "history")
+                    db.merge(db_dataset)
+                    db.commit()
+                    break
+
+                else:
+                    pass
