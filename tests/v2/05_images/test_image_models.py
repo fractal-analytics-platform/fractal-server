@@ -1,109 +1,229 @@
-import pytest
+from typing import TypeVar
+
 from pydantic import ValidationError
 
-from fractal_server.images import SingleImage
-from fractal_server.images import SingleImageTaskOutput
-from fractal_server.images import SingleImageUpdate
+from fractal_server.images.models import SingleImage
 from fractal_server.images.models import SingleImageBase
+from fractal_server.images.models import SingleImageTaskOutput
+from fractal_server.images.models import SingleImageUpdate
+
+T = TypeVar("T")
 
 
-def test_single_image():
+def image_ok(model: T = SingleImageBase, **kwargs) -> T:
+    return model(**kwargs)
 
-    with pytest.raises(ValidationError):
-        SingleImage()
 
-    assert SingleImage(zarr_url="/somewhere").zarr_url == "/somewhere"
+def image_fail(model: T = SingleImageBase, **kwargs) -> str:
+    try:
+        model(**kwargs)
+        raise AssertionError(f"{model=}, {kwargs=}")
+    except ValidationError as e:
+        return str(e)
 
-    assert SingleImage(zarr_url="/somewhere", origin="/foo").origin == "/foo"
-    assert SingleImage(zarr_url="/somewhere", origin=None).origin is None
 
-    valid_attributes = dict(a="string", b=3, c=0.33, d=True)
-    assert (
-        SingleImage(
-            zarr_url="/somewhere", attributes=valid_attributes
-        ).attributes
-        == valid_attributes
-    )
-    invalid_attributes = [
-        dict(a=None),
-        dict(a=["l", "i", "s", "t"]),
-        dict(a={"d": "i", "c": "t"}),
-    ]
-    for attr in invalid_attributes:
-        with pytest.raises(ValidationError):
-            SingleImage(zarr_url="/somewhere", attributes=attr)
+def test_SingleImageBase():
 
-    valid_types = dict(a=True, b=False)
-    assert (
-        SingleImage(zarr_url="/somewhere", types=valid_types).types
-        == valid_types
-    )
+    image_fail()
 
-    invalid_types = dict(a="not a bool")
-    with pytest.raises(ValidationError):
-        SingleImage(zarr_url="/somewhere", types=invalid_types)
+    # zarr_url
+    image = image_ok(zarr_url="/x")
+    assert image.dict() == {
+        "zarr_url": "/x",
+        "origin": None,
+        "attributes": {},
+        "types": {},
+    }
+    image_fail(zarr_url="x")  # see 'test_url_normalization'
+    image_fail(zarr_url=None)
+
+    # origin
+    image = image_ok(zarr_url="/x", origin="/y")
+    assert image.origin == "/y"
+    image = image_ok(zarr_url="/x", origin=None)
+    assert image.origin is None
+    image_fail(zarr_url="/x", origin="y")
+    image_fail(origin="/y")
+
+    # attributes
+    valid_attributes = {
+        "int": 1,
+        "float": 1.2,
+        "string": "abc",
+        "bool": True,
+        "null": None,
+        "list": ["l", "i", "s", "t"],
+        "dict": {"d": "i", "c": "t"},
+        "function": lambda x: x,
+        "type": int,
+    }  # Any
+    image = image_ok(zarr_url="/x", attributes=valid_attributes)
+    assert image.attributes == valid_attributes
+    invalid_attributes = {
+        "repeated": 1,
+        "  repeated ": 2,
+    }
+    image_fail(zarr_url="/x", attributes=invalid_attributes)
+
+    # types
+    valid_types = {"y": True, "n": False}  # only booleans
+    image = image_ok(zarr_url="/x", types=valid_types)
+    assert image.types == valid_types
+    image_fail(zarr_url="/x", types={"a": "not a bool"})
+    image_fail(zarr_url="/x", types={"a": True, " a": True})
+    image_ok(zarr_url="/x", types={1: True})
 
 
 def test_url_normalization():
 
+    image = image_ok(zarr_url="/valid/url")
+    assert image.zarr_url == "/valid/url"
+    image = image_ok(zarr_url="/remove/slash/")
+    assert image.zarr_url == "/remove/slash"
+
+    e = image_fail(zarr_url="s3/foo")
+    assert "S3 handling" in e
+    e = image_fail(zarr_url="https://foo.bar")
+    assert "URLs must begin" in e
+
+    image_ok(zarr_url="/x", origin=None)
+    image_ok(zarr_url="/x", origin="/y")
+    image = image_ok(zarr_url="/x", origin="/y///")
+    assert image.origin == "/y"
+
+    e = image_fail(zarr_url="/x", origin="s3/foo")
+    assert "S3 handling" in e
+    e = image_fail(zarr_url="/x", origin="https://foo.bar")
+    assert "URLs must begin" in e
+
+
+def test_SingleImageTaskOutput():
+
+    image_ok(
+        model=SingleImageTaskOutput,
+        zarr_url="/x",
+        attributes={
+            "int": 1,
+            "float": 1.2,
+            "string": "abc",
+            "bool": True,
+            "null": None,
+        },
+    )
+    image_fail(
+        model=SingleImageTaskOutput,
+        zarr_url="/x",
+        attributes={"list": ["l", "i", "s", "t"]},
+    )
+    image_fail(
+        model=SingleImageTaskOutput,
+        zarr_url="/x",
+        attributes={"dict": {"d": "i", "c": "t"}},
+    )
+    image_fail(
+        model=SingleImageTaskOutput,
+        zarr_url="/x",
+        attributes={"function": lambda x: x},
+    )
+    image_fail(
+        model=SingleImageTaskOutput,
+        zarr_url="/x",
+        attributes={"type": int},
+    )
+    image_fail(
+        model=SingleImageTaskOutput,
+        zarr_url="/x",
+        attributes={"repeated": 1, " repeated": 2},
+    )
+
+
+def test_SingleImage():
+
+    image_ok(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={
+            "int": 1,
+            "float": 1.2,
+            "string": "abc",
+            "bool": True,
+        },
+    )
+    image_fail(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={"null": None},
+    )
+    image_fail(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={"list": ["l", "i", "s", "t"]},
+    )
+    image_fail(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={"dict": {"d": "i", "c": "t"}},
+    )
+    image_fail(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={"function": lambda x: x},
+    )
+    image_fail(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={"type": int},
+    )
+    image_fail(
+        model=SingleImage,
+        zarr_url="/x",
+        attributes={"repeated": 1, " repeated": 2},
+    )
+
+
+def test_SingleImageUpdate():
+
+    image_fail(model=SingleImageUpdate)
+
     # zarr_url
-    assert SingleImage(zarr_url="/valid/url").zarr_url == "/valid/url"
-    assert SingleImage(zarr_url="/remove/slash/").zarr_url == "/remove/slash"
+    image = image_ok(model=SingleImageUpdate, zarr_url="/x")
+    assert image.dict() == {
+        "zarr_url": "/x",
+        "attributes": None,
+        "types": None,
+    }
+    image_fail(model=SingleImageUpdate, zarr_url="x")
+    image_fail(model=SingleImageUpdate, zarr_url=None)
 
-    with pytest.raises(ValidationError) as e:
-        SingleImage(zarr_url="s3/foo")
-    assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
-
-    with pytest.raises(ValidationError) as e:
-        SingleImage(zarr_url="https://foo.bar")
-    assert "URLs must begin" in e._excinfo[1].errors()[0]["msg"]
-
-    # origin
-    assert SingleImage(zarr_url="/valid/url", origin=None).origin is None
-    assert (
-        SingleImage(zarr_url="/valid/url", origin="/valid/origin").origin
-        == "/valid/origin"
+    # attributes
+    valid_attributes = {
+        "int": 1,
+        "float": 1.2,
+        "string": "abc",
+        "bool": True,
+    }
+    image = image_ok(
+        model=SingleImageUpdate, zarr_url="/x", attributes=valid_attributes
     )
-    assert (
-        SingleImage(zarr_url="/valid/url", origin="/remove/slash//").origin
-        == "/remove/slash"
-    )
-    with pytest.raises(ValidationError) as e:
-        SingleImage(zarr_url="/valid/url", origin="s3/foo")
-    assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
-    with pytest.raises(ValidationError) as e:
-        SingleImage(zarr_url="/valid/url", origin="http://foo.bar")
-    assert "URLs must begin" in e._excinfo[1].errors()[0]["msg"]
-
-
-def test_single_image_task_output():
-    base = SingleImageBase(zarr_url="/zarr/url", attributes={"x": None})
-
-    # SingleImageTaskOutput accepts 'None' as value
-    SingleImageTaskOutput(**base.dict())
-    # SingleImage does not accept 'None' as value
-    with pytest.raises(ValidationError):
-        SingleImage(**base.dict())
-
-
-def test_single_image_update():
-
-    with pytest.raises(ValidationError):
-        SingleImageUpdate()
-    SingleImageUpdate(zarr_url="/something")
-
-    # override SingleImageBase validation
-    args = dict(zarr_url="/something", attributes=None)
-    with pytest.raises(ValidationError):
-        SingleImageBase(**args)
-    SingleImageUpdate(**args)
-
-    args = dict(zarr_url="/something", types=None)
-    with pytest.raises(ValidationError):
-        SingleImageBase(**args)
-    SingleImageUpdate(**args)
-
-    with pytest.raises(ValidationError):
-        SingleImageUpdate(
-            zarr_url="/something", attributes={"invalid": ["l", "i", "s", "t"]}
+    assert image.attributes == valid_attributes
+    for invalid_attributes in [
+        {"null": None},
+        {"list": ["l", "i", "s", "t"]},
+        {"dict": {"d": "i", "c": "t"}},
+        {"function": lambda x: x},
+        {"type": int},
+        {"repeated": 1, "  repeated ": 2},
+    ]:
+        image_fail(
+            model=SingleImageUpdate,
+            zarr_url="/x",
+            attributes=invalid_attributes,
         )
+
+    # types
+    valid_types = {"y": True, "n": False}  # only booleans
+    image = image_ok(model=SingleImageUpdate, zarr_url="/x", types=valid_types)
+    assert image.types == valid_types
+    image_fail(zarr_url="/x", types={"a": "not a bool"})
+    image_fail(zarr_url="/x", types={"a": True, " a": True})
+    image_ok(zarr_url="/x", types={1: True})

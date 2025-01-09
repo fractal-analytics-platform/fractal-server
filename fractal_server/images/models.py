@@ -84,8 +84,8 @@ class SingleImage(SingleImageBase):
 
 class SingleImageUpdate(BaseModel):
     zarr_url: str
-    attributes: Optional[dict[str, Any]]
-    types: Optional[dict[str, bool]]
+    attributes: Optional[dict[str, Any]] = None
+    types: Optional[dict[str, bool]] = None
 
     @validator("zarr_url")
     def normalize_zarr_url(cls, v: str) -> str:
