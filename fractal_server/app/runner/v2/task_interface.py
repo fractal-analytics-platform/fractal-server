@@ -8,7 +8,8 @@ from pydantic import root_validator
 from pydantic import validator
 
 from ....images import SingleImageTaskOutput
-from fractal_server.app.schemas._validators import valdict_keys
+from fractal_server.app.schemas._validators import root_validate_dict_keys
+from fractal_server.app.schemas._validators import validate_type_filters
 from fractal_server.urls import normalize_url
 
 
@@ -22,7 +23,7 @@ class LegacyFilters(BaseModel, extra=Extra.forbid):
     """
 
     types: dict[str, bool] = Field(default_factory=dict)
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
+    _types = validator("types", allow_reuse=True)(validate_type_filters)
 
 
 class TaskOutput(BaseModel, extra=Extra.forbid):
@@ -35,7 +36,12 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
     filters: Optional[LegacyFilters] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
-    # FIXME: add the valdict_keys validator
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
 
     def check_zarr_urls_are_unique(self) -> None:
         zarr_urls = [img.zarr_url for img in self.image_list_updates]
