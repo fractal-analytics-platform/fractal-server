@@ -1,8 +1,10 @@
 from devtools import debug
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.schemas.v2.dataset import WorkflowTaskStatusTypeV2
 
 
 async def test_workflowtask_status_no_history_no_job(
@@ -150,7 +152,9 @@ async def test_workflowtask_status_history_job(
     there is a running job associated to a given dataset/workflow pair.
     """
     working_dir = tmp_path / "working_dir"
-    history = [dict(workflowtask=dict(id=3), status="done")]
+    history = [
+        dict(workflowtask=dict(id=1), status=WorkflowTaskStatusTypeV2.DONE)
+    ]
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
@@ -182,13 +186,17 @@ async def test_workflowtask_status_history_job(
         )
     )
     assert res.status_code == 200
-    assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
+    assert res.json() == {"status": {"1": "done", "2": "submitted"}}
 
     # CASE 2: the job has a temporary history file
     dataset.history = [
-        dict(workflowtask=dict(id=workflow.task_list[0].id), status="done")
+        dict(
+            workflowtask=dict(id=workflow.task_list[0].id),
+            status=WorkflowTaskStatusTypeV2.DONE,
+        )
     ]
-    db.add(dataset)
+    flag_modified(dataset, "history")
+    await db.merge(dataset)
     await db.commit()
     res = await client.get(
         (

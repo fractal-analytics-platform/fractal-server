@@ -87,6 +87,7 @@ async def get_workflowtask_status(
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
     history = dataset.history
+
     for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]
@@ -95,8 +96,8 @@ async def get_workflowtask_status(
     if running_job is None:
         # If no job is running, the chronological-last history item is also the
         # positional-last workflow task to be included in the response.
-        if len(dataset.history) > 0:
-            last_valid_wftask_id = dataset.history[-1]["workflowtask"]["id"]
+        if len(history) > 0:
+            last_valid_wftask_id = history[-1]["workflowtask"]["id"]
         else:
             last_valid_wftask_id = None
     else:
@@ -106,11 +107,14 @@ async def get_workflowtask_status(
         # as "submitted"
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
-        for wftask in workflow.task_list[start:end]:
+
+        all_wf_task_list = workflow.task_list[start:end]
+        for wftask in all_wf_task_list[
+            len(workflow_tasks_status_dict) :  # noqa: E203
+        ]:
             workflow_tasks_status_dict[
                 wftask.id
             ] = WorkflowTaskStatusTypeV2.SUBMITTED
-
         # The last workflow task that is included in the submitted job is also
         # the positional-last workflow task to be included in the response.
         try:
