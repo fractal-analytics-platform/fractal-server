@@ -87,8 +87,9 @@ async def get_workflowtask_status(
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
     history = dataset.history
-
+    wftask_history_id = []
     for history_item in history:
+        wftask_history_id.append(history_item["workflowtask"]["id"])
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]
         workflow_tasks_status_dict[wftask_id] = wftask_status
@@ -109,12 +110,33 @@ async def get_workflowtask_status(
         end = running_job.last_task_index + 1
 
         all_wf_task_list = workflow.task_list[start:end]
-        for wftask in all_wf_task_list[
-            len(workflow_tasks_status_dict) :  # noqa: E203
-        ]:
-            workflow_tasks_status_dict[
-                wftask.id
-            ] = WorkflowTaskStatusTypeV2.SUBMITTED
+        # for wftask in all_wf_task_list[
+        #     len(workflow_tasks_status_dict) :  # noqa: E203
+        # ]:
+        for ind, wftask in enumerate(all_wf_task_list):
+            if (
+                wftask.id in wftask_history_id
+                and workflow_tasks_status_dict[wftask_id]
+                == WorkflowTaskStatusTypeV2.SUBMITTED
+            ):
+                workflow_tasks_status_dict.update(
+                    {
+                        sub_wftask.id: WorkflowTaskStatusTypeV2.SUBMITTED
+                        for sub_wftask in all_wf_task_list[ind:]
+                    }
+                )
+                break
+            elif (
+                wftask.id in wftask_history_id
+                and workflow_tasks_status_dict[wftask_id]
+                == WorkflowTaskStatusTypeV2.DONE
+            ):
+                pass
+            else:
+                workflow_tasks_status_dict.update(
+                    {wftask.id: WorkflowTaskStatusTypeV2.SUBMITTED}
+                )
+
         # The last workflow task that is included in the submitted job is also
         # the positional-last workflow task to be included in the response.
         try:
