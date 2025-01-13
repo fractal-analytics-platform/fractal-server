@@ -142,7 +142,9 @@ async def test_query_images(
         [
             image
             for image in images
-            if match_filter(image, type_filters={"flag": False})
+            if match_filter(
+                image, type_filters={"flag": False}, attribute_filters={}
+            )
         ]
     )
     assert res.json()["current_page"] == 1
@@ -160,7 +162,9 @@ async def test_query_images(
         [
             image
             for image in images
-            if match_filter(image, type_filters={"flag": 1})
+            if match_filter(
+                image, type_filters={"flag": 1}, attribute_filters={}
+            )
         ]
     )
     assert res.json()["page_size"] == 1000
