@@ -172,7 +172,9 @@ async def update_dataset(
             ),
         )
 
-    for key, value in dataset_update.dict(exclude_unset=True).items():
+    for key, value in dataset_update.dict(
+        exclude_unset=True, exclude_none=True
+    ).items():
         setattr(db_dataset, key, value)
 
     await db.commit()
