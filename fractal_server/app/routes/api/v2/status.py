@@ -110,9 +110,6 @@ async def get_workflowtask_status(
         end = running_job.last_task_index + 1
 
         all_wf_task_list = workflow.task_list[start:end]
-        # for wftask in all_wf_task_list[
-        #     len(workflow_tasks_status_dict) :  # noqa: E203
-        # ]:
         for ind, wftask in enumerate(all_wf_task_list):
             if (
                 wftask.id in wftask_history_id

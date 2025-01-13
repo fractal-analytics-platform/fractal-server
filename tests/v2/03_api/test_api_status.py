@@ -153,7 +153,9 @@ async def test_workflowtask_status_history_job(
     """
     working_dir = tmp_path / "working_dir"
     history = [
-        dict(workflowtask=dict(id=1), status=WorkflowTaskStatusTypeV2.DONE)
+        dict(
+            workflowtask=dict(id=1), status=WorkflowTaskStatusTypeV2.SUBMITTED
+        )
     ]
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -178,7 +180,7 @@ async def test_workflowtask_status_history_job(
             last_task_index=1,
         )
 
-    # CASE 1: the job has no temporary history file
+    # CASE 1: first submitted
     res = await client.get(
         (
             f"api/v2/project/{project.id}/status/?"
@@ -186,9 +188,9 @@ async def test_workflowtask_status_history_job(
         )
     )
     assert res.status_code == 200
-    assert res.json() == {"status": {"1": "done", "2": "submitted"}}
+    assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
 
-    # CASE 2: the job has a temporary history file
+    # CASE 2: first done
     dataset.history = [
         dict(
             workflowtask=dict(id=workflow.task_list[0].id),
