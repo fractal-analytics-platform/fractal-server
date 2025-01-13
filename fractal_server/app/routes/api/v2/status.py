@@ -147,21 +147,6 @@ async def get_workflowtask_status(
             last_valid_wftask_id = None
             logger.warning(f"Now setting {last_valid_wftask_id=}.")
 
-        # Highest priority: Read status updates coming from the running-job
-        # temporary file. Note: this file only contains information on
-        # WorkflowTask's that ran through successfully.
-        # tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
-        # try:
-        #     with tmp_file.open("r") as f:
-        #         history = json.load(f)
-        # except FileNotFoundError:
-        #     history = []
-        # db_dataset = await db.get(DatasetV2, dataset_id)
-        # for history_item in db_dataset.history:
-        #     wftask_id = history_item["workflowtask"]["id"]
-        #     wftask_status = history_item["status"]
-        #     workflow_tasks_status_dict[wftask_id] = wftask_status
-        #
     # Based on previously-gathered information, clean up the response body
     clean_workflow_tasks_status_dict = {}
     for wf_task in workflow.task_list:
