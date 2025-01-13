@@ -118,6 +118,10 @@ async def get_workflowtask_status(
                 WorkflowTaskStatusTypeV2.SUBMITTED
             )
         except ValueError:
+            logger.info(
+                f"Job {running_job.id} is submitted but it task list does "
+                f"not contain a {WorkflowTaskStatusTypeV2.SUBMITTED} task."
+            )
             first_submitted_index = 0
 
         for wftask in running_job_wftasks[first_submitted_index:]:
