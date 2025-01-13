@@ -174,7 +174,7 @@ async def query_dataset_images(
             else:
                 images = [image]
 
-        if query.filters.attributes or query.filters.types:
+        if query.attribute_filters or query.type_filters:
             images = [
                 image
                 for image in images
