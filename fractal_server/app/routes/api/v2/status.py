@@ -108,31 +108,22 @@ async def get_workflowtask_status(
         # as "submitted"
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
+        running_job_wftasks = workflow.task_list[start:end]
+        running_job_statuses = [
+            workflow_tasks_status_dict.get(wft.id)
+            for wft in running_job_wftasks
+        ]
+        try:
+            first_submitted_index = running_job_statuses.index(
+                WorkflowTaskStatusTypeV2.SUBMITTED
+            )
+        except ValueError:
+            first_submitted_index = 0
 
-        all_wf_task_list = workflow.task_list[start:end]
-        for ind, wftask in enumerate(all_wf_task_list):
-            if (
-                wftask.id in wftask_history_id
-                and workflow_tasks_status_dict[wftask_id]
-                == WorkflowTaskStatusTypeV2.SUBMITTED
-            ):
-                workflow_tasks_status_dict.update(
-                    {
-                        sub_wftask.id: WorkflowTaskStatusTypeV2.SUBMITTED
-                        for sub_wftask in all_wf_task_list[ind:]
-                    }
-                )
-                break
-            elif (
-                wftask.id in wftask_history_id
-                and workflow_tasks_status_dict[wftask_id]
-                == WorkflowTaskStatusTypeV2.DONE
-            ):
-                pass
-            else:
-                workflow_tasks_status_dict.update(
-                    {wftask.id: WorkflowTaskStatusTypeV2.SUBMITTED}
-                )
+        for wftask in enumerate(running_job_wftasks[first_submitted_index:]):
+            workflow_tasks_status_dict[
+                wftask.id
+            ] = WorkflowTaskStatusTypeV2.SUBMITTED
 
         # The last workflow task that is included in the submitted job is also
         # the positional-last workflow task to be included in the response.
