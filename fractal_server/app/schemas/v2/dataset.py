@@ -116,7 +116,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         name:
         zarr_dir:
         images:
-        filters:
+        type_filters:
+        attribute_filters:
     """
 
     name: str
@@ -151,7 +152,8 @@ class DatasetExportV2(BaseModel):
         name:
         zarr_dir:
         images:
-        filters:
+        type_filters:
+        attribute_filters:
     """
 
     name: str

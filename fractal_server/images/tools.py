@@ -74,7 +74,8 @@ def filter_image_list(
 
     Arguments:
         images: A list of images.
-        filters: A set of filters.
+        type_filters:
+        attribute_filters:
 
     Returns:
         List of the `images` elements which match the filter set.
