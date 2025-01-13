@@ -293,13 +293,12 @@ async def test_workflowtask_status_modified_workflow(
 ):
     """
     Test the status endpoint when there is a running job associated to a given
-    dataset/workflow pair, but the workflow has been modified after the job
-    was created.
+    dataset/workflow pair, but the workflow is modified after the job was
+    created.
     """
     working_dir = tmp_path / "working_dir"
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id, history=[])
         task = await task_factory_v2(
             user_id=user.id, name="task1", source="task1"
         )
@@ -308,6 +307,23 @@ async def test_workflowtask_status_modified_workflow(
             await _workflow_insert_task(
                 workflow_id=workflow.id, task_id=task.id, db=db
             )
+        dataset = await dataset_factory_v2(
+            project_id=project.id,
+            history=[
+                dict(
+                    workflowtask=dict(id=workflow.task_list[0].id),
+                    status=WorkflowTaskStatusTypeV2.DONE,
+                ),
+                dict(
+                    workflowtask=dict(id=workflow.task_list[1].id),
+                    status=WorkflowTaskStatusTypeV2.DONE,
+                ),
+                dict(
+                    workflowtask=dict(id=workflow.task_list[2].id),
+                    status=WorkflowTaskStatusTypeV2.SUBMITTED,
+                ),
+            ],
+        )
         await job_factory_v2(
             project_id=project.id,
             workflow_id=workflow.id,
@@ -318,6 +334,50 @@ async def test_workflowtask_status_modified_workflow(
         )
 
         # Delete second and third WorkflowTasks
-        await client.get(
+        res = await client.get(
             f"api/v2/project/{project.id}/workflow/{workflow.id}/"
         )
+        assert res.status_code == 200
+        wftask_list = res.json()["task_list"]
+        for wftask in wftask_list[1:]:
+            wftask_id = wftask["id"]
+            res = await client.delete(
+                f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+                f"wftask/{wftask_id}/"
+            )
+            assert res.status_code == 204
+
+        # The endpoint response is OK, even if the running_job points to
+        # non-existing WorkflowTask's.
+        res = await client.get(
+            (
+                f"api/v2/project/{project.id}/status/?"
+                f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+            )
+        )
+        assert res.status_code == 200
+        assert res.json() == {"status": {"1": "submitted"}}
+
+        # Delete last remaining task
+        res = await client.get(
+            f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 200
+        for wftask in res.json()["task_list"]:
+            wftask_id = wftask["id"]
+            res = await client.delete(
+                f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+                f"wftask/{wftask_id}/"
+            )
+            assert res.status_code == 204
+
+        # The endpoint response is OK, even if the running_job points to
+        # non-existing WorkflowTask's.
+        res = await client.get(
+            (
+                f"api/v2/project/{project.id}/status/?"
+                f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+            )
+        )
+        assert res.status_code == 200
+        assert res.json() == {"status": {}}
