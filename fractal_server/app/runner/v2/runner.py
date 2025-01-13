@@ -75,6 +75,7 @@ def execute_tasks_v2(
                     f'Image zarr_url: {image["zarr_url"]}\n'
                     f'Image types: {image["types"]}\n'
                 )
+        # First, set status SUBMITTED in dataset.history for each wftask
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             new_history_item = _DatasetHistoryItemV2(
@@ -289,8 +290,8 @@ def execute_tasks_v2(
         # Update filters.types
         tmp_filters["types"].update(types_from_manifest)
         tmp_filters["types"].update(types_from_task)
-        # Write current dataset attributes (history, images, filters) into
-        # temporary files which can be used (1) to retrieve the latest state
+        # Write current dataset attributes (history, images, filters) into the
+        # database. They can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
         with next(get_sync_db()) as db:
@@ -299,17 +300,6 @@ def execute_tasks_v2(
                 history_item["status"] = WorkflowTaskStatusTypeV2.DONE
                 db_dataset.history[ind] = history_item
 
-            # Update history (based on _DatasetHistoryItemV2)
-            # history_item = _DatasetHistoryItemV2(
-            #     workflowtask=wftask,
-            #     status=WorkflowTaskStatusTypeV2.DONE,
-            #     parallelization=dict(
-            #         # task_type=wftask.task.type,# FIXME: breaks for V1 tasks
-            #         # component_list=fil, #FIXME
-            #     ),
-            # ).dict()
-            # tmp_history.append(history_item)
-            # db_dataset.history.extend(tmp_history)
             db_dataset.filters = tmp_filters
             db_dataset.images = tmp_images
             for attribute_name in ["filters", "history", "images"]:
@@ -317,13 +307,6 @@ def execute_tasks_v2(
             db.merge(db_dataset)
             db.commit()
             db.refresh(db_dataset)
-
-            # with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
-            #     json.dump(tmp_history, f, indent=2)
-            # with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
-            #     json.dump(tmp_filters, f, indent=2)
-            # with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
-            #     json.dump(tmp_images, f, indent=2)
 
             logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
 
