@@ -117,7 +117,7 @@ async def get_workflowtask_status(
                 WorkflowTaskStatusTypeV2.SUBMITTED
             )
         except ValueError:
-            logger.info(
+            logger.warning(
                 f"Job {running_job.id} is submitted but its task list does "
                 f"not contain a {WorkflowTaskStatusTypeV2.SUBMITTED} task."
             )
