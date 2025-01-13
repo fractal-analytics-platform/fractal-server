@@ -120,7 +120,7 @@ async def get_workflowtask_status(
         except ValueError:
             first_submitted_index = 0
 
-        for wftask in enumerate(running_job_wftasks[first_submitted_index:]):
+        for wftask in running_job_wftasks[first_submitted_index:]:
             workflow_tasks_status_dict[
                 wftask.id
             ] = WorkflowTaskStatusTypeV2.SUBMITTED
