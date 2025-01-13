@@ -196,7 +196,11 @@ async def test_workflowtask_status_history_job(
         dict(
             workflowtask=dict(id=workflow.task_list[0].id),
             status=WorkflowTaskStatusTypeV2.DONE,
-        )
+        ),
+        dict(
+            workflowtask=dict(id=workflow.task_list[1].id),
+            status=WorkflowTaskStatusTypeV2.SUBMITTED,
+        ),
     ]
     flag_modified(dataset, "history")
     await db.merge(dataset)
