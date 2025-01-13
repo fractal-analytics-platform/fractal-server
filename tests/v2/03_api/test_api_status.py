@@ -154,7 +154,8 @@ async def test_workflowtask_status_history_job(
     working_dir = tmp_path / "working_dir"
     history = [
         dict(
-            workflowtask=dict(id=1), status=WorkflowTaskStatusTypeV2.SUBMITTED
+            workflowtask=dict(id=1),
+            status=WorkflowTaskStatusTypeV2.SUBMITTED,
         )
     ]
     async with MockCurrentUser() as user:
@@ -188,7 +189,7 @@ async def test_workflowtask_status_history_job(
         )
     )
     assert res.status_code == 200
-    assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
+    assert res.json()["status"] == {"1": "submitted", "2": "submitted"}
 
     # CASE 2: first done
     dataset.history = [
@@ -207,7 +208,7 @@ async def test_workflowtask_status_history_job(
         )
     )
     assert res.status_code == 200
-    assert res.json() == {"status": {"1": "done", "2": "submitted"}}
+    assert res.json()["status"] == {"1": "done", "2": "submitted"}
 
 
 async def test_workflowtask_status_two_jobs(
