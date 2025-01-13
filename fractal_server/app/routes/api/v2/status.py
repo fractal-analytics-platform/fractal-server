@@ -87,9 +87,7 @@ async def get_workflowtask_status(
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
     history = dataset.history
-    wftask_history_id = []
     for history_item in history:
-        wftask_history_id.append(history_item["workflowtask"]["id"])
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]
         workflow_tasks_status_dict[wftask_id] = wftask_status
@@ -108,9 +106,10 @@ async def get_workflowtask_status(
         # as "submitted"
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
+
         running_job_wftasks = workflow.task_list[start:end]
         running_job_statuses = [
-            workflow_tasks_status_dict.get(wft.id)
+            workflow_tasks_status_dict.get(wft.id, None)
             for wft in running_job_wftasks
         ]
         try:
@@ -119,7 +118,7 @@ async def get_workflowtask_status(
             )
         except ValueError:
             logger.info(
-                f"Job {running_job.id} is submitted but it task list does "
+                f"Job {running_job.id} is submitted but its task list does "
                 f"not contain a {WorkflowTaskStatusTypeV2.SUBMITTED} task."
             )
             first_submitted_index = 0
