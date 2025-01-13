@@ -374,7 +374,11 @@ async def test_patch_dataset(
 ):
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
+        dataset = await dataset_factory_v2(
+            project_id=project.id,
+            attribute_filters={"a": [1, 2], "b": [3]},
+            type_filters={"c": True, "d": False},
+        )
         project_id = project.id
         dataset_id = dataset.id
 
@@ -418,6 +422,46 @@ async def test_patch_dataset(
             json=dict(zarr_dir="/new_zarr_dir_2"),
         )
         assert res.status_code == 422
+
+        # Patch `attribute_filters`
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+        )
+        assert res.json()["attribute_filters"] == {"a": [1, 2], "b": [3]}
+        assert res.json()["type_filters"] == {"c": True, "d": False}
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(attribute_filters={"c": 3}),
+        )
+        assert res.status_code == 422
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(attribute_filters={"c": [3]}),
+        )
+        assert res.status_code == 200
+        assert res.json()["attribute_filters"] == {"c": [3]}
+        assert res.json()["type_filters"] == {"c": True, "d": False}
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(type_filters={"x": 42}),
+        )
+        assert res.status_code == 422
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(type_filters={"x": True}),
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == "something-new"
+        assert res.json()["zarr_dir"] == "/new_zarr_dir"
+        assert res.json()["attribute_filters"] == {"c": [3]}
+        assert res.json()["type_filters"] == {"x": True}
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(attribute_filters={}, type_filters=None),
+        )
+        assert res.status_code == 200
+        assert res.json()["attribute_filters"] == {}
+        assert res.json()["type_filters"] == {"x": True}
 
 
 async def test_dataset_export(
