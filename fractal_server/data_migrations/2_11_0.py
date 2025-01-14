@@ -63,7 +63,6 @@ def fix_db():
             job.dataset_dump["attribute_filters"] = job.dataset_dump[
                 "filters"
             ]["attributes"]
-            job.dataset_dump["filters"] = None
             flag_modified(job, "dataset_dump")
             logger.warning(f"Fixed filters in JobV2[{job.id}].datasetdump")
 
