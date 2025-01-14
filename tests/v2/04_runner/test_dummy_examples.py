@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+from aux_get_dataset_attrs import _get_dataset_attrs
 from devtools import debug
 from fixtures_mocks import *  # noqa: F401,F403
 from v2_mock_models import WorkflowTaskV2Mock
@@ -227,7 +228,7 @@ async def test_dummy_remove_images(
                 for index in [0, 1, 2]
             ],
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_remove_images"],
@@ -239,7 +240,6 @@ async def test_dummy_remove_images(
             dataset=dataset_pre,
             **execute_tasks_v2_args,
         )
-        debug(dataset_attrs)
 
         # Fail when removing images that do not exist
         dataset_pre_fail = await dataset_factory_v2(
@@ -301,7 +301,7 @@ async def test_dummy_unset_attribute(
         )
 
     # Unset an existing attribute (starting from dataset_pre)
-    dataset_attrs = execute_tasks_v2(
+    execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
@@ -314,6 +314,7 @@ async def test_dummy_unset_attribute(
         dataset=dataset_pre,
         **execute_tasks_v2_args,
     )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
     debug(dataset_attrs["images"])
     assert "key2" not in dataset_attrs["images"][0]["attributes"].keys()
 
@@ -331,7 +332,7 @@ async def test_dummy_unset_attribute(
         dataset=dataset_pre,
         **execute_tasks_v2_args,
     )
-    debug(dataset_attrs["images"])
+    dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
     assert dataset_attrs["images"][0]["attributes"] == {
         "key1": "value1",
         "key2": "value2",
@@ -360,7 +361,7 @@ async def test_dummy_insert_single_image_none_attribute(
             project_id=project.id, zarr_dir=zarr_dir
         )
         # Run successfully on an empty dataset
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
@@ -377,6 +378,7 @@ async def test_dummy_insert_single_image_none_attribute(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
         debug(dataset_attrs["images"])
         assert (
             "attribute-name"
@@ -406,7 +408,7 @@ async def test_dummy_insert_single_image_normalization(
             project_id=project.id, zarr_dir=zarr_dir
         )
         # Run successfully with trailing slashes
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
@@ -421,6 +423,7 @@ async def test_dummy_insert_single_image_normalization(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
         debug(dataset_attrs["images"])
         for image in dataset_attrs["images"]:
             assert normalize_url(image["zarr_url"]) == image["zarr_url"]
@@ -455,7 +458,7 @@ async def test_default_inclusion_of_images(
         )
 
         # Run
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["generic_task_parallel"],
@@ -471,6 +474,7 @@ async def test_default_inclusion_of_images(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
         image = dataset_attrs["images"][0]
         debug(dataset_attrs)
         debug(image)
