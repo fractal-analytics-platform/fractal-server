@@ -2,6 +2,8 @@ import os
 from typing import Any
 from typing import Optional
 
+from fractal_server.images.models import AttributeFiltersType
+
 
 def valstr(attribute: str, accept_none: bool = False):
     """
@@ -104,8 +106,8 @@ def val_unique_list(attribute: str):
 
 
 def validate_type_filters(
-    type_filters: Optional[dict],
-) -> Optional[dict[str, bool]]:
+    type_filters: Optional[dict[str, bool]]
+) -> dict[str, bool]:
     if type_filters is None:
         raise ValueError("'type_filters' cannot be 'None'.")
 
@@ -114,8 +116,8 @@ def validate_type_filters(
 
 
 def validate_attribute_filters(
-    attribute_filters: Optional[dict[str, Optional[list[Any]]]],
-) -> dict[str, Optional[list[Any]]]:
+    attribute_filters: Optional[AttributeFiltersType],
+) -> AttributeFiltersType:
     if attribute_filters is None:
         raise ValueError("'attribute_filters' cannot be 'None'.")
 
@@ -147,6 +149,10 @@ def validate_attribute_filters(
 
 
 def root_validate_dict_keys(cls, object: dict) -> dict:
+    """
+    For each dictionary in `object.values()`,
+    checks that that dictionary has only keys of type str.
+    """
     for dictionary in (v for v in object.values() if isinstance(v, dict)):
         if not all(isinstance(key, str) for key in dictionary.keys()):
             raise ValueError("Dictionary keys must be strings.")
