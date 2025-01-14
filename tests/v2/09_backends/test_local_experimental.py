@@ -59,6 +59,7 @@ async def test_unit_process_workflow():
             logger_name=None,
             workflow_dir_local="/foo",
             workflow_dir_remote="/bar",
+            job_attribute_filters={},
         )
 
 
@@ -218,6 +219,7 @@ async def test_indirect_shutdown_during_process_workflow(
                 workflow_dir_local=tmp_path,
                 first_task_index=0,
                 last_task_index=0,
+                job_attribute_filters={},
             )
         tmp_stdout.close()
         tmp_stderr.close()
