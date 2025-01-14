@@ -339,14 +339,6 @@ async def submit_workflow(
             f"more logs at {str(log_file_path)}"
         )
         logger.debug(f'END workflow "{workflow.name}"')
-        #
-        # # Update dataset attributes, in case of successful execution
-        # dataset.history.extend(new_dataset_attributes["history"])
-        # dataset.filters = new_dataset_attributes["filters"]
-        # dataset.images = new_dataset_attributes["images"]
-        # for attribute_name in ["filters", "history", "images"]:
-        #     flag_modified(dataset, attribute_name)
-        # db_sync.merge(dataset)
 
         # Update job DB entry
         job.status = JobStatusTypeV2.DONE
@@ -365,7 +357,6 @@ async def submit_workflow(
         # update the DB dataset accordingly
 
         failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
-        # dataset.history =
         assemble_history_failed_job(
             job,
             dataset,
@@ -373,13 +364,6 @@ async def submit_workflow(
             logger_name=logger_name,
             failed_wftask=failed_wftask,
         )
-        # latest_filters = assemble_filters_failed_job(job)
-        # if latest_filters is not None:
-        #     dataset.filters = latest_filters
-        # latest_images = assemble_images_failed_job(job)
-        # if latest_images is not None:
-        #     dataset.images = latest_images
-        # db_sync.merge(dataset)
 
         exception_args_string = "\n".join(e.args)
         log_msg = (
@@ -395,20 +379,12 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
         # Read dataset attributes produced by the last successful task, and
         # update the DB dataset accordingly
-        # dataset.history =
         assemble_history_failed_job(
             job,
             dataset,
             workflow,
             logger_name=logger_name,
         )
-        # latest_filters = assemble_filters_failed_job(job)
-        # if latest_filters is not None:
-        #     dataset.filters = latest_filters
-        # latest_images = assemble_images_failed_job(job)
-        # if latest_images is not None:
-        #     dataset.images = latest_images
-        # db_sync.merge(dataset)
 
         fail_job(
             db=db_sync,
@@ -428,20 +404,13 @@ async def submit_workflow(
 
         # Read dataset attributes produced by the last successful task, and
         # update the DB dataset accordingly
-        # dataset.history =
         assemble_history_failed_job(
             job,
             dataset,
             workflow,
             logger_name=logger_name,
         )
-        # latest_filters = assemble_filters_failed_job(job)
-        # if latest_filters is not None:
-        #     dataset.filters = latest_filters
-        # latest_images = assemble_images_failed_job(job)
-        # if latest_images is not None:
-        #     dataset.images = latest_images
-        # db_sync.merge(dataset)
+
         fail_job(
             db=db_sync,
             job=job,
