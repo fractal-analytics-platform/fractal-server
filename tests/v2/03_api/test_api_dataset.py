@@ -459,9 +459,25 @@ async def test_patch_dataset(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
             json=dict(attribute_filters={}, type_filters=None),
         )
+        assert res.status_code == 422
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(attribute_filters={}),
+        )
         assert res.status_code == 200
+        assert res.json()["name"] == "something-new"
+        assert res.json()["zarr_dir"] == "/new_zarr_dir"
         assert res.json()["attribute_filters"] == {}
         assert res.json()["type_filters"] == {"x": True}
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(type_filters={}),
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == "something-new"
+        assert res.json()["zarr_dir"] == "/new_zarr_dir"
+        assert res.json()["attribute_filters"] == {}
+        assert res.json()["type_filters"] == {}
 
 
 async def test_dataset_export(
