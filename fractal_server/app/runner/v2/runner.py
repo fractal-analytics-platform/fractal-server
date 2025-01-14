@@ -71,7 +71,11 @@ def execute_tasks_v2(
         )
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
-            if not match_filter(image, type_filters=task.input_types):
+            if not match_filter(
+                image,
+                type_filters=task.input_types,
+                attribute_filters={},
+            ):
                 raise JobExecutionError(
                     "Invalid filtered image list\n"
                     f"Task input types: {task.input_types=}\n"
