@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from aux_get_dataset_attrs import _get_dataset_attrs
 from devtools import debug
 from fixtures_mocks import *  # noqa: F401,F403
 from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
-from fractal_server.app.models import DatasetV2
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -59,15 +59,6 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
             print(f"{prefix} {image['zarr_url']} does *not* contain data")
             all_images_have_data = False
     return all_images_have_data
-
-
-async def _get_dataset_attrs(db, dataset_id) -> dict[str, Any]:
-    await db.close()
-    db_dataset = await db.get(DatasetV2, dataset_id)
-    dataset_attrs = db_dataset.model_dump(
-        include={"filters", "history", "images"}
-    )
-    return dataset_attrs
 
 
 async def test_fractal_demos_01(
@@ -139,7 +130,7 @@ async def test_fractal_demos_01(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
-        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound",
             "illumination_correction",
@@ -174,7 +165,7 @@ async def test_fractal_demos_01(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["MIP_compound"],
@@ -188,6 +179,7 @@ async def test_fractal_demos_01(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
         debug(dataset_attrs)
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
@@ -221,7 +213,7 @@ async def test_fractal_demos_01(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["cellpose_segmentation"],
@@ -236,7 +228,7 @@ async def test_fractal_demos_01(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
-
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
         debug(dataset_attrs)
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
@@ -273,7 +265,7 @@ async def test_fractal_demos_01_no_overwrite(
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
@@ -288,6 +280,7 @@ async def test_fractal_demos_01_no_overwrite(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
         assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
             f"{zarr_dir}/my_plate.zarr/A/01/0",
             f"{zarr_dir}/my_plate.zarr/A/02/0",
@@ -298,7 +291,7 @@ async def test_fractal_demos_01_no_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["illumination_correction"],
@@ -313,7 +306,7 @@ async def test_fractal_demos_01_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
-
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound",
             "illumination_correction",
@@ -378,7 +371,7 @@ async def test_fractal_demos_01_no_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["MIP_compound"],
@@ -391,6 +384,7 @@ async def test_fractal_demos_01_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound",
@@ -446,7 +440,7 @@ async def test_fractal_demos_01_no_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["cellpose_segmentation"],
@@ -460,7 +454,7 @@ async def test_fractal_demos_01_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
-
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound",
             "illumination_correction",
@@ -493,7 +487,7 @@ async def test_registration_no_overwrite(
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -510,11 +504,12 @@ async def test_registration_no_overwrite(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
         # Run init registration
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -531,6 +526,7 @@ async def test_registration_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # In all non-reference-cycle images, a certain table was updated
         for image in dataset_attrs["images"]:
@@ -547,7 +543,7 @@ async def test_registration_no_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -563,6 +559,7 @@ async def test_registration_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # In all images, a certain (post-consensus) table was updated
         for image in dataset_attrs["images"]:
@@ -577,7 +574,7 @@ async def test_registration_no_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -594,6 +591,7 @@ async def test_registration_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # A new copy of each image was created
         assert len(dataset_attrs["images"]) == 12
