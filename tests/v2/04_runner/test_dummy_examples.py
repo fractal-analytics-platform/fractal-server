@@ -319,7 +319,7 @@ async def test_dummy_unset_attribute(
     assert "key2" not in dataset_attrs["images"][0]["attributes"].keys()
 
     # Unset a missing attribute (starting from dataset_pre)
-    dataset_attrs = execute_tasks_v2(
+    execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
@@ -465,6 +465,7 @@ async def test_default_inclusion_of_images(
                     task_id=fractal_tasks_mock_no_db[
                         "generic_task_parallel"
                     ].id,
+                    rder=0,
                     id=0,
                     order=0,
                 )
