@@ -292,16 +292,14 @@ def execute_tasks_v2(
         # Update filters.types
         tmp_filters["types"].update(types_from_manifest)
         tmp_filters["types"].update(types_from_task)
+
         # Write current dataset attributes (history, images, filters) into the
         # database. They can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
-            for ind, history_item in enumerate(db_dataset.history):
-                history_item["status"] = WorkflowTaskStatusTypeV2.DONE
-                db_dataset.history[ind] = history_item
-
+            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
             db_dataset.filters = tmp_filters
             db_dataset.images = tmp_images
             for attribute_name in ["filters", "history", "images"]:

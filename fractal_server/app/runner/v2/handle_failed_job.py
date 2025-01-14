@@ -13,97 +13,40 @@
 Helper functions to handle Dataset history.
 """
 import logging
-from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 
 from ...models.v2 import DatasetV2
-from ...models.v2 import JobV2
-from ...models.v2 import WorkflowTaskV2
-from ...models.v2 import WorkflowV2
 from ...schemas.v2 import WorkflowTaskStatusTypeV2
 from fractal_server.app.db import get_sync_db
 
 
-def assemble_history_failed_job(
-    job: JobV2,
+def mark_last_wftask_as_failed(
     dataset: DatasetV2,
-    workflow: WorkflowV2,
-    logger_name: Optional[str] = None,
-    failed_wftask: Optional[WorkflowTaskV2] = None,
+    logger_name: str,
 ) -> None:
     """
-    Assemble `history` after a workflow-execution job fails.
+    Edit dataset history, by marking last item as failed.
 
     Args:
-        job:
-            The failed `JobV2` object.
-        dataset:
-            The `DatasetV2` object associated to `job`.
-        workflow:
-            The `WorkflowV2` object associated to `job`.
+        dataset: The `DatasetV2` object
         logger_name: A logger name.
-        failed_wftask:
-            If set, append it to `history` during step 3; if `None`, infer
-            it by comparing the job task list and the one in
-            `HISTORY_FILENAME`.  FIXME
-
-    Returns:
-        The new value of `history`, to be merged into
-        `dataset.meta`.
     """
 
     logger = logging.getLogger(logger_name)
-
-    # The final value of the history attribute should include up to three
-    # parts, coming from: the database, the temporary file, the failed-task
-    # information.
     with next(get_sync_db()) as db:
         db_dataset = db.get(DatasetV2, dataset.id)
-
-        job_wftasks = workflow.task_list[
-            job.first_task_index : (job.last_task_index + 1)  # noqa
-        ]
-        # Part 1/A: Identify failed task, if needed
-        if failed_wftask is None:
-            tmp_file_wftasks = [
-                history_item["workflowtask"]
-                for history_item in db_dataset.history
-            ]
-            if len(job_wftasks) <= len(tmp_file_wftasks):
-                n_tasks_job = len(job_wftasks)
-                n_tasks_tmp = len(tmp_file_wftasks)
-                logger.error(
-                    "Cannot identify the failed task based on job task list "
-                    f"(length {n_tasks_job}) and temporary-file task list "
-                    f"(length {n_tasks_tmp})."
-                )
-                logger.error("Failed task not appended to history.")
-            else:
-                failed_wftask = job_wftasks[len(tmp_file_wftasks)]
-
-        # Part 1/B: Append failed task to history
-        if failed_wftask is not None:
-            failed_wftask_dump = failed_wftask.model_dump(exclude={"task"})
-            failed_wftask_dump["task"] = failed_wftask.task.model_dump()
-
-            for ind, history_item in enumerate(db_dataset.history):
-                if (
-                    history_item["workflowtask"]["task"]["id"]
-                    == failed_wftask_dump["task"]["id"]
-                ):
-                    history_item["status"] = WorkflowTaskStatusTypeV2.FAILED
-                    db_dataset.history[ind] = history_item
-                    flag_modified(db_dataset, "history")
-                    db.merge(db_dataset)
-                    db.commit()
-                    break
-        if (
-            len(db_dataset.history) > 0
-            and db_dataset.history[-1]["status"]
-            == WorkflowTaskStatusTypeV2.SUBMITTED
-        ):
-            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.FAILED
-            flag_modified(db_dataset, "history")
-            db.merge(db_dataset)
-            db.commit()
+        workflowtask_id = db_dataset.history[-1]["workflowtask"]["id"]
+        last_item_status = db_dataset.history[-1]["status"]
+        if last_item_status != WorkflowTaskStatusTypeV2.SUBMITTED:
+            logger.warning(
+                "Unexpected branch: "
+                f"Last history item, for {workflowtask_id=}, "
+                "has status {status}. Skip."
+            )
+            return
+        logger.info(f"Setting history item for {workflowtask_id=} to failed.")
+        db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.FAILED
+        flag_modified(db_dataset, "history")
+        db.merge(db_dataset)
+        db.commit()

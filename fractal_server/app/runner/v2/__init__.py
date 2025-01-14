@@ -23,7 +23,6 @@ from ....zip_tools import _zip_folder_to_file_and_remove
 from ...db import DB
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
-from ...models.v2 import WorkflowTaskV2
 from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
@@ -37,7 +36,7 @@ from ._local_experimental import (
 )
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
-from .handle_failed_job import assemble_history_failed_job
+from .handle_failed_job import mark_last_wftask_as_failed
 from fractal_server import __VERSION__
 from fractal_server.app.models import UserSettings
 
@@ -350,18 +349,10 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        # Read dataset attributes produced by the last successful task, and
-        # update the DB dataset accordingly
-
-        failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
-        assemble_history_failed_job(
-            job,
-            dataset,
+        mark_last_wftask_as_failed(
             workflow,
             logger_name=logger_name,
-            failed_wftask=failed_wftask,
         )
-
         exception_args_string = "\n".join(e.args)
         log_msg = (
             f"TASK ERROR: "
@@ -374,15 +365,10 @@ async def submit_workflow(
     except JobExecutionError as e:
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
-        # Read dataset attributes produced by the last successful task, and
-        # update the DB dataset accordingly
-        assemble_history_failed_job(
-            job,
+        mark_last_wftask_as_failed(
             dataset,
-            workflow,
             logger_name=logger_name,
         )
-
         fail_job(
             db=db_sync,
             job=job,
@@ -396,18 +382,11 @@ async def submit_workflow(
     except Exception:
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
-
-        current_traceback = traceback.format_exc()
-
-        # Read dataset attributes produced by the last successful task, and
-        # update the DB dataset accordingly
-        assemble_history_failed_job(
-            job,
+        mark_last_wftask_as_failed(
             dataset,
-            workflow,
             logger_name=logger_name,
         )
-
+        current_traceback = traceback.format_exc()
         fail_job(
             db=db_sync,
             job=job,
