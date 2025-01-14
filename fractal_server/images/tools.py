@@ -33,6 +33,7 @@ def find_image_by_zarr_url(
 
 
 def match_filter(
+    *,
     image: dict[str, Any],
     type_filters: dict[str, bool],
     attribute_filters: AttributeFiltersType,
