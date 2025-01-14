@@ -49,8 +49,8 @@ async def test_status_yes_history_no_running_job(
     client,
 ):
     """
-    GIVEN A database with non-empty dataset.history and no running jobs
-    THEN The status-endpoint response is empty
+    Test the case of the database with non-empty dataset.history and no
+    running jobs.
     """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
