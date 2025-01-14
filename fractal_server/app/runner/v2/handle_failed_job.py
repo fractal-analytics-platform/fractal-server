@@ -46,7 +46,7 @@ def assemble_history_failed_job(
         failed_wftask:
             If set, append it to `history` during step 3; if `None`, infer
             it by comparing the job task list and the one in
-            `HISTORY_FILENAME`.
+            `HISTORY_FILENAME`.  FIXME
 
     Returns:
         The new value of `history`, to be merged into

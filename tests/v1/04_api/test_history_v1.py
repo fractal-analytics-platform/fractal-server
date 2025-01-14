@@ -6,7 +6,7 @@ from devtools import debug
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
+from fractal_server.app.runner.filenames import HISTORY_FILENAME_V1
 from fractal_server.app.runner.v1.handle_failed_job import (
     assemble_history_failed_job,
 )  # noqa
@@ -46,9 +46,9 @@ async def test_get_workflowtask_status(
 
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
-    with (working_dir / HISTORY_FILENAME).open("w") as f:
+    with (working_dir / HISTORY_FILENAME_V1).open("w") as f:
         json.dump(history, f)
-    debug(working_dir / HISTORY_FILENAME)
+    debug(working_dir / HISTORY_FILENAME_V1)
 
     async with MockCurrentUser() as user:
         project = await project_factory(user)
@@ -315,7 +315,7 @@ async def test_assemble_history_failed_job_fail(
 
     Path(job.working_dir).mkdir()
     tmp_history = [dict(workflowtask={"id": wftask.id})]
-    with (Path(job.working_dir) / HISTORY_FILENAME).open("w") as fp:
+    with (Path(job.working_dir) / HISTORY_FILENAME_V1).open("w") as fp:
         json.dump(tmp_history, fp)
 
     logger = logging.getLogger(None)
@@ -341,7 +341,7 @@ async def test_json_decode_error(
     history = "NOT A VALID JSON"
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
-    with (working_dir / HISTORY_FILENAME).open("w") as f:
+    with (working_dir / HISTORY_FILENAME_V1).open("w") as f:
         f.write(history)
 
     async with MockCurrentUser() as user:

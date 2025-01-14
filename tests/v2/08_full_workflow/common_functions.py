@@ -165,9 +165,6 @@ async def full_workflow(
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
             actual_files = zip_ref.namelist()
         expected_files = [
-            # HISTORY_FILENAME,
-            # FILTERS_FILENAME,
-            # IMAGES_FILENAME,
             WORKFLOW_LOG_FILENAME,
         ]
         assert set(expected_files) < set(actual_files)
@@ -591,9 +588,6 @@ async def workflow_with_non_python_task(
         must_exist = [
             "0.log",
             "0.args.json",
-            # IMAGES_FILENAME,
-            # HISTORY_FILENAME,
-            # FILTERS_FILENAME,
             WORKFLOW_LOG_FILENAME,
         ]
 
