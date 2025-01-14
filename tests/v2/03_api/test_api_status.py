@@ -1,14 +1,12 @@
-import json
-
-from devtools import debug
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
+from fractal_server.app.schemas.v2.dataset import WorkflowTaskStatusTypeV2
 
 
-async def test_workflowtask_status_no_history_no_job(
+async def test_status_no_history_no_running_job(
     db,
     MockCurrentUser,
     project_factory_v2,
@@ -18,8 +16,8 @@ async def test_workflowtask_status_no_history_no_job(
     client,
 ):
     """
-    Test the status endpoint when there is information in the DB and no running
-    job associated to a given dataset/workflow pair.
+    GIVEN A database with no jobs and no history
+    THEN The status-endpoint response is empty
     """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -41,7 +39,7 @@ async def test_workflowtask_status_no_history_no_job(
         assert res.json() == {"status": {}}
 
 
-async def test_workflowtask_status_history_no_job(
+async def test_status_yes_history_no_running_job(
     db,
     MockCurrentUser,
     project_factory_v2,
@@ -51,8 +49,8 @@ async def test_workflowtask_status_history_no_job(
     client,
 ):
     """
-    Test the status endpoint when there is a non-empty history in the DB but
-    no running job associated to a given dataset/workflow pair.
+    Test the case of the database with non-empty dataset.history and no
+    running jobs.
     """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -137,7 +135,7 @@ async def test_workflowtask_status_history_no_job(
         assert res.json() == {"status": {"3": "done"}}
 
 
-async def test_workflowtask_status_history_job(
+async def test_status_yes_history_yes_running_job(
     db,
     MockCurrentUser,
     tmp_path,
@@ -153,12 +151,9 @@ async def test_workflowtask_status_history_job(
     there is a running job associated to a given dataset/workflow pair.
     """
     working_dir = tmp_path / "working_dir"
-    history = [dict(workflowtask=dict(id=3), status="done")]
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, history=history
-        )
+        dataset = await dataset_factory_v2(project_id=project.id, history=[])
         task = await task_factory_v2(
             user_id=user.id, name="task1", source="task1"
         )
@@ -177,23 +172,16 @@ async def test_workflowtask_status_history_job(
             last_task_index=1,
         )
 
-    # CASE 1: the job has no temporary history file
-    res = await client.get(
-        (
-            f"api/v2/project/{project.id}/status/?"
-            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
-        )
-    )
-    assert res.status_code == 200
-    assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
-
-    # CASE 2: the job has a temporary history file
-    history = [
-        dict(workflowtask=dict(id=workflow.task_list[0].id), status="done")
+    # CASE 1: first submitted
+    dataset.history = [
+        dict(
+            workflowtask=dict(id=workflow.task_list[0].id),
+            status=WorkflowTaskStatusTypeV2.SUBMITTED,
+        ),
     ]
-    working_dir.mkdir()
-    with (working_dir / HISTORY_FILENAME).open("w") as f:
-        json.dump(history, f)
+    flag_modified(dataset, "history")
+    await db.merge(dataset)
+    await db.commit()
     res = await client.get(
         (
             f"api/v2/project/{project.id}/status/?"
@@ -201,7 +189,53 @@ async def test_workflowtask_status_history_job(
         )
     )
     assert res.status_code == 200
-    assert res.json() == {"status": {"1": "done", "2": "submitted"}}
+    assert res.json()["status"] == {"1": "submitted", "2": "submitted"}
+
+    # CASE 2: first done
+    dataset.history = [
+        dict(
+            workflowtask=dict(id=workflow.task_list[0].id),
+            status=WorkflowTaskStatusTypeV2.DONE,
+        ),
+        dict(
+            workflowtask=dict(id=workflow.task_list[1].id),
+            status=WorkflowTaskStatusTypeV2.SUBMITTED,
+        ),
+    ]
+    flag_modified(dataset, "history")
+    await db.merge(dataset)
+    await db.commit()
+    res = await client.get(
+        (
+            f"api/v2/project/{project.id}/status/?"
+            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+        )
+    )
+    assert res.status_code == 200
+    assert res.json()["status"] == {"1": "done", "2": "submitted"}
+
+    # CASE 3: no "SUBMITTED" in the task list
+    dataset.history = [
+        dict(
+            workflowtask=dict(id=workflow.task_list[0].id),
+            status=WorkflowTaskStatusTypeV2.DONE,
+        ),
+        dict(
+            workflowtask=dict(id=workflow.task_list[1].id),
+            status=WorkflowTaskStatusTypeV2.FAILED,
+        ),
+    ]
+    flag_modified(dataset, "history")
+    await db.merge(dataset)
+    await db.commit()
+    res = await client.get(
+        (
+            f"api/v2/project/{project.id}/status/?"
+            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+        )
+    )
+    assert res.status_code == 200
+    assert res.json()["status"] == {"1": "submitted", "2": "submitted"}
 
 
 async def test_workflowtask_status_two_jobs(
@@ -217,7 +251,7 @@ async def test_workflowtask_status_two_jobs(
 ):
     """
     If there are more than one jobs associated to a given dataset/workflow pair
-    (which should never happen), the endpoin responds with 422.
+    (which should never happen), the endpoint responds with 422.
     """
     working_dir = tmp_path / "working_dir"
     async with MockCurrentUser() as user:
@@ -237,14 +271,12 @@ async def test_workflowtask_status_two_jobs(
                 dataset_id=dataset.id,
                 working_dir=str(working_dir),
             )
-
     res = await client.get(
         (
             f"api/v2/project/{project.id}/status/?"
             f"dataset_id={dataset.id}&workflow_id={workflow.id}"
         )
     )
-    debug(res.json())
     assert res.status_code == 422
 
 
@@ -267,7 +299,6 @@ async def test_workflowtask_status_modified_workflow(
     working_dir = tmp_path / "working_dir"
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id, history=[])
         task = await task_factory_v2(
             user_id=user.id, name="task1", source="task1"
         )
@@ -276,6 +307,23 @@ async def test_workflowtask_status_modified_workflow(
             await _workflow_insert_task(
                 workflow_id=workflow.id, task_id=task.id, db=db
             )
+        dataset = await dataset_factory_v2(
+            project_id=project.id,
+            history=[
+                dict(
+                    workflowtask=dict(id=workflow.task_list[0].id),
+                    status=WorkflowTaskStatusTypeV2.DONE,
+                ),
+                dict(
+                    workflowtask=dict(id=workflow.task_list[1].id),
+                    status=WorkflowTaskStatusTypeV2.DONE,
+                ),
+                dict(
+                    workflowtask=dict(id=workflow.task_list[2].id),
+                    status=WorkflowTaskStatusTypeV2.SUBMITTED,
+                ),
+            ],
+        )
         await job_factory_v2(
             project_id=project.id,
             workflow_id=workflow.id,
@@ -293,20 +341,43 @@ async def test_workflowtask_status_modified_workflow(
         wftask_list = res.json()["task_list"]
         for wftask in wftask_list[1:]:
             wftask_id = wftask["id"]
-            debug(f"Delete {wftask_id=}")
             res = await client.delete(
                 f"api/v2/project/{project.id}/workflow/{workflow.id}/"
                 f"wftask/{wftask_id}/"
             )
             assert res.status_code == 204
 
-    # The endpoint response is OK, even if the running_job points to
-    # non-existing WorkflowTask's.
-    res = await client.get(
-        (
-            f"api/v2/project/{project.id}/status/?"
-            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+        # The endpoint response is OK, even if the running_job points to
+        # non-existing WorkflowTask's.
+        res = await client.get(
+            (
+                f"api/v2/project/{project.id}/status/?"
+                f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+            )
         )
-    )
-    assert res.status_code == 200
-    assert res.json() == {"status": {"1": "submitted"}}
+        assert res.status_code == 200
+        assert res.json() == {"status": {"1": "submitted"}}
+
+        # Delete last remaining task
+        res = await client.get(
+            f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 200
+        for wftask in res.json()["task_list"]:
+            wftask_id = wftask["id"]
+            res = await client.delete(
+                f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+                f"wftask/{wftask_id}/"
+            )
+            assert res.status_code == 204
+
+        # The endpoint response is OK, even if the running_job points to
+        # non-existing WorkflowTask's.
+        res = await client.get(
+            (
+                f"api/v2/project/{project.id}/status/?"
+                f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+            )
+        )
+        assert res.status_code == 200
+        assert res.json() == {"status": {}}
