@@ -41,8 +41,6 @@ from .handle_failed_job import assemble_history_failed_job
 from fractal_server import __VERSION__
 from fractal_server.app.models import UserSettings
 
-# from .handle_failed_job import assemble_filters_failed_job
-# from .handle_failed_job import assemble_images_failed_job
 
 _backends = {}
 _backends["local"] = local_process_workflow
