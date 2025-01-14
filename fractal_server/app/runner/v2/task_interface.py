@@ -63,7 +63,7 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
             raise ValueError(msg)
 
     @root_validator()
-    def validate_filters(cls, values):
+    def update_legacy_filters(cls, values):
         if values["filters"] is not None:
             if values["type_filters"] != {}:
                 raise ValueError(
