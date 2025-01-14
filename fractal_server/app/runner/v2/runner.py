@@ -305,6 +305,5 @@ def execute_tasks_v2(
                 flag_modified(db_dataset, attribute_name)
             db.merge(db_dataset)
             db.commit()
-            db.refresh(db_dataset)
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
