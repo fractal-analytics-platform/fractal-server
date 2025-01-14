@@ -84,14 +84,18 @@ def filter_image_list(
     # When no filter is provided, return all images
     if type_filters is None and attribute_filters is None:
         return images
+    elif type_filters is None:
+        type_filters = {}
+    elif attribute_filters is None:
+        attribute_filters = {}
 
     filtered_images = [
         copy(this_image)
         for this_image in images
         if match_filter(
             this_image,
-            type_filters=type_filters or {},
-            attribute_filters=attribute_filters or {},
+            type_filters=type_filters,
+            attribute_filters=attribute_filters,
         )
     ]
     return filtered_images
