@@ -66,10 +66,14 @@ async def test_schemas_dataset_v2():
 
     # Update
 
-    # validation accepts `zarr_dir` and `filters` as None, but not `name`
-    DatasetUpdateV2(zarr_dir=None, attribute_filters=None)
+    # validation accepts `zarr_dir` as None, but not `name` and `filters`
+    DatasetUpdateV2(zarr_dir=None)
     with pytest.raises(ValidationError):
-        DatasetUpdateV2(name=None, zarr_dir=None, attribute_filters=None)
+        DatasetUpdateV2(name=None)
+    with pytest.raises(ValidationError):
+        DatasetUpdateV2(attribute_filters=None)
+    with pytest.raises(ValidationError):
+        DatasetUpdateV2(type_filters=None)
 
     dataset_update = DatasetUpdateV2(name="new name", zarr_dir="/zarr/")
     assert not dataset_update.zarr_dir.endswith("/")
