@@ -27,7 +27,7 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
 
     additional_args = {}
     if last_new_filters is not None:
-        additional_args["filters"] = last_new_filters
+        additional_args["filters"] = last_new_filters  # FIXME
 
     final_output = TaskOutput(
         image_list_updates=final_image_list_updates,
