@@ -7,6 +7,8 @@
 * Testing:
     * Improve configuration for coverage GitHub Action step (\#2175).
     * Add `persist-credentials: false` to `actions/checkout@v4` GitHub Action steps (\#2176).
+* Dependencies:
+    * Require `bumpver>2024.0` (\#2179).
 
 
 # 2.10.4

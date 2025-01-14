@@ -64,7 +64,7 @@ pytest = "8.1.*"
 httpx = "^0.23"
 devtools = "^0.12"
 pytest-asyncio = "^0.23"
-bumpver = "^2022.1120"
+bumpver = ">=2024.0"
 pre-commit = "^2.19"
 coverage = {extras = ["toml"], version = "7.5.*"}
 pytest-docker = {version = "3.1.*"}
