@@ -143,7 +143,7 @@ async def test_query_images(
             image
             for image in images
             if match_filter(
-                image, type_filters={"flag": False}, attribute_filters={}
+                image=image, type_filters={"flag": False}, attribute_filters={}
             )
         ]
     )
@@ -163,7 +163,7 @@ async def test_query_images(
             image
             for image in images
             if match_filter(
-                image, type_filters={"flag": 1}, attribute_filters={}
+                image=image, type_filters={"flag": 1}, attribute_filters={}
             )
         ]
     )

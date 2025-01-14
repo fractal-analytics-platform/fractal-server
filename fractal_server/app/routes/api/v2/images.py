@@ -141,7 +141,7 @@ async def query_dataset_images(
             image
             for image in images
             if match_filter(
-                image,
+                image=image,
                 type_filters=dataset.type_filters,
                 attribute_filters=dataset.attribute_filters,
             )
@@ -179,7 +179,7 @@ async def query_dataset_images(
                 image
                 for image in images
                 if match_filter(
-                    image,
+                    image=image,
                     type_filters=query.type_filters,
                     attribute_filters=query.attribute_filters,
                 )

@@ -72,7 +72,7 @@ def execute_tasks_v2(
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
             if not match_filter(
-                image,
+                image=image,
                 type_filters=task.input_types,
                 attribute_filters={},
             ):
