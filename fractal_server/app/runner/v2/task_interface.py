@@ -8,8 +8,8 @@ from pydantic import root_validator
 from pydantic import validator
 
 from ....images import SingleImageTaskOutput
+from fractal_server.app.schemas._filter_validators import validate_type_filters
 from fractal_server.app.schemas._validators import root_validate_dict_keys
-from fractal_server.app.schemas._validators import validate_type_filters
 from fractal_server.urls import normalize_url
 
 

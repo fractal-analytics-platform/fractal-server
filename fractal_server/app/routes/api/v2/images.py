@@ -17,9 +17,11 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.schemas._filter_validators import (
+    validate_attribute_filters,
+)
+from fractal_server.app.schemas._filter_validators import validate_type_filters
 from fractal_server.app.schemas._validators import root_validate_dict_keys
-from fractal_server.app.schemas._validators import validate_attribute_filters
-from fractal_server.app.schemas._validators import validate_type_filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.models import AttributeFiltersType

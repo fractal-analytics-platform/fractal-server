@@ -9,8 +9,8 @@ from pydantic import root_validator
 from pydantic import validator
 from pydantic.types import StrictStr
 
+from .._filter_validators import validate_attribute_filters
 from .._validators import root_validate_dict_keys
-from .._validators import validate_attribute_filters
 from .._validators import valstr
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2

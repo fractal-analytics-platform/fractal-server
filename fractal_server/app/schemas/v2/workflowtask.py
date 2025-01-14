@@ -9,9 +9,9 @@ from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
 
+from .._filter_validators import validate_type_filters
 from .._validators import root_validate_dict_keys
 from .._validators import valdict_keys
-from .._validators import validate_type_filters
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy

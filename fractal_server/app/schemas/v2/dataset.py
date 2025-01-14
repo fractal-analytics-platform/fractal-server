@@ -8,9 +8,9 @@ from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
 
+from .._filter_validators import validate_attribute_filters
+from .._filter_validators import validate_type_filters
 from .._validators import root_validate_dict_keys
-from .._validators import validate_attribute_filters
-from .._validators import validate_type_filters
 from .._validators import valstr
 from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
