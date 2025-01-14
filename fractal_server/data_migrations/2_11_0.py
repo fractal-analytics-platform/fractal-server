@@ -46,7 +46,7 @@ def fix_db():
             wft.type_filters = wft.input_filters["types"]
             logger.warning(
                 f"Deleting WorkflowTaskV2[{wft.id}].input_filters.attributes ="
-                f" {wft['input_filters']['attributes']}"
+                f" {wft.input_filters['attributes']}"
             )
             wft.input_filters = None
             flag_modified(wft, "input_filters")
