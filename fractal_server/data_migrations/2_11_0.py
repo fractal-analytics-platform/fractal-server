@@ -9,6 +9,7 @@ from fractal_server.app.models import JobV2
 from fractal_server.app.models import WorkflowTaskV2
 
 logger = logging.getLogger("fix_db")
+logger.setLevel(logging.INFO)
 
 
 def fix_db():
