@@ -12,7 +12,7 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.urls import normalize_url
 
 
-def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
+def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs) -> None:
     from fractal_server.app.runner.task_files import task_subfolder_name
     from fractal_server.app.runner.v2.runner import (
         execute_tasks_v2 as raw_execute_tasks_v2,
@@ -25,12 +25,11 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
-    out = raw_execute_tasks_v2(
+    raw_execute_tasks_v2(
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
         **kwargs,
     )
-    return out
 
 
 async def test_dummy_insert_single_image(
@@ -56,7 +55,7 @@ async def test_dummy_insert_single_image(
         )
         # Run successfully on an empty dataset
         debug(dataset)
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
@@ -70,10 +69,9 @@ async def test_dummy_insert_single_image(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
-        debug(dataset_attrs["images"])
 
         # Run successfully even if the image already exists
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
@@ -87,7 +85,6 @@ async def test_dummy_insert_single_image(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
-        debug(dataset_attrs["images"])
         # Fail because new image is not relative to zarr_dir
         IMAGES = [dict(zarr_url=Path(zarr_dir, "my-image").as_posix())]
         dataset_images = await dataset_factory_v2(
