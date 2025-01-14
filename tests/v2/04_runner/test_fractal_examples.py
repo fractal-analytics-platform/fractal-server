@@ -10,6 +10,7 @@ from fixtures_mocks import *  # noqa: F401,F403
 from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
+from fractal_server.app.models import DatasetV2
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -60,6 +61,15 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
     return all_images_have_data
 
 
+async def _get_dataset_attrs(db, dataset_id) -> dict[str, Any]:
+    await db.close()
+    db_dataset = await db.get(DatasetV2, dataset_id)
+    dataset_attrs = db_dataset.model_dump(
+        include={"filters", "history", "images"}
+    )
+    return dataset_attrs
+
+
 async def test_fractal_demos_01(
     db,
     MockCurrentUser,
@@ -85,7 +95,7 @@ async def test_fractal_demos_01(
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
@@ -101,6 +111,7 @@ async def test_fractal_demos_01(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
         debug(dataset_attrs["history"])
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound"
@@ -109,10 +120,11 @@ async def test_fractal_demos_01(
         assert dataset_attrs["filters"]["types"] == {}
         _assert_image_data_exist(dataset_attrs["images"])
         assert len(dataset_attrs["images"]) == 2
+
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["illumination_correction"],
@@ -127,6 +139,7 @@ async def test_fractal_demos_01(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound",
             "illumination_correction",
