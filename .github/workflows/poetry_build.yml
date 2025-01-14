@@ -2,17 +2,18 @@ name: Build package
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "dev-2.11"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev-2.11"]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: "Set up Python 3.10"
         uses: actions/setup-python@v5

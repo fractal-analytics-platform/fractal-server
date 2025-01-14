@@ -1,4 +1,3 @@
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
@@ -7,19 +6,19 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
+from sqlalchemy.orm.attributes import flag_modified
+
 from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ....images.tools import match_filter
 from ..exceptions import JobExecutionError
-from ..filenames import HISTORY_FILENAME
-from ..filenames import IMAGES_FILENAME
-from ..filenames import TYPE_FILTERS_FILENAME
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
@@ -37,13 +36,14 @@ def execute_tasks_v2(
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     job_attribute_filters: AttributeFiltersType,
-) -> DatasetV2:
-
+) -> None:
     logger = logging.getLogger(logger_name)
 
-    if (
-        not workflow_dir_local.exists()
-    ):  # FIXME: this should have already happened
+    if not workflow_dir_local.exists():
+        logger.warning(
+            f"Now creating {workflow_dir_local}, "
+            "but it should have already happened."
+        )
         workflow_dir_local.mkdir()
 
     # Initialize local dataset attributes
@@ -51,7 +51,6 @@ def execute_tasks_v2(
     tmp_images = deepcopy(dataset.images)
     tmp_type_filters = deepcopy(dataset.type_filters)
     tmp_attribute_filters = deepcopy(dataset.attribute_filters)
-    tmp_history = []
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -79,8 +78,19 @@ def execute_tasks_v2(
                     f'Image zarr_url: {image["zarr_url"]}\n'
                     f'Image types: {image["types"]}\n'
                 )
-
-        # TASK EXECUTION
+        # First, set status SUBMITTED in dataset.history for each wftask
+        with next(get_sync_db()) as db:
+            db_dataset = db.get(DatasetV2, dataset.id)
+            new_history_item = _DatasetHistoryItemV2(
+                workflowtask=wftask,
+                status=WorkflowTaskStatusTypeV2.SUBMITTED,
+                parallelization=dict(),  # FIXME: re-include parallelization
+            ).dict()
+            db_dataset.history.append(new_history_item)
+            flag_modified(db_dataset, "history")
+            db.merge(db_dataset)
+            db.commit()
+        # TASK EXECUTION (V2)
         if task.type == "non_parallel":
             current_task_output = run_v2_task_non_parallel(
                 images=filtered_images,
@@ -276,36 +286,24 @@ def execute_tasks_v2(
         tmp_type_filters.update(type_filters_from_task_manifest)
         tmp_type_filters.update(type_filters_from_task_output)
 
-        # Update history (based on _DatasetHistoryItemV2)
-        history_item = _DatasetHistoryItemV2(
-            workflowtask=wftask,
-            status=WorkflowTaskStatusTypeV2.DONE,
-            parallelization=dict(
-                # task_type=wftask.task.type,  # FIXME: breaks for V1 tasks
-                # component_list=fil, #FIXME
-            ),
-        ).dict()
-        tmp_history.append(history_item)
-
-        # Write current dataset attributes (history, images, filters) into
-        # temporary files which can be used (1) to retrieve the latest state
+        # Write current dataset attributes (history, images, filters) into the
+        # database. They can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
-        with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
-            json.dump(tmp_history, f, indent=2)
-        with open(workflow_dir_local / TYPE_FILTERS_FILENAME, "w") as f:
-            json.dump(tmp_type_filters, f, indent=2)
-        with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
-            json.dump(tmp_images, f, indent=2)
+        with next(get_sync_db()) as db:
+            db_dataset = db.get(DatasetV2, dataset.id)
+            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
+            db_dataset.attribute_filters = tmp_attribute_filters
+            db_dataset.type_filters = tmp_type_filters
+            db_dataset.images = tmp_images
+            for attribute_name in [
+                "attribute_filters",
+                "type_filters",
+                "history",
+                "images",
+            ]:
+                flag_modified(db_dataset, attribute_name)
+            db.merge(db_dataset)
+            db.commit()
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
-
-    # NOTE: tmp_history only contains the newly-added history items (to be
-    # appended to the original history), while tmp_filters and tmp_images
-    # represent the new attributes (to replace the original ones)
-    result = dict(
-        history=tmp_history,
-        type_filters=tmp_type_filters,
-        images=tmp_images,
-    )
-    return result

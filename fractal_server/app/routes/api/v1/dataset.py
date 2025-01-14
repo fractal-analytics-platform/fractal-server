@@ -17,7 +17,7 @@ from ....models.v1 import ApplyWorkflow
 from ....models.v1 import Dataset
 from ....models.v1 import Project
 from ....models.v1 import Resource
-from ....runner.filenames import HISTORY_FILENAME
+from ....runner.filenames import HISTORY_FILENAME_V1
 from ....schemas.v1 import DatasetCreateV1
 from ....schemas.v1 import DatasetReadV1
 from ....schemas.v1 import DatasetStatusReadV1
@@ -511,7 +511,7 @@ async def get_workflowtask_status(
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
         # WorkflowTask's that ran through successfully
-        tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
+        tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME_V1
         try:
             with tmp_file.open("r") as f:
                 history = json.load(f)

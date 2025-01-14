@@ -2,9 +2,9 @@ name: docs
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "dev-2.11"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev-2.11"]
 
 jobs:
 
@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:
@@ -48,6 +50,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:

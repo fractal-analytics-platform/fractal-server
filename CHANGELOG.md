@@ -1,11 +1,22 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.11.0 (unreleased)
+
+* Runner
+    * Integrate database write access in runner component (\#2169).
+* API:
+    * Update and simplify `/api/v2/project/{project_id}/status/` (\#2169).
+
+# 2.10.5
 
 * App:
     * Add missing space in "To" field for email settings (\#2173).
 * Testing:
     * Improve configuration for coverage GitHub Action step (\#2175).
+    * Add `persist-credentials: false` to `actions/checkout@v4` GitHub Action steps (\#2176).
+* Dependencies:
+    * Require `bumpver>2024.0` (\#2179).
+
 
 # 2.10.4
 
