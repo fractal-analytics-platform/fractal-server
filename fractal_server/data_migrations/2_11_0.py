@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 
 def fix_db():
 
-    logger.warning("START execution of fix_db function")
+    logger.info("START execution of fix_db function")
 
     with next(get_sync_db()) as db:
 
@@ -31,28 +31,22 @@ def fix_db():
                     "workflowtask"
                 ]["input_filters"]["types"]
                 if h["workflowtask"]["input_filters"]["attributes"]:
-                    logger.warning(
-                        f"Deleting DatasetV2[{ds.id}].history.input_filters"
-                        ".attributes = "
-                        f"{h['workflowtask']['input_filters']['attributes']}"
-                    )
+                    logger.warning("TMP")
             flag_modified(ds, "history")
             db.add(ds)
-            logger.warning(f"Fixed filters in DatasetV2[{ds.id}]")
+            logger.info(f"Fixed filters in DatasetV2[{ds.id}]")
 
         # WorkflowTaskV2.input_filters
         stm = select(WorkflowTaskV2).order_by(WorkflowTaskV2.id)
         wftasks = db.execute(stm).scalars().all()
         for wft in wftasks:
             wft.type_filters = wft.input_filters["types"]
-            logger.warning(
-                f"Deleting WorkflowTaskV2[{wft.id}].input_filters.attributes ="
-                f" {wft.input_filters['attributes']}"
-            )
+            if wft.input_filters["attributes"]:
+                logger.warning("TBD")
             wft.input_filters = None
             flag_modified(wft, "input_filters")
             db.add(wft)
-            logger.warning(f"Fixed filters in WorkflowTaskV2[{wft.id}]")
+            logger.info(f"Fixed filters in WorkflowTaskV2[{wft.id}]")
 
         # JOBS V2
         stm = select(JobV2).order_by(JobV2.id)
@@ -66,7 +60,7 @@ def fix_db():
             ]["attributes"]
             job.dataset_dump.pop("filters")
             flag_modified(job, "dataset_dump")
-            logger.warning(f"Fixed filters in JobV2[{job.id}].datasetdump")
+            logger.info(f"Fixed filters in JobV2[{job.id}].datasetdump")
 
         db.commit()
-        logger.warning("Changes committed.")
+        logger.info("Changes committed.")
