@@ -8,7 +8,7 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
 
     final_image_list_updates = []
     final_image_list_removals = []
-    last_new_filters = None
+    last_new_type_filters = None
 
     for ind, task_output in enumerate(task_outputs):
 
@@ -16,23 +16,27 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
         final_image_list_removals.extend(task_output.image_list_removals)
 
         # Check that all filters are the same
-        current_new_filters = task_output.filters
+        current_new_type_filters = task_output.type_filters
         if ind == 0:
-            last_new_filters = copy(current_new_filters)
-        if current_new_filters != last_new_filters:
-            raise ValueError(f"{current_new_filters=} but {last_new_filters=}")
-        last_new_filters = copy(current_new_filters)
+            last_new_type_filters = copy(current_new_type_filters)
+        if current_new_type_filters != last_new_type_filters:
+            raise ValueError(
+                f"{current_new_type_filters=} but {last_new_type_filters=}"
+            )
+        last_new_type_filters = copy(current_new_type_filters)
 
     final_image_list_updates = deduplicate_list(final_image_list_updates)
 
-    additional_args = {}
-    if last_new_filters is not None:
-        additional_args["filters"] = last_new_filters  # FIXME
-
-    final_output = TaskOutput(
-        image_list_updates=final_image_list_updates,
-        image_list_removals=final_image_list_removals,
-        **additional_args,
-    )
+    if last_new_type_filters is None:
+        final_output = TaskOutput(
+            image_list_updates=final_image_list_updates,
+            image_list_removals=final_image_list_removals,
+        )
+    else:
+        final_output = TaskOutput(
+            image_list_updates=final_image_list_updates,
+            image_list_removals=final_image_list_removals,
+            type_filters=last_new_type_filters,
+        )
 
     return final_output
