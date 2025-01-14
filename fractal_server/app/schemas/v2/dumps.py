@@ -39,12 +39,9 @@ class TaskDumpV2(BaseModel):
 
 class WorkflowTaskDumpV2(BaseModel):
     """
-    Before v2.5.0, WorkflowTaskV2 could have `task_id=task=None` and
-    non-`None` `task_legacy_id` and `task_legacy`. Since these objects
-    may still exist in the database after version updates, we are setting
-    `task_id` and `task` to `Optional` to avoid response-validation errors
+    We do not include 'extra=Extra.forbid' because legacy data may include
+    'input_filters' field and we want to avoid response-validation errors
     for the endpoints that GET datasets.
-    Ref issue #1783.
     """
 
     id: int

@@ -30,8 +30,6 @@ def fix_db():
                 ds.history[i]["workflowtask"]["type_filters"] = h[
                     "workflowtask"
                 ]["input_filters"]["types"]
-                if h["workflowtask"]["input_filters"]["attributes"]:
-                    logger.warning("TMP")
             flag_modified(ds, "history")
             db.add(ds)
             logger.info(f"Fixed filters in DatasetV2[{ds.id}]")
@@ -42,7 +40,10 @@ def fix_db():
         for wft in wftasks:
             wft.type_filters = wft.input_filters["types"]
             if wft.input_filters["attributes"]:
-                logger.warning("TBD")
+                logger.warning(
+                    f"Removing WorkflowTaskV2[{wft.id}].input_filters"
+                    f"['attributes'] = {wft.input_filters['attributes']}"
+                )
             wft.input_filters = None
             flag_modified(wft, "input_filters")
             db.add(wft)
