@@ -121,7 +121,6 @@ async def process_workflow(
             to the backend executor. This argument is present for compatibility
             with the standard backend interface, but is ignored in the `local`
             backend.
-        FIXME: FIXME
 
     Raises:
         TaskExecutionError: wrapper for errors raised during tasks' execution
