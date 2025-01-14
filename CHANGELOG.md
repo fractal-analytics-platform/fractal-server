@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.11.0 (unreleased)
+
+* Runner
+    * Integrate database write access in runner component (\#2169).
+* API:
+    * Update and simplify `/api/v2/project/{project_id}/status/` (\#2169).
+
 # 2.10.5
 
 * App:
