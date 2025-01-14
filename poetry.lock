@@ -227,22 +227,20 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "bumpver"
-version = "2022.1120"
+version = "2024.1130"
 description = "Bump version numbers in project files."
 optional = false
 python-versions = ">=2.7"
 groups = ["dev"]
 files = [
-    {file = "bumpver-2022.1120-py2.py3-none-any.whl", hash = "sha256:9da18a6997ade04c66bec05f5349acc5f2f146b16fb77b307f91ef3370c6aa55"},
-    {file = "bumpver-2022.1120.tar.gz", hash = "sha256:ff8ad562a2ed87e862e07683cb68c4b61046679bf155f7a7ebb20b2ea47775cd"},
+    {file = "bumpver-2024.1130-py2.py3-none-any.whl", hash = "sha256:8e54220aefe7db25148622f45959f7beb6b8513af0b0429b38b9072566665a49"},
+    {file = "bumpver-2024.1130.tar.gz", hash = "sha256:74f7ebc294b2240f346e99748cc6f238e57b050999d7428db75d76baf2bf1437"},
 ]
 
 [package.dependencies]
 click = {version = "*", markers = "python_version >= \"3.6\""}
 colorama = ">=0.4"
 lexid = "*"
-pathlib2 = "*"
-setuptools = {version = ">=45.0.0", markers = "python_version >= \"3.5\""}
 toml = "*"
 
 [[package]]
@@ -1605,21 +1603,6 @@ gssapi = ["gssapi (>=1.4.1)", "pyasn1 (>=0.1.7)", "pywin32 (>=2.1.8)"]
 invoke = ["invoke (>=2.0)"]
 
 [[package]]
-name = "pathlib2"
-version = "2.3.7.post1"
-description = "Object-oriented filesystem paths"
-optional = false
-python-versions = "*"
-groups = ["dev"]
-files = [
-    {file = "pathlib2-2.3.7.post1-py2.py3-none-any.whl", hash = "sha256:5266a0fd000452f1b3467d782f079a4343c63aaa119221fbdc4e39577489ca5b"},
-    {file = "pathlib2-2.3.7.post1.tar.gz", hash = "sha256:9fe0edad898b83c0c3e199c842b27ed216645d2e177757b2dd67384d4113c641"},
-]
-
-[package.dependencies]
-six = "*"
-
-[[package]]
 name = "pathspec"
 version = "0.12.1"
 description = "Utility library for gitignore style pattern matching of file paths."
@@ -2333,27 +2316,6 @@ idna = {version = "*", optional = true, markers = "extra == \"idna2008\""}
 idna2008 = ["idna"]
 
 [[package]]
-name = "setuptools"
-version = "75.7.0"
-description = "Easily download, build, install, upgrade, and uninstall Python packages"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "setuptools-75.7.0-py3-none-any.whl", hash = "sha256:84fb203f278ebcf5cd08f97d3fb96d3fbed4b629d500b29ad60d11e00769b183"},
-    {file = "setuptools-75.7.0.tar.gz", hash = "sha256:886ff7b16cd342f1d1defc16fc98c9ce3fde69e087a4e1983d7ab634e5f41f4f"},
-]
-
-[package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)", "ruff (>=0.8.0)"]
-core = ["importlib_metadata (>=6)", "jaraco.collections", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging", "packaging (>=24.2)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
-cover = ["pytest-cov"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
-enabler = ["pytest-enabler (>=2.2)"]
-test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
-type = ["importlib_metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (==1.14.*)", "pytest-mypy"]
-
-[[package]]
 name = "six"
 version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -2786,4 +2748,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "3aaf29aa7f8f25ebf69a7ff13c4b58345c18385861cfab6aab7c283adf386a11"
+content-hash = "21a08bf95970858e761b176378ea03dd94dd97d550f36508f6688bf27442c60a"
