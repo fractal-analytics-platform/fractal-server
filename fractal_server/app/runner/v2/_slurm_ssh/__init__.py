@@ -48,14 +48,11 @@ def _process_workflow(
     worker_init: Optional[Union[str, list[str]]] = None,
 ) -> None:
     """
-    Internal processing routine for the SLURM backend
+    Run the workflow using a `FractalSlurmSSHExecutor`.
 
     This function initialises the a FractalSlurmExecutor, setting logging,
     workflow working dir and user to impersonate. It then schedules the
     workflow tasks and returns the new dataset attributes
-
-    Returns:
-        new_dataset_attributes:
     """
 
     if isinstance(worker_init, str):
@@ -81,8 +78,8 @@ def _process_workflow(
     ) as executor:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
-                first_task_index : (last_task_index + 1)  # noqa
-            ],  # noqa
+                first_task_index : (last_task_index + 1)
+            ],
             dataset=dataset,
             executor=executor,
             workflow_dir_local=workflow_dir_local,

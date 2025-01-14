@@ -23,13 +23,7 @@ def _process_workflow(
     last_task_index: int,
 ) -> None:
     """
-    Internal processing routine
-
-    Schedules the workflow using a `FractalProcessPoolExecutor`.
-
-    Cf.
-    [process_workflow][fractal_server.app.runner.v2._local_experimental.process_workflow]
-    for the call signature.
+    Run the workflow using a `FractalProcessPoolExecutor`.
     """
     with FractalProcessPoolExecutor(
         shutdown_file=workflow_dir_local / SHUTDOWN_FILENAME
@@ -37,7 +31,7 @@ def _process_workflow(
         try:
             execute_tasks_v2(
                 wf_task_list=workflow.task_list[
-                    first_task_index : (last_task_index + 1)  # noqa
+                    first_task_index : (last_task_index + 1)
                 ],
                 dataset=dataset,
                 executor=executor,
