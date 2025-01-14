@@ -20,12 +20,11 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
-    out = raw_execute_tasks_v2(
+    raw_execute_tasks_v2(
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
         **kwargs,
     )
-    return out
 
 
 async def test_parallelize_on_no_images(
