@@ -36,7 +36,7 @@ def upgrade() -> None:
             "filters",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
             nullable=True,
-            server_default=None,
+            server_default="null",
         )
 
     with op.batch_alter_table("jobv2", schema=None) as batch_op:
@@ -59,7 +59,7 @@ def upgrade() -> None:
             "input_filters",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
             nullable=True,
-            server_default=None,
+            server_default="null",
         )
 
     # ### end Alembic commands ###
