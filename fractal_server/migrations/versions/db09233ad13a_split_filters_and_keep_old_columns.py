@@ -1,15 +1,16 @@
 """split filters and keep old columns
 
-Revision ID: ec7329221c1a
+Revision ID: db09233ad13a
 Revises: 316140ff7ee1
-Create Date: 2025-01-08 15:46:26.940083
+Create Date: 2025-01-14 14:50:46.007222
 
 """
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "ec7329221c1a"
+revision = "db09233ad13a"
 down_revision = "316140ff7ee1"
 branch_labels = None
 depends_on = None
@@ -33,9 +34,9 @@ def upgrade() -> None:
         )
         batch_op.alter_column(
             "filters",
-            existing_type=sa.JSON(),
+            existing_type=postgresql.JSON(astext_type=sa.Text()),
             nullable=True,
-            existing_server_default='{"attributes": {}, "types": {}}',
+            server_default=None,
         )
 
     with op.batch_alter_table("jobv2", schema=None) as batch_op:
@@ -56,9 +57,9 @@ def upgrade() -> None:
         )
         batch_op.alter_column(
             "input_filters",
-            existing_type=sa.JSON(),
+            existing_type=postgresql.JSON(astext_type=sa.Text()),
             nullable=True,
-            existing_server_default='{"attributes": {}, "types": {}}',
+            server_default=None,
         )
 
     # ### end Alembic commands ###
@@ -69,9 +70,11 @@ def downgrade() -> None:
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
         batch_op.alter_column(
             "input_filters",
-            existing_type=sa.JSON(),
+            existing_type=postgresql.JSON(astext_type=sa.Text()),
             nullable=False,
-            existing_server_default='{"attributes": {}, "types": {}}',
+            existing_server_default=sa.text(
+                '\'{"attributes": {}, "types": {}}\'::json'
+            ),
         )
         batch_op.drop_column("type_filters")
 
@@ -81,9 +84,11 @@ def downgrade() -> None:
     with op.batch_alter_table("datasetv2", schema=None) as batch_op:
         batch_op.alter_column(
             "filters",
-            existing_type=sa.JSON(),
+            existing_type=postgresql.JSON(astext_type=sa.Text()),
             nullable=False,
-            existing_server_default='{"attributes": {}, "types": {}}',
+            existing_server_default=sa.text(
+                '\'{"attributes": {}, "types": {}}\'::json'
+            ),
         )
         batch_op.drop_column("attribute_filters")
         batch_op.drop_column("type_filters")
