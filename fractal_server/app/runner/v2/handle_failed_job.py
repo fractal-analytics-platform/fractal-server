@@ -22,7 +22,7 @@ from fractal_server.app.db import get_sync_db
 
 
 def mark_last_wftask_as_failed(
-    dataset: DatasetV2,
+    dataset_id: int,
     logger_name: str,
 ) -> None:
     """
@@ -35,7 +35,7 @@ def mark_last_wftask_as_failed(
 
     logger = logging.getLogger(logger_name)
     with next(get_sync_db()) as db:
-        db_dataset = db.get(DatasetV2, dataset.id)
+        db_dataset = db.get(DatasetV2, dataset_id)
         workflowtask_id = db_dataset.history[-1]["workflowtask"]["id"]
         last_item_status = db_dataset.history[-1]["status"]
         if last_item_status != WorkflowTaskStatusTypeV2.SUBMITTED:

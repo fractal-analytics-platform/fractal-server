@@ -350,7 +350,7 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
         mark_last_wftask_as_failed(
-            workflow,
+            dataset_id=dataset_id,
             logger_name=logger_name,
         )
         exception_args_string = "\n".join(e.args)
@@ -366,7 +366,7 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
         mark_last_wftask_as_failed(
-            dataset,
+            dataset_id=dataset_id,
             logger_name=logger_name,
         )
         fail_job(
@@ -383,7 +383,7 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
         mark_last_wftask_as_failed(
-            dataset,
+            dataset_id=dataset_id,
             logger_name=logger_name,
         )
         current_traceback = traceback.format_exc()
