@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.10.5
 
 * App:
     * Add missing space in "To" field for email settings (\#2173).
