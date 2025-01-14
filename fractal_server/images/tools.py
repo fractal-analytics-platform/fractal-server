@@ -68,7 +68,7 @@ def match_filter(
 def filter_image_list(
     images: list[dict[str, Any]],
     type_filters: Optional[dict[str, bool]] = None,
-    attribute_filters: Optional[dict[str, list[Any]]] = None,
+    attribute_filters: Optional[AttributeFiltersType] = None,
 ) -> list[dict[str, Any]]:
     """
     Compute a sublist with images that match a filter set.
@@ -85,18 +85,16 @@ def filter_image_list(
     # When no filter is provided, return all images
     if type_filters is None and attribute_filters is None:
         return images
-    elif type_filters is None:
-        type_filters = {}
-    elif attribute_filters is None:
-        attribute_filters = {}
+    actual_type_filters = type_filters or {}
+    actual_attribute_filters = attribute_filters or {}
 
     filtered_images = [
         copy(this_image)
         for this_image in images
         if match_filter(
-            this_image,
-            type_filters=type_filters,
-            attribute_filters=attribute_filters,
+            image=this_image,
+            type_filters=actual_type_filters,
+            attribute_filters=actual_attribute_filters,
         )
     ]
     return filtered_images
