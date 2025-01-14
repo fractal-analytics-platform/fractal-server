@@ -35,12 +35,14 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-) -> DatasetV2:
+) -> None:
     logger = logging.getLogger(logger_name)
 
-    if (
-        not workflow_dir_local.exists()
-    ):  # FIXME: this should have already happened
+    if not workflow_dir_local.exists():
+        logger.warning(
+            f"Now creating {workflow_dir_local}, "
+            "but it should have already happened."
+        )
         workflow_dir_local.mkdir()
 
     # Initialize local dataset attributes
@@ -308,11 +310,4 @@ def execute_tasks_v2(
             db.commit()
             db.refresh(db_dataset)
 
-            logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
-
-            result = dict(
-                history=db_dataset.history,
-                filters=db_dataset.filters,
-                images=db_dataset.images,
-            )
-    return result
+        logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')

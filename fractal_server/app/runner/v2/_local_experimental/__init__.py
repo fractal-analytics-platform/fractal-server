@@ -21,7 +21,7 @@ def _process_workflow(
     workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
-) -> dict:
+) -> None:
     """
     Internal processing routine
 
@@ -35,7 +35,7 @@ def _process_workflow(
         shutdown_file=workflow_dir_local / SHUTDOWN_FILENAME
     ) as executor:
         try:
-            new_dataset_attributes = execute_tasks_v2(
+            execute_tasks_v2(
                 wf_task_list=workflow.task_list[
                     first_task_index : (last_task_index + 1)  # noqa
                 ],
@@ -54,8 +54,6 @@ def _process_workflow(
                 )
             )
 
-    return new_dataset_attributes
-
 
 async def process_workflow(
     *,
@@ -71,7 +69,7 @@ async def process_workflow(
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> dict:
+) -> None:
     """
     Run a workflow
 
@@ -123,11 +121,6 @@ async def process_workflow(
                             (positive exit codes).
         JobExecutionError: wrapper for errors raised by the tasks' executors
                            (negative exit codes).
-
-    Returns:
-        output_dataset_metadata:
-            The updated metadata for the dataset, as returned by the last task
-            of the workflow
     """
 
     if workflow_dir_remote and (workflow_dir_remote != workflow_dir_local):
@@ -144,7 +137,7 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    new_dataset_attributes = await async_wrap(_process_workflow)(
+    await async_wrap(_process_workflow)(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
@@ -152,4 +145,3 @@ async def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )
-    return new_dataset_attributes

@@ -321,7 +321,6 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        # new_dataset_attributes =
         await process_workflow(
             workflow=workflow,
             dataset=dataset,

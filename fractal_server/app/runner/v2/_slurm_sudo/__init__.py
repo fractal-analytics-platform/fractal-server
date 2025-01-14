@@ -17,7 +17,6 @@ This backend runs fractal workflows in a SLURM cluster using Clusterfutures
 Executor objects.
 """
 from pathlib import Path
-from typing import Any
 from typing import Optional
 from typing import Union
 
@@ -43,16 +42,13 @@ def _process_workflow(
     slurm_account: Optional[str] = None,
     user_cache_dir: str,
     worker_init: Optional[Union[str, list[str]]] = None,
-) -> dict[str, Any]:
+) -> None:
     """
     Internal processing routine for the SLURM backend
 
     This function initialises the a FractalSlurmExecutor, setting logging,
     workflow working dir and user to impersonate. It then schedules the
     workflow tasks and returns the new dataset attributes
-
-    Returns:
-        new_dataset_attributes:
     """
 
     if not slurm_user:
@@ -73,7 +69,7 @@ def _process_workflow(
         common_script_lines=worker_init,
         slurm_account=slurm_account,
     ) as executor:
-        new_dataset_attributes = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)  # noqa
             ],  # noqa
@@ -84,7 +80,6 @@ def _process_workflow(
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
         )
-    return new_dataset_attributes
 
 
 async def process_workflow(
@@ -101,7 +96,7 @@ async def process_workflow(
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> dict:
+) -> None:
     """
     Process workflow (SLURM backend public interface).
     """
@@ -113,8 +108,7 @@ async def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )
-
-    new_dataset_attributes = await async_wrap(_process_workflow)(
+    await async_wrap(_process_workflow)(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
@@ -127,4 +121,3 @@ async def process_workflow(
         slurm_account=slurm_account,
         worker_init=worker_init,
     )
-    return new_dataset_attributes
