@@ -622,7 +622,7 @@ async def test_registration_overwrite(
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -639,12 +639,13 @@ async def test_registration_overwrite(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
         # Run init registration
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -661,6 +662,7 @@ async def test_registration_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # In all non-reference-cycle images, a certain table was updated
         for image in dataset_attrs["images"]:
@@ -677,7 +679,7 @@ async def test_registration_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -693,6 +695,7 @@ async def test_registration_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # In all images, a certain (post-consensus) table was updated
         for image in dataset_attrs["images"]:
@@ -707,7 +710,7 @@ async def test_registration_overwrite(
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -724,6 +727,7 @@ async def test_registration_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # Images are still the same number, but they are marked as registered
         assert len(dataset_attrs["images"]) == 6
@@ -753,7 +757,7 @@ async def test_channel_parallelization_with_overwrite(
             project_id=project.id, zarr_dir=zarr_dir
         )
         # Run create_ome_zarr+yokogawa_to_zarr
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
@@ -768,12 +772,13 @@ async def test_channel_parallelization_with_overwrite(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
         # Run illumination_correction_compound
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -791,6 +796,7 @@ async def test_channel_parallelization_with_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # Check that there are now 2 images
         assert len(dataset_attrs["images"]) == 2
@@ -818,7 +824,7 @@ async def test_channel_parallelization_no_overwrite(
             project_id=project.id, zarr_dir=zarr_dir
         )
         # Run create_ome_zarr+yokogawa_to_zarr
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
@@ -833,12 +839,13 @@ async def test_channel_parallelization_no_overwrite(
             dataset=dataset,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
         # Run illumination_correction_compound
         dataset_with_attrs = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
         )
-        dataset_attrs = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
                     task=fractal_tasks_mock_no_db[
@@ -856,6 +863,7 @@ async def test_channel_parallelization_no_overwrite(
             dataset=dataset_with_attrs,
             **execute_tasks_v2_args,
         )
+        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
         # Check that there are now 4 images
         assert len(dataset_attrs["images"]) == 4
