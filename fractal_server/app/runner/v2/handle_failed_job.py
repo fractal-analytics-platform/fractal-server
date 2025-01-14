@@ -49,7 +49,7 @@ def mark_last_wftask_as_failed(
             logger.warning(
                 "Unexpected branch: "
                 f"Last history item, for {workflowtask_id=}, "
-                "has status {status}. Skip."
+                f"has status {last_item_status}. Skip."
             )
             return
         logger.info(f"Setting history item for {workflowtask_id=} to failed.")
