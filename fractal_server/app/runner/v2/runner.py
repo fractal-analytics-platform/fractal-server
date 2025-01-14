@@ -1,4 +1,3 @@
-# import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
