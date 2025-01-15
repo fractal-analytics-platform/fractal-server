@@ -1,11 +1,25 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.11.0 (unreleased)
+> WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
-* Runner
-    * Integrate database write access in runner component (\#2169).
+# 2.11.0a1
+
+> Note: This release requires running a `fractalctl update-db-data`
+
+(changes that affect API, database lifecycle, runner, ...)
+
+* Split filters into attribute and types (\#2168).
+* Support multiple options for attribute filters (\#2168).
+* Deprecate support for attribute filters in workflowtask (\#2168).
+* Introduce support for attribute filters in jobs (\#2168).
+* Data migration script (\#2168).
+
+# 2.11.0a0
+
 * API:
     * Update and simplify `/api/v2/project/{project_id}/status/` (\#2169).
+* Runner
+    * Integrate database write access in runner component (\#2169).
 
 # 2.10.5
 
