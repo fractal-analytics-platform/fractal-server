@@ -163,3 +163,8 @@ def test_update_legacy_filters():
         TaskOutput(
             filters=legacy_filters, type_filters=legacy_filters["types"]
         )
+
+    # 4
+    output = TaskOutput()
+    assert output.filters is None
+    assert output.type_filters == {}
