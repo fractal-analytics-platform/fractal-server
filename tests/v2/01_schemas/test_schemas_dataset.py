@@ -31,7 +31,7 @@ INVALID_ATTRIBUTE_FILTERS = (
     {"key1": "something"},  # not a list
     {"key1": [1], " key1": [1]},  # non-unique normalized keys
     {"key1": [None]},  # None value
-    {"key1": [1, 1.0]},  # non-homogeneous types - FIXME unsupported
+    {"key1": [1, 1.0]},  # non-homogeneous types
     {"key1": [1, "a"]},  # non-homogeneous types
     {"key1": [[1, 2], [1, 2]]},  # non-scalar type
     # {"key1": [1, True]},  # non-homogeneous types - FIXME unsupported
