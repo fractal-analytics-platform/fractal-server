@@ -32,6 +32,7 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
     raw_execute_tasks_v2(
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
+        job_attribute_filters={},
         **kwargs,
     )
 
@@ -106,8 +107,8 @@ async def test_fractal_demos_01(
         assert _task_names_from_history(dataset_attrs["history"]) == [
             "create_ome_zarr_compound"
         ]
-        assert dataset_attrs["filters"]["attributes"] == {}
-        assert dataset_attrs["filters"]["types"] == {}
+        assert dataset_attrs["attribute_filters"] == {}
+        assert dataset_attrs["type_filters"] == {}
         _assert_image_data_exist(dataset_attrs["images"])
         assert len(dataset_attrs["images"]) == 2
 
@@ -134,8 +135,8 @@ async def test_fractal_demos_01(
             "create_ome_zarr_compound",
             "illumination_correction",
         ]
-        assert dataset_attrs["filters"]["attributes"] == {}
-        assert dataset_attrs["filters"]["types"] == {
+        assert dataset_attrs["attribute_filters"] == {}
+        assert dataset_attrs["type_filters"] == {
             "illumination_correction": True,
         }
         assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
@@ -187,8 +188,8 @@ async def test_fractal_demos_01(
             "MIP_compound",
         ]
 
-        assert dataset_attrs["filters"]["attributes"] == {}
-        assert dataset_attrs["filters"]["types"] == {
+        assert dataset_attrs["attribute_filters"] == {}
+        assert dataset_attrs["type_filters"] == {
             "illumination_correction": True,
             "3D": False,
         }
@@ -310,8 +311,8 @@ async def test_fractal_demos_01_no_overwrite(
             "create_ome_zarr_compound",
             "illumination_correction",
         ]
-        assert dataset_attrs["filters"]["attributes"] == {}
-        assert dataset_attrs["filters"]["types"] == {
+        assert dataset_attrs["attribute_filters"] == {}
+        assert dataset_attrs["type_filters"] == {
             "illumination_correction": True,
         }
         assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
@@ -390,8 +391,8 @@ async def test_fractal_demos_01_no_overwrite(
             "illumination_correction",
             "MIP_compound",
         ]
-        assert dataset_attrs["filters"]["attributes"] == {}
-        assert dataset_attrs["filters"]["types"] == {
+        assert dataset_attrs["attribute_filters"] == {}
+        assert dataset_attrs["type_filters"] == {
             "3D": False,
             "illumination_correction": True,
         }
@@ -429,8 +430,8 @@ async def test_fractal_demos_01_no_overwrite(
             },
         }
 
-        assert dataset_attrs["filters"]["attributes"] == {}
-        assert dataset_attrs["filters"]["types"] == {
+        assert dataset_attrs["attribute_filters"] == {}
+        assert dataset_attrs["type_filters"] == {
             "3D": False,
             "illumination_correction": True,
         }

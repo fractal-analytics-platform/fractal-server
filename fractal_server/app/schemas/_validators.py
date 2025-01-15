@@ -27,7 +27,7 @@ def valstr(attribute: str, accept_none: bool = False):
     return val
 
 
-def valdictkeys(attribute: str):
+def valdict_keys(attribute: str):
     def val(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
         """
         Apply valstr to every key of the dictionary, and fail if there are
@@ -38,7 +38,7 @@ def valdictkeys(attribute: str):
             new_keys = [valstr(f"{attribute}[{key}]")(key) for key in old_keys]
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
-                    f"Dictionary contains multiple identical keys: {d}."
+                    f"Dictionary contains multiple identical keys: '{d}'."
                 )
             for old_key, new_key in zip(old_keys, new_keys):
                 if new_key != old_key:
@@ -101,3 +101,14 @@ def val_unique_list(attribute: str):
         return must_be_unique
 
     return val
+
+
+def root_validate_dict_keys(cls, object: dict) -> dict:
+    """
+    For each dictionary in `object.values()`,
+    checks that that dictionary has only keys of type str.
+    """
+    for dictionary in (v for v in object.values() if isinstance(v, dict)):
+        if not all(isinstance(key, str) for key in dictionary.keys()):
+            raise ValueError("Dictionary keys must be strings.")
+    return object

@@ -29,6 +29,7 @@ from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
+from fractal_server.images.models import AttributeFiltersType
 
 
 def _process_workflow(
@@ -39,6 +40,7 @@ def _process_workflow(
     workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
+    job_attribute_filters: AttributeFiltersType,
 ) -> None:
     """
     Run the workflow using a `FractalThreadPoolExecutor`.
@@ -54,6 +56,7 @@ def _process_workflow(
             workflow_dir_remote=workflow_dir_local,
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
+            job_attribute_filters=job_attribute_filters,
         )
 
 
@@ -66,6 +69,7 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
+    job_attribute_filters: AttributeFiltersType,
     # Slurm-specific
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -146,4 +150,5 @@ async def process_workflow(
         workflow_dir_local=workflow_dir_local,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
+        job_attribute_filters=job_attribute_filters,
     )

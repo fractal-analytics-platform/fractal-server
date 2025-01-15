@@ -327,6 +327,7 @@ async def submit_workflow(
             worker_init=worker_init,
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
+            job_attribute_filters=job.attribute_filters,
             **backend_specific_kwargs,
         )
 

@@ -1,17 +1,22 @@
 from datetime import datetime
+from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
+from .._filter_validators import validate_attribute_filters
+from .._filter_validators import validate_type_filters
+from .._validators import root_validate_dict_keys
 from .._validators import valstr
 from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.urls import normalize_url
 
 
@@ -34,16 +39,28 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     zarr_dir: Optional[str] = None
 
-    filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
+
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
+
+    _name = validator("name", allow_reuse=True)(valstr("name"))
+
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
         return v
-
-    _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
 class DatasetReadV2(BaseModel):
@@ -59,23 +76,36 @@ class DatasetReadV2(BaseModel):
     timestamp_created: datetime
 
     zarr_dir: str
-    filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool]
+    attribute_filters: AttributeFiltersType
 
 
 class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
     name: Optional[str]
     zarr_dir: Optional[str]
-    filters: Optional[Filters]
+    type_filters: Optional[dict[str, bool]]
+    attribute_filters: Optional[dict[str, list[Any]]]
 
     # Validators
+
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
+
+    _name = validator("name", allow_reuse=True)(valstr("name"))
+
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
         return v
-
-    _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
 class DatasetImportV2(BaseModel, extra=Extra.forbid):
@@ -86,15 +116,29 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         name:
         zarr_dir:
         images:
-        filters:
+        type_filters:
+        attribute_filters:
     """
 
     name: str
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    filters: Filters = Field(default_factory=Filters)
+
+    type_filters: dict[str, bool] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
+
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
+
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: str) -> str:
         return normalize_url(v)
@@ -108,10 +152,12 @@ class DatasetExportV2(BaseModel):
         name:
         zarr_dir:
         images:
-        filters:
+        type_filters:
+        attribute_filters:
     """
 
     name: str
     zarr_dir: str
     images: list[SingleImage]
-    filters: Filters
+    type_filters: dict[str, bool]
+    attribute_filters: AttributeFiltersType

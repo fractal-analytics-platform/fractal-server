@@ -8,7 +8,6 @@ from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 
-from ....images import Filters
 from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
@@ -24,9 +23,11 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
+from fractal_server.images.models import AttributeFiltersType
 
 
 def execute_tasks_v2(
+    *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
     executor: ThreadPoolExecutor,
@@ -34,6 +35,7 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
+    job_attribute_filters: AttributeFiltersType,
 ) -> None:
     logger = logging.getLogger(logger_name)
 
@@ -47,7 +49,7 @@ def execute_tasks_v2(
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    tmp_filters = deepcopy(dataset.filters)
+    tmp_type_filters = deepcopy(dataset.type_filters)
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -57,19 +59,20 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        pre_filters = dict(
-            types=copy(tmp_filters["types"]),
-            attributes=copy(tmp_filters["attributes"]),
-        )
-        pre_filters["types"].update(wftask.input_filters["types"])
-        pre_filters["attributes"].update(wftask.input_filters["attributes"])
+        pre_type_filters = copy(tmp_type_filters)
+        pre_type_filters.update(wftask.type_filters)
         filtered_images = filter_image_list(
             images=tmp_images,
-            filters=Filters(**pre_filters),
+            type_filters=pre_type_filters,
+            attribute_filters=job_attribute_filters,
         )
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
-            if not match_filter(image, Filters(types=task.input_types)):
+            if not match_filter(
+                image=image,
+                type_filters=task.input_types,
+                attribute_filters={},
+            ):
                 raise JobExecutionError(
                     "Invalid filtered image list\n"
                     f"Task input types: {task.input_types=}\n"
@@ -259,38 +262,30 @@ def execute_tasks_v2(
             else:
                 tmp_images.pop(img_search["index"])
 
-        # Update filters.attributes:
-        # current + (task_output: not really, in current examples..)
-        if current_task_output.filters is not None:
-            tmp_filters["attributes"].update(
-                current_task_output.filters.attributes
-            )
+        # Update type_filters
 
-        # Find manifest ouptut types
-        types_from_manifest = task.output_types
-
-        # Find task-output types
-        if current_task_output.filters is not None:
-            types_from_task = current_task_output.filters.types
-        else:
-            types_from_task = {}
+        # Assign the type filters based on different sources
+        # (task manifest and post-execution task output)
+        type_filters_from_task_manifest = task.output_types
+        type_filters_from_task_output = current_task_output.type_filters
 
         # Check that key sets are disjoint
-        set_types_from_manifest = set(types_from_manifest.keys())
-        set_types_from_task = set(types_from_task.keys())
-        if not set_types_from_manifest.isdisjoint(set_types_from_task):
-            overlap = set_types_from_manifest.intersection(set_types_from_task)
+        keys_from_manifest = set(type_filters_from_task_manifest.keys())
+        keys_from_task_output = set(type_filters_from_task_output.keys())
+        if not keys_from_manifest.isdisjoint(keys_from_task_output):
+            overlap = keys_from_manifest.intersection(keys_from_task_output)
             raise JobExecutionError(
                 "Some type filters are being set twice, "
                 f"for task '{task_name}'.\n"
-                f"Types from task output: {types_from_task}\n"
-                f"Types from task maniest: {types_from_manifest}\n"
+                f"Types from task output: {type_filters_from_task_output}\n"
+                "Types from task manifest: "
+                f"{type_filters_from_task_manifest}\n"
                 f"Overlapping keys: {overlap}"
             )
 
         # Update filters.types
-        tmp_filters["types"].update(types_from_manifest)
-        tmp_filters["types"].update(types_from_task)
+        tmp_type_filters.update(type_filters_from_task_manifest)
+        tmp_type_filters.update(type_filters_from_task_output)
 
         # Write current dataset attributes (history, images, filters) into the
         # database. They can be used (1) to retrieve the latest state
@@ -299,9 +294,13 @@ def execute_tasks_v2(
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
-            db_dataset.filters = tmp_filters
+            db_dataset.type_filters = tmp_type_filters
             db_dataset.images = tmp_images
-            for attribute_name in ["filters", "history", "images"]:
+            for attribute_name in [
+                "type_filters",
+                "history",
+                "images",
+            ]:
                 flag_modified(db_dataset, attribute_name)
             db.merge(db_dataset)
             db.commit()

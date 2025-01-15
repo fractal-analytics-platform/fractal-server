@@ -14,7 +14,7 @@ def test_issue_1783():
         id=1,
         workflow_id=1,
         order=0,
-        input_filters=dict(attributes=dict(), types=dict()),
+        type_filters=dict(),
         task_id=1,
         task=dict(
             id=1,
@@ -36,7 +36,7 @@ def test_issue_1783():
         id=1,
         workflow_id=1,
         order=0,
-        input_filters=dict(attributes=dict(), types=dict()),
+        type_filters=dict(),
         task_legacy_id=1,
         task_legacy=dict(
             id=1,
