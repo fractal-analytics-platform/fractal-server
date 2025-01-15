@@ -50,7 +50,6 @@ def execute_tasks_v2(
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
     tmp_type_filters = deepcopy(dataset.type_filters)
-    tmp_attribute_filters = deepcopy(dataset.attribute_filters)
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -60,14 +59,12 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        pre_attribute_filters = deepcopy(tmp_attribute_filters)
-        pre_attribute_filters.update(job_attribute_filters)
         pre_type_filters = copy(tmp_type_filters)
         pre_type_filters.update(wftask.type_filters)
         filtered_images = filter_image_list(
             images=tmp_images,
             type_filters=pre_type_filters,
-            attribute_filters=pre_attribute_filters,
+            attribute_filters=job_attribute_filters,
         )
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
@@ -297,11 +294,9 @@ def execute_tasks_v2(
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
-            db_dataset.attribute_filters = tmp_attribute_filters
             db_dataset.type_filters = tmp_type_filters
             db_dataset.images = tmp_images
             for attribute_name in [
-                "attribute_filters",
                 "type_filters",
                 "history",
                 "images",
