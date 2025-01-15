@@ -20,6 +20,8 @@ def test_find_image_by_zarr_url():
         "index": 2,
         "image": {"zarr_url": "/z"},
     }
+    res = find_image_by_zarr_url(zarr_url="/k", images=images)
+    assert res is None
 
 
 def test_match_filter():
