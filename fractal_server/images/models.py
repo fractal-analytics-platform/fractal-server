@@ -12,7 +12,7 @@ from fractal_server.urls import normalize_url
 AttributeFiltersType = dict[str, Optional[list[Any]]]
 
 
-class SingleImageBase(BaseModel):
+class _SingleImageBase(BaseModel):
     """
     Base for SingleImage and SingleImageTaskOutput.
 
@@ -45,7 +45,7 @@ class SingleImageBase(BaseModel):
             return normalize_url(v)
 
 
-class SingleImageTaskOutput(SingleImageBase):
+class SingleImageTaskOutput(_SingleImageBase):
     """
     `SingleImageBase`, with scalar `attributes` values (`None` included).
     """
@@ -64,7 +64,7 @@ class SingleImageTaskOutput(SingleImageBase):
         return v
 
 
-class SingleImage(SingleImageBase):
+class SingleImage(_SingleImageBase):
     """
     `SingleImageBase`, with scalar `attributes` values (`None` excluded).
     """

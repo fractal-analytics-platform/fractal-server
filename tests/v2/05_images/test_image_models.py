@@ -2,19 +2,19 @@ from typing import TypeVar
 
 from pydantic import ValidationError
 
+from fractal_server.images.models import _SingleImageBase
 from fractal_server.images.models import SingleImage
-from fractal_server.images.models import SingleImageBase
 from fractal_server.images.models import SingleImageTaskOutput
 from fractal_server.images.models import SingleImageUpdate
 
 T = TypeVar("T")
 
 
-def image_ok(model: T = SingleImageBase, **kwargs) -> T:
+def image_ok(model: T = _SingleImageBase, **kwargs) -> T:
     return model(**kwargs)
 
 
-def image_fail(model: T = SingleImageBase, **kwargs) -> str:
+def image_fail(model: T = _SingleImageBase, **kwargs) -> str:
     try:
         model(**kwargs)
         raise AssertionError(f"{model=}, {kwargs=}")
