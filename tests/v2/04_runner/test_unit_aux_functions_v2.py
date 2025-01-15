@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.app.runner.v2.merge_outputs import merge_outputs
 from fractal_server.app.runner.v2.runner_functions import (
     _cast_and_validate_InitTaskOutput,
 )
@@ -84,3 +85,34 @@ def test_cast_and_validate_functions():
     )
     with pytest.raises(JobExecutionError):
         _cast_and_validate_InitTaskOutput(dict(invalid=True))
+
+
+def test_merge_outputs():
+
+    # 1
+    task_outputs = [
+        TaskOutput(type_filters={"a": True}),
+        TaskOutput(type_filters={"a": True}),
+    ]
+    merged = merge_outputs(task_outputs)
+    assert merged.type_filters == {"a": True}
+
+    # 2
+    task_outputs = [
+        TaskOutput(type_filters={"a": True}),
+        TaskOutput(type_filters={"b": True}),
+    ]
+    with pytest.raises(ValueError):
+        merge_outputs(task_outputs)
+
+    # 3
+    task_outputs = [
+        TaskOutput(type_filters={"a": True}),
+        TaskOutput(type_filters={"a": False}),
+    ]
+    with pytest.raises(ValueError):
+        merge_outputs(task_outputs)
+
+    # 4
+    merged = merge_outputs([])
+    assert merged == TaskOutput()
