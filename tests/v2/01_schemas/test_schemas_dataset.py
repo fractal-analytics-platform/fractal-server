@@ -26,12 +26,15 @@ VALID_ATTRIBUTE_FILTERS = (
 INVALID_ATTRIBUTE_FILTERS = (
     {True: ["value"]},  # non-string key
     {1: ["value"]},  # non-string key
+    {"key1": 1},  # not a list
+    {"key1": True},  # not a list
+    {"key1": "something"},  # not a list
     {"key1": [1], " key1": [1]},  # non-unique normalized keys
     {"key1": [None]},  # None value
-    # {"key1": [1, True]},  # non-homogeneous types - FIXME unsupported
     {"key1": [1, 1.0]},  # non-homogeneous types - FIXME unsupported
     {"key1": [1, "a"]},  # non-homogeneous types
     {"key1": [[1, 2], [1, 2]]},  # non-scalar type
+    # {"key1": [1, True]},  # non-homogeneous types - FIXME unsupported
 )
 
 
@@ -60,21 +63,6 @@ async def test_schemas_dataset_v2():
 
     project = ProjectV2(id=1, name="project")
 
-    # Create
-    with pytest.raises(ValidationError):
-        # Not a list
-        DatasetCreateV2(
-            name="name",
-            zarr_dir="/zarr",
-            attribute_filters={"x": 1},
-        )
-    with pytest.raises(ValidationError):
-        # Non-scalar attribute
-        DatasetCreateV2(
-            name="name",
-            zarr_dir="/zarr",
-            attribute_filters={"x": [{1, 0}]},
-        )
     with pytest.raises(ValidationError):
         # Non-boolean types
         DatasetCreateV2(name="name", zarr_dir="/zarr", type_filters={"a": "b"})
@@ -83,7 +71,6 @@ async def test_schemas_dataset_v2():
 
     dataset_create = DatasetCreateV2(
         name="name",
-        attribute_filters={"x": [10, 11]},
         zarr_dir="/tmp/",
     )
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
