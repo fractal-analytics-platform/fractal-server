@@ -142,3 +142,24 @@ def test_merge_outputs():
         SingleImageTaskOutput(zarr_url="/c"),
     ]
     assert merged.image_list_removals == ["/x", "/y", "/z", "/x", "/y", "/z"]
+
+
+def test_update_legacy_filters():
+
+    legacy_filters = {"types": {"a": True}}
+
+    # 1
+    output = TaskOutput(filters=legacy_filters)
+    assert output.filters is None
+    assert output.type_filters == legacy_filters["types"]
+
+    # 2
+    output = TaskOutput(type_filters=legacy_filters["types"])
+    assert output.filters is None
+    assert output.type_filters == legacy_filters["types"]
+
+    # 3
+    with pytest.raises(ValidationError):
+        TaskOutput(
+            filters=legacy_filters, type_filters=legacy_filters["types"]
+        )
