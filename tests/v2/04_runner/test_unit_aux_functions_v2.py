@@ -13,6 +13,7 @@ from fractal_server.app.runner.v2.runner_functions import (
 )
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.app.runner.v2.task_interface import TaskOutput
+from fractal_server.images import SingleImageTaskOutput
 
 
 def test_deduplicate_list_of_dicts():
@@ -116,3 +117,28 @@ def test_merge_outputs():
     # 4
     merged = merge_outputs([])
     assert merged == TaskOutput()
+
+    # 5
+    task_outputs = [
+        TaskOutput(
+            image_list_updates=[
+                SingleImageTaskOutput(zarr_url="/a"),
+                SingleImageTaskOutput(zarr_url="/b"),
+            ],
+            image_list_removals=["/x", "/y", "/z"],
+        ),
+        TaskOutput(
+            image_list_updates=[
+                SingleImageTaskOutput(zarr_url="/c"),
+                SingleImageTaskOutput(zarr_url="/a"),
+            ],
+            image_list_removals=["/x", "/y", "/z"],
+        ),
+    ]
+    merged = merge_outputs(task_outputs)
+    assert merged.image_list_updates == [
+        SingleImageTaskOutput(zarr_url="/a"),
+        SingleImageTaskOutput(zarr_url="/b"),
+        SingleImageTaskOutput(zarr_url="/c"),
+    ]
+    assert merged.image_list_removals == ["/x", "/y", "/z", "/x", "/y", "/z"]
