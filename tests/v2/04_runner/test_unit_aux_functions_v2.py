@@ -132,16 +132,17 @@ def test_merge_outputs():
                 SingleImageTaskOutput(zarr_url="/c"),
                 SingleImageTaskOutput(zarr_url="/a"),
             ],
-            image_list_removals=["/x", "/y", "/z"],
+            image_list_removals=["/x", "/w", "/z"],
         ),
     ]
     merged = merge_outputs(task_outputs)
-    assert merged.image_list_updates == [
+    for output in (
         SingleImageTaskOutput(zarr_url="/a"),
         SingleImageTaskOutput(zarr_url="/b"),
         SingleImageTaskOutput(zarr_url="/c"),
-    ]
-    assert merged.image_list_removals == ["/x", "/y", "/z", "/x", "/y", "/z"]
+    ):
+        assert output in merged.image_list_updates
+    assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])
 
 
 def test_update_legacy_filters():

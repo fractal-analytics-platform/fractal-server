@@ -23,6 +23,7 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
             )
 
     final_image_list_updates = deduplicate_list(final_image_list_updates)
+    final_image_list_removals = list(set(final_image_list_removals))
 
     final_output = TaskOutput(
         image_list_updates=final_image_list_updates,
