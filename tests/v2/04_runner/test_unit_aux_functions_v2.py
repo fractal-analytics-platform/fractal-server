@@ -136,12 +136,11 @@ def test_merge_outputs():
         ),
     ]
     merged = merge_outputs(task_outputs)
-    for output in (
+    assert merged.image_list_updates == [
         SingleImageTaskOutput(zarr_url="/a"),
         SingleImageTaskOutput(zarr_url="/b"),
         SingleImageTaskOutput(zarr_url="/c"),
-    ):
-        assert output in merged.image_list_updates
+    ]
     assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])
 
 
