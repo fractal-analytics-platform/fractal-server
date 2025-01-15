@@ -504,6 +504,7 @@ async def test_dataset_export(
         assert res_dataset["images"] == IMAGES
         assert res_dataset["attribute_filters"] == dict()
         assert res_dataset["type_filters"] == dict()
+        assert "filters" not in res_dataset.keys()
 
 
 async def test_dataset_import(
