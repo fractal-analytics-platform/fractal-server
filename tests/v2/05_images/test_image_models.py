@@ -10,11 +10,11 @@ from fractal_server.images.models import SingleImageUpdate
 T = TypeVar("T")
 
 
-def image_ok(model: T = _SingleImageBase, **kwargs) -> T:
+def image_ok(model: T, **kwargs) -> T:
     return model(**kwargs)
 
 
-def image_fail(model: T = _SingleImageBase, **kwargs) -> str:
+def image_fail(model: T, **kwargs) -> str:
     try:
         model(**kwargs)
         raise AssertionError(f"{model=}, {kwargs=}")
@@ -24,26 +24,28 @@ def image_fail(model: T = _SingleImageBase, **kwargs) -> str:
 
 def test_SingleImageBase():
 
-    image_fail()
+    image_fail(model=_SingleImageBase)
 
     # zarr_url
-    image = image_ok(zarr_url="/x")
+    image = image_ok(model=_SingleImageBase, zarr_url="/x")
     assert image.dict() == {
         "zarr_url": "/x",
         "origin": None,
         "attributes": {},
         "types": {},
     }
-    image_fail(zarr_url="x")  # see 'test_url_normalization'
-    image_fail(zarr_url=None)
+    image_fail(
+        model=_SingleImageBase, zarr_url="x"
+    )  # see 'test_url_normalization'
+    image_fail(model=_SingleImageBase, zarr_url=None)
 
     # origin
-    image = image_ok(zarr_url="/x", origin="/y")
+    image = image_ok(model=_SingleImageBase, zarr_url="/x", origin="/y")
     assert image.origin == "/y"
-    image = image_ok(zarr_url="/x", origin=None)
+    image = image_ok(model=_SingleImageBase, zarr_url="/x", origin=None)
     assert image.origin is None
-    image_fail(zarr_url="/x", origin="y")
-    image_fail(origin="/y")
+    image_fail(model=_SingleImageBase, zarr_url="/x", origin="y")
+    image_fail(model=_SingleImageBase, origin="/y")
 
     # attributes
     valid_attributes = {
@@ -57,43 +59,53 @@ def test_SingleImageBase():
         "function": lambda x: x,
         "type": int,
     }  # Any
-    image = image_ok(zarr_url="/x", attributes=valid_attributes)
+    image = image_ok(
+        model=_SingleImageBase, zarr_url="/x", attributes=valid_attributes
+    )
     assert image.attributes == valid_attributes
     invalid_attributes = {
         "repeated": 1,
         "  repeated ": 2,
     }
-    image_fail(zarr_url="/x", attributes=invalid_attributes)
+    image_fail(
+        model=_SingleImageBase, zarr_url="/x", attributes=invalid_attributes
+    )
 
     # types
     valid_types = {"y": True, "n": False}  # only booleans
-    image = image_ok(zarr_url="/x", types=valid_types)
+    image = image_ok(model=_SingleImageBase, zarr_url="/x", types=valid_types)
     assert image.types == valid_types
-    image_fail(zarr_url="/x", types={"a": "not a bool"})
-    image_fail(zarr_url="/x", types={"a": True, " a": True})
-    image_ok(zarr_url="/x", types={1: True})
+    image_fail(
+        model=_SingleImageBase, zarr_url="/x", types={"a": "not a bool"}
+    )
+    image_fail(
+        model=_SingleImageBase, zarr_url="/x", types={"a": True, " a": True}
+    )
+    image_ok(model=_SingleImageBase, zarr_url="/x", types={1: True})
 
 
 def test_url_normalization():
 
-    image = image_ok(zarr_url="/valid/url")
+    image = image_ok(model=_SingleImageBase, zarr_url="/valid/url")
     assert image.zarr_url == "/valid/url"
-    image = image_ok(zarr_url="/remove/slash/")
+    image = image_ok(model=_SingleImageBase, zarr_url="/remove/slash/")
     assert image.zarr_url == "/remove/slash"
 
-    e = image_fail(zarr_url="s3/foo")
+    e = image_fail(model=_SingleImageBase, zarr_url="s3/foo")
     assert "S3 handling" in e
-    e = image_fail(zarr_url="https://foo.bar")
+    e = image_fail(model=_SingleImageBase, zarr_url="https://foo.bar")
     assert "URLs must begin" in e
 
-    image_ok(zarr_url="/x", origin=None)
-    image_ok(zarr_url="/x", origin="/y")
-    image = image_ok(zarr_url="/x", origin="/y///")
+    image_ok(model=_SingleImageBase, zarr_url="/x", origin=None)
+    image_ok(model=_SingleImageBase, zarr_url="/x", origin="/y")
+    image = image_ok(model=_SingleImageBase, zarr_url="/x", origin="/y///")
     assert image.origin == "/y"
 
-    e = image_fail(zarr_url="/x", origin="s3/foo")
+    e = image_fail(model=_SingleImageBase, zarr_url="/x", origin="s3/foo")
     assert "S3 handling" in e
-    e = image_fail(zarr_url="/x", origin="https://foo.bar")
+    e = image_fail(
+        model=_SingleImageBase, zarr_url="/x", origin="https://foo.bar"
+    )
     assert "URLs must begin" in e
 
 
@@ -224,6 +236,10 @@ def test_SingleImageUpdate():
     valid_types = {"y": True, "n": False}  # only booleans
     image = image_ok(model=SingleImageUpdate, zarr_url="/x", types=valid_types)
     assert image.types == valid_types
-    image_fail(zarr_url="/x", types={"a": "not a bool"})
-    image_fail(zarr_url="/x", types={"a": True, " a": True})
-    image_ok(zarr_url="/x", types={1: True})
+    image_fail(
+        model=SingleImageUpdate, zarr_url="/x", types={"a": "not a bool"}
+    )
+    image_fail(
+        model=SingleImageUpdate, zarr_url="/x", types={"a": True, " a": True}
+    )
+    image_ok(model=SingleImageUpdate, zarr_url="/x", types={1: True})
