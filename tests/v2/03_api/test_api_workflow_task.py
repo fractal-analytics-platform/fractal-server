@@ -8,7 +8,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.images.models import Filters
+
 
 PREFIX = "api/v2"
 
@@ -296,10 +296,7 @@ async def test_patch_workflow_task(
             args_parallel={"c": 333, "d": 444},
             meta_non_parallel={"non": "parallel"},
             meta_parallel={"executor": "cpu-low"},
-            input_filters={
-                "attributes": {"a": "b", "c": "d"},
-                "types": {"e": True, "f": False, "g": True},
-            },
+            type_filters={"e": True, "f": False, "g": True},
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -323,9 +320,7 @@ async def test_patch_workflow_task(
         assert (
             patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
         )
-        assert (
-            patched_workflow_task["input_filters"] == payload["input_filters"]
-        )
+        assert patched_workflow_task["type_filters"] == payload["type_filters"]
         assert res.status_code == 200
 
         payload_up = dict(
@@ -377,15 +372,13 @@ async def test_patch_workflow_task(
             f"wftask/{workflow['task_list'][0]['id']}/",
             json=dict(
                 args_non_parallel={},
-                input_filters=Filters().dict(),
+                type_filters=dict(),
             ),
         )
         patched_workflow_task = res.json()
         debug(patched_workflow_task["args_non_parallel"])
         assert patched_workflow_task["args_non_parallel"] is None
-        assert patched_workflow_task["input_filters"] == dict(
-            attributes={}, types={}
-        )
+        assert patched_workflow_task["type_filters"] == dict()
         assert res.status_code == 200
 
         # Test 422

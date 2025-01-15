@@ -7,6 +7,6 @@ async def _get_dataset_attrs(db, dataset_id) -> dict[str, Any]:
     await db.close()
     db_dataset = await db.get(DatasetV2, dataset_id)
     dataset_attrs = db_dataset.model_dump(
-        include={"filters", "history", "images"}
+        include={"type_filters", "attribute_filters", "history", "images"}
     )
     return dataset_attrs

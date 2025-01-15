@@ -29,6 +29,7 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs) -> None:
     raw_execute_tasks_v2(
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
+        job_attribute_filters={},
         **kwargs,
     )
 

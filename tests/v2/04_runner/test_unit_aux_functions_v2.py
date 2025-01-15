@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.app.runner.v2.merge_outputs import merge_outputs
 from fractal_server.app.runner.v2.runner_functions import (
     _cast_and_validate_InitTaskOutput,
 )
@@ -12,6 +13,7 @@ from fractal_server.app.runner.v2.runner_functions import (
 )
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.app.runner.v2.task_interface import TaskOutput
+from fractal_server.images import SingleImageTaskOutput
 
 
 def test_deduplicate_list_of_dicts():
@@ -84,3 +86,85 @@ def test_cast_and_validate_functions():
     )
     with pytest.raises(JobExecutionError):
         _cast_and_validate_InitTaskOutput(dict(invalid=True))
+
+
+def test_merge_outputs():
+
+    # 1
+    task_outputs = [
+        TaskOutput(type_filters={"a": True}),
+        TaskOutput(type_filters={"a": True}),
+    ]
+    merged = merge_outputs(task_outputs)
+    assert merged.type_filters == {"a": True}
+
+    # 2
+    task_outputs = [
+        TaskOutput(type_filters={"a": True}),
+        TaskOutput(type_filters={"b": True}),
+    ]
+    with pytest.raises(ValueError):
+        merge_outputs(task_outputs)
+
+    # 3
+    task_outputs = [
+        TaskOutput(type_filters={"a": True}),
+        TaskOutput(type_filters={"a": False}),
+    ]
+    with pytest.raises(ValueError):
+        merge_outputs(task_outputs)
+
+    # 4
+    merged = merge_outputs([])
+    assert merged == TaskOutput()
+
+    # 5
+    task_outputs = [
+        TaskOutput(
+            image_list_updates=[
+                SingleImageTaskOutput(zarr_url="/a"),
+                SingleImageTaskOutput(zarr_url="/b"),
+            ],
+            image_list_removals=["/x", "/y", "/z"],
+        ),
+        TaskOutput(
+            image_list_updates=[
+                SingleImageTaskOutput(zarr_url="/c"),
+                SingleImageTaskOutput(zarr_url="/a"),
+            ],
+            image_list_removals=["/x", "/w", "/z"],
+        ),
+    ]
+    merged = merge_outputs(task_outputs)
+    assert merged.image_list_updates == [
+        SingleImageTaskOutput(zarr_url="/a"),
+        SingleImageTaskOutput(zarr_url="/b"),
+        SingleImageTaskOutput(zarr_url="/c"),
+    ]
+    assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])
+
+
+def test_update_legacy_filters():
+
+    legacy_filters = {"types": {"a": True}}
+
+    # 1
+    output = TaskOutput(filters=legacy_filters)
+    assert output.filters is None
+    assert output.type_filters == legacy_filters["types"]
+
+    # 2
+    output = TaskOutput(type_filters=legacy_filters["types"])
+    assert output.filters is None
+    assert output.type_filters == legacy_filters["types"]
+
+    # 3
+    with pytest.raises(ValidationError):
+        TaskOutput(
+            filters=legacy_filters, type_filters=legacy_filters["types"]
+        )
+
+    # 4
+    output = TaskOutput()
+    assert output.filters is None
+    assert output.type_filters == {}

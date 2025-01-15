@@ -10,7 +10,7 @@ from pydantic import root_validator
 from pydantic import validator
 
 from fractal_server.app.schemas._validators import val_unique_list
-from fractal_server.app.schemas._validators import valdictkeys
+from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.app.schemas._validators import valstr
 from fractal_server.string_tools import validate_cmd
 
@@ -66,25 +66,25 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     _version = validator("version", allow_reuse=True)(valstr("version"))
 
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
     _args_schema_non_parallel = validator(
         "args_schema_non_parallel", allow_reuse=True
-    )(valdictkeys("args_schema_non_parallel"))
+    )(valdict_keys("args_schema_non_parallel"))
     _args_schema_parallel = validator(
         "args_schema_parallel", allow_reuse=True
-    )(valdictkeys("args_schema_parallel"))
+    )(valdict_keys("args_schema_parallel"))
     _args_schema_version = validator("args_schema_version", allow_reuse=True)(
         valstr("args_schema_version")
     )
     _input_types = validator("input_types", allow_reuse=True)(
-        valdictkeys("input_types")
+        valdict_keys("input_types")
     )
     _output_types = validator("output_types", allow_reuse=True)(
-        valdictkeys("output_types")
+        valdict_keys("output_types")
     )
 
     _category = validator("category", allow_reuse=True)(
@@ -158,10 +158,10 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
         "command_non_parallel", allow_reuse=True
     )(valstr("command_non_parallel"))
     _input_types = validator("input_types", allow_reuse=True)(
-        valdictkeys("input_types")
+        valdict_keys("input_types")
     )
     _output_types = validator("output_types", allow_reuse=True)(
-        valdictkeys("output_types")
+        valdict_keys("output_types")
     )
 
     _category = validator("category", allow_reuse=True)(

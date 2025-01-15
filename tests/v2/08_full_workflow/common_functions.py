@@ -128,7 +128,7 @@ async def full_workflow(
         assert res.status_code == 200
         dataset = res.json()
         assert len(dataset["history"]) == 2
-        assert dataset["filters"]["types"] == {"3D": False}
+        assert dataset["type_filters"] == {"3D": False}
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
             "images/query/",
@@ -281,13 +281,10 @@ async def full_workflow_TaskExecutionError(
         )
         assert res.status_code == 200
         dataset = res.json()
-        EXPECTED_FILTERS = {
-            "attributes": {},
-            "types": {
-                "3D": False,
-            },
-        }
-        assert dataset["filters"] == EXPECTED_FILTERS
+        EXPECTED_TYPE_FILTERS = {"3D": False}
+        EXPECTED_ATTRIBUTE_FILTERS = {}
+        assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
+        assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
         assert len(dataset["history"]) == 3
         assert [item["status"] for item in dataset["history"]] == [
             "done",

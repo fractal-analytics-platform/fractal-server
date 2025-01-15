@@ -29,8 +29,8 @@ from ...executors.slurm.ssh.executor import FractalSlurmSSHExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.logger import set_logger
-
 
 logger = set_logger(__name__)
 
@@ -46,6 +46,7 @@ def _process_workflow(
     last_task_index: int,
     fractal_ssh: FractalSSH,
     worker_init: Optional[Union[str, list[str]]] = None,
+    job_attribute_filters: AttributeFiltersType,
 ) -> None:
     """
     Run the workflow using a `FractalSlurmSSHExecutor`.
@@ -86,6 +87,7 @@ def _process_workflow(
             workflow_dir_remote=workflow_dir_remote,
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
+            job_attribute_filters=job_attribute_filters,
         )
 
 
@@ -98,12 +100,13 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
-    # Not used
+    job_attribute_filters: AttributeFiltersType,
     fractal_ssh: FractalSSH,
+    worker_init: Optional[str] = None,
+    # Not used
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
-    worker_init: Optional[str] = None,
 ) -> None:
     """
     Process workflow (SLURM backend public interface)
@@ -127,4 +130,5 @@ async def process_workflow(
         last_task_index=last_task_index,
         worker_init=worker_init,
         fractal_ssh=fractal_ssh,
+        job_attribute_filters=job_attribute_filters,
     )
