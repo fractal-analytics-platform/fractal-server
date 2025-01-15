@@ -4,6 +4,9 @@ from fractal_server.app.runner.v2.task_interface import TaskOutput
 
 def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
 
+    if len(task_outputs) == 0:
+        return TaskOutput()
+
     final_image_list_updates = []
     final_image_list_removals = []
 
@@ -21,16 +24,10 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
 
     final_image_list_updates = deduplicate_list(final_image_list_updates)
 
-    if task_outputs:
-        final_output = TaskOutput(
-            image_list_updates=final_image_list_updates,
-            image_list_removals=final_image_list_removals,
-            type_filters=task_outputs[0].type_filters,
-        )
-    else:
-        final_output = TaskOutput(
-            image_list_updates=final_image_list_updates,
-            image_list_removals=final_image_list_removals,
-        )
+    final_output = TaskOutput(
+        image_list_updates=final_image_list_updates,
+        image_list_removals=final_image_list_removals,
+        type_filters=task_outputs[0].type_filters,
+    )
 
     return final_output
