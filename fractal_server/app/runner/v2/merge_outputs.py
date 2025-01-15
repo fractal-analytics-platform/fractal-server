@@ -22,6 +22,7 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
                 f"but {task_outputs[0].type_filters=}"
             )
 
+    # Note: the ordering of `image_list_removals` is not guaranteed
     final_image_list_updates = deduplicate_list(final_image_list_updates)
     final_image_list_removals = list(set(final_image_list_removals))
 
