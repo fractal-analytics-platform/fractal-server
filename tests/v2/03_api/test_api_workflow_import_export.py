@@ -489,3 +489,125 @@ async def test_unit_disambiguate_task_groups(
     )
     debug(task_group)
     assert task_group is None
+
+
+async def test_import_with_legacy_filters(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+        task = await task_factory_v2(
+            name="mytask",
+            version="myversion",
+            user_id=user.id,
+        )
+        TYPE_FILTERS = dict(key1=True, key2=False)
+        payload = {
+            "name": "myworkflow0",
+            "task_list": [
+                {
+                    # Task with new type filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "type_filters": TYPE_FILTERS,
+                },
+                {
+                    # Task with legacy filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "filters": {"types": TYPE_FILTERS, "attributes": {}},
+                },
+            ],
+        }
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=payload,
+        )
+        assert res.status_code == 201
+        for wft in res.json()["task_list"]:
+            assert "filters" not in wft.keys()
+            assert wft["type_filters"] == TYPE_FILTERS
+
+        # FAILURE
+        payload = {
+            "name": "myworkflow1",
+            "task_list": [
+                {
+                    # Task with new type filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "type_filters": TYPE_FILTERS,
+                    "filters": {"types": TYPE_FILTERS, "attributes": {}},
+                }
+            ],
+        }
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "Cannot set filters both through the legacy" in str(res.json())
+
+        # FAILURE
+        payload = {
+            "name": "myworkflow2",
+            "task_list": [
+                {
+                    # Task with new type filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "filters": {
+                        "types": {"key1": "not-a-bool"},
+                        "attributes": {},
+                    },
+                }
+            ],
+        }
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "value could not be parsed to a boolean" in str(res.json())
+
+        # FAILURE
+        payload = {
+            "name": "myworkflow3",
+            "task_list": [
+                {
+                    # Task with new type filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "filters": {"types": {}, "attributes": {"key1": "value1"}},
+                }
+            ],
+        }
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "Cannot set attribute filters for WorkflowTasks." in str(
+            res.json()
+        )
