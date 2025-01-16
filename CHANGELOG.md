@@ -2,6 +2,10 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# 2.11.0a3
+
+* Support importing workflows or datasets exported with `fractal-server<2.11.0`, possibly including legacy `filters` (\#2185).
+
 # 2.11.0a2
 
 > Note: This release requires running a `fractalctl update-db-data`
