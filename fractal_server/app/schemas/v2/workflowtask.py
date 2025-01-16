@@ -179,14 +179,31 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None
     args_parallel: Optional[dict[str, Any]] = None
-
     type_filters: Optional[dict[str, bool]] = None
+    filters: Optional[dict[str, Any]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
-    )
+    # Validators
+    @root_validator(pre=True)
+    def update_legacy_filters(cls, values: dict):
+        """
+        Transform legacy filters into type filters
+        """
+        if values.get("filters") is not None:
+            if "type_filters" in values.keys():
+                raise ValueError(
+                    "Cannot set filters both through the legacy field "
+                    "('filters') and the new one ('type_filters')."
+                )
+
+            else:
+                # Convert legacy filters.types into new type_filters
+                values["type_filters"] = values["filters"].get("types", {})
+                values["filters"] = None
+
+        return values
+
     _type_filters = validator("type_filters", allow_reuse=True)(
         validate_type_filters
     )
