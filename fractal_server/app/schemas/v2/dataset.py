@@ -124,6 +124,7 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
 
+    filters: Optional[dict[str, Any]] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
@@ -142,6 +143,32 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     @validator("zarr_dir")
     def normalize_zarr_dir(cls, v: str) -> str:
         return normalize_url(v)
+
+    @root_validator()
+    def update_legacy_filters(cls, values):
+        if values["filters"] is not None:
+            if (
+                values["type_filters"] != {}
+                or values["attribute_filters"] != {}
+            ):
+                raise ValueError(
+                    "Cannot set filters both through the legacy field "
+                    "('filters') and the new ones ('type_filters' and/or "
+                    "'attribute_filters')."
+                )
+
+            else:
+                # Convert legacy filters.types into new type_filters
+                values["type_filters"] = values["filters"].get("types", {})
+                values["attribute_filters"] = {
+                    key: [value]
+                    for key, value in values["filters"]
+                    .get("attributes", {})
+                    .items()
+                }
+                values["filters"] = None
+
+        return values
 
 
 class DatasetExportV2(BaseModel):

@@ -518,7 +518,9 @@ async def test_dataset_import(
         )
         assert res.status_code == 422
         debug(res.json())
-        # assert "is not relative to zarr_dir" in res.json()["detail"]  # FIXME
+        assert "Cannot set filters both through the legacy field" in str(
+            res.json()
+        )
 
         # FAILURE: Images with zarr_urls not relative to zarr_dir
         dataset = dict(
@@ -564,7 +566,7 @@ async def test_dataset_import(
             zarr_dir=ZARR_DIR,
             images=IMAGES,
             filters={
-                "attributes": dict(key1="value"),
+                "attributes": dict(key1="value1"),
                 "types": dict(key3=True),
             },
         )
