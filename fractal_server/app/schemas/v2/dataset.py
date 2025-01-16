@@ -144,10 +144,6 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
                     "Cannot set filters both through the legacy field "
                     "('filters') and the new ones ('type_filters' and/or "
                     "'attribute_filters')."
-                    "\n"
-                    f"{values['filters']=}\n"
-                    f"{values['typefilters']=}\n"
-                    f"{values['attribute_filters']=}\n"
                 )
 
             else:
