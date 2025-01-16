@@ -116,6 +116,7 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         name:
         zarr_dir:
         images:
+        filters:
         type_filters:
         attribute_filters:
     """
@@ -129,27 +130,15 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
-
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
-    )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
-    )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
-    )
-
-    @validator("zarr_dir")
-    def normalize_zarr_dir(cls, v: str) -> str:
-        return normalize_url(v)
-
-    @root_validator()
-    def update_legacy_filters(cls, values):
-        if values["filters"] is not None:
+    @root_validator(pre=True)
+    def update_legacy_filters(cls, values: dict):
+        """
+        Transform legacy filters into attribute/type filters
+        """
+        if "filters" in values.keys():
             if (
-                values["type_filters"] != {}
-                or values["attribute_filters"] != {}
+                "type_filters" in values.keys()
+                or "attribute_filters" in values.keys()
             ):
                 raise ValueError(
                     "Cannot set filters both through the legacy field "
@@ -169,6 +158,17 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
                 values["filters"] = None
 
         return values
+
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
+
+    @validator("zarr_dir")
+    def normalize_zarr_dir(cls, v: str) -> str:
+        return normalize_url(v)
 
 
 class DatasetExportV2(BaseModel):

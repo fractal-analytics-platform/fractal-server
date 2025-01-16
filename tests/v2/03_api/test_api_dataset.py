@@ -488,21 +488,29 @@ async def test_dataset_import(
     db,
 ):
     ZARR_DIR = "/something"
-    IMAGES = [
-        SingleImage(
-            zarr_url=f"{ZARR_DIR}/image1",
-            attributes=dict(key1="value1", key2=2),
-            types=dict(key3=True, key4=False),
-        ).dict(),
-    ]
+    IMAGES = [SingleImage(zarr_url=f"{ZARR_DIR}/image1").dict()]
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
     EXPECTED_TYPE_FILTERS = dict(key3=True)
 
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
+        ENDPOINT_URL = f"{PREFIX}/project/{project.id}/dataset/import/"
+
+        # FAILURE: Images with zarr_urls not relative to zarr_dir
+        payload = dict(
+            name="Dataset",
+            zarr_dir="/invalid",
+            images=IMAGES,
+            attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
+            type_filters=EXPECTED_TYPE_FILTERS,
+        )
+        res = await client.post(ENDPOINT_URL, json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "is not relative to zarr_dir" in res.json()["detail"]
 
         # FAILURE: Cannot set both legacy and new filters
-        dataset = dict(
+        payload = dict(
             name="Dataset",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
@@ -513,45 +521,50 @@ async def test_dataset_import(
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
             type_filters=EXPECTED_TYPE_FILTERS,
         )
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
-        )
-        assert res.status_code == 422
+        res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
-        assert "Cannot set filters both through the legacy field" in str(
-            res.json()
-        )
+        assert res.status_code == 422
+        assert "Cannot set filters both through the legacy" in str(res.json())
 
-        # FAILURE: Images with zarr_urls not relative to zarr_dir
-        dataset = dict(
+        # FAILURE: invalid legacy filters
+        payload = dict(
             name="Dataset",
-            zarr_dir="/invalid",
+            zarr_dir=ZARR_DIR,
             images=IMAGES,
-            attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
-            type_filters=EXPECTED_TYPE_FILTERS,
+            filters={
+                "attributes": {"key": [1, 2, 3]},
+                "types": {},
+            },
         )
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
-        )
+        res = await client.post(ENDPOINT_URL, json=payload)
         assert res.status_code == 422
-        assert "is not relative to zarr_dir" in res.json()["detail"]
         debug(res.json())
+        assert "has values with invalid types" in str(res.json())
+
+        # FAIL, with invalid filters
+        payload = dict(
+            name="Dataset",
+            zarr_dir=ZARR_DIR,
+            images=IMAGES,
+            attribute_filters=dict(key1="not-a-list"),
+        )
+        res = await client.post(ENDPOINT_URL, json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "not a valid list" in str(res.json())
 
         # SUCCESS, with new filters only
-        dataset = dict(
+        payload = dict(
             name="Dataset1",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
             type_filters=EXPECTED_TYPE_FILTERS,
         )
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
-        )
+        res = await client.post(ENDPOINT_URL, json=payload)
         assert res.status_code == 201
         res_dataset = res.json()
         debug(res_dataset)
-
         assert res_dataset["name"] == "Dataset1"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
@@ -561,7 +574,7 @@ async def test_dataset_import(
         assert dataset.filters is None
 
         # SUCCESS, with legacy filters only
-        dataset = dict(
+        payload = dict(
             name="Dataset2",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
@@ -570,13 +583,10 @@ async def test_dataset_import(
                 "types": dict(key3=True),
             },
         )
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
-        )
+        res = await client.post(ENDPOINT_URL, json=payload)
         assert res.status_code == 201
         res_dataset = res.json()
         debug(res_dataset)
-
         assert res_dataset["name"] == "Dataset2"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
