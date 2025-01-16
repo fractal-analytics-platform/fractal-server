@@ -198,6 +198,10 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
                 )
 
             else:
+                if values["filters"]["attributes"] != {}:
+                    raise ValueError(
+                        "Cannot set attribute filters for WorkflowTasks."
+                    )
                 # Convert legacy filters.types into new type_filters
                 values["type_filters"] = values["filters"].get("types", {})
                 values["filters"] = None
