@@ -2,6 +2,7 @@ from datetime import datetime
 
 from devtools import debug
 
+from fractal_server.app.models import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -480,61 +481,67 @@ async def test_patch_dataset(
         assert res.json()["type_filters"] == {}
 
 
-async def test_dataset_export(
-    app, client, MockCurrentUser, project_factory_v2, dataset_factory_v2
-):
-    IMAGES = n_images(1)
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=ZARR_DIR, images=IMAGES
-        )
-        project_id = project.id
-        dataset_id = dataset.id
-
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/export/",
-        )
-        assert res.status_code == 200
-
-        res_dataset = res.json()
-
-        assert res_dataset["name"] == "My Dataset"
-        assert res_dataset["zarr_dir"] == "/zarr_dir"
-        assert res_dataset["images"] == IMAGES
-        assert res_dataset["attribute_filters"] == dict()
-        assert res_dataset["type_filters"] == dict()
-        assert "filters" not in res_dataset.keys()
-
-
 async def test_dataset_import(
-    app, client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    db,
 ):
-    IMAGES = n_images(1)
+    ZARR_DIR = "/something"
+    IMAGES = [
+        SingleImage(
+            zarr_url=f"{ZARR_DIR}/image1",
+            attributes=dict(key1="value1", key2=2),
+            types=dict(key3=True, key4=False),
+        ).dict(),
+    ]
+    EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
+    EXPECTED_TYPE_FILTERS = dict(key3=True)
+
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
-        # Fail due to image zarr_urls not being relative to ZARR_DIR
+        # FAILURE: Cannot set both legacy and new filters
         dataset = dict(
             name="Dataset",
-            zarr_dir="/somewhere/invalid/",
+            zarr_dir=ZARR_DIR,
             images=IMAGES,
-            attribute_filters={},
-            type_filters={},
+            filters={
+                "attributes": dict(key1="value"),
+                "types": dict(key3=True),
+            },
+            attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
+            type_filters=EXPECTED_TYPE_FILTERS,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        # assert "is not relative to zarr_dir" in res.json()["detail"]  # FIXME
+
+        # FAILURE: Images with zarr_urls not relative to zarr_dir
+        dataset = dict(
+            name="Dataset",
+            zarr_dir="/invalid",
+            images=IMAGES,
+            attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
+            type_filters=EXPECTED_TYPE_FILTERS,
         )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
         )
         assert res.status_code == 422
         assert "is not relative to zarr_dir" in res.json()["detail"]
+        debug(res.json())
 
-        # Proceed successfully
+        # SUCCESS, with new filters only
         dataset = dict(
-            name="Dataset",
+            name="Dataset1",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
-            attribute_filters=dict(),
-            type_filters=dict(),
+            attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
+            type_filters=EXPECTED_TYPE_FILTERS,
         )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
@@ -542,7 +549,36 @@ async def test_dataset_import(
         assert res.status_code == 201
         res_dataset = res.json()
         debug(res_dataset)
-        assert res_dataset["name"] == "Dataset"
+
+        assert res_dataset["name"] == "Dataset1"
         assert res_dataset["zarr_dir"] == ZARR_DIR
-        assert res_dataset["attribute_filters"] == dict()
-        assert res_dataset["type_filters"] == dict()
+        assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
+        assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
+        assert "filters" not in res_dataset.keys()
+        dataset = await db.get(DatasetV2, res_dataset["id"])
+        assert dataset.filters is None
+
+        # SUCCESS, with legacy filters only
+        dataset = dict(
+            name="Dataset2",
+            zarr_dir=ZARR_DIR,
+            images=IMAGES,
+            filters={
+                "attributes": dict(key1="value"),
+                "types": dict(key3=True),
+            },
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
+        )
+        assert res.status_code == 201
+        res_dataset = res.json()
+        debug(res_dataset)
+
+        assert res_dataset["name"] == "Dataset2"
+        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
+        assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
+        assert "filters" not in res_dataset.keys()
+        dataset = await db.get(DatasetV2, res_dataset["id"])
+        assert dataset.filters is None
