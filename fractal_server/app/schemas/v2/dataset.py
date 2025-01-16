@@ -116,6 +116,7 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         name:
         zarr_dir:
         images:
+        filters:
         type_filters:
         attribute_filters:
     """
@@ -124,14 +125,40 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
 
+    filters: Optional[dict[str, Any]] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
-    # Validators
+    @root_validator(pre=True)
+    def update_legacy_filters(cls, values: dict):
+        """
+        Transform legacy filters (created with fractal-server<2.11.0)
+        into attribute/type filters
+        """
+        if values.get("filters") is not None:
+            if (
+                "type_filters" in values.keys()
+                or "attribute_filters" in values.keys()
+            ):
+                raise ValueError(
+                    "Cannot set filters both through the legacy field "
+                    "('filters') and the new ones ('type_filters' and/or "
+                    "'attribute_filters')."
+                )
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
-    )
+            else:
+                # Convert legacy filters.types into new type_filters
+                values["type_filters"] = values["filters"].get("types", {})
+                values["attribute_filters"] = {
+                    key: [value]
+                    for key, value in values["filters"]
+                    .get("attributes", {})
+                    .items()
+                }
+                values["filters"] = None
+
+        return values
+
     _type_filters = validator("type_filters", allow_reuse=True)(
         validate_type_filters
     )
