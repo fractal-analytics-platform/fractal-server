@@ -188,7 +188,8 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     @root_validator(pre=True)
     def update_legacy_filters(cls, values: dict):
         """
-        Transform legacy filters into type filters
+        Transform legacy filters (created with fractal-server<2.11.0)
+        into type filters
         """
         if values.get("filters") is not None:
             if "type_filters" in values.keys():
@@ -198,6 +199,8 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
                 )
 
             else:
+                # As of 2.11.0, WorkflowTask do not have attribute filters
+                # any more.
                 if values["filters"]["attributes"] != {}:
                     raise ValueError(
                         "Cannot set attribute filters for WorkflowTasks."

@@ -132,7 +132,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     @root_validator(pre=True)
     def update_legacy_filters(cls, values: dict):
         """
-        Transform legacy filters into attribute/type filters
+        Transform legacy filters (created with fractal-server<2.11.0)
+        into attribute/type filters
         """
         if values.get("filters") is not None:
             if (
