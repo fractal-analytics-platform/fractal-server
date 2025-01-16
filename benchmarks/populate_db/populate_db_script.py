@@ -65,9 +65,7 @@ def _user_flow_vanilla(
     ds = user.import_dataset(
         proj.id,
         DatasetImportV2(
-            name="MyDataset",
-            zarr_dir="/invalid/zarr",
-            images=image_list,
+            name="MyDataset", zarr_dir="/invalid/zarr", images=image_list
         ),
     )
     wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow"))
@@ -220,9 +218,7 @@ def _user_flow_job(
     ds = user.import_dataset(
         proj.id,
         DatasetImportV2(
-            name="MyDataset",
-            zarr_dir="/invalid/zarr",
-            images=image_list,
+            name="MyDataset", zarr_dir="/invalid/zarr", images=image_list
         ),
     )
     wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow_uj"))
