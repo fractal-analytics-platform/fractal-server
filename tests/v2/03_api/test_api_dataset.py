@@ -594,3 +594,21 @@ async def test_dataset_import(
         assert "filters" not in res_dataset.keys()
         dataset = await db.get(DatasetV2, res_dataset["id"])
         assert dataset.filters is None
+
+        # SUCCESS, with no filters
+        payload = dict(
+            name="Dataset3",
+            zarr_dir=ZARR_DIR,
+            images=IMAGES,
+        )
+        res = await client.post(ENDPOINT_URL, json=payload)
+        assert res.status_code == 201
+        res_dataset = res.json()
+        debug(res_dataset)
+        assert res_dataset["name"] == "Dataset3"
+        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["attribute_filters"] == {}
+        assert res_dataset["type_filters"] == {}
+        assert "filters" not in res_dataset.keys()
+        dataset = await db.get(DatasetV2, res_dataset["id"])
+        assert dataset.filters is None
