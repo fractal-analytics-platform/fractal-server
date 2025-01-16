@@ -129,13 +129,12 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
-    # Validators
     @root_validator(pre=True)
     def update_legacy_filters(cls, values: dict):
         """
         Transform legacy filters into attribute/type filters
         """
-        if "filters" in values.keys():
+        if values.get("filters") is not None:
             if (
                 "type_filters" in values.keys()
                 or "attribute_filters" in values.keys()
