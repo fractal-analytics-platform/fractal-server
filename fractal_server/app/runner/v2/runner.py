@@ -64,7 +64,7 @@ def execute_tasks_v2(
             task_input_types=task.input_types,
             wftask_type_filters=wftask.type_filters,
         )
-        type_filters = type_filters.update(type_filters_patch)
+        type_filters.update(type_filters_patch)
         filtered_images = filter_image_list(
             images=tmp_images,
             type_filters=type_filters,
