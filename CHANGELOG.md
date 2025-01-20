@@ -7,6 +7,8 @@
 * Runner:
     * Use `TaskV2.input_types` for filtering, rather than validation (\#2191).
     * Remove all filters from `TaskOutput` (\#2190).
+* Task Collection:
+    * Improve logs handling for failed collection (\#2192)
 
 # 2.11.0a3
 
