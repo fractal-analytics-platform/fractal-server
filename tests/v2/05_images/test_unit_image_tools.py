@@ -1,6 +1,9 @@
+import pytest
+
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
+from fractal_server.images.tools import merge_type_filters
 
 
 def test_find_image_by_zarr_url():
@@ -156,3 +159,37 @@ def test_filter_image_list():
         attribute_filters={"a": [1, 2], "b": [-1]},
     )
     assert len(res) == 0
+
+
+def test_merge_type_filters():
+    task_input_types = dict(key1=False, key2=True)
+    wftask_type_filters = dict(key1=False, key3=True)
+    merged = merge_type_filters(
+        task_input_types=task_input_types,
+        wftask_type_filters=wftask_type_filters,
+    )
+    assert merged == dict(key1=False, key2=True, key3=True)
+
+    task_input_types = dict()
+    wftask_type_filters = dict(key1=False, key3=True)
+    merged = merge_type_filters(
+        task_input_types=task_input_types,
+        wftask_type_filters=wftask_type_filters,
+    )
+    assert merged == wftask_type_filters
+
+    task_input_types = dict(key1=False, key2=True)
+    wftask_type_filters = dict()
+    merged = merge_type_filters(
+        task_input_types=task_input_types,
+        wftask_type_filters=wftask_type_filters,
+    )
+    assert merged == task_input_types
+
+    task_input_types = dict(key1=False, key2=True)
+    wftask_type_filters = dict(key1=True)
+    with pytest.raises(ValueError, match="Cannot merge"):
+        merge_type_filters(
+            task_input_types=task_input_types,
+            wftask_type_filters=wftask_type_filters,
+        )
