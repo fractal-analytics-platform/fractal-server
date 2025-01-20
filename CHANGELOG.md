@@ -2,12 +2,16 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# 2.11.0a4
+
+* Runner:
+    * Use `TaskV2.input_types` for filtering, rather than validation (\#2191).
+    * Remove all filters from `TaskOutput` (\#2190).
+
 # 2.11.0a3
 
 * API:
     * Support importing workflows or datasets exported with `fractal-server<2.11.0`, possibly including legacy `filters` (\#2185).
-* Runner:
-    * Use `TaskV2.input_types` for filtering, rather than validation (\#2190).
 
 # 2.11.0a2
 
