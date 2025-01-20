@@ -11,7 +11,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
-from ....images.tools import match_filter
 from ..exceptions import JobExecutionError
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
@@ -24,6 +23,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images.models import AttributeFiltersType
+from fractal_server.images.tools import merge_type_filters
 
 
 def execute_tasks_v2(
@@ -49,7 +49,7 @@ def execute_tasks_v2(
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    tmp_type_filters = deepcopy(dataset.type_filters)
+    current_dataset_type_filters = deepcopy(dataset.type_filters)
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -59,26 +59,18 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        pre_type_filters = copy(tmp_type_filters)
-        pre_type_filters.update(wftask.type_filters)
+        type_filters = copy(current_dataset_type_filters)
+        type_filters_patch = merge_type_filters(
+            task_input_types=task.input_types,
+            wftask_type_filters=wftask.type_filters,
+        )
+        type_filters.update(type_filters_patch)
         filtered_images = filter_image_list(
             images=tmp_images,
-            type_filters=pre_type_filters,
+            type_filters=type_filters,
             attribute_filters=job_attribute_filters,
         )
-        # Verify that filtered images comply with task input_types
-        for image in filtered_images:
-            if not match_filter(
-                image=image,
-                type_filters=task.input_types,
-                attribute_filters={},
-            ):
-                raise JobExecutionError(
-                    "Invalid filtered image list\n"
-                    f"Task input types: {task.input_types=}\n"
-                    f'Image zarr_url: {image["zarr_url"]}\n'
-                    f'Image types: {image["types"]}\n'
-                )
+
         # First, set status SUBMITTED in dataset.history for each wftask
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
@@ -284,8 +276,8 @@ def execute_tasks_v2(
             )
 
         # Update filters.types
-        tmp_type_filters.update(type_filters_from_task_manifest)
-        tmp_type_filters.update(type_filters_from_task_output)
+        current_dataset_type_filters.update(type_filters_from_task_manifest)
+        current_dataset_type_filters.update(type_filters_from_task_output)
 
         # Write current dataset attributes (history, images, filters) into the
         # database. They can be used (1) to retrieve the latest state
@@ -294,7 +286,7 @@ def execute_tasks_v2(
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
-            db_dataset.type_filters = tmp_type_filters
+            db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
             for attribute_name in [
                 "type_filters",

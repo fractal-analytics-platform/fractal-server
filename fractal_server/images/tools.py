@@ -98,3 +98,28 @@ def filter_image_list(
         )
     ]
     return filtered_images
+
+
+def merge_type_filters(
+    *,
+    task_input_types: dict[str, bool],
+    wftask_type_filters: dict[str, bool],
+) -> dict[str, bool]:
+    """
+    Merge two type-filters sets, if they are compatible.
+    """
+    all_keys = set(task_input_types.keys()) | set(wftask_type_filters.keys())
+    for key in all_keys:
+        if (
+            key in task_input_types.keys()
+            and key in wftask_type_filters.keys()
+            and task_input_types[key] != wftask_type_filters[key]
+        ):
+            raise ValueError(
+                "Cannot merge type filters "
+                f"`{task_input_types}` (from task) "
+                f"and `{wftask_type_filters}` (from workflowtask)."
+            )
+    merged_dict = task_input_types
+    merged_dict.update(wftask_type_filters)
+    return merged_dict
