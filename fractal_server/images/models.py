@@ -3,15 +3,16 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
-from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
-from fractal_server.app.schemas._validators import valdictkeys
+from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.urls import normalize_url
 
+AttributeFiltersType = dict[str, Optional[list[Any]]]
 
-class SingleImageBase(BaseModel):
+
+class _SingleImageBase(BaseModel):
     """
     Base for SingleImage and SingleImageTaskOutput.
 
@@ -30,9 +31,9 @@ class SingleImageBase(BaseModel):
 
     # Validators
     _attributes = validator("attributes", allow_reuse=True)(
-        valdictkeys("attributes")
+        valdict_keys("attributes")
     )
-    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
 
     @validator("zarr_url")
     def normalize_zarr_url(cls, v: str) -> str:
@@ -44,7 +45,7 @@ class SingleImageBase(BaseModel):
             return normalize_url(v)
 
 
-class SingleImageTaskOutput(SingleImageBase):
+class SingleImageTaskOutput(_SingleImageBase):
     """
     `SingleImageBase`, with scalar `attributes` values (`None` included).
     """
@@ -63,7 +64,7 @@ class SingleImageTaskOutput(SingleImageBase):
         return v
 
 
-class SingleImage(SingleImageBase):
+class SingleImage(_SingleImageBase):
     """
     `SingleImageBase`, with scalar `attributes` values (`None` excluded).
     """
@@ -83,8 +84,8 @@ class SingleImage(SingleImageBase):
 
 class SingleImageUpdate(BaseModel):
     zarr_url: str
-    attributes: Optional[dict[str, Any]]
-    types: Optional[dict[str, bool]]
+    attributes: Optional[dict[str, Any]] = None
+    types: Optional[dict[str, bool]] = None
 
     @validator("zarr_url")
     def normalize_zarr_url(cls, v: str) -> str:
@@ -96,7 +97,7 @@ class SingleImageUpdate(BaseModel):
     ) -> dict[str, Union[int, float, str, bool]]:
         if v is not None:
             # validate keys
-            valdictkeys("attributes")(v)
+            valdict_keys("attributes")(v)
             # validate values
             for key, value in v.items():
                 if not isinstance(value, (int, float, str, bool)):
@@ -107,28 +108,4 @@ class SingleImageUpdate(BaseModel):
                     )
         return v
 
-    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
-
-
-class Filters(BaseModel, extra=Extra.forbid):
-    attributes: dict[str, Any] = Field(default_factory=dict)
-    types: dict[str, bool] = Field(default_factory=dict)
-
-    # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        valdictkeys("attributes")
-    )
-    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
-
-    @validator("attributes")
-    def validate_attributes(
-        cls, v: dict[str, Any]
-    ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in v.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
-                raise ValueError(
-                    f"Filters.attributes[{key}] must be a scalar "
-                    "(int, float, str, bool, or None). "
-                    f"Given {value} ({type(value)})"
-                )
-        return v
+    _types = validator("types", allow_reuse=True)(valdict_keys("types"))

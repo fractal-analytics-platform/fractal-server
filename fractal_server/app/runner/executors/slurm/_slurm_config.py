@@ -423,7 +423,7 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
     )
 
     # Handle integer argument
-    if isinstance(raw_mem, int):
+    if type(raw_mem) is int:
         return raw_mem
 
     # Handle string argument

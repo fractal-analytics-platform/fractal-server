@@ -7,9 +7,6 @@ from typing import Optional
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.runner.filenames import FILTERS_FILENAME
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
-from fractal_server.app.runner.filenames import IMAGES_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v2"
@@ -130,9 +127,8 @@ async def full_workflow(
         )
         assert res.status_code == 200
         dataset = res.json()
-        debug(dataset)
         assert len(dataset["history"]) == 2
-        assert dataset["filters"]["types"] == {"3D": False}
+        assert dataset["type_filters"] == {"3D": False}
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
             "images/query/",
@@ -169,9 +165,6 @@ async def full_workflow(
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
             actual_files = zip_ref.namelist()
         expected_files = [
-            HISTORY_FILENAME,
-            FILTERS_FILENAME,
-            IMAGES_FILENAME,
             WORKFLOW_LOG_FILENAME,
         ]
         assert set(expected_files) < set(actual_files)
@@ -204,7 +197,6 @@ async def full_workflow_TaskExecutionError(
     user_kwargs: Optional[dict] = None,
     user_settings_dict: Optional[dict] = None,
 ):
-
     if user_kwargs is None:
         user_kwargs = {}
 
@@ -289,13 +281,10 @@ async def full_workflow_TaskExecutionError(
         )
         assert res.status_code == 200
         dataset = res.json()
-        EXPECTED_FILTERS = {
-            "attributes": {},
-            "types": {
-                "3D": False,
-            },
-        }
-        assert dataset["filters"] == EXPECTED_FILTERS
+        EXPECTED_TYPE_FILTERS = {"3D": False}
+        EXPECTED_ATTRIBUTE_FILTERS = {}
+        assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
+        assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
         assert len(dataset["history"]) == 3
         assert [item["status"] for item in dataset["history"]] == [
             "done",
@@ -596,9 +585,6 @@ async def workflow_with_non_python_task(
         must_exist = [
             "0.log",
             "0.args.json",
-            IMAGES_FILENAME,
-            HISTORY_FILENAME,
-            FILTERS_FILENAME,
             WORKFLOW_LOG_FILENAME,
         ]
 

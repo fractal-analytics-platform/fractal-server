@@ -1,32 +1,10 @@
 from typing import Any
-from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
-
-
-class DatasetV2Mock(BaseModel):
-    id: Optional[int] = None
-    name: str
-    zarr_dir: str
-    images: list[dict[str, Any]] = Field(default_factory=list)
-    filters: dict[Literal["types", "attributes"], dict[str, Any]] = Field(
-        default_factory=dict
-    )
-    history: list = Field(default_factory=list)
-
-    @property
-    def image_zarr_urls(self) -> list[str]:
-        return [image["zarr_urls"] for image in self.images]
-
-    @validator("filters", always=True)
-    def _default_filters(cls, value):
-        if value == {}:
-            return {"types": {}, "attributes": {}}
-        return value
 
 
 class TaskV2Mock(BaseModel):
@@ -77,13 +55,8 @@ class WorkflowTaskV2Mock(BaseModel):
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
     task: TaskV2Mock
-    input_filters: dict[str, Any] = Field(default_factory=dict)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
     order: int
     id: int
     workflow_id: int = 0
     task_id: int
-
-    @validator("input_filters", always=True)
-    def _default_filters(cls, value):
-        if value == {}:
-            return {"types": {}, "attributes": {}}

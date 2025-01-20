@@ -17,7 +17,6 @@ This backend runs fractal workflows in a SLURM cluster using Clusterfutures
 Executor objects.
 """
 from pathlib import Path
-from typing import Any
 from typing import Optional
 from typing import Union
 
@@ -30,8 +29,8 @@ from ...executors.slurm.ssh.executor import FractalSlurmSSHExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.logger import set_logger
-
 
 logger = set_logger(__name__)
 
@@ -47,16 +46,14 @@ def _process_workflow(
     last_task_index: int,
     fractal_ssh: FractalSSH,
     worker_init: Optional[Union[str, list[str]]] = None,
-) -> dict[str, Any]:
+    job_attribute_filters: AttributeFiltersType,
+) -> None:
     """
-    Internal processing routine for the SLURM backend
+    Run the workflow using a `FractalSlurmSSHExecutor`.
 
     This function initialises the a FractalSlurmExecutor, setting logging,
     workflow working dir and user to impersonate. It then schedules the
     workflow tasks and returns the new dataset attributes
-
-    Returns:
-        new_dataset_attributes:
     """
 
     if isinstance(worker_init, str):
@@ -80,18 +77,18 @@ def _process_workflow(
         workflow_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
     ) as executor:
-        new_dataset_attributes = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=workflow.task_list[
-                first_task_index : (last_task_index + 1)  # noqa
-            ],  # noqa
+                first_task_index : (last_task_index + 1)
+            ],
             dataset=dataset,
             executor=executor,
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
+            job_attribute_filters=job_attribute_filters,
         )
-    return new_dataset_attributes
 
 
 async def process_workflow(
@@ -103,13 +100,14 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
-    # Not used
+    job_attribute_filters: AttributeFiltersType,
     fractal_ssh: FractalSSH,
+    worker_init: Optional[str] = None,
+    # Not used
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
-    worker_init: Optional[str] = None,
-) -> dict:
+) -> None:
     """
     Process workflow (SLURM backend public interface)
     """
@@ -122,7 +120,7 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    new_dataset_attributes = await async_wrap(_process_workflow)(
+    await async_wrap(_process_workflow)(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
@@ -132,5 +130,5 @@ async def process_workflow(
         last_task_index=last_task_index,
         worker_init=worker_init,
         fractal_ssh=fractal_ssh,
+        job_attribute_filters=job_attribute_filters,
     )
-    return new_dataset_attributes

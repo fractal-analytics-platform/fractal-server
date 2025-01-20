@@ -6,7 +6,6 @@ from pydantic import Field
 from pydantic import validator
 
 from ....images import SingleImageTaskOutput
-from fractal_server.images import Filters
 from fractal_server.urls import normalize_url
 
 
@@ -16,7 +15,6 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
         default_factory=list
     )
     image_list_removals: list[str] = Field(default_factory=list)
-    filters: Filters = Field(default_factory=Filters)
 
     def check_zarr_urls_are_unique(self) -> None:
         zarr_urls = [img.zarr_url for img in self.image_list_updates]

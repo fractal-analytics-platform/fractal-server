@@ -8,6 +8,8 @@ from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import root_validator
+from pydantic import validator
 from sqlalchemy.orm.attributes import flag_modified
 
 from ._aux_functions import _get_dataset_check_owner
@@ -15,9 +17,14 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
-from fractal_server.images import Filters
+from fractal_server.app.schemas._filter_validators import (
+    validate_attribute_filters,
+)
+from fractal_server.app.schemas._filter_validators import validate_type_filters
+from fractal_server.app.schemas._validators import root_validate_dict_keys
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
@@ -38,7 +45,18 @@ class ImagePage(BaseModel):
 
 class ImageQuery(BaseModel):
     zarr_url: Optional[str]
-    filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
+    )
 
 
 @router.post(
@@ -124,7 +142,11 @@ async def query_dataset_images(
         images = [
             image
             for image in images
-            if match_filter(image, Filters(**dataset.filters))
+            if match_filter(
+                image=image,
+                type_filters=dataset.type_filters,
+                attribute_filters=dataset.attribute_filters,
+            )
         ]
 
     attributes = {}
@@ -154,13 +176,14 @@ async def query_dataset_images(
             else:
                 images = [image]
 
-        if query.filters.attributes or query.filters.types:
+        if query.attribute_filters or query.type_filters:
             images = [
                 image
                 for image in images
                 if match_filter(
-                    image,
-                    Filters(**query.filters.dict()),
+                    image=image,
+                    type_filters=query.type_filters,
+                    attribute_filters=query.attribute_filters,
                 )
             ]
 
