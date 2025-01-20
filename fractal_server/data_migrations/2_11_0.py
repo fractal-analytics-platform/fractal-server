@@ -65,3 +65,5 @@ def fix_db():
 
         db.commit()
         logger.info("Changes committed.")
+
+    logger.info("END execution of fix_db function")
