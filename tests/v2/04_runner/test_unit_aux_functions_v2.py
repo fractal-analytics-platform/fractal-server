@@ -71,7 +71,7 @@ def test_task_output():
 def test_cast_and_validate_functions():
 
     _cast_and_validate_TaskOutput(
-        dict(filters={}, image_list_updates=[dict(zarr_url="/some/image")])
+        dict(image_list_updates=[dict(zarr_url="/some/image")])
     )
 
     with pytest.raises(JobExecutionError):
@@ -91,34 +91,10 @@ def test_cast_and_validate_functions():
 def test_merge_outputs():
 
     # 1
-    task_outputs = [
-        TaskOutput(type_filters={"a": True}),
-        TaskOutput(type_filters={"a": True}),
-    ]
-    merged = merge_outputs(task_outputs)
-    assert merged.type_filters == {"a": True}
-
-    # 2
-    task_outputs = [
-        TaskOutput(type_filters={"a": True}),
-        TaskOutput(type_filters={"b": True}),
-    ]
-    with pytest.raises(ValueError):
-        merge_outputs(task_outputs)
-
-    # 3
-    task_outputs = [
-        TaskOutput(type_filters={"a": True}),
-        TaskOutput(type_filters={"a": False}),
-    ]
-    with pytest.raises(ValueError):
-        merge_outputs(task_outputs)
-
-    # 4
     merged = merge_outputs([])
     assert merged == TaskOutput()
 
-    # 5
+    # 2
     task_outputs = [
         TaskOutput(
             image_list_updates=[
@@ -142,29 +118,3 @@ def test_merge_outputs():
         SingleImageTaskOutput(zarr_url="/c"),
     ]
     assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])
-
-
-def test_update_legacy_filters():
-
-    legacy_filters = {"types": {"a": True}}
-
-    # 1
-    output = TaskOutput(filters=legacy_filters)
-    assert output.filters is None
-    assert output.type_filters == legacy_filters["types"]
-
-    # 2
-    output = TaskOutput(type_filters=legacy_filters["types"])
-    assert output.filters is None
-    assert output.type_filters == legacy_filters["types"]
-
-    # 3
-    with pytest.raises(ValidationError):
-        TaskOutput(
-            filters=legacy_filters, type_filters=legacy_filters["types"]
-        )
-
-    # 4
-    output = TaskOutput()
-    assert output.filters is None
-    assert output.type_filters == {}

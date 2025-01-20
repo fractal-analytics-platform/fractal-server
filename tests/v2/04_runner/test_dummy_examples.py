@@ -1,6 +1,5 @@
 import logging
 from concurrent.futures import Executor
-from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -120,34 +119,6 @@ async def test_dummy_insert_single_image(
             "Cannot edit an image with zarr_url different from origin."
             in error_msg
         )
-
-        # Fail because types filters are set twice
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir_2",
-            workflow_dir_remote=tmp_path / "job_dir_2",
-        )
-        PATCHED_TASK = deepcopy(
-            fractal_tasks_mock_no_db["dummy_insert_single_image"]
-        )
-        KEY = "something"
-        PATCHED_TASK.output_types = {KEY: True}
-        with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2(
-                wf_task_list=[
-                    WorkflowTaskV2Mock(
-                        task=PATCHED_TASK,
-                        task_id=PATCHED_TASK.id,
-                        args_non_parallel={"types": {KEY: True}},
-                        id=2,
-                        order=2,
-                    )
-                ],
-                dataset=dataset_images,
-                **execute_tasks_v2_args,
-            )
-        error_msg = str(e.value)
-        assert "Some type filters are being set twice" in error_msg
 
         # Fail because new image is not relative to zarr_dir
         execute_tasks_v2_args = dict(
