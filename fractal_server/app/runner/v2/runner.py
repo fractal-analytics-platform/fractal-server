@@ -19,7 +19,6 @@ from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
@@ -53,7 +52,7 @@ def execute_tasks_v2(
     current_dataset_type_filters = deepcopy(dataset.type_filters)
 
     for wftask in wf_task_list:
-        task: TaskV2 = wftask.task
+        task = wftask.task
         task_name = task.name
         logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
 
