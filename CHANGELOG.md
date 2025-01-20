@@ -4,7 +4,10 @@
 
 # 2.11.0a3
 
-* Support importing workflows or datasets exported with `fractal-server<2.11.0`, possibly including legacy `filters` (\#2185).
+* API:
+    * Support importing workflows or datasets exported with `fractal-server<2.11.0`, possibly including legacy `filters` (\#2185).
+* Runner:
+    * Use `TaskV2.input_types` for filtering, rather than validation (\#2190).
 
 # 2.11.0a2
 
