@@ -267,25 +267,9 @@ def execute_tasks_v2(
         # Assign the type filters based on different sources
         # (task manifest and post-execution task output)
         type_filters_from_task_manifest = task.output_types
-        type_filters_from_task_output = current_task_output.type_filters
-
-        # Check that key sets are disjoint
-        keys_from_manifest = set(type_filters_from_task_manifest.keys())
-        keys_from_task_output = set(type_filters_from_task_output.keys())
-        if not keys_from_manifest.isdisjoint(keys_from_task_output):
-            overlap = keys_from_manifest.intersection(keys_from_task_output)
-            raise JobExecutionError(
-                "Some type filters are being set twice, "
-                f"for task '{task_name}'.\n"
-                f"Types from task output: {type_filters_from_task_output}\n"
-                "Types from task manifest: "
-                f"{type_filters_from_task_manifest}\n"
-                f"Overlapping keys: {overlap}"
-            )
 
         # Update filters.types
         tmp_type_filters.update(type_filters_from_task_manifest)
-        tmp_type_filters.update(type_filters_from_task_output)
 
         # Write current dataset attributes (history, images, filters) into the
         # database. They can be used (1) to retrieve the latest state
