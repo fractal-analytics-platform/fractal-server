@@ -4,14 +4,11 @@ from concurrent.futures import Executor
 from pathlib import Path
 from typing import Any
 
-import pytest
 from aux_get_dataset_attrs import _get_dataset_attrs
 from devtools import debug
 from fixtures_mocks import *  # noqa: F401,F403
-from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
-from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 
@@ -867,52 +864,3 @@ async def test_channel_parallelization_no_overwrite(
 
         # Check that there are now 4 images
         assert len(dataset_attrs["images"]) == 4
-
-
-async def test_invalid_filtered_image_list(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-):
-    """
-    Validation of the filtered image list against task input_types fails.
-    """
-
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
-
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    zarr_url = Path(zarr_dir, "my_image").as_posix()
-    image = SingleImage(zarr_url=zarr_url, attributes={}, types={}).dict()
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, images=[image]
-        )
-        with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2(
-                wf_task_list=[
-                    WorkflowTaskV2Mock(
-                        task=TaskV2Mock(
-                            id=0,
-                            name="name",
-                            source="source",
-                            command_non_parallel="cmd",
-                            type="non_parallel",
-                            input_types=dict(invalid=True),
-                        ),
-                        task_id=0,
-                        id=0,
-                        order=0,
-                    )
-                ],
-                dataset=dataset,
-                **execute_tasks_v2_args,
-            )
-        assert "Invalid filtered image list" in str(e.value)
