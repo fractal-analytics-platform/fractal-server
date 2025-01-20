@@ -120,4 +120,6 @@ def merge_type_filters(
                 f"`{task_input_types}` (from task) "
                 f"and `{wftask_type_filters}` (from workflowtask)."
             )
-    return task_input_types | wftask_type_filters
+    merged_dict = task_input_types
+    merged_dict.update(wftask_type_filters)
+    return merged_dict
