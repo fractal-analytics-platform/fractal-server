@@ -254,13 +254,8 @@ def execute_tasks_v2(
             else:
                 tmp_images.pop(img_search["index"])
 
-        # Update type_filters
-
-        # Assign the type filters based on different sources
-        # (task manifest and post-execution task output)
+        # Update type_filters based on task-manifest output_types
         type_filters_from_task_manifest = task.output_types
-
-        # Update filters.types
         current_dataset_type_filters.update(type_filters_from_task_manifest)
 
         # Write current dataset attributes (history, images, filters) into the
