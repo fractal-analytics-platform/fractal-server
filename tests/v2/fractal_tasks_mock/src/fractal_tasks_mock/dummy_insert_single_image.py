@@ -46,8 +46,6 @@ def dummy_insert_single_image(
     if full_new_image is not None:
         new_image = full_new_image
     out = dict(image_list_updates=[new_image])
-    if types is not None:
-        out["filters"] = dict(types=types)
     logging.info("[dummy_insert_single_image] END")
     return out
 
