@@ -117,8 +117,10 @@ def execute_command_sync(
         raise RuntimeError(
             f"Command {command} failed.\n"
             f"returncode={res.returncode}\n"
-            f"{stdout=}\n"
-            f"{stderr=}\n"
+            "STDOUT:"
+            f"{stdout}"
+            "STDERR:"
+            f"{stderr}"
         )
     logger.debug(f"END   subprocess call to '{command}'")
     return stdout
