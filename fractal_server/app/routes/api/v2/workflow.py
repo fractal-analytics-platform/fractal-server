@@ -1,3 +1,4 @@
+from copy import copy
 from typing import Optional
 
 from fastapi import APIRouter
@@ -5,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic import BaseModel
 from sqlmodel import select
 
 from ....db import AsyncSession
@@ -12,12 +14,16 @@ from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import WorkflowV2
+from ....runner.set_start_and_last_task_index import (
+    set_start_and_last_task_index,
+)
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowReadV2
 from ....schemas.v2 import WorkflowReadV2WithWarnings
 from ....schemas.v2 import WorkflowUpdateV2
 from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
@@ -25,6 +31,7 @@ from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.images.tools import merge_type_filters
 
 router = APIRouter()
 
@@ -284,3 +291,82 @@ async def get_user_workflows(
     res = await db.execute(stm)
     workflow_list = res.scalars().all()
     return workflow_list
+
+
+class TypeFiltersFlow(BaseModel):
+    list_dataset_filters: list[dict[str, bool]]
+    list_filters_in: list[dict[str, bool]]
+    list_filters_out: list[dict[str, bool]]
+
+
+@router.get(
+    (
+        "/project/{project_id}/workflow/{workflow_id}/"
+        "experimental-type-filters-flow"
+    ),
+    response_model=TypeFiltersFlow,
+)
+async def get_workflow_type_filters(
+    project_id: int,
+    workflow_id: int,
+    dataset_id: Optional[int] = None,
+    first_task_index: Optional[int] = None,
+    last_task_index: Optional[int] = None,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Optional[WorkflowReadV2WithWarnings]:
+    """
+    Get info on an existing workflow
+    """
+
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    if dataset_id is None:
+        dataset_type_filters = {}
+    else:
+        res = await _get_dataset_check_owner(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            user_id=user.id,
+            db=db,
+        )
+        dataset = res["dataset"]
+        dataset_type_filters = dataset.type_filters
+
+    num_tasks = len(workflow.task_list)
+    first_task_index, last_task_index = set_start_and_last_task_index(
+        num_tasks,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
+    )
+
+    list_dataset_filters = [copy(dataset_type_filters)]
+    list_filters_in = []
+    list_filters_out = []
+    for wftask in workflow.task_list[first_task_index : last_task_index + 1]:
+
+        input_type_filters = copy(dataset_type_filters)
+        patch = merge_type_filters(
+            wftask_type_filters=wftask.type_filters,
+            task_input_types=wftask.task.input_types,
+        )
+        input_type_filters.update(patch)
+        list_filters_in.append(copy(input_type_filters))
+
+        output_type_filters = wftask.task.output_types
+        list_filters_out.append(output_type_filters)
+
+        dataset_type_filters.update(wftask.task.output_types)
+        list_dataset_filters.append(copy(dataset_type_filters))
+
+    response_body = dict(
+        list_dataset_filters=list_dataset_filters,
+        list_filters_in=list_filters_in,
+        list_filters_out=list_filters_out,
+    )
+    return response_body
