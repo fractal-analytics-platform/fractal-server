@@ -28,6 +28,7 @@ from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
+from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
@@ -116,6 +117,10 @@ async def apply_workflow(
             task_id=wftask.task_id,
             require_active=True,
             db=db,
+        )
+        _check_type_filters_compatibility(
+            task_input_types=task.input_types,
+            wftask_type_filters=wftask.type_filters,
         )
         used_task_group_ids.add(task.taskgroupv2_id)
 
