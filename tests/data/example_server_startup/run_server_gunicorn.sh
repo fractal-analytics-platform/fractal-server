@@ -6,7 +6,7 @@ poetry run fractalctl set-db
 
 # Start the server
 poetry run gunicorn fractal_server.main:app \
-    --workers 4 \
+    --workers 1 \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind 0.0.0.0:8000 \
     --access-logfile logs-fractal-server.access \
