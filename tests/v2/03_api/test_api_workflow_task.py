@@ -916,9 +916,15 @@ async def test_replace_task_in_workflowtask(
         task6 = await task_factory_v2(
             user_id=user.id, input_types={"a": False}
         )
+        task7 = await task_factory_v2(user_id=user.id, input_types={"a": True})
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task6.id}",
         )
         assert res.status_code == 422
         assert "filters" in res.json()["detail"]
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task7.id}",
+        )
+        assert res.status_code == 201
