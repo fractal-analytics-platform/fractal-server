@@ -13,7 +13,6 @@ from fractal_server.urls import normalize_url
 
 VALID_ATTRIBUTE_FILTERS = (
     {},
-    {"key1": []},
     {"key1": ["A"]},
     {"key1": ["A", "B"]},
     {"key1": [1, 2]},
@@ -24,6 +23,7 @@ VALID_ATTRIBUTE_FILTERS = (
 )
 
 INVALID_ATTRIBUTE_FILTERS = (
+    {"key1": []},
     {True: ["value"]},  # non-string key
     {1: ["value"]},  # non-string key
     {"key1": 1},  # not a list

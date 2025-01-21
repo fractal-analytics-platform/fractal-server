@@ -27,9 +27,9 @@ def validate_attribute_filters(
             # attribute `key`
             pass
         elif values == []:
-            # WARNING: in this case, no image can match with the current
-            # filter. In the future we may deprecate this possibility.
-            pass
+            raise ValueError(
+                f"attribute_filters[{key}] cannot be an empty list."
+            )
         else:
             # values is a non-empty list, and its items must all be of the
             # same scalar non-None type
