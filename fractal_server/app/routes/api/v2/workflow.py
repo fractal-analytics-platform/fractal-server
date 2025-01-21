@@ -323,6 +323,12 @@ async def get_workflow_type_filters(
         db=db,
     )
 
+    if len(workflow.task_list) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Workflow has no tasks.",
+        )
+
     if dataset_id is None:
         dataset_type_filters = {}
     else:
@@ -336,11 +342,17 @@ async def get_workflow_type_filters(
         dataset_type_filters = dataset.type_filters
 
     num_tasks = len(workflow.task_list)
-    first_task_index, last_task_index = set_start_and_last_task_index(
-        num_tasks,
-        first_task_index=first_task_index,
-        last_task_index=last_task_index,
-    )
+    try:
+        first_task_index, last_task_index = set_start_and_last_task_index(
+            num_tasks,
+            first_task_index=first_task_index,
+            last_task_index=last_task_index,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid first/last task index.\nOriginal error: {str(e)}",
+        )
 
     list_dataset_filters = [copy(dataset_type_filters)]
     list_filters_in = []
