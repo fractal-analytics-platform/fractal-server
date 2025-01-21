@@ -57,9 +57,7 @@ def collect_local(
         wheel_file:
     """
 
-    LOGGER_NAME = (
-        f"fractal_server.tasks.v2.local.collect.{task_group_activity_id}"
-    )
+    LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
     with TemporaryDirectory() as tmpdir:
         log_file_path = get_log_path(Path(tmpdir))

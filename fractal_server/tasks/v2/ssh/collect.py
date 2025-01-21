@@ -60,9 +60,7 @@ def collect_ssh(
         wheel_file:
     """
 
-    LOGGER_NAME = (
-        f"fractal_server.tasks.v2.ssh.collect.{task_group_activity_id}"
-    )
+    LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
     # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
