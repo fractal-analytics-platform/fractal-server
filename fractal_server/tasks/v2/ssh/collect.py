@@ -30,8 +30,6 @@ from fractal_server.tasks.v2.utils_templates import (
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
-LOGGER_NAME = __name__
-
 
 def collect_ssh(
     *,
@@ -61,6 +59,8 @@ def collect_ssh(
             `user_settings.ssh_tasks_dir`.
         wheel_file:
     """
+
+    LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
     # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:

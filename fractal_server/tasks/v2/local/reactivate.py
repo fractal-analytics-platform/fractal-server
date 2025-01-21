@@ -23,9 +23,6 @@ from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
 
-LOGGER_NAME = __name__
-
-
 def reactivate_local(
     *,
     task_group_activity_id: int,
@@ -41,6 +38,8 @@ def reactivate_local(
         task_group_id:
         task_group_activity_id:
     """
+
+    LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
     with TemporaryDirectory() as tmpdir:
         log_file_path = get_log_path(Path(tmpdir))

@@ -39,6 +39,11 @@
 * Runner
     * Integrate database write access in runner component (\#2169).
 
+# 2.10.6
+
+* Task lifecycle:
+    * Use unique logger names for task-lifecycle operations (\#2204).
+
 # 2.10.5
 
 * App:
