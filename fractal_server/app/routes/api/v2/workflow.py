@@ -300,10 +300,7 @@ class TypeFiltersFlow(BaseModel):
 
 
 @router.get(
-    (
-        "/project/{project_id}/workflow/{workflow_id}/"
-        "experimental-type-filters-flow/"
-    ),
+    "/project/{project_id}/workflow/{workflow_id}/type-filters-flow/",
     response_model=TypeFiltersFlow,
 )
 async def get_workflow_type_filters(
