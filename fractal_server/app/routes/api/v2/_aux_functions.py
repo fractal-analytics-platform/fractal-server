@@ -21,6 +21,7 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
+from ._aux_functions_tasks import _check_type_filters_compatibility
 
 
 async def _get_project_check_owner(
@@ -361,6 +362,12 @@ async def _workflow_insert_task(
     if db_task is None:
         raise ValueError(f"TaskV2 {task_id} not found.")
     task_type = db_task.type
+
+    if type_filters is not None:
+        _check_type_filters_compatibility(
+            task_input_types=db_task.input_types,
+            wftask_type_filters=type_filters,
+        )
 
     # Combine meta_parallel (higher priority)
     # and db_task.meta_parallel (lower priority)

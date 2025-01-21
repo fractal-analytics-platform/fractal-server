@@ -336,12 +336,17 @@ async def import_workflow(
 
     # Insert task into the workflow
     for ind, new_wf_task in enumerate(list_wf_tasks):
-        await _workflow_insert_task(
-            **new_wf_task.dict(),
-            workflow_id=db_workflow.id,
-            task_id=list_task_ids[ind],
-            db=db,
-        )
+        try:
+            await _workflow_insert_task(
+                **new_wf_task.dict(),
+                workflow_id=db_workflow.id,
+                task_id=list_task_ids[ind],
+                db=db,
+            )
+        except HTTPException as e:
+            db.delete(db_workflow)
+            db.commit()
+            raise e
 
     # Add warnings for non-active tasks (or non-accessible tasks,
     # although that should never happen)

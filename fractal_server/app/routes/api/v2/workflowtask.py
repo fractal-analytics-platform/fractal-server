@@ -12,6 +12,7 @@ from ....db import get_async_db
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
+from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -59,6 +60,11 @@ async def replace_workflowtask(
                 f"  Task '{task.type}'."
             ),
         )
+
+    _check_type_filters_compatibility(
+        task_input_types=task.input_types,
+        wftask=old_workflow_task.type_filters,
+    )
 
     _args_non_parallel = old_workflow_task.args_non_parallel
     _args_parallel = old_workflow_task.args_parallel
@@ -176,6 +182,12 @@ async def create_workflowtask(
                     "is `non_parallel`."
                 ),
             )
+
+    _check_type_filters_compatibility(
+        task_input_types=task.input_types,
+        wftask_type_filters=new_task.type_filters,
+    )
+
     workflow_task = await _workflow_insert_task(
         workflow_id=workflow.id,
         task_id=task_id,
@@ -236,6 +248,12 @@ async def update_workflowtask(
         user_id=user.id,
         db=db,
     )
+
+    if workflow_task_update.type_filters is not None:
+        _check_type_filters_compatibility(
+            task_input_types=db_wf_task.task.input_types,
+            wftask_type_filters=db_wf_task.type_filters,
+        )
 
     if db_wf_task.task_type == "parallel" and (
         workflow_task_update.args_non_parallel is not None
