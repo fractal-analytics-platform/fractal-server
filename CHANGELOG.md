@@ -3,7 +3,7 @@
 # 2.10.6
 
 * Task lifecycle:
-    * Use unique logger name for task-lifecycle operations (\#2204).
+    * Use unique logger names for task-lifecycle operations (\#2204).
 
 # 2.10.5
 
