@@ -2,8 +2,8 @@
 
 # 2.10.6
 
-* Task collection:
-    * Use unique loggers for task collections (\#2204).
+* Task lifecycle:
+    * Use unique logger name for task-lifecycle operations (\#2204).
 
 # 2.10.5
 
