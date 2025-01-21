@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.10.6
+
+* Task collection:
+    * Use unique loggers for task collections (\#2204).
+
 # 2.10.5
 
 * App:
