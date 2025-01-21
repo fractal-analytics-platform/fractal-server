@@ -248,11 +248,10 @@ async def update_workflowtask(
         user_id=user.id,
         db=db,
     )
-
     if workflow_task_update.type_filters is not None:
         _check_type_filters_compatibility(
             task_input_types=db_wf_task.task.input_types,
-            wftask_type_filters=db_wf_task.type_filters,
+            wftask_type_filters=workflow_task_update.type_filters,
         )
 
     if db_wf_task.task_type == "parallel" and (
