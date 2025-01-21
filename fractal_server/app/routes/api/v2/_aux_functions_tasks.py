@@ -355,8 +355,13 @@ async def _add_warnings_to_workflow_tasks(
 
 
 def _check_type_filters_compatibility(
-    *, task_input_types: dict[str, bool], wftask_type_filters: dict[str, bool]
-):
+    *,
+    task_input_types: dict[str, bool],
+    wftask_type_filters: dict[str, bool],
+) -> None:
+    """
+    Wrap `merge_type_filters` and raise `HTTPException` if needed.
+    """
     try:
         merge_type_filters(
             task_input_types=task_input_types,
