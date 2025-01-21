@@ -22,8 +22,6 @@ from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
-LOGGER_NAME = __name__
-
 
 def deactivate_ssh(
     *,
@@ -46,6 +44,8 @@ def deactivate_ssh(
             Only used as a `safe_root` in `remove_dir`, and typically set to
             `user_settings.ssh_tasks_dir`.
     """
+
+    LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
     with TemporaryDirectory() as tmpdir:
         log_file_path = get_log_path(Path(tmpdir))
