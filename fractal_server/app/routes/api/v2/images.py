@@ -207,7 +207,7 @@ async def query_dataset_images(
         if page > last_page:
             page = last_page
         offset = (page - 1) * page_size
-        images = images[offset : offset + page_size]  # noqa E203
+        images = images[offset : offset + page_size]
 
     return ImagePage(
         total_count=total_count,

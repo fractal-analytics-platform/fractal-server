@@ -22,6 +22,7 @@ from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -351,3 +352,23 @@ async def _add_warnings_to_workflow_tasks(
             wftask_data["warning"] = "Current user has no access to this task."
         wftask_list_with_warnings.append(wftask_data)
     return wftask_list_with_warnings
+
+
+def _check_type_filters_compatibility(
+    *,
+    task_input_types: dict[str, bool],
+    wftask_type_filters: dict[str, bool],
+) -> None:
+    """
+    Wrap `merge_type_filters` and raise `HTTPException` if needed.
+    """
+    try:
+        merge_type_filters(
+            task_input_types=task_input_types,
+            wftask_type_filters=wftask_type_filters,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Incompatible type filters.\nOriginal error: {str(e)}",
+        )
