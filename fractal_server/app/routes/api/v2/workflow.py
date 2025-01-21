@@ -294,15 +294,15 @@ async def get_user_workflows(
 
 
 class TypeFiltersFlow(BaseModel):
-    list_dataset_filters: list[dict[str, bool]]
-    list_filters_in: list[dict[str, bool]]
-    list_filters_out: list[dict[str, bool]]
+    dataset_filters: list[dict[str, bool]]
+    input_filters: list[dict[str, bool]]
+    output_filters: list[dict[str, bool]]
 
 
 @router.get(
     (
         "/project/{project_id}/workflow/{workflow_id}/"
-        "experimental-type-filters-flow"
+        "experimental-type-filters-flow/"
     ),
     response_model=TypeFiltersFlow,
 )
@@ -365,8 +365,8 @@ async def get_workflow_type_filters(
         list_dataset_filters.append(copy(dataset_type_filters))
 
     response_body = dict(
-        list_dataset_filters=list_dataset_filters,
-        list_filters_in=list_filters_in,
-        list_filters_out=list_filters_out,
+        dataset_filters=list_dataset_filters,
+        input_filters=list_filters_in,
+        output_filters=list_filters_out,
     )
     return response_body
