@@ -63,7 +63,7 @@ async def replace_workflowtask(
 
     _check_type_filters_compatibility(
         task_input_types=task.input_types,
-        wftask=old_workflow_task.type_filters,
+        wftask_type_filters=old_workflow_task.type_filters,
     )
 
     _args_non_parallel = old_workflow_task.args_non_parallel
