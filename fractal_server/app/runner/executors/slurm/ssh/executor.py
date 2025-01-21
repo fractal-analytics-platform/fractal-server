@@ -966,8 +966,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 # Retrieve job and future objects
                 job = jobs[ind_job]
                 future = futures[ind_job]
-                remaining_job_ids = job_ids[ind_job + 1 :]  # noqa: E203
-                remaining_futures = futures[ind_job + 1 :]  # noqa: E203
+                remaining_job_ids = job_ids[ind_job + 1 :]
+                remaining_futures = futures[ind_job + 1 :]
 
                 outputs = []
 
