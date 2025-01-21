@@ -190,7 +190,7 @@ async def create_workflowtask(
         wftask_type_filters=wftask.type_filters,
     )
 
-    workflow_task = await _workflow_insert_task(
+    wftask_db = await _workflow_insert_task(
         workflow_id=workflow.id,
         task_id=task_id,
         meta_non_parallel=wftask.meta_non_parallel,
@@ -203,7 +203,7 @@ async def create_workflowtask(
 
     await db.close()
 
-    return workflow_task
+    return wftask_db
 
 
 @router.get(
