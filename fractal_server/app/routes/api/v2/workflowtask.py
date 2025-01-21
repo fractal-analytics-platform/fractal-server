@@ -48,21 +48,21 @@ async def replace_workflowtask(
         db=db,
     )
 
-    task = await _get_task_read_access(
+    new_task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True
     )
 
-    if task.type != old_workflow_task.task.type:
+    if new_task.type != old_workflow_task.task.type:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot replace a Task '{old_workflow_task.task.type}' with a"
-                f"  Task '{task.type}'."
+                f"  Task '{new_task.type}'."
             ),
         )
 
     _check_type_filters_compatibility(
-        task_input_types=task.input_types,
+        task_input_types=new_task.input_types,
         wftask_type_filters=old_workflow_task.type_filters,
     )
 
@@ -70,7 +70,7 @@ async def replace_workflowtask(
     _args_parallel = old_workflow_task.args_parallel
     if replace is not None:
         if replace.args_non_parallel is not None:
-            if task.type == "parallel":
+            if new_task.type == "parallel":
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
@@ -82,7 +82,7 @@ async def replace_workflowtask(
                 _args_non_parallel = replace.args_non_parallel
 
         if replace.args_parallel is not None:
-            if task.type == "non_parallel":
+            if new_task.type == "non_parallel":
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
@@ -98,22 +98,24 @@ async def replace_workflowtask(
     if (
         old_workflow_task.meta_non_parallel
         != old_workflow_task.task.meta_non_parallel
-    ) and (old_workflow_task.task.meta_non_parallel == task.meta_non_parallel):
+    ) and (
+        old_workflow_task.task.meta_non_parallel == new_task.meta_non_parallel
+    ):
         _meta_non_parallel = old_workflow_task.meta_non_parallel
     else:
-        _meta_non_parallel = task.meta_non_parallel
+        _meta_non_parallel = new_task.meta_non_parallel
     # Same for `meta_parallel`
     if (
         old_workflow_task.meta_parallel != old_workflow_task.task.meta_parallel
-    ) and (old_workflow_task.task.meta_parallel == task.meta_parallel):
+    ) and (old_workflow_task.task.meta_parallel == new_task.meta_parallel):
         _meta_parallel = old_workflow_task.meta_parallel
     else:
-        _meta_parallel = task.meta_parallel
+        _meta_parallel = new_task.meta_parallel
 
     new_workflow_task = WorkflowTaskV2(
-        task_id=task.id,
-        task_type=task.type,
-        task=task,
+        task_id=new_task.id,
+        task_type=new_task.type,
+        task=new_task,
         # old-task values
         type_filters=old_workflow_task.type_filters,
         # possibly new values
@@ -140,7 +142,7 @@ async def create_workflowtask(
     project_id: int,
     workflow_id: int,
     task_id: int,
-    new_task: WorkflowTaskCreateV2,
+    wftask: WorkflowTaskCreateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowTaskReadV2]:
@@ -158,8 +160,8 @@ async def create_workflowtask(
 
     if task.type == "parallel":
         if (
-            new_task.meta_non_parallel is not None
-            or new_task.args_non_parallel is not None
+            wftask.meta_non_parallel is not None
+            or wftask.args_non_parallel is not None
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -171,8 +173,8 @@ async def create_workflowtask(
             )
     elif task.type == "non_parallel":
         if (
-            new_task.meta_parallel is not None
-            or new_task.args_parallel is not None
+            wftask.meta_parallel is not None
+            or wftask.args_parallel is not None
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -185,17 +187,17 @@ async def create_workflowtask(
 
     _check_type_filters_compatibility(
         task_input_types=task.input_types,
-        wftask_type_filters=new_task.type_filters,
+        wftask_type_filters=wftask.type_filters,
     )
 
     workflow_task = await _workflow_insert_task(
         workflow_id=workflow.id,
         task_id=task_id,
-        meta_non_parallel=new_task.meta_non_parallel,
-        meta_parallel=new_task.meta_parallel,
-        args_non_parallel=new_task.args_non_parallel,
-        args_parallel=new_task.args_parallel,
-        type_filters=new_task.type_filters,
+        meta_non_parallel=wftask.meta_non_parallel,
+        meta_parallel=wftask.meta_parallel,
+        args_non_parallel=wftask.args_non_parallel,
+        args_parallel=wftask.args_parallel,
+        type_filters=wftask.type_filters,
         db=db,
     )
 

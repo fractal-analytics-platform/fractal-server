@@ -362,8 +362,8 @@ def _check_type_filters_compatibility(
             task_input_types=task_input_types,
             wftask_type_filters=wftask_type_filters,
         )
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Error: type filters are not compatible.",
+            detail=f"Incompatible type filters.\nOriginal error: {str(e)}",
         )
