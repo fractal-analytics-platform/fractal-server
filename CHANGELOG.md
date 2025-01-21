@@ -2,10 +2,13 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
-# 2.11.0a4
+# 2.11.0a5
 
 * API:
     * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
+
+# 2.11.0a4
+
 * Runner:
     * Use `TaskV2.input_types` for filtering, rather than validation (\#2191).
     * Remove all filters from `TaskOutput` (\#2190).
