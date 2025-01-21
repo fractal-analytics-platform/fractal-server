@@ -4,6 +4,8 @@
 
 # 2.11.0a4
 
+* API:
+    * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
 * Runner:
     * Use `TaskV2.input_types` for filtering, rather than validation (\#2191).
     * Remove all filters from `TaskOutput` (\#2190).
