@@ -778,6 +778,7 @@ async def test_replace_task_in_workflowtask(
             task_id=task1.id,
             args_parallel={"wft1": "wft1"},
             args_non_parallel={"wft1": "wft1"},
+            type_filters={"a": True},
         )
         wft2 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
@@ -909,3 +910,15 @@ async def test_replace_task_in_workflowtask(
         )
         assert res.status_code == 422
         debug(res.json())
+
+        # test type filters compatibility
+        debug(wft1b)
+        task6 = await task_factory_v2(
+            user_id=user.id, input_types={"a": False}
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task6.id}",
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]
