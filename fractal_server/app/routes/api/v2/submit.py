@@ -109,9 +109,7 @@ async def apply_workflow(
 
     # Check that tasks have read-access and are `active`
     used_task_group_ids = set()
-    for wftask in workflow.task_list[
-        first_task_index : last_task_index + 1  # noqa: E203
-    ]:
+    for wftask in workflow.task_list[first_task_index : last_task_index + 1]:
         task = await _get_task_read_access(
             user_id=user.id,
             task_id=wftask.task_id,
