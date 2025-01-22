@@ -7,12 +7,15 @@ from sqlmodel import select
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import DatasetV2
 from fractal_server.app.models import JobV2
+from fractal_server.app.models import ProjectV2
 from fractal_server.app.models import WorkflowTaskV2
+from fractal_server.app.models import WorkflowV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.images.models import AttributeFiltersType
 
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
@@ -21,23 +24,25 @@ logger.setLevel(logging.INFO)
 def dict_values_to_list(
     input_dict: dict[str, Union[int, float, bool, str, None]],
     identifier: str,
-) -> dict[str, list[Union[int, float, bool, str]]]:
+) -> tuple[AttributeFiltersType, bool]:
+    was_there_a_warning = False
     for k, v in input_dict.items():
         if not isinstance(v, (int, float, bool, str, type(None))):
             error_msg = (
                 f"Attribute '{k}' from '{identifier}' "
-                f"has invalid type '{type(v)}'."
+                "has invalid type '{type(v)}'."
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         elif v is None:
             logger.warning(
-                f"Attribute '{k}' from '{identifier}' is None and it "
-                "will be removed."
+                f"Attribute '{k}' from '{identifier}' is "
+                "None and it will be removed."
             )
+            was_there_a_warning = True
         else:
             input_dict[k] = [v]
-    return input_dict
+    return input_dict, was_there_a_warning
 
 
 def fix_db():
@@ -45,15 +50,24 @@ def fix_db():
 
     with next(get_sync_db()) as db:
         # DatasetV2.filters
-        # DatasetV2.history[].workflowtask.input_filters
         stm = select(DatasetV2).order_by(DatasetV2.id)
         datasets = db.execute(stm).scalars().all()
         for ds in datasets:
             logger.info(f"DatasetV2[{ds.id}] START")
-            ds.attribute_filters = dict_values_to_list(
+            ds.attribute_filters, warning = dict_values_to_list(
                 ds.filters["attributes"],
                 f"Dataset[{ds.id}].filters.attributes",
             )
+            if warning:
+                proj = db.get(ProjectV2, ds.project_id)
+                logger.warning(
+                    "Additional information: "
+                    f"{proj.id=}, "
+                    f"{proj.name=}, "
+                    f"{proj.user_list[0].email=}, "
+                    f"{ds.id=}, "
+                    f"{ds.name=}"
+                )
             ds.type_filters = ds.filters["types"]
             ds.filters = None
             for i, h in enumerate(ds.history):
@@ -81,6 +95,17 @@ def fix_db():
                     "Removing input_filters['attributes']. "
                     f"(previous value: {wft.input_filters['attributes']})"
                 )
+                wf = db.get(WorkflowV2, wft.workflow_id)
+                proj = db.get(ProjectV2, wf.project_id)
+                logger.warning(
+                    "Additional information: "
+                    f"{proj.id=}, "
+                    f"{proj.name=}, "
+                    f"{proj.user_list[0].email=}, "
+                    f"{wf.id=}, "
+                    f"{wf.name=}, "
+                    f"{wft.task.name=}"
+                )
             wft.input_filters = None
             flag_modified(wft, "input_filters")
             WorkflowTaskReadV2(
@@ -100,10 +125,28 @@ def fix_db():
             job.dataset_dump["type_filters"] = job.dataset_dump["filters"][
                 "types"
             ]
-            job.dataset_dump["attribute_filters"] = dict_values_to_list(
+            (
+                job.dataset_dump["attribute_filters"],
+                warning,
+            ) = dict_values_to_list(
                 job.dataset_dump["filters"]["attributes"],
                 f"JobV2[{job.id}].dataset_dump.filters.attributes",
             )
+            if warning and job.project_id is not None:
+                proj = db.get(ProjectV2, job.project_id)
+                logger.warning(
+                    "Additional information: "
+                    f"{proj.id=}, "
+                    f"{proj.name=}, "
+                    f"{proj.user_list[0].email=}, "
+                    f"{job.id=}, "
+                    f"{job.start_timestamp=}, "
+                    f"{job.end_timestamp=}, "
+                    f"{job.dataset_id=}, "
+                    f"{job.workflow_id=}."
+                )
+                # FIXME
+                pass
             job.dataset_dump.pop("filters")
             flag_modified(job, "dataset_dump")
             JobReadV2(**job.model_dump())
