@@ -2,12 +2,17 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# 2.11.0a6
+
+* Data-migration script updates (\#).
+
 # 2.11.0a5
 
 * API:
     * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
 * Schemas:
-    * Forbid `None` or `[]` as `attribute_filters` (\#2200).
+    * Forbid `None` or `[]` as `attribute_filters` (\#2202).
+* Data-migration script updates (\#2202).
 
 # 2.11.0a4
 
