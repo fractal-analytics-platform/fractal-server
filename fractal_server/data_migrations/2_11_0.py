@@ -8,6 +8,9 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import DatasetV2
 from fractal_server.app.models import JobV2
 from fractal_server.app.models import WorkflowTaskV2
+from fractal_server.app.schemas.v2 import DatasetReadV2
+from fractal_server.app.schemas.v2 import JobReadV2
+from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
@@ -17,9 +20,12 @@ def dict_values_to_list(
     input_dict: dict[str, Union[int, float, bool, str, None]], identifier: str
 ) -> dict[str, list[Union[int, float, bool, str]]]:
     for k, v in input_dict.items():
-        if isinstance(v, list):
-            logger.error(f"Attribute '{k}' from '{identifier}' is a list.")
-            raise RuntimeError
+        if not isinstance(v, (int, float, bool, str, type(None))):
+            error_msg = (
+                f"Attribute '{k}' from '{identifier}' has type '{type(v)}'."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
         elif v is None:
             logger.warning(
                 f"Attribute '{k}' from '{identifier}' is None and it will be "
@@ -53,10 +59,11 @@ def fix_db():
                         "workflowtask"
                     ]["input_filters"]["types"]
                 flag_modified(ds, "history")
+                DatasetReadV2(**ds.model_dump())
                 db.add(ds)
                 logger.info(f"Fixed filters in DatasetV2[{ds.id}]")
-            except RuntimeError:
-                logger.info("Skipping dataset ")
+            except RuntimeError as e:
+                logger.info(f"Skipping DatasetV2[{ds.id}]. Error: '{e}'.")
 
         # WorkflowTaskV2.input_filters
         stm = select(WorkflowTaskV2).order_by(WorkflowTaskV2.id)
@@ -70,6 +77,7 @@ def fix_db():
                 )
             wft.input_filters = None
             flag_modified(wft, "input_filters")
+            WorkflowTaskReadV2(**wft.model_dump())
             db.add(wft)
             logger.info(f"Fixed filters in WorkflowTaskV2[{wft.id}]")
 
@@ -86,6 +94,8 @@ def fix_db():
             )
             job.dataset_dump.pop("filters")
             flag_modified(job, "dataset_dump")
+            JobReadV2(**job.model_dump())
+            db.add(job)
             logger.info(f"Fixed filters in JobV2[{job.id}].datasetdump")
 
         db.commit()
