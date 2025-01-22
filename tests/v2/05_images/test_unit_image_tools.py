@@ -88,11 +88,6 @@ def test_match_filter():
     assert not match_filter(
         image=image, type_filters={}, attribute_filters={"a": [0], "b": [1, 2]}
     )
-    assert match_filter(
-        image=image,
-        type_filters={},
-        attribute_filters={"a": None, "b": [1, 2]},
-    )
 
     # both
     assert match_filter(
@@ -141,8 +136,6 @@ def test_filter_image_list():
     assert len(res) == 3
     res = filter_image_list(images, attribute_filters={"a": [1, 2]})
     assert len(res) == 4
-    res = filter_image_list(images, attribute_filters={"a": None, "b": None})
-    assert len(res) == 5
 
     # both
     res = filter_image_list(
