@@ -10,6 +10,8 @@ from fractal_server.app.models import JobV2
 from fractal_server.app.models import WorkflowTaskV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
+from fractal_server.app.schemas.v2 import ProjectReadV2
+from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 
 logger = logging.getLogger("fix_db")
@@ -59,7 +61,10 @@ def fix_db():
                         "workflowtask"
                     ]["input_filters"]["types"]
                 flag_modified(ds, "history")
-                DatasetReadV2(**ds.model_dump())
+                DatasetReadV2(
+                    project=ProjectReadV2(**ds.project.model_dump()),
+                    **ds.model_dump(),
+                )
                 db.add(ds)
                 logger.info(f"Fixed filters in DatasetV2[{ds.id}]")
             except RuntimeError as e:
@@ -77,7 +82,9 @@ def fix_db():
                 )
             wft.input_filters = None
             flag_modified(wft, "input_filters")
-            WorkflowTaskReadV2(**wft.model_dump())
+            WorkflowTaskReadV2(
+                task=TaskReadV2(**wft.task.model_dump()), **wft.model_dump()
+            )
             db.add(wft)
             logger.info(f"Fixed filters in WorkflowTaskV2[{wft.id}]")
 
