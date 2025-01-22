@@ -2,7 +2,7 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
-# 2.11.0a6
+# 2.11.0a7
 
 * Data-migration script updates (\#).
 
