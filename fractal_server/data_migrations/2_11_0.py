@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
@@ -12,6 +13,23 @@ logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
 
 
+def dict_values_to_list(
+    input_dict: dict[str, Union[int, float, bool, str, None]], identifier: str
+) -> dict[str, list[Union[int, float, bool, str]]]:
+    for k, v in input_dict.items():
+        if isinstance(v, list):
+            logger.error(f"Attribute '{k}' from '{identifier}' is a list.")
+            raise RuntimeError
+        elif v is None:
+            logger.warning(
+                f"Attribute '{k}' from '{identifier}' is None and it will be "
+                "removed."
+            )
+        else:
+            input_dict[k] = [v]
+    return input_dict
+
+
 def fix_db():
 
     logger.info("START execution of fix_db function")
@@ -23,16 +41,22 @@ def fix_db():
         stm = select(DatasetV2).order_by(DatasetV2.id)
         datasets = db.execute(stm).scalars().all()
         for ds in datasets:
-            ds.attribute_filters = ds.filters["attributes"]
-            ds.type_filters = ds.filters["types"]
-            ds.filters = None
-            for i, h in enumerate(ds.history):
-                ds.history[i]["workflowtask"]["type_filters"] = h[
-                    "workflowtask"
-                ]["input_filters"]["types"]
-            flag_modified(ds, "history")
-            db.add(ds)
-            logger.info(f"Fixed filters in DatasetV2[{ds.id}]")
+            try:
+                ds.attribute_filters = dict_values_to_list(
+                    ds.filters["attributes"],
+                    f"Dataset[{ds.id}].filters.attributes",
+                )
+                ds.type_filters = ds.filters["types"]
+                ds.filters = None
+                for i, h in enumerate(ds.history):
+                    ds.history[i]["workflowtask"]["type_filters"] = h[
+                        "workflowtask"
+                    ]["input_filters"]["types"]
+                flag_modified(ds, "history")
+                db.add(ds)
+                logger.info(f"Fixed filters in DatasetV2[{ds.id}]")
+            except RuntimeError:
+                logger.info("Skipping dataset ")
 
         # WorkflowTaskV2.input_filters
         stm = select(WorkflowTaskV2).order_by(WorkflowTaskV2.id)
@@ -56,9 +80,10 @@ def fix_db():
             job.dataset_dump["type_filters"] = job.dataset_dump["filters"][
                 "types"
             ]
-            job.dataset_dump["attribute_filters"] = job.dataset_dump[
-                "filters"
-            ]["attributes"]
+            job.dataset_dump["attribute_filters"] = dict_values_to_list(
+                job.dataset_dump["filters"]["attributes"],
+                f"JobV2[{job.id}].dataset_dump.filters.attributes",
+            )
             job.dataset_dump.pop("filters")
             flag_modified(job, "dataset_dump")
             logger.info(f"Fixed filters in JobV2[{job.id}].datasetdump")
