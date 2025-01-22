@@ -57,8 +57,6 @@ def match_filter(
 
     # Verify match with attributes (only for not-None filters)
     for key, values in attribute_filters.items():
-        if values is None:
-            continue
         if image["attributes"].get(key) not in values:
             return False
 

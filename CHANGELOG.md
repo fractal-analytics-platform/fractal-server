@@ -6,6 +6,8 @@
 
 * API:
     * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
+* Schemas:
+    * Forbid `None` or `[]` as `attribute_filters` (\#2200).
 
 # 2.11.0a4
 
