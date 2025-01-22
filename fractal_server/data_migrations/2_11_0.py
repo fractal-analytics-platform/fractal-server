@@ -92,18 +92,21 @@ def fix_db():
         stm = select(JobV2).order_by(JobV2.id)
         jobs = db.execute(stm).scalars().all()
         for job in jobs:
-            job.dataset_dump["type_filters"] = job.dataset_dump["filters"][
-                "types"
-            ]
-            job.dataset_dump["attribute_filters"] = dict_values_to_list(
-                job.dataset_dump["filters"]["attributes"],
-                f"JobV2[{job.id}].dataset_dump.filters.attributes",
-            )
-            job.dataset_dump.pop("filters")
-            flag_modified(job, "dataset_dump")
-            JobReadV2(**job.model_dump())
-            db.add(job)
-            logger.info(f"Fixed filters in JobV2[{job.id}].datasetdump")
+            try:
+                job.dataset_dump["type_filters"] = job.dataset_dump["filters"][
+                    "types"
+                ]
+                job.dataset_dump["attribute_filters"] = dict_values_to_list(
+                    job.dataset_dump["filters"]["attributes"],
+                    f"JobV2[{job.id}].dataset_dump.filters.attributes",
+                )
+                job.dataset_dump.pop("filters")
+                flag_modified(job, "dataset_dump")
+                JobReadV2(**job.model_dump())
+                db.add(job)
+                logger.info(f"Fixed filters in JobV2[{job.id}].datasetdump")
+            except RuntimeError as e:
+                logger.info(f"Skipping JobV2[{job.id}]. Error: '{e}'.")
 
         db.commit()
         logger.info("Changes committed.")
