@@ -109,7 +109,10 @@ def set_logger(
             if isinstance(handler, logging.FileHandler)
         ]
         if len(current_file_handlers) > 1:
-            logger.warning(f"Logger {logger_name} has multiple file handlers.")
+            logger.warning(
+                f"Logger {logger_name} has multiple file handlers: "
+                f"{current_file_handlers}"
+            )
 
     return logger
 

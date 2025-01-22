@@ -613,3 +613,41 @@ async def test_import_with_legacy_filters(
         assert "Cannot set attribute filters for WorkflowTasks." in str(
             res.json()
         )
+
+
+async def test_import_filters_compatibility(
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory_v2,
+    client,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+        await task_factory_v2(
+            user_id=user.id,
+            source="foo",
+            input_types={"a": True, "b": False},
+        )
+
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=dict(
+                name="Workflow Ok",
+                task_list=[
+                    {"task": {"source": "foo"}, "type_filters": {"a": True}}
+                ],
+            ),
+        )
+        assert res.status_code == 201
+
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=dict(
+                name="Workflow Fail",
+                task_list=[
+                    {"task": {"source": "foo"}, "type_filters": {"b": True}}
+                ],
+            ),
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]

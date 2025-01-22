@@ -2,6 +2,11 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# 2.11.0a5
+
+* API:
+    * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
+
 # 2.11.0a4
 
 * Runner:
@@ -33,6 +38,11 @@
     * Update and simplify `/api/v2/project/{project_id}/status/` (\#2169).
 * Runner
     * Integrate database write access in runner component (\#2169).
+
+# 2.10.6
+
+* Task lifecycle:
+    * Use unique logger names for task-lifecycle operations (\#2204).
 
 # 2.10.5
 

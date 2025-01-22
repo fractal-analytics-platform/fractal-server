@@ -19,6 +19,7 @@ from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
+from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -324,6 +325,13 @@ async def import_workflow(
         )
         list_wf_tasks.append(new_wf_task)
         list_task_ids.append(task_id)
+
+    for wftask, task_id in zip(list_wf_tasks, list_task_ids):
+        task = await db.get(TaskV2, task_id)
+        _check_type_filters_compatibility(
+            task_input_types=task.input_types,
+            wftask_type_filters=wftask.type_filters,
+        )
 
     # Create new Workflow
     db_workflow = WorkflowV2(
