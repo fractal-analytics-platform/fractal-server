@@ -22,11 +22,7 @@ def validate_attribute_filters(
 
     attribute_filters = valdict_keys("attribute_filters")(attribute_filters)
     for key, values in attribute_filters.items():
-        if values is None:
-            # values=None corresponds to not applying any filter for
-            # attribute `key`
-            pass
-        elif values == []:
+        if values == []:
             raise ValueError(
                 f"attribute_filters[{key}] cannot be an empty list."
             )
