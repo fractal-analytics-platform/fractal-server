@@ -470,3 +470,56 @@ async def test_delete_workflow_with_job(
 
         await db.refresh(job)
         assert job.workflow_id is None
+
+
+async def test_workflow_type_filters_flow(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    workflow_factory_v2,
+    db,
+):
+    async with MockCurrentUser() as user:
+        task = await task_factory_v2(
+            user_id=user.id,
+            input_types=dict(typeA=True, typeB=False),
+            output_types=dict(
+                typeC=True,
+            ),
+        )
+        proj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=proj.id)
+        await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=task.id,
+            db=db,
+            type_filters=dict(typeA=True, typeD=False),
+        )
+
+        # Get workflow, and check relationship
+        res = await client.get(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/",
+        )
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json() == {
+            "dataset_filters": [
+                {},
+                {
+                    "typeC": True,
+                },
+            ],
+            "input_filters": [
+                {
+                    "typeA": True,
+                    "typeB": False,
+                    "typeD": False,
+                },
+            ],
+            "output_filters": [
+                {
+                    "typeC": True,
+                },
+            ],
+        }
