@@ -87,15 +87,25 @@ OLD_FRACTAL_TASKS_CORE_VERSION = "1.3.2"
 @pytest.mark.parametrize(
     "package_version", [None, OLD_FRACTAL_TASKS_CORE_VERSION]
 )
-async def test_task_collection_from_pypi(
-    db,
+async def test_task_collection_from_pypi_api_only(
     client,
     MockCurrentUser,
     override_settings_factory,
     tmp_path: Path,
     current_py_version,
     package_version,
+    monkeypatch,
 ):
+
+    import fractal_server.app.routes.api.v2.task_collection  # noqa
+
+    def fake_collect_local(*args, **kwargs) -> None:
+        return None
+
+    monkeypatch.setattr(
+        "fractal_server.app.routes.api.v2.task_collection.collect_local",
+        fake_collect_local,
+    )
 
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
@@ -121,6 +131,57 @@ async def test_task_collection_from_pypi(
     else:
         EXPECTED_PACKAGE_VERSION = package_version
         payload["package_version"] = package_version
+
+    debug(payload)
+    debug(EXPECTED_PACKAGE_VERSION)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/?private=true",
+            data=payload,
+        )
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+
+        # Get collection info
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        task_group_activity = res.json()
+        debug(task_group_activity)
+        assert task_group_activity["version"] == EXPECTED_PACKAGE_VERSION
+
+
+async def test_task_collection_from_pypi(
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+    current_py_version,
+):
+
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
+    # Note 2: Set logging level to CRITICAL, and then make sure that
+    # task-collection logs are included
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
+    )
+    settings = Inject(get_settings)
+
+    # Prepare and validate payload
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    payload = dict(
+        package="fractal-tasks-core",
+        python_version=PYTHON_VERSION,
+    )
+    EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
+        payload["package"]
+    )
+    assert EXPECTED_PACKAGE_VERSION > OLD_FRACTAL_TASKS_CORE_VERSION
 
     debug(payload)
     debug(EXPECTED_PACKAGE_VERSION)
