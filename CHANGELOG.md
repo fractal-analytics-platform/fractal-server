@@ -2,6 +2,11 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# 2.11.0a9
+
+* API:
+    * Add new (experimental) `/project/{project_id}/workflow/{workflow_id}/type-filters-flow/` endpoint (\#2208).
+
 # 2.11.0a7 and 2.11.0a8
 
 * Data-migration script updates (\#2208, \#2209).
