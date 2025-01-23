@@ -54,6 +54,10 @@ def fix_db():
         datasets = db.execute(stm).scalars().all()
         for ds in datasets:
             logger.info(f"DatasetV2[{ds.id}] START")
+            if ds.filters is None:
+                logger.info(f"DatasetV2[{ds.id}] SKIP")
+                continue
+
             ds.attribute_filters, warning = dict_values_to_list(
                 ds.filters["attributes"],
                 f"Dataset[{ds.id}].filters.attributes",
@@ -89,6 +93,9 @@ def fix_db():
         wftasks = db.execute(stm).scalars().all()
         for wft in wftasks:
             logger.info(f"WorkflowTaskV2[{wft.id}] START")
+            if wft.input_filters is None:
+                logger.info(f"WorkflowTaskV2[{wft.id}] SKIP")
+                continue
             wft.type_filters = wft.input_filters["types"]
             if wft.input_filters["attributes"]:
                 logger.warning(
@@ -122,6 +129,9 @@ def fix_db():
         jobs = db.execute(stm).scalars().all()
         for job in jobs:
             logger.info(f"JobV2[{job.id}] START")
+            if "filters" not in job.dataset_dump.keys():
+                logger.info(f"JobV2[{job.id}] SKIP")
+                continue
             job.dataset_dump["type_filters"] = job.dataset_dump["filters"][
                 "types"
             ]
