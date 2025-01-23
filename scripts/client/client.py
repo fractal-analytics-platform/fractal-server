@@ -7,6 +7,8 @@ import httpx
 from a2wsgi import ASGIMiddleware
 from fastapi import Response
 
+from fractal_server.app.schemas import UserGroupCreate
+from fractal_server.app.schemas import UserGroupRead
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user import UserUpdate
@@ -278,3 +280,21 @@ class FractalClient:
                 return None
             time.sleep(waiting_interval)
         raise RuntimeError(f"Reached {max_calls=} but {job_statuses=}.")
+
+    def add_user_group(self):
+        group = UserGroupCreate(name="new_group", viewer_paths=["/view/path"])
+        res = self.make_request(
+            endpoint="auth/group/",
+            method="POST",
+            data=group.dict(),
+        )
+        self.detail(res)
+        return UserGroupRead(**response_json(res))
+
+    def add_user_usergroup(self, group_id: int, user_id: int):
+        res = self.make_request(
+            endpoint=f"auth/group/{group_id}/add-user/{user_id}/",
+            method="POST",
+        )
+        self.detail(res)
+        return UserGroupRead(**response_json(res))
