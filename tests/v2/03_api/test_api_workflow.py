@@ -495,6 +495,14 @@ async def test_workflow_type_filters_flow(
             project_id=proj.id,
             type_filters=dict(existing=False),
         )
+
+        # FAILURE due to empty workflow
+        res = await client.get(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/"
+        )
+        assert res.status_code == 422
+        assert "Workflow has no tasks" in str(res.json())
+
         await _workflow_insert_task(
             workflow_id=wf.id,
             task_id=task.id,
@@ -502,7 +510,33 @@ async def test_workflow_type_filters_flow(
             type_filters=dict(typeA=True, typeD=False),
         )
 
-        # With no dataset
+        # FAILURE due to wrong first/last indices
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                "type-filters-flow/?first_task_index=-1"
+            )
+        )
+        assert res.status_code == 422
+        assert "Invalid first/last" in str(res.json())
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                "type-filters-flow/?last_task_index=-1"
+            )
+        )
+        assert res.status_code == 422
+        assert "Invalid first/last" in str(res.json())
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                "type-filters-flow/?last_task_index=99"
+            )
+        )
+        assert res.status_code == 422
+        assert "Invalid first/last" in str(res.json())
+
+        # SUCCESS, without dataset
         res = await client.get(
             f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/",
         )
@@ -528,9 +562,7 @@ async def test_workflow_type_filters_flow(
             ],
         }
 
-        # With dataset
-
-        # Get workflow, and check relationship
+        # SUCCESS, with dataset
         res = await client.get(
             (
                 f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
