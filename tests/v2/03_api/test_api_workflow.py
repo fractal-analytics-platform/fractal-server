@@ -477,6 +477,7 @@ async def test_workflow_type_filters_flow(
     MockCurrentUser,
     task_factory_v2,
     project_factory_v2,
+    dataset_factory_v2,
     workflow_factory_v2,
     db,
 ):
@@ -490,6 +491,10 @@ async def test_workflow_type_filters_flow(
         )
         proj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=proj.id)
+        ds = await dataset_factory_v2(
+            project_id=proj.id,
+            type_filters=dict(existing=False),
+        )
         await _workflow_insert_task(
             workflow_id=wf.id,
             task_id=task.id,
@@ -497,12 +502,11 @@ async def test_workflow_type_filters_flow(
             type_filters=dict(typeA=True, typeD=False),
         )
 
-        # Get workflow, and check relationship
+        # With no dataset
         res = await client.get(
             f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/",
         )
         assert res.status_code == 200
-        debug(res.json())
         assert res.json() == {
             "dataset_filters": [
                 {},
@@ -512,6 +516,41 @@ async def test_workflow_type_filters_flow(
             ],
             "input_filters": [
                 {
+                    "typeA": True,
+                    "typeB": False,
+                    "typeD": False,
+                },
+            ],
+            "output_filters": [
+                {
+                    "typeC": True,
+                },
+            ],
+        }
+
+        # With dataset
+
+        # Get workflow, and check relationship
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                f"type-filters-flow/?dataset_id={ds.id}"
+            )
+        )
+        assert res.status_code == 200
+        assert res.json() == {
+            "dataset_filters": [
+                {
+                    "existing": False,
+                },
+                {
+                    "existing": False,
+                    "typeC": True,
+                },
+            ],
+            "input_filters": [
+                {
+                    "existing": False,
                     "typeA": True,
                     "typeB": False,
                     "typeD": False,
