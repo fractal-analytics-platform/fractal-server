@@ -109,8 +109,8 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-v2-${{ matrix.python-version }}
-          path: coverage-data-v2-${{ matrix.python-version }}*
+          name: coverage-data-v2-part1-${{ matrix.python-version }}
+          path: coverage-data-v2-part1-${{ matrix.python-version }}*
 
   tests_v2_part2:
 
@@ -169,8 +169,8 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-v2-${{ matrix.python-version }}
-          path: coverage-data-v2-${{ matrix.python-version }}*
+          name: coverage-data-v2-part2-${{ matrix.python-version }}
+          path: coverage-data-v2-part2-${{ matrix.python-version }}*
 
 
   coverage:
