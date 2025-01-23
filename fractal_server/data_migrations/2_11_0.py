@@ -78,6 +78,7 @@ def fix_db():
                 ds.history[i]["workflowtask"]["type_filters"] = h[
                     "workflowtask"
                 ]["input_filters"]["types"]
+                ds.history[i]["workflowtask"].pop("input_filters")
             flag_modified(ds, "history")
             DatasetReadV2(
                 **ds.model_dump(),
@@ -155,8 +156,6 @@ def fix_db():
                     f"{job.dataset_id=}, "
                     f"{job.workflow_id=}."
                 )
-                # FIXME
-                pass
             job.dataset_dump.pop("filters")
             flag_modified(job, "dataset_dump")
             JobReadV2(**job.model_dump())
