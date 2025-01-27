@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from devtools import debug
 from sqlmodel import select
 
@@ -179,42 +178,36 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
         assert res.status_code == 200
 
 
-@pytest.mark.parametrize("new_name", (None, "new name"))
-async def test_patch_project(
-    new_name,
-    client,
-    MockCurrentUser,
-):
+async def test_patch_project(client, MockCurrentUser):
     """
     Test that the project can be patched correctly, with any possible
     combination of set/unset attributes.
     """
     async with MockCurrentUser():
-        # Create project
-        payload = dict(
-            name="old name",
-        )
-        res = await client.post(f"{PREFIX}/project/", json=payload)
-        old_project = res.json()
-        project_id = old_project["id"]
-        assert res.status_code == 201
+        for new_name in (None, "new name"):
+            # Create project
+            payload = dict(name=f"old {new_name}")
+            res = await client.post(f"{PREFIX}/project/", json=payload)
+            old_project = res.json()
+            project_id = old_project["id"]
+            assert res.status_code == 201
 
-        # Patch project
-        payload = {}
-        if new_name:
-            payload["name"] = new_name
-        debug(payload)
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/", json=payload
-        )
-        new_project = res.json()
-        debug(new_project)
-        assert res.status_code == 200
-        for key, value in new_project.items():
-            if key in payload.keys():
-                assert value == payload[key]
-            else:
-                assert value == old_project[key]
+            # Patch project
+            payload = {}
+            if new_name:
+                payload["name"] = new_name
+            debug(payload)
+            res = await client.patch(
+                f"{PREFIX}/project/{project_id}/", json=payload
+            )
+            new_project = res.json()
+            debug(new_project)
+            assert res.status_code == 200
+            for key, value in new_project.items():
+                if key in payload.keys():
+                    assert value == payload[key]
+                else:
+                    assert value == old_project[key]
 
 
 async def test_delete_project(
