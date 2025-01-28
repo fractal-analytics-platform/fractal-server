@@ -335,17 +335,21 @@ async def test_lifecycle(
         res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
         assert res.status_code == 200
         task_group = res.json()
+        pip_freeze = task_group["pip_freeze"]
+        task_group_wheel_path = task_group["wheel_path"]
+        assert (
+            f"fractal-tasks-mock @ file://{task_group_wheel_path}"
+            in pip_freeze
+        )
         pip_version = next(
-            line
-            for line in task_group["pip_freeze"].split("\n")
-            if line.startswith("pip")
+            line for line in pip_freeze.split("\n") if line.startswith("pip")
         ).split("==")[1]
         assert Version(pip_version) <= Version(
             settings.FRACTAL_MAX_PIP_VERSION
         )
         assert (
-            Path(res.json()["path"]) / Path(wheel_path).name
-        ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
+            Path(task_group["path"]) / Path(wheel_path).name
+        ).as_posix() == (Path(task_group_wheel_path).as_posix())
 
         # STEP 2: Deactivate task group
         res = await client.post(
