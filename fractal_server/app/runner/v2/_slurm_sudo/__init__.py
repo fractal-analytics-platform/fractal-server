@@ -18,7 +18,6 @@ Executor objects.
 """
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
@@ -29,28 +28,33 @@ from ._submit_setup import _slurm_submit_setup
 from fractal_server.images.models import AttributeFiltersType
 
 
-def _process_workflow(
+def process_workflow(
     *,
     workflow: WorkflowV2,
     dataset: DatasetV2,
-    logger_name: str,
     workflow_dir_local: Path,
-    workflow_dir_remote: Path,
-    first_task_index: int,
-    last_task_index: int,
+    workflow_dir_remote: Optional[Path] = None,
+    first_task_index: Optional[int] = None,
+    last_task_index: Optional[int] = None,
+    logger_name: str,
+    job_attribute_filters: AttributeFiltersType,
+    # Slurm-specific
+    user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
-    user_cache_dir: str,
-    worker_init: Optional[Union[str, list[str]]] = None,
-    job_attribute_filters: AttributeFiltersType,
+    worker_init: Optional[str] = None,
 ) -> None:
     """
-    Run the workflow using a `FractalSlurmExecutor`.
-
-    This function initialises the a FractalSlurmExecutor, setting logging,
-    workflow working dir and user to impersonate. It then schedules the
-    workflow tasks and returns the new dataset attributes
+    Process workflow (SLURM backend public interface).
     """
+
+    # Set values of first_task_index and last_task_index
+    num_tasks = len(workflow.task_list)
+    first_task_index, last_task_index = set_start_and_last_task_index(
+        num_tasks,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
+    )
 
     if not slurm_user:
         raise RuntimeError(
@@ -82,47 +86,3 @@ def _process_workflow(
             submit_setup_call=_slurm_submit_setup,
             job_attribute_filters=job_attribute_filters,
         )
-
-
-def process_workflow(
-    *,
-    workflow: WorkflowV2,
-    dataset: DatasetV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
-    logger_name: str,
-    job_attribute_filters: AttributeFiltersType,
-    # Slurm-specific
-    user_cache_dir: Optional[str] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    worker_init: Optional[str] = None,
-) -> None:
-    """
-    Process workflow (SLURM backend public interface).
-    """
-
-    # Set values of first_task_index and last_task_index
-    num_tasks = len(workflow.task_list)
-    first_task_index, last_task_index = set_start_and_last_task_index(
-        num_tasks,
-        first_task_index=first_task_index,
-        last_task_index=last_task_index,
-    )
-
-    _process_workflow(
-        workflow=workflow,
-        dataset=dataset,
-        logger_name=logger_name,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        first_task_index=first_task_index,
-        last_task_index=last_task_index,
-        user_cache_dir=user_cache_dir,
-        slurm_user=slurm_user,
-        slurm_account=slurm_account,
-        worker_init=worker_init,
-        job_attribute_filters=job_attribute_filters,
-    )
