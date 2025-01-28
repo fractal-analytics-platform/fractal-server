@@ -237,6 +237,24 @@ async def test_import_export(
             == first_task_no_source.taskgroupv2_id
         )
 
+        # issue 2226
+        await task_factory_v2(
+            user_id=user.id,
+            version="1.4.2",
+            name="Convert Cellvoyager to OME-Zarr",
+            task_group_kwargs=dict(pkg_name="fractal-tasks-core"),
+        )
+        with (testdata_path / "import_export/workflow-issue2226.json").open(
+            "r"
+        ) as f:
+            workflow_issue_2226 = json.load(f)
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=workflow_issue_2226,
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
 
 async def test_unit_get_task_by_source():
     from fractal_server.app.routes.api.v2.workflow_import import (

@@ -1,0 +1,97 @@
+{
+    "name":"wf-1738071424-1",
+    "task_list":[
+        {
+            "meta_non_parallel":{
+                "cpus_per_task":1,
+                "mem":500
+            },
+            "meta_parallel":{
+                "cpus_per_task":1,
+                "mem":500
+            },
+            "args_non_parallel":{
+                "image_dirs":[
+                    "/data/images/10.5281_zenodo.8287221/"
+                ],
+                "allowed_channels":[
+                    {
+                        "color":"00FFFF",
+                        "wavelength_id":"A01_C01",
+                        "label":"DAPI",
+                        "window":{
+                            "start":110,
+                            "end":800
+                        },
+                        "active":true
+                    },
+                    {
+                        "color":"FF00FF",
+                        "wavelength_id":"A01_C02",
+                        "label":"nanog",
+                        "window":{
+                            "start":110,
+                            "end":290
+                        },
+                        "active":true
+                    },
+                    {
+                        "color":"FFFF00",
+                        "wavelength_id":"A02_C03",
+                        "label":"Lamin B1",
+                        "window":{
+                            "start":110,
+                            "end":1600
+                        },
+                        "active":true
+                    }
+                ],
+                "coarsening_xy":2,
+                "num_levels":5,
+                "image_extension":"png",
+                "overwrite":true
+            },
+            "args_parallel":null,
+            "input_filters":{
+                "attributes":{
+
+                },
+                "types":{
+
+                }
+            },
+            "task":{
+                "pkg_name":"fractal-tasks-core",
+                "version":"1.4.2",
+                "name":"Convert Cellvoyager to OME-Zarr"
+            }
+        },
+        {
+            "meta_non_parallel":{
+                "cpus_per_task":1,
+                "mem":500
+            },
+            "meta_parallel":{
+                "cpus_per_task":1,
+                "mem":500
+            },
+            "args_non_parallel":{
+                "overwrite":true
+            },
+            "args_parallel":null,
+            "input_filters":{
+                "attributes":{
+
+                },
+                "types":{
+
+                }
+            },
+            "task":{
+                "pkg_name":"fractal-tasks-core",
+                "version":"1.4.2",
+                "name":"Project Image (HCS Plate)"
+            }
+        }
+    ]
+}
