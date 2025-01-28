@@ -180,7 +180,7 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     args_non_parallel: Optional[dict[str, Any]] = None
     args_parallel: Optional[dict[str, Any]] = None
     type_filters: Optional[dict[str, bool]] = None
-    filters: Optional[dict[str, Any]] = None
+    input_filters: Optional[dict[str, Any]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
@@ -191,7 +191,7 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
         Transform legacy filters (created with fractal-server<2.11.0)
         into type filters
         """
-        if values.get("filters") is not None:
+        if values.get("input_filters") is not None:
             if "type_filters" in values.keys():
                 raise ValueError(
                     "Cannot set filters both through the legacy field "
@@ -201,13 +201,15 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
             else:
                 # As of 2.11.0, WorkflowTask do not have attribute filters
                 # any more.
-                if values["filters"]["attributes"] != {}:
+                if values["input_filters"]["attributes"] != {}:
                     raise ValueError(
                         "Cannot set attribute filters for WorkflowTasks."
                     )
                 # Convert legacy filters.types into new type_filters
-                values["type_filters"] = values["filters"].get("types", {})
-                values["filters"] = None
+                values["type_filters"] = values["input_filters"].get(
+                    "types", {}
+                )
+                values["input_filters"] = None
 
         return values
 
