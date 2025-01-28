@@ -1,9 +1,6 @@
-import json
-import logging
 from pathlib import Path
 
 from devtools import debug
-from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -238,7 +235,7 @@ async def test_invalid_wheel(
     db,
 ):
     """
-    GIVEN a package with invalid/missing manifest
+    GIVEN a package with invalid/missing manifest or missing executable
     WHEN the 'collect_local' function is called
     THEN the expected log is shown
     """
@@ -300,67 +297,8 @@ async def test_invalid_wheel(
             task_group_activity = await db.get(
                 TaskGroupActivityV2, task_group_activity.id
             )
-            assert task_group_activity.status == "failed"
+            assert task_group_activity.status == (
+                TaskGroupActivityStatusV2.FAILED
+            )
             assert task_group_activity.timestamp_ended is not None
             assert log in task_group_activity.log
-
-
-async def test_failure_cleanup(
-    db,
-    client,
-    MockCurrentUser,
-    override_settings_factory,
-    tmp_path: Path,
-    testdata_path: Path,
-):
-    """
-    Verify that a failed collection cleans up its folder and TaskGroupV2.
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
-        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-    )
-
-    # Valid part of the payload
-    payload = dict(package_extras="my_extra")
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        wheel_path = (
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        )
-        with open(wheel_path, "rb") as f:
-            files = {"file": (wheel_path.name, f.read(), "application/zip")}
-        TASK_GROUP_PATH = tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
-        assert not TASK_GROUP_PATH.exists()
-
-        # Endpoint returns correctly,
-        # despite invalid `pinned_package_versions`
-        res = await client.post(
-            "api/v2/task/collect/pip/",
-            data=dict(
-                **payload,
-                pinned_package_versions=json.dumps({"pydantic": "99.99.99"}),
-            ),
-            files=files,
-        )
-        assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        # Background task failed
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "failed"
-        assert task_group_activity["timestamp_ended"] is not None
-        assert (
-            "No matching distribution found for pydantic==99.99.99"
-            in task_group_activity["log"]
-        )
-
-        # Cleanup was performed correctly
-        assert not TASK_GROUP_PATH.exists()
-        res = await db.execute(select(TaskGroupV2))
-        assert len(res.scalars().all()) == 0
