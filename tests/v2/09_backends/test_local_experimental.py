@@ -52,7 +52,7 @@ def two_args(a, b):
 
 async def test_unit_process_workflow():
     with pytest.raises(NotImplementedError):
-        await process_workflow(
+        process_workflow(
             workflow=None,
             dataset=None,
             logger_name=None,
