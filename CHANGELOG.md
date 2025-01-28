@@ -2,6 +2,11 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# Unreleased
+
+* API:
+    * Move zipping logic on a different thread (\#2225)
+
 # 2.11.0a9
 
 * Runner:
