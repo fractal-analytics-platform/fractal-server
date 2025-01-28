@@ -21,7 +21,7 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
-from ...async_wrap import async_wrap
+from ...async_wrap_v1 import async_wrap_v1
 from ...executors.slurm.sudo.executor import FractalSlurmExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from .._common import execute_tasks
@@ -145,7 +145,7 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    output_dataset_metadata_history = await async_wrap(_process_workflow)(
+    output_dataset_metadata_history = await async_wrap_v1(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,
         output_path=output_path,

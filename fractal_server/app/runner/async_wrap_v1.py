@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Callable
 
 
-def async_wrap(func: Callable) -> Callable:
+def async_wrap_v1(func: Callable) -> Callable:
     """
     Wrap a synchronous callable in an async task
 
