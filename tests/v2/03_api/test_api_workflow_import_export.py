@@ -237,6 +237,29 @@ async def test_import_export(
             == first_task_no_source.taskgroupv2_id
         )
 
+        # issue 2226
+        names = [
+            "Convert Cellvoyager to OME-Zarr",
+            "Project Image (HCS Plate)",
+        ]
+        for name in names:
+            await task_factory_v2(
+                user_id=user.id,
+                version="1.4.2",
+                name=name,
+                task_group_kwargs=dict(pkg_name="fractal-tasks-core"),
+            )
+        with (testdata_path / "import_export/workflow-issue2226.json").open(
+            "r"
+        ) as f:
+            workflow_issue_2226 = json.load(f)
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=workflow_issue_2226,
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
 
 async def test_unit_get_task_by_source():
     from fractal_server.app.routes.api.v2.workflow_import import (
@@ -526,7 +549,7 @@ async def test_import_with_legacy_filters(
                         "version": task.version,
                     },
                     "type_filters": TYPE_FILTERS,
-                    "filters": None,
+                    "input_filters": None,
                 },
                 {
                     # Task with legacy filters
@@ -535,14 +558,14 @@ async def test_import_with_legacy_filters(
                         "pkg_name": task.name,
                         "version": task.version,
                     },
-                    "filters": {"types": TYPE_FILTERS, "attributes": {}},
+                    "input_filters": {"types": TYPE_FILTERS, "attributes": {}},
                 },
             ],
         }
         res = await client.post(ENDPOINT_URL, json=payload)
         assert res.status_code == 201
         for wft in res.json()["task_list"]:
-            assert "filters" not in wft.keys()
+            assert "input_filters" not in wft.keys()
             assert wft["type_filters"] == TYPE_FILTERS
 
         # FAILURE: legacy and new filters cannot coexist
@@ -556,7 +579,7 @@ async def test_import_with_legacy_filters(
                         "version": task.version,
                     },
                     "type_filters": TYPE_FILTERS,
-                    "filters": {
+                    "input_filters": {
                         "types": TYPE_FILTERS,
                         "attributes": {},
                     },
@@ -578,7 +601,7 @@ async def test_import_with_legacy_filters(
                         "pkg_name": task.name,
                         "version": task.version,
                     },
-                    "filters": {
+                    "input_filters": {
                         "types": {"key1": "not-a-boolean"},
                         "attributes": {},
                     },
@@ -600,7 +623,7 @@ async def test_import_with_legacy_filters(
                         "pkg_name": task.name,
                         "version": task.version,
                     },
-                    "filters": {
+                    "input_filters": {
                         "types": {},
                         "attributes": {"key1": "value1"},
                     },
