@@ -19,7 +19,6 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
-from fractal_server.app.runner.v2._local_experimental import _process_workflow
 from fractal_server.app.runner.v2._local_experimental import process_workflow
 from fractal_server.app.runner.v2._local_experimental._local_config import (
     get_local_backend_config,
@@ -53,7 +52,7 @@ def two_args(a, b):
 
 async def test_unit_process_workflow():
     with pytest.raises(NotImplementedError):
-        await process_workflow(
+        process_workflow(
             workflow=None,
             dataset=None,
             logger_name=None,
@@ -212,7 +211,7 @@ async def test_indirect_shutdown_during_process_workflow(
                 stdout=tmp_stdout,
                 stderr=tmp_stderr,
             )
-            _process_workflow(
+            process_workflow(
                 workflow=workflow,
                 dataset=dataset,
                 logger_name="logger",

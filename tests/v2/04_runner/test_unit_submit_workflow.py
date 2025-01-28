@@ -26,7 +26,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         dataset = await dataset_factory_v2(project_id=project.id)
 
-        await submit_workflow(
+        submit_workflow(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=9999999,
@@ -40,7 +40,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             working_dir=tmp_path.as_posix(),
         )
         assert job.status == JobStatusTypeV2.SUBMITTED
-        await submit_workflow(
+        submit_workflow(
             workflow_id=9999999,
             dataset_id=9999999,
             job_id=job.id,
@@ -79,7 +79,7 @@ async def test_fail_submit_workflows_wrong_backend(
             working_dir=tmp_path.as_posix(),
         )
 
-        await submit_workflow(
+        submit_workflow(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=job.id,

@@ -4,6 +4,8 @@
 
 # 2.11.0a9
 
+* Runner:
+    * Make job-execution background-task function sync in v2, to make it transparent that it runs on a thread (\#2220).
 * API:
     * Add new (experimental) `/project/{project_id}/workflow/{workflow_id}/type-filters-flow/` endpoint (\#2208).
 
