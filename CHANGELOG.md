@@ -6,6 +6,8 @@
 
 * API:
     * Move zipping logic on a different thread (\#2225)
+* Testing:
+    * Speed up CI by splitting it into more jobs (\#2210).
 
 # 2.11.0a9
 
@@ -13,8 +15,6 @@
     * Make job-execution background-task function sync in v2, to make it transparent that it runs on a thread (\#2220).
 * API:
     * Add new (experimental) `/project/{project_id}/workflow/{workflow_id}/type-filters-flow/` endpoint (\#2208).
-* Testing:
-    * Speed up CI by splitting it into more jobs (\#2210).
 
 # 2.11.0a7 and 2.11.0a8
 
