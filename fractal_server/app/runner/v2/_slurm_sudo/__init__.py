@@ -23,7 +23,6 @@ from typing import Union
 
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
-from ...async_wrap import async_wrap
 from ...executors.slurm.sudo.executor import FractalSlurmExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
@@ -87,7 +86,7 @@ def _process_workflow(
     return new_dataset_attributes
 
 
-async def process_workflow(
+def process_workflow(
     *,
     workflow: WorkflowV2,
     dataset: DatasetV2,
@@ -114,7 +113,7 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    new_dataset_attributes = await async_wrap(_process_workflow)(
+    new_dataset_attributes = _process_workflow(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
