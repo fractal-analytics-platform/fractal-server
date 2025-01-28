@@ -2,9 +2,9 @@ name: precommit
 
 on:
   push:
-    branches: ["main","dev-2.11"]
+    branches: ["main"]
   pull_request:
-    branches: ["main","dev-2.11"]
+    branches: ["main"]
 
 jobs:
   precommit:
