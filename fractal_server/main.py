@@ -28,6 +28,7 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
+from fractal_server import __VERSION__
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -87,7 +88,9 @@ async def lifespan(app: FastAPI):
     app.state.jobsV1 = []
     app.state.jobsV2 = []
     logger = set_logger("fractal_server.lifespan")
-    logger.info("Start application startup")
+    logger.info(
+        f"Start application startup (fractal-server version: {__VERSION__})"
+    )
     check_settings()
     settings = Inject(get_settings)
 
