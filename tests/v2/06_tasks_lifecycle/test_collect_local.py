@@ -234,69 +234,77 @@ async def test_invalid_manifest(
     MockCurrentUser,
     override_settings_factory,
     tmp_path: Path,
+    current_py_version,
     testdata_path: Path,
+    db,
 ):
     """
     GIVEN a package with invalid/missing manifest
-    WHEN the api to collect tasks from that package is called
-    THEN it returns 202 but the background task fails
+    WHEN the 'collect_local' function is called
+    THEN the expected log is shown
     """
 
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
 
-    # Invalid manifest
-    wheel_path = (
-        testdata_path.parent
-        / "v2/fractal_tasks_fail/invalid_manifest"
-        / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f.read(), "application/zip")}
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        # API call is successful
-        res = await client.post(
-            "api/v2/task/collect/pip/",
-            data={},
-            files=files,
-        )
+    pkgnames_logs = [
+        ("invalid_manifest", "Wrong manifest version"),
+        ("missing_manifest", "manifest path not found"),
+    ]
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        for name, log in pkgnames_logs:
+            wheel_path = (
+                testdata_path.parent
+                / f"v2/fractal_tasks_fail/{name}"
+                / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            )
 
-        assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        # Background task failed
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "failed"
-        assert task_group_activity["timestamp_ended"] is not None
-        assert "Wrong manifest version" in task_group_activity["log"]
+            task_group = TaskGroupV2(
+                pkg_name="fractal-tasks-mock",
+                version="0.0.1",
+                origin="local",
+                wheel_path=wheel_path,
+                python_version=current_py_version,
+                path=(tmp_path / name).as_posix(),
+                venv_path=(tmp_path / name / "venv").as_posix(),
+                user_id=user.id,
+            )
 
-    # Missing manifest
-    wheel_path = (
-        testdata_path.parent
-        / "v2/fractal_tasks_fail/missing_manifest"
-        / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f.read(), "application/zip")}
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        # API call is successful
-        res = await client.post(
-            "api/v2/task/collect/pip/",
-            data={},
-            files=files,
-        )
+            db.add(task_group)
+            await db.commit()
+            await db.refresh(task_group)
+            db.expunge(task_group)
+            task_group_activity = TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                status=TaskGroupActivityStatusV2.PENDING,
+                action=TaskGroupActivityActionV2.COLLECT,
+                pkg_name="pkg",
+                version="1.0.0",
+            )
+            await db.commit()
+            db.add(task_group_activity)
+            await db.commit()
+            await db.refresh(task_group_activity)
+            db.expunge(task_group_activity)
 
-        assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        # Background task failed
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "failed"
-        assert task_group_activity["timestamp_ended"] is not None
-        assert "manifest path not found" in task_group_activity["log"]
+            with open(wheel_path, "rb") as whl:
+                collect_local(
+                    task_group_id=task_group.id,
+                    task_group_activity_id=task_group_activity.id,
+                    wheel_file=WheelFile(
+                        contents=whl.read(),
+                        filename=wheel_path.name,
+                    ),
+                )
+
+            res = await client.get(
+                f"/api/v2/task-group/activity/{task_group_activity.id}/"
+            )
+            task_group_activity = res.json()
+            debug(task_group_activity)
+            assert task_group_activity["status"] == "failed"
+            assert task_group_activity["timestamp_ended"] is not None
+            assert log in task_group_activity["log"]
 
 
 async def test_missing_task_executable(
