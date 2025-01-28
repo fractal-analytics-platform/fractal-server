@@ -6,6 +6,8 @@
 
 * API:
     * Move zipping logic on a different thread (\#2225)
+* Testing:
+    * Speed up CI by splitting it into more jobs (\#2210).
 
 # 2.11.0a9
 

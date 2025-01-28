@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
@@ -19,6 +21,31 @@ async def test_non_verified_user(client, MockCurrentUser):
 
         res = await client.patch(f"{PREFIX}/123/", json={})
         assert res.status_code == 401
+
+
+async def test_fail_wheel_file_and_version(client, testdata_path):
+
+    local_wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    ).as_posix()
+
+    with open(local_wheel_path, "rb") as f:
+        files = {
+            "file": (Path(local_wheel_path).name, f.read(), "application/zip")
+        }
+    res = await client.post(
+        f"{PREFIX}/collect/pip/",
+        data=dict(
+            package_version="1.2.3",
+            python_version="3.12",
+        ),
+        files=files,
+    )
+    assert res.status_code == 422
+    error_msg = "Cannot set `package_version` when `file` is provided"
+    assert error_msg in str(res.json()["detail"])
 
 
 async def test_task_get_list(

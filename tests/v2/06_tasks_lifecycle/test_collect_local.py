@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -222,3 +224,81 @@ async def test_bad_wheel_file_arguments(
         assert task_group_activity_v2.status == "failed"
         assert "Broken rm" in task_group_activity_v2.log
         assert path.exists()
+
+
+async def test_invalid_wheel(
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+    current_py_version,
+    testdata_path: Path,
+    db,
+):
+    """
+    GIVEN a package with invalid/missing manifest or missing executable
+    WHEN the 'collect_local' function is called
+    THEN the expected log is shown
+    """
+
+    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
+
+    pkgnames_logs = [
+        ("invalid_manifest", "Wrong manifest version"),
+        ("missing_manifest", "manifest path not found"),
+        ("missing_executable", "missing file"),
+    ]
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        for name, log in pkgnames_logs:
+            wheel_path = (
+                testdata_path.parent
+                / f"v2/fractal_tasks_fail/{name}"
+                / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            )
+
+            task_group = TaskGroupV2(
+                pkg_name="fractal-tasks-mock",
+                version="0.0.1",
+                origin="local",
+                wheel_path=wheel_path,
+                python_version=current_py_version,
+                path=(tmp_path / name).as_posix(),
+                venv_path=(tmp_path / name / "venv").as_posix(),
+                user_id=user.id,
+            )
+
+            db.add(task_group)
+            await db.commit()
+            await db.refresh(task_group)
+            db.expunge(task_group)
+            task_group_activity = TaskGroupActivityV2(
+                user_id=user.id,
+                taskgroupv2_id=task_group.id,
+                status=TaskGroupActivityStatusV2.PENDING,
+                action=TaskGroupActivityActionV2.COLLECT,
+                pkg_name="pkg",
+                version="1.0.0",
+            )
+            await db.commit()
+            db.add(task_group_activity)
+            await db.commit()
+            await db.refresh(task_group_activity)
+            db.expunge(task_group_activity)
+
+            with open(wheel_path, "rb") as whl:
+                collect_local(
+                    task_group_id=task_group.id,
+                    task_group_activity_id=task_group_activity.id,
+                    wheel_file=WheelFile(
+                        contents=whl.read(),
+                        filename=wheel_path.name,
+                    ),
+                )
+
+            task_group_activity = await db.get(
+                TaskGroupActivityV2, task_group_activity.id
+            )
+            assert task_group_activity.status == (
+                TaskGroupActivityStatusV2.FAILED
+            )
+            assert task_group_activity.timestamp_ended is not None
+            assert log in task_group_activity.log

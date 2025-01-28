@@ -1,6 +1,5 @@
 from typing import Literal
 
-import pytest
 from devtools import debug  # noqa
 from sqlmodel import select
 
@@ -623,22 +622,7 @@ async def test_patch_workflow_task_failures(
         assert res.status_code == 422
 
 
-reorder_cases = [
-    [1, 2],
-    [2, 1],
-    [1, 2, 3],
-    [1, 3, 2],
-    [2, 1, 3],
-    [2, 3, 1],
-    [3, 2, 1],
-    [3, 1, 2],
-    [4, 3, 5, 6, 1, 2],
-]
-
-
-@pytest.mark.parametrize("reordered_workflowtask_ids", reorder_cases)
 async def test_reorder_task_list(
-    reordered_workflowtask_ids,
     project_factory_v2,
     client,
     MockCurrentUser,
@@ -648,70 +632,78 @@ async def test_reorder_task_list(
     WHEN we call its PATCH endpoint with the order_permutation attribute
     THEN the task_list is reodered correctly
     """
+    reorder_cases = [
+        [1, 2],
+        [2, 1],
+        [1, 2, 3],
+        [1, 3, 2],
+        [2, 1, 3],
+        [2, 3, 1],
+        [3, 2, 1],
+        [3, 1, 2],
+        [4, 3, 5, 6, 1, 2],
+    ]
+    for j, permutation in enumerate(reorder_cases):
+        num_tasks = len(permutation)
 
-    num_tasks = len(reordered_workflowtask_ids)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        # Create project and empty workflow
-        project = await project_factory_v2(user)
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/", json=dict(name="WF")
-        )
-        assert res.status_code == 201
-        wf_id = res.json()["id"]
-
-        # Make no-op API call to reorder an empty task list
-        res = await client.patch(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
-            json=dict(reordered_workflowtask_ids=[]),
-        )
-        assert res.status_code == 200
-
-        # Create tasks and insert WorkflowTasksV2
-        for i in range(num_tasks):
-            t = await post_task(client, i)
+        async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+            # Create project and empty workflow
+            project = await project_factory_v2(user)
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-                f"?task_id={t['id']}",
-                json=dict(),
+                f"{PREFIX}/project/{project.id}/workflow/",
+                json=dict(name="WF"),
             )
+            assert res.status_code == 201
+            wf_id = res.json()["id"]
 
-        # At this point, all WorkflowTask attributes have a predictable order
-        workflow = await get_workflow(client, project.id, wf_id)
-        old_worfklowtask_orders = [
-            wft["order"] for wft in workflow["task_list"]
-        ]
-        old_worfklowtask_ids = [wft["id"] for wft in workflow["task_list"]]
-        old_task_ids = [wft["task"]["id"] for wft in workflow["task_list"]]
-        assert old_worfklowtask_orders == list(range(num_tasks))
-        assert old_worfklowtask_ids == list(range(1, num_tasks + 1))
-        assert old_task_ids == list(range(1, num_tasks + 1))
+            # Make no-op API call to reorder an empty task list
+            res = await client.patch(
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
+                json=dict(reordered_workflowtask_ids=[]),
+            )
+            assert res.status_code == 200
 
-        # Call PATCH endpoint to reorder the task_list (and simultaneously
-        # update the name attribute)
-        NEW_WF_NAME = "new-wf-name"
-        res = await client.patch(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
-            json=dict(
-                name=NEW_WF_NAME,
-                reordered_workflowtask_ids=reordered_workflowtask_ids,
-            ),
-        )
-        new_workflow = res.json()
-        debug(new_workflow)
-        assert res.status_code == 200
-        assert new_workflow["name"] == NEW_WF_NAME
+            # Create tasks and insert WorkflowTasksV2
+            for i in range(num_tasks):
+                t = await post_task(client, 100 * j + i)
+                res = await client.post(
+                    f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                    f"?task_id={t['id']}",
+                    json=dict(),
+                )
 
-        # Extract new attribute lists
-        new_task_list = new_workflow["task_list"]
-        new_workflowtask_orders = [wft["order"] for wft in new_task_list]
-        new_workflowtask_ids = [wft["id"] for wft in new_task_list]
-        new_task_ids = [wft["task"]["id"] for wft in new_task_list]
+            # All WorkflowTask attributes have a predictable order
+            workflow = await get_workflow(client, project.id, wf_id)
+            old_worfklowtask_ids = [wft["id"] for wft in workflow["task_list"]]
+            reordered_workflowtask_ids = [
+                old_worfklowtask_ids[i - 1] for i in permutation
+            ]
 
-        # Assert that new attributes list corresponds to expectations
-        assert new_workflowtask_orders == list(range(num_tasks))
-        assert new_workflowtask_ids == reordered_workflowtask_ids
-        assert new_task_ids == reordered_workflowtask_ids
+            # Call PATCH endpoint to reorder the task_list (and simultaneously
+            # update the name attribute)
+            NEW_WF_NAME = "new-wf-name"
+            res = await client.patch(
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
+                json=dict(
+                    name=NEW_WF_NAME,
+                    reordered_workflowtask_ids=reordered_workflowtask_ids,
+                ),
+            )
+            new_workflow = res.json()
+            debug(new_workflow)
+            assert res.status_code == 200
+            assert new_workflow["name"] == NEW_WF_NAME
+
+            # Extract new attribute lists
+            new_task_list = new_workflow["task_list"]
+            new_workflowtask_orders = [wft["order"] for wft in new_task_list]
+            new_workflowtask_ids = [wft["id"] for wft in new_task_list]
+            new_task_ids = [wft["task"]["id"] for wft in new_task_list]
+
+            # Assert that new attributes list corresponds to expectations
+            assert new_workflowtask_orders == list(range(num_tasks))
+            assert new_workflowtask_ids == reordered_workflowtask_ids
+            assert new_task_ids == reordered_workflowtask_ids
 
 
 async def test_reorder_task_list_fail(
