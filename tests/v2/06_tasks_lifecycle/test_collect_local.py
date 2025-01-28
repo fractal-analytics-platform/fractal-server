@@ -229,7 +229,7 @@ async def test_bad_wheel_file_arguments(
         assert path.exists()
 
 
-async def test_invalid_manifest(
+async def test_invalid_wheel(
     MockCurrentUser,
     override_settings_factory,
     tmp_path: Path,
@@ -248,6 +248,7 @@ async def test_invalid_manifest(
     pkgnames_logs = [
         ("invalid_manifest", "Wrong manifest version"),
         ("missing_manifest", "manifest path not found"),
+        ("missing_executable", "missing file"),
     ]
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         for name, log in pkgnames_logs:
@@ -302,50 +303,6 @@ async def test_invalid_manifest(
             assert task_group_activity.status == "failed"
             assert task_group_activity.timestamp_ended is not None
             assert log in task_group_activity.log
-
-
-async def test_missing_task_executable(
-    client,
-    MockCurrentUser,
-    override_settings_factory,
-    testdata_path: Path,
-    tmp_path: Path,
-):
-    """
-    Try to collect a task package which triggers an error (namely its manifests
-    includes a task for which there does not exist the python script), and
-    handle failure.
-    """
-    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
-
-    wheel_path = (
-        testdata_path.parent
-        / "v2/fractal_tasks_fail/missing_executable"
-        / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f.read(), "application/zip")}
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        # Trigger collection
-        res = await client.post(
-            "api/v2/task/collect/pip/",
-            data={},
-            files=files,
-        )
-
-        assert res.status_code == 202
-        assert res.json()["status"] == "pending"
-
-        task_group_activity_id = res.json()["id"]
-        # Background task failed
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "failed"
-        assert task_group_activity["timestamp_ended"] is not None
-        assert "missing file" in task_group_activity["log"]
 
 
 async def test_failure_cleanup(
