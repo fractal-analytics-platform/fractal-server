@@ -230,7 +230,6 @@ async def test_bad_wheel_file_arguments(
 
 
 async def test_invalid_manifest(
-    client,
     MockCurrentUser,
     override_settings_factory,
     tmp_path: Path,
@@ -297,14 +296,12 @@ async def test_invalid_manifest(
                     ),
                 )
 
-            res = await client.get(
-                f"/api/v2/task-group/activity/{task_group_activity.id}/"
+            task_group_activity = await db.get(
+                TaskGroupActivityV2, task_group_activity.id
             )
-            task_group_activity = res.json()
-            debug(task_group_activity)
-            assert task_group_activity["status"] == "failed"
-            assert task_group_activity["timestamp_ended"] is not None
-            assert log in task_group_activity["log"]
+            assert task_group_activity.status == "failed"
+            assert task_group_activity.timestamp_ended is not None
+            assert log in task_group_activity.log
 
 
 async def test_missing_task_executable(
