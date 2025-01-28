@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.app.runner.v2.merge_outputs import merge_outputs
 from fractal_server.app.runner.v2.runner_functions import (
     _cast_and_validate_InitTaskOutput,
 )
@@ -12,6 +13,7 @@ from fractal_server.app.runner.v2.runner_functions import (
 )
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.app.runner.v2.task_interface import TaskOutput
+from fractal_server.images import SingleImageTaskOutput
 
 
 def test_deduplicate_list_of_dicts():
@@ -69,7 +71,7 @@ def test_task_output():
 def test_cast_and_validate_functions():
 
     _cast_and_validate_TaskOutput(
-        dict(filters={}, image_list_updates=[dict(zarr_url="/some/image")])
+        dict(image_list_updates=[dict(zarr_url="/some/image")])
     )
 
     with pytest.raises(JobExecutionError):
@@ -84,3 +86,35 @@ def test_cast_and_validate_functions():
     )
     with pytest.raises(JobExecutionError):
         _cast_and_validate_InitTaskOutput(dict(invalid=True))
+
+
+def test_merge_outputs():
+
+    # 1
+    merged = merge_outputs([])
+    assert merged == TaskOutput()
+
+    # 2
+    task_outputs = [
+        TaskOutput(
+            image_list_updates=[
+                SingleImageTaskOutput(zarr_url="/a"),
+                SingleImageTaskOutput(zarr_url="/b"),
+            ],
+            image_list_removals=["/x", "/y", "/z"],
+        ),
+        TaskOutput(
+            image_list_updates=[
+                SingleImageTaskOutput(zarr_url="/c"),
+                SingleImageTaskOutput(zarr_url="/a"),
+            ],
+            image_list_removals=["/x", "/w", "/z"],
+        ),
+    ]
+    merged = merge_outputs(task_outputs)
+    assert merged.image_list_updates == [
+        SingleImageTaskOutput(zarr_url="/a"),
+        SingleImageTaskOutput(zarr_url="/b"),
+        SingleImageTaskOutput(zarr_url="/c"),
+    ]
+    assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])

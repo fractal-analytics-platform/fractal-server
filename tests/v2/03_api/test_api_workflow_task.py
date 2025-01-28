@@ -8,7 +8,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.images.models import Filters
+
 
 PREFIX = "api/v2"
 
@@ -44,6 +44,7 @@ async def test_post_worfkflow_task(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
+    task_factory_v2,
 ):
     """
     GIVEN a Workflow with a list of WorkflowTasks
@@ -98,6 +99,22 @@ async def test_post_worfkflow_task(
         assert task_list[1]["task"]["name"] == "task1"
         assert task_list[2]["task"]["name"] == "task2"
         assert task_list[2]["args_non_parallel"] == args_payload
+
+        # Test type filters compatibility
+        task = await task_factory_v2(user_id=user.id, input_types={"a": False})
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task.id}",
+            json=dict(type_filters={"a": True}),
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task.id}",
+            json=dict(type_filters={"a": False}),
+        )
+        assert res.status_code == 201
 
 
 async def test_post_worfkflow_task_failures(
@@ -260,7 +277,7 @@ async def test_delete_workflow_task(
 
 
 async def test_patch_workflow_task(
-    client, MockCurrentUser, project_factory_v2
+    client, MockCurrentUser, project_factory_v2, task_factory_v2
 ):
     """
     GIVEN a WorkflowTask
@@ -296,10 +313,7 @@ async def test_patch_workflow_task(
             args_parallel={"c": 333, "d": 444},
             meta_non_parallel={"non": "parallel"},
             meta_parallel={"executor": "cpu-low"},
-            input_filters={
-                "attributes": {"a": "b", "c": "d"},
-                "types": {"e": True, "f": False, "g": True},
-            },
+            type_filters={"e": True, "f": False, "g": True},
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -323,9 +337,7 @@ async def test_patch_workflow_task(
         assert (
             patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
         )
-        assert (
-            patched_workflow_task["input_filters"] == payload["input_filters"]
-        )
+        assert patched_workflow_task["type_filters"] == payload["type_filters"]
         assert res.status_code == 200
 
         payload_up = dict(
@@ -377,15 +389,13 @@ async def test_patch_workflow_task(
             f"wftask/{workflow['task_list'][0]['id']}/",
             json=dict(
                 args_non_parallel={},
-                input_filters=Filters().dict(),
+                type_filters=dict(),
             ),
         )
         patched_workflow_task = res.json()
         debug(patched_workflow_task["args_non_parallel"])
         assert patched_workflow_task["args_non_parallel"] is None
-        assert patched_workflow_task["input_filters"] == dict(
-            attributes={}, types={}
-        )
+        assert patched_workflow_task["type_filters"] == dict()
         assert res.status_code == 200
 
         # Test 422
@@ -423,6 +433,33 @@ async def test_patch_workflow_task(
             )
             assert res.status_code == 422
             assert "Cannot patch" in res.json()["detail"]
+
+        # Test type filters compatibility
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/", json={"name": "WorkF"}
+        )
+        assert res.status_code == 201
+        wf_id = res.json()["id"]
+        task = await task_factory_v2(user_id=user.id, input_types={"a": False})
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task.id}",
+            json=dict(),
+        )
+        assert res.status_code == 201
+        wft_id = res.json()["id"]
+
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}/",
+            json={"type_filters": {"a": True}},
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}/",
+            json={"type_filters": {"b": True}},
+        )
+        assert res.status_code == 200
 
 
 async def test_patch_workflow_task_with_args_schema(
@@ -785,6 +822,7 @@ async def test_replace_task_in_workflowtask(
             task_id=task1.id,
             args_parallel={"wft1": "wft1"},
             args_non_parallel={"wft1": "wft1"},
+            type_filters={"a": True},
         )
         wft2 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
@@ -916,3 +954,21 @@ async def test_replace_task_in_workflowtask(
         )
         assert res.status_code == 422
         debug(res.json())
+
+        # Test type filters compatibility
+        debug(wft1b)
+        task6 = await task_factory_v2(
+            user_id=user.id, input_types={"a": False}
+        )
+        task7 = await task_factory_v2(user_id=user.id, input_types={"a": True})
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task6.id}",
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task7.id}",
+        )
+        assert res.status_code == 201

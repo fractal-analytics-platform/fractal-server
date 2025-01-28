@@ -100,6 +100,54 @@ async def test_submit_job_failures(
         assert "empty task list" in res.json()["detail"]
 
 
+async def test_submit_incompatible_filters(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        task = await task_factory_v2(
+            user_id=user.id, source="foo", input_types={"a": True}
+        )
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+
+        workflow1 = await workflow_factory_v2(project_id=project.id)
+        await _workflow_insert_task(
+            db=db,
+            workflow_id=workflow1.id,
+            task_id=task.id,
+            type_filters={"a": False},
+        )
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow1.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]
+
+        workflow2 = await workflow_factory_v2(project_id=project.id)
+        await _workflow_insert_task(
+            db=db,
+            workflow_id=workflow2.id,
+            task_id=task.id,
+            type_filters={"a": True},
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow2.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+
+
 async def test_submit_jobs_with_same_dataset(
     db,
     client,
@@ -353,7 +401,9 @@ async def test_project_apply_workflow_subset(
             **json.loads(workflow.json(exclude={"task_list"}))
         ).dict()
         expected_dataset_dump = DatasetDumpV2(
-            **json.loads(dataset1.json(exclude={"history", "images"}))
+            **json.loads(
+                dataset1.json(exclude={"history", "images", "filters"})
+            )
         ).dict()
         assert res.json()["project_dump"] == expected_project_dump
         assert res.json()["workflow_dump"] == expected_workflow_dump

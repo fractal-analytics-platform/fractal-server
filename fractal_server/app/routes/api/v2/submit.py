@@ -28,6 +28,7 @@ from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
+from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
@@ -108,14 +109,16 @@ async def apply_workflow(
 
     # Check that tasks have read-access and are `active`
     used_task_group_ids = set()
-    for wftask in workflow.task_list[
-        first_task_index : last_task_index + 1  # noqa: E203
-    ]:
+    for wftask in workflow.task_list[first_task_index : last_task_index + 1]:
         task = await _get_task_read_access(
             user_id=user.id,
             task_id=wftask.task_id,
             require_active=True,
             db=db,
+        )
+        _check_type_filters_compatibility(
+            task_input_types=task.input_types,
+            wftask_type_filters=wftask.type_filters,
         )
         used_task_group_ids.add(task.taskgroupv2_id)
 
@@ -159,7 +162,11 @@ async def apply_workflow(
         dataset_id=dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        dataset_dump=json.loads(dataset.json(exclude={"images", "history"})),
+        # The 'filters' field is not supported any more but still exists as a
+        # database column, therefore we manually exclude it from dumps.
+        dataset_dump=json.loads(
+            dataset.json(exclude={"images", "history", "filters"})
+        ),
         workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
         project_dump=json.loads(project.json(exclude={"user_list"})),
         **job_create.dict(),

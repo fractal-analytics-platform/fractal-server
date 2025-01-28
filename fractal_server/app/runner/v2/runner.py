@@ -1,4 +1,3 @@
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
@@ -7,27 +6,28 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
-from ....images import Filters
+from sqlalchemy.orm.attributes import flag_modified
+
 from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
-from ....images.tools import match_filter
 from ..exceptions import JobExecutionError
-from ..filenames import FILTERS_FILENAME
-from ..filenames import HISTORY_FILENAME
-from ..filenames import IMAGES_FILENAME
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
+from fractal_server.images.models import AttributeFiltersType
+from fractal_server.images.tools import merge_type_filters
 
 
 def execute_tasks_v2(
+    *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
     executor: ThreadPoolExecutor,
@@ -35,20 +35,21 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-) -> DatasetV2:
-
+    job_attribute_filters: AttributeFiltersType,
+) -> None:
     logger = logging.getLogger(logger_name)
 
-    if (
-        not workflow_dir_local.exists()
-    ):  # FIXME: this should have already happened
+    if not workflow_dir_local.exists():
+        logger.warning(
+            f"Now creating {workflow_dir_local}, "
+            "but it should have already happened."
+        )
         workflow_dir_local.mkdir()
 
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    tmp_filters = deepcopy(dataset.filters)
-    tmp_history = []
+    current_dataset_type_filters = deepcopy(dataset.type_filters)
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -58,26 +59,30 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        pre_filters = dict(
-            types=copy(tmp_filters["types"]),
-            attributes=copy(tmp_filters["attributes"]),
+        type_filters = copy(current_dataset_type_filters)
+        type_filters_patch = merge_type_filters(
+            task_input_types=task.input_types,
+            wftask_type_filters=wftask.type_filters,
         )
-        pre_filters["types"].update(wftask.input_filters["types"])
-        pre_filters["attributes"].update(wftask.input_filters["attributes"])
+        type_filters.update(type_filters_patch)
         filtered_images = filter_image_list(
             images=tmp_images,
-            filters=Filters(**pre_filters),
+            type_filters=type_filters,
+            attribute_filters=job_attribute_filters,
         )
-        # Verify that filtered images comply with task input_types
-        for image in filtered_images:
-            if not match_filter(image, Filters(types=task.input_types)):
-                raise JobExecutionError(
-                    "Invalid filtered image list\n"
-                    f"Task input types: {task.input_types=}\n"
-                    f'Image zarr_url: {image["zarr_url"]}\n'
-                    f'Image types: {image["types"]}\n'
-                )
 
+        # First, set status SUBMITTED in dataset.history for each wftask
+        with next(get_sync_db()) as db:
+            db_dataset = db.get(DatasetV2, dataset.id)
+            new_history_item = _DatasetHistoryItemV2(
+                workflowtask=wftask,
+                status=WorkflowTaskStatusTypeV2.SUBMITTED,
+                parallelization=dict(),  # FIXME: re-include parallelization
+            ).dict()
+            db_dataset.history.append(new_history_item)
+            flag_modified(db_dataset, "history")
+            db.merge(db_dataset)
+            db.commit()
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
             current_task_output = run_v2_task_non_parallel(
@@ -249,69 +254,26 @@ def execute_tasks_v2(
             else:
                 tmp_images.pop(img_search["index"])
 
-        # Update filters.attributes:
-        # current + (task_output: not really, in current examples..)
-        if current_task_output.filters is not None:
-            tmp_filters["attributes"].update(
-                current_task_output.filters.attributes
-            )
+        # Update type_filters based on task-manifest output_types
+        type_filters_from_task_manifest = task.output_types
+        current_dataset_type_filters.update(type_filters_from_task_manifest)
 
-        # Find manifest ouptut types
-        types_from_manifest = task.output_types
-
-        # Find task-output types
-        if current_task_output.filters is not None:
-            types_from_task = current_task_output.filters.types
-        else:
-            types_from_task = {}
-
-        # Check that key sets are disjoint
-        set_types_from_manifest = set(types_from_manifest.keys())
-        set_types_from_task = set(types_from_task.keys())
-        if not set_types_from_manifest.isdisjoint(set_types_from_task):
-            overlap = set_types_from_manifest.intersection(set_types_from_task)
-            raise JobExecutionError(
-                "Some type filters are being set twice, "
-                f"for task '{task_name}'.\n"
-                f"Types from task output: {types_from_task}\n"
-                f"Types from task maniest: {types_from_manifest}\n"
-                f"Overlapping keys: {overlap}"
-            )
-
-        # Update filters.types
-        tmp_filters["types"].update(types_from_manifest)
-        tmp_filters["types"].update(types_from_task)
-
-        # Update history (based on _DatasetHistoryItemV2)
-        history_item = _DatasetHistoryItemV2(
-            workflowtask=wftask,
-            status=WorkflowTaskStatusTypeV2.DONE,
-            parallelization=dict(
-                # task_type=wftask.task.type,  # FIXME: breaks for V1 tasks
-                # component_list=fil, #FIXME
-            ),
-        ).dict()
-        tmp_history.append(history_item)
-
-        # Write current dataset attributes (history, images, filters) into
-        # temporary files which can be used (1) to retrieve the latest state
+        # Write current dataset attributes (history, images, filters) into the
+        # database. They can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
-        with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
-            json.dump(tmp_history, f, indent=2)
-        with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
-            json.dump(tmp_filters, f, indent=2)
-        with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
-            json.dump(tmp_images, f, indent=2)
+        with next(get_sync_db()) as db:
+            db_dataset = db.get(DatasetV2, dataset.id)
+            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
+            db_dataset.type_filters = current_dataset_type_filters
+            db_dataset.images = tmp_images
+            for attribute_name in [
+                "type_filters",
+                "history",
+                "images",
+            ]:
+                flag_modified(db_dataset, attribute_name)
+            db.merge(db_dataset)
+            db.commit()
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
-
-    # NOTE: tmp_history only contains the newly-added history items (to be
-    # appended to the original history), while tmp_filters and tmp_images
-    # represent the new attributes (to replace the original ones)
-    result = dict(
-        history=tmp_history,
-        filters=tmp_filters,
-        images=tmp_images,
-    )
-    return result

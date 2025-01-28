@@ -24,8 +24,8 @@ from ...models.v1 import Dataset
 from ...models.v1 import Workflow
 from ...models.v1 import WorkflowTask
 from ...schemas.v1 import WorkflowTaskStatusTypeV1
-from ..filenames import HISTORY_FILENAME
-from ..filenames import METADATA_FILENAME
+from ..filenames import HISTORY_FILENAME_V1
+from ..filenames import METADATA_FILENAME_V1
 
 
 def assemble_history_failed_job(
@@ -64,7 +64,7 @@ def assemble_history_failed_job(
     new_history = output_dataset.history
 
     # Part 2: Extend history based on tmp_metadata_file
-    tmp_history_file = Path(job.working_dir) / HISTORY_FILENAME
+    tmp_history_file = Path(job.working_dir) / HISTORY_FILENAME_V1
     try:
         with tmp_history_file.open("r") as f:
             tmp_file_history = json.load(f)
@@ -129,7 +129,7 @@ def assemble_meta_failed_job(
     """
 
     new_meta = deepcopy(output_dataset.meta)
-    metadata_file = Path(job.working_dir) / METADATA_FILENAME
+    metadata_file = Path(job.working_dir) / METADATA_FILENAME_V1
     try:
         with metadata_file.open("r") as f:
             metadata_update = json.load(f)

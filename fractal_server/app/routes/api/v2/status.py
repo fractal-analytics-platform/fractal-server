@@ -1,5 +1,3 @@
-import json
-from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -18,7 +16,6 @@ from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
 
 router = APIRouter()
 
@@ -98,8 +95,8 @@ async def get_workflowtask_status(
     if running_job is None:
         # If no job is running, the chronological-last history item is also the
         # positional-last workflow task to be included in the response.
-        if len(dataset.history) > 0:
-            last_valid_wftask_id = dataset.history[-1]["workflowtask"]["id"]
+        if len(history) > 0:
+            last_valid_wftask_id = history[-1]["workflowtask"]["id"]
         else:
             last_valid_wftask_id = None
     else:
@@ -109,7 +106,24 @@ async def get_workflowtask_status(
         # as "submitted"
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
-        for wftask in workflow.task_list[start:end]:
+
+        running_job_wftasks = workflow.task_list[start:end]
+        running_job_statuses = [
+            workflow_tasks_status_dict.get(wft.id, None)
+            for wft in running_job_wftasks
+        ]
+        try:
+            first_submitted_index = running_job_statuses.index(
+                WorkflowTaskStatusTypeV2.SUBMITTED
+            )
+        except ValueError:
+            logger.warning(
+                f"Job {running_job.id} is submitted but its task list does "
+                f"not contain a {WorkflowTaskStatusTypeV2.SUBMITTED} task."
+            )
+            first_submitted_index = 0
+
+        for wftask in running_job_wftasks[first_submitted_index:]:
             workflow_tasks_status_dict[
                 wftask.id
             ] = WorkflowTaskStatusTypeV2.SUBMITTED
@@ -132,20 +146,6 @@ async def get_workflowtask_status(
             )
             last_valid_wftask_id = None
             logger.warning(f"Now setting {last_valid_wftask_id=}.")
-
-        # Highest priority: Read status updates coming from the running-job
-        # temporary file. Note: this file only contains information on
-        # WorkflowTask's that ran through successfully.
-        tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
-        try:
-            with tmp_file.open("r") as f:
-                history = json.load(f)
-        except FileNotFoundError:
-            history = []
-        for history_item in history:
-            wftask_id = history_item["workflowtask"]["id"]
-            wftask_status = history_item["status"]
-            workflow_tasks_status_dict[wftask_id] = wftask_status
 
     # Based on previously-gathered information, clean up the response body
     clean_workflow_tasks_status_dict = {}

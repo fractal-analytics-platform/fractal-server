@@ -11,6 +11,7 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
+from fractal_server.images.models import AttributeFiltersType
 
 
 class DatasetV2(SQLModel, table=True):
@@ -41,12 +42,14 @@ class DatasetV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
 
-    filters: dict[Literal["attributes", "types"], dict[str, Any]] = Field(
-        sa_column=Column(
-            JSON,
-            nullable=False,
-            server_default='{"attributes": {}, "types": {}}',
-        )
+    filters: Optional[
+        dict[Literal["attributes", "types"], dict[str, Any]]
+    ] = Field(sa_column=Column(JSON, nullable=True, server_default="null"))
+    type_filters: dict[str, bool] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
+    attribute_filters: AttributeFiltersType = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 
     @property

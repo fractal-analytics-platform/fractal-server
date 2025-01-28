@@ -4,13 +4,18 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 from pydantic.types import StrictStr
 
+from .._filter_validators import validate_attribute_filters
+from .._validators import root_validate_dict_keys
 from .._validators import valstr
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
+from fractal_server.images.models import AttributeFiltersType
 
 
 class JobStatusTypeV2(str, Enum):
@@ -41,9 +46,17 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
     slurm_account: Optional[StrictStr] = None
     worker_init: Optional[str]
 
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
         valstr("worker_init")
+    )
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        validate_attribute_filters
     )
 
     @validator("first_task_index", always=True)
@@ -99,6 +112,7 @@ class JobReadV2(BaseModel):
     first_task_index: Optional[int]
     last_task_index: Optional[int]
     worker_init: Optional[str]
+    attribute_filters: AttributeFiltersType
 
 
 class JobUpdateV2(BaseModel, extra=Extra.forbid):

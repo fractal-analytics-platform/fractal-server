@@ -28,6 +28,7 @@ from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
+from fractal_server.images.models import AttributeFiltersType
 
 
 def _process_workflow(
@@ -38,26 +39,24 @@ def _process_workflow(
     workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
-) -> dict:
+    job_attribute_filters: AttributeFiltersType,
+) -> None:
     """
-    Internal processing routine
-
-    Schedules the workflow using a `FractalThreadPoolExecutor`.
+    Run the workflow using a `FractalThreadPoolExecutor`.
     """
-
     with FractalThreadPoolExecutor() as executor:
-        new_dataset_attributes = execute_tasks_v2(
+        execute_tasks_v2(
             wf_task_list=workflow.task_list[
-                first_task_index : (last_task_index + 1)  # noqa
-            ],  # noqa
+                first_task_index : (last_task_index + 1)
+            ],
             dataset=dataset,
             executor=executor,
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_local,
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
+            job_attribute_filters=job_attribute_filters,
         )
-    return new_dataset_attributes
 
 
 def process_workflow(
@@ -69,12 +68,13 @@ def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
+    job_attribute_filters: AttributeFiltersType,
     # Slurm-specific
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> dict:
+) -> None:
     """
     Run a workflow
 
@@ -126,11 +126,6 @@ def process_workflow(
                             (positive exit codes).
         JobExecutionError: wrapper for errors raised by the tasks' executors
                            (negative exit codes).
-
-    Returns:
-        output_dataset_metadata:
-            The updated metadata for the dataset, as returned by the last task
-            of the workflow
     """
 
     if workflow_dir_remote and (workflow_dir_remote != workflow_dir_local):
@@ -147,12 +142,12 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    new_dataset_attributes = _process_workflow(
+    _process_workflow(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
         workflow_dir_local=workflow_dir_local,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
+        job_attribute_filters=job_attribute_filters,
     )
-    return new_dataset_attributes
