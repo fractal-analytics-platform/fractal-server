@@ -5,7 +5,7 @@
 # Unreleased
 
 * API:
-    * Move zipping logic on a different thread (\#2225).
+    * Move zipping logic on a different thread, when triggered from the download-job-logs endpoint (\#2225).
     * Fix bug with filters in workflow import (\#2227).
 * Testing:
     * Speed up CI by splitting it into more jobs (\#2210).
