@@ -31,9 +31,7 @@ from fractal_server.app.routes.auth import current_active_user
 # This moves the function execution to a separate thread,
 # preventing it from blocking the event loop.
 async def zip_folder_threaded(folder: str) -> Iterator[bytes]:
-    return await asyncio.to_thread(
-        _zip_folder_to_byte_stream_iterator, folder
-    )
+    return await asyncio.to_thread(_zip_folder_to_byte_stream_iterator, folder)
 
 
 router = APIRouter()
@@ -119,7 +117,6 @@ async def read_job(
     return job
 
 
-
 @router.get(
     "/project/{project_id}/job/{job_id}/download/",
     response_class=StreamingResponse,
@@ -143,7 +140,7 @@ async def download_job_logs(
     zip_name = f"{Path(job.working_dir).name}_archive.zip"
 
     zip_bytes_iterator = await zip_folder_threaded(job.working_dir)
-    
+
     return StreamingResponse(
         zip_bytes_iterator,
         media_type="application/x-zip-compressed",
