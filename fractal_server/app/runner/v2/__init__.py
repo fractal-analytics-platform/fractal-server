@@ -69,7 +69,7 @@ def fail_job(
     return
 
 
-async def submit_workflow(
+def submit_workflow(
     *,
     workflow_id: int,
     dataset_id: int,
@@ -318,7 +318,7 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        await process_workflow(
+        process_workflow(
             workflow=workflow,
             dataset=dataset,
             workflow_dir_local=WORKFLOW_DIR_LOCAL,
