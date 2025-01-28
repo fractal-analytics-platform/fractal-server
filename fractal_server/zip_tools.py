@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 from io import BytesIO
 from pathlib import Path
 from typing import Iterator
@@ -33,6 +34,7 @@ def _create_zip(folder: str, output: T) -> T:
         raise ValueError("BytesIO is not empty")
 
     with ZipFile(output, mode="w", compression=ZIP_DEFLATED) as zipfile:
+        time.sleep(60)
         for root, dirs, files in os.walk(folder):
             for file in files:
                 file_path = os.path.join(root, file)
