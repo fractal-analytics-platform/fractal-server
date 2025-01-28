@@ -2,8 +2,7 @@ import logging
 from pathlib import Path
 
 import pytest
-from devtools import debug  # noqa
-from packaging.version import Version
+from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -360,81 +359,3 @@ async def test_contact_an_admin_message(
         )
         assert "TaskGroupActivityV2" in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
-
-
-async def test_task_collection_from_wheel_file(
-    db,
-    client,
-    MockCurrentUser,
-    override_settings_factory,
-    tmp_path: Path,
-    testdata_path: Path,
-    current_py_version: str,
-):
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
-    # Note 2: Set logging level to CRITICAL, and then make sure that
-    # task-collection logs are included
-    FRACTAL_MAX_PIP_VERSION = "24.0"
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
-        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
-        FRACTAL_MAX_PIP_VERSION=FRACTAL_MAX_PIP_VERSION,
-    )
-    settings = Inject(get_settings)
-    # Prepare absolute path to wheel file
-    wheel_path = (
-        testdata_path.parent
-        / "v2/fractal_tasks_mock/dist"
-        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    # payload_package = wheel_path.as_posix()
-    debug(wheel_path)
-    with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f.read(), "application/zip")}
-
-    # Prepare and validate payload
-    payload = dict(package_extras="my_extras")
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        # Trigger task collection
-        res = await client.post(
-            f"{PREFIX}/collect/pip/", data=payload, files=files
-        )
-        debug(res.json())
-        assert res.status_code == 202
-        assert res.json()["status"] == "pending"
-        assert res.json()["log"] is None
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
-        assert res.status_code == 200
-        task_group_activity = res.json()
-        debug(task_group_activity)
-
-        assert task_group_activity["log"].count("\n") > 0
-        assert task_group_activity["log"].count("\\n") == 0
-
-        assert task_group_activity["status"] == "OK"
-        assert task_group_activity["timestamp_ended"] is not None
-        # Check that log were written, even with CRITICAL logging level
-        log = task_group_activity["log"]
-        assert log is not None
-        # Check that my_extra was included, in a local-package collection
-        task_groupv2_id = task_group_activity["taskgroupv2_id"]
-        # Check pip_freeze attribute in TaskGroupV2
-        res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
-        assert res.status_code == 200
-        task_group = res.json()
-        pip_version = next(
-            line
-            for line in task_group["pip_freeze"].split("\n")
-            if line.startswith("pip")
-        ).split("==")[1]
-        assert Version(pip_version) <= Version(
-            settings.FRACTAL_MAX_PIP_VERSION
-        )
-        assert (
-            Path(res.json()["path"]) / Path(wheel_path).name
-        ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())

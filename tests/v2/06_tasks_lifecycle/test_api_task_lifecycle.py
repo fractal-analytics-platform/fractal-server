@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from packaging.version import Version
 
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -13,7 +14,11 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 from tests.fixtures_slurm import SLURM_USER
+
+settings = Inject(get_settings)
 
 
 class MockFractalSSHList:
@@ -305,10 +310,12 @@ async def test_lifecycle(
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
-            data={},
+            data=dict(package_extras="my_extras"),
             files=files,
         )
         assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        assert res.json()["log"] is None
         activity = res.json()
         activity_id = activity["id"]
         task_group_id = activity["taskgroupv2_id"]
@@ -316,6 +323,29 @@ async def test_lifecycle(
         assert res.status_code == 200
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
+        assert task_group_activity["timestamp_ended"] is not None
+
+        log = task_group_activity["log"]
+        assert log is not None
+        assert log.count("\n") > 0
+        assert log.count("\\n") == 0
+
+        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        # Check pip_freeze attribute in TaskGroupV2
+        res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
+        assert res.status_code == 200
+        task_group = res.json()
+        pip_version = next(
+            line
+            for line in task_group["pip_freeze"].split("\n")
+            if line.startswith("pip")
+        ).split("==")[1]
+        assert Version(pip_version) <= Version(
+            settings.FRACTAL_MAX_PIP_VERSION
+        )
+        assert (
+            Path(res.json()["path"]) / Path(wheel_path).name
+        ).as_posix() == (Path(res.json()["wheel_path"]).as_posix())
 
         # STEP 2: Deactivate task group
         res = await client.post(
