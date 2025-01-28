@@ -18,7 +18,6 @@ async def test_clean_app_job_list_v2(
     job_factory_v2,
     override_settings_factory,
 ):
-
     # Check that app fixture starts in a clean state
     assert app.state.jobsV1 == []
     assert app.state.jobsV2 == []
@@ -27,10 +26,9 @@ async def test_clean_app_job_list_v2(
     override_settings_factory(FRACTAL_API_MAX_JOB_LIST_LENGTH=0)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-
         # Create DB objects
         task = await task_factory_v2(
-            user_id=user.id, name="task", command="echo"
+            user_id=user.id, name="task", command_non_parallel="echo"
         )
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)

@@ -6,14 +6,16 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
-from .._validators import valdictkeys
+from .._filter_validators import validate_type_filters
+from .._validators import root_validate_dict_keys
+from .._validators import valdict_keys
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
 from .task import TaskReadV2
-from fractal_server.images import Filters
 
 RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
 
@@ -43,21 +45,28 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
-    input_filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
 
     @validator("args_non_parallel")
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_non_parallel")(value)
+        valdict_keys("args_non_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -71,7 +80,7 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_parallel")(value)
+        valdict_keys("args_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -101,7 +110,7 @@ class WorkflowTaskReadV2(BaseModel):
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
 
-    input_filters: Filters
+    type_filters: dict[str, bool]
 
     task_type: str
     task_id: int
@@ -118,21 +127,28 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
-    input_filters: Optional[Filters]
+    type_filters: Optional[dict[str, bool]]
 
     # Validators
+    _dict_keys = root_validator(pre=True, allow_reuse=True)(
+        root_validate_dict_keys
+    )
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
 
     @validator("args_non_parallel")
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_non_parallel")(value)
+        valdict_keys("args_non_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -146,7 +162,7 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdictkeys("args_parallel")(value)
+        valdict_keys("args_parallel")(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -163,22 +179,53 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None
     args_parallel: Optional[dict[str, Any]] = None
-
-    input_filters: Optional[Filters] = None
+    type_filters: Optional[dict[str, bool]] = None
+    filters: Optional[dict[str, Any]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
+    # Validators
+    @root_validator(pre=True)
+    def update_legacy_filters(cls, values: dict):
+        """
+        Transform legacy filters (created with fractal-server<2.11.0)
+        into type filters
+        """
+        if values.get("filters") is not None:
+            if "type_filters" in values.keys():
+                raise ValueError(
+                    "Cannot set filters both through the legacy field "
+                    "('filters') and the new one ('type_filters')."
+                )
+
+            else:
+                # As of 2.11.0, WorkflowTask do not have attribute filters
+                # any more.
+                if values["filters"]["attributes"] != {}:
+                    raise ValueError(
+                        "Cannot set attribute filters for WorkflowTasks."
+                    )
+                # Convert legacy filters.types into new type_filters
+                values["type_filters"] = values["filters"].get("types", {})
+                values["filters"] = None
+
+        return values
+
+    _type_filters = validator("type_filters", allow_reuse=True)(
+        validate_type_filters
+    )
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdictkeys("meta_non_parallel")
+        valdict_keys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdictkeys("meta_parallel")
+        valdict_keys("meta_parallel")
     )
     _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
-        valdictkeys("args_non_parallel")
+        valdict_keys("args_non_parallel")
     )
     _args_parallel = validator("args_parallel", allow_reuse=True)(
-        valdictkeys("args_parallel")
+        valdict_keys("args_parallel")
     )
 
 
@@ -188,6 +235,6 @@ class WorkflowTaskExportV2(BaseModel):
     meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None
     args_parallel: Optional[dict[str, Any]] = None
-    input_filters: Filters = Field(default_factory=Filters)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
 
     task: TaskExportV2

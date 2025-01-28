@@ -470,3 +470,127 @@ async def test_delete_workflow_with_job(
 
         await db.refresh(job)
         assert job.workflow_id is None
+
+
+async def test_workflow_type_filters_flow(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    db,
+):
+    async with MockCurrentUser() as user:
+        task = await task_factory_v2(
+            user_id=user.id,
+            input_types=dict(typeA=True, typeB=False),
+            output_types=dict(
+                typeC=True,
+            ),
+        )
+        proj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=proj.id)
+        ds = await dataset_factory_v2(
+            project_id=proj.id,
+            type_filters=dict(existing=False),
+        )
+
+        # FAILURE due to empty workflow
+        res = await client.get(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/"
+        )
+        assert res.status_code == 422
+        assert "Workflow has no tasks" in str(res.json())
+
+        await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=task.id,
+            db=db,
+            type_filters=dict(typeA=True, typeD=False),
+        )
+
+        # FAILURE due to wrong first/last indices
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                "type-filters-flow/?first_task_index=-1"
+            )
+        )
+        assert res.status_code == 422
+        assert "Invalid first/last" in str(res.json())
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                "type-filters-flow/?last_task_index=-1"
+            )
+        )
+        assert res.status_code == 422
+        assert "Invalid first/last" in str(res.json())
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                "type-filters-flow/?last_task_index=99"
+            )
+        )
+        assert res.status_code == 422
+        assert "Invalid first/last" in str(res.json())
+
+        # SUCCESS, without dataset
+        res = await client.get(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/",
+        )
+        assert res.status_code == 200
+        assert res.json() == {
+            "dataset_filters": [
+                {},
+                {
+                    "typeC": True,
+                },
+            ],
+            "input_filters": [
+                {
+                    "typeA": True,
+                    "typeB": False,
+                    "typeD": False,
+                },
+            ],
+            "output_filters": [
+                {
+                    "typeC": True,
+                },
+            ],
+        }
+
+        # SUCCESS, with dataset
+        res = await client.get(
+            (
+                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+                f"type-filters-flow/?dataset_id={ds.id}"
+            )
+        )
+        assert res.status_code == 200
+        assert res.json() == {
+            "dataset_filters": [
+                {
+                    "existing": False,
+                },
+                {
+                    "existing": False,
+                    "typeC": True,
+                },
+            ],
+            "input_filters": [
+                {
+                    "existing": False,
+                    "typeA": True,
+                    "typeB": False,
+                    "typeD": False,
+                },
+            ],
+            "output_filters": [
+                {
+                    "typeC": True,
+                },
+            ],
+        }

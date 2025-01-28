@@ -45,7 +45,7 @@ async def test_submit_workflow_failure(
         )
     db.expunge_all()
 
-    await submit_workflow(
+    submit_workflow(
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         job_id=job.id,
@@ -87,7 +87,7 @@ async def test_mkdir_error(
             status="submitted",
         )
 
-        await submit_workflow(
+        submit_workflow(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=job.id,

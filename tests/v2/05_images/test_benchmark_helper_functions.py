@@ -6,7 +6,6 @@ from devtools import debug
 
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import filter_image_list
 
@@ -46,10 +45,8 @@ def test_filter_image_list_with_filters(
 ):
     new_list = filter_image_list(
         images=images,
-        filters=Filters(
-            attributes=dict(a1=0, a2="a2", a3=None),
-            types=dict(t1=True, t2=False),
-        ),
+        attribute_filters=dict(a1=[0], a2=["a2"]),
+        type_filters=dict(t1=True, t2=False),
     )
     debug(len(images), len(new_list))
     assert len(new_list) == len(images) // 4
@@ -65,7 +62,7 @@ def test_filter_image_list_few_filters(
 ):
     new_list = filter_image_list(
         images=images,
-        filters=Filters(attributes=dict(a1=0)),
+        attribute_filters=dict(a1=[0]),
     )
     debug(len(images), len(new_list))
     assert len(new_list) == len(images) // 2

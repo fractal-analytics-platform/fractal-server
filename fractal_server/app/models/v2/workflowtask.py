@@ -25,14 +25,11 @@ class WorkflowTaskV2(SQLModel, table=True):
     args_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
-    input_filters: dict[
-        Literal["attributes", "types"], dict[str, Any]
-    ] = Field(
-        sa_column=Column(
-            JSON,
-            nullable=False,
-            server_default='{"attributes": {}, "types": {}}',
-        )
+    input_filters: Optional[
+        dict[Literal["attributes", "types"], dict[str, Any]]
+    ] = Field(sa_column=Column(JSON, nullable=True, server_default="null"))
+    type_filters: dict[str, bool] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 
     # Task

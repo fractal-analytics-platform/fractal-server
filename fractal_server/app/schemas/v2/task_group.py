@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic import validator
 
 from .._validators import val_absolute_path
-from .._validators import valdictkeys
+from .._validators import valdict_keys
 from .._validators import valstr
 from .task import TaskReadV2
 
@@ -57,7 +57,7 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     )
     _pinned_package_versions = validator(
         "pinned_package_versions", allow_reuse=True
-    )(valdictkeys("pinned_package_versions"))
+    )(valdict_keys("pinned_package_versions"))
     _pip_extras = validator("pip_extras", allow_reuse=True)(
         valstr("pip_extras")
     )

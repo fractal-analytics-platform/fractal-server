@@ -28,8 +28,8 @@ from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
-from fractal_server.app.runner.filenames import METADATA_FILENAME
+from fractal_server.app.runner.filenames import HISTORY_FILENAME_V1
+from fractal_server.app.runner.filenames import METADATA_FILENAME_V1
 from fractal_server.app.runner.task_files import get_task_file_paths
 from fractal_server.string_tools import validate_cmd
 
@@ -610,11 +610,11 @@ def execute_tasks(
         )
 
         # Write most recent metadata to METADATA_FILENAME
-        with open(workflow_dir_local / METADATA_FILENAME, "w") as f:
+        with open(workflow_dir_local / METADATA_FILENAME_V1, "w") as f:
             json.dump(current_task_pars.metadata, f, indent=2)
 
         # Write most recent metadata to HISTORY_FILENAME
-        with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
+        with open(workflow_dir_local / HISTORY_FILENAME_V1, "w") as f:
             json.dump(current_task_pars.history, f, indent=2)
 
     return current_task_pars

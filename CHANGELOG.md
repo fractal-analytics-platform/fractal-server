@@ -1,5 +1,58 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+> WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
+
+# 2.11.0a9
+
+* Runner:
+    * Make job-execution background-task function sync in v2, to make it transparent that it runs on a thread (\#2220).
+* API:
+    * Add new (experimental) `/project/{project_id}/workflow/{workflow_id}/type-filters-flow/` endpoint (\#2208).
+
+# 2.11.0a7 and 2.11.0a8
+
+* Data-migration script updates (\#2208, \#2209).
+
+# 2.11.0a5
+
+* API:
+    * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
+* Schemas:
+    * Forbid `None` or `[]` as `attribute_filters` (\#2202).
+* Data-migration script updates (\#2202).
+
+# 2.11.0a4
+
+* Runner:
+    * Use `TaskV2.input_types` for filtering, rather than validation (\#2191).
+    * Remove all filters from `TaskOutput` (\#2190).
+* Task Collection:
+    * Improve logs handling for failed collection (\#2192)
+
+# 2.11.0a3
+
+* API:
+    * Support importing workflows or datasets exported with `fractal-server<2.11.0`, possibly including legacy `filters` (\#2185).
+
+# 2.11.0a2
+
+> Note: This release requires running a `fractalctl update-db-data`
+
+(changes that affect API, database lifecycle, runner, ...)
+
+* Split filters into attribute and types (\#2168).
+* Support multiple options for attribute filters (\#2168).
+* Deprecate support for attribute filters in workflowtask (\#2168).
+* Introduce support for attribute filters in jobs (\#2168).
+* Data migration script (\#2168).
+
+# 2.11.0a0
+
+* API:
+    * Update and simplify `/api/v2/project/{project_id}/status/` (\#2169).
+* Runner
+    * Integrate database write access in runner component (\#2169).
+
 # 2.10.6
 
 * Task lifecycle:

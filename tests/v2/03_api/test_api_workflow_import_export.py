@@ -489,3 +489,165 @@ async def test_unit_disambiguate_task_groups(
     )
     debug(task_group)
     assert task_group is None
+
+
+async def test_import_with_legacy_filters(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+        ENDPOINT_URL = f"{PREFIX}/project/{prj.id}/workflow/import/"
+        task = await task_factory_v2(
+            name="mytask",
+            version="myversion",
+            user_id=user.id,
+        )
+        TYPE_FILTERS = dict(key1=True, key2=False)
+        payload = {
+            "name": "myworkflow0",
+            "task_list": [
+                {
+                    # Task with new type filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "type_filters": TYPE_FILTERS,
+                },
+                # Task with new type filters and filters=None
+                {
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "type_filters": TYPE_FILTERS,
+                    "filters": None,
+                },
+                {
+                    # Task with legacy filters
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "filters": {"types": TYPE_FILTERS, "attributes": {}},
+                },
+            ],
+        }
+        res = await client.post(ENDPOINT_URL, json=payload)
+        assert res.status_code == 201
+        for wft in res.json()["task_list"]:
+            assert "filters" not in wft.keys()
+            assert wft["type_filters"] == TYPE_FILTERS
+
+        # FAILURE: legacy and new filters cannot coexist
+        payload = {
+            "name": "myworkflow1",
+            "task_list": [
+                {
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "type_filters": TYPE_FILTERS,
+                    "filters": {
+                        "types": TYPE_FILTERS,
+                        "attributes": {},
+                    },
+                }
+            ],
+        }
+        res = await client.post(ENDPOINT_URL, json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "Cannot set filters both through the legacy" in str(res.json())
+
+        # FAILURE: invalid type filter
+        payload = {
+            "name": "myworkflow2",
+            "task_list": [
+                {
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "filters": {
+                        "types": {"key1": "not-a-boolean"},
+                        "attributes": {},
+                    },
+                }
+            ],
+        }
+        res = await client.post(ENDPOINT_URL, json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "value could not be parsed to a boolean" in str(res.json())
+
+        # FAILURE: Attribute filters are now deprecated
+        payload = {
+            "name": "myworkflow3",
+            "task_list": [
+                {
+                    "task": {
+                        "name": task.name,
+                        "pkg_name": task.name,
+                        "version": task.version,
+                    },
+                    "filters": {
+                        "types": {},
+                        "attributes": {"key1": "value1"},
+                    },
+                }
+            ],
+        }
+        res = await client.post(ENDPOINT_URL, json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "Cannot set attribute filters for WorkflowTasks." in str(
+            res.json()
+        )
+
+
+async def test_import_filters_compatibility(
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory_v2,
+    client,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+        await task_factory_v2(
+            user_id=user.id,
+            source="foo",
+            input_types={"a": True, "b": False},
+        )
+
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=dict(
+                name="Workflow Ok",
+                task_list=[
+                    {"task": {"source": "foo"}, "type_filters": {"a": True}}
+                ],
+            ),
+        )
+        assert res.status_code == 201
+
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=dict(
+                name="Workflow Fail",
+                task_list=[
+                    {"task": {"source": "foo"}, "type_filters": {"b": True}}
+                ],
+            ),
+        )
+        assert res.status_code == 422
+        assert "filters" in res.json()["detail"]
