@@ -1,4 +1,6 @@
+import asyncio
 from pathlib import Path
+from typing import Iterator
 from typing import Optional
 
 from fastapi import APIRouter
@@ -128,8 +130,17 @@ async def download_job_logs(
     )
     job = output["job"]
     zip_name = f"{Path(job.working_dir).name}_archive.zip"
+
+    # https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread
+    # This moves the function execution to a separate thread,
+    # preventing it from blocking the event loop.
+    async def zip_folder_threaded(folder: str) -> Iterator[bytes]:
+        return await asyncio.to_thread(
+            _zip_folder_to_byte_stream_iterator, folder
+        )
+
     return StreamingResponse(
-        _zip_folder_to_byte_stream_iterator(folder=job.working_dir),
+        await zip_folder_threaded(job.working_dir),
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_name}"},
     )
