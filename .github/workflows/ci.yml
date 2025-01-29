@@ -176,7 +176,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: [tests_v1, tests_v2_part1, tests_v2_part2]
+    needs: [tests_v2_part1, tests_v2_part2]
 
     permissions:
       pull-requests: write
