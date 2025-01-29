@@ -19,7 +19,7 @@ env:
   # with the SOURCE_VERSION of fractal-server.
   # Here we test the script that upgrades the DB from SOURCE_VERSION to the
   #current version.
-  SOURCE_VERSION: 2.9.0
+  SOURCE_VERSION: 2.11.0
   ROOTDIR: tests/data/testing_databases
 
 jobs:
