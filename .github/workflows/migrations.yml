@@ -64,8 +64,6 @@ jobs:
           poetry add setuptools # required for py3.12
 
       - name: Apply migration and fix-db script (postgres)
-        env:
-          FRACTAL_V27_DEFAULT_USER_EMAIL: admin@fractal.xy
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
