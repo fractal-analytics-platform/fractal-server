@@ -10,6 +10,7 @@ from devtools import debug
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.aux._runner import _backend_supports_shutdown
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v2 import _backends
@@ -364,7 +365,7 @@ async def test_stop_job(
             f"{PREFIX}/job/{job.id}/stop/",
         )
 
-        if backend == "slurm":
+        if _backend_supports_shutdown(backend=backend):
             assert res.status_code == 202
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
             debug(shutdown_file)
