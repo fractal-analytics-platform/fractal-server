@@ -312,7 +312,6 @@ async def test_failing_workflow_UnknownError_slurm(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    task_factory,
     request,
     override_settings_factory,
     monkeypatch,
@@ -344,7 +343,6 @@ async def test_failing_workflow_UnknownError_slurm(
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
-        task_factory=task_factory,
         task_factory_v2=task_factory_v2,
     )
 
