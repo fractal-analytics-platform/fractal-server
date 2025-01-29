@@ -2,7 +2,7 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
-# 2.11.0a10
+# 2.11.0
 
 This version revamps the filters data structure, and it introduces complex attribute filters.
 
