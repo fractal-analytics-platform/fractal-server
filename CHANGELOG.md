@@ -4,62 +4,35 @@
 
 # 2.11.0a10
 
-* API:
-    * Move zipping logic on a different thread, when triggered from the download-job-logs endpoint (\#2225).
-    * Fix bug with filters in workflow import (\#2227).
-* Testing:
-    * Speed up CI by splitting it into more jobs (\#2210).
+This version revamps the filters data structure, and it introduces complex attribute filters.
 
-# 2.11.0a9
+> Note: This release requires running `fractalctl update-db-data`.
+> Some legacy columns will be removed from the database, either as part of
+> the `2.11.0` data-migration or as part of the `2.11.1` schema migration.
+> Please make sure you have a database dump.
 
-* Runner:
-    * Make job-execution background-task function sync in v2, to make it transparent that it runs on a thread (\#2220).
 * API:
+    * Align API with new database schemas for filters-related columns (\#2168, \#2196, \#2202).
+    * Support importing workflows or datasets with legacy (pre-`2.11.0`) filters-related fields (\#2185, \#2227).
+    * Avoid blocking operations from the download-job-logs endpoint, when the zip archive of a running job is requested (\#2225).
+    * Update and simplify `/api/v2/project/{project_id}/status/`, dropping use of temporary job files (\#2169).
     * Add new (experimental) `/project/{project_id}/workflow/{workflow_id}/type-filters-flow/` endpoint (\#2208).
-
-# 2.11.0a7 and 2.11.0a8
-
-* Data-migration script updates (\#2208, \#2209).
-
-# 2.11.0a5
-
-* API:
-    * Impose compatibility between `WorkflowTaskV2.type_filters` and `TaskV2.input_types` (\#2196).
-* Schemas:
-    * Forbid `None` or `[]` as `attribute_filters` (\#2202).
-* Data-migration script updates (\#2202).
-
-# 2.11.0a4
-
+* Database:
+    * Update table schemas for all filters-related columns:
+        * Always handle attribute- and type-filters in different columns (\#2168).
+        * Update attribute-filter-values type from scalar to list (\#2168, \#2196).
+        * Deprecate attribute filters for `WorkflowTaskV2` (\#2168).
+        * Add attribute filters to `JobV2` (\#2168).
+    * `2.11.0` data-migration script (\#2168, \#2202, \#2208, \#2209).
 * Runner:
-    * Use `TaskV2.input_types` for filtering, rather than validation (\#2191).
+    * Introduce database writes in runner component, to replace the use of temporary files (\#2169).
+    * Use `TaskV2.input_types` for filtering, rather than validation (\#2191, \#2196).
+    * Make job-execution background-task function sync, to make it transparent that it runs on a thread (\#2220).
     * Remove all filters from `TaskOutput` (\#2190).
 * Task Collection:
-    * Improve logs handling for failed collection (\#2192)
-
-# 2.11.0a3
-
-* API:
-    * Support importing workflows or datasets exported with `fractal-server<2.11.0`, possibly including legacy `filters` (\#2185).
-
-# 2.11.0a2
-
-> Note: This release requires running a `fractalctl update-db-data`
-
-(changes that affect API, database lifecycle, runner, ...)
-
-* Split filters into attribute and types (\#2168).
-* Support multiple options for attribute filters (\#2168).
-* Deprecate support for attribute filters in workflowtask (\#2168).
-* Introduce support for attribute filters in jobs (\#2168).
-* Data migration script (\#2168).
-
-# 2.11.0a0
-
-* API:
-    * Update and simplify `/api/v2/project/{project_id}/status/` (\#2169).
-* Runner
-    * Integrate database write access in runner component (\#2169).
+    * Improve logs handling for failed task collections (\#2192)
+* Testing:
+    * Speed up CI by splitting it into more jobs (\#2210).
 
 # 2.10.6
 
