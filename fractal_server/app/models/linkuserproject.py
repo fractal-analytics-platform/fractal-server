@@ -1,15 +1,5 @@
-from typing import Optional
-
 from sqlmodel import Field
 from sqlmodel import SQLModel
-
-
-class LinkUserProject(SQLModel, table=True):
-    """
-    Crossing table between User and Project
-    """
-
-    id: Optional[int] = Field(default=None, primary_key=True)
 
 
 class LinkUserProjectV2(SQLModel, table=True):
