@@ -75,7 +75,6 @@ def check_settings() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.jobsV1 = []
     app.state.jobsV2 = []
     logger = set_logger("fractal_server.lifespan")
     logger.info("Start application startup")
@@ -114,12 +113,11 @@ async def lifespan(app: FastAPI):
 
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
-        f"Current jobs: {app.state.jobsV1=}, {app.state.jobsV2=}"
+        f"Current jobs: {app.state.jobsV2=}"
     )
     if _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND):
         try:
             await cleanup_after_shutdown(
-                jobsV1=app.state.jobsV1,
                 jobsV2=app.state.jobsV2,
                 logger_name="fractal_server.lifespan",
             )

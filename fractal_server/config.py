@@ -338,7 +338,7 @@ class Settings(BaseSettings):
 
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 50
     """
-    Number of ids that can be stored in the `jobsV1` and `jobsV2` attributes of
+    Number of ids that can be stored in the `jobsV2` attribute of
     `app.state`.
     """
 
