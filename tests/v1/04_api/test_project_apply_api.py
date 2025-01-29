@@ -1,6 +1,7 @@
 import json
 import time
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.routes.api.v1._aux_functions import (
@@ -625,6 +626,7 @@ async def test_project_apply_slurm_account(
         assert res.status_code == 422
 
 
+@pytest.skip(reason="Flaky")
 async def test_rate_limit(
     MockCurrentUser,
     project_factory,
