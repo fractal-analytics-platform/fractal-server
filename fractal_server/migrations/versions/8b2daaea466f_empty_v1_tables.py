@@ -24,16 +24,16 @@ def upgrade() -> None:
         "applyworkflow", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
         batch_op.drop_constraint(
-            "fk_applyworkflow_output_dataset_id_dataset", type_="foreignkey"
+            "applyworkflow_output_dataset_id_fkey", type_="foreignkey"
         )
         batch_op.drop_constraint(
-            "fk_applyworkflow_project_id_project", type_="foreignkey"
+            "applyworkflow_project_id_fkey", type_="foreignkey"
         )
         batch_op.drop_constraint(
-            "fk_applyworkflow_workflow_id_workflow", type_="foreignkey"
+            "applyworkflow_workflow_id_fkey", type_="foreignkey"
         )
         batch_op.drop_constraint(
-            "fk_applyworkflow_input_dataset_id_dataset", type_="foreignkey"
+            "applyworkflow_input_dataset_id_fkey", type_="foreignkey"
         )
         batch_op.drop_column("input_dataset_id")
         batch_op.drop_column("project_dump")
@@ -58,9 +58,7 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "dataset", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
-        batch_op.drop_constraint(
-            "fk_dataset_project_id_project", type_="foreignkey"
-        )
+        batch_op.drop_constraint("dataset_project_id_fkey", type_="foreignkey")
         batch_op.drop_column("meta")
         batch_op.drop_column("name")
         batch_op.drop_column("project_id")
@@ -72,12 +70,14 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "linkuserproject", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
-        batch_op.add_column(sa.Column("id", sa.Integer(), nullable=False))
-        batch_op.drop_constraint(
-            "fk_linkuserproject_user_id_user_oauth", type_="foreignkey"
+        batch_op.add_column(
+            sa.Column("id", sa.Integer(), nullable=False, server_default="1")
         )
         batch_op.drop_constraint(
-            "fk_linkuserproject_project_id_project", type_="foreignkey"
+            "linkuserproject_user_id_fkey", type_="foreignkey"
+        )
+        batch_op.drop_constraint(
+            "linkuserproject_project_id_fkey", type_="foreignkey"
         )
         batch_op.drop_column("user_id")
         batch_op.drop_column("project_id")
@@ -93,7 +93,7 @@ def upgrade() -> None:
         "resource", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
         batch_op.drop_constraint(
-            "fk_resource_dataset_id_dataset", type_="foreignkey"
+            "resource_dataset_id_fkey", type_="foreignkey"
         )
         batch_op.drop_column("path")
         batch_op.drop_column("dataset_id")
@@ -107,7 +107,7 @@ def upgrade() -> None:
     with op.batch_alter_table(
         "task", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
-        batch_op.drop_constraint("uq_task_source", type_="unique")
+        batch_op.drop_constraint("task_source_key", type_="unique")
         batch_op.drop_column("input_type")
         batch_op.drop_column("owner")
         batch_op.drop_column("args_schema")
@@ -125,7 +125,7 @@ def upgrade() -> None:
         "workflow", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
         batch_op.drop_constraint(
-            "fk_workflow_project_id_project", type_="foreignkey"
+            "workflow_project_id_fkey", type_="foreignkey"
         )
         batch_op.drop_column("timestamp_created")
         batch_op.drop_column("name")
@@ -135,10 +135,10 @@ def upgrade() -> None:
         "workflowtask", schema=None, naming_convention=NAMING_CONVENTION
     ) as batch_op:
         batch_op.drop_constraint(
-            "fk_workflowtask_workflow_id_workflow", type_="foreignkey"
+            "workflowtask_workflow_id_fkey", type_="foreignkey"
         )
         batch_op.drop_constraint(
-            "fk_workflowtask_task_id_task", type_="foreignkey"
+            "workflowtask_task_id_fkey", type_="foreignkey"
         )
         batch_op.drop_column("workflow_id")
         batch_op.drop_column("meta")
@@ -189,10 +189,10 @@ def downgrade() -> None:
             )
         )
         batch_op.create_foreign_key(
-            "fk_workflowtask_task_id_task", "task", ["task_id"], ["id"]
+            "workflowtask_task_id_fkey", "task", ["task_id"], ["id"]
         )
         batch_op.create_foreign_key(
-            "fk_workflowtask_workflow_id_workflow",
+            "workflowtask_workflow_id_fkey",
             "workflow",
             ["workflow_id"],
             ["id"],
@@ -220,7 +220,7 @@ def downgrade() -> None:
             )
         )
         batch_op.create_foreign_key(
-            "fk_workflow_project_id_project", "project", ["project_id"], ["id"]
+            "workflow_project_id_fkey", "project", ["project_id"], ["id"]
         )
 
     with op.batch_alter_table(
@@ -298,7 +298,7 @@ def downgrade() -> None:
                 "input_type", sa.VARCHAR(), autoincrement=False, nullable=False
             )
         )
-        batch_op.create_unique_constraint("uq_task_source", ["source"])
+        batch_op.create_unique_constraint("task_source_key", ["source"])
 
     with op.batch_alter_table(
         "state", schema=None, naming_convention=NAMING_CONVENTION
@@ -334,7 +334,7 @@ def downgrade() -> None:
             )
         )
         batch_op.create_foreign_key(
-            "fk_resource_dataset_id_dataset", "dataset", ["dataset_id"], ["id"]
+            "resource_dataset_id_fkey", "dataset", ["dataset_id"], ["id"]
         )
 
     with op.batch_alter_table(
@@ -373,13 +373,13 @@ def downgrade() -> None:
             )
         )
         batch_op.create_foreign_key(
-            "fk_linkuserproject_project_id_project",
+            "linkuserproject_project_id_fkey",
             "project",
             ["project_id"],
             ["id"],
         )
         batch_op.create_foreign_key(
-            "fk_linkuserproject_user_id_user_oauth",
+            "linkuserproject_user_id_fkey",
             "user_oauth",
             ["user_id"],
             ["id"],
@@ -433,7 +433,7 @@ def downgrade() -> None:
             )
         )
         batch_op.create_foreign_key(
-            "fk_dataset_project_id_project", "project", ["project_id"], ["id"]
+            "dataset_project_id_fkey", "project", ["project_id"], ["id"]
         )
 
     with op.batch_alter_table(
@@ -569,25 +569,25 @@ def downgrade() -> None:
             )
         )
         batch_op.create_foreign_key(
-            "fk_applyworkflow_input_dataset_id_dataset",
+            "applyworkflow_input_dataset_id_fkey",
             "dataset",
             ["input_dataset_id"],
             ["id"],
         )
         batch_op.create_foreign_key(
-            "fk_applyworkflow_workflow_id_workflow",
+            "applyworkflow_workflow_id_fkey",
             "workflow",
             ["workflow_id"],
             ["id"],
         )
         batch_op.create_foreign_key(
-            "fk_applyworkflow_project_id_project",
+            "applyworkflow_project_id_fkey",
             "project",
             ["project_id"],
             ["id"],
         )
         batch_op.create_foreign_key(
-            "fk_applyworkflow_output_dataset_id_dataset",
+            "applyworkflow_output_dataset_id_fkey",
             "dataset",
             ["output_dataset_id"],
             ["id"],
