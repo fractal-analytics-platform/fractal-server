@@ -59,7 +59,6 @@ async def test_app_with_lifespan(
 
     async with lifespan(app):
         # verify shutdown
-        assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
 
         task = await task_factory_v2(
@@ -134,9 +133,7 @@ async def test_lifespan_shutdown_raise_error(
 
     # mock function to trigger except
 
-    async def raise_error(
-        *, jobsV1: list[int], jobsV2: list[int], logger_name: str
-    ):
+    async def raise_error(*, jobsV2: list[int], logger_name: str):
         raise ValueError("ERROR")
 
     monkeypatch.setattr(
@@ -177,7 +174,6 @@ async def test_lifespan_slurm_ssh(
     )
     app = FastAPI()
     async with lifespan(app):
-        assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
         assert isinstance(app.state.fractal_ssh_list, FractalSSHList)
         assert app.state.fractal_ssh_list.size == 0
