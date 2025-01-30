@@ -37,8 +37,11 @@ def upgrade() -> None:
     target_metadata.naming_convention = NAMING_CONVENTION
 
     connection = op.get_bind()
-    target_metadata.reflect(bind=connection, extend_existing=True)
-
+    target_metadata.reflect(
+        bind=connection,
+        extend_existing=True,
+        only=TABLES_V1,
+    )
     for table_name in TABLES_V1:
         table = target_metadata.tables[table_name]
         for fk in table.foreign_keys:
