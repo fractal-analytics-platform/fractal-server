@@ -51,4 +51,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    pass
+    raise RuntimeError(
+        "Cannot downgrade from 1eac13a26c83 to db09233ad13a, "
+        "because it's fully breaking."
+    )
