@@ -1,7 +1,7 @@
 """Drop V1 tables
 
 Revision ID: 1eac13a26c83
-Revises: db09233ad13a
+Revises: af8673379a5c
 Create Date: 2025-01-10 13:17:47.838607
 
 """
@@ -14,7 +14,7 @@ from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 
 # revision identifiers, used by Alembic.
 revision = "1eac13a26c83"
-down_revision = "db09233ad13a"
+down_revision = "af8673379a5c"
 branch_labels = None
 depends_on = None
 
