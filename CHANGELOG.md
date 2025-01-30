@@ -2,6 +2,11 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# 2.11.1
+
+* Database
+    * Drop columns `DatasetV2.filters` and `WorkflowTaskV2.input_filters` (\#2232).
+
 # 2.11.0
 
 This version revamps the filters data structure, and it introduces complex attribute filters.
