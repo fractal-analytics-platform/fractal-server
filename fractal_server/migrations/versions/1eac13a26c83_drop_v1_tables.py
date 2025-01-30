@@ -33,6 +33,9 @@ TABLES_V1 = [
 
 
 def upgrade() -> None:
+
+    logger = logging.getLogger("alembic.runtime.migration")
+
     target_metadata = SQLModel.metadata
     target_metadata.naming_convention = NAMING_CONVENTION
 
@@ -42,14 +45,18 @@ def upgrade() -> None:
         extend_existing=True,
         only=TABLES_V1,
     )
+
+    logger.info("Starting non-reversible upgrade")
+    logger.info("Dropping all V1 ForeignKey constraints")
+    fk_names = []
     for table_name in TABLES_V1:
         table = target_metadata.tables[table_name]
         for fk in table.foreign_keys:
-            logging.warning(f"Dropping FK constraint {fk.name}")
             op.drop_constraint(fk.name, table_name, type_="foreignkey")
-
+            fk_names.append(fk.name)
+    logger.info(f"Dropped all V1 ForeignKey constraints: {fk_names}")
+    logger.info(f"Dropping all V1 tables: {TABLES_V1}")
     for table_name in TABLES_V1:
-        logging.warning(f"Dropping table {table_name}")
         op.drop_table(table_name)
 
 
