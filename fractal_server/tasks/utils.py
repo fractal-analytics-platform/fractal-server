@@ -7,9 +7,5 @@ COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 FORBIDDEN_DEPENDENCY_STRINGS = ["github.com"]
 
 
-def get_collection_path(base: Path) -> Path:
-    return base / COLLECTION_FILENAME
-
-
 def get_log_path(base: Path) -> Path:
     return base / COLLECTION_LOG_FILENAME
