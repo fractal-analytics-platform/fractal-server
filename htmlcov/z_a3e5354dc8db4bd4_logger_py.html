@@ -5,6 +5,146 @@
     <title>Coverage for fractal_server/logger.py: 93%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
+    <script type="text/javascript">
+        contexts = {
+  "a": "(empty)",
+  "b": "test_collect_local.test_bad_wheel_file_arguments",
+  "c": "test_collect_local.test_collect_pip_local_fail_rmtree",
+  "d": "test_collect_local.test_invalid_wheel",
+  "e": "test_deactivate_local.test_deactivate_fail_no_venv_path",
+  "f": "test_deactivate_local.test_deactivate_local_fail",
+  "g": "test_deactivate_local.test_deactivate_local_github_dependency",
+  "h": "test_deactivate_local.test_deactivate_wheel_no_wheel_path",
+  "i": "test_deactivate_ssh.test_deactivate_fail_no_venv_path",
+  "j": "test_deactivate_ssh.test_deactivate_ssh_fail",
+  "k": "test_deactivate_ssh.test_deactivate_ssh_github_dependency",
+  "l": "test_deactivate_ssh.test_deactivate_wheel_no_wheel_path",
+  "m": "test_full_workflow.test_full_workflow",
+  "n": "test_full_workflow.test_metadiff",
+  "o": "test_full_workflow.test_non_python_task",
+  "p": "test_reactivate_local.test_reactivate_local_fail",
+  "q": "test_reactivate_local.test_reactivate_local_venv_exists",
+  "r": "test_reactivate_ssh.test_reactivate_ssh_fail",
+  "s": "test_reactivate_ssh.test_reactivate_ssh_venv_exists",
+  "t": "test_submission_job_list_v1.test_clean_app_job_list_v1",
+  "u": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
+  "v": "test_task_collection_api.test_collection",
+  "w": "test_backend_local.test_call_single_task",
+  "x": "test_backend_local.test_execute_multiple_tasks",
+  "y": "test_backend_local.test_execute_single_parallel_task",
+  "z": "test_backend_local.test_execute_single_task",
+  "A": "test_backend_runners.test_runner",
+  "B": "test_background_operations.test_logs_failed_collection",
+  "C": "test_task_collection_api.test_collection_with_json_schemas",
+  "D": "test_task_collection_api.test_failed_collection_missing_task_file",
+  "E": "test_background_operations.test_unit_create_venv_install_package",
+  "F": "test_deactivate_local.test_deactivate_wheel_package_created_before_2_9_0",
+  "G": "test_unit_lifespan.test_app_with_lifespan",
+  "H": "test_unit_lifespan.test_lifespan_shutdown_empty_jobs_list",
+  "I": "test_unit_lifespan.test_lifespan_shutdown_raise_error",
+  "J": "test_unit_lifespan.test_lifespan_slurm_ssh",
+  "K": "test_collect_local.test_collect_pip_existing_file",
+  "L": "test_full_workflow.test_failing_workflow_TaskExecutionError",
+  "M": "test_full_workflow.test_failing_workflow_UnknownError",
+  "N": "test_full_workflow.test_non_executable_task_command",
+  "O": "test_project_apply_api.test_project_apply_existing_job",
+  "P": "test_project_apply_api.test_project_apply_slurm_account",
+  "Q": "test_project_apply_api.test_project_apply_workflow_subset",
+  "R": "test_project_apply_api.test_rate_limit",
+  "S": "test_unit_submit_workflow_v1.test_success_submit_workflows",
+  "T": "test_unit_missing_db_objects.test_unit_missing_objects",
+  "U": "test_full_workflow.test_failing_workflow_JobExecutionError_slurm",
+  "V": "test_task_collection_api.test_collection_local_package_with_extras",
+  "W": "test_task_collection_api.test_failed_collection_existing_db_tasks",
+  "X": "test_task_collection_api.test_logs",
+  "Y": "test_api_task_collection_ssh.test_task_collection_ssh_failure",
+  "Z": "test_api_task_collection_ssh.test_task_collection_ssh_failure_no_connection",
+  "0": "test_api_task_collection_ssh.test_task_collection_ssh_from_pypi",
+  "1": "test_api_task_lifecycle.test_lifecycle",
+  "2": "test_background_task.test_mkdir_error",
+  "3": "test_background_task.test_submit_workflow_failure",
+  "4": "test_unit_submit_workflow.test_fail_submit_workflows_wrong_IDs",
+  "5": "test_unit_submit_workflow.test_fail_submit_workflows_wrong_backend",
+  "6": "test_unit_submit_workflow_v1.test_fail_submit_workflows_wrong_IDs",
+  "7": "test_unit_submit_workflow_v1.test_fail_submit_workflows_wrong_backend",
+  "8": "test_deactivate_ssh.test_deactivate_wheel_package_created_before_2_9_0",
+  "9": "test_admin_others.test_task_query",
+  "!": "test_api_project.test_delete_project",
+  "#": "test_api_project.test_delete_project_ongoing_jobs",
+  "$": "test_api_task_collection.test_task_collection_from_pypi",
+  "%": "test_api_task_collection.test_task_collection_from_pypi_api_only",
+  "'": "test_api_task_collection.test_task_collection_from_wheel_non_canonical",
+  "(": "test_api_task_collection_failures.test_failure_cleanup",
+  ")": "test_unit_check_settings.test_check_settings",
+  "*": "test_FractalSSH.test_fail_and_raise",
+  "+": "test_compress_folder.test_compress_folder_success_local_to_remote",
+  ",": "test_executor.test_slurm_ssh_executor_submit",
+  "-": "test_read_only_endpoints.test_read_only_enpoints",
+  ".": "test_workflow_api.test_export_workflow_log",
+  "/": "test_workflow_api.test_import_export_workflow",
+  ":": "test_FractalSSH.test_acquire_lock",
+  ";": "test_FractalSSH.test_closed_socket",
+  "=": "test_FractalSSH.test_novalidconnectionserror_in_sftp_methods",
+  "?": "test_FractalSSH.test_run_command_retries",
+  "@": "test_FractalSSHList.test_lock_FractalSSHList",
+  "[": "test_FractalSSHList.test_run_command_through_FractalSSHList",
+  "]": "test_FractalSSHList.test_unit_FractalSSHList",
+  "^": "test_compress_folder.test_compress_folder_success_remote_to_local",
+  "_": "test_compress_folder.test_compress_folder_success_with_overwrite",
+  "`": "test_compress_folder.test_compress_folder_tar_failure",
+  "{": "test_compress_folder.test_main_success",
+  "|": "test_executor.test_errors_failed_init_3",
+  "}": "test_executor.test_slurm_ssh_executor_error_in_calllback",
+  "~": "test_executor.test_slurm_ssh_executor_map",
+  "ab": "test_executor.test_slurm_ssh_executor_submit_with_pre_sbatch",
+  "bb": "test_extract_archive.test_extract_archive",
+  "cb": "test_extract_archive.test_main_success",
+  "db": "test_full_workflow_slurm_ssh_v2.test_workflow_with_non_python_task_slurm_ssh",
+  "eb": "test_full_workflow_slurm_ssh_v2.test_workflow_with_non_python_task_slurm_ssh_fail",
+  "fb": "test_setup.test_check_connection_failure",
+  "gb": "test_task_collection_api.test_collect_validation_error",
+  "hb": "test_task_collection_api.test_failed_collection_invalid_manifest",
+  "ib": "test_FractalSSH.test_remove_folder_input_validation",
+  "jb": "test_executor.test_slurm_ssh_executor_handshake_fail",
+  "kb": "test_extract_archive.test_extract_archive_failure",
+  "lb": "test_task_collection_api.test_failed_collection_missing_wheel_file",
+  "mb": "test_task_collection_api.test_failed_get_collection_info",
+  "nb": "test_unit_auth.test_get_single_user_with_groups",
+  "ob": "test_unit_auth.test_user_or_404",
+  "pb": "test_unit_security.test_unit_create_first_group",
+  "qb": "test_unit_security.test_unit_create_first_user",
+  "rb": "test_unit_config_uvicorn_loggers.test_config_uvicorn_loggers",
+  "sb": "test_FractalSSH.test_file_transfer",
+  "tb": "test_FractalSSH.test_folder_utils",
+  "ub": "test_FractalSSH.test_remote_file_exists",
+  "vb": "test_FractalSSH.test_run_command",
+  "wb": "test_FractalSSH.test_run_command_concurrency",
+  "xb": "test_FractalSSH.test_send_file_concurrency",
+  "yb": "test_FractalSSH.test_write_remote_file",
+  "zb": "test_backend_local.test_call_parallel_task_max_tasks",
+  "Ab": "test_backend_local.test_execute_tasks_with_wrong_submit_setup_call",
+  "Bb": "test_background_operations.test_download",
+  "Cb": "test_background_operations.test_init_venv",
+  "Db": "test_background_operations.test_pip_install",
+  "Eb": "test_background_operations.test_pip_install_pinned",
+  "Fb": "test_endpoint_operations.test_inspect_package",
+  "Gb": "test_endpoint_operations.test_inspect_package_fail",
+  "Hb": "test_executor.test_errors_failed_init_2",
+  "Ib": "test_executor.test_slurm_ssh_executor_shutdown_before_job_submission",
+  "Jb": "test_run_subprocess.test_run_subprocess",
+  "Kb": "test_setup.test_versions",
+  "Lb": "test_unit_bash_scripts.test_template_1",
+  "Mb": "test_unit_bash_scripts.test_template_2",
+  "Nb": "test_unit_bash_scripts.test_template_4_missing_manifest",
+  "Ob": "test_unit_bash_scripts.test_templates_freeze",
+  "Pb": "test_unit_bash_scripts.test_venv_size_and_file_number",
+  "Qb": "test_unit_package_names.test_compare_package_names",
+  "Rb": "test_unit_template_customization.test_customize_and_run_template_local",
+  "Sb": "test_unit_template_customization.test_customize_and_run_template_ssh",
+  "Tb": "test_unit_utils.test_execute_command",
+  "Ub": "test_unit_utils.test_execute_command_fail"
+}
+    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -67,7 +207,7 @@
             <a id="nextFileLink" class="nav" href="z_a3e5354dc8db4bd4_main_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 13:25 +0000
+            created at 2025-01-31 13:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -96,20 +236,20 @@
     <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="str">This module provides logging utilities</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Union</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"><label for="ctxs15" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"><label for="ctxs16" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"><label for="ctxs17" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Union</span>&nbsp;</span><span class="r"><label for="ctxs18" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"><label for="ctxs20" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"><label for="ctxs21" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="nam">LOG_FORMAT</span> <span class="op">=</span> <span class="str">"%(asctime)s - %(name)s - %(levelname)s - %(message)s"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="nam">LOG_FORMATTER</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Formatter</span><span class="op">(</span><span class="nam">LOG_FORMAT</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="nam">LOG_FORMAT</span> <span class="op">=</span> <span class="str">"%(asctime)s - %(name)s - %(levelname)s - %(message)s"</span>&nbsp;</span><span class="r"><label for="ctxs24" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="nam">LOG_FORMATTER</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Formatter</span><span class="op">(</span><span class="nam">LOG_FORMAT</span><span class="op">)</span>&nbsp;</span><span class="r"><label for="ctxs25" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">def</span> <span class="nam">get_logger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">)</span> <span class="op">-></span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Logger</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">def</span> <span class="nam">get_logger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">)</span> <span class="op">-></span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Logger</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs28" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="str">    Wrap the</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="str">    [`logging.getLogger`](https://docs.python.org/3/library/logging.html#logging.getLogger)</span>&nbsp;</span><span class="r"></span></p>
@@ -135,10 +275,10 @@
     <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t"><span class="str">    Returns:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t"><span class="str">        Logger with name `logger_name`</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">    <span class="key">return</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">    <span class="key">return</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs54"><span class="r"><label for="ctxs54" class="ctx">113 ctx</label></span><span class="ctxs">2a : ; * sbtb= ubvbwb? xbyb@ [ ] Y Z 0 1 zbw x y z AbA BbCbB DbEbE 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 FbGbHb| } ~ Ib, abbbcbL M m n N o dbebO P Q R p q r s JbfbKbt gbv V C W hbD X LbMbNbObPbG H I J Qb4 5 u 6 7 S RbSbTbUb</span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">def</span> <span class="nam">set_logger</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">def</span> <span class="nam">set_logger</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs57" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">    <span class="nam">logger_name</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">    <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="nam">log_file_path</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">Union</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Path</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -164,66 +304,66 @@
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t"><span class="str">        logger: The logger, as configured by the arguments.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">propagate</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">logging</span><span class="op">.</span><span class="nam">DEBUG</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs83"><span class="r"><label for="ctxs83" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
+    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">propagate</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><input type="checkbox" id="ctxs84"><span class="r"><label for="ctxs84" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
+    <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">logging</span><span class="op">.</span><span class="nam">DEBUG</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs85"><span class="r"><label for="ctxs85" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
     <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">current_stream_handlers</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">current_stream_handlers</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><input type="checkbox" id="ctxs87"><span class="r"><label for="ctxs87" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
     <p class="pln"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">        <span class="nam">handler</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">        <span class="key">for</span> <span class="nam">handler</span> <span class="key">in</span> <span class="nam">logger</span><span class="op">.</span><span class="nam">handlers</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">        <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">handler</span><span class="op">,</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">StreamHandler</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">    <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">current_stream_handlers</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">        <span class="nam">stream_handler</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">StreamHandler</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">        <span class="nam">settings</span> <span class="op">=</span> <span class="nam">Inject</span><span class="op">(</span><span class="nam">get_settings</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">        <span class="nam">stream_handler</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_LOGGING_LEVEL</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">        <span class="nam">stream_handler</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">addHandler</span><span class="op">(</span><span class="nam">stream_handler</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">current_stream_handlers</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs93"><span class="r"><label for="ctxs93" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
+    <p class="run"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">        <span class="nam">stream_handler</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">StreamHandler</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs94"><span class="r"><label for="ctxs94" class="ctx">68 ctx</label></span><span class="ctxs">1a*9!#$%'(YZ01wxyzABE23bcd+efghFijkl,ULMmnNoOPQRpqrs-tvCD)GHIJT45u67S</span></p>
+    <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">        <span class="nam">settings</span> <span class="op">=</span> <span class="nam">Inject</span><span class="op">(</span><span class="nam">get_settings</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs95"><span class="r"><label for="ctxs95" class="ctx">68 ctx</label></span><span class="ctxs">1a*9!#$%'(YZ01wxyzABE23bcd+efghFijkl,ULMmnNoOPQRpqrs-tvCD)GHIJT45u67S</span></p>
+    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">        <span class="nam">stream_handler</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_LOGGING_LEVEL</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs96"><span class="r"><label for="ctxs96" class="ctx">68 ctx</label></span><span class="ctxs">1a*9!#$%'(YZ01wxyzABE23bcd+efghFijkl,ULMmnNoOPQRpqrs-tvCD)GHIJT45u67S</span></p>
+    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">        <span class="nam">stream_handler</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs97"><span class="r"><label for="ctxs97" class="ctx">68 ctx</label></span><span class="ctxs">1a*9!#$%'(YZ01wxyzABE23bcd+efghFijkl,ULMmnNoOPQRpqrs-tvCD)GHIJT45u67S</span></p>
+    <p class="run"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">addHandler</span><span class="op">(</span><span class="nam">stream_handler</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs98"><span class="r"><label for="ctxs98" class="ctx">68 ctx</label></span><span class="ctxs">1a*9!#$%'(YZ01wxyzABE23bcd+efghFijkl,ULMmnNoOPQRpqrs-tvCD)GHIJT45u67S</span></p>
     <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="key">if</span> <span class="nam">log_file_path</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="nam">file_handler</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">FileHandler</span><span class="op">(</span><span class="nam">log_file_path</span><span class="op">,</span> <span class="nam">mode</span><span class="op">=</span><span class="str">"a"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">        <span class="nam">file_handler</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">logging</span><span class="op">.</span><span class="nam">DEBUG</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="nam">file_handler</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">file_handler</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">addHandler</span><span class="op">(</span><span class="nam">file_handler</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="nam">current_file_handlers</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="key">if</span> <span class="nam">log_file_path</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs100"><span class="r"><label for="ctxs100" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
+    <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="nam">file_handler</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">FileHandler</span><span class="op">(</span><span class="nam">log_file_path</span><span class="op">,</span> <span class="nam">mode</span><span class="op">=</span><span class="str">"a"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs101"><span class="r"><label for="ctxs101" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
+    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">        <span class="nam">file_handler</span><span class="op">.</span><span class="nam">setLevel</span><span class="op">(</span><span class="nam">logging</span><span class="op">.</span><span class="nam">DEBUG</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs102"><span class="r"><label for="ctxs102" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
+    <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="nam">file_handler</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs103"><span class="r"><label for="ctxs103" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
+    <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">file_handler</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs104"><span class="r"><label for="ctxs104" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
+    <p class="run"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">addHandler</span><span class="op">(</span><span class="nam">file_handler</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs105"><span class="r"><label for="ctxs105" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
+    <p class="run"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="nam">current_file_handlers</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><input type="checkbox" id="ctxs106"><span class="r"><label for="ctxs106" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
     <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">            <span class="nam">handler</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">            <span class="key">for</span> <span class="nam">handler</span> <span class="key">in</span> <span class="nam">logger</span><span class="op">.</span><span class="nam">handlers</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">            <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">handler</span><span class="op">,</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">FileHandler</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">        <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">current_file_handlers</span><span class="op">)</span> <span class="op">></span> <span class="num">1</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">current_file_handlers</span><span class="op">)</span> <span class="op">></span> <span class="num">1</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs111"><span class="r"><label for="ctxs111" class="ctx">47 ctx</label></span><span class="ctxs">1awxyzABEbKcdefghFijkl8ULMmnNoOPQRpqrstvVCWDXTuS</span></p>
+    <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs112"><span class="r"><label for="ctxs112" class="ctx">10 ctx</label></span><span class="ctxs">1aEKF8vVWXT</span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">                <span class="fst">f"</span><span class="fst">Logger </span><span class="op">{</span><span class="nam">logger_name</span><span class="op">}</span><span class="fst"> has multiple file handlers: </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="nam">current_file_handlers</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">    <span class="key">return</span> <span class="nam">logger</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">    <span class="key">return</span> <span class="nam">logger</span>&nbsp;</span><input type="checkbox" id="ctxs117"><span class="r"><label for="ctxs117" class="ctx">106 ctx</label></span><span class="ctxs">2a : ; * = ib? @ [ ] 9 ! # $ % ' ( Y Z 0 1 w x y z A B E 2 3 b K c d + ^ _ ` { e f g h F i j k l 8 | } jb~ , abbbkbcbU L M m n N o dbebO P Q R p q r s - fbt gbv V C W hbD lbmbX nbob) G H I J T pbqb4 5 u 6 7 S . / </span></p>
     <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t"><span class="key">def</span> <span class="nam">close_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">:</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Logger</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t"><span class="key">def</span> <span class="nam">close_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">:</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Logger</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs120" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t"><span class="str">    Close all handlers associated to a `logging.Logger` object</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="str">    Arguments:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t"><span class="str">        logger: The actual logger</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="key">for</span> <span class="nam">handle</span> <span class="key">in</span> <span class="nam">logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">        <span class="nam">handle</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="key">for</span> <span class="nam">handle</span> <span class="key">in</span> <span class="nam">logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs127"><span class="r"><label for="ctxs127" class="ctx">58 ctx</label></span><span class="ctxs">1a9!#$%'(YZ01wxyzAB23bKcdefghijklmnopqrstvVCWDX)GHIJ45u67./</span></p>
+    <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">        <span class="nam">handle</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs128"><span class="r"><label for="ctxs128" class="ctx">58 ctx</label></span><span class="ctxs">1a9!#$%'(YZ01wxyzAB23bKcdefghijklmnopqrstvVCWDX)GHIJ45u67./</span></p>
     <p class="pln"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t"><span class="key">def</span> <span class="nam">reset_logger_handlers</span><span class="op">(</span><span class="nam">logger</span><span class="op">:</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Logger</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t"><span class="key">def</span> <span class="nam">reset_logger_handlers</span><span class="op">(</span><span class="nam">logger</span><span class="op">:</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">Logger</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs131" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t"><span class="str">    Close and remove all handlers associated to a `logging.Logger` object</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t"><span class="str">    Arguments:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t"><span class="str">        logger: The actual logger</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">    <span class="nam">close_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">.</span><span class="nam">clear</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">    <span class="nam">close_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs138"><span class="r"><label for="ctxs138" class="ctx">44 ctx</label></span><span class="ctxs">1a9!#$%'(YZ0123bKcdefghijklmnopqrst)GHIJ45u67</span></p>
+    <p class="run"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">.</span><span class="nam">clear</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs139"><span class="r"><label for="ctxs139" class="ctx">44 ctx</label></span><span class="ctxs">1a9!#$%'(YZ0123bKcdefghijklmnopqrst)GHIJ45u67</span></p>
     <p class="pln"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t"><span class="key">def</span> <span class="nam">config_uvicorn_loggers</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t"><span class="key">def</span> <span class="nam">config_uvicorn_loggers</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs142" class="ctx">(empty)</label></span></p>
     <p class="pln"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t"><span class="str">    Change the formatter for the uvicorn access/error loggers.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -240,12 +380,12 @@
     <p class="pln"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t"><span class="str">    already have a handler. If not, we skip the formatting.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t157" href="#t157">157</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">    <span class="nam">access_logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="str">"uvicorn.access"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t160" href="#t160">160</a></span><span class="t">    <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">access_logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">)</span> <span class="op">></span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">160&#x202F;&#x219B;&#x202F;161</span><span class="annotate long">line 160 didn't jump to line 161 because the condition on line 160 was never true</span></span></p>
+    <p class="run"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">    <span class="nam">access_logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="str">"uvicorn.access"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs159"><span class="r"><label for="ctxs159" class="ctx">5 ctx</label></span><span class="ctxs">2rbG H I J </span></p>
+    <p class="par run show_par"><span class="n"><a id="t160" href="#t160">160</a></span><span class="t">    <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">access_logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">)</span> <span class="op">></span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs160"><span class="r"><span class="annotate short">160&#x202F;&#x219B;&#x202F;161</span><span class="annotate long">line 160 didn't jump to line 161 because the condition on line 160 was never true</span><label for="ctxs160" class="ctx">5 ctx</label></span><span class="ctxs">2rbG H I J </span></p>
     <p class="mis show_mis"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">        <span class="nam">access_logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t162" href="#t162">162</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">    <span class="nam">error_logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="str">"uvicorn.error"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">    <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">error_logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">)</span> <span class="op">></span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">164&#x202F;&#x219B;&#x202F;165</span><span class="annotate long">line 164 didn't jump to line 165 because the condition on line 164 was never true</span></span></p>
+    <p class="run"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">    <span class="nam">error_logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="str">"uvicorn.error"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs163"><span class="r"><label for="ctxs163" class="ctx">5 ctx</label></span><span class="ctxs">2rbG H I J </span></p>
+    <p class="par run show_par"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">    <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">error_logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">)</span> <span class="op">></span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs164"><span class="r"><span class="annotate short">164&#x202F;&#x219B;&#x202F;165</span><span class="annotate long">line 164 didn't jump to line 165 because the condition on line 164 was never true</span><label for="ctxs164" class="ctx">5 ctx</label></span><span class="ctxs">2rbG H I J </span></p>
     <p class="mis show_mis"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t">        <span class="nam">error_logger</span><span class="op">.</span><span class="nam">handlers</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">.</span><span class="nam">setFormatter</span><span class="op">(</span><span class="nam">LOG_FORMATTER</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
@@ -256,7 +396,7 @@
             <a class="nav" href="z_a3e5354dc8db4bd4_main_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 13:25 +0000
+            created at 2025-01-31 13:44 +0000
         </p>
     </div>
 </footer>
