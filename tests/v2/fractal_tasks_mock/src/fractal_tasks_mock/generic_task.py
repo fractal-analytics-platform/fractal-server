@@ -1,6 +1,8 @@
+# Importing fractal_tasks_mock is only to load __init__.py
 import logging
 import time
 
+import fractal_tasks_mock  # noqa
 from pydantic.decorator import validate_arguments
 
 
