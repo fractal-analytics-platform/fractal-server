@@ -22,18 +22,18 @@ def generic_task(
         raise_error: If true, the task raises a ValueError
     """
 
-    logging.info("[generic_task] START")
-    logging.info(f"[generic_task] {sleep_time=}")
-    logging.info(f"[generic_task] {raise_error=}")
+    logging.warning("[generic_task] START")
+    logging.warning(f"[generic_task] {sleep_time=}")
+    logging.warning(f"[generic_task] {raise_error=}")
 
-    logging.info(f"[generic_task] Now sleep for {sleep_time} seconds")
+    logging.warning(f"[generic_task] Now sleep for {sleep_time} seconds")
     time.sleep(sleep_time)
-    logging.info(f"[generic_task] I slept for {sleep_time} seconds")
+    logging.warning(f"[generic_task] I slept for {sleep_time} seconds")
 
     if raise_error:
         logging.error("[generic_task] I will now raise an error!")
         raise ValueError("This is the error message")
-    logging.info("[generic_task] END")
+    logging.warning("[generic_task] END")
 
 
 if __name__ == "__main__":
