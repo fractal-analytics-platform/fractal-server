@@ -19,7 +19,6 @@ async def test_clean_app_job_list_v2(
     override_settings_factory,
 ):
     # Check that app fixture starts in a clean state
-    assert app.state.jobsV1 == []
     assert app.state.jobsV2 == []
 
     # Set this to 0 so that the endpoint also calls the clean-up function

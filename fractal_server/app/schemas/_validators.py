@@ -48,25 +48,6 @@ def valdict_keys(attribute: str):
     return val
 
 
-def valint(attribute: str, min_val: int = 1):
-    """
-    Check that an integer attribute (e.g. if it is meant to be the ID of a
-    database entry) is greater or equal to min_val.
-    """
-
-    def val(integer: Optional[int]) -> Optional[int]:
-        if integer is None:
-            raise ValueError(f"Integer attribute '{attribute}' cannot be None")
-        if integer < min_val:
-            raise ValueError(
-                f"Integer attribute '{attribute}' cannot be less than "
-                f"{min_val} (given {integer})"
-            )
-        return integer
-
-    return val
-
-
 def val_absolute_path(attribute: str, accept_none: bool = False):
     """
     Check that a string attribute is an absolute path

@@ -394,7 +394,6 @@ async def failing_workflow_UnknownError(
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
-    task_factory,
     task_factory_v2,
     user_kwargs: Optional[dict] = None,
     user_settings_dict: Optional[dict] = None,

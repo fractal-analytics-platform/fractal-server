@@ -8,65 +8,6 @@ on:
 
 jobs:
 
-  tests_v1:
-    name: "V1 - Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        python-version: ["3.10"]
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Start Postgres
-        run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
-
-      - name: Cache SLURM Docker images
-        id: cache-docker-slurm-multipy
-        uses: actions/cache@v4
-        with:
-          path: ci/cache/docker/slurm-multipy
-          key: cache-docker-slurm-multipy
-
-      - name: Use SLURM Docker Image Cache if cache hit
-        if: steps.cache-docker-slurm-multipy.outputs.cache-hit == 'true'
-        run: docker image load --input ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
-
-      - name: Update SLURM Docker Image Cache if cache miss
-        if: steps.cache-docker-slurm-multipy.outputs.cache-hit != 'true'
-        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
-
-      - name: Install poetry
-        run: pipx install poetry==2.0.0
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "poetry"
-
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
-
-      - name: Test with pytest
-        env:
-          COVERAGE_FILE: coverage-data-v1-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv tests/v1 --durations 0
-
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-data-v1-${{ matrix.python-version }}
-          path: coverage-data-v1-${{ matrix.python-version }}*
-
   tests_v2_part1:
 
     name: "V2 - Part 1 - Python ${{ matrix.python-version }}"
@@ -176,7 +117,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: [tests_v1, tests_v2_part1, tests_v2_part2]
+    needs: [tests_v2_part1, tests_v2_part2]
 
     permissions:
       pull-requests: write

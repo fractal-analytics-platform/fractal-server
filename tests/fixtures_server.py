@@ -42,7 +42,6 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR = temp_path / "artifacts"
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
-    settings.FRACTAL_API_SUBMIT_RATE_LIMIT = 0
     settings.FRACTAL_API_MAX_JOB_LIST_LENGTH = 1
     settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME = 1
 
@@ -149,7 +148,6 @@ async def db_sync(db_create_tables):
 @pytest.fixture
 async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
-    app.state.jobsV1 = []
     app.state.jobsV2 = []
     app.state.fractal_ssh_list = None
     yield app

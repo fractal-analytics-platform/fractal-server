@@ -21,16 +21,6 @@ from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
 )
 
 
-class TaskV1Mock(BaseModel, extra=Extra.forbid):
-    id: int = 1
-    name: str = "name_t1"
-    command: str = "cmd_t1"
-    source: str = "source_t1"
-    input_type: str
-    output_type: str
-    meta: Optional[dict[str, Any]] = Field(default_factory=dict)
-
-
 class TaskV2Mock(BaseModel, extra=Extra.forbid):
     id: int = 1
     name: str = "name_t2"

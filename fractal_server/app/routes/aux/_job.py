@@ -1,12 +1,10 @@
 from pathlib import Path
-from typing import Union
 
-from ...models.v1 import ApplyWorkflow
 from ...models.v2 import JobV2
 from ...runner.filenames import SHUTDOWN_FILENAME
 
 
-def _write_shutdown_file(*, job: Union[ApplyWorkflow, JobV2]):
+def _write_shutdown_file(*, job: JobV2):
     """
     Write job's shutdown file.
 

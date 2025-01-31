@@ -779,6 +779,12 @@
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
+          "sleep_time": {
+            "default": 0.0,
+            "description": "Missing description",
+            "title": "Sleep Time",
+            "type": "number"
+          },
           "zarr_url": {
             "description": "Missing description",
             "title": "Zarr Url",

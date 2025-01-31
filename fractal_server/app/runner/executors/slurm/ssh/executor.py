@@ -385,9 +385,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         args_batches = []
         batch_size = tasks_per_job
         for ind_chunk in range(0, tot_tasks, batch_size):
-            args_batches.append(
-                list_args[ind_chunk : ind_chunk + batch_size]  # noqa
-            )
+            args_batches.append(list_args[ind_chunk : ind_chunk + batch_size])
         if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
@@ -536,10 +534,15 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             _prefixes = []
             _subfolder_names = []
             for component in components:
-                if isinstance(component, dict):
+                # In Fractal, `component` is `dict` by construction (e.g.
+                # `component = {"zarr_url": "/something", "param": 1}``). The
+                # try/except covers the case of e.g. `executor.map([1, 2])`,
+                # which is useful for testing.
+                try:
                     actual_component = component.get(_COMPONENT_KEY_, None)
-                else:
-                    actual_component = component
+                except AttributeError:
+                    actual_component = str(component)
+
                 _task_file_paths = get_task_file_paths(
                     workflow_dir_local=task_files.workflow_dir_local,
                     workflow_dir_remote=task_files.workflow_dir_remote,
