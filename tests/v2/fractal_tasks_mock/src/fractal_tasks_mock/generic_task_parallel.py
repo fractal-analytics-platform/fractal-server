@@ -1,5 +1,6 @@
 import logging
 
+import fractal_tasks_mock  # noqa
 from pydantic.decorator import validate_arguments
 
 
