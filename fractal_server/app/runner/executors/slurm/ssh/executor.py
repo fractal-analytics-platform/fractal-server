@@ -536,10 +536,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             _prefixes = []
             _subfolder_names = []
             for component in components:
-                if isinstance(component, dict):
-                    actual_component = component.get(_COMPONENT_KEY_, None)
-                else:
-                    actual_component = component
+                actual_component = component.get(_COMPONENT_KEY_, None)
                 _task_file_paths = get_task_file_paths(
                     workflow_dir_local=task_files.workflow_dir_local,
                     workflow_dir_remote=task_files.workflow_dir_remote,
