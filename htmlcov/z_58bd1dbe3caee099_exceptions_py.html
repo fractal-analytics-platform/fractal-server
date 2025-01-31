@@ -17,9 +17,10 @@
   "h": "test_unit_slurm_executor.test_slurm_sudo_executor_shutdown_before_job_submission",
   "i": "test_unit_subprocess_run_or_raise.test_subprocess_run_or_raise",
   "j": "test_full_workflow.test_non_executable_task_command",
-  "k": "test_project_apply_api.test_project_apply_existing_job",
-  "l": "test_project_apply_api.test_project_apply_workflow_subset",
-  "m": "test_unit_lowlevel_functions.test_command_wrapper"
+  "k": "test_project_apply_api.test_project_apply_workflow_subset",
+  "l": "test_unit_lowlevel_functions.test_command_wrapper",
+  "m": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
+  "n": "test_unit_submit_workflow_v1.test_success_submit_workflows"
 }
     </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -84,7 +85,7 @@
             <a id="nextFileLink" class="nav" href="z_cbf78191baac1645__batching_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 13:44 +0000
+            created at 2025-01-31 14:47 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -132,10 +133,10 @@
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">workflow_task_order</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">int</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">task_name</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">        <span class="nam">super</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">__init__</span><span class="op">(</span><span class="op">*</span><span class="nam">args</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs34"><span class="r"><label for="ctxs34" class="ctx">5 ctx</label></span><span class="ctxs">1ajklm</span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">workflow_task_id</span> <span class="op">=</span> <span class="nam">workflow_task_id</span>&nbsp;</span><input type="checkbox" id="ctxs35"><span class="r"><label for="ctxs35" class="ctx">5 ctx</label></span><span class="ctxs">1ajklm</span></p>
-    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">workflow_task_order</span> <span class="op">=</span> <span class="nam">workflow_task_order</span>&nbsp;</span><input type="checkbox" id="ctxs36"><span class="r"><label for="ctxs36" class="ctx">5 ctx</label></span><span class="ctxs">1ajklm</span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">task_name</span> <span class="op">=</span> <span class="nam">task_name</span>&nbsp;</span><input type="checkbox" id="ctxs37"><span class="r"><label for="ctxs37" class="ctx">5 ctx</label></span><span class="ctxs">1ajklm</span></p>
+    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">        <span class="nam">super</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">__init__</span><span class="op">(</span><span class="op">*</span><span class="nam">args</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs34"><span class="r"><label for="ctxs34" class="ctx">6 ctx</label></span><span class="ctxs">1ajklmn</span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">workflow_task_id</span> <span class="op">=</span> <span class="nam">workflow_task_id</span>&nbsp;</span><input type="checkbox" id="ctxs35"><span class="r"><label for="ctxs35" class="ctx">6 ctx</label></span><span class="ctxs">1ajklmn</span></p>
+    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">workflow_task_order</span> <span class="op">=</span> <span class="nam">workflow_task_order</span>&nbsp;</span><input type="checkbox" id="ctxs36"><span class="r"><label for="ctxs36" class="ctx">6 ctx</label></span><span class="ctxs">1ajklmn</span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">task_name</span> <span class="op">=</span> <span class="nam">task_name</span>&nbsp;</span><input type="checkbox" id="ctxs37"><span class="r"><label for="ctxs37" class="ctx">6 ctx</label></span><span class="ctxs">1ajklmn</span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">class</span> <span class="nam">JobExecutionError</span><span class="op">(</span><span class="nam">RuntimeError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs40" class="ctx">(empty)</label></span></p>
@@ -237,7 +238,7 @@
             <a class="nav" href="z_cbf78191baac1645__batching_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 13:44 +0000
+            created at 2025-01-31 14:47 +0000
         </p>
     </div>
 </footer>

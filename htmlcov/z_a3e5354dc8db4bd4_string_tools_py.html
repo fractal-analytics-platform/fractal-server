@@ -39,12 +39,12 @@
   "D": "test_full_workflow.test_non_executable_task_command",
   "E": "test_full_workflow.test_non_python_task",
   "F": "test_no_images_parallelization.test_parallelize_on_no_images_compound",
-  "G": "test_project_apply_api.test_project_apply_existing_job",
-  "H": "test_project_apply_api.test_project_apply_slurm_account",
-  "I": "test_project_apply_api.test_project_apply_workflow_subset",
-  "J": "test_project_apply_api.test_rate_limit",
-  "K": "test_submission_job_list_v1.test_clean_app_job_list_v1",
-  "L": "test_unit_slurm_executor.test_slurm_sudo_executor_shutdown_before_job_submission",
+  "G": "test_project_apply_api.test_project_apply_slurm_account",
+  "H": "test_project_apply_api.test_project_apply_workflow_subset",
+  "I": "test_project_apply_api.test_rate_limit",
+  "J": "test_submission_job_list_v1.test_clean_app_job_list_v1",
+  "K": "test_unit_slurm_executor.test_slurm_sudo_executor_shutdown_before_job_submission",
+  "L": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
   "M": "test_unit_submit_workflow_v1.test_success_submit_workflows",
   "N": "test_FractalSSH.test_remove_folder_input_validation",
   "O": "test_setup.test_versions",
@@ -61,10 +61,10 @@
   "Z": "test_api_dataset.test_post_dataset",
   "0": "test_backend_local.test_execute_tasks_with_wrong_submit_setup_call",
   "1": "test_no_images_parallelization.test_parallelize_on_no_images",
-  "2": "test_slurm_config.test_slurm_submit_setup",
-  "3": "test_string_tools.test_unit_sanitize_string",
-  "4": "test_unit_slurm_config_v1.test_slurm_submit_setup",
-  "5": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
+  "2": "test_project_apply_api.test_project_apply_existing_job",
+  "3": "test_slurm_config.test_slurm_submit_setup",
+  "4": "test_string_tools.test_unit_sanitize_string",
+  "5": "test_unit_slurm_config_v1.test_slurm_submit_setup",
   "6": "test_unit_utils_executors.test_get_default_task_files",
   "7": "test_FractalSSH.test_folder_utils",
   "8": "test_FractalSSH.test_run_command",
@@ -191,7 +191,7 @@
             <a id="nextFileLink" class="nav" href="z_a3e5354dc8db4bd4_syringe_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 13:44 +0000
+            created at 2025-01-31 14:47 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -235,10 +235,10 @@
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t"><span class="str">    Returns:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="str">        Sanitized value</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">value</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs30"><span class="r"><label for="ctxs30" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1FGHIJ23K4L5M6</span></p>
-    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">for</span> <span class="nam">character</span> <span class="key">in</span> <span class="nam">__SPECIAL_CHARACTERS__</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs31"><span class="r"><label for="ctxs31" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1FGHIJ23K4L5M6</span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">new_value</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">character</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs32"><span class="r"><label for="ctxs32" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1FGHIJ23K4L5M6</span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="key">return</span> <span class="nam">new_value</span>&nbsp;</span><input type="checkbox" id="ctxs33"><span class="r"><label for="ctxs33" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1FGHIJ23K4L5M6</span></p>
+    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">value</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs30"><span class="r"><label for="ctxs30" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">for</span> <span class="nam">character</span> <span class="key">in</span> <span class="nam">__SPECIAL_CHARACTERS__</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs31"><span class="r"><label for="ctxs31" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">new_value</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">character</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs32"><span class="r"><label for="ctxs32" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="key">return</span> <span class="nam">new_value</span>&nbsp;</span><input type="checkbox" id="ctxs33"><span class="r"><label for="ctxs33" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">def</span> <span class="nam">slugify_task_name_for_source_v1</span><span class="op">(</span><span class="nam">task_name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs36" class="ctx">(empty)</label></span></p>
@@ -278,12 +278,12 @@
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t"><span class="str">        allow_char: chars to accept among the forbidden ones</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t"><span class="str">        attribute_name: Name of the attribute, to be used in error message.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">command</span><span class="op">,</span> <span class="nam">str</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs73"><span class="r"><label for="ctxs73" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I J jbkblbmbO P K W X nbobpbqbrbsbtbubY vbwbxbL M yb</span></p>
+    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">command</span><span class="op">,</span> <span class="nam">str</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs73"><span class="r"><label for="ctxs73" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
     <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">command</span><span class="op">=</span><span class="op">}</span><span class="fst"> is not a string.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs74"><span class="r"><label for="ctxs74" class="ctx">1 ctx</label></span><span class="ctxs">1N</span></p>
-    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">set</span><span class="op">(</span><span class="nam">__NOT_ALLOWED_FOR_COMMANDS__</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs75"><span class="r"><label for="ctxs75" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I J jbkblbmbO P K W X nbobpbqbrbsbtbubY vbwbxbL M yb</span></p>
-    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="key">if</span> <span class="nam">allow_char</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs76"><span class="r"><label for="ctxs76" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I J jbkblbmbO P K W X nbobpbqbrbsbtbubY vbwbxbL M yb</span></p>
+    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">set</span><span class="op">(</span><span class="nam">__NOT_ALLOWED_FOR_COMMANDS__</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs75"><span class="r"><label for="ctxs75" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
+    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="key">if</span> <span class="nam">allow_char</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs76"><span class="r"><label for="ctxs76" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
     <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">forbidden</span> <span class="op">-</span> <span class="nam">set</span><span class="op">(</span><span class="nam">allow_char</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs77"><span class="r"><label for="ctxs77" class="ctx">13 ctx</label></span><span class="ctxs">1aQRSTbcdeUVOP</span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">forbidden</span><span class="op">.</span><span class="nam">isdisjoint</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs78"><span class="r"><label for="ctxs78" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I J jbkblbmbO P K W X nbobpbqbrbsbtbubY vbwbxbL M yb</span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">forbidden</span><span class="op">.</span><span class="nam">isdisjoint</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs78"><span class="r"><label for="ctxs78" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
     <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs79"><span class="r"><label for="ctxs79" class="ctx">6 ctx</label></span><span class="ctxs">1NOPWXY</span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">            <span class="fst">f"</span><span class="op">{</span><span class="nam">attribute_name</span><span class="op">}</span><span class="fst"> must not contain any of this characters: </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">            <span class="fst">f"</span><span class="fst">'</span><span class="op">{</span><span class="nam">forbidden</span><span class="op">}</span><span class="fst">'\n</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
@@ -298,7 +298,7 @@
             <a class="nav" href="z_a3e5354dc8db4bd4_syringe_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 13:44 +0000
+            created at 2025-01-31 14:47 +0000
         </p>
     </div>
 </footer>
