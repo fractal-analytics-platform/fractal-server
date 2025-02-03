@@ -401,6 +401,7 @@ def test_fractal_email():
             password="password",
             instance_name="test",
             use_starttls=False,
+            use_login=True,
         )
     ).encode("utf-8")
     enc_fractal_mail_settings = (

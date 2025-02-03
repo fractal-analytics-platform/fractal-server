@@ -63,8 +63,8 @@ jobs:
             POSTGRES_PORT: 5432
             # FRACTAL_EMAIL_SETTINGS and KEY are generated with the following command
             # `printf "fakepassword\n" | poetry run fractalctl email-settings sender@example.org localhost 1025 test --skip-starttls`
-            FRACTAL_EMAIL_SETTINGS: gAAAAABnYvLgoSeECnrXlv1UoP4D_c9Of0xmwMJVopBA3TIDjOvx6YDVfe2ULz8yGr8Ba5Id8rRLjCXa_Ys8iHjvuniJyvsX0mDrc3IGSoofMEeeSCvYEe4iSWLeb_qTNVNPc4IT2-SLB-F7dEvkwzyAFnEm9dVmApd4_lQLm9_wJoS-tz1Q1K8E1_jJSgpfGgwHaINHICVh1UL_qHjIa3DwFvDPvt32tLLBZTL7oN88A8RCmg00ThIZs4HN7OQkvfninfOiM060Lb-AeNViCVgBX-bIPWZaeQ==
-            FRACTAL_EMAIL_SETTINGS_KEY: 4otDt3R-8p4S97QT0gcUzynCalByypTv01YntqQ9XFk=
+            FRACTAL_EMAIL_SETTINGS: gAAAAABnoPQV82lnV1OlIXnOr9Nk-29VTzg6prP6o-bUEMu02wXImFLjKOZdbW9EAYMgOXdk3FkGJTfIDXgstl26nYFQAhKOfhYnggpbXakudPA9szG9BsmEiHpWCxPjTJYR0IoCJhx84c3B06OxNnOjNFHkZKdiXnMwX3W90VSSTawffdxEIeh9vGUi51UM5z9FZLWxqNBMMIN1X02nKn5IJWhOu8Pzx97LTPxEXnuKbKgrsDX2xFBfj1I3ZAX3Fw90qXcojMymNZw9yrS2y6s7h4bmFXVU84x-YVtBRZb99rU-RXkIAhQ=
+            FRACTAL_EMAIL_SETTINGS_KEY: 8hUJTuN6h6DOqZ2_2n-oOkuHGeTSscK7bqn8GMUzWQU=
             FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
             OAUTH_DEXIDP_CLIENT_ID: client_test_id
             OAUTH_DEXIDP_CLIENT_SECRET: client_test_secret

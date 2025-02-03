@@ -97,6 +97,12 @@ email_settings_parser.add_argument(
     default=False,
     help="If set, skip the execution of `starttls` when sending emails",
 )
+email_settings_parser.add_argument(
+    "--use-login",
+    action="store_true",
+    default=True,
+    help="TBD",
+)
 
 
 def save_openapi(dest="openapi.json"):
@@ -230,7 +236,7 @@ def print_mail_settings(
     port: int,
     instance: str,
     skip_starttls: bool,
-    use_login: bool = True,
+    use_login: bool,
 ):
     from cryptography.fernet import Fernet
 
@@ -276,6 +282,7 @@ def run():
             port=args.port,
             instance=args.instance,
             skip_starttls=args.skip_starttls,
+            use_login=args.use_login,
         )
     else:
         sys.exit(f"Error: invalid command '{args.cmd}'.")

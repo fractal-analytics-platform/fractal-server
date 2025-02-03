@@ -8,14 +8,14 @@ from fractal_server.app.security import get_user_manager
 async def test_server_not_available(override_settings_factory, db, caplog):
     override_settings_factory(
         FRACTAL_EMAIL_SETTINGS=(
-            "gAAAAABnYvLgoSeECnrXlv1UoP4D_c9Of0xmwMJVopBA3TIDjOvx6YDVfe2ULz8yG"
-            "r8Ba5Id8rRLjCXa_Ys8iHjvuniJyvsX0mDrc3IGSoofMEeeSCvYEe4iSWLeb_qTNV"
-            "NPc4IT2-SLB-F7dEvkwzyAFnEm9dVmApd4_lQLm9_wJoS-tz1Q1K8E1_jJSgpfGgw"
-            "HaINHICVh1UL_qHjIa3DwFvDPvt32tLLBZTL7oN88A8RCmg00ThIZs4HN7OQkvfni"
-            "nfOiM060Lb-AeNViCVgBX-bIPWZaeQ=="
+            "gAAAAABnoPQV82lnV1OlIXnOr9Nk-29VTzg6prP6o-bUEMu02wXImFLjKOZdbW9EA"
+            "YMgOXdk3FkGJTfIDXgstl26nYFQAhKOfhYnggpbXakudPA9szG9BsmEiHpWCxPjTJ"
+            "YR0IoCJhx84c3B06OxNnOjNFHkZKdiXnMwX3W90VSSTawffdxEIeh9vGUi51UM5z9"
+            "FZLWxqNBMMIN1X02nKn5IJWhOu8Pzx97LTPxEXnuKbKgrsDX2xFBfj1I3ZAX3Fw90"
+            "qXcojMymNZw9yrS2y6s7h4bmFXVU84x-YVtBRZb99rU-RXkIAhQ="
         ),
         FRACTAL_EMAIL_SETTINGS_KEY=(
-            "4otDt3R-8p4S97QT0gcUzynCalByypTv01YntqQ9XFk="
+            "8hUJTuN6h6DOqZ2_2n-oOkuHGeTSscK7bqn8GMUzWQU="
         ),
         FRACTAL_EMAIL_RECIPIENTS="test@example.org",
     )
