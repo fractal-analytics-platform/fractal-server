@@ -19,7 +19,7 @@ env:
   # with the SOURCE_VERSION of fractal-server.
   # Here we test the script that upgrades the DB from SOURCE_VERSION to the
   #current version.
-  SOURCE_VERSION: 2.9.0
+  SOURCE_VERSION: 2.11.0
   ROOTDIR: tests/data/testing_databases
 
 jobs:
@@ -64,8 +64,6 @@ jobs:
           poetry add setuptools # required for py3.12
 
       - name: Apply migration and fix-db script (postgres)
-        env:
-          FRACTAL_V27_DEFAULT_USER_EMAIL: admin@fractal.xy
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
@@ -101,10 +99,13 @@ jobs:
         run: |
           poetry install --no-interaction
 
+      # We only run `alembic downgrade` until the specific revision that drops
+      # V1 tables (rather than all the way to `base`), because that revision
+      # is breakingly non-reversible
       - name: Apply upgrade and downgrade
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
           cd fractal_server
           poetry run alembic history
           poetry run alembic upgrade head
-          poetry run alembic downgrade base
+          poetry run alembic downgrade 1eac13a26c83

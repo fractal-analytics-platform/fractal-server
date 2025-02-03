@@ -2,7 +2,6 @@ from datetime import datetime
 
 from devtools import debug
 
-from fractal_server.app.models import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -569,9 +568,6 @@ async def test_dataset_import(
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
         assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-        assert "filters" not in res_dataset.keys()
-        dataset = await db.get(DatasetV2, res_dataset["id"])
-        assert dataset.filters is None
 
         # SUCCESS, with legacy filters only
         payload = dict(
@@ -591,9 +587,6 @@ async def test_dataset_import(
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
         assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-        assert "filters" not in res_dataset.keys()
-        dataset = await db.get(DatasetV2, res_dataset["id"])
-        assert dataset.filters is None
 
         # SUCCESS, with no filters
         payload = dict(
@@ -609,9 +602,6 @@ async def test_dataset_import(
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == {}
         assert res_dataset["type_filters"] == {}
-        assert "filters" not in res_dataset.keys()
-        dataset = await db.get(DatasetV2, res_dataset["id"])
-        assert dataset.filters is None
 
         # SUCCESS, with filters=None and new filters
         payload = dict(
@@ -630,6 +620,3 @@ async def test_dataset_import(
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
         assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-        assert "filters" not in res_dataset.keys()
-        dataset = await db.get(DatasetV2, res_dataset["id"])
-        assert dataset.filters is None

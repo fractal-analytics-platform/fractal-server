@@ -4,8 +4,6 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models.security import UserOAuth
-from fractal_server.app.models.v1 import LinkUserProject
-from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
@@ -17,16 +15,6 @@ from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 PREFIX = "/api/v2"
-
-
-async def _project_list(user: UserOAuth, db):
-    stm = (
-        select(Project)
-        .join(LinkUserProject)
-        .where(LinkUserProject.user_id == user.id)
-    )
-    res = await db.execute(stm)
-    return res.scalars().unique().all()
 
 
 async def _project_list_v2(user: UserOAuth, db):
@@ -55,7 +43,6 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
             f"{PREFIX}/project/", json=dict(name="project")
         )
         assert res.status_code == 201
-        assert len(await _project_list(userA, db)) == 0
         assert len(await _project_list_v2(userA, db)) == 1
         other_project = res.json()
 
@@ -69,7 +56,6 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
             f"{PREFIX}/project/", json=dict(name="project")
         )
         assert res.status_code == 201
-        assert len(await _project_list(userB, db)) == 0
         assert len(await _project_list_v2(userB, db)) == 1
 
         # a user can't create two projectsV2 with the same name
@@ -78,14 +64,6 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
         )
         assert res.status_code == 422
         assert len((await _project_list_v2(userB, db))) == 1
-
-        # create two V1 Projects
-        for i in range(2):
-            res = await client.post(
-                "/api/v1/project/", json=dict(name=f"project_{i}_v1")
-            )
-        assert len(await _project_list(userB, db)) == 2
-        assert len(await _project_list_v2(userB, db)) == 1
 
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
