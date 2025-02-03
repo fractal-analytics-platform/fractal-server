@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 14.4
--- Dumped by pg_dump version 14.13 (Homebrew)
+-- Dumped by pg_dump version 14.15 (Homebrew)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -135,7 +135,9 @@ CREATE TABLE public.datasetv2 (
     timestamp_created timestamp with time zone NOT NULL,
     zarr_dir character varying NOT NULL,
     images json DEFAULT '[]'::json NOT NULL,
-    filters json DEFAULT '{"attributes": {}, "types": {}}'::json NOT NULL
+    filters json DEFAULT 'null'::json,
+    type_filters json DEFAULT '{}'::json NOT NULL,
+    attribute_filters json DEFAULT '{}'::json NOT NULL
 );
 
 
@@ -185,7 +187,8 @@ CREATE TABLE public.jobv2 (
     start_timestamp timestamp with time zone NOT NULL,
     end_timestamp timestamp with time zone,
     status character varying NOT NULL,
-    log character varying
+    log character varying,
+    attribute_filters json DEFAULT '{}'::json NOT NULL
 );
 
 
@@ -674,7 +677,6 @@ CREATE TABLE public.user_settings (
     ssh_tasks_dir character varying,
     ssh_jobs_dir character varying,
     slurm_user character varying,
-    cache_dir character varying,
     project_dir character varying
 );
 
@@ -825,9 +827,10 @@ CREATE TABLE public.workflowtaskv2 (
     meta_non_parallel json,
     args_parallel json,
     args_non_parallel json,
-    input_filters json DEFAULT '{"attributes": {}, "types": {}}'::json NOT NULL,
+    input_filters json DEFAULT 'null'::json,
     task_type character varying NOT NULL,
-    task_id integer NOT NULL
+    task_id integer NOT NULL,
+    type_filters json DEFAULT '{}'::json NOT NULL
 );
 
 
@@ -1036,7 +1039,7 @@ ALTER TABLE ONLY public.workflowv2 ALTER COLUMN id SET DEFAULT nextval('public.w
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-d256a7379ab8
+db09233ad13a
 \.
 
 
@@ -1204,8 +1207,8 @@ COPY public.dataset (meta, name, type, read_only, id, project_id, history, times
 -- Data for Name: datasetv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.datasetv2 (id, name, project_id, history, timestamp_created, zarr_dir, images, filters) FROM stdin;
-1	MyDataset	1	[{"workflowtask": {"id": 1, "workflow_id": 1, "order": 0, "is_legacy_task": false, "input_filters": {"attributes": {}, "types": {}}, "task_id": 1, "task": {"id": 1, "name": "Echo Task", "type": "compound", "command_non_parallel": "echo", "command_parallel": "echo", "source": "admin:echo-task", "owner": "admin", "version": null, "input_types": {}, "output_types": {}}, "task_legacy_id": null, "task_legacy": null}, "status": "done", "parallelization": {}}]	2024-04-24 12:54:44.017086+02	/invalid/zarr	[{"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000000", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000000", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000001", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000001", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000002", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000002", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000003", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000003", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000004", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000004", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000005", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000005", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000006", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000006", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000007", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000007", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000008", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000008", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000009", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000009", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}]	{"attributes": {}, "types": {}}
+COPY public.datasetv2 (id, name, project_id, history, timestamp_created, zarr_dir, images, filters, type_filters, attribute_filters) FROM stdin;
+1	MyDataset	1	[{"workflowtask": {"id": 1, "workflow_id": 1, "order": 0, "is_legacy_task": false, "task_id": 1, "task": {"id": 1, "name": "Echo Task", "type": "compound", "command_non_parallel": "echo", "command_parallel": "echo", "source": "admin:echo-task", "owner": "admin", "version": null, "input_types": {}, "output_types": {}}, "task_legacy_id": null, "task_legacy": null, "type_filters": {}}, "status": "done", "parallelization": {}}]	2024-04-24 12:54:44.017086+02	/invalid/zarr	[{"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000000", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000000", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000001", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000001", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000002", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000002", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000003", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000003", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000004", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000004", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000005", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000005", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000006", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000006", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000007", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000007", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000008", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000008", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}, {"zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000009", "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000009", "attributes": {"plate": "my-beautiful-plate.zarr", "well": "A99"}, "types": {"is_3D": true}}]	null	{}	{}
 \.
 
 
@@ -1213,8 +1216,8 @@ COPY public.datasetv2 (id, name, project_id, history, timestamp_created, zarr_di
 -- Data for Name: jobv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.jobv2 (id, project_id, workflow_id, dataset_id, user_email, slurm_account, dataset_dump, workflow_dump, project_dump, worker_init, working_dir, working_dir_user, first_task_index, last_task_index, start_timestamp, end_timestamp, status, log) FROM stdin;
-1	1	1	1	vanilla@example.org	\N	{"name": "MyDataset", "project_id": 1, "id": 1, "zarr_dir": "/invalid/zarr", "filters": {"attributes": {}, "types": {}}, "timestamp_created": "2024-04-24T10:54:44.017086+00:00"}	{"project_id": 1, "name": "MyWorkflow", "id": 1, "timestamp_created": "2024-04-24T10:54:44.034782+00:00"}	{"name": "MyProject_uv", "id": 1, "timestamp_created": "2024-04-24T10:54:43.995984+00:00"}	\N	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	0	0	2024-04-24 12:54:44.103821+02	2024-04-24 12:54:44.176501+02	done	2024-04-24 12:54:44,151 - WF1_job1 - INFO - Start execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - fractal_server.__VERSION__: 2.0.0a11\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - FRACTAL_RUNNER_BACKEND: local\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - slurm_user: vanilla-slurm\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - slurm_account: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - worker_init: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.id: 1\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir_user: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.first_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.last_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - START workflow "MyWorkflow"\n2024-04-24 12:54:44,154 - WF1_job1 - DEBUG - SUBMIT 0-th task (name="Echo Task")\n2024-04-24 12:54:44,168 - WF1_job1 - DEBUG - END    0-th task (name="Echo Task")\n2024-04-24 12:54:44,169 - WF1_job1 - INFO - End execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,169 - WF1_job1 - DEBUG - END workflow "MyWorkflow"\n
+COPY public.jobv2 (id, project_id, workflow_id, dataset_id, user_email, slurm_account, dataset_dump, workflow_dump, project_dump, worker_init, working_dir, working_dir_user, first_task_index, last_task_index, start_timestamp, end_timestamp, status, log, attribute_filters) FROM stdin;
+1	1	1	1	vanilla@example.org	\N	{"name": "MyDataset", "project_id": 1, "id": 1, "zarr_dir": "/invalid/zarr", "timestamp_created": "2024-04-24T10:54:44.017086+00:00", "type_filters": {}, "attribute_filters": {}}	{"project_id": 1, "name": "MyWorkflow", "id": 1, "timestamp_created": "2024-04-24T10:54:44.034782+00:00"}	{"name": "MyProject_uv", "id": 1, "timestamp_created": "2024-04-24T10:54:43.995984+00:00"}	\N	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	0	0	2024-04-24 12:54:44.103821+02	2024-04-24 12:54:44.176501+02	done	2024-04-24 12:54:44,151 - WF1_job1 - INFO - Start execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - fractal_server.__VERSION__: 2.0.0a11\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - FRACTAL_RUNNER_BACKEND: local\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - slurm_user: vanilla-slurm\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - slurm_account: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - worker_init: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.id: 1\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir_user: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.first_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.last_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - START workflow "MyWorkflow"\n2024-04-24 12:54:44,154 - WF1_job1 - DEBUG - SUBMIT 0-th task (name="Echo Task")\n2024-04-24 12:54:44,168 - WF1_job1 - DEBUG - END    0-th task (name="Echo Task")\n2024-04-24 12:54:44,169 - WF1_job1 - INFO - End execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,169 - WF1_job1 - DEBUG - END workflow "MyWorkflow"\n	{}
 \.
 
 
@@ -1599,11 +1602,11 @@ COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_
 -- Data for Name: user_settings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_settings (id, slurm_accounts, ssh_host, ssh_username, ssh_private_key_path, ssh_tasks_dir, ssh_jobs_dir, slurm_user, cache_dir, project_dir) FROM stdin;
-1	[]	\N	\N	\N	\N	\N	\N	/tmp/__REDACTED_CACHE_DIR__	\N
-2	[]	\N	\N	\N	\N	\N	__REDACTED_SLURM_USER_	/tmp/__REDACTED_CACHE_DIR__	\N
-3	[]	\N	\N	\N	\N	\N	slurm	\N	\N
-4	[]	\N	\N	\N	\N	\N	vanilla-slurm	\N	\N
+COPY public.user_settings (id, slurm_accounts, ssh_host, ssh_username, ssh_private_key_path, ssh_tasks_dir, ssh_jobs_dir, slurm_user, project_dir) FROM stdin;
+1	[]	\N	\N	\N	\N	\N	\N	\N
+2	[]	\N	\N	\N	\N	\N	__REDACTED_SLURM_USER_	\N
+3	[]	\N	\N	\N	\N	\N	slurm	\N
+4	[]	\N	\N	\N	\N	\N	vanilla-slurm	\N
 \.
 
 
@@ -1913,8 +1916,8 @@ COPY public.workflowtask (meta, args, id, workflow_id, task_id, "order") FROM st
 -- Data for Name: workflowtaskv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.workflowtaskv2 (id, workflow_id, "order", meta_parallel, meta_non_parallel, args_parallel, args_non_parallel, input_filters, task_type, task_id) FROM stdin;
-1	1	0	null	null	null	null	{"attributes": {}, "types": {}}	compound	1
+COPY public.workflowtaskv2 (id, workflow_id, "order", meta_parallel, meta_non_parallel, args_parallel, args_non_parallel, input_filters, task_type, task_id, type_filters) FROM stdin;
+1	1	0	null	null	null	null	null	compound	1	{}
 \.
 
 
