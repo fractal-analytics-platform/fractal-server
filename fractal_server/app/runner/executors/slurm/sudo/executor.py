@@ -10,6 +10,7 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import json
 import math
 import shlex
 import subprocess  # nosec
@@ -258,6 +259,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.slurm_account = slurm_account
 
         self.common_script_lines = common_script_lines or []
+
+        try:
+            self.check_runner_node_python_interpreter()
+        except ValueError as e:
+            self._stop_and_join_wait_thread()
+            raise RuntimeError(f"Original error {str(e)}")
 
         # Check that SLURM account is not set here
         try:
@@ -1247,3 +1254,29 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         self._stop_and_join_wait_thread()
         logger.debug("[FractalSlurmExecutor.__exit__] End")
+
+    def check_runner_node_python_interpreter(self):
+        """
+        Check fractal version on the runner's node
+        """
+        settings = Inject(get_settings)
+        output = _subprocess_run_or_raise(
+            (
+                f"{settings.FRACTAL_SLURM_WORKER_PYTHON} "
+                "-m fractal_server.app.runner.versions"
+            )
+        )
+        runner_version = json.loads(output.stdout.strip("\n"))[
+            "fractal_server"
+        ]
+
+        if runner_version != __VERSION__:
+            error_msg = (
+                "Fractal-server version mismatch.\n"
+                "Local interpreter: "
+                f"({sys.executable}): {__VERSION__}.\n"
+                "Remote interpreter: "
+                f"({settings.FRACTAL_SLURM_WORKER_PYTHON}): {runner_version}."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
