@@ -63,51 +63,15 @@ update_db_data_parser = subparsers.add_parser(
     description="Apply data-migration script to an existing database.",
 )
 
-# fractalctl email-settings
-email_settings_parser = subparsers.add_parser(
-    "email-settings",
-    description=(
-        "Generate valid values for environment variables "
-        "`FRACTAL_EMAIL_SETTINGS` and `FRACTAL_EMAIL_SETTINGS_KEY`."
-    ),
-)
-email_settings_parser.add_argument(
-    "sender",
-    type=str,
-    help="Email of the sender",
-)
-email_settings_parser.add_argument(
-    "server",
-    type=str,
-    help="SMPT server used to send emails",
-)
-email_settings_parser.add_argument(
-    "port",
-    type=int,
-    help="Port of the SMPT server",
-)
-email_settings_parser.add_argument(
-    "instance",
-    type=str,
-    help="Name of the Fractal instance sending emails",
-)
-email_settings_parser.add_argument(
-    "--skip-starttls",
-    action="store_true",
-    default=False,
-    help="If set, skip the execution of `starttls` when sending emails",
-)
-email_settings_parser.add_argument(
-    "--use-login",
-    action="store_true",
-    default=True,
-    help="TBD",
+# fractalctl encrypt-email-password
+encrypt_email_password_parser = subparsers.add_parser(
+    "encrypt-email-password",
+    description="TBD",
 )
 
 
 def save_openapi(dest="openapi.json"):
     from fractal_server.main import start_application
-    import json
 
     app = start_application()
     openapi_schema = app.openapi()
@@ -230,33 +194,15 @@ def update_db_data():
     current_update_db_data_module.fix_db()
 
 
-def print_mail_settings(
-    sender: str,
-    server: str,
-    port: int,
-    instance: str,
-    skip_starttls: bool,
-    use_login: bool,
-):
+def print_encrypted_password():
     from cryptography.fernet import Fernet
 
-    password = input(f"Insert email password for sender '{sender}': ")
+    password = input("Insert email password: ").encode("utf-8")
     key = Fernet.generate_key().decode("utf-8")
-    fractal_mail_settings = json.dumps(
-        dict(
-            sender=sender,
-            password=password,
-            smtp_server=server,
-            port=port,
-            instance_name=instance,
-            use_starttls=(not skip_starttls),
-            use_login=use_login,
-        )
-    ).encode("utf-8")
-    email_settings = Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
+    encrypted_password = Fernet(key).encrypt(password).decode("utf-8")
 
-    print(f"\nFRACTAL_EMAIL_SETTINGS: {email_settings}")
-    print(f"FRACTAL_EMAIL_SETTINGS_KEY: {key}")
+    print(f"\nFRACTAL_EMAIL_PASSWORD: {encrypted_password}")
+    print(f"FRACTAL_EMAIL_PASSWORD_KEY: {key}")
 
 
 def run():
@@ -275,15 +221,8 @@ def run():
             port=args.port,
             reload=args.reload,
         )
-    elif args.cmd == "email-settings":
-        print_mail_settings(
-            sender=args.sender,
-            server=args.server,
-            port=args.port,
-            instance=args.instance,
-            skip_starttls=args.skip_starttls,
-            use_login=args.use_login,
-        )
+    elif args.cmd == "encrypt-email-password":
+        print_encrypted_password()
     else:
         sys.exit(f"Error: invalid command '{args.cmd}'.")
 
