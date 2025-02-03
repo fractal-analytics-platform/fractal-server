@@ -104,7 +104,6 @@ async def test_failing_workflow_UnknownError_local(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    task_factory,
     monkeypatch,
     override_settings_factory,
 ):
@@ -124,7 +123,6 @@ async def test_failing_workflow_UnknownError_local(
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
-        task_factory=task_factory,
         task_factory_v2=task_factory_v2,
     )
 
