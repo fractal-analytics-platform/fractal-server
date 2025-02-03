@@ -26,7 +26,7 @@ async def test_submit_job_failures_non_verified_user(
 ):
     """
     Test that non-verified users are not authorized to make calls
-    to `/api/v1/project/123/workflow/123/apply/`.
+    to `/api/v2/project/123/workflow/123/apply/`.
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
         res = await client.post(

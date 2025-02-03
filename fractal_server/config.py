@@ -340,7 +340,7 @@ class Settings(BaseSettings):
 
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 50
     """
-    Number of ids that can be stored in the `jobsV1` and `jobsV2` attributes of
+    Number of ids that can be stored in the `jobsV2` attribute of
     `app.state`.
     """
 
@@ -498,26 +498,12 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
-    FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
-    """
-    Interval to wait (in seconds) to be allowed to call again
-    `POST api/v1/{project_id}/workflow/{workflow_id}/apply/`
-    with the same path and query parameters.
-    """
-
     FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE: str = (
         "Copy OME-Zarr structure;Convert Metadata Components from 2D to 3D"
     )
     """
     `;`-separated list of names for task that require the `metadata["image"]`
     attribute in their input-arguments JSON file.
-    """
-
-    FRACTAL_API_V1_MODE: Literal[
-        "include", "include_read_only", "exclude"
-    ] = "include"
-    """
-    Whether to include the v1 API.
     """
 
     FRACTAL_PIP_CACHE_DIR: Optional[str] = None
