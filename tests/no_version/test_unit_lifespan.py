@@ -6,11 +6,7 @@ from sqlmodel import select
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.security import UserOAuth
-from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v2.job import JobV2
-from fractal_server.app.routes.api.v1._aux_functions import (
-    _workflow_insert_task as _workflow_insert_task_v1,
-)
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v2,
 )
@@ -32,11 +28,6 @@ async def test_app_with_lifespan(
     workflow_factory_v2,
     dataset_factory_v2,
     job_factory_v2,
-    project_factory,
-    workflow_factory,
-    dataset_factory,
-    job_factory,
-    task_factory,
     tmp_path,
 ):
     monkeypatch.setattr(
@@ -68,7 +59,6 @@ async def test_app_with_lifespan(
 
     async with lifespan(app):
         # verify shutdown
-        assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
 
         task = await task_factory_v2(
@@ -93,23 +83,6 @@ async def test_app_with_lifespan(
         # append submitted job to jobsV2 status
         app.state.jobsV2.append(jobv2.id)
 
-        # create jobv1
-        projectv1 = await project_factory(user)
-        workflowv1 = await workflow_factory(project_id=projectv1.id)
-        taskv1 = await task_factory(name="task", source="task_source")
-        await _workflow_insert_task_v1(
-            workflow_id=workflowv1.id, task_id=taskv1.id, db=db
-        )
-        datasetv1 = await dataset_factory(project_id=projectv1.id)
-        jobv1 = await job_factory(
-            working_dir=tmp_path.as_posix(),
-            project_id=project.id,
-            input_dataset_id=datasetv1.id,
-            output_dataset_id=datasetv1.id,
-            workflow_id=workflow.id,
-        )
-        # append submitted job to jobsV2 status
-        app.state.jobsV1.append(jobv1.id)
         # we need to close the db session to get
         # updated data from db
         await db.close()
@@ -119,15 +92,9 @@ async def test_app_with_lifespan(
     jobv2_after = (
         await db.execute(select(JobV2).where(JobV2.id == jobv2.id))
     ).scalar_one_or_none()
-    jobv1_after = (
-        await db.execute(
-            select(ApplyWorkflow).where(ApplyWorkflow.id == jobv1.id)
-        )
-    ).scalar_one_or_none()
+
     assert jobv2_after.status == "failed"
-    assert jobv1_after.status == "failed"
     assert jobv2_after.log == "\nJob stopped due to app shutdown\n"
-    assert jobv1_after.log == "\nJob stopped due to app shutdown\n"
 
 
 async def test_lifespan_shutdown_empty_jobs_list(
@@ -166,9 +133,7 @@ async def test_lifespan_shutdown_raise_error(
 
     # mock function to trigger except
 
-    async def raise_error(
-        *, jobsV1: list[int], jobsV2: list[int], logger_name: str
-    ):
+    async def raise_error(*, jobsV2: list[int], logger_name: str):
         raise ValueError("ERROR")
 
     monkeypatch.setattr(
@@ -209,7 +174,6 @@ async def test_lifespan_slurm_ssh(
     )
     app = FastAPI()
     async with lifespan(app):
-        assert len(app.state.jobsV1) == 0
         assert len(app.state.jobsV2) == 0
         assert isinstance(app.state.fractal_ssh_list, FractalSSHList)
         assert app.state.fractal_ssh_list.size == 0
