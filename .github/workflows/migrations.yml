@@ -99,7 +99,9 @@ jobs:
         run: |
           poetry install --no-interaction
 
-      # FIXME: ADD COMMENT
+      # We only run `alembic downgrade` until the specific revision that drops
+      # V1 tables (rather than all the way to `base`), because that revision
+      # is breakingly non-reversible
       - name: Apply upgrade and downgrade
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env

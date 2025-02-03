@@ -53,7 +53,9 @@ async def set_test_db(tmp_path):
     # Apply migrations on reverse until database is dropped, in order to
     # keep tests stateless:
     # https://alembic.sqlalchemy.org/en/latest/tutorial.html#downgrading
-    # FIXME: ADD COMMENT
+    # NOTE: We only run `alembic downgrade` until the specific revision that
+    # drops V1 tables (rather than all the way to `base`), because that
+    # revision is breakingly non-reversible
     cmd = "poetry run alembic downgrade 1eac13a26c83"
     res = subprocess.run(
         shlex.split(cmd),
