@@ -5,32 +5,6 @@
     <title>Coverage for fractal_server/tasks/v2/utils_python_interpreter.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script type="text/javascript">
-        contexts = {
-  "a": "(empty)",
-  "b": "test_unit_python_interpreter.test_get_python_interpreter_v2",
-  "c": "test_api_task_collection.test_contact_an_admin_message",
-  "d": "test_api_task_collection.test_task_collection_failure_due_to_existing_path",
-  "e": "test_api_task_collection.test_task_collection_from_pypi",
-  "f": "test_api_task_collection.test_task_collection_from_pypi_api_only",
-  "g": "test_api_task_collection.test_task_collection_from_wheel_non_canonical",
-  "h": "test_api_task_collection_failures.test_failure_cleanup",
-  "i": "test_api_task_collection_failures.test_folder_already_exists",
-  "j": "test_api_task_collection_failures.test_invalid_python_version",
-  "k": "test_api_task_collection_failures.test_wheel_collection_failures",
-  "l": "test_api_task_collection_ssh.test_task_collection_ssh_failure",
-  "m": "test_api_task_collection_ssh.test_task_collection_ssh_failure_no_connection",
-  "n": "test_api_task_collection_ssh.test_task_collection_ssh_from_pypi",
-  "o": "test_api_task_lifecycle.test_lifecycle",
-  "p": "test_collect_local.test_bad_wheel_file_arguments",
-  "q": "test_collect_local.test_collect_pip_local_fail_rmtree",
-  "r": "test_collect_local.test_invalid_wheel",
-  "s": "test_deactivate_local.test_deactivate_wheel_package_created_before_2_9_0",
-  "t": "test_deactivate_ssh.test_deactivate_wheel_package_created_before_2_9_0",
-  "u": "test_reactivate_local.test_reactivate_local_fail",
-  "v": "test_reactivate_ssh.test_reactivate_ssh_fail"
-}
-    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -93,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_dc3b34c4bcecf82d_utils_templates_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -108,13 +82,13 @@
     </div>
 </header>
 <main id="source">
-    <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Literal</span>&nbsp;</span><span class="r"><label for="ctxs1" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Literal</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"><label for="ctxs3" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"><label for="ctxs4" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">def</span> <span class="nam">get_python_interpreter_v2</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs7" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">def</span> <span class="nam">get_python_interpreter_v2</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t">    <span class="nam">python_version</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">"3.9"</span><span class="op">,</span> <span class="str">"3.10"</span><span class="op">,</span> <span class="str">"3.11"</span><span class="op">,</span> <span class="str">"3.12"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -131,16 +105,16 @@
     <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="str">        interpreter: string representing the python executable or its path</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="key">if</span> <span class="nam">python_version</span> <span class="key">not</span> <span class="key">in</span> <span class="op">[</span><span class="str">"3.9"</span><span class="op">,</span> <span class="str">"3.10"</span><span class="op">,</span> <span class="str">"3.11"</span><span class="op">,</span> <span class="str">"3.12"</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs24"><span class="r"><label for="ctxs24" class="ctx">22 ctx</label></span><span class="ctxs">1acdefghijklmnopqrstuvb</span></p>
-    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Invalid </span><span class="op">{</span><span class="nam">python_version</span><span class="op">=</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs25"><span class="r"><label for="ctxs25" class="ctx">1 ctx</label></span><span class="ctxs">1b</span></p>
+    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="key">if</span> <span class="nam">python_version</span> <span class="key">not</span> <span class="key">in</span> <span class="op">[</span><span class="str">"3.9"</span><span class="op">,</span> <span class="str">"3.10"</span><span class="op">,</span> <span class="str">"3.11"</span><span class="op">,</span> <span class="str">"3.12"</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Invalid </span><span class="op">{</span><span class="nam">python_version</span><span class="op">=</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">settings</span> <span class="op">=</span> <span class="nam">Inject</span><span class="op">(</span><span class="nam">get_settings</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs27"><span class="r"><label for="ctxs27" class="ctx">22 ctx</label></span><span class="ctxs">1acdefghijklmnopqrstuvb</span></p>
-    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">    <span class="nam">version_underscore</span> <span class="op">=</span> <span class="nam">python_version</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">"."</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs28"><span class="r"><label for="ctxs28" class="ctx">22 ctx</label></span><span class="ctxs">1acdefghijklmnopqrstuvb</span></p>
-    <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">key</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">FRACTAL_TASKS_PYTHON_</span><span class="op">{</span><span class="nam">version_underscore</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><input type="checkbox" id="ctxs29"><span class="r"><label for="ctxs29" class="ctx">22 ctx</label></span><span class="ctxs">1acdefghijklmnopqrstuvb</span></p>
-    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">value</span> <span class="op">=</span> <span class="nam">getattr</span><span class="op">(</span><span class="nam">settings</span><span class="op">,</span> <span class="nam">key</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs30"><span class="r"><label for="ctxs30" class="ctx">22 ctx</label></span><span class="ctxs">1acdefghijklmnopqrstuvb</span></p>
-    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">if</span> <span class="nam">value</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs31"><span class="r"><label for="ctxs31" class="ctx">22 ctx</label></span><span class="ctxs">1acdefghijklmnopqrstuvb</span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Requested </span><span class="op">{</span><span class="nam">python_version</span><span class="op">=</span><span class="op">}</span><span class="fst">, but </span><span class="op">{</span><span class="nam">key</span><span class="op">}</span><span class="fst">=</span><span class="op">{</span><span class="nam">value</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs32"><span class="r"><label for="ctxs32" class="ctx">2 ctx</label></span><span class="ctxs">1jb</span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="key">return</span> <span class="nam">value</span>&nbsp;</span><input type="checkbox" id="ctxs33"><span class="r"><label for="ctxs33" class="ctx">21 ctx</label></span><span class="ctxs">1acdefghiklmnopqrstuvb</span></p>
+    <p class="run"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">settings</span> <span class="op">=</span> <span class="nam">Inject</span><span class="op">(</span><span class="nam">get_settings</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">    <span class="nam">version_underscore</span> <span class="op">=</span> <span class="nam">python_version</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">"."</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">key</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">FRACTAL_TASKS_PYTHON_</span><span class="op">{</span><span class="nam">version_underscore</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">value</span> <span class="op">=</span> <span class="nam">getattr</span><span class="op">(</span><span class="nam">settings</span><span class="op">,</span> <span class="nam">key</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">if</span> <span class="nam">value</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Requested </span><span class="op">{</span><span class="nam">python_version</span><span class="op">=</span><span class="op">}</span><span class="fst">, but </span><span class="op">{</span><span class="nam">key</span><span class="op">}</span><span class="fst">=</span><span class="op">{</span><span class="nam">value</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="key">return</span> <span class="nam">value</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -150,7 +124,7 @@
             <a class="nav" href="z_dc3b34c4bcecf82d_utils_templates_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
     </div>
 </footer>

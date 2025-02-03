@@ -5,29 +5,6 @@
     <title>Coverage for fractal_server/app/routes/aux/__init__.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script type="text/javascript">
-        contexts = {
-  "a": "(empty)",
-  "b": "test_admin_api.test_view_dataset",
-  "c": "test_admin_api.test_view_job",
-  "d": "test_admin_api.test_view_workflow",
-  "e": "test_admin_job.test_view_job",
-  "f": "test_admin_api.test_view_project",
-  "g": "test_admin_taskgroup.test_get_task_group_activity",
-  "h": "test_admin_taskgroup.test_task_group_admin",
-  "i": "test_api_dataset.test_get_dataset",
-  "j": "test_api_project.test_post_and_get_project",
-  "k": "test_api_task_group.test_get_task_group_activity_list",
-  "l": "test_api_workflow.test_get_workflow",
-  "m": "test_dataset_api.test_get_dataset",
-  "n": "test_job_api.test_get_job_list",
-  "o": "test_project_api.test_get_project",
-  "p": "test_workflow_api.test_get_workflow",
-  "q": "test_admin_api.test_unauthorized_to_admin",
-  "r": "test_admin_others.test_unauthorized_to_admin",
-  "s": "test_api_project.test_delete_project"
-}
-    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -90,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_7571860ffc6ddefd__job_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -105,23 +82,23 @@
     </div>
 </header>
 <main id="source">
-    <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"><label for="ctxs1" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"><label for="ctxs2" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">fastapi</span> <span class="key">import</span> <span class="nam">HTTPException</span>&nbsp;</span><span class="r"><label for="ctxs4" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">fastapi</span> <span class="key">import</span> <span class="nam">status</span>&nbsp;</span><span class="r"><label for="ctxs5" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">fastapi</span> <span class="key">import</span> <span class="nam">HTTPException</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">fastapi</span> <span class="key">import</span> <span class="nam">status</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">def</span> <span class="nam">_raise_if_naive_datetime</span><span class="op">(</span><span class="op">*</span><span class="nam">timestamps</span><span class="op">:</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">Optional</span><span class="op">[</span><span class="nam">datetime</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs8" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">def</span> <span class="nam">_raise_if_naive_datetime</span><span class="op">(</span><span class="op">*</span><span class="nam">timestamps</span><span class="op">:</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">Optional</span><span class="op">[</span><span class="nam">datetime</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="str">    Raise 422 if any not-null argument is a naive `datetime` object:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="str">    https://docs.python.org/3/library/datetime.html#determining-if-an-object-is-aware-or-naive</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">    <span class="key">for</span> <span class="nam">timestamp</span> <span class="key">in</span> <span class="nam">filter</span><span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="nam">timestamps</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs13"><span class="r"><label for="ctxs13" class="ctx">18 ctx</label></span><span class="ctxs">1qbcfderghisjklmnop</span></p>
-    <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">        <span class="key">if</span> <span class="op">(</span><span class="nam">timestamp</span><span class="op">.</span><span class="nam">tzinfo</span> <span class="key">is</span> <span class="key">None</span><span class="op">)</span> <span class="key">or</span> <span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs14"><span class="r"><label for="ctxs14" class="ctx">15 ctx</label></span><span class="ctxs">1bcfdeghijklmnop</span></p>
+    <p class="run"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">    <span class="key">for</span> <span class="nam">timestamp</span> <span class="key">in</span> <span class="nam">filter</span><span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="nam">timestamps</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">        <span class="key">if</span> <span class="op">(</span><span class="nam">timestamp</span><span class="op">.</span><span class="nam">tzinfo</span> <span class="key">is</span> <span class="key">None</span><span class="op">)</span> <span class="key">or</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">            <span class="nam">timestamp</span><span class="op">.</span><span class="nam">tzinfo</span><span class="op">.</span><span class="nam">utcoffset</span><span class="op">(</span><span class="nam">timestamp</span><span class="op">)</span> <span class="key">is</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">            <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs17"><span class="r"><label for="ctxs17" class="ctx">4 ctx</label></span><span class="ctxs">1bcde</span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">            <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">                <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">                <span class="nam">detail</span><span class="op">=</span><span class="fst">f"</span><span class="op">{</span><span class="nam">timestamp</span><span class="op">=</span><span class="op">}</span><span class="fst"> is naive. You must provide a timezone.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -134,7 +111,7 @@
             <a class="nav" href="z_7571860ffc6ddefd__job_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
     </div>
 </footer>

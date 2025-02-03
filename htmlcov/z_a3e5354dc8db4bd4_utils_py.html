@@ -5,352 +5,6 @@
     <title>Coverage for fractal_server/utils.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script type="text/javascript">
-        contexts = {
-  "a": "(empty)",
-  "b": "test_collect_local.test_invalid_wheel",
-  "c": "test_reactivate_local.test_reactivate_local_fail",
-  "d": "test_unit_bash_scripts.test_template_2",
-  "e": "test_unit_bash_scripts.test_template_4_missing_manifest",
-  "f": "test_collect_local.test_bad_wheel_file_arguments",
-  "g": "test_collect_local.test_collect_pip_local_fail_rmtree",
-  "h": "test_deactivate_local.test_deactivate_wheel_package_created_before_2_9_0",
-  "i": "test_unit_bash_scripts.test_template_1",
-  "j": "test_unit_bash_scripts.test_templates_freeze",
-  "k": "test_unit_bash_scripts.test_venv_size_and_file_number",
-  "l": "test_background_operations.test_logs_failed_collection",
-  "m": "test_task_collection_api.test_collect_validation_error",
-  "n": "test_task_collection_api.test_collection",
-  "o": "test_task_collection_api.test_collection_local_package_with_extras",
-  "p": "test_task_collection_api.test_collection_with_json_schemas",
-  "q": "test_task_collection_api.test_failed_collection_existing_db_tasks",
-  "r": "test_task_collection_api.test_failed_collection_missing_task_file",
-  "s": "test_task_collection_api.test_logs",
-  "t": "test_background_operations.test_pip_install_pinned",
-  "u": "test_background_operations.test_download",
-  "v": "test_background_operations.test_init_venv",
-  "w": "test_background_operations.test_pip_install",
-  "x": "test_background_operations.test_unit_create_venv_install_package",
-  "y": "test_endpoint_operations.test_inspect_package",
-  "z": "test_unit_utils.test_execute_command",
-  "A": "test_unit_utils.test_execute_command_fail",
-  "B": "test_admin_api.test_download_job_logs",
-  "C": "test_admin_api.test_patch_job",
-  "D": "test_admin_api.test_stop_job",
-  "E": "test_admin_api.test_unauthorized_to_admin",
-  "F": "test_admin_api.test_view_dataset",
-  "G": "test_admin_api.test_view_job",
-  "H": "test_admin_api.test_view_project",
-  "I": "test_admin_api.test_view_single_job",
-  "J": "test_admin_api.test_view_workflow",
-  "K": "test_admin_job.test_download_job_logs",
-  "L": "test_admin_job.test_patch_job",
-  "M": "test_admin_job.test_stop_job",
-  "N": "test_admin_job.test_view_job",
-  "O": "test_admin_job.test_view_single_job",
-  "P": "test_admin_others.test_task_query",
-  "Q": "test_admin_others.test_unauthorized_to_admin",
-  "R": "test_admin_others.test_view_project",
-  "S": "test_admin_taskgroup.test_admin_deactivate_task_group_api",
-  "T": "test_admin_taskgroup.test_get_task_group_activity",
-  "U": "test_admin_taskgroup.test_lifecycle_actions_with_submitted_jobs",
-  "V": "test_admin_taskgroup.test_reactivate_task_group_api",
-  "W": "test_admin_taskgroup.test_task_group_admin",
-  "X": "test_alive.test_settings_endpoint",
-  "Y": "test_api_current_user.test_get_current_user_allowed_viewer_paths",
-  "Z": "test_api_current_user.test_get_current_user_group_ids_names_order",
-  "0": "test_api_dataset.test_dataset_import",
-  "1": "test_api_dataset.test_delete_dataset",
-  "2": "test_api_dataset.test_delete_dataset_cascade_jobs",
-  "3": "test_api_dataset.test_get_dataset",
-  "4": "test_api_dataset.test_get_user_datasets",
-  "5": "test_api_dataset.test_new_dataset_v2",
-  "6": "test_api_dataset.test_patch_dataset",
-  "7": "test_api_dataset.test_post_dataset",
-  "8": "test_api_dataset_images.test_delete_images",
-  "9": "test_api_dataset_images.test_patch_images",
-  "!": "test_api_dataset_images.test_post_new_image",
-  "#": "test_api_dataset_images.test_query_images",
-  "$": "test_api_job.test_get_jobs",
-  "%": "test_api_job.test_project_apply_missing_user_attributes",
-  "'": "test_api_job.test_project_apply_slurm_account",
-  "(": "test_api_job.test_project_apply_workflow_subset",
-  ")": "test_api_job.test_stop_job",
-  "*": "test_api_job.test_submit_incompatible_filters",
-  "+": "test_api_job.test_submit_job_failures",
-  ",": "test_api_job.test_submit_job_failures_non_verified_user",
-  "-": "test_api_job.test_submit_jobs_with_same_dataset",
-  ".": "test_api_job.test_update_timestamp_taskgroup",
-  "/": "test_api_project.test_delete_project",
-  ":": "test_api_project.test_delete_project_ongoing_jobs",
-  ";": "test_api_project.test_patch_project",
-  "=": "test_api_project.test_patch_project_name_constraint",
-  "?": "test_api_project.test_post_and_get_project",
-  "@": "test_api_project.test_post_project",
-  "[": "test_api_project.test_post_project_name_constraint",
-  "]": "test_api_status.test_status_no_history_no_running_job",
-  "^": "test_api_status.test_status_yes_history_no_running_job",
-  "_": "test_api_status.test_status_yes_history_yes_running_job",
-  "`": "test_api_status.test_workflowtask_status_modified_workflow",
-  "{": "test_api_status.test_workflowtask_status_two_jobs",
-  "|": "test_api_task.test_delete_task",
-  "}": "test_api_task.test_get_task",
-  "~": "test_api_task.test_non_verified_user",
-  "ab": "test_api_task.test_patch_task",
-  "bb": "test_api_task.test_patch_task_auth",
-  "cb": "test_api_task.test_post_task",
-  "db": "test_api_task.test_post_task_user_group_id",
-  "eb": "test_api_task.test_task_get_list",
-  "fb": "test_api_task_collection.test_contact_an_admin_message",
-  "gb": "test_api_task_collection.test_task_collection_failure_due_to_existing_path",
-  "hb": "test_api_task_collection.test_task_collection_from_pypi",
-  "ib": "test_api_task_collection.test_task_collection_from_pypi_api_only",
-  "jb": "test_api_task_collection.test_task_collection_from_wheel_non_canonical",
-  "kb": "test_api_task_collection_custom.test_task_collection_custom",
-  "lb": "test_api_task_collection_custom.test_task_collection_custom_fail_with_ssh",
-  "mb": "test_api_task_collection_failures.test_failure_cleanup",
-  "nb": "test_api_task_collection_failures.test_folder_already_exists",
-  "ob": "test_api_task_collection_failures.test_invalid_python_version",
-  "pb": "test_api_task_collection_failures.test_non_verified_user",
-  "qb": "test_api_task_collection_failures.test_wheel_collection_failures",
-  "rb": "test_api_task_collection_ssh.test_task_collection_ssh_failure",
-  "sb": "test_api_task_collection_ssh.test_task_collection_ssh_failure_no_connection",
-  "tb": "test_api_task_collection_ssh.test_task_collection_ssh_from_pypi",
-  "ub": "test_api_task_group.test_delete_task_group",
-  "vb": "test_api_task_group.test_delete_task_group_fail",
-  "wb": "test_api_task_group.test_get_single_task_group",
-  "xb": "test_api_task_group.test_get_single_task_group_activity",
-  "yb": "test_api_task_group.test_get_task_group_activity_list",
-  "zb": "test_api_task_group.test_get_task_group_list",
-  "Ab": "test_api_task_group.test_patch_task_group",
-  "Bb": "test_api_task_lifecycle.test_deactivate_task_group_api",
-  "Cb": "test_api_task_lifecycle.test_fail_due_to_ongoing_activities",
-  "Db": "test_api_task_lifecycle.test_lifecycle",
-  "Eb": "test_api_task_lifecycle.test_lifecycle_actions_with_submitted_jobs",
-  "Fb": "test_api_task_lifecycle.test_reactivate_task_group_api",
-  "Gb": "test_api_user_groups.test_create_user_group_same_name",
-  "Hb": "test_api_user_groups.test_get_user_optional_group_info",
-  "Ib": "test_api_user_groups.test_patch_user_settings_bulk",
-  "Jb": "test_api_user_groups.test_update_group",
-  "Kb": "test_api_user_groups.test_user_group_crud",
-  "Lb": "test_api_users.test_set_groups_endpoint",
-  "Mb": "test_api_workflow.test_delete_workflow",
-  "Nb": "test_api_workflow.test_delete_workflow_with_job",
-  "Ob": "test_api_workflow.test_get_project_workflows",
-  "Pb": "test_api_workflow.test_get_user_workflows",
-  "Qb": "test_api_workflow.test_get_workflow",
-  "Rb": "test_api_workflow.test_patch_workflow",
-  "Sb": "test_api_workflow.test_post_workflow",
-  "Tb": "test_api_workflow.test_workflow_type_filters_flow",
-  "Ub": "test_api_workflow_import_export.test_import_export",
-  "Vb": "test_api_workflow_import_export.test_import_filters_compatibility",
-  "Wb": "test_api_workflow_import_export.test_import_with_legacy_filters",
-  "Xb": "test_api_workflow_import_export.test_unit_disambiguate_task_groups",
-  "Yb": "test_api_workflow_import_export.test_unit_get_task_by_source",
-  "Zb": "test_api_workflow_import_export.test_unit_get_task_by_taskimport",
-  "0b": "test_api_workflow_task.test_delete_workflow_task",
-  "1b": "test_api_workflow_task.test_patch_workflow_task",
-  "2b": "test_api_workflow_task.test_patch_workflow_task_failures",
-  "3b": "test_api_workflow_task.test_patch_workflow_task_with_args_schema",
-  "4b": "test_api_workflow_task.test_post_worfkflow_task",
-  "5b": "test_api_workflow_task.test_post_worfkflow_task_failures",
-  "6b": "test_api_workflow_task.test_read_workflowtask",
-  "7b": "test_api_workflow_task.test_reorder_task_list",
-  "8b": "test_api_workflow_task.test_reorder_task_list_fail",
-  "9b": "test_api_workflow_task.test_replace_task_in_workflowtask",
-  "!b": "test_backend_runners.test_runner",
-  "#b": "test_background_task.test_mkdir_error",
-  "$b": "test_background_task.test_submit_workflow_failure",
-  "%b": "test_background_tasks.test_async_db",
-  "'b": "test_background_tasks.test_sync_db",
-  "(b": "test_collect_local.test_collect_pip_existing_file",
-  ")b": "test_dataset_api.test_delete_dataset",
-  "*b": "test_dataset_api.test_delete_dataset_cascade_jobs",
-  "+b": "test_dataset_api.test_delete_resource",
-  ",b": "test_dataset_api.test_get_dataset",
-  "-b": "test_dataset_api.test_get_resource",
-  ".b": "test_dataset_api.test_get_user_datasets",
-  "/b": "test_dataset_api.test_patch_dataset",
-  ":b": "test_dataset_api.test_patch_resource",
-  ";b": "test_dataset_api.test_patch_resource_failure",
-  "=b": "test_dataset_api.test_post_dataset",
-  "?b": "test_dataset_api.test_post_resource",
-  "@b": "test_dataset_api.test_post_resource_order",
-  "[b": "test_deactivate_local.test_deactivate_fail_no_venv_path",
-  "]b": "test_deactivate_local.test_deactivate_local_fail",
-  "^b": "test_deactivate_local.test_deactivate_local_github_dependency",
-  "_b": "test_deactivate_local.test_deactivate_wheel_no_wheel_path",
-  "`b": "test_deactivate_ssh.test_deactivate_fail_no_venv_path",
-  "{b": "test_deactivate_ssh.test_deactivate_ssh_fail",
-  "|b": "test_deactivate_ssh.test_deactivate_ssh_github_dependency",
-  "}b": "test_deactivate_ssh.test_deactivate_wheel_no_wheel_path",
-  "~b": "test_deactivate_ssh.test_deactivate_wheel_package_created_before_2_9_0",
-  "ac": "test_delete_user.test_delete_user",
-  "bc": "test_dummy_examples.test_default_inclusion_of_images",
-  "cc": "test_dummy_examples.test_dummy_insert_single_image",
-  "dc": "test_dummy_examples.test_dummy_insert_single_image_none_attribute",
-  "ec": "test_dummy_examples.test_dummy_insert_single_image_normalization",
-  "fc": "test_dummy_examples.test_dummy_remove_images",
-  "gc": "test_dummy_examples.test_dummy_unset_attribute",
-  "hc": "test_fixture_MockCurrentUser.test_MockCurrentUser_fixture",
-  "ic": "test_fractal_examples.test_channel_parallelization_no_overwrite",
-  "jc": "test_fractal_examples.test_channel_parallelization_with_overwrite",
-  "kc": "test_fractal_examples.test_fractal_demos_01",
-  "lc": "test_fractal_examples.test_fractal_demos_01_no_overwrite",
-  "mc": "test_fractal_examples.test_registration_no_overwrite",
-  "nc": "test_fractal_examples.test_registration_overwrite",
-  "oc": "test_full_workflow.test_failing_workflow_JobExecutionError_slurm",
-  "pc": "test_full_workflow.test_failing_workflow_TaskExecutionError",
-  "qc": "test_full_workflow.test_failing_workflow_UnknownError",
-  "rc": "test_full_workflow.test_full_workflow",
-  "sc": "test_full_workflow.test_metadiff",
-  "tc": "test_full_workflow.test_non_executable_task_command",
-  "uc": "test_full_workflow.test_non_python_task",
-  "vc": "test_full_workflow_local_experimental_v2.test_failing_workflow_UnknownError_local",
-  "wc": "test_full_workflow_local_experimental_v2.test_full_workflow_TaskExecutionError",
-  "xc": "test_full_workflow_local_experimental_v2.test_full_workflow_local",
-  "yc": "test_full_workflow_local_experimental_v2.test_non_executable_task_command_local",
-  "zc": "test_full_workflow_local_experimental_v2.test_non_python_task_local",
-  "Ac": "test_full_workflow_local_v2.test_failing_workflow_UnknownError_local",
-  "Bc": "test_full_workflow_local_v2.test_full_workflow_TaskExecutionError",
-  "Cc": "test_full_workflow_local_v2.test_full_workflow_local",
-  "Dc": "test_full_workflow_local_v2.test_non_executable_task_command_local",
-  "Ec": "test_full_workflow_local_v2.test_non_python_task_local",
-  "Fc": "test_full_workflow_slurm_ssh_v2.test_workflow_with_non_python_task_slurm_ssh",
-  "Gc": "test_full_workflow_slurm_ssh_v2.test_workflow_with_non_python_task_slurm_ssh_fail",
-  "Hc": "test_full_workflow_slurm_v2.test_failing_workflow_JobExecutionError",
-  "Ic": "test_full_workflow_slurm_v2.test_failing_workflow_UnknownError_slurm",
-  "Jc": "test_full_workflow_slurm_v2.test_full_workflow_TaskExecutionError_slurm",
-  "Kc": "test_full_workflow_slurm_v2.test_full_workflow_slurm",
-  "Lc": "test_full_workflow_slurm_v2.test_non_executable_task_command_slurm",
-  "Mc": "test_history_v1.test_assemble_history_failed_job_fail",
-  "Nc": "test_history_v1.test_export_history_as_workflow_fail",
-  "Oc": "test_history_v1.test_get_workflowtask_status",
-  "Pc": "test_history_v1.test_get_workflowtask_status_fail",
-  "Qc": "test_history_v1.test_get_workflowtask_status_simple",
-  "Rc": "test_history_v1.test_json_decode_error",
-  "Sc": "test_job_api.test_get_job",
-  "Tc": "test_job_api.test_get_job_list",
-  "Uc": "test_job_api.test_get_user_jobs",
-  "Vc": "test_job_api.test_job_download_logs",
-  "Wc": "test_job_api.test_job_list",
-  "Xc": "test_job_api.test_stop_job",
-  "Yc": "test_job_api.test_view_log_submitted_jobs",
-  "Zc": "test_link_project_user.test_project_user_link",
-  "0c": "test_local_experimental.test_indirect_shutdown_during_process_workflow",
-  "1c": "test_loss_of_access_to_task.test_loss_of_access_to_task",
-  "2c": "test_models_project.test_project_version_attribute",
-  "3c": "test_models_workflow.test_project_and_workflows",
-  "4c": "test_no_images_parallelization.test_parallelize_on_no_images",
-  "5c": "test_no_images_parallelization.test_parallelize_on_no_images_compound",
-  "6c": "test_project_api.test_delete_project",
-  "7c": "test_project_api.test_delete_project_ongoing_jobs",
-  "8c": "test_project_api.test_get_project",
-  "9c": "test_project_api.test_patch_project",
-  "!c": "test_project_api.test_patch_project_name_constraint",
-  "#c": "test_project_api.test_post_project",
-  "$c": "test_project_api.test_post_project_name_constraint",
-  "%c": "test_project_apply_api.test_project_apply_existing_job",
-  "'c": "test_project_apply_api.test_project_apply_failures",
-  "(c": "test_project_apply_api.test_project_apply_failures_non_verified_user",
-  ")c": "test_project_apply_api.test_project_apply_missing_resources",
-  "*c": "test_project_apply_api.test_project_apply_missing_user_attributes",
-  "+c": "test_project_apply_api.test_project_apply_slurm_account",
-  ",c": "test_project_apply_api.test_project_apply_workflow_subset",
-  "-c": "test_project_apply_api.test_rate_limit",
-  ".c": "test_reactivate_local.test_reactivate_local_venv_exists",
-  "/c": "test_reactivate_ssh.test_reactivate_ssh_fail",
-  ":c": "test_reactivate_ssh.test_reactivate_ssh_venv_exists",
-  ";c": "test_read_only_endpoints.test_read_only_enpoints",
-  "=c": "test_schemas_dataset.test_schemas_dataset_v2",
-  "?c": "test_schemas_workflow.test_schemas_workflow_v2",
-  "@c": "test_submission_job_list_v1.test_clean_app_job_list_v1",
-  "[c": "test_submission_job_list_v2.test_clean_app_job_list_v2",
-  "]c": "test_task_api.test_delete_task",
-  "^c": "test_task_api.test_get_task",
-  "_c": "test_task_api.test_non_verified_user",
-  "`c": "test_task_api.test_patch_args_schema",
-  "{c": "test_task_api.test_patch_task",
-  "|c": "test_task_api.test_patch_task_auth",
-  "}c": "test_task_api.test_patch_task_different_users",
-  "~c": "test_task_api.test_post_task",
-  "ad": "test_task_api.test_task_get_list",
-  "bd": "test_task_collection_api.test_collection_non_verified_user",
-  "cd": "test_task_collection_api.test_failed_collection_invalid_manifest",
-  "dd": "test_task_collection_api.test_failed_collection_missing_wheel_file",
-  "ed": "test_task_collection_api.test_failed_get_collection_info",
-  "fd": "test_tasks_v2.test_collection_state",
-  "gd": "test_tasks_v2.test_task_group_v2",
-  "hd": "test_unit_aux_functions.test_check_workflow_exists",
-  "id": "test_unit_aux_functions.test_get_dataset_check_owner",
-  "jd": "test_unit_aux_functions.test_get_job_check_owner",
-  "kd": "test_unit_aux_functions.test_get_project_check_owner",
-  "ld": "test_unit_aux_functions.test_get_workflow_check_owner",
-  "md": "test_unit_aux_functions.test_get_workflow_task_check_owner",
-  "nd": "test_unit_aux_functions_tasks.test_get_collection_task_group_activity_status_message",
-  "od": "test_unit_aux_functions_tasks.test_get_task",
-  "pd": "test_unit_aux_functions_tasks.test_get_task_require_active",
-  "qd": "test_unit_aux_functions_v1.test_check_workflow_exists",
-  "rd": "test_unit_aux_functions_v1.test_get_dataset_check_owner",
-  "sd": "test_unit_aux_functions_v1.test_get_job_check_owner",
-  "td": "test_unit_aux_functions_v1.test_get_project_check_owner",
-  "ud": "test_unit_aux_functions_v1.test_get_task_check_owner",
-  "vd": "test_unit_aux_functions_v1.test_get_workflow_check_owner",
-  "wd": "test_unit_aux_functions_v1.test_get_workflow_task_check_owner",
-  "xd": "test_unit_db_models.test_cascade_delete_workflow",
-  "yd": "test_unit_db_models.test_dataset_and_resources",
-  "zd": "test_unit_db_models.test_insert_task_with_meta_none",
-  "Ad": "test_unit_db_models.test_jobs",
-  "Bd": "test_unit_db_models.test_project_and_datasets",
-  "Cd": "test_unit_db_models.test_project_and_workflows",
-  "Dd": "test_unit_db_models.test_project_name_not_unique",
-  "Ed": "test_unit_db_models.test_project_relationships",
-  "Fd": "test_unit_db_models.test_projects",
-  "Gd": "test_unit_db_models.test_state_table",
-  "Hd": "test_unit_db_models.test_task_default_args_from_args_schema",
-  "Id": "test_unit_db_models.test_task_workflow_association",
-  "Jd": "test_unit_db_models.test_timestamp",
-  "Kd": "test_unit_db_models.test_workflow_insert_task_with_args_schema",
-  "Ld": "test_unit_db_models.test_workflows_tasks_and_workflowtasks",
-  "Md": "test_unit_lifespan.test_app_with_lifespan",
-  "Nd": "test_unit_mark_last_wftask_as_failed.test_unit_mark_last_wftask_as_failed",
-  "Od": "test_unit_pip_install_string.test_pinned_package_versions_string",
-  "Pd": "test_unit_pip_install_string.test_pip_install_string",
-  "Qd": "test_unit_schemas.test_apply_workflow_read",
-  "Rd": "test_unit_schemas.test_dataset_read",
-  "Sd": "test_unit_schemas.test_state_read",
-  "Td": "test_unit_schemas.test_workflow_read_empty_task_list",
-  "Ud": "test_unit_schemas.test_workflow_read_non_empty_task_list",
-  "Vd": "test_unit_schemas_no_version.test_user_group_read",
-  "Wd": "test_unit_security.test_unit_create_first_group",
-  "Xd": "test_unit_submit_workflow.test_fail_submit_workflows_wrong_IDs",
-  "Yd": "test_unit_submit_workflow.test_fail_submit_workflows_wrong_backend",
-  "Zd": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
-  "0d": "test_unit_submit_workflow_v1.test_fail_submit_workflows_wrong_IDs",
-  "1d": "test_unit_submit_workflow_v1.test_fail_submit_workflows_wrong_backend",
-  "2d": "test_unit_submit_workflow_v1.test_success_submit_workflows",
-  "3d": "test_unit_timezone.test_timezone_api",
-  "4d": "test_unit_utils.test_timestamp",
-  "5d": "test_workflow_api.test_delete_workflow",
-  "6d": "test_workflow_api.test_delete_workflow_task",
-  "7d": "test_workflow_api.test_delete_workflow_with_job",
-  "8d": "test_workflow_api.test_export_workflow_log",
-  "9d": "test_workflow_api.test_get_project_workflows",
-  "!d": "test_workflow_api.test_get_user_workflows",
-  "#d": "test_workflow_api.test_get_workflow",
-  "$d": "test_workflow_api.test_import_export_workflow",
-  "%d": "test_workflow_api.test_import_export_workflow_fail",
-  "'d": "test_workflow_api.test_patch_workflow",
-  "(d": "test_workflow_api.test_patch_workflow_task",
-  ")d": "test_workflow_api.test_patch_workflow_task_failures",
-  "*d": "test_workflow_api.test_patch_workflow_task_with_args_schema",
-  "+d": "test_workflow_api.test_post_worfkflow_task",
-  ",d": "test_workflow_api.test_post_workflow",
-  "-d": "test_workflow_api.test_read_workflowtask",
-  ".d": "test_workflow_api.test_reorder_task_list",
-  "/d": "test_workflow_api.test_reorder_task_list_fail"
-}
-    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -413,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_a3e5354dc8db4bd4_zip_tools_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -443,26 +97,26 @@
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="str">This module provides general purpose utilities that are not specific to any</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="str">subsystem.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">import</span> <span class="nam">asyncio</span>&nbsp;</span><span class="r"><label for="ctxs16" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">import</span> <span class="nam">shlex</span>&nbsp;</span><span class="r"><label for="ctxs17" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">import</span> <span class="nam">subprocess</span>  <span class="com"># nosec</span>&nbsp;</span><span class="r"><label for="ctxs18" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"><label for="ctxs19" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">timezone</span>&nbsp;</span><span class="r"><label for="ctxs20" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"><label for="ctxs21" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"><label for="ctxs22" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">import</span> <span class="nam">asyncio</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">import</span> <span class="nam">shlex</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">import</span> <span class="nam">subprocess</span>  <span class="com"># nosec</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">timezone</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">get_logger</span>&nbsp;</span><span class="r"><label for="ctxs24" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">string_tools</span> <span class="key">import</span> <span class="nam">validate_cmd</span>&nbsp;</span><span class="r"><label for="ctxs25" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">get_logger</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">string_tools</span> <span class="key">import</span> <span class="nam">validate_cmd</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">def</span> <span class="nam">get_timestamp</span><span class="op">(</span><span class="op">)</span> <span class="op">-></span> <span class="nam">datetime</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs28" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">def</span> <span class="nam">get_timestamp</span><span class="op">(</span><span class="op">)</span> <span class="op">-></span> <span class="nam">datetime</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="str">    Get timezone aware timestamp.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="key">return</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">now</span><span class="op">(</span><span class="nam">tz</span><span class="op">=</span><span class="nam">timezone</span><span class="op">.</span><span class="nam">utc</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs32"><span class="r"><label for="ctxs32" class="ctx">329 ctx</label></span><span class="ctxs">2a B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ ] ^ _ ` { | } ~ abbbcbdbebfbgbhbibjbkblbmbnbobpbqbrbsbtbubvbwbxbybzbAbBbCbDbEbFbGbHbIbJbKbLbMbNbObPbQbRbSbTbUbVbWbXbYbZb0b1b2b3b4b5b6b7b8b9b!bl #b$b%b'bf (bg b )b*b+b,b-b.b/b:b;b=b?b@b[b]b^b_bh `b{b|b}b~bacbcccdcecfcgchcicjckclcmcncocpcqcrcsctcucvcwcxcyczcAcBcCcDcEcFcGcHcIcJcKcLcMcNcOcPcQcRcScTcUcVcWcXcYcZc0c1c2c3c4c5c6c7c8c9c!c#c$c%c'c(c)c*c+c,c-cc .c/c:c;c=c?c@c[c]c^c_c`c{c|c}c~cadm n o bdp q cdr ddeds fdgdhdidjdkdldmdndodpdqdrdsdtdudvdwdxdydzdAdBdCdDdEdFdGdHdIdJdKdLdMdNdOdPdQdRdSdTdUdVdWdXdYdZd0d1d2d3d4d5d6d7d8d9d!d#d$d%d'd(d)d*d+d,d-d.d/d</span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="key">return</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">now</span><span class="op">(</span><span class="nam">tz</span><span class="op">=</span><span class="nam">timezone</span><span class="op">.</span><span class="nam">utc</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">execute_command_async</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs35" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">execute_command_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="nam">command</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="nam">cwd</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">Path</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -488,28 +142,28 @@
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="str">        RuntimeError: if the process exited with non-zero status. The error</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="str">            string is set to the `stderr` of the process.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="nam">command_split</span> <span class="op">=</span> <span class="nam">shlex</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs61"><span class="r"><label for="ctxs61" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">cmd</span><span class="op">,</span> <span class="op">*</span><span class="nam">args</span> <span class="op">=</span> <span class="nam">command_split</span>&nbsp;</span><input type="checkbox" id="ctxs62"><span class="r"><label for="ctxs62" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
+    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="nam">command_split</span> <span class="op">=</span> <span class="nam">shlex</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">cmd</span><span class="op">,</span> <span class="op">*</span><span class="nam">args</span> <span class="op">=</span> <span class="nam">command_split</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">get_logger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs64"><span class="r"><label for="ctxs64" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="nam">cwd_kwarg</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">(</span><span class="op">)</span> <span class="key">if</span> <span class="nam">cwd</span> <span class="key">is</span> <span class="key">None</span> <span class="key">else</span> <span class="nam">dict</span><span class="op">(</span><span class="nam">cwd</span><span class="op">=</span><span class="nam">cwd</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs65"><span class="r"><label for="ctxs65" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="nam">proc</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">asyncio</span><span class="op">.</span><span class="nam">create_subprocess_exec</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs66"><span class="r"><label for="ctxs66" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
+    <p class="run"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">get_logger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="nam">cwd_kwarg</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">(</span><span class="op">)</span> <span class="key">if</span> <span class="nam">cwd</span> <span class="key">is</span> <span class="key">None</span> <span class="key">else</span> <span class="nam">dict</span><span class="op">(</span><span class="nam">cwd</span><span class="op">=</span><span class="nam">cwd</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="nam">proc</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">asyncio</span><span class="op">.</span><span class="nam">create_subprocess_exec</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">        <span class="nam">cmd</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">        <span class="op">*</span><span class="nam">args</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">        <span class="nam">stdout</span><span class="op">=</span><span class="nam">asyncio</span><span class="op">.</span><span class="nam">subprocess</span><span class="op">.</span><span class="nam">PIPE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">        <span class="nam">stderr</span><span class="op">=</span><span class="nam">asyncio</span><span class="op">.</span><span class="nam">subprocess</span><span class="op">.</span><span class="nam">PIPE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">        <span class="op">**</span><span class="nam">cwd_kwarg</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="nam">stdout</span><span class="op">,</span> <span class="nam">stderr</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">proc</span><span class="op">.</span><span class="nam">communicate</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs73"><span class="r"><label for="ctxs73" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Subprocess call to: </span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs74"><span class="r"><label for="ctxs74" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stdout</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs75"><span class="r"><label for="ctxs75" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stderr</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs76"><span class="r"><label for="ctxs76" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="key">if</span> <span class="nam">proc</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">!=</span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs77"><span class="r"><label for="ctxs77" class="ctx">17 ctx</label></span><span class="ctxs">1auvlwtxymnopqrszA</span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="nam">stderr</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs78"><span class="r"><label for="ctxs78" class="ctx">3 ctx</label></span><span class="ctxs">1ltA</span></p>
-    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="key">return</span> <span class="nam">stdout</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs79"><span class="r"><label for="ctxs79" class="ctx">16 ctx</label></span><span class="ctxs">1auvlwtxymnopqrsz</span></p>
+    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="nam">stdout</span><span class="op">,</span> <span class="nam">stderr</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">proc</span><span class="op">.</span><span class="nam">communicate</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Subprocess call to: </span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stdout</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stderr</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="key">if</span> <span class="nam">proc</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">!=</span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="nam">stderr</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="key">return</span> <span class="nam">stdout</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t"><span class="key">def</span> <span class="nam">execute_command_sync</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs82" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t"><span class="key">def</span> <span class="nam">execute_command_sync</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">command</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">logger_name</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -526,20 +180,20 @@
     <p class="pln"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t"><span class="str">        logger_name: Name of the logger.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t"><span class="str">        allow_char: Argument propagated to `validate_cmd`.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">get_logger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs99"><span class="r"><label for="ctxs99" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">START subprocess call to '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs100"><span class="r"><label for="ctxs100" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">    <span class="nam">validate_cmd</span><span class="op">(</span><span class="nam">command</span><span class="op">=</span><span class="nam">command</span><span class="op">,</span> <span class="nam">allow_char</span><span class="op">=</span><span class="nam">allow_char</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs101"><span class="r"><label for="ctxs101" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">    <span class="nam">res</span> <span class="op">=</span> <span class="nam">subprocess</span><span class="op">.</span><span class="nam">run</span><span class="op">(</span>  <span class="com"># nosec</span>&nbsp;</span><input type="checkbox" id="ctxs102"><span class="r"><label for="ctxs102" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
+    <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">get_logger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">START subprocess call to '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">    <span class="nam">validate_cmd</span><span class="op">(</span><span class="nam">command</span><span class="op">=</span><span class="nam">command</span><span class="op">,</span> <span class="nam">allow_char</span><span class="op">=</span><span class="nam">allow_char</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">    <span class="nam">res</span> <span class="op">=</span> <span class="nam">subprocess</span><span class="op">.</span><span class="nam">run</span><span class="op">(</span>  <span class="com"># nosec</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="nam">shlex</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">capture_output</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">    <span class="nam">returncode</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">returncode</span>&nbsp;</span><input type="checkbox" id="ctxs107"><span class="r"><label for="ctxs107" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">    <span class="nam">stdout</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">stdout</span>&nbsp;</span><input type="checkbox" id="ctxs108"><span class="r"><label for="ctxs108" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">    <span class="nam">stderr</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">stderr</span>&nbsp;</span><input type="checkbox" id="ctxs109"><span class="r"><label for="ctxs109" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="key">if</span> <span class="nam">res</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">!=</span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs110"><span class="r"><label for="ctxs110" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">ERROR in subprocess call to '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs111"><span class="r"><label for="ctxs111" class="ctx">5 ctx</label></span><span class="ctxs">1abcde</span></p>
-    <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">        <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs112"><span class="r"><label for="ctxs112" class="ctx">5 ctx</label></span><span class="ctxs">1abcde</span></p>
+    <p class="run"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">    <span class="nam">returncode</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">returncode</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">    <span class="nam">stdout</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">stdout</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">    <span class="nam">stderr</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">stderr</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="key">if</span> <span class="nam">res</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">!=</span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">ERROR in subprocess call to '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">        <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">            <span class="fst">f"</span><span class="fst">Command </span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst"> failed.\n</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">            <span class="fst">f"</span><span class="fst">returncode=</span><span class="op">{</span><span class="nam">res</span><span class="op">.</span><span class="nam">returncode</span><span class="op">}</span><span class="fst">\n</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">            <span class="str">"STDOUT:\n"</span>&nbsp;</span><span class="r"></span></p>
@@ -547,13 +201,13 @@
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">            <span class="str">"STDERR:\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">            <span class="fst">f"</span><span class="op">{</span><span class="nam">stderr</span><span class="op">}</span><span class="fst">\n</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">returncode</span><span class="op">=</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs120"><span class="r"><label for="ctxs120" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"STDOUT:"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs121"><span class="r"><label for="ctxs121" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stdout</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs122"><span class="r"><label for="ctxs122" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"STDERR:"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs123"><span class="r"><label for="ctxs123" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stderr</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs124"><span class="r"><label for="ctxs124" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">END   subprocess call to '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs125"><span class="r"><label for="ctxs125" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
-    <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="key">return</span> <span class="nam">stdout</span>&nbsp;</span><input type="checkbox" id="ctxs126"><span class="r"><label for="ctxs126" class="ctx">11 ctx</label></span><span class="ctxs">1afgbhcidejk</span></p>
+    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">returncode</span><span class="op">=</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"STDOUT:"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stdout</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"STDERR:"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="nam">stderr</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">END   subprocess call to '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="key">return</span> <span class="nam">stdout</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -563,7 +217,7 @@
             <a class="nav" href="z_a3e5354dc8db4bd4_zip_tools_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
     </div>
 </footer>

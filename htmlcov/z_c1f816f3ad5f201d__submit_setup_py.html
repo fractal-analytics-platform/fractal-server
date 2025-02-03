@@ -5,12 +5,6 @@
     <title>Coverage for fractal_server/app/runner/v1/_slurm/_submit_setup.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script type="text/javascript">
-        contexts = {
-  "a": "(empty)",
-  "b": "test_unit_slurm_config_v1.test_slurm_submit_setup"
-}
-    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -73,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_c1f816f3ad5f201d_get_slurm_config_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -104,14 +98,14 @@
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="str">implementation of `submit_setup_call` in</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="str">[fractal_server.app.runner.v1._common][]).</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"><label for="ctxs17" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">task_files</span> <span class="key">import</span> <span class="nam">get_task_file_paths</span>&nbsp;</span><span class="r"><label for="ctxs19" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">get_slurm_config</span> <span class="key">import</span> <span class="nam">get_slurm_config</span>&nbsp;</span><span class="r"><label for="ctxs20" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">v1</span> <span class="key">import</span> <span class="nam">WorkflowTask</span>&nbsp;</span><span class="r"><label for="ctxs21" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">task_files</span> <span class="key">import</span> <span class="nam">get_task_file_paths</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">get_slurm_config</span> <span class="key">import</span> <span class="nam">get_slurm_config</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">v1</span> <span class="key">import</span> <span class="nam">WorkflowTask</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="key">def</span> <span class="nam">_slurm_submit_setup</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs24" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="key">def</span> <span class="nam">_slurm_submit_setup</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="nam">wftask</span><span class="op">:</span> <span class="nam">WorkflowTask</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">workflow_dir_local</span><span class="op">:</span> <span class="nam">Path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -149,14 +143,14 @@
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="com"># Get SlurmConfig object</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">slurm_config</span> <span class="op">=</span> <span class="nam">get_slurm_config</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs62"><span class="r"><label for="ctxs62" class="ctx">2 ctx</label></span><span class="ctxs">1ab</span></p>
+    <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">slurm_config</span> <span class="op">=</span> <span class="nam">get_slurm_config</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">        <span class="nam">wftask</span><span class="op">=</span><span class="nam">wftask</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">        <span class="nam">workflow_dir_local</span><span class="op">=</span><span class="nam">workflow_dir_local</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">        <span class="nam">workflow_dir_remote</span><span class="op">=</span><span class="nam">workflow_dir_remote</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="com"># Get TaskFiles object</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">    <span class="nam">task_files</span> <span class="op">=</span> <span class="nam">get_task_file_paths</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs69"><span class="r"><label for="ctxs69" class="ctx">2 ctx</label></span><span class="ctxs">1ab</span></p>
+    <p class="run"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">    <span class="nam">task_files</span> <span class="op">=</span> <span class="nam">get_task_file_paths</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">        <span class="nam">workflow_dir_local</span><span class="op">=</span><span class="nam">workflow_dir_local</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">        <span class="nam">workflow_dir_remote</span><span class="op">=</span><span class="nam">workflow_dir_remote</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">        <span class="nam">task_order</span><span class="op">=</span><span class="nam">wftask</span><span class="op">.</span><span class="nam">order</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -164,11 +158,11 @@
     <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="com"># Prepare and return output dictionary</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="nam">submit_setup_dict</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs77"><span class="r"><label for="ctxs77" class="ctx">2 ctx</label></span><span class="ctxs">1ab</span></p>
+    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="nam">submit_setup_dict</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="nam">slurm_config</span><span class="op">=</span><span class="nam">slurm_config</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="nam">task_files</span><span class="op">=</span><span class="nam">task_files</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="key">return</span> <span class="nam">submit_setup_dict</span>&nbsp;</span><input type="checkbox" id="ctxs81"><span class="r"><label for="ctxs81" class="ctx">2 ctx</label></span><span class="ctxs">1ab</span></p>
+    <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="key">return</span> <span class="nam">submit_setup_dict</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -178,7 +172,7 @@
             <a class="nav" href="z_c1f816f3ad5f201d_get_slurm_config_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
     </div>
 </footer>

@@ -5,212 +5,6 @@
     <title>Coverage for fractal_server/syringe.py: 93%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script type="text/javascript">
-        contexts = {
-  "a": "(empty)",
-  "b": "test_admin_api.test_stop_job",
-  "c": "test_admin_job.test_stop_job",
-  "d": "test_admin_taskgroup.test_admin_deactivate_task_group_api",
-  "e": "test_admin_taskgroup.test_reactivate_task_group_api",
-  "f": "test_api_current_user.test_get_current_user_allowed_viewer_paths",
-  "g": "test_api_job.test_project_apply_missing_user_attributes",
-  "h": "test_api_job.test_stop_job",
-  "i": "test_api_task_collection.test_task_collection_from_pypi",
-  "j": "test_api_task_collection.test_task_collection_from_pypi_api_only",
-  "k": "test_api_task_collection.test_task_collection_from_wheel_non_canonical",
-  "l": "test_api_task_collection_custom.test_task_collection_custom_fail_with_ssh",
-  "m": "test_api_task_collection_failures.test_failure_cleanup",
-  "n": "test_api_task_collection_failures.test_folder_already_exists",
-  "o": "test_api_task_collection_failures.test_invalid_python_version",
-  "p": "test_api_task_collection_ssh.test_task_collection_ssh_failure",
-  "q": "test_api_task_collection_ssh.test_task_collection_ssh_failure_no_connection",
-  "r": "test_api_task_collection_ssh.test_task_collection_ssh_from_pypi",
-  "s": "test_api_task_lifecycle.test_deactivate_task_group_api",
-  "t": "test_api_task_lifecycle.test_lifecycle",
-  "u": "test_api_task_lifecycle.test_reactivate_task_group_api",
-  "v": "test_backend_runners.test_runner",
-  "w": "test_background_operations.test_logs_failed_collection",
-  "x": "test_background_task.test_mkdir_error",
-  "y": "test_collect_local.test_invalid_wheel",
-  "z": "test_deactivate_ssh.test_deactivate_wheel_package_created_before_2_9_0",
-  "A": "test_email.test_server_not_available",
-  "B": "test_executor.test_errors_failed_init_1",
-  "C": "test_executor.test_errors_failed_init_2",
-  "D": "test_executor.test_errors_failed_init_3",
-  "E": "test_executor.test_slurm_ssh_executor_error_in_calllback",
-  "F": "test_executor.test_slurm_ssh_executor_handshake_fail",
-  "G": "test_executor.test_slurm_ssh_executor_map",
-  "H": "test_executor.test_slurm_ssh_executor_shutdown_before_job_submission",
-  "I": "test_executor.test_slurm_ssh_executor_submit",
-  "J": "test_executor.test_slurm_ssh_executor_submit_with_pre_sbatch",
-  "K": "test_fixtures_settings_factory.test0",
-  "L": "test_full_workflow.test_failing_workflow_JobExecutionError_slurm",
-  "M": "test_full_workflow.test_failing_workflow_TaskExecutionError",
-  "N": "test_full_workflow.test_failing_workflow_UnknownError",
-  "O": "test_full_workflow.test_full_workflow",
-  "P": "test_full_workflow.test_non_executable_task_command",
-  "Q": "test_full_workflow_local_experimental_v2.test_failing_workflow_UnknownError_local",
-  "R": "test_full_workflow_local_experimental_v2.test_full_workflow_TaskExecutionError",
-  "S": "test_full_workflow_local_experimental_v2.test_full_workflow_local",
-  "T": "test_full_workflow_local_experimental_v2.test_non_executable_task_command_local",
-  "U": "test_full_workflow_local_experimental_v2.test_non_python_task_local",
-  "V": "test_full_workflow_local_v2.test_failing_workflow_UnknownError_local",
-  "W": "test_full_workflow_local_v2.test_full_workflow_TaskExecutionError",
-  "X": "test_full_workflow_local_v2.test_full_workflow_local",
-  "Y": "test_full_workflow_local_v2.test_non_executable_task_command_local",
-  "Z": "test_full_workflow_slurm_ssh_v2.test_workflow_with_non_python_task_slurm_ssh",
-  "0": "test_full_workflow_slurm_ssh_v2.test_workflow_with_non_python_task_slurm_ssh_fail",
-  "1": "test_full_workflow_slurm_v2.test_failing_workflow_JobExecutionError",
-  "2": "test_full_workflow_slurm_v2.test_failing_workflow_UnknownError_slurm",
-  "3": "test_full_workflow_slurm_v2.test_full_workflow_TaskExecutionError_slurm",
-  "4": "test_full_workflow_slurm_v2.test_full_workflow_slurm",
-  "5": "test_full_workflow_slurm_v2.test_non_executable_task_command_slurm",
-  "6": "test_job_api.test_stop_job",
-  "7": "test_project_apply_api.test_project_apply_missing_user_attributes",
-  "8": "test_project_apply_api.test_rate_limit",
-  "9": "test_reactivate_ssh.test_reactivate_ssh_fail",
-  "!": "test_read_only_endpoints.test_read_only_enpoints",
-  "#": "test_slurm_config.test_slurm_submit_setup",
-  "$": "test_submission_job_list_v1.test_clean_app_job_list_v1",
-  "%": "test_submission_job_list_v2.test_clean_app_job_list_v2",
-  "'": "test_task_collection_api.test_collect_validation_error",
-  "(": "test_task_collection_api.test_collection",
-  ")": "test_task_collection_api.test_collection_local_package_with_extras",
-  "*": "test_task_collection_api.test_collection_with_json_schemas",
-  "+": "test_task_collection_api.test_failed_collection_existing_db_tasks",
-  ",": "test_task_collection_api.test_failed_collection_invalid_manifest",
-  "-": "test_task_collection_api.test_failed_collection_missing_task_file",
-  ".": "test_task_collection_api.test_logs",
-  "/": "test_unit_check_settings.test_check_settings",
-  ":": "test_unit_injection.test_injection_override",
-  ";": "test_unit_lifespan.test_app_with_lifespan",
-  "=": "test_unit_lifespan.test_lifespan_shutdown_empty_jobs_list",
-  "?": "test_unit_lifespan.test_lifespan_shutdown_raise_error",
-  "@": "test_unit_lifespan.test_lifespan_slurm_ssh",
-  "[": "test_unit_python_interpreter.test_get_python_interpreter_v2",
-  "]": "test_unit_slurm_config_v1.test_slurm_submit_setup",
-  "^": "test_unit_slurm_executor.test_slurm_sudo_executor_shutdown_before_job_submission",
-  "_": "test_unit_submit_workflow.test_fail_submit_workflows_wrong_backend",
-  "`": "test_unit_submit_workflow_v1.test_fail_submit_workflows_wrong_backend",
-  "{": "test_unit_tasks_no_version.test_get_absolute_venv_path",
-  "|": "test_unit_config.test_settings_injection",
-  "}": "test_unit_injection.test_injection",
-  "~": "test_unit_injection.test_singleton",
-  "ab": "test_FractalSSH.test_fail_and_raise",
-  "bb": "test_admin_others.test_task_query",
-  "cb": "test_alive.test_alive",
-  "db": "test_alive.test_settings_endpoint",
-  "eb": "test_alive.test_unit_get_sanitized_settings",
-  "fb": "test_api_job.test_project_apply_slurm_account",
-  "gb": "test_api_job.test_project_apply_workflow_subset",
-  "hb": "test_api_job.test_submit_incompatible_filters",
-  "ib": "test_api_job.test_submit_job_failures",
-  "jb": "test_api_job.test_submit_jobs_with_same_dataset",
-  "kb": "test_api_job.test_update_timestamp_taskgroup",
-  "lb": "test_api_project.test_delete_project",
-  "mb": "test_api_project.test_delete_project_ongoing_jobs",
-  "nb": "test_api_project.test_post_and_get_project",
-  "ob": "test_api_task_collection.test_contact_an_admin_message",
-  "pb": "test_api_task_collection.test_task_collection_failure_due_to_existing_path",
-  "qb": "test_api_task_collection_custom.test_task_collection_custom",
-  "rb": "test_api_task_collection_failures.test_wheel_collection_failures",
-  "sb": "test_api_user_groups.test_update_group",
-  "tb": "test_api_user_groups.test_user_group_crud",
-  "ub": "test_api_users.test_add_superuser",
-  "vb": "test_api_users.test_edit_users_as_superuser",
-  "wb": "test_api_users.test_get_and_patch_user_settings",
-  "xb": "test_api_users.test_list_users",
-  "yb": "test_api_users.test_register_user",
-  "zb": "test_api_users.test_set_groups_endpoint",
-  "Ab": "test_api_users.test_show_user",
-  "Bb": "test_backend_local.test_call_parallel_task_max_tasks",
-  "Cb": "test_backend_local.test_call_single_task",
-  "Db": "test_backend_local.test_execute_multiple_tasks",
-  "Eb": "test_backend_local.test_execute_single_parallel_task",
-  "Fb": "test_backend_local.test_execute_single_task",
-  "Gb": "test_background_operations.test_unit_create_venv_install_package",
-  "Hb": "test_background_task.test_submit_workflow_failure",
-  "Ib": "test_collect_local.test_bad_wheel_file_arguments",
-  "Jb": "test_collect_local.test_collect_pip_local_fail_rmtree",
-  "Kb": "test_compress_folder.test_compress_folder_success_local_to_remote",
-  "Lb": "test_dataset_api.test_delete_dataset",
-  "Mb": "test_dataset_api.test_delete_dataset_cascade_jobs",
-  "Nb": "test_dataset_api.test_delete_resource",
-  "Ob": "test_dataset_api.test_get_dataset",
-  "Pb": "test_dataset_api.test_patch_dataset",
-  "Qb": "test_dataset_api.test_patch_resource",
-  "Rb": "test_dataset_api.test_patch_resource_failure",
-  "Sb": "test_dataset_api.test_post_dataset",
-  "Tb": "test_dataset_api.test_post_resource",
-  "Ub": "test_db.test_DB_class_async",
-  "Vb": "test_db.test_DB_class_sync",
-  "Wb": "test_deactivate_local.test_deactivate_fail_no_venv_path",
-  "Xb": "test_deactivate_local.test_deactivate_local_fail",
-  "Yb": "test_deactivate_local.test_deactivate_local_github_dependency",
-  "Zb": "test_deactivate_local.test_deactivate_wheel_no_wheel_path",
-  "0b": "test_deactivate_local.test_deactivate_wheel_package_created_before_2_9_0",
-  "1b": "test_deactivate_ssh.test_deactivate_fail_no_venv_path",
-  "2b": "test_deactivate_ssh.test_deactivate_ssh_fail",
-  "3b": "test_deactivate_ssh.test_deactivate_ssh_github_dependency",
-  "4b": "test_deactivate_ssh.test_deactivate_wheel_no_wheel_path",
-  "5b": "test_endpoint_operations.test_create_package_dir_pip",
-  "6b": "test_fixtures_settings_factory.test1",
-  "7b": "test_full_workflow.test_metadiff",
-  "8b": "test_full_workflow.test_non_python_task",
-  "9b": "test_full_workflow_local_v2.test_non_python_task_local",
-  "!b": "test_local_experimental.test_indirect_shutdown_during_process_workflow",
-  "#b": "test_loss_of_access_to_task.test_loss_of_access_to_task",
-  "$b": "test_project_api.test_delete_project",
-  "%b": "test_project_api.test_delete_project_ongoing_jobs",
-  "'b": "test_project_api.test_patch_project",
-  "(b": "test_project_api.test_patch_project_name_constraint",
-  ")b": "test_project_api.test_post_project",
-  "*b": "test_project_api.test_post_project_name_constraint",
-  "+b": "test_project_apply_api.test_project_apply_existing_job",
-  ",b": "test_project_apply_api.test_project_apply_failures",
-  "-b": "test_project_apply_api.test_project_apply_missing_resources",
-  ".b": "test_project_apply_api.test_project_apply_slurm_account",
-  "/b": "test_project_apply_api.test_project_apply_workflow_subset",
-  ":b": "test_reactivate_local.test_reactivate_local_fail",
-  ";b": "test_reactivate_local.test_reactivate_local_venv_exists",
-  "=b": "test_reactivate_ssh.test_reactivate_ssh_venv_exists",
-  "?b": "test_task_api.test_delete_task",
-  "@b": "test_task_api.test_patch_args_schema",
-  "[b": "test_task_api.test_patch_task",
-  "]b": "test_task_api.test_patch_task_auth",
-  "^b": "test_task_api.test_patch_task_different_users",
-  "_b": "test_task_api.test_post_task",
-  "`b": "test_task_collection_api.test_failed_collection_missing_wheel_file",
-  "{b": "test_unit_auth.test_get_single_user_with_groups",
-  "|b": "test_unit_auth.test_user_or_404",
-  "}b": "test_unit_local_config.test_get_local_backend_config",
-  "~b": "test_unit_missing_db_objects.test_unit_missing_objects",
-  "ac": "test_unit_runner_functions.test_task_needs_image_list",
-  "bc": "test_unit_runner_functions.test_trim_TaskParameters",
-  "cc": "test_unit_security.test_unit_create_first_user",
-  "dc": "test_unit_submit_workflow.test_fail_submit_workflows_wrong_IDs",
-  "ec": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
-  "fc": "test_unit_submit_workflow_v1.test_fail_submit_workflows_wrong_IDs",
-  "gc": "test_unit_submit_workflow_v1.test_success_submit_workflows",
-  "hc": "test_workflow_api.test_delete_workflow",
-  "ic": "test_workflow_api.test_delete_workflow_task",
-  "jc": "test_workflow_api.test_delete_workflow_with_job",
-  "kc": "test_workflow_api.test_export_workflow_log",
-  "lc": "test_workflow_api.test_get_project_workflows",
-  "mc": "test_workflow_api.test_get_workflow",
-  "nc": "test_workflow_api.test_import_export_workflow",
-  "oc": "test_workflow_api.test_import_export_workflow_fail",
-  "pc": "test_workflow_api.test_patch_workflow",
-  "qc": "test_workflow_api.test_patch_workflow_task",
-  "rc": "test_workflow_api.test_patch_workflow_task_failures",
-  "sc": "test_workflow_api.test_patch_workflow_task_with_args_schema",
-  "tc": "test_workflow_api.test_post_worfkflow_task",
-  "uc": "test_workflow_api.test_post_workflow",
-  "vc": "test_workflow_api.test_read_workflowtask",
-  "wc": "test_workflow_api.test_reorder_task_list",
-  "xc": "test_workflow_api.test_reorder_task_list_fail"
-}
-    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -273,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_e0542f3a62985dd8_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -324,16 +118,16 @@
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="str">    >>> bar()</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="str">    42</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Any</span>&nbsp;</span><span class="r"><label for="ctxs37" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Callable</span>&nbsp;</span><span class="r"><label for="ctxs38" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TypeVar</span>&nbsp;</span><span class="r"><label for="ctxs39" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Any</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Callable</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TypeVar</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="nam">T</span> <span class="op">=</span> <span class="nam">TypeVar</span><span class="op">(</span><span class="str">"T"</span><span class="op">)</span>&nbsp;</span><span class="r"><label for="ctxs42" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="nam">_instance_count</span> <span class="op">=</span> <span class="num">0</span>&nbsp;</span><span class="r"><label for="ctxs43" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="nam">T</span> <span class="op">=</span> <span class="nam">TypeVar</span><span class="op">(</span><span class="str">"T"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="nam">_instance_count</span> <span class="op">=</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t"><span class="key">class</span> <span class="nam">_Inject</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs46" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t"><span class="key">class</span> <span class="nam">_Inject</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t"><span class="str">    Injection class</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -344,16 +138,16 @@
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t"><span class="str">            The dependency directory</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="nam">_dependencies</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">Any</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="op">}</span>&nbsp;</span><span class="r"><label for="ctxs57" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="nam">_dependencies</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">Any</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs59" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">        <span class="key">global</span> <span class="nam">_instance_count</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">        <span class="key">if</span> <span class="nam">_instance_count</span> <span class="op">==</span> <span class="num">1</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs61"><span class="r"><label for="ctxs61" class="ctx">2 ctx</label></span><span class="ctxs">1a~</span></p>
-    <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">            <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="str">"You must only instance this class once"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs62"><span class="r"><label for="ctxs62" class="ctx">1 ctx</label></span><span class="ctxs">1~</span></p>
-    <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">        <span class="nam">_instance_count</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"><label for="ctxs63" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">        <span class="key">if</span> <span class="nam">_instance_count</span> <span class="op">==</span> <span class="num">1</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">            <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="str">"You must only instance this class once"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">        <span class="nam">_instance_count</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="op">@</span><span class="nam">classmethod</span>&nbsp;</span><span class="r"><label for="ctxs65" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="key">def</span> <span class="nam">__call__</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="nam">_callable</span><span class="op">:</span> <span class="nam">Callable</span><span class="op">[</span><span class="op">...</span><span class="op">,</span> <span class="nam">T</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">T</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs66" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="op">@</span><span class="nam">classmethod</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="key">def</span> <span class="nam">__call__</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="nam">_callable</span><span class="op">:</span> <span class="nam">Callable</span><span class="op">[</span><span class="op">...</span><span class="op">,</span> <span class="nam">T</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">T</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t"><span class="str">        Call the dependency</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -364,13 +158,13 @@
     <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t"><span class="str">        Returns:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t"><span class="str">            The output of calling `_callalbe` or its dependency override.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs77"><span class="r"><label for="ctxs77" class="ctx">201 ctx</label></span><span class="ctxs">2a abb c bbd e cbdbebf g fbgbh hbibjbkblbmbnbobpbi j k qbl m n o rbp q r s t u sbtbubvbwbxbybzbAbBbCbDbEbFbv w Gbx HbIbJby KbLbMbNbObPbQbRbSbTbUbVbWbXbYbZb0b1b2b3b4bz A 5bB C D E F G H I J K 6bL M N O 7bP 8bQ R S T U V W X Y 9bZ 0 1 2 3 4 5 6 !b#b$b%b'b(b)b*b+b,b-b7 .b/b8 :b;b9 =b! # $ % ?b@b[b]b^b_b' ( ) * + , - `b. {b|b/ | } : ; = ? @ }b~b[ acbccc] ^ dc_ ecfc` gc{ hcicjckclcmcncocpcqcrcsctcucvcwcxc</span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">            <span class="key">return</span> <span class="nam">cls</span><span class="op">.</span><span class="nam">_dependencies</span><span class="op">[</span><span class="nam">_callable</span><span class="op">]</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs78"><span class="r"><label for="ctxs78" class="ctx">201 ctx</label></span><span class="ctxs">2a abb c bbd e cbdbebf g fbgbh hbibjbkblbmbnbobpbi j k qbl m n o rbp q r s t u sbtbubvbwbxbybzbAbBbCbDbEbFbv w Gbx HbIbJby KbLbMbNbObPbQbRbSbTbUbVbWbXbYbZb0b1b2b3b4bz A 5bB C D E F G H I J K 6bL M N O 7bP 8bQ R S T U V W X Y 9bZ 0 1 2 3 4 5 6 !b#b$b%b'b(b)b*b+b,b-b7 .b/b8 :b;b9 =b! # $ % ?b@b[b]b^b_b' ( ) * + , - `b. {b|b/ | } : ; = ? @ }b~b[ acbccc] ^ dc_ ecfc` gc{ hcicjckclcmcncocpcqcrcsctcucvcwcxc</span></p>
-    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">except</span> <span class="nam">KeyError</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs79"><span class="r"><label for="ctxs79" class="ctx">4 ctx</label></span><span class="ctxs">1a|}:</span></p>
-    <p class="run"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">            <span class="key">return</span> <span class="nam">_callable</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs80"><span class="r"><label for="ctxs80" class="ctx">4 ctx</label></span><span class="ctxs">1a|}:</span></p>
+    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">            <span class="key">return</span> <span class="nam">cls</span><span class="op">.</span><span class="nam">_dependencies</span><span class="op">[</span><span class="nam">_callable</span><span class="op">]</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">except</span> <span class="nam">KeyError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">            <span class="key">return</span> <span class="nam">_callable</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">    <span class="op">@</span><span class="nam">classmethod</span>&nbsp;</span><span class="r"><label for="ctxs82" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="key">def</span> <span class="nam">pop</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="nam">_callable</span><span class="op">:</span> <span class="nam">Callable</span><span class="op">[</span><span class="op">...</span><span class="op">,</span> <span class="nam">T</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">T</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs83" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">    <span class="op">@</span><span class="nam">classmethod</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="key">def</span> <span class="nam">pop</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="nam">_callable</span><span class="op">:</span> <span class="nam">Callable</span><span class="op">[</span><span class="op">...</span><span class="op">,</span> <span class="nam">T</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">T</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t"><span class="str">        Remove the dependency from the directory</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -378,13 +172,13 @@
     <p class="pln"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t"><span class="str">            _callable:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t"><span class="str">                Callable dependency object</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs91"><span class="r"><label for="ctxs91" class="ctx">85 ctx</label></span><span class="ctxs">1abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%'()*+,-./;=?@[]^_`{</span></p>
-    <p class="run"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">            <span class="key">return</span> <span class="nam">cls</span><span class="op">.</span><span class="nam">_dependencies</span><span class="op">.</span><span class="nam">pop</span><span class="op">(</span><span class="nam">_callable</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs92"><span class="r"><label for="ctxs92" class="ctx">85 ctx</label></span><span class="ctxs">1abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%'()*+,-./;=?@[]^_`{</span></p>
+    <p class="run"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">            <span class="key">return</span> <span class="nam">cls</span><span class="op">.</span><span class="nam">_dependencies</span><span class="op">.</span><span class="nam">pop</span><span class="op">(</span><span class="nam">_callable</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">        <span class="key">except</span> <span class="nam">KeyError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">            <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">No dependency override for </span><span class="op">{</span><span class="nam">_callable</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="op">@</span><span class="nam">classmethod</span>&nbsp;</span><span class="r"><label for="ctxs96" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="key">def</span> <span class="nam">override</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs97" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="op">@</span><span class="nam">classmethod</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="key">def</span> <span class="nam">override</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">        <span class="nam">cls</span><span class="op">,</span> <span class="nam">_callable</span><span class="op">:</span> <span class="nam">Callable</span><span class="op">[</span><span class="op">...</span><span class="op">,</span> <span class="nam">T</span><span class="op">]</span><span class="op">,</span> <span class="nam">value</span><span class="op">:</span> <span class="nam">Callable</span><span class="op">[</span><span class="op">...</span><span class="op">,</span> <span class="nam">T</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -398,12 +192,12 @@
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t"><span class="str">            value:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t"><span class="str">                Callable override</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="nam">cls</span><span class="op">.</span><span class="nam">_dependencies</span><span class="op">[</span><span class="nam">_callable</span><span class="op">]</span> <span class="op">=</span> <span class="nam">value</span>&nbsp;</span><input type="checkbox" id="ctxs111"><span class="r"><label for="ctxs111" class="ctx">86 ctx</label></span><span class="ctxs">1abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%'()*+,-./:;=?@[]^_`{</span></p>
+    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="nam">cls</span><span class="op">.</span><span class="nam">_dependencies</span><span class="op">[</span><span class="nam">_callable</span><span class="op">]</span> <span class="op">=</span> <span class="nam">value</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t"><span class="com"># NOTE: This is a singleton instance</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t"><span class="nam">Inject</span> <span class="op">=</span> <span class="nam">_Inject</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"><label for="ctxs115" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"><label for="ctxs116" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t"><span class="nam">Inject</span> <span class="op">=</span> <span class="nam">_Inject</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t"><span class="str">The singleton instance of `_Inject`, the only public member of this module.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -415,7 +209,7 @@
             <a class="nav" href="z_e0542f3a62985dd8_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
     </div>
 </footer>

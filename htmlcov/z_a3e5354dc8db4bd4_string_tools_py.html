@@ -5,130 +5,6 @@
     <title>Coverage for fractal_server/string_tools.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
-    <script type="text/javascript">
-        contexts = {
-  "a": "(empty)",
-  "b": "test_executor.test_slurm_ssh_executor_error_in_calllback",
-  "c": "test_executor.test_slurm_ssh_executor_map",
-  "d": "test_executor.test_slurm_ssh_executor_submit",
-  "e": "test_executor.test_slurm_ssh_executor_submit_with_pre_sbatch",
-  "f": "test_backend_local.test_call_parallel_task_max_tasks",
-  "g": "test_backend_local.test_call_single_task",
-  "h": "test_backend_local.test_execute_multiple_tasks",
-  "i": "test_backend_local.test_execute_single_parallel_task",
-  "j": "test_backend_local.test_execute_single_task",
-  "k": "test_backend_runners.test_runner",
-  "l": "test_dummy_examples.test_default_inclusion_of_images",
-  "m": "test_dummy_examples.test_dummy_insert_single_image",
-  "n": "test_dummy_examples.test_dummy_insert_single_image_none_attribute",
-  "o": "test_dummy_examples.test_dummy_insert_single_image_normalization",
-  "p": "test_dummy_examples.test_dummy_remove_images",
-  "q": "test_dummy_examples.test_dummy_unset_attribute",
-  "r": "test_executor.test_slurm_ssh_executor_shutdown_before_job_submission",
-  "s": "test_fractal_examples.test_channel_parallelization_no_overwrite",
-  "t": "test_fractal_examples.test_channel_parallelization_with_overwrite",
-  "u": "test_fractal_examples.test_fractal_demos_01",
-  "v": "test_fractal_examples.test_fractal_demos_01_no_overwrite",
-  "w": "test_fractal_examples.test_registration_no_overwrite",
-  "x": "test_fractal_examples.test_registration_overwrite",
-  "y": "test_full_workflow.test_failing_workflow_JobExecutionError_slurm",
-  "z": "test_full_workflow.test_failing_workflow_TaskExecutionError",
-  "A": "test_full_workflow.test_failing_workflow_UnknownError",
-  "B": "test_full_workflow.test_full_workflow",
-  "C": "test_full_workflow.test_metadiff",
-  "D": "test_full_workflow.test_non_executable_task_command",
-  "E": "test_full_workflow.test_non_python_task",
-  "F": "test_no_images_parallelization.test_parallelize_on_no_images_compound",
-  "G": "test_project_apply_api.test_project_apply_slurm_account",
-  "H": "test_project_apply_api.test_project_apply_workflow_subset",
-  "I": "test_project_apply_api.test_rate_limit",
-  "J": "test_submission_job_list_v1.test_clean_app_job_list_v1",
-  "K": "test_unit_slurm_executor.test_slurm_sudo_executor_shutdown_before_job_submission",
-  "L": "test_unit_submit_workflow_v1.test_fail_submit_workflows_at_same_time",
-  "M": "test_unit_submit_workflow_v1.test_success_submit_workflows",
-  "N": "test_FractalSSH.test_remove_folder_input_validation",
-  "O": "test_setup.test_versions",
-  "P": "test_string_tools.test_unit_validate_cmd",
-  "Q": "test_compress_folder.test_compress_folder_success_local_to_remote",
-  "R": "test_compress_folder.test_compress_folder_success_remote_to_local",
-  "S": "test_compress_folder.test_compress_folder_success_with_overwrite",
-  "T": "test_compress_folder.test_main_success",
-  "U": "test_extract_archive.test_extract_archive",
-  "V": "test_extract_archive.test_main_success",
-  "W": "test_task_collection.test_TaskCollectCustomV2",
-  "X": "test_task_collection.test_TaskCollectPipV2",
-  "Y": "test_unit_lowlevel_functions.test_command_wrapper",
-  "Z": "test_api_dataset.test_post_dataset",
-  "0": "test_backend_local.test_execute_tasks_with_wrong_submit_setup_call",
-  "1": "test_no_images_parallelization.test_parallelize_on_no_images",
-  "2": "test_project_apply_api.test_project_apply_existing_job",
-  "3": "test_slurm_config.test_slurm_submit_setup",
-  "4": "test_string_tools.test_unit_sanitize_string",
-  "5": "test_unit_slurm_config_v1.test_slurm_submit_setup",
-  "6": "test_unit_utils_executors.test_get_default_task_files",
-  "7": "test_FractalSSH.test_folder_utils",
-  "8": "test_FractalSSH.test_run_command",
-  "9": "test_FractalSSH.test_run_command_concurrency",
-  "!": "test_FractalSSH.test_run_command_retries",
-  "#": "test_FractalSSHList.test_run_command_through_FractalSSHList",
-  "$": "test_api_current_user.test_get_current_user_allowed_viewer_paths",
-  "%": "test_api_task.test_patch_task_auth",
-  "'": "test_api_task.test_post_task",
-  "(": "test_api_task.test_post_task_user_group_id",
-  ")": "test_api_task_collection_custom.test_task_collection_custom",
-  "*": "test_api_task_collection_custom.test_task_collection_custom_fail_with_ssh",
-  "+": "test_api_task_collection_ssh.test_task_collection_ssh_failure",
-  ",": "test_api_task_collection_ssh.test_task_collection_ssh_from_pypi",
-  "-": "test_api_user_groups.test_patch_user_settings_bulk",
-  ".": "test_api_workflow_task.test_delete_workflow_task",
-  "/": "test_api_workflow_task.test_patch_workflow_task",
-  ":": "test_api_workflow_task.test_patch_workflow_task_failures",
-  ";": "test_api_workflow_task.test_post_worfkflow_task",
-  "=": "test_api_workflow_task.test_post_worfkflow_task_failures",
-  "?": "test_api_workflow_task.test_read_workflowtask",
-  "@": "test_api_workflow_task.test_reorder_task_list",
-  "[": "test_api_workflow_task.test_reorder_task_list_fail",
-  "]": "test_backend_local.test_command_wrapper",
-  "^": "test_collect_local.test_bad_wheel_file_arguments",
-  "_": "test_collect_local.test_collect_pip_local_fail_rmtree",
-  "`": "test_collect_local.test_invalid_wheel",
-  "{": "test_compress_folder.test_compress_folder_tar_failure",
-  "|": "test_deactivate_local.test_deactivate_wheel_package_created_before_2_9_0",
-  "}": "test_deactivate_ssh.test_deactivate_fail_no_venv_path",
-  "~": "test_deactivate_ssh.test_deactivate_ssh_fail",
-  "ab": "test_deactivate_ssh.test_deactivate_ssh_github_dependency",
-  "bb": "test_deactivate_ssh.test_deactivate_wheel_no_wheel_path",
-  "cb": "test_deactivate_ssh.test_deactivate_wheel_package_created_before_2_9_0",
-  "db": "test_executor.test_errors_failed_init_2",
-  "eb": "test_full_workflow_slurm_v2.test_failing_workflow_JobExecutionError",
-  "fb": "test_full_workflow_slurm_v2.test_failing_workflow_UnknownError_slurm",
-  "gb": "test_full_workflow_slurm_v2.test_full_workflow_TaskExecutionError_slurm",
-  "hb": "test_full_workflow_slurm_v2.test_full_workflow_slurm",
-  "ib": "test_full_workflow_slurm_v2.test_non_executable_task_command_slurm",
-  "jb": "test_reactivate_local.test_reactivate_local_fail",
-  "kb": "test_reactivate_ssh.test_reactivate_ssh_fail",
-  "lb": "test_reactivate_ssh.test_reactivate_ssh_venv_exists",
-  "mb": "test_run_subprocess.test_run_subprocess",
-  "nb": "test_unit_bash_scripts.test_template_1",
-  "ob": "test_unit_bash_scripts.test_template_2",
-  "pb": "test_unit_bash_scripts.test_template_4_missing_manifest",
-  "qb": "test_unit_bash_scripts.test_templates_freeze",
-  "rb": "test_unit_bash_scripts.test_venv_size_and_file_number",
-  "sb": "test_unit_custom_subprocess_module.test_glob_as_user",
-  "tb": "test_unit_custom_subprocess_module.test_glob_as_user_strict",
-  "ub": "test_unit_custom_subprocess_module.test_path_exists_as_user",
-  "vb": "test_unit_schemas_v2.test_dictionary_keys_validation",
-  "wb": "test_unit_schemas_v2.test_extra_on_create_models",
-  "xb": "test_unit_schemas_v2.test_task_collect_pip",
-  "yb": "test_unit_subprocess_run_or_raise.test_subprocess_run_or_raise",
-  "zb": "test_task_collection_api.test_collection",
-  "Ab": "test_task_collection_api.test_collection_local_package_with_extras",
-  "Bb": "test_task_collection_api.test_collection_with_json_schemas",
-  "Cb": "test_task_collection_api.test_failed_collection_existing_db_tasks",
-  "Db": "test_task_collection_api.test_failed_collection_missing_task_file",
-  "Eb": "test_task_collection_api.test_logs"
-}
-    </script>
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
 </head>
 <body class="pyfile">
@@ -191,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_a3e5354dc8db4bd4_syringe_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -206,17 +82,17 @@
     </div>
 </header>
 <main id="source">
-    <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">import</span> <span class="nam">string</span>&nbsp;</span><span class="r"><label for="ctxs1" class="ctx">(empty)</label></span></p>
-    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"><label for="ctxs2" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">import</span> <span class="nam">string</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="nam">__SPECIAL_CHARACTERS__</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">string</span><span class="op">.</span><span class="nam">punctuation</span><span class="op">}</span><span class="op">{</span><span class="nam">string</span><span class="op">.</span><span class="nam">whitespace</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"><label for="ctxs4" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="nam">__SPECIAL_CHARACTERS__</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">string</span><span class="op">.</span><span class="nam">punctuation</span><span class="op">}</span><span class="op">{</span><span class="nam">string</span><span class="op">.</span><span class="nam">whitespace</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="com"># List of invalid characters discussed here:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="com"># https://github.com/fractal-analytics-platform/fractal-server/issues/1647</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="nam">__NOT_ALLOWED_FOR_COMMANDS__</span> <span class="op">=</span> <span class="str">r"`#$&amp;*()\|[]{};&lt;>?!"</span>&nbsp;</span><span class="r"><label for="ctxs8" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="nam">__NOT_ALLOWED_FOR_COMMANDS__</span> <span class="op">=</span> <span class="str">r"`#$&amp;*()\|[]{};&lt;>?!"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">def</span> <span class="nam">sanitize_string</span><span class="op">(</span><span class="nam">value</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs11" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">def</span> <span class="nam">sanitize_string</span><span class="op">(</span><span class="nam">value</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="str">    Make string safe to be used in file/folder names and subprocess commands.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -235,13 +111,13 @@
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t"><span class="str">    Returns:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="str">        Sanitized value</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">value</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs30"><span class="r"><label for="ctxs30" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
-    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">for</span> <span class="nam">character</span> <span class="key">in</span> <span class="nam">__SPECIAL_CHARACTERS__</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs31"><span class="r"><label for="ctxs31" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">new_value</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">character</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs32"><span class="r"><label for="ctxs32" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="key">return</span> <span class="nam">new_value</span>&nbsp;</span><input type="checkbox" id="ctxs33"><span class="r"><label for="ctxs33" class="ctx">47 ctx</label></span><span class="ctxs">1aZfghij0klmnopqbcrdestuvwxyzABCDE1F2GHI34J5KLM6</span></p>
+    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">value</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">for</span> <span class="nam">character</span> <span class="key">in</span> <span class="nam">__SPECIAL_CHARACTERS__</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">new_value</span> <span class="op">=</span> <span class="nam">new_value</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="nam">character</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="key">return</span> <span class="nam">new_value</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">def</span> <span class="nam">slugify_task_name_for_source_v1</span><span class="op">(</span><span class="nam">task_name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"><label for="ctxs36" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">def</span> <span class="nam">slugify_task_name_for_source_v1</span><span class="op">(</span><span class="nam">task_name</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="str">    NOTE: this function is used upon creation of tasks' sources, therefore</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="str">    for the moment we cannot replace it with its more comprehensive version</span>&nbsp;</span><span class="r"></span></p>
@@ -259,10 +135,10 @@
     <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t"><span class="str">    Return:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t"><span class="str">        Slug-ified task name.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">    <span class="key">return</span> <span class="nam">task_name</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">" "</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs54"><span class="r"><label for="ctxs54" class="ctx">7 ctx</label></span><span class="ctxs">2a zbAbBbCbDbEb</span></p>
+    <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">    <span class="key">return</span> <span class="nam">task_name</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">" "</span><span class="op">,</span> <span class="str">"_"</span><span class="op">)</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">def</span> <span class="nam">validate_cmd</span><span class="op">(</span>&nbsp;</span><span class="r"><label for="ctxs57" class="ctx">(empty)</label></span></p>
+    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">def</span> <span class="nam">validate_cmd</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">    <span class="nam">command</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">    <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="nam">allow_char</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -278,13 +154,13 @@
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t"><span class="str">        allow_char: chars to accept among the forbidden ones</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t"><span class="str">        attribute_name: Name of the attribute, to be used in error message.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">command</span><span class="op">,</span> <span class="nam">str</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs73"><span class="r"><label for="ctxs73" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
-    <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">command</span><span class="op">=</span><span class="op">}</span><span class="fst"> is not a string.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs74"><span class="r"><label for="ctxs74" class="ctx">1 ctx</label></span><span class="ctxs">1N</span></p>
-    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">set</span><span class="op">(</span><span class="nam">__NOT_ALLOWED_FOR_COMMANDS__</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs75"><span class="r"><label for="ctxs75" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
-    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="key">if</span> <span class="nam">allow_char</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs76"><span class="r"><label for="ctxs76" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
-    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">forbidden</span> <span class="op">-</span> <span class="nam">set</span><span class="op">(</span><span class="nam">allow_char</span><span class="op">)</span>&nbsp;</span><input type="checkbox" id="ctxs77"><span class="r"><label for="ctxs77" class="ctx">13 ctx</label></span><span class="ctxs">1aQRSTbcdeUVOP</span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">forbidden</span><span class="op">.</span><span class="nam">isdisjoint</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><input type="checkbox" id="ctxs78"><span class="r"><label for="ctxs78" class="ctx">106 ctx</label></span><span class="ctxs">2a 7 N 8 9 ! # $ % ' ( ) * + , - . / : ; = ? @ [ f g ] h i j k ^ _ ` Q R S { T | } ~ abbbcbl m n o p q dbb c r d e U V s t u v w x y z A B C D E ebfbgbhbibF G H I jbkblbmbO P J W X nbobpbqbrbsbtbubY vbwbxbK L M yb</span></p>
-    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><input type="checkbox" id="ctxs79"><span class="r"><label for="ctxs79" class="ctx">6 ctx</label></span><span class="ctxs">1NOPWXY</span></p>
+    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">command</span><span class="op">,</span> <span class="nam">str</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">command</span><span class="op">=</span><span class="op">}</span><span class="fst"> is not a string.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">set</span><span class="op">(</span><span class="nam">__NOT_ALLOWED_FOR_COMMANDS__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="key">if</span> <span class="nam">allow_char</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="nam">forbidden</span> <span class="op">=</span> <span class="nam">forbidden</span> <span class="op">-</span> <span class="nam">set</span><span class="op">(</span><span class="nam">allow_char</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">forbidden</span><span class="op">.</span><span class="nam">isdisjoint</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">command</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">            <span class="fst">f"</span><span class="op">{</span><span class="nam">attribute_name</span><span class="op">}</span><span class="fst"> must not contain any of this characters: </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">            <span class="fst">f"</span><span class="fst">'</span><span class="op">{</span><span class="nam">forbidden</span><span class="op">}</span><span class="fst">'\n</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">            <span class="fst">f"</span><span class="fst">Provided </span><span class="op">{</span><span class="nam">attribute_name</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span><span class="op">}</span><span class="fst">: '</span><span class="op">{</span><span class="nam">command</span><span class="op">}</span><span class="fst">'.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
@@ -298,7 +174,7 @@
             <a class="nav" href="z_a3e5354dc8db4bd4_syringe_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-01-31 14:47 +0000
+            created at 2025-02-03 08:16 +0000
         </p>
     </div>
 </footer>
