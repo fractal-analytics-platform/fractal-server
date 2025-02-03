@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner
+    * Both executors now check the fractal server version using `FRACTAL_SLURM_WORKER_PYTHON` config variabl (\#2240)
+
 # 2.12.0
 
 > WARNING: The database schema update introduced via this version is non-reversible.
