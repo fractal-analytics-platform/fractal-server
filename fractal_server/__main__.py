@@ -230,6 +230,7 @@ def print_mail_settings(
     port: int,
     instance: str,
     skip_starttls: bool,
+    use_login: bool = True,
 ):
     from cryptography.fernet import Fernet
 
@@ -243,6 +244,7 @@ def print_mail_settings(
             port=port,
             instance_name=instance,
             use_starttls=(not skip_starttls),
+            use_login=use_login,
         )
     ).encode("utf-8")
     email_settings = Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")

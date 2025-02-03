@@ -47,6 +47,7 @@ class MailSettings(BaseModel):
         password: Sender password
         instance_name: Name of SMTP server instance
         use_starttls: Using or not security protocol
+        use_login: TBD  # FIXME
     """
 
     sender: EmailStr
@@ -56,6 +57,7 @@ class MailSettings(BaseModel):
     password: str
     instance_name: str
     use_starttls: bool
+    use_login: bool
 
 
 class FractalConfigurationError(RuntimeError):
@@ -592,7 +594,7 @@ class Settings(BaseSettings):
     FRACTAL_EMAIL_SETTINGS: Optional[str] = None
     """
     Encrypted version of settings dictionary, with keys `sender`, `password`,
-    `smtp_server`, `port`, `instance_name`, `use_starttls`.
+    `smtp_server`, `port`, `instance_name`, `use_starttls`, `use_login`.
     """
     FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
     """
