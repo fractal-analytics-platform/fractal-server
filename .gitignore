@@ -50,3 +50,5 @@ monitoring.db
 jobs/wf*
 runinfo
 mypy-scan
+
+.coverage*

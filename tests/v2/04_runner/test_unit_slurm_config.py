@@ -2,28 +2,44 @@ import json
 
 import pytest
 from devtools import debug
+from pydantic import BaseModel
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
 )
-from fractal_server.app.runner.v1._slurm import (
+from fractal_server.app.runner.v2._slurm_common.get_slurm_config import (
     get_slurm_config,
 )
-from fractal_server.app.runner.v1._slurm._submit_setup import (
+from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
     _slurm_submit_setup,
 )
-from tests.fixtures_tasks_v1 import MockTask
-from tests.fixtures_tasks_v1 import MockWorkflowTask
+
+
+class MockTask(BaseModel):
+    name: str = "dummy name"
+    type: str
+
+    def model_dump(self, *args, **kwargs):
+        return self.dict(*args, **kwargs)
+
+
+class MockWorkflowTask(BaseModel):
+    task: MockTask
+    meta_parallel: dict
+    meta_non_parallel: dict
+    order: int = 42
+
+    def model_dump(self, *args, **kwargs):
+        return self.dict(*args, **kwargs)
 
 
 @pytest.mark.parametrize("fail", [True, False])
 def test_get_slurm_config(tmp_path, fail):
     """
     Testing that:
-    1. WorkflowTask.meta overrides WorkflowTask.Task.meta
-    2. needs_gpu=True triggers other changes
-    3. If WorkflowTask.meta includes (e.g.) "gres", then this is the actual
-    value that is set (even for needs_gpu=True).
+    1. needs_gpu=True triggers other changes
+    2. If WorkflowTask.meta_{parallel,non_parallel} includes (e.g.) "gres",
+       then this is the actual value that is set (even for needs_gpu=True).
     """
 
     # Write gloabl variables into JSON config file
@@ -63,51 +79,34 @@ def test_get_slurm_config(tmp_path, fail):
     with config_path.open("w") as f:
         json.dump(slurm_config, f)
 
-    # Create Task
-    CPUS_PER_TASK = 1
-    MEM = 1
-    CUSTOM_GRES = "my-custom-gres-from-task"
-    meta = dict(
-        cpus_per_task=CPUS_PER_TASK,
-        mem=MEM,
-        needs_gpu=False,
-        gres=CUSTOM_GRES,
-        extra_lines=["a", "b", "c", "d"],
-    )
-    mytask = MockTask(
-        name="My beautiful task",
-        command="python something.py",
-        meta=meta,
-    )
-
     # Create WorkflowTask
     CPUS_PER_TASK_OVERRIDE = 2
     CUSTOM_CONSTRAINT = "my-custom-constraint-from-wftask"
     CUSTOM_EXTRA_LINES = ["export VAR1=VALUE1", "export VAR2=VALUE2"]
+    CUSTOM_GRES = "my-custom-gres-from-task"
+
     MEM_OVERRIDE = "1G"
     MEM_OVERRIDE_MB = 1000
     meta = dict(
         cpus_per_task=CPUS_PER_TASK_OVERRIDE,
         mem=MEM_OVERRIDE,
+        gres=CUSTOM_GRES,
         needs_gpu=True,
         constraint=CUSTOM_CONSTRAINT,
         extra_lines=CUSTOM_EXTRA_LINES,
     )
     mywftask = MockWorkflowTask(
-        task=mytask,
-        args=dict(message="test"),
-        order=0,
-        meta=meta,
+        task=MockTask(type="parallel"),
+        meta_non_parallel={},
+        meta_parallel=meta,
     )
     debug(mywftask)
-    debug(mywftask.meta)
 
     # Call get_slurm_config
     try:
         slurm_config = get_slurm_config(
             wftask=mywftask,
-            workflow_dir_local=(tmp_path / "server"),
-            workflow_dir_remote=(tmp_path / "user"),
+            which_type=mywftask.task.type,
             config_path=config_path,
         )
         debug(slurm_config)
@@ -182,13 +181,6 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     with config_path.open("w") as f:
         json.dump(slurm_config, f)
 
-    # Create Task
-    mytask = MockTask(
-        name="My beautiful task",
-        command="python something.py",
-        meta=None,
-    )
-
     # Create WorkflowTask
     CPUS_PER_TASK_OVERRIDE = 2
     CUSTOM_CONSTRAINT = "my-custom-constraint-from-wftask"
@@ -203,19 +195,16 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
         extra_lines=CUSTOM_EXTRA_LINES,
     )
     mywftask = MockWorkflowTask(
-        task=mytask,
-        args=dict(message="test"),
-        order=0,
-        meta=meta,
+        task=MockTask(type="parallel"),
+        meta_parallel=meta,
+        meta_non_parallel={},
     )
     debug(mywftask)
-    debug(mywftask.meta)
 
     # Call get_slurm_config
     slurm_config = get_slurm_config(
         wftask=mywftask,
-        workflow_dir_local=(tmp_path / "server"),
-        workflow_dir_remote=(tmp_path / "user"),
+        which_type="parallel",
         config_path=config_path,
     )
     debug(slurm_config)
@@ -249,11 +238,13 @@ def test_slurm_submit_setup(
 
     # No account in `wftask.meta` --> OK
     wftask = MockWorkflowTask(
-        meta=dict(key="value"),
-        task=MockTask(name="name", source="source", command="command"),
+        meta_parallel=dict(key="value"),
+        meta_non_parallel={},
+        task=MockTask(type="parallel"),
     )
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
+        which_type="parallel",
         workflow_dir_local=tmp_path,
         workflow_dir_remote=tmp_path,
     )
@@ -262,12 +253,14 @@ def test_slurm_submit_setup(
 
     # Account in `wftask.meta` --> fail
     wftask = MockWorkflowTask(
-        meta=dict(key="value", account="MyFakeAccount"),
-        task=MockTask(name="name", source="source", command="command"),
+        meta_parallel=dict(key="value", account="MyFakeAccount"),
+        meta_non_parallel={},
+        task=MockTask(type="parallel"),
     )
     with pytest.raises(SlurmConfigError) as e:
         _slurm_submit_setup(
             wftask=wftask,
+            which_type="parallel",
             workflow_dir_local=tmp_path,
             workflow_dir_remote=tmp_path,
         )

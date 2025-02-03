@@ -1,6 +1,18 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-> WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
+# 2.12.0
+
+> WARNING: The database schema update introduced via this version is non-reversible.
+
+* API:
+    * Drop V1 endpoints (\#2230).
+* Database:
+    * Drop V1 tables (\#2230).
+* Runner:
+    * Drop V1 runners (\#2230).
+* Testing:
+    * Drop V1 tests (\#2230).
+    *  Update V2 tests to keep coverage stable (\#2230).
 
 # Unreleased
 
