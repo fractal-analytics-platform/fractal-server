@@ -1,10 +1,16 @@
 import logging
+import time
 
+import fractal_tasks_mock  # noqa
 from pydantic.decorator import validate_arguments
 
 
 @validate_arguments
-def generic_task_parallel(*, zarr_url: str) -> dict:
+def generic_task_parallel(
+    *,
+    zarr_url: str,
+    sleep_time: float = 0.0,
+) -> dict:
     """
     Dummy task description.
 
@@ -13,6 +19,8 @@ def generic_task_parallel(*, zarr_url: str) -> dict:
     """
 
     logging.info("[generic_task_parallel] START")
+    logging.info(f"[generic_task_parallel] Sleep {sleep_time} seconds")
+    time.sleep(sleep_time)
     logging.info("[generic_task_parallel] Do nothing and return None")
     logging.info("[generic_task_parallel] END")
     return None
