@@ -144,6 +144,7 @@ def set_db(skip_init_data: bool = False):
     print()
     # NOTE: It will be fixed with #1739
     settings = Inject(get_settings)
+    settings.check_db()
     asyncio.run(
         _create_first_user(
             email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
