@@ -162,7 +162,7 @@ async def test_failing_workflow_JobExecutionError(
             name="dataset",
             zarr_dir=ZARR_DIR,
             images=[
-                SingleImage(zarr_url=f"{ZARR_DIR}/ind").dict()
+                SingleImage(zarr_url=f"{ZARR_DIR}/{ind}").dict()
                 for ind in range(4)
             ],
         )
