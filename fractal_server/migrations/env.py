@@ -1,7 +1,6 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy.engine import Connection
 from sqlmodel import SQLModel
 
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
@@ -34,15 +33,16 @@ from fractal_server.app import models  # noqa
 # ... etc.
 
 
-def do_run_migrations(connection: Connection) -> None:
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        render_as_batch=True,
-    )
-
-    with context.begin_transaction():
-        context.run_migrations()
+# def do_run_migrations(connection: Connection) -> None:
+#     context.configure(
+#         connection=connection,
+#         target_metadata=target_metadata,
+#         render_as_batch=True,
+#     )
+#
+#     with context.begin_transaction():
+#         context.run_migrations()
+#
 
 
 def run_migrations_online() -> None:
@@ -56,7 +56,14 @@ def run_migrations_online() -> None:
 
     engine = DB.engine_sync()
     with engine.connect() as connection:
-        do_run_migrations(connection=connection)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            render_as_batch=True,
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
 
     engine.dispose()
 
