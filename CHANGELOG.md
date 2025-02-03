@@ -2,6 +2,12 @@
 
 > WARNING: Notes for 2.11.0 prereleases are currently separated, and they should be merged at a later stage.
 
+# Unreleased
+
+* Internal
+    * Remove `run_migrations_offline` from `env.py` and make
+    `run_migrations_online` sync (\#2239).
+
 # 2.11.1
 
 * Database
