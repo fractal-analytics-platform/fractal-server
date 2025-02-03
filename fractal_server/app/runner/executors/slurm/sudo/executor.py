@@ -259,12 +259,17 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.slurm_account = slurm_account
 
         self.common_script_lines = common_script_lines or []
+        settings = Inject(get_settings)
 
-        try:
-            self.check_runner_node_python_interpreter()
-        except ValueError as e:
-            self._stop_and_join_wait_thread()
-            raise RuntimeError(f"Original error {str(e)}")
+        if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
+            try:
+                self.check_runner_node_python_interpreter()
+            except ValueError as e:
+                self._stop_and_join_wait_thread()
+                raise RuntimeError(f"Original error {str(e)}")
+            except FileNotFoundError as e:
+                self._stop_and_join_wait_thread()
+                raise RuntimeError(f"Original error {str(e)}")
 
         # Check that SLURM account is not set here
         try:
@@ -296,7 +301,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Set the attribute slurm_poll_interval for self.wait_thread (see
         # cfut.SlurmWaitThread)
         if not slurm_poll_interval:
-            settings = Inject(get_settings)
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.slurm_user = self.slurm_user

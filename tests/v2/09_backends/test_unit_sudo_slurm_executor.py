@@ -33,6 +33,14 @@ def test_check_runner_node_python_interpreter(
         self.workflow_dir_local = workflow_dir_local
         self.workflow_dir_remote = workflow_dir_remote
 
+    with pytest.raises(
+        RuntimeError, match="No such file or directory: '/remote/python'"
+    ):
+        FractalSlurmExecutor(
+            slurm_user="test_user",
+            workflow_dir_local=Path("/local/workflow"),
+            workflow_dir_remote=Path("/remote/workflow"),
+        )
     monkeypatch.setattr(
         (
             "fractal_server.app.runner.executors.slurm.sudo.executor"
@@ -41,7 +49,7 @@ def test_check_runner_node_python_interpreter(
         mock_subprocess_run_or_raise,
     )
 
-    with pytest.raises(RuntimeError, match=" Fractal-server version mismatch"):
+    with pytest.raises(RuntimeError, match="Fractal-server version mismatch"):
         FractalSlurmExecutor(
             slurm_user="test_user",
             workflow_dir_local=Path("/local/workflow"),
