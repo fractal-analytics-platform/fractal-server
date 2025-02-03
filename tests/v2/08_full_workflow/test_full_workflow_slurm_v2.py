@@ -12,7 +12,6 @@ from devtools import debug
 from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
 )
-from fractal_server.images.models import SingleImage
 from tests.fixtures_slurm import SLURM_USER
 
 
@@ -151,20 +150,11 @@ async def test_failing_workflow_JobExecutionError(
             project_dir=project_dir,
         ),
     ) as user:
-        # Create project
         project = await project_factory_v2(user)
         project_id = project.id
-
-        # Create dataset, with many images
-        ZARR_DIR = "/invalid/zarr/dir"
         dataset = await dataset_factory_v2(
             project_id=project_id,
             name="dataset",
-            zarr_dir=ZARR_DIR,
-            images=[
-                SingleImage(zarr_url=f"{ZARR_DIR}/ind").dict()
-                for ind in range(4)
-            ],
         )
         dataset_id = dataset.id
 
@@ -174,21 +164,43 @@ async def test_failing_workflow_JobExecutionError(
         )
         workflow_id = workflow.id
 
-        # Add a long *parallel* task, which will be stopped while running
-        task_id = fractal_tasks_mock_db["generic_task_parallel"].id
+        # Retrieve relevant task ID
+        task_id_0 = fractal_tasks_mock_db["create_ome_zarr_compound"].id
+        task_id_1 = fractal_tasks_mock_db["generic_task_parallel"].id
+
+        # Add a short task, which will be run successfully
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(args_parallel=dict(sleep_time=200)),
+            f"?task_id={task_id_0}",
+            json=dict(
+                args_non_parallel=dict(
+                    image_dir="/fake-path",
+                    num_images=3,
+                )
+            ),
         )
         assert res.status_code == 201
-        wftask_id = res.json()["id"]
+        wftask0_id = res.json()["id"]
+
+        # Add a long *parallel* task, which will be stopped while running
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_1}",
+            json=dict(
+                args_parallel=dict(
+                    sleep_time=200,
+                )
+            ),
+        )
+        assert res.status_code == 201
+        wftask1_id = res.json()["id"]
 
         # NOTE: the client.post call below is blocking, due to the way we are
         # running tests. For this reason, we call the scancel function from a
         # `subprocess.Popen`, so that we can make it happen during execution.
-        scancel_sleep_time = 5
+        scancel_sleep_time = 12
         slurm_user = SLURM_USER
+
         tmp_script = (tmp_path / "script.sh").as_posix()
         debug(tmp_script)
         with open(tmp_script, "w") as f:
@@ -245,7 +257,10 @@ async def test_failing_workflow_JobExecutionError(
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
-        assert statuses == {str(wftask_id): "failed"}
+        assert statuses == {
+            str(wftask0_id): "done",
+            str(wftask1_id): "failed",
+        }
 
         tmp_stdout.close()
         tmp_stderr.close()
