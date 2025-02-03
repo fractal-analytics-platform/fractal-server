@@ -591,15 +591,10 @@ class Settings(BaseSettings):
     ###########################################################################
     # SMTP SERVICE
     ###########################################################################
-    FRACTAL_EMAIL_SENDER: Optional[str] = None
-    FRACTAL_EMAIL_PASSWORD: Optional[str] = None
-    FRACTAL_EMAIL_SMTP_SERVER: Optional[str] = None
-    FRACTAL_EMAIL_PORT: Optional[str] = None
-    FRACTAL_EMAIL_INSTANCE: Optional[str] = None
-    FRACTAL_EMAIL_USE_STARTTLS: Optional[str] = None
-    FRACTAL_EMAIL_USER_LOGIN: Optional[str] = None
+    FRACTAL_EMAIL_SETTINGS: Optional[str] = None
     """
-    TBD
+    Encrypted version of settings dictionary, with keys `sender`, `password`,
+    `smtp_server`, `port`, `instance_name`, `use_starttls`, `use_login`.
     """
     FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
     """
