@@ -645,7 +645,7 @@ class Settings(BaseSettings):
                     )
                 else:
                     try:
-                        (
+                        decryped_password = (
                             Fernet(email_values["FRACTAL_EMAIL_PASSWORD_KEY"])
                             .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
                             .decode("utf-8")
@@ -660,12 +660,15 @@ class Settings(BaseSettings):
                             "Invalid FRACTAL_EMAIL_PASSWORD_KEY. "
                             f"Original error: '{e}'."
                         )
+            else:
+                decryped_password = None
+
             values["FRACTAL_EMAIL_SETTINGS"] = MailSettings(
                 sender=email_values["FRACTAL_EMAIL_SENDER"],
                 recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
                 smtp_server=email_values["FRACTAL_EMAIL_SMTP_SERVER"],
                 port=email_values["FRACTAL_EMAIL_SMTP_PORT"],
-                password=email_values["FRACTAL_EMAIL_SENDER"],
+                password=decryped_password,
                 instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
                 use_starttls=email_values.get(
                     "FRACTAL_EMAIL_USE_STARTTLS", True
