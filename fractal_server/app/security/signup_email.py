@@ -28,10 +28,10 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
         if mail_settings.use_starttls:
             server.starttls()
             server.ehlo()
-
-        server.login(
-            user=mail_settings.sender, password=mail_settings.password
-        )
+        if mail_settings.use_login:
+            server.login(
+                user=mail_settings.sender, password=mail_settings.password
+            )
         server.sendmail(
             from_addr=mail_settings.sender,
             to_addrs=mail_settings.recipients,
