@@ -15,6 +15,7 @@ from fractal_server.app.runner.executors.slurm.sudo.executor import (
     FractalSlurmExecutor,
 )  # noqa
 from fractal_server.logger import set_logger
+from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2._aux_runner import get_default_task_files
@@ -152,7 +153,8 @@ async def test_scancel_during_execution(
                 task_files=task_files,
             )
             # Wait and then scancel
-            time.sleep(5)
+            while "RUNNING" not in run_squeue(squeue_format="%i %T"):
+                time.sleep(0.1)
             subprocess.run(
                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"
             )
@@ -177,7 +179,8 @@ async def test_scancel_during_execution(
                 task_files=task_files,
             )
             # Wait and then scancel
-            time.sleep(5)
+            while "RUNNING" not in run_squeue(squeue_format="%i %T"):
+                time.sleep(0.1)
             subprocess.run(
                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"
             )
