@@ -152,7 +152,7 @@ async def test_scancel_during_execution(
                 task_files=task_files,
             )
             # Wait and then scancel
-            time.sleep(3)
+            time.sleep(5)
             subprocess.run(
                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"
             )
@@ -177,7 +177,7 @@ async def test_scancel_during_execution(
                 task_files=task_files,
             )
             # Wait and then scancel
-            time.sleep(3)
+            time.sleep(5)
             subprocess.run(
                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"
             )
