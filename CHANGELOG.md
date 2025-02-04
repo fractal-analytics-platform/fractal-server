@@ -10,8 +10,13 @@
     * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
 * Runner
     * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON` config variable, if set (\#2240).
+    * Handle `_COMPONENT_KEY_`-related errors in sudo/SLURM executor, to simplify testing (\#2245).
+    * Drop obsolete `SlurmJob.workflow_task_file_prefix` for both SSH/sudo executors (\#2245).
+    * Drop obsolete `keep_pickle_files` attribute from slurm executors (\#2246).
 * Dependencies:
     * Bump `uvicorn` version (\#2242).
+* Testing:
+    * Improve testing of sudo-Slurm executor (\#2245, \#2246).
 
 # 2.12.0
 
