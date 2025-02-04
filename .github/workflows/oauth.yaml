@@ -70,10 +70,11 @@ jobs:
             # Email
             FRACTAL_EMAIL_SENDER: sender@example.org
             FRACTAL_EMAIL_SMTP_SERVER: localhost
-            FRACTAL_EMAIL_PORT: 1025
+            FRACTAL_EMAIL_SMTP_PORT: 1025
             FRACTAL_EMAIL_INSTANCE_NAME: test
             FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
             FRACTAL_EMAIL_USE_STARTTLS: false
+            FRACTAL_EMAIL_USE_LOGIN: true
             # FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KET are generated with the following command
             # `printf "fakepassword\n" | poetry run fractalctl encrypt-email-password`
             FRACTAL_EMAIL_PASSWORD: gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuMP5fjvkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg==

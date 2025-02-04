@@ -403,7 +403,7 @@ def test_fractal_email():
     mandatory_mail_args = dict(
         FRACTAL_EMAIL_SENDER="sender@example.org",
         FRACTAL_EMAIL_SMTP_SERVER="smtp_server",
-        FRACTAL_EMAIL_PORT=54321,
+        FRACTAL_EMAIL_SMTP_PORT=54321,
         FRACTAL_EMAIL_INSTANCE_NAME="test",
         FRACTAL_EMAIL_RECIPIENTS="a@fracta.xy,b@fractal.yx",
     )

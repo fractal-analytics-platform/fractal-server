@@ -66,7 +66,10 @@ update_db_data_parser = subparsers.add_parser(
 # fractalctl encrypt-email-password
 encrypt_email_password_parser = subparsers.add_parser(
     "encrypt-email-password",
-    description="TBD",
+    description=(
+        "Generate valid values for environment variables "
+        "FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KEY."
+    ),
 )
 
 
@@ -204,8 +207,8 @@ def print_encrypted_password():
     key = Fernet.generate_key().decode("utf-8")
     encrypted_password = Fernet(key).encrypt(password).decode("utf-8")
 
-    print(f"\nFRACTAL_EMAIL_PASSWORD: {encrypted_password}")
-    print(f"FRACTAL_EMAIL_PASSWORD_KEY: {key}")
+    print(f"\nFRACTAL_EMAIL_PASSWORD={encrypted_password}")
+    print(f"FRACTAL_EMAIL_PASSWORD_KEY={key}")
 
 
 def run():

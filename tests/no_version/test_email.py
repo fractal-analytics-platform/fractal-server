@@ -17,7 +17,7 @@ async def test_server_not_available(override_settings_factory, db, caplog):
         FRACTAL_EMAIL_RECIPIENTS="test@example.org",
         FRACTAL_EMAIL_SENDER="fractal@fractal.fractal",
         FRACTAL_EMAIL_SMTP_SERVER="localhost",
-        FRACTAL_EMAIL_PORT="1234",
+        FRACTAL_EMAIL_SMTP_PORT="1234",
         FRACTAL_EMAIL_INSTANCE_NAME="fractal",
     )
     user = UserOAuth(

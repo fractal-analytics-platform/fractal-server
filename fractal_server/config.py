@@ -22,6 +22,7 @@ from typing import Optional
 from typing import TypeVar
 
 from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
@@ -45,8 +46,8 @@ class MailSettings(BaseModel):
         port: SMTP server port
         password: Sender password
         instance_name: Name of SMTP server instance
-        use_starttls: Using or not security protocol
-        use_login: TBD  # FIXME
+        use_starttls: Whether to use the security protocol
+        use_login: Whether to use login
     """
 
     sender: EmailStr
@@ -576,7 +577,7 @@ class Settings(BaseSettings):
     # SMTP SERVICE
     ###########################################################################
 
-    FRACTAL_EMAIL_SENDER: Optional[str] = None
+    FRACTAL_EMAIL_SENDER: Optional[EmailStr] = None
     """
     TBD
     """
@@ -592,7 +593,7 @@ class Settings(BaseSettings):
     """
     TBD
     """
-    FRACTAL_EMAIL_PORT: Optional[int] = None
+    FRACTAL_EMAIL_SMTP_PORT: Optional[int] = None
     """
     TBD
     """
@@ -612,10 +613,13 @@ class Settings(BaseSettings):
     """
     TBD
     """
+    FRACTAL_EMAIL_SETTINGS: Optional[MailSettings] = None
 
     @root_validator(pre=True)
     def validate_email_settings(cls, values):
-        email_values = {k: v for k, v in values.items() if "EMAIL" in k}
+        email_values = {
+            k: v for k, v in values.items() if k.startswith("FRACTAL_EMAIL")
+        }
         if email_values:
 
             def assert_key(key: str):
@@ -624,41 +628,50 @@ class Settings(BaseSettings):
 
             assert_key("FRACTAL_EMAIL_SENDER")
             assert_key("FRACTAL_EMAIL_SMTP_SERVER")
-            assert_key("FRACTAL_EMAIL_PORT")
+            assert_key("FRACTAL_EMAIL_SMTP_PORT")
             assert_key("FRACTAL_EMAIL_INSTANCE_NAME")
             assert_key("FRACTAL_EMAIL_RECIPIENTS")
-            if email_values.get("FRACTAL_EMAIL_USE_LOGIN") is not False and (
-                "FRACTAL_EMAIL_PASSWORD" not in email_values
-                or "FRACTAL_EMAIL_PASSWORD_KEY" not in email_values
-            ):
-                raise ValueError(
-                    "'FRACTAL_EMAIL_USE_LOGIN' is True but "
-                    "'FRACTAL_EMAIL_PASSWORD' or 'FRACTAL_EMAIL_PASSWORD_KEY' "
-                    "are provided."
-                )
-        return values
 
-    @property
-    def MAIL_SETTINGS(self) -> Optional[MailSettings]:
-        if self.FRACTAL_EMAIL_SENDER is None:
-            return None
-        password = (
-            Fernet(self.FRACTAL_EMAIL_PASSWORD_KEY)
-            .decrypt(self.FRACTAL_EMAIL_PASSWORD)
-            .decode("utf-8")
-        )
-        recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
-        mail_settings = MailSettings(
-            sender=self.FRACTAL_EMAIL_SENDER,
-            password=password,
-            recipients=recipients,
-            smtp_server=self.FRACTAL_EMAIL_SMTP_SERVER,
-            port=self.FRACTAL_EMAIL_PORT,
-            instance_name=self.FRACTAL_EMAIL_INSTANCE_NAME,
-            use_starttls=self.FRACTAL_EMAIL_USE_STARTTLS,
-            use_login=self.FRACTAL_EMAIL_USE_LOGIN,
-        )
-        return mail_settings
+            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", True):
+                if "FRACTAL_EMAIL_PASSWORD" not in email_values:
+                    raise ValueError(
+                        "'FRACTAL_EMAIL_USE_LOGIN' is True but "
+                        "'FRACTAL_EMAIL_PASSWORD' is not provided."
+                    )
+                elif "FRACTAL_EMAIL_PASSWORD_KEY" not in email_values:
+                    raise ValueError(
+                        "'FRACTAL_EMAIL_USE_LOGIN' is True but "
+                        "'FRACTAL_EMAIL_PASSWORD_KEY' is not provided."
+                    )
+                else:
+                    try:
+                        (
+                            Fernet(email_values["FRACTAL_EMAIL_PASSWORD_KEY"])
+                            .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
+                            .decode("utf-8")
+                        )
+                    except InvalidToken as e:
+                        raise ValueError(
+                            "Invalid FRACTAL_EMAIL_PASSWORD. "
+                            f"Original error: '{e}'."
+                        )
+                    except ValueError as e:
+                        raise ValueError(
+                            "Invalid FRACTAL_EMAIL_PASSWORD_KEY. "
+                            f"Original error: '{e}'."
+                        )
+            values["FRACTAL_EMAIL_SETTINGS"] = MailSettings(
+                sender=email_values["FRACTAL_EMAIL_SENDER"],
+                recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
+                smtp_server=email_values["FRACTAL_EMAIL_SMTP_SERVER"],
+                port=email_values["FRACTAL_EMAIL_SMTP_PORT"],
+                password=email_values["FRACTAL_EMAIL_SENDER"],
+                instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
+                use_starttls=email_values["FRACTAL_EMAIL_USE_STARTTLS"],
+                use_login=email_values["FRACTAL_EMAIL_USE_LOGIN"],
+            )
+
+        return values
 
     ###########################################################################
     # BUSINESS LOGIC
