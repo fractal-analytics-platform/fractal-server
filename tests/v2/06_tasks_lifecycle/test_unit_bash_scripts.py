@@ -64,7 +64,7 @@ def test_template_2(
     settings = Settings(
         **Settings(
             FRACTAL_PIP_CACHE_DIR=(tmp_path / "CACHE_DIR").as_posix()
-        ).dict()
+        ).dict(exclude_unset=True)
     )
     path = tmp_path / "unit_templates"
     venv_path = path / "venv"
