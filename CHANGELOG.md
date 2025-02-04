@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
+# 2.12.1
+
+* App:
+    * Add fractal-server version to logs (\#2228).
+
 # 2.12.0
 
 > WARNING: The database schema update introduced via this version is non-reversible.
