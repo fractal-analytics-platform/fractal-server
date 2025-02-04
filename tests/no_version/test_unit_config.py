@@ -400,7 +400,7 @@ def test_fractal_email():
         .decode("utf-8")
     )
 
-    mandatory_mail_args = dict(
+    required_mail_args = dict(
         FRACTAL_EMAIL_SENDER="sender@example.org",
         FRACTAL_EMAIL_SMTP_SERVER="smtp_server",
         FRACTAL_EMAIL_SMTP_PORT=54321,
@@ -414,26 +414,26 @@ def test_fractal_email():
     with pytest.raises(ValidationError):
         Settings(
             **common_attributes,
-            **mandatory_mail_args,
+            **required_mail_args,
         )
     # 3a: missing password
     with pytest.raises(ValidationError):
         Settings(
             **common_attributes,
-            **mandatory_mail_args,
+            **required_mail_args,
             FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
         )
     # 3b missing password key
     with pytest.raises(ValidationError):
         Settings(
             **common_attributes,
-            **mandatory_mail_args,
+            **required_mail_args,
             FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
         )
     # 4: ok
     settings = Settings(
         **common_attributes,
-        **mandatory_mail_args,
+        **required_mail_args,
         FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
         FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
     )
@@ -442,22 +442,22 @@ def test_fractal_email():
     # 5: FRACTAL_EMAIL_USE_LOGIN is false and no password needed
     Settings(
         **common_attributes,
-        **mandatory_mail_args,
+        **required_mail_args,
         FRACTAL_EMAIL_USE_LOGIN=False,
     )
     # 6: missing mandatory arguments
-    for arg in mandatory_mail_args:
+    for arg in required_mail_args:
         with pytest.raises(ValidationError):
             Settings(
                 **common_attributes,
-                **{k: v for k, v in mandatory_mail_args.items() if k != arg},
+                **{k: v for k, v in required_mail_args.items() if k != arg},
                 FRACTAL_EMAIL_USE_LOGIN=False,
             )
     # 7a: fail with Fernet encryption
     with pytest.raises(ValidationError) as e:
         Settings(
             **common_attributes,
-            **mandatory_mail_args,
+            **required_mail_args,
             FRACTAL_EMAIL_PASSWORD="invalid",
             FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
         )
@@ -466,7 +466,7 @@ def test_fractal_email():
     with pytest.raises(ValidationError) as e:
         Settings(
             **common_attributes,
-            **mandatory_mail_args,
+            **required_mail_args,
             FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
             FRACTAL_EMAIL_PASSWORD_KEY="invalid",
         )
@@ -478,7 +478,7 @@ def test_fractal_email():
             **common_attributes,
             **{
                 k: v
-                for k, v in mandatory_mail_args.items()
+                for k, v in required_mail_args.items()
                 if k != "FRACTAL_EMAIL_SENDER"
             },
             FRACTAL_EMAIL_SENDER="not-an-email",
@@ -489,7 +489,7 @@ def test_fractal_email():
             **common_attributes,
             **{
                 k: v
-                for k, v in mandatory_mail_args.items()
+                for k, v in required_mail_args.items()
                 if k != "FRACTAL_EMAIL_RECIPIENTS"
             },
             FRACTAL_EMAIL_RECIPIENTS="not,emails",
