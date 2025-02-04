@@ -409,7 +409,7 @@ def test_fractal_email():
     )
     # 1: no mail settings
     settings = Settings(**common_attributes)
-    assert settings.FRACTAL_EMAIL_SETTINGS is None
+    assert settings.mail_settings is None
     # 2: FRACTAL_EMAIL_USE_LOGIN is true, but no password settings
     with pytest.raises(ValidationError):
         Settings(
@@ -437,15 +437,17 @@ def test_fractal_email():
         FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
         FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
     )
-    assert settings.FRACTAL_EMAIL_SETTINGS is not None
-    assert len(settings.FRACTAL_EMAIL_SETTINGS.recipients) == 2
+    assert settings.mail_settings is not None
+    assert len(settings.mail_settings.recipients) == 2
     # 5: FRACTAL_EMAIL_USE_LOGIN is false and no password needed
-    Settings(
+    settings = Settings(
         **common_attributes,
         **required_mail_args,
         FRACTAL_EMAIL_USE_LOGIN=False,
     )
-    # 6: missing mandatory arguments
+    assert settings.mail_settings is not None
+
+    # 6: missing required arguments
     for arg in required_mail_args:
         with pytest.raises(ValidationError):
             Settings(

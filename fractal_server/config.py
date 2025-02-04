@@ -613,7 +613,7 @@ class Settings(BaseSettings):
     """
     TBD
     """
-    FRACTAL_EMAIL_SETTINGS: Optional[MailSettings] = None
+    mail_settings: Optional[MailSettings] = None
 
     @root_validator(pre=True)
     def validate_email_settings(cls, values):

@@ -252,18 +252,15 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             # Send mail section
             settings = Inject(get_settings)
 
-            if (
-                this_user.oauth_accounts
-                and settings.FRACTAL_EMAIL_SETTINGS is not None
-            ):
+            if this_user.oauth_accounts and settings.mail_settings is not None:
                 try:
                     logger.info(
                         "START sending email about new signup to "
-                        f"{settings.FRACTAL_EMAIL_SETTINGS.recipients}."
+                        f"{settings.mail_settings.recipients}."
                     )
                     mail_new_oauth_signup(
                         msg=f"New user registered: '{this_user.email}'.",
-                        mail_settings=settings.FRACTAL_EMAIL_SETTINGS,
+                        mail_settings=settings.mail_settings,
                     )
                     logger.info("END sending email about new signup.")
                 except Exception as e:
