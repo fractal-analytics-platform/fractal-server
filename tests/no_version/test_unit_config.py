@@ -475,14 +475,24 @@ def test_fractal_email():
     # 8: fail with sender emails
     with pytest.raises(ValidationError):
         Settings(
-            **(common_attributes | {"FRACTAL_EMAIL_SENDER": "not-an-email"}),
-            **mandatory_mail_args,
+            **common_attributes,
+            **{
+                k: v
+                for k, v in mandatory_mail_args.items()
+                if k != "FRACTAL_EMAIL_SENDER"
+            },
+            FRACTAL_EMAIL_SENDER="not-an-email",
             FRACTAL_EMAIL_USE_LOGIN=False,
         )
     with pytest.raises(ValidationError):
         Settings(
-            **(common_attributes | {"FRACTAL_EMAIL_RECIPIENTS": "not,emails"}),
-            **mandatory_mail_args,
+            **common_attributes,
+            **{
+                k: v
+                for k, v in mandatory_mail_args.items()
+                if k != "FRACTAL_EMAIL_RECIPIENTS"
+            },
+            FRACTAL_EMAIL_RECIPIENTS="not,emails",
             FRACTAL_EMAIL_USE_LOGIN=False,
         )
 
