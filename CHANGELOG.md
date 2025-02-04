@@ -1,9 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.12.1
 
+* API:
+    * Deprecate `use_dataset_filters` query parameter for `/project/{project_id}/dataset/{dataset_id}/images/query/` (\#2231).
+* App:
+    * Add fractal-server version to logs (\#2228).
+* Database:
+    * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
 * Runner
-    * Both executors now check the fractal server version using `FRACTAL_SLURM_WORKER_PYTHON` config variabl (\#2240)
+    * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON` config variable, if set (\#2240).
 
 # 2.12.0
 
@@ -18,6 +24,7 @@
 * Testing:
     * Drop V1 tests (\#2230).
     *  Update V2 tests to keep coverage stable (\#2230).
+
 
 # 2.11.1
 
