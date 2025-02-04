@@ -118,7 +118,6 @@ async def post_new_image(
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
-    use_dataset_filters: bool = False,  # query param
     page: int = 1,  # query param
     page_size: Optional[int] = None,  # query param
     query: Optional[ImageQuery] = None,  # body
@@ -137,17 +136,6 @@ async def query_dataset_images(
     )
     dataset = output["dataset"]
     images = dataset.images
-
-    if use_dataset_filters is True:
-        images = [
-            image
-            for image in images
-            if match_filter(
-                image=image,
-                type_filters=dataset.type_filters,
-                attribute_filters=dataset.attribute_filters,
-            )
-        ]
 
     attributes = {}
     for image in images:

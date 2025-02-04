@@ -1,10 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-
 # 2.12.1
 
+* API:
+    * Deprecate `use_dataset_filters` query parameter for `/project/{project_id}/dataset/{dataset_id}/images/query/` (\#2231).
 * App:
     * Add fractal-server version to logs (\#2228).
+
 
 # 2.12.0
 
