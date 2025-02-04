@@ -103,8 +103,7 @@ def test_email_settings():
 
     cmd = (
         'printf "mypassword\n" | '
-        "poetry run fractalctl email-settings "
-        "sender@test.org localhost 1234 exact --skip-starttls"
+        "poetry run fractalctl encrypt-email-password"
     )
     res = subprocess.run(
         cmd,
@@ -113,6 +112,6 @@ def test_email_settings():
         cwd=FRACTAL_SERVER_DIR,
         shell=True,
     )
-    assert "FRACTAL_EMAIL_SETTINGS" in res.stdout
-    assert "FRACTAL_EMAIL_SETTINGS_KEY" in res.stdout
+    assert "FRACTAL_EMAIL_PASSWORD" in res.stdout
+    assert "FRACTAL_EMAIL_PASSWORD_KEY" in res.stdout
     assert not res.stderr

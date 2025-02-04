@@ -7,17 +7,18 @@ from fractal_server.app.security import get_user_manager
 
 async def test_server_not_available(override_settings_factory, db, caplog):
     override_settings_factory(
-        FRACTAL_EMAIL_SETTINGS=(
-            "gAAAAABnoPQV82lnV1OlIXnOr9Nk-29VTzg6prP6o-bUEMu02wXImFLjKOZdbW9EA"
-            "YMgOXdk3FkGJTfIDXgstl26nYFQAhKOfhYnggpbXakudPA9szG9BsmEiHpWCxPjTJ"
-            "YR0IoCJhx84c3B06OxNnOjNFHkZKdiXnMwX3W90VSSTawffdxEIeh9vGUi51UM5z9"
-            "FZLWxqNBMMIN1X02nKn5IJWhOu8Pzx97LTPxEXnuKbKgrsDX2xFBfj1I3ZAX3Fw90"
-            "qXcojMymNZw9yrS2y6s7h4bmFXVU84x-YVtBRZb99rU-RXkIAhQ="
+        FRACTAL_EMAIL_PASSWORD=(
+            "gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuMP5fj"
+            "vkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg=="
         ),
-        FRACTAL_EMAIL_SETTINGS_KEY=(
-            "8hUJTuN6h6DOqZ2_2n-oOkuHGeTSscK7bqn8GMUzWQU="
+        FRACTAL_EMAIL_PASSWORD_KEY=(
+            "lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4="
         ),
         FRACTAL_EMAIL_RECIPIENTS="test@example.org",
+        FRACTAL_EMAIL_SENDER="fractal@fractal.fractal",
+        FRACTAL_EMAIL_SMTP_SERVER="localhost",
+        FRACTAL_EMAIL_PORT="1234",
+        FRACTAL_EMAIL_INSTANCE_NAME="fractal",
     )
     user = UserOAuth(
         email="user@example.org",
@@ -48,6 +49,5 @@ async def test_server_not_available(override_settings_factory, db, caplog):
 
     async with contextlib.asynccontextmanager(get_user_manager)() as um:
         await um.on_after_register(user)
-
     assert "ERROR sending notification email" in caplog.text
     assert "[Errno 111] Connection refused" in caplog.text

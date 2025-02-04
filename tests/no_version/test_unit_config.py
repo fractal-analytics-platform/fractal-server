@@ -384,7 +384,6 @@ def test_collect_oauth_clients(monkeypatch):
 
 def test_fractal_email():
     from cryptography.fernet import Fernet
-    import json
 
     common_attributes = dict(
         JWT_SECRET_KEY="something",
@@ -392,61 +391,65 @@ def test_fractal_email():
         FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
         FRACTAL_TASKS_DIR="/something",
     )
-    key = Fernet.generate_key().decode("utf-8")
-    fractal_mail_settings = json.dumps(
-        dict(
-            sender="sender@example.org",
-            smtp_server="smtp_server",
-            port=54321,
-            password="password",
-            instance_name="test",
-            use_starttls=False,
-            use_login=True,
+
+    password = "password"
+    FRACTAL_EMAIL_PASSWORD_KEY = Fernet.generate_key().decode("utf-8")
+    FRACTAL_EMAIL_PASSWORD = (
+        Fernet(FRACTAL_EMAIL_PASSWORD_KEY)
+        .encrypt(password.encode("utf-8"))
+        .decode("utf-8")
+    )
+
+    mandatory_mail_args = dict(
+        FRACTAL_EMAIL_SENDER="sender@example.org",
+        FRACTAL_EMAIL_SMTP_SERVER="smtp_server",
+        FRACTAL_EMAIL_PORT=54321,
+        FRACTAL_EMAIL_INSTANCE_NAME="test",
+        FRACTAL_EMAIL_RECIPIENTS="a@fracta.xy,b@fractal.yx",
+    )
+    # 1: no mail settings
+    Settings(**common_attributes)
+    # 2: FRACTAL_EMAIL_USE_LOGIN is true, but no password settings
+    with pytest.raises(ValidationError):
+        Settings(
+            **common_attributes,
+            **mandatory_mail_args,
         )
-    ).encode("utf-8")
-    enc_fractal_mail_settings = (
-        Fernet(key).encrypt(fractal_mail_settings).decode("utf-8")
-    )
-    settings = Settings(
-        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
-        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
-        FRACTAL_EMAIL_RECIPIENTS="admin@fractal.xy",
+    # 3a: missing password
+    with pytest.raises(ValidationError):
+        Settings(
+            **common_attributes,
+            **mandatory_mail_args,
+            FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
+        )
+    # 3b missing password key
+    with pytest.raises(ValidationError):
+        Settings(
+            **common_attributes,
+            **mandatory_mail_args,
+            FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
+        )
+    # 4: ok
+    Settings(
         **common_attributes,
+        **mandatory_mail_args,
+        FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
+        FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
     )
-
-    mail_settings = settings.MAIL_SETTINGS
-    assert mail_settings.recipients == ["admin@fractal.xy"]
-    assert mail_settings.sender == "sender@example.org"
-
-    # Fail with missing recipients
-
-    bad_settings = Settings(
-        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
-        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
+    # 5: FRACTAL_EMAIL_USE_LOGIN is false and no password needed
+    Settings(
+        **common_attributes,
+        **mandatory_mail_args,
+        FRACTAL_EMAIL_USE_LOGIN=False,
     )
-    with pytest.raises(ValueError) as expinfo:
-        mail_settings = bad_settings.MAIL_SETTINGS
-    assert "You must set all SMPT config variables" in str(expinfo.value)
-
-    # fail with missing settings
-
-    bad_settings = Settings(
-        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
-    )
-    with pytest.raises(ValueError) as expinfo:
-        mail_settings = bad_settings.MAIL_SETTINGS
-    assert "You must set all SMPT config variables" in str(expinfo.value)
-
-    bad_settings = Settings(
-        FRACTAL_EMAIL_SETTINGS=f"{enc_fractal_mail_settings}",
-        FRACTAL_EMAIL_SETTINGS_KEY=f"{key}",
-        FRACTAL_EMAIL_RECIPIENTS="",
-    )
-    with pytest.raises(ValidationError) as expinfo:
-        mail_settings = bad_settings.MAIL_SETTINGS
-
-    with pytest.raises(FractalConfigurationError) as expinfo:
-        bad_settings.check_fractal_mail_settings()
+    # 6: missing mandatory arguments
+    for arg in mandatory_mail_args:
+        with pytest.raises(ValidationError):
+            Settings(
+                **common_attributes,
+                **{k: v for k, v in mandatory_mail_args.items() if k != arg},
+                FRACTAL_EMAIL_USE_LOGIN=False,
+            )
 
 
 def test_python_interpreters():
