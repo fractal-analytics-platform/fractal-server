@@ -616,7 +616,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             _prefixes = []
             _subfolder_names = []
             for component in components:
-                actual_component = component.get(_COMPONENT_KEY_, None)
+                # In Fractal, `component` is a `dict` by construction (e.g.
+                # `component = {"zarr_url": "/something", "param": 1}``). The
+                # try/except covers the case of e.g. `executor.map([1, 2])`,
+                # which is useful for testing.
+                try:
+                    actual_component = component.get(_COMPONENT_KEY_, None)
+                except AttributeError:
+                    actual_component = str(component)
                 _task_file_paths = get_task_file_paths(
                     workflow_dir_local=task_files.workflow_dir_local,
                     workflow_dir_remote=task_files.workflow_dir_remote,
