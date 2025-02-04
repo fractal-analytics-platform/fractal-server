@@ -22,7 +22,6 @@ from typing import Optional
 from typing import TypeVar
 
 from cryptography.fernet import Fernet
-from cryptography.fernet import InvalidToken
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
@@ -651,15 +650,10 @@ class Settings(BaseSettings):
                             .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
                             .decode("utf-8")
                         )
-                    except InvalidToken:
+                    except Exception as e:
                         raise ValueError(
                             "Invalid FRACTAL_EMAIL_PASSWORD. "
-                            f"Original error: '{InvalidToken}'."
-                        )
-                    except ValueError as e:
-                        raise ValueError(
-                            "Invalid FRACTAL_EMAIL_PASSWORD_KEY. "
-                            f"Original error: '{e}'."
+                            f"Original error: {str(e)}."
                         )
 
             values["FRACTAL_EMAIL_SETTINGS"] = MailSettings(
