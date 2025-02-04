@@ -95,16 +95,10 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
 
 
 def test_check_remote_runner_python_interpreter(
-    monkeypatch, override_settings_factory
+    monkeypatch,
+    override_settings_factory,
 ):
-    remote_version = "1.0.0"
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/remote/python")
-
-    def mock_subprocess_run_or_raise(cmd):
-        class MockCompletedProcess(object):
-            stdout: str = json.dumps({"fractal_server": remote_version})
-
-        return MockCompletedProcess()
 
     with pytest.raises(
         RuntimeError, match="No such file or directory: '/remote/python'"
@@ -114,6 +108,12 @@ def test_check_remote_runner_python_interpreter(
             workflow_dir_local=Path("/local/workflow"),
             workflow_dir_remote=Path("/remote/workflow"),
         )
+
+    def mock_subprocess_run_or_raise(cmd):
+        class MockCompletedProcess(object):
+            stdout: str = json.dumps({"fractal_server": "9.9.9"})
+
+        return MockCompletedProcess()
 
     monkeypatch.setattr(
         (
