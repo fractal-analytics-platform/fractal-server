@@ -99,6 +99,11 @@ def set_db(skip_init_data: bool = False):
     from pathlib import Path
     import fractal_server
 
+    # Check settings
+    settings = Inject(get_settings)
+    settings.check_db()
+
+    # Perform migrations
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
     print(f"START: Run alembic.config, with argv={alembic_args}")
@@ -108,12 +113,10 @@ def set_db(skip_init_data: bool = False):
     if skip_init_data:
         return
 
-    # Insert default group
+    # Create default group and user
     print()
     _create_first_group()
     print()
-    # NOTE: It will be fixed with #1739
-    settings = Inject(get_settings)
     asyncio.run(
         _create_first_user(
             email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
