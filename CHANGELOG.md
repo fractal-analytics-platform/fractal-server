@@ -6,7 +6,8 @@
     * Deprecate `use_dataset_filters` query parameter for `/project/{project_id}/dataset/{dataset_id}/images/query/` (\#2231).
 * App:
     * Add fractal-server version to logs (\#2228).
-
+* Database:
+    * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
 
 # 2.12.0
 
@@ -21,6 +22,7 @@
 * Testing:
     * Drop V1 tests (\#2230).
     *  Update V2 tests to keep coverage stable (\#2230).
+
 
 # 2.11.1
 
