@@ -263,11 +263,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
             try:
-                self.check_runner_node_python_interpreter()
-            except ValueError as e:
-                self._stop_and_join_wait_thread()
-                raise RuntimeError(f"Original error {str(e)}")
-            except FileNotFoundError as e:
+                self.check_remote_python_interpreter()
+            except Exception as e:
                 self._stop_and_join_wait_thread()
                 raise RuntimeError(f"Original error {str(e)}")
 
@@ -1255,9 +1252,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         self._stop_and_join_wait_thread()
         logger.debug("[FractalSlurmExecutor.__exit__] End")
 
-    def check_runner_node_python_interpreter(self):
+    def check_remote_python_interpreter(self):
         """
-        Check fractal version on the runner's node
+        Check fractal-server version on the _remote_ Python interpreter.
         """
         settings = Inject(get_settings)
         output = _subprocess_run_or_raise(
