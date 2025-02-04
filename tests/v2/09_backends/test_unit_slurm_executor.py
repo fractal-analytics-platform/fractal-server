@@ -23,11 +23,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
     Verify the behavior when shutdown is called before any job has started.
     """
 
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=(
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-    )
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
 
     with FractalSlurmExecutor(
         workflow_dir_local=tmp_path / "job_dir1",
