@@ -8,6 +8,8 @@
     * Add fractal-server version to logs (\#2228).
 * Database:
     * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
+* Dependencies:
+    * Bump `uvicorn` version (\#2242).
 
 # 2.12.0
 
