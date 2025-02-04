@@ -1,3 +1,4 @@
+import json
 import os
 import shlex
 import subprocess
@@ -13,7 +14,7 @@ from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user impo
 )
 from fractal_server.app.runner.executors.slurm.sudo.executor import (
     FractalSlurmExecutor,
-)  # noqa
+)
 from fractal_server.logger import set_logger
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
@@ -102,6 +103,43 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
                 slurm_config=get_default_slurm_config(),
             )
         debug(exc_info.value)
+
+
+def test_check_remote_runner_python_interpreter(
+    monkeypatch, override_settings_factory
+):
+    remote_version = "1.0.0"
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/remote/python")
+
+    def mock_subprocess_run_or_raise(cmd):
+        class MockCompletedProcess(object):
+            stdout: str = json.dumps({"fractal_server": remote_version})
+
+        return MockCompletedProcess()
+
+    with pytest.raises(
+        RuntimeError, match="No such file or directory: '/remote/python'"
+    ):
+        FractalSlurmExecutor(
+            slurm_user="test_user",
+            workflow_dir_local=Path("/local/workflow"),
+            workflow_dir_remote=Path("/remote/workflow"),
+        )
+
+    monkeypatch.setattr(
+        (
+            "fractal_server.app.runner.executors.slurm.sudo.executor"
+            "._subprocess_run_or_raise"
+        ),
+        mock_subprocess_run_or_raise,
+    )
+
+    with pytest.raises(RuntimeError, match="Fractal-server version mismatch"):
+        FractalSlurmExecutor(
+            slurm_user="test_user",
+            workflow_dir_local=Path("/local/workflow"),
+            workflow_dir_remote=Path("/remote/workflow"),
+        )
 
 
 async def test_scancel_during_execution(
