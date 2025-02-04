@@ -4,6 +4,9 @@
 
 * API:
     * Deprecate `use_dataset_filters` query parameter for `/project/{project_id}/dataset/{dataset_id}/images/query/` (\#2231).
+* App:
+    * Add fractal-server version to logs (\#2228).
+
 
 # 2.12.0
 
