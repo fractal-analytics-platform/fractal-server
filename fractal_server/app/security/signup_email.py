@@ -2,6 +2,8 @@ import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
 
+from cryptography.fernet import Fernet
+
 from fractal_server.config import MailSettings
 
 
@@ -29,9 +31,12 @@ def mail_new_oauth_signup(msg: str, mail_settings: MailSettings):
             server.starttls()
             server.ehlo()
         if mail_settings.use_login:
-            server.login(
-                user=mail_settings.sender, password=mail_settings.password
+            password = (
+                Fernet(mail_settings.encryption_key)
+                .decrypt(mail_settings.encrypted_password)
+                .decode("utf-8")
             )
+            server.login(user=mail_settings.sender, password=password)
         server.sendmail(
             from_addr=mail_settings.sender,
             to_addrs=mail_settings.recipients,

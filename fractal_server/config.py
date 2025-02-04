@@ -54,7 +54,8 @@ class MailSettings(BaseModel):
     recipients: list[EmailStr] = Field(min_items=1)
     smtp_server: str
     port: int
-    password: str
+    encrypted_password: str
+    encryption_key: str
     instance_name: str
     use_starttls: bool
     use_login: bool
@@ -645,7 +646,7 @@ class Settings(BaseSettings):
                     )
                 else:
                     try:
-                        decryped_password = (
+                        (
                             Fernet(email_values["FRACTAL_EMAIL_PASSWORD_KEY"])
                             .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
                             .decode("utf-8")
@@ -660,15 +661,14 @@ class Settings(BaseSettings):
                             "Invalid FRACTAL_EMAIL_PASSWORD_KEY. "
                             f"Original error: '{e}'."
                         )
-            else:
-                decryped_password = None
 
             values["FRACTAL_EMAIL_SETTINGS"] = MailSettings(
                 sender=email_values["FRACTAL_EMAIL_SENDER"],
                 recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
                 smtp_server=email_values["FRACTAL_EMAIL_SMTP_SERVER"],
                 port=email_values["FRACTAL_EMAIL_SMTP_PORT"],
-                password=decryped_password,
+                encrypted_password=email_values.get("FRACTAL_EMAIL_PASSWORD"),
+                encryption_key=email_values.get("FRACTAL_EMAIL_PASSWORD_KEY"),
                 instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
                 use_starttls=email_values.get(
                     "FRACTAL_EMAIL_USE_STARTTLS", True
