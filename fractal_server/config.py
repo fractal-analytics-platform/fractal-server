@@ -650,10 +650,10 @@ class Settings(BaseSettings):
                             .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
                             .decode("utf-8")
                         )
-                    except InvalidToken as e:
+                    except InvalidToken:
                         raise ValueError(
                             "Invalid FRACTAL_EMAIL_PASSWORD. "
-                            f"Original error: '{e}'."
+                            f"Original error: '{InvalidToken}'."
                         )
                     except ValueError as e:
                         raise ValueError(
@@ -667,8 +667,10 @@ class Settings(BaseSettings):
                 port=email_values["FRACTAL_EMAIL_SMTP_PORT"],
                 password=email_values["FRACTAL_EMAIL_SENDER"],
                 instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
-                use_starttls=email_values["FRACTAL_EMAIL_USE_STARTTLS"],
-                use_login=email_values["FRACTAL_EMAIL_USE_LOGIN"],
+                use_starttls=email_values.get(
+                    "FRACTAL_EMAIL_USE_STARTTLS", True
+                ),
+                use_login=email_values.get("FRACTAL_EMAIL_USE_LOGIN", True),
             )
 
         return values

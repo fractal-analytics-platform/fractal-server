@@ -408,7 +408,8 @@ def test_fractal_email():
         FRACTAL_EMAIL_RECIPIENTS="a@fracta.xy,b@fractal.yx",
     )
     # 1: no mail settings
-    Settings(**common_attributes)
+    settings = Settings(**common_attributes)
+    assert settings.FRACTAL_EMAIL_SETTINGS is None
     # 2: FRACTAL_EMAIL_USE_LOGIN is true, but no password settings
     with pytest.raises(ValidationError):
         Settings(
@@ -430,12 +431,14 @@ def test_fractal_email():
             FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
         )
     # 4: ok
-    Settings(
+    settings = Settings(
         **common_attributes,
         **mandatory_mail_args,
         FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
         FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
     )
+    assert settings.FRACTAL_EMAIL_SETTINGS is not None
+    assert len(settings.FRACTAL_EMAIL_SETTINGS.recipients) == 2
     # 5: FRACTAL_EMAIL_USE_LOGIN is false and no password needed
     Settings(
         **common_attributes,
@@ -450,6 +453,38 @@ def test_fractal_email():
                 **{k: v for k, v in mandatory_mail_args.items() if k != arg},
                 FRACTAL_EMAIL_USE_LOGIN=False,
             )
+    # 7a: fail with Fernet encryption
+    with pytest.raises(ValidationError) as e:
+        Settings(
+            **common_attributes,
+            **mandatory_mail_args,
+            FRACTAL_EMAIL_PASSWORD="invalid",
+            FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
+        )
+    assert "FRACTAL_EMAIL_PASSWORD" in e.value.errors()[0]["msg"]
+    debug(e.value.errors()[0]["msg"])
+    with pytest.raises(ValidationError) as e:
+        Settings(
+            **common_attributes,
+            **mandatory_mail_args,
+            FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
+            FRACTAL_EMAIL_PASSWORD_KEY="invalid",
+        )
+    assert "FRACTAL_EMAIL_PASSWORD_KEY" in e.value.errors()[0]["msg"]
+
+    # 8: fail with sender emails
+    with pytest.raises(ValidationError):
+        Settings(
+            **(common_attributes | {"FRACTAL_EMAIL_SENDER": "not-an-email"}),
+            **mandatory_mail_args,
+            FRACTAL_EMAIL_USE_LOGIN=False,
+        )
+    with pytest.raises(ValidationError):
+        Settings(
+            **(common_attributes | {"FRACTAL_EMAIL_RECIPIENTS": "not,emails"}),
+            **mandatory_mail_args,
+            FRACTAL_EMAIL_USE_LOGIN=False,
+        )
 
 
 def test_python_interpreters():
