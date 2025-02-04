@@ -10,6 +10,8 @@
     * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
 * Runner
     * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON` config variable, if set (\#2240).
+* Dependencies:
+    * Bump `uvicorn` version (\#2242).
 
 # 2.12.0
 
