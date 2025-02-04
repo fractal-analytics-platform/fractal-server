@@ -219,7 +219,6 @@ class FractalSlurmExecutor(SlurmExecutor):
     workflow_dir_local: Path
     workflow_dir_remote: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
-    keep_pickle_files: bool
     slurm_account: Optional[str]
     jobs: dict[str, tuple[Future, SlurmJob]]
 
@@ -232,7 +231,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         user_cache_dir: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
-        keep_pickle_files: bool = False,
         slurm_account: Optional[str] = None,
         *args,
         **kwargs,
@@ -253,7 +251,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         # raised within `__init__`).
         self.wait_thread.shutdown_callback = self.shutdown
 
-        self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
         self.slurm_account = slurm_account
 
@@ -874,8 +871,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
                         )
-                        if not self.keep_pickle_files:
-                            in_path.unlink()
+                        in_path.unlink()
                         self._cleanup(jobid)
                         return
 
@@ -917,23 +913,20 @@ class FractalSlurmExecutor(SlurmExecutor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    if not self.keep_pickle_files:
-                        out_path.unlink()
+                    out_path.unlink()
                 except InvalidStateError:
                     logger.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
                     )
-                    if not self.keep_pickle_files:
-                        out_path.unlink()
-                        in_path.unlink()
+                    out_path.unlink()
+                    in_path.unlink()
                     self._cleanup(jobid)
                     return
 
                 # Clean up input pickle file
-                if not self.keep_pickle_files:
-                    in_path.unlink()
+                in_path.unlink()
             self._cleanup(jobid)
             if job.single_task_submission:
                 fut.set_result(outputs[0])
