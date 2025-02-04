@@ -12,6 +12,8 @@
     * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON` config variable, if set (\#2240).
 * Dependencies:
     * Bump `uvicorn` version (\#2242).
+* Testing:
+    * Add tests for `scancel` during execution (\#2245).
 
 # 2.12.0
 
