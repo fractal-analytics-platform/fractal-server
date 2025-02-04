@@ -62,7 +62,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         shutdown_file:
         python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
         wait_thread_cls: Class for waiting thread
-        keep_pickle_files:
         workflow_dir_local:
             Directory for both the cfut/SLURM and fractal-server files and logs
         workflow_dir_remote:
@@ -84,7 +83,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     python_remote: str
 
     wait_thread_cls = FractalSlurmWaitThread
-    keep_pickle_files: bool
 
     common_script_lines: list[str]
     slurm_account: Optional[str]
@@ -100,8 +98,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Folders and files
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
-        # Runner options
-        keep_pickle_files: bool = False,
         # Monitoring options
         slurm_poll_interval: Optional[int] = None,
         # SLURM submission script options
@@ -120,7 +116,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             fractal_ssh:
             workflow_dir_local:
             workflow_dir_remote:
-            keep_pickle_files:
             slurm_poll_interval:
             common_script_lines:
             slurm_account:
@@ -194,7 +189,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             raise e
 
         # Set/initialize some more options
-        self.keep_pickle_files = keep_pickle_files
         self.map_jobid_to_slurm_files_local = {}
 
     def _validate_common_script_lines(self):
@@ -901,12 +895,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 pass
         for job_id in remaining_job_ids:
             self._cleanup(job_id)
-        if not self.keep_pickle_files:
-            for job in remaining_jobs:
-                for path in job.output_pickle_files_local:
-                    path.unlink()
-                for path in job.input_pickle_files_local:
-                    path.unlink()
+        for job in remaining_jobs:
+            for path in job.output_pickle_files_local:
+                path.unlink()
+            for path in job.input_pickle_files_local:
+                path.unlink()
 
     def _completion(self, job_ids: list[str]) -> None:
         """
@@ -1001,8 +994,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                                 f"Future {future} (SLURM job ID: {job_id}) "
                                 "was already cancelled."
                             )
-                            if not self.keep_pickle_files:
-                                in_path.unlink()
+                            in_path.unlink()
                             self._cleanup(job_id)
                             self._handle_remaining_jobs(
                                 remaining_futures=remaining_futures,
@@ -1062,17 +1054,15 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                                     remaining_job_ids=remaining_job_ids,
                                 )
                                 return
-                        if not self.keep_pickle_files:
-                            out_path.unlink()
+                        out_path.unlink()
                     except InvalidStateError:
                         logger.warning(
                             f"Future {future} (SLURM job ID: {job_id}) was "
                             "already cancelled, exit from "
                             "FractalSlurmSSHExecutor._completion."
                         )
-                        if not self.keep_pickle_files:
-                            out_path.unlink()
-                            in_path.unlink()
+                        out_path.unlink()
+                        in_path.unlink()
 
                         self._cleanup(job_id)
                         self._handle_remaining_jobs(
@@ -1082,8 +1072,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                         return
 
                     # Clean up input pickle file
-                    if not self.keep_pickle_files:
-                        in_path.unlink()
+                    in_path.unlink()
                 self._cleanup(job_id)
                 if job.single_task_submission:
                     future.set_result(outputs[0])
