@@ -446,7 +446,6 @@ def test_fractal_email():
         FRACTAL_EMAIL_USE_LOGIN=False,
     )
     assert settings.mail_settings is not None
-
     # 6: missing required arguments
     for arg in required_mail_args:
         with pytest.raises(ValidationError):
