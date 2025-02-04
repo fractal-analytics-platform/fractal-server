@@ -11,7 +11,6 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
-import json
 import logging
 import shutil
 import sys
@@ -46,16 +45,19 @@ class MailSettings(BaseModel):
         port: SMTP server port
         password: Sender password
         instance_name: Name of SMTP server instance
-        use_starttls: Using or not security protocol
+        use_starttls: Whether to use the security protocol
+        use_login: Whether to use login
     """
 
     sender: EmailStr
     recipients: list[EmailStr] = Field(min_items=1)
     smtp_server: str
     port: int
-    password: str
+    encrypted_password: Optional[str] = None
+    encryption_key: Optional[str] = None
     instance_name: str
     use_starttls: bool
+    use_login: bool
 
 
 class FractalConfigurationError(RuntimeError):
@@ -406,7 +408,7 @@ class Settings(BaseSettings):
     """
 
     @root_validator(pre=True)
-    def check_tasks_python(cls, values) -> None:
+    def check_tasks_python(cls, values):
         """
         Perform multiple checks of the Python-interpreter variables.
 
@@ -416,7 +418,6 @@ class Settings(BaseSettings):
             `sys.executable` and set the corresponding
             `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
         """
-
         # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
         for version in ["3_9", "3_10", "3_11", "3_12"]:
             key = f"FRACTAL_TASKS_PYTHON_{version}"
@@ -575,65 +576,106 @@ class Settings(BaseSettings):
     ###########################################################################
     # SMTP SERVICE
     ###########################################################################
-    FRACTAL_EMAIL_SETTINGS: Optional[str] = None
+
+    FRACTAL_EMAIL_SENDER: Optional[EmailStr] = None
     """
-    Encrypted version of settings dictionary, with keys `sender`, `password`,
-    `smtp_server`, `port`, `instance_name`, `use_starttls`.
+    Address of the OAuth-signup email sender.
     """
-    FRACTAL_EMAIL_SETTINGS_KEY: Optional[str] = None
+    FRACTAL_EMAIL_PASSWORD: Optional[str] = None
+    """
+    Password for the OAuth-signup email sender.
+    """
+    FRACTAL_EMAIL_PASSWORD_KEY: Optional[str] = None
     """
     Key value for `cryptography.fernet` decrypt
     """
+    FRACTAL_EMAIL_SMTP_SERVER: Optional[str] = None
+    """
+    SMPT server for the OAuth-signup emails.
+    """
+    FRACTAL_EMAIL_SMTP_PORT: Optional[int] = None
+    """
+    SMPT server port for the OAuth-signup emails.
+    """
+    FRACTAL_EMAIL_INSTANCE_NAME: Optional[str] = None
+    """
+    Fractal instance name, to be included in the OAuth-signup emails.
+    """
     FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
     """
-    List of email receivers, separated with commas
+    Comma-separated list of recipients of the OAuth-signup emails.
     """
+    FRACTAL_EMAIL_USE_STARTTLS: Optional[bool] = True
+    """
+    Whether to use StartTLS when using the SMTP server.
+    """
+    FRACTAL_EMAIL_USE_LOGIN: Optional[bool] = True
+    """
+    Whether to use login when using the SMTP server.
+    """
+    email_settings: Optional[MailSettings] = None
 
-    @property
-    def MAIL_SETTINGS(self) -> Optional[MailSettings]:
-        if (
-            self.FRACTAL_EMAIL_SETTINGS is not None
-            and self.FRACTAL_EMAIL_SETTINGS_KEY is not None
-            and self.FRACTAL_EMAIL_RECIPIENTS is not None
-        ):
-            smpt_settings = (
-                Fernet(self.FRACTAL_EMAIL_SETTINGS_KEY)
-                .decrypt(self.FRACTAL_EMAIL_SETTINGS)
-                .decode("utf-8")
+    @root_validator(pre=True)
+    def validate_email_settings(cls, values):
+        email_values = {
+            k: v for k, v in values.items() if k.startswith("FRACTAL_EMAIL")
+        }
+        if email_values:
+
+            def assert_key(key: str):
+                if key not in email_values:
+                    raise ValueError(f"Missing '{key}'")
+
+            assert_key("FRACTAL_EMAIL_SENDER")
+            assert_key("FRACTAL_EMAIL_SMTP_SERVER")
+            assert_key("FRACTAL_EMAIL_SMTP_PORT")
+            assert_key("FRACTAL_EMAIL_INSTANCE_NAME")
+            assert_key("FRACTAL_EMAIL_RECIPIENTS")
+
+            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", True):
+                if "FRACTAL_EMAIL_PASSWORD" not in email_values:
+                    raise ValueError(
+                        "'FRACTAL_EMAIL_USE_LOGIN' is True but "
+                        "'FRACTAL_EMAIL_PASSWORD' is not provided."
+                    )
+                elif "FRACTAL_EMAIL_PASSWORD_KEY" not in email_values:
+                    raise ValueError(
+                        "'FRACTAL_EMAIL_USE_LOGIN' is True but "
+                        "'FRACTAL_EMAIL_PASSWORD_KEY' is not provided."
+                    )
+                else:
+                    try:
+                        (
+                            Fernet(email_values["FRACTAL_EMAIL_PASSWORD_KEY"])
+                            .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
+                            .decode("utf-8")
+                        )
+                    except Exception as e:
+                        raise ValueError(
+                            "Invalid pair (FRACTAL_EMAIL_PASSWORD, "
+                            "FRACTAL_EMAIL_PASSWORD_KEY). "
+                            f"Original error: {str(e)}."
+                        )
+
+            values["email_settings"] = MailSettings(
+                sender=email_values["FRACTAL_EMAIL_SENDER"],
+                recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
+                smtp_server=email_values["FRACTAL_EMAIL_SMTP_SERVER"],
+                port=email_values["FRACTAL_EMAIL_SMTP_PORT"],
+                encrypted_password=email_values.get("FRACTAL_EMAIL_PASSWORD"),
+                encryption_key=email_values.get("FRACTAL_EMAIL_PASSWORD_KEY"),
+                instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
+                use_starttls=email_values.get(
+                    "FRACTAL_EMAIL_USE_STARTTLS", True
+                ),
+                use_login=email_values.get("FRACTAL_EMAIL_USE_LOGIN", True),
             )
-            recipients = self.FRACTAL_EMAIL_RECIPIENTS.split(",")
-            mail_settings = MailSettings(
-                **json.loads(smpt_settings), recipients=recipients
-            )
-            return mail_settings
-        elif not all(
-            [
-                self.FRACTAL_EMAIL_RECIPIENTS is None,
-                self.FRACTAL_EMAIL_SETTINGS_KEY is None,
-                self.FRACTAL_EMAIL_SETTINGS is None,
-            ]
-        ):
-            raise ValueError(
-                "You must set all SMPT config variables: "
-                f"{self.FRACTAL_EMAIL_SETTINGS=}, "
-                f"{self.FRACTAL_EMAIL_RECIPIENTS=}, "
-                f"{self.FRACTAL_EMAIL_SETTINGS_KEY=}, "
-            )
+
+        return values
 
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
-
-    def check_fractal_mail_settings(self):
-        """
-        Checks that the mail settings are properly set.
-        """
-        try:
-            self.MAIL_SETTINGS
-        except Exception as e:
-            raise FractalConfigurationError(
-                f"Invalid email configuration settings. Original error: {e}"
-            )
 
     def check_db(self) -> None:
         """
@@ -740,7 +782,6 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
-        self.check_fractal_mail_settings()
 
     def get_sanitized(self) -> dict:
         def _must_be_sanitized(string) -> bool:

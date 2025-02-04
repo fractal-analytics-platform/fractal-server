@@ -2,10 +2,13 @@
 
 # 2.12.1
 
+> Note: this version requires a manual update of email-related configuration variables.
+
 * API:
     * Deprecate `use_dataset_filters` query parameter for `/project/{project_id}/dataset/{dataset_id}/images/query/` (\#2231).
 * App:
     * Add fractal-server version to logs (\#2228).
+    * Review configuration variables for email-sending (\#2241).
 * Database:
     * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
 * Runner

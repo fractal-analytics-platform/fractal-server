@@ -56,20 +56,29 @@ jobs:
             FRACTAL_RUNNER_BACKEND: local
             JWT_SECRET_KEY: jwt_secret_key
             JWT_EXPIRE_SECONDS: 1000
+            # Postgres
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
             POSTGRES_DB: fractal_test
             POSTGRES_HOST: localhost
             POSTGRES_PORT: 5432
-            # FRACTAL_EMAIL_SETTINGS and KEY are generated with the following command
-            # `printf "fakepassword\n" | poetry run fractalctl email-settings sender@example.org localhost 1025 test --skip-starttls`
-            FRACTAL_EMAIL_SETTINGS: gAAAAABnYvLgoSeECnrXlv1UoP4D_c9Of0xmwMJVopBA3TIDjOvx6YDVfe2ULz8yGr8Ba5Id8rRLjCXa_Ys8iHjvuniJyvsX0mDrc3IGSoofMEeeSCvYEe4iSWLeb_qTNVNPc4IT2-SLB-F7dEvkwzyAFnEm9dVmApd4_lQLm9_wJoS-tz1Q1K8E1_jJSgpfGgwHaINHICVh1UL_qHjIa3DwFvDPvt32tLLBZTL7oN88A8RCmg00ThIZs4HN7OQkvfninfOiM060Lb-AeNViCVgBX-bIPWZaeQ==
-            FRACTAL_EMAIL_SETTINGS_KEY: 4otDt3R-8p4S97QT0gcUzynCalByypTv01YntqQ9XFk=
-            FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
+            # Dex (OAuth)
             OAUTH_DEXIDP_CLIENT_ID: client_test_id
             OAUTH_DEXIDP_CLIENT_SECRET: client_test_secret
             OAUTH_DEXIDP_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
             OAUTH_DEXIDP_OIDC_CONFIGURATION_ENDPOINT: http://127.0.0.1:5556/dex/.well-known/openid-configuration
+            # Email
+            FRACTAL_EMAIL_SENDER: sender@example.org
+            FRACTAL_EMAIL_SMTP_SERVER: localhost
+            FRACTAL_EMAIL_SMTP_PORT: 1025
+            FRACTAL_EMAIL_INSTANCE_NAME: test
+            FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
+            FRACTAL_EMAIL_USE_STARTTLS: false
+            FRACTAL_EMAIL_USE_LOGIN: true
+            # FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KET are generated with the following command
+            # `printf "fakepassword\n" | poetry run fractalctl encrypt-email-password`
+            FRACTAL_EMAIL_PASSWORD: gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuMP5fjvkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg==
+            FRACTAL_EMAIL_PASSWORD_KEY: lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4=
           run: |
             fractalctl set-db
             fractalctl start --port 8001 &

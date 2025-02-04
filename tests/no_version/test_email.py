@@ -3,21 +3,25 @@ import contextlib
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.security import get_user_manager
+from fractal_server.config import MailSettings
 
 
 async def test_server_not_available(override_settings_factory, db, caplog):
     override_settings_factory(
-        FRACTAL_EMAIL_SETTINGS=(
-            "gAAAAABnYvLgoSeECnrXlv1UoP4D_c9Of0xmwMJVopBA3TIDjOvx6YDVfe2ULz8yG"
-            "r8Ba5Id8rRLjCXa_Ys8iHjvuniJyvsX0mDrc3IGSoofMEeeSCvYEe4iSWLeb_qTNV"
-            "NPc4IT2-SLB-F7dEvkwzyAFnEm9dVmApd4_lQLm9_wJoS-tz1Q1K8E1_jJSgpfGgw"
-            "HaINHICVh1UL_qHjIa3DwFvDPvt32tLLBZTL7oN88A8RCmg00ThIZs4HN7OQkvfni"
-            "nfOiM060Lb-AeNViCVgBX-bIPWZaeQ=="
-        ),
-        FRACTAL_EMAIL_SETTINGS_KEY=(
-            "4otDt3R-8p4S97QT0gcUzynCalByypTv01YntqQ9XFk="
-        ),
-        FRACTAL_EMAIL_RECIPIENTS="test@example.org",
+        email_settings=MailSettings(
+            sender="fractal@fractal.fractal",
+            recipients=["test@example.org"],
+            smtp_server="localhost",
+            port=1234,
+            encrypted_password=(
+                "gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuM"
+                "P5fjvkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg=="
+            ),
+            encryption_key="lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4=",
+            instance_name="fractal",
+            use_starttls=False,
+            use_login=True,
+        )
     )
     user = UserOAuth(
         email="user@example.org",
