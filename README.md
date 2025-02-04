@@ -92,7 +92,7 @@
 | fractal\_server/app/runner/v2/\_local\_experimental/\_\_init\_\_.py            |       22 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local\_experimental/\_local\_config.py         |       39 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local\_experimental/\_submit\_setup.py         |        8 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/\_local\_experimental/executor.py                |       74 |        1 |       16 |        3 |     96% |72->80, 77, 140->144 |
+| fractal\_server/app/runner/v2/\_local\_experimental/executor.py                |       74 |        0 |       16 |        2 |     98% |72->80, 140->144 |
 | fractal\_server/app/runner/v2/\_slurm\_common/\_\_init\_\_.py                  |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_slurm\_common/get\_slurm\_config.py            |       70 |        1 |       34 |        3 |     96% |60, 73->77, 104->108 |
 | fractal\_server/app/runner/v2/\_slurm\_ssh/\_\_init\_\_.py                     |       27 |        1 |        2 |        1 |     93% |        66 |
@@ -125,10 +125,10 @@
 | fractal\_server/app/schemas/v2/task\_group.py                                  |       82 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/workflow.py                                     |       41 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/workflowtask.py                                 |      128 |        0 |       22 |        0 |    100% |           |
-| fractal\_server/app/security/\_\_init\_\_.py                                   |      178 |       30 |       34 |        1 |     81% |117-130, 149-150, 155-164, 169-177, 210, 265, 347-351 |
-| fractal\_server/app/security/signup\_email.py                                  |       17 |        6 |        2 |        0 |     58% |     27-35 |
+| fractal\_server/app/security/\_\_init\_\_.py                                   |      178 |       30 |       34 |        1 |     81% |117-130, 149-150, 155-164, 169-177, 210, 268, 350-354 |
+| fractal\_server/app/security/signup\_email.py                                  |       20 |        8 |        4 |        0 |     50% |     33-44 |
 | fractal\_server/app/user\_settings.py                                          |       12 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/config.py                                                      |      282 |        6 |       86 |        6 |     96% |673-674, 679, 688, 693, 700, 705->exit |
+| fractal\_server/config.py                                                      |      304 |        6 |       92 |        6 |     96% |715-716, 721, 730, 735, 742, 747->exit |
 | fractal\_server/images/\_\_init\_\_.py                                         |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                               |       53 |        0 |       16 |        1 |     99% |   98->109 |
 | fractal\_server/images/tools.py                                                |       37 |        0 |       14 |        0 |    100% |           |
@@ -159,7 +159,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8625** |  **402** | **1824** |  **135** | **94%** |           |
+|                                                                      **TOTAL** | **8650** |  **403** | **1832** |  **134** | **94%** |           |
 
 
 ## Setup coverage badge
