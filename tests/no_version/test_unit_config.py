@@ -469,7 +469,6 @@ def test_fractal_email():
             FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
             FRACTAL_EMAIL_PASSWORD_KEY="invalid",
         )
-
     # 8: fail with sender emails
     with pytest.raises(ValidationError):
         Settings(

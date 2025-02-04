@@ -579,11 +579,11 @@ class Settings(BaseSettings):
 
     FRACTAL_EMAIL_SENDER: Optional[EmailStr] = None
     """
-    TBD
+    Address of the OAuth-signup email sender.
     """
     FRACTAL_EMAIL_PASSWORD: Optional[str] = None
     """
-    TBD
+    Password for the OAuth-signup email sender.
     """
     FRACTAL_EMAIL_PASSWORD_KEY: Optional[str] = None
     """
@@ -591,27 +591,27 @@ class Settings(BaseSettings):
     """
     FRACTAL_EMAIL_SMTP_SERVER: Optional[str] = None
     """
-    TBD
+    SMPT server for the OAuth-signup emails.
     """
     FRACTAL_EMAIL_SMTP_PORT: Optional[int] = None
     """
-    TBD
+    SMPT server port for the OAuth-signup emails.
     """
     FRACTAL_EMAIL_INSTANCE_NAME: Optional[str] = None
     """
-    TBD
+    Fractal instance name, to be included in the OAuth-signup emails.
     """
     FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
     """
-    List of email receivers, separated with commas
+    Comma-separated list of recipients of the OAuth-signup emails.
     """
     FRACTAL_EMAIL_USE_STARTTLS: Optional[bool] = True
     """
-    TBD
+    Whether to use StartTLS when using the SMTP server.
     """
     FRACTAL_EMAIL_USE_LOGIN: Optional[bool] = True
     """
-    TBD
+    Whether to use login when using the SMTP server.
     """
     email_settings: Optional[MailSettings] = None
 
