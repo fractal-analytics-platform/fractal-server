@@ -92,7 +92,7 @@
 | fractal\_server/app/runner/v2/\_local\_experimental/\_\_init\_\_.py            |       22 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local\_experimental/\_local\_config.py         |       39 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local\_experimental/\_submit\_setup.py         |        8 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/\_local\_experimental/executor.py                |       74 |        1 |       16 |        3 |     96% |72->80, 77, 140->144 |
+| fractal\_server/app/runner/v2/\_local\_experimental/executor.py                |       74 |        0 |       16 |        2 |     98% |72->80, 140->144 |
 | fractal\_server/app/runner/v2/\_slurm\_common/\_\_init\_\_.py                  |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_slurm\_common/get\_slurm\_config.py            |       70 |        1 |       34 |        3 |     96% |60, 73->77, 104->108 |
 | fractal\_server/app/runner/v2/\_slurm\_ssh/\_\_init\_\_.py                     |       27 |        1 |        2 |        1 |     93% |        66 |
@@ -133,7 +133,7 @@
 | fractal\_server/images/models.py                                               |       53 |        0 |       16 |        1 |     99% |   98->109 |
 | fractal\_server/images/tools.py                                                |       37 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/logger.py                                                      |       44 |        2 |       12 |        2 |     93% |  161, 165 |
-| fractal\_server/main.py                                                        |       65 |        1 |       10 |        1 |     97% |       131 |
+| fractal\_server/main.py                                                        |       66 |        1 |       10 |        1 |     97% |       132 |
 | fractal\_server/ssh/\_\_init\_\_.py                                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/ssh/\_fabric.py                                                |      264 |        0 |       46 |        3 |     99% |150->152, 257->exit, 299->353 |
 | fractal\_server/string\_tools.py                                               |       17 |        0 |        8 |        0 |    100% |           |
@@ -159,7 +159,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8621** |  **414** | **1840** |  **145** | **94%** |           |
+|                                                                      **TOTAL** | **8622** |  **413** | **1840** |  **144** | **94%** |           |
 
 
 ## Setup coverage badge
