@@ -161,3 +161,45 @@ def test_SlurmJob():
             slurm_config=get_default_slurm_config(),
             slurm_file_prefix="prefix",
         )
+
+
+def test_FractalSlurmExecutor_init(
+    tmp_path,
+    override_settings_factory,
+):
+
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
+
+    with pytest.raises(
+        RuntimeError,
+        match="Missing attribute FractalSlurmExecutor.slurm_user",
+    ):
+        with FractalSlurmExecutor(
+            slurm_user=None,
+            workflow_dir_local=tmp_path / "job_dir1",
+            workflow_dir_remote=tmp_path / "remote_job_dir1",
+        ):
+            pass
+
+    with pytest.raises(
+        RuntimeError,
+        match="Missing attribute FractalSlurmExecutor.slurm_user",
+    ):
+        with FractalSlurmExecutor(
+            slurm_user="",
+            workflow_dir_local=tmp_path / "job_dir1",
+            workflow_dir_remote=tmp_path / "remote_job_dir1",
+        ):
+            pass
+
+    with pytest.raises(
+        RuntimeError,
+        match="SLURM account must be set via the request body",
+    ):
+        with FractalSlurmExecutor(
+            slurm_user="something",
+            workflow_dir_local=tmp_path / "job_dir1",
+            workflow_dir_remote=tmp_path / "remote_job_dir1",
+            common_script_lines=["#SBATCH --account=myaccount"],
+        ):
+            pass
