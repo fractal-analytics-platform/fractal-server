@@ -652,7 +652,8 @@ class Settings(BaseSettings):
                         )
                     except Exception as e:
                         raise ValueError(
-                            "Invalid FRACTAL_EMAIL_PASSWORD. "
+                            "Invalid pair (FRACTAL_EMAIL_PASSWORD, "
+                            "FRACTAL_EMAIL_PASSWORD_KEY). "
                             f"Original error: {str(e)}."
                         )
 
