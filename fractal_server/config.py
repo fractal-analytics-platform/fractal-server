@@ -613,7 +613,7 @@ class Settings(BaseSettings):
     """
     TBD
     """
-    mail_settings: Optional[MailSettings] = None
+    email_settings: Optional[MailSettings] = None
 
     @root_validator(pre=True)
     def validate_email_settings(cls, values):
@@ -657,7 +657,7 @@ class Settings(BaseSettings):
                             f"Original error: {str(e)}."
                         )
 
-            values["FRACTAL_EMAIL_SETTINGS"] = MailSettings(
+            values["email_settings"] = MailSettings(
                 sender=email_values["FRACTAL_EMAIL_SENDER"],
                 recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
                 smtp_server=email_values["FRACTAL_EMAIL_SMTP_SERVER"],

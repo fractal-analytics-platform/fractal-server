@@ -8,7 +8,7 @@ from fractal_server.config import MailSettings
 
 async def test_server_not_available(override_settings_factory, db, caplog):
     override_settings_factory(
-        FRACTAL_EMAIL_SETTINGS=MailSettings(
+        email_settings=MailSettings(
             sender="fractal@fractal.fractal",
             recipients=["test@example.org"],
             smtp_server="localhost",

@@ -409,7 +409,7 @@ def test_fractal_email():
     )
     # 1: no mail settings
     settings = Settings(**common_attributes)
-    assert settings.mail_settings is None
+    assert settings.email_settings is None
     # 2: FRACTAL_EMAIL_USE_LOGIN is true, but no password settings
     with pytest.raises(ValidationError):
         Settings(
@@ -437,15 +437,15 @@ def test_fractal_email():
         FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
         FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
     )
-    assert settings.mail_settings is not None
-    assert len(settings.mail_settings.recipients) == 2
+    assert settings.email_settings is not None
+    assert len(settings.email_settings.recipients) == 2
     # 5: FRACTAL_EMAIL_USE_LOGIN is false and no password needed
     settings = Settings(
         **common_attributes,
         **required_mail_args,
         FRACTAL_EMAIL_USE_LOGIN=False,
     )
-    assert settings.mail_settings is not None
+    assert settings.email_settings is not None
     # 6: missing required arguments
     for arg in required_mail_args:
         with pytest.raises(ValidationError):
@@ -455,23 +455,20 @@ def test_fractal_email():
                 FRACTAL_EMAIL_USE_LOGIN=False,
             )
     # 7a: fail with Fernet encryption
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(ValidationError, match="FRACTAL_EMAIL_PASSWORD"):
         Settings(
             **common_attributes,
             **required_mail_args,
             FRACTAL_EMAIL_PASSWORD="invalid",
             FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
         )
-    assert "FRACTAL_EMAIL_PASSWORD" in e.value.errors()[0]["msg"]
-    debug(e.value.errors()[0]["msg"])
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(ValidationError, match="FRACTAL_EMAIL_PASSWORD"):
         Settings(
             **common_attributes,
             **required_mail_args,
             FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
             FRACTAL_EMAIL_PASSWORD_KEY="invalid",
         )
-    assert "FRACTAL_EMAIL_PASSWORD_KEY" in e.value.errors()[0]["msg"]
 
     # 8: fail with sender emails
     with pytest.raises(ValidationError):
