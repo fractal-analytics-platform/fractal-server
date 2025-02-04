@@ -88,7 +88,6 @@ class SlurmJob:
         self,
         num_tasks_tot: int,
         slurm_config: SlurmConfig,
-        workflow_task_file_prefix: Optional[str] = None,
         slurm_file_prefix: Optional[str] = None,
         wftask_file_prefixes: Optional[tuple[str, ...]] = None,
         single_task_submission: bool = False,
