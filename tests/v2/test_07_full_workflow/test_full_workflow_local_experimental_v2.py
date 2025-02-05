@@ -1,8 +1,16 @@
-from common_functions import failing_workflow_UnknownError
-from common_functions import full_workflow
-from common_functions import full_workflow_TaskExecutionError
-from common_functions import non_executable_task_command
-from common_functions import workflow_with_non_python_task
+from tests.v2.test_07_full_workflow.common_functions import (
+    failing_workflow_UnknownError,
+)
+from tests.v2.test_07_full_workflow.common_functions import full_workflow
+from tests.v2.test_07_full_workflow.common_functions import (
+    full_workflow_TaskExecutionError,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    non_executable_task_command,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    workflow_with_non_python_task,
+)
 
 FRACTAL_RUNNER_BACKEND = "local_experimental"
 

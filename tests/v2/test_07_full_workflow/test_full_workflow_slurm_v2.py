@@ -1,15 +1,21 @@
 import logging
 
 import pytest
-from common_functions import failing_workflow_UnknownError
-from common_functions import full_workflow
-from common_functions import full_workflow_TaskExecutionError
-from common_functions import non_executable_task_command
 
 from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
 )
 from tests.fixtures_slurm import SLURM_USER
+from tests.v2.test_07_full_workflow.common_functions import (
+    failing_workflow_UnknownError,
+)
+from tests.v2.test_07_full_workflow.common_functions import full_workflow
+from tests.v2.test_07_full_workflow.common_functions import (
+    full_workflow_TaskExecutionError,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    non_executable_task_command,
+)
 
 
 FRACTAL_RUNNER_BACKEND = "slurm"
