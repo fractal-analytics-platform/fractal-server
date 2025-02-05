@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -12,6 +13,7 @@ from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 
 
+@pytest.mark.container
 async def test_deactivate_fail_no_venv_path(
     tmp777_path,
     db,
@@ -60,6 +62,7 @@ async def test_deactivate_fail_no_venv_path(
     assert "does not exist" in task_group_activity_v2.log
 
 
+@pytest.mark.container
 async def test_deactivate_ssh_fail(
     tmp777_path,
     db,
@@ -123,6 +126,7 @@ async def test_deactivate_ssh_fail(
     assert FAKE_ERROR_MSG in activity.log
 
 
+@pytest.mark.container
 async def test_deactivate_wheel_no_wheel_path(
     tmp777_path,
     db,
@@ -178,6 +182,7 @@ async def test_deactivate_wheel_no_wheel_path(
     assert "Invalid wheel path" in task_group_activity_v2.log
 
 
+@pytest.mark.container
 async def test_deactivate_wheel_package_created_before_2_9_0(
     db,
     first_user,
@@ -294,6 +299,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     assert "Recreate pip-freeze information" in activity_deactivate.log
 
 
+@pytest.mark.container
 async def test_deactivate_ssh_github_dependency(
     tmp777_path,
     db,

@@ -58,6 +58,7 @@ class MockFractalSlurmSSHExecutor(FractalSlurmSSHExecutor):
         self._create_remote_folder_structure()
 
 
+@pytest.mark.container
 def test_errors_failed_init_1(
     override_settings_factory,
     fractal_ssh,
@@ -86,6 +87,7 @@ def test_errors_failed_init_1(
     assert len(threads_post) == len(threads_pre)
 
 
+@pytest.mark.container
 def test_errors_failed_init_2(
     override_settings_factory,
     current_py_version,
@@ -116,6 +118,7 @@ def test_errors_failed_init_2(
     assert len(threads_post) == len(threads_pre)
 
 
+@pytest.mark.container
 def test_errors_failed_init_3(
     override_settings_factory,
     current_py_version,
@@ -203,6 +206,7 @@ def test_slurm_ssh_executor_handshake_fail(
                 assert "Fractal server versions not available" in log_text
 
 
+@pytest.mark.container
 def test_slurm_ssh_executor_submit(
     fractal_ssh,
     tmp_path: Path,
@@ -239,6 +243,7 @@ def test_slurm_ssh_executor_submit(
     assert len(list((tmp_path / "job_dir").glob("*.tar.gz"))) == 0
 
 
+@pytest.mark.container
 def test_slurm_ssh_executor_map(
     fractal_ssh: FractalSSH,
     tmp_path: Path,
@@ -271,6 +276,7 @@ def test_slurm_ssh_executor_map(
         assert results == [2, 4, 6]
 
 
+@pytest.mark.container
 def test_slurm_ssh_executor_submit_with_pre_sbatch(
     fractal_ssh,
     tmp_path: Path,
@@ -312,6 +318,7 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
     assert auxfile.exists()
 
 
+@pytest.mark.container
 def test_slurm_ssh_executor_shutdown_before_job_submission(
     fractal_ssh,
     tmp_path: Path,
@@ -391,6 +398,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
         debug(exc_info.value)
 
 
+@pytest.mark.container
 def test_slurm_ssh_executor_error_in_calllback(
     fractal_ssh,
     tmp_path: Path,

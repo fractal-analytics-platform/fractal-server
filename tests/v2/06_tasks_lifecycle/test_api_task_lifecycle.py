@@ -253,6 +253,7 @@ async def test_reactivate_task_group_api(
 
 
 @pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.container
 async def test_lifecycle(
     client,
     MockCurrentUser,

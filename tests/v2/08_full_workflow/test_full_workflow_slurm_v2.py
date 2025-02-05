@@ -1,5 +1,6 @@
 import logging
 
+import pytest
 from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
@@ -27,6 +28,7 @@ def _reset_permissions_for_user_folder(folder):
     )
 
 
+@pytest.mark.container
 async def test_full_workflow_slurm(
     client,
     MockCurrentUser,
@@ -67,6 +69,7 @@ async def test_full_workflow_slurm(
     _reset_permissions_for_user_folder(project_dir)
 
 
+@pytest.mark.container
 async def test_full_workflow_TaskExecutionError_slurm(
     client,
     MockCurrentUser,
@@ -112,6 +115,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     _reset_permissions_for_user_folder(project_dir)
 
 
+@pytest.mark.container
 async def test_non_executable_task_command_slurm(
     client,
     MockCurrentUser,
@@ -156,6 +160,7 @@ async def test_non_executable_task_command_slurm(
     _reset_permissions_for_user_folder(project_dir)
 
 
+@pytest.mark.container
 async def test_failing_workflow_UnknownError_slurm(
     client,
     MockCurrentUser,

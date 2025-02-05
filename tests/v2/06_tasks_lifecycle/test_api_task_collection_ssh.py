@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from fractal_server.ssh._fabric import FractalSSH
@@ -21,6 +22,7 @@ def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
     fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
+@pytest.mark.container
 async def test_task_collection_ssh_from_pypi(
     db,
     app,
@@ -186,6 +188,7 @@ async def test_task_collection_ssh_from_pypi(
         _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
 
+@pytest.mark.container
 async def test_task_collection_ssh_failure(
     db,
     app,

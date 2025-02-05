@@ -11,6 +11,7 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 
 
+@pytest.mark.container
 async def test_reactivate_ssh_venv_exists(
     tmp777_path,
     db,
@@ -63,6 +64,7 @@ async def test_reactivate_ssh_venv_exists(
 
 
 @pytest.mark.parametrize("make_rmtree_fail", [False, True])
+@pytest.mark.container
 async def test_reactivate_ssh_fail(
     tmp777_path,
     db,
