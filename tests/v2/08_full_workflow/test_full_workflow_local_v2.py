@@ -1,8 +1,8 @@
-from containers.common_functions import failing_workflow_UnknownError
-from containers.common_functions import full_workflow
-from containers.common_functions import full_workflow_TaskExecutionError
-from containers.common_functions import non_executable_task_command
-from containers.common_functions import workflow_with_non_python_task
+from common_functions import failing_workflow_UnknownError
+from common_functions import full_workflow
+from common_functions import full_workflow_TaskExecutionError
+from common_functions import non_executable_task_command
+from common_functions import workflow_with_non_python_task
 
 FRACTAL_RUNNER_BACKEND = "local"
 
