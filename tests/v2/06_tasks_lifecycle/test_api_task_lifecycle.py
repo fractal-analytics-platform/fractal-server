@@ -16,6 +16,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from tests.fixtures_slurm import SLURM_USER
 
 settings = Inject(get_settings)
 
@@ -251,20 +252,37 @@ async def test_reactivate_task_group_api(
         assert res.json()["status"] == "failed"
 
 
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local"])
 async def test_lifecycle(
     client,
     MockCurrentUser,
     db,
     testdata_path,
+    FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
     app,
     tmp777_path: Path,
     request,
     current_py_version,
 ):
-    overrides = dict(FRACTAL_RUNNER_BACKEND="local")
+    overrides = dict(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     override_settings_factory(**overrides)
-    user_settings_dict = {}
+
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = request.getfixturevalue(
+            "fractal_ssh_list"
+        )
+        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
+        ssh_keys = request.getfixturevalue("ssh_keys")
+        user_settings_dict = dict(
+            ssh_host=slurmlogin_ip,
+            ssh_username=SLURM_USER,
+            ssh_private_key_path=ssh_keys["private"],
+            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+        )
+    else:
+        user_settings_dict = {}
 
     # Absolute path to wheel file (use a path in tmp77_path, so that it is
     # also accessible on the SSH remote host)
