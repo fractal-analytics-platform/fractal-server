@@ -1199,8 +1199,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         script_lines = slurm_config.sort_script_lines(script_lines)
         logger.debug(script_lines)
 
-        # Always print output of `pwd`
-        script_lines.append('echo "Working directory (pwd): `pwd`"\n')
+        # Always print output of `uname -n` and `pwd`
+        script_lines.append(
+            '"Hostname: `uname -n`; current directory: `pwd`"\n'
+        )
 
         # Complete script preamble
         script_lines.append("\n")
