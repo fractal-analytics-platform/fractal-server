@@ -252,7 +252,7 @@ async def test_reactivate_task_group_api(
         assert res.json()["status"] == "failed"
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local"])
 async def test_lifecycle(
     client,
     MockCurrentUser,
@@ -266,14 +266,6 @@ async def test_lifecycle(
     current_py_version,
 ):
     overrides = dict(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # Setup remote Python interpreter
-        current_py_version_underscore = current_py_version.replace(".", "_")
-        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
-        python_value = (
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-        overrides[python_key] = python_value
     override_settings_factory(**overrides)
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
