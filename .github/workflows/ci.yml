@@ -45,13 +45,61 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv tests/v2/03_api --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" tests/v2/03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-api-${{ matrix.python-version }}
           path: coverage-data-api-${{ matrix.python-version }}*
+
+
+  tests_not_api:
+
+    name: "V2 - not API - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Install poetry
+        run: pipx install poetry==2.0.0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev --no-interaction
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" --ignore tests/v2/03_api --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-not-api-${{ matrix.python-version }}
+          path: coverage-data-not-api-${{ matrix.python-version }}*
+
+
 
   tests_containers:
 
@@ -105,7 +153,7 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-containers-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" tests/no_version tests/v2 --ignore tests/v2/03_api --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -113,56 +161,10 @@ jobs:
           name: coverage-data-containers-${{ matrix.python-version }}
           path: coverage-data-containers-${{ matrix.python-version }}*
 
-
-  tests_no_containers:
-    name: "V2 - NO Containers - Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Start Postgres
-        run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
-
-      - name: Install poetry
-        run: pipx install poetry==2.0.0
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "poetry"
-
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
-
-      - name: Test with pytest
-        env:
-          COVERAGE_FILE: coverage-data-no-containers-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" tests/no_version tests/v2 --ignore tests/v2/03_api --durations 0
-
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-data-no-containers-${{ matrix.python-version }}
-          path: coverage-data-no-containers-${{ matrix.python-version }}*
-
-
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: [tests_api, tests_containers, tests_no_containers]
+    needs: [tests_api, tests_not_api, tests_containers]
 
     permissions:
       pull-requests: write
