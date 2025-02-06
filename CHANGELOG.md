@@ -21,6 +21,8 @@
     * Bump `uvicorn` version (\#2242).
 * Testing:
     * Improve testing of sudo-Slurm executor (\#2245, \#2246).
+    * Introduce `container` pytest marker (\#2249).
+    * Split CI GitHub Actions in three jobs: API, not API and Containers (\#2249).
 
 # 2.12.0
 
