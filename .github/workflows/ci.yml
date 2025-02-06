@@ -16,7 +16,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ${{ github.event_name == 'pull_request' && fromJson('["3.10"]') || fromJson('["3.10", "3.11", "3.12"]') }}
+        python-version: ${{ github.event_name == 'pull_request' && '3.10' || '3.10,3.11,3.12' }}
+
 
     steps:
       - uses: actions/checkout@v4
