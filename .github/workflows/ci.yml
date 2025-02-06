@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: ["main"]
 
-permissions: {}
-
 jobs:
 
   tests_api:
@@ -179,7 +177,6 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
-      actions: read
 
     steps:
       - uses: actions/checkout@v4
