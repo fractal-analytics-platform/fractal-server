@@ -14,6 +14,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
@@ -85,7 +86,7 @@ def collect_ssh(
                 return
 
             # Log some info
-            logger.debug("START")
+            logger.info("START")
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
@@ -137,7 +138,7 @@ def collect_ssh(
                         Path(task_group.path) / wheel_filename
                     ).as_posix()
                     tmp_wheel_path = (Path(tmpdir) / wheel_filename).as_posix()
-                    logger.debug(
+                    logger.info(
                         f"Write wheel-file contents into {tmp_wheel_path}"
                     )
                     with open(tmp_wheel_path, "wb") as f:
@@ -171,7 +172,7 @@ def collect_ssh(
                     logger_name=LOGGER_NAME,
                 )
 
-                logger.debug("installing - START")
+                logger.info("installing - START")
 
                 # Set status to ONGOING and refresh logs
                 activity.status = TaskGroupActivityStatusV2.ONGOING
@@ -286,14 +287,13 @@ def collect_ssh(
                 )
 
                 # Finalize (write metadata to DB)
-                logger.debug("finalising - START")
+                logger.info("finalising - START")
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
-                logger.debug("finalising - END")
-                logger.debug("END")
-
-                logger.debug("END")
+                logger.info("finalising - END")
+                logger.info("END")
+                reset_logger_handlers(logger)
 
             except Exception as collection_e:
                 # Delete corrupted package dir

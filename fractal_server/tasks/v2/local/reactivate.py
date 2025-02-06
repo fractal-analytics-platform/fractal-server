@@ -13,6 +13,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
@@ -133,6 +134,8 @@ def reactivate_local(
                 task_group.active = True
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.debug("END")
+
+                reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
                 # Delete corrupted venv_path

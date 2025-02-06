@@ -12,6 +12,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.utils import get_log_path
@@ -69,7 +70,7 @@ def reactivate_ssh(
                 return
 
             # Log some info
-            logger.debug("START")
+            logger.info("START")
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
@@ -152,28 +153,30 @@ def reactivate_ssh(
                 # Create remote directory for scripts
                 fractal_ssh.mkdir(folder=script_dir_remote)
 
-                logger.debug("start - create venv")
+                logger.info("start - create venv")
                 _customize_and_run_template(
                     template_filename="1_create_venv.sh",
                     **common_args,
                 )
-                logger.debug("end - create venv")
+                logger.info("end - create venv")
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.debug("start - install from pip freeze")
+                logger.info("start - install from pip freeze")
                 _customize_and_run_template(
                     template_filename="6_pip_install_from_freeze.sh",
                     **common_args,
                 )
-                logger.debug("end - install from pip freeze")
+                logger.info("end - install from pip freeze")
                 activity.log = get_current_log(log_file_path)
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
                 task_group.active = True
                 task_group = add_commit_refresh(obj=task_group, db=db)
-                logger.debug("END")
+                logger.info("END")
+
+                reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
                 # Delete corrupted venv_path
