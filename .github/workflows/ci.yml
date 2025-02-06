@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions: {}
+
 jobs:
 
   tests_api:
@@ -23,6 +25,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Start Postgres
         run: |
@@ -177,9 +181,10 @@ jobs:
       contents: write
 
     steps:
+      # Note: we cannot add `persist-credentials: false`, since credentials
+      # are needed for a `git push` operation within
+      # py-cov-action/python-coverage-comment-action@v3
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - run: pipx install poetry==2.0.0
 
