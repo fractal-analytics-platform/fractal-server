@@ -15,6 +15,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
@@ -80,7 +81,7 @@ def collect_local(
                 return
 
             # Log some info
-            logger.debug("START")
+            logger.info("START")
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
@@ -101,7 +102,7 @@ def collect_local(
             try:
                 # Create task_group.path folder
                 Path(task_group.path).mkdir(parents=True)
-                logger.debug(f"Created {task_group.path}")
+                logger.info(f"Created {task_group.path}")
 
                 # Write wheel file and set task_group.wheel_path
                 if wheel_file is not None:
@@ -109,9 +110,7 @@ def collect_local(
                     wheel_path = (
                         Path(task_group.path) / wheel_file.filename
                     ).as_posix()
-                    logger.debug(
-                        f"Write wheel-file contents into {wheel_path}"
-                    )
+                    logger.info(f"Write wheel-file contents into {wheel_path}")
                     with open(wheel_path, "wb") as f:
                         f.write(wheel_file.contents)
                     task_group.wheel_path = wheel_path
@@ -256,12 +255,14 @@ def collect_local(
                 )
 
                 # Finalize (write metadata to DB)
-                logger.debug("finalising - START")
+                logger.info("finalising - START")
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
-                logger.debug("finalising - END")
-                logger.debug("END")
+                logger.info("finalising - END")
+                logger.info("END")
+
+                reset_logger_handlers(logger)
 
             except Exception as collection_e:
                 # Delete corrupted package dir

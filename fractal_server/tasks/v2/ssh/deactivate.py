@@ -14,6 +14,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.utils import FORBIDDEN_DEPENDENCY_STRINGS
@@ -251,6 +252,8 @@ def deactivate_ssh(
                 activity.log = get_current_log(log_file_path)
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                reset_logger_handlers(logger)
 
             except Exception as e:
                 fail_and_cleanup(
