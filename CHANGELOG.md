@@ -11,6 +11,8 @@
     * Review configuration variables for email-sending (\#2241).
 * Database:
     * Remove `run_migrations_offline` from `env.py` and make `run_migrations_online` sync (\#2239).
+* Task lifecycle:
+    * Reset logger handlers upon success of a background lifecycle operation, to avoid open file descriptors (\#2256).
 * Runner
     * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON` config variable, if set (\#2240).
     * Add `uname -n` to SLURM submission scripts (\#2247).
