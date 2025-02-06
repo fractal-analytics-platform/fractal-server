@@ -16,7 +16,10 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ${{ github.event_name == 'pull_request' && '3.10' || '3.10,3.11,3.12' }}
+        python-version:
+          - 3.10
+          - ${{ github.event_name != 'pull_request' && '3.11' || '' }}
+          - ${{ github.event_name != 'pull_request' && '3.12' || '' }}
 
 
     steps:
