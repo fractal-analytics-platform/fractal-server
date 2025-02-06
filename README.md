@@ -76,7 +76,7 @@
 | fractal\_server/app/runner/executors/slurm/sudo/\_check\_jobs\_status.py       |       24 |       11 |       10 |        1 |     47% |12-31, 55-62 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_executor\_wait\_thread.py    |       52 |        5 |       14 |        3 |     88% |80-83, 98->exit, 126->exit, 129-132 |
 | fractal\_server/app/runner/executors/slurm/sudo/\_subprocess\_run\_as\_user.py |       46 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      447 |       62 |       98 |       17 |     85% |476, 578, 583, 592, 601, 636-647, 653, 792-793, 892-896, 911->906, 917-926, 937-942, 975-980, 1018, 1036-1042, 1088, 1107-1114, 1141-1143, 1176->1175, 1200-1210, 1214-1234 |
+| fractal\_server/app/runner/executors/slurm/sudo/executor.py                    |      447 |       67 |       98 |       17 |     84% |476, 578, 583, 592, 601, 636-647, 653, 792-793, 868-876, 892-896, 911->906, 917-926, 937-942, 975-980, 1018, 1036-1042, 1088, 1107-1114, 1141-1143, 1176->1175, 1200-1210, 1214-1234 |
 | fractal\_server/app/runner/executors/slurm/utils\_executors.py                 |       17 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/runner/extract\_archive.py                                 |       32 |        2 |        8 |        2 |     90% |    25, 85 |
 | fractal\_server/app/runner/filenames.py                                        |        2 |        0 |        0 |        0 |    100% |           |
@@ -159,7 +159,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8661** |  **403** | **1832** |  **134** | **94%** |           |
+|                                                                      **TOTAL** | **8661** |  **408** | **1832** |  **134** | **94%** |           |
 
 
 ## Setup coverage badge
