@@ -19,6 +19,7 @@ from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2._aux_runner import get_default_task_files
 
 
+@pytest.mark.container
 async def test_scancel_during_execution(
     tmp777_path: Path, monkey_slurm, slurm_working_folders
 ):

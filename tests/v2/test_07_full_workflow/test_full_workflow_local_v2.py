@@ -1,36 +1,23 @@
-import logging
-
-from common_functions import failing_workflow_UnknownError
-from common_functions import full_workflow
-from common_functions import full_workflow_TaskExecutionError
-from common_functions import non_executable_task_command
-
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa
-    _run_command_as_user,
+from tests.v2.test_07_full_workflow.common_functions import (
+    failing_workflow_UnknownError,
 )
-from tests.fixtures_slurm import SLURM_USER
+from tests.v2.test_07_full_workflow.common_functions import full_workflow
+from tests.v2.test_07_full_workflow.common_functions import (
+    full_workflow_TaskExecutionError,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    non_executable_task_command,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    workflow_with_non_python_task,
+)
+
+FRACTAL_RUNNER_BACKEND = "local"
 
 
-FRACTAL_RUNNER_BACKEND = "slurm"
-
-
-def _reset_permissions_for_user_folder(folder):
-    """
-    This is useful to avoid "garbage" folders (in pytest tmp folder) that
-    cannot be removed because of wrong permissions.
-    """
-    logging.warning(f"[_reset_permissions_for_user_folder] {folder=}")
-    _run_command_as_user(
-        cmd=f"chmod -R 777 {folder}",
-        user=SLURM_USER,
-        check=True,
-    )
-
-
-async def test_full_workflow_slurm(
+async def test_full_workflow_local(
     client,
     MockCurrentUser,
-    testdata_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
@@ -38,39 +25,26 @@ async def test_full_workflow_slurm(
     override_settings_factory,
     tmp_path_factory,
     fractal_tasks_mock_db,
-    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
-    monkey_slurm,
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
-
-    project_dir = str(tmp777_path / "user_project_dir-slurm")
-
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
-        user_settings_dict=dict(
-            slurm_user=SLURM_USER,
-            slurm_accounts=[],
-            project_dir=project_dir,
-        ),
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
         tasks=fractal_tasks_mock_db,
     )
-    _reset_permissions_for_user_folder(project_dir)
 
 
-async def test_full_workflow_TaskExecutionError_slurm(
+async def test_full_workflow_TaskExecutionError(
     client,
     MockCurrentUser,
-    testdata_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
@@ -78,30 +52,20 @@ async def test_full_workflow_TaskExecutionError_slurm(
     override_settings_factory,
     tmp_path_factory,
     fractal_tasks_mock_db,
-    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
-    monkey_slurm,
 ):
     """ "
     Run a workflow made of three tasks, two successful tasks and one
     that raises an error.
     """
+
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
-
-    project_dir = str(tmp777_path / "user_project_dir-slurm")
-
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
-        user_settings_dict=dict(
-            slurm_user=SLURM_USER,
-            slurm_accounts=[],
-            project_dir=project_dir,
-        ),
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
@@ -109,10 +73,8 @@ async def test_full_workflow_TaskExecutionError_slurm(
         tasks=fractal_tasks_mock_db,
     )
 
-    _reset_permissions_for_user_folder(project_dir)
 
-
-async def test_non_executable_task_command_slurm(
+async def test_non_executable_task_command_local(
     client,
     MockCurrentUser,
     testdata_path,
@@ -122,29 +84,17 @@ async def test_non_executable_task_command_slurm(
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
-    monkey_slurm,
 ):
     """
     Execute a workflow with a task which has an invalid `command` (i.e. it is
     not executable).
     """
-
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
-
-    project_dir = str(tmp777_path / "user_project_dir-slurm")
-
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
-        user_settings_dict=dict(
-            slurm_user=SLURM_USER,
-            slurm_accounts=[],
-            project_dir=project_dir,
-        ),
         client=client,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
@@ -153,23 +103,17 @@ async def test_non_executable_task_command_slurm(
         task_factory_v2=task_factory_v2,
     )
 
-    _reset_permissions_for_user_folder(project_dir)
 
-
-async def test_failing_workflow_UnknownError_slurm(
+async def test_failing_workflow_UnknownError_local(
     client,
     MockCurrentUser,
-    testdata_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    request,
-    override_settings_factory,
     monkeypatch,
-    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
-    monkey_slurm,
+    override_settings_factory,
 ):
     """
     Submit a workflow that fails with some unrecognized exception (due
@@ -179,18 +123,9 @@ async def test_failing_workflow_UnknownError_slurm(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
-
-    project_dir = str(tmp777_path / "user_project_dir-slurm")
-
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
-        user_settings_dict=dict(
-            slurm_user=SLURM_USER,
-            slurm_accounts=[],
-            project_dir=project_dir,
-        ),
         client=client,
         monkeypatch=monkeypatch,
         project_factory_v2=project_factory_v2,
@@ -199,4 +134,32 @@ async def test_failing_workflow_UnknownError_slurm(
         task_factory_v2=task_factory_v2,
     )
 
-    _reset_permissions_for_user_folder(project_dir)
+
+# Tested with 'local' backends only.
+# With 'slurm' backend we get:
+#   TaskExecutionError: bash: /home/runner/work/fractal-server/fractal-server/
+#       tests/data/non_python_task_issue1377.sh: No such file or directory
+async def test_non_python_task_local(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    testdata_path,
+    tmp777_path,
+):
+    """
+    Run a full workflow with a single bash task, which simply writes
+    something to stderr and stdout
+    """
+    await workflow_with_non_python_task(
+        client=client,
+        MockCurrentUser=MockCurrentUser,
+        project_factory_v2=project_factory_v2,
+        dataset_factory_v2=dataset_factory_v2,
+        workflow_factory_v2=workflow_factory_v2,
+        task_factory_v2=task_factory_v2,
+        testdata_path=testdata_path,
+        tmp777_path=tmp777_path,
+    )

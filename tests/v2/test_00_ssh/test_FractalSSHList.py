@@ -59,6 +59,7 @@ def test_unit_FractalSSHList():
     collection.close_all()
 
 
+@pytest.mark.container
 def test_run_command_through_FractalSSHList(
     slurmlogin_ip,
     ssh_keys,

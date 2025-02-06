@@ -1,10 +1,18 @@
-from common_functions import failing_workflow_UnknownError
-from common_functions import full_workflow
-from common_functions import full_workflow_TaskExecutionError
-from common_functions import non_executable_task_command
-from common_functions import workflow_with_non_python_task
+from tests.v2.test_07_full_workflow.common_functions import (
+    failing_workflow_UnknownError,
+)
+from tests.v2.test_07_full_workflow.common_functions import full_workflow
+from tests.v2.test_07_full_workflow.common_functions import (
+    full_workflow_TaskExecutionError,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    non_executable_task_command,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
+    workflow_with_non_python_task,
+)
 
-FRACTAL_RUNNER_BACKEND = "local"
+FRACTAL_RUNNER_BACKEND = "local_experimental"
 
 
 async def test_full_workflow_local(
@@ -140,18 +148,21 @@ async def test_non_python_task_local(
     task_factory_v2,
     testdata_path,
     tmp777_path,
+    override_settings_factory,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
     something to stderr and stdout
     """
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+
     await workflow_with_non_python_task(
-        client=client,
         MockCurrentUser=MockCurrentUser,
+        client=client,
+        testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
-        testdata_path=testdata_path,
         tmp777_path=tmp777_path,
     )

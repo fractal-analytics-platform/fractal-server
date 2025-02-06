@@ -1,5 +1,6 @@
 import io
 import logging
+import os
 import shlex
 import shutil
 import subprocess
@@ -106,6 +107,11 @@ def docker_compose_file(
 
 @pytest.fixture
 def slurmlogin_container(docker_compose_project_name, docker_services) -> str:
+    if "DO_NOT_USE_DOCKER" in os.environ:
+        raise RuntimeError(
+            "You are using 'slurmlogin_container' fixture, but "
+            "'DO_NOT_USE_DOCKER' is set: you probably forgot a marker."
+        )
     logging.warning(f"{docker_compose_project_name=}")
     slurm_container = docker_compose_project_name + "-slurm-1"
     logging.warning(f"{slurm_container=}")

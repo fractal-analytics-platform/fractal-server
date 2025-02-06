@@ -1,14 +1,18 @@
 import io
 
-from common_functions import workflow_with_non_python_task
+import pytest
 
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
+from tests.v2.test_07_full_workflow.common_functions import (
+    workflow_with_non_python_task,
+)
 
 
 FRACTAL_RUNNER_BACKEND = "slurm_ssh"
 
 
+@pytest.mark.container
 async def test_workflow_with_non_python_task_slurm_ssh(
     client,
     app,
@@ -61,6 +65,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     app.state.fractal_ssh_list.close_all()
 
 
+@pytest.mark.container
 async def test_workflow_with_non_python_task_slurm_ssh_fail(
     client,
     app,
