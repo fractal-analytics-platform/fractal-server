@@ -4,7 +4,8 @@
 from fastapi import APIRouter
 
 from .dataset import router as dataset_router_v2
-from .images import router as images_routes_v2
+from .images import router as images_router_v2
+from .healthckeck import router as healthcheck_router_v2
 from .job import router as job_router_v2
 from .project import router as project_router_v2
 from .status import router as status_router_v2
@@ -25,7 +26,8 @@ router_api_v2 = APIRouter()
 
 router_api_v2.include_router(dataset_router_v2, tags=["V2 Dataset"])
 router_api_v2.include_router(job_router_v2, tags=["V2 Job"])
-router_api_v2.include_router(images_routes_v2, tags=["V2 Images"])
+router_api_v2.include_router(healthcheck_router_v2, prefix="/healthcheck", tags=["V2 Healthcheck"])
+router_api_v2.include_router(images_router_v2, tags=["V2 Images"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
 router_api_v2.include_router(submit_job_router_v2, tags=["V2 Job"])
 
