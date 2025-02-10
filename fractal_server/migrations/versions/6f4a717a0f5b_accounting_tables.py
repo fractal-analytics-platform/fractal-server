@@ -1,8 +1,8 @@
 """accounting tables
 
-Revision ID: 196d53b7c03b
+Revision ID: 6f4a717a0f5b
 Revises: 1eac13a26c83
-Create Date: 2025-02-10 10:41:25.230784
+Create Date: 2025-02-10 10:51:16.281955
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "196d53b7c03b"
+revision = "6f4a717a0f5b"
 down_revision = "1eac13a26c83"
 branch_labels = None
 depends_on = None

@@ -17,7 +17,7 @@ class Accounting(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: UserOAuth = Relationship(back_populates="oauth_accounts")
+    user: UserOAuth = Relationship()
     timestamp: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -31,7 +31,7 @@ class AccountingSlurm(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: UserOAuth = Relationship(back_populates="oauth_accounts")
+    user: UserOAuth = Relationship()
     timestamp: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
