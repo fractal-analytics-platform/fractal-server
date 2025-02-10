@@ -21,9 +21,9 @@ from fractal_server.app.schemas.v2 import AccountingRead
 
 
 class AccountingQuery(BaseModel):
-    user_id: Optional[int] = (None,)
-    timestamp_min: Optional[datetime] = (None,)
-    timestamp_max: Optional[datetime] = (None,)
+    user_id: Optional[int] = None
+    timestamp_min: Optional[datetime] = None
+    timestamp_max: Optional[datetime] = None
 
 
 class AccountingPage(BaseModel):
