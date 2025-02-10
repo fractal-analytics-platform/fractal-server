@@ -94,7 +94,7 @@ async def query_accounting(
     )
 
 
-@router.post("/slurm/", response_model=JSONResponse)
+@router.post("/slurm/")
 async def query_accounting_slurm(
     query: AccountingQuery,
     # dependencies
