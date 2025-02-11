@@ -22,7 +22,9 @@ async def run_admin_healthcheck(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-    return run_healthcheck(payload=payload, request=request, user=user, db=db)
+    return await run_healthcheck(
+        payload=payload, request=request, user=user, db=db
+    )
 
 
 @router.post("/{user_id}/", status_code=status.HTTP_200_OK)
@@ -36,4 +38,6 @@ async def run_user_healthcheck(
     user = await db.get(UserOAuth, user_id)
     if user is None:
         raise HTTPException(404, detail="User not found")
-    return run_healthcheck(payload=payload, request=request, user=user, db=db)
+    return await run_healthcheck(
+        payload=payload, request=request, user=user, db=db
+    )

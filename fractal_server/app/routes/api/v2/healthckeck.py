@@ -80,6 +80,7 @@ async def run_healthcheck(
     task_group = res.scalar_one_or_none()
     if task_group is None:
         task = await create_task(
+            private=True,
             task=TaskCreateV2(
                 name="__TEST_ECHO_TASK__",
                 version="9.9.9",
