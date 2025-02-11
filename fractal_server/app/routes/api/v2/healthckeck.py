@@ -77,7 +77,7 @@ async def run_healthcheck(
         .where(TaskGroupV2.pkg_name == "__TEST_ECHO_TASK__")
         .where(TaskGroupV2.version == "9.9.9")
     )
-    task_group = res.one_or_none()
+    task_group = res.scalar_one_or_none()
     if task_group is None:
         task = await create_task(
             task=TaskCreateV2(
