@@ -38,6 +38,7 @@ class HealthCheck(BaseModel):
 async def run_healthcheck(
     payload: HealthCheck,
     request: Request,
+    background_tasks: BackgroundTasks,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
@@ -106,7 +107,7 @@ async def run_healthcheck(
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         job_create=JobCreateV2(),
-        background_tasks=BackgroundTasks(),
+        background_tasks=background_tasks,
         request=request,
         user=user,
         db=db,
