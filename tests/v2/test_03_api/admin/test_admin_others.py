@@ -273,3 +273,27 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 422
         assert "Please add more query filters" in res.json()["detail"]
+
+
+async def test_admin_healthcheck(MockCurrentUser, client, tmp_path):
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
+        pass
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        res = await client.post(
+            f"{PREFIX}/healthcheck/", json={"zarr_dir": tmp_path.as_posix()}
+        )
+        assert res.status_code == 200
+
+        res = await client.post(
+            f"{PREFIX}/healthcheck/{user.id}/",
+            json={"zarr_dir": tmp_path.as_posix()},
+        )
+        assert res.status_code == 200
+
+        res = await client.post(
+            f"{PREFIX}/healthcheck/123456789/",
+            json={"zarr_dir": tmp_path.as_posix()},
+        )
+        assert res.status_code == 404
