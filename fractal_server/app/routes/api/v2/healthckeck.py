@@ -5,7 +5,6 @@ from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import Request
 from fastapi import status
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlmodel import select
 
@@ -15,6 +14,7 @@ from ....models import TaskGroupV2
 from ....models import UserOAuth
 from ....schemas.v2 import DatasetCreateV2
 from ....schemas.v2 import JobCreateV2
+from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import ProjectCreateV2
 from ....schemas.v2 import TaskCreateV2
 from ....schemas.v2 import WorkflowCreateV2
@@ -40,7 +40,7 @@ async def run_healthcheck(
     request: Request,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
+) -> JobReadV2:
 
     random_integer = randint(10**9, 10**10 - 1)  # nosec B311
 
@@ -111,4 +111,4 @@ async def run_healthcheck(
         user=user,
         db=db,
     )
-    return JSONResponse(content=job.id, status_code=200)
+    return job
