@@ -15,18 +15,6 @@ from ...auth import current_active_superuser
 router = APIRouter()
 
 
-@router.post("/", status_code=status.HTTP_200_OK)
-async def run_admin_healthcheck(
-    payload: HealthCheck,
-    request: Request,
-    user: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
-    return await run_healthcheck(
-        payload=payload, request=request, user=user, db=db
-    )
-
-
 @router.post("/{user_id}/", status_code=status.HTTP_200_OK)
 async def run_user_healthcheck(
     user_id: int,
