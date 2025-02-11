@@ -3,6 +3,7 @@
 """
 from fastapi import APIRouter
 
+from .healthcheck import router as healthcheck_router
 from .job import router as job_router
 from .project import router as project_router
 from .task import router as task_router
@@ -18,3 +19,4 @@ router_admin_v2.include_router(task_group_router, prefix="/task-group")
 router_admin_v2.include_router(
     task_group_lifecycle_router, prefix="/task-group"
 )
+router_admin_v2.include_router(healthcheck_router, prefix="/healthcheck")
