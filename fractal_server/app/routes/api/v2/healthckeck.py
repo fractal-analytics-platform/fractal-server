@@ -34,7 +34,7 @@ class HealthCheck(BaseModel):
     zarr_dir: str
 
 
-@router.post("/", status_code=status.HTTP_200_OK)
+@router.post("/", status_code=status.HTTP_200_OK, response_model=JobReadV2)
 async def run_healthcheck(
     payload: HealthCheck,
     request: Request,

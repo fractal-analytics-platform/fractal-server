@@ -15,7 +15,9 @@ from ...auth import current_active_superuser
 router = APIRouter()
 
 
-@router.post("/{user_id}/", status_code=status.HTTP_200_OK)
+@router.post(
+    "/{user_id}/", status_code=status.HTTP_200_OK, response_model=JobReadV2
+)
 async def run_user_healthcheck(
     user_id: int,
     payload: HealthCheck,
