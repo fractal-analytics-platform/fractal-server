@@ -608,10 +608,16 @@ class Settings(BaseSettings):
     FRACTAL_EMAIL_USE_STARTTLS: Optional[bool] = True
     """
     Whether to use StartTLS when using the SMTP server.
+    Accepte values:
+        anything that lower-cased becomes 'false', 'f', '0', 'true, 't', '1'.
     """
     FRACTAL_EMAIL_USE_LOGIN: Optional[bool] = True
     """
     Whether to use login when using the SMTP server.
+    If 'True', FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KEY must be
+    provided.
+    Accepte values:
+        anything that lower-cased becomes 'false', 'f', '0', 'true, 't', '1'.
     """
     email_settings: Optional[MailSettings] = None
 
