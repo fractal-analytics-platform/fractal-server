@@ -3,7 +3,6 @@ from random import randint
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -72,7 +71,14 @@ async def run_healthcheck(
     )
 
     # Create (or get) a task
-    try:
+    res = await db.execute(
+        select(TaskGroupV2)
+        .where(TaskGroupV2.user_id == user.id)
+        .where(TaskGroupV2.pkg_name == "__TEST_ECHO_TASK__")
+        .where(TaskGroupV2.version == "9.9.9")
+    )
+    task_group = res.one_or_none()
+    if task_group is None:
         task = await create_task(
             task=TaskCreateV2(
                 name="__TEST_ECHO_TASK__",
@@ -82,16 +88,7 @@ async def run_healthcheck(
             user=user,
             db=db,
         )
-    except HTTPException as e:
-        if "already owns a task" not in e.detail:
-            raise e
-        res = await db.execute(
-            select(TaskGroupV2)
-            .where(TaskGroupV2.user_id == user.id)
-            .where(TaskGroupV2.pkg_name == "__TEST_ECHO_TASK__")
-            .where(TaskGroupV2.version == "9.9.9")
-        )
-        task_group = res.scalar_one()
+    else:
         task = task_group.task_list[0]
 
     await create_workflowtask(
