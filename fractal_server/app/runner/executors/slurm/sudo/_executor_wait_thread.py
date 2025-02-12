@@ -13,7 +13,7 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 logger = set_logger(__name__)
 
 
-class FractalFileWaitThread(threading.Thread):
+class FractalSlurmWaitThread(threading.Thread):
     """
     Overrides the original clusterfutures.FileWaitThread, so that:
 
@@ -37,6 +37,7 @@ class FractalFileWaitThread(threading.Thread):
     slurm_user: str
     shutdown_file: Optional[str] = None
     shutdown_callback: Callable
+    slurm_poll_interval: int = 30
 
     def __init__(self, callback, interval=1):
 
@@ -70,7 +71,7 @@ class FractalFileWaitThread(threading.Thread):
         with self.lock:
             self.waiting[filenames] = jobid
 
-    def check(self, i):
+    def check_shutdown(self, i):
         """
         Do one shutdown-file-existence check.
 
@@ -109,26 +110,8 @@ class FractalFileWaitThread(threading.Thread):
                 self.check(i)
             time.sleep(self.interval)
 
-
-class FractalSlurmWaitThread(FractalFileWaitThread):
-    """
-    Replaces the original clusterfutures.SlurmWaitThread, to inherit from
-    FractalFileWaitThread instead of FileWaitThread.
-
-    The function is copied from clusterfutures 0.5. Original Copyright: 2022
-    Adrian Sampson, released under the MIT licence
-
-    **Note**: if `self.interval != 1` then this should be modified, but for
-    `clusterfutures` v0.5 `self.interval` is indeed equal to `1`.
-
-    Changed from clusterfutures:
-    * Rename `id_to_filename` to `id_to_filenames`
-    """
-
-    slurm_poll_interval = 30
-
     def check(self, i):
-        super().check(i)
+        self.check_shutdown(i)
         if i % (self.slurm_poll_interval // self.interval) == 0:
             try:
                 finished_jobs = _jobs_finished(self.waiting.values())
