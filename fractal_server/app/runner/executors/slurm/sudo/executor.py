@@ -219,7 +219,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     workflow_dir_local: Path
     workflow_dir_remote: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
-    slurm_account: Optional[str]
+    slurm_account: Optional[str] = None
     jobs: dict[str, tuple[Future, SlurmJob]]
 
     def __init__(

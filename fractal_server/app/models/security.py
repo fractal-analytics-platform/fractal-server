@@ -51,8 +51,8 @@ class OAuthAccount(SQLModel, table=True):
     user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
-    expires_at: Optional[int] = Field(nullable=True)
-    refresh_token: Optional[str] = Field(nullable=True)
+    expires_at: Optional[int] = Field(nullable=True, default=None)
+    refresh_token: Optional[str] = Field(nullable=True, default=None)
     account_id: str = Field(index=True, nullable=False)
     account_email: str = Field(nullable=False)
     model_config = ConfigDict(from_attributes=True)
@@ -91,7 +91,7 @@ class UserOAuth(SQLModel, table=True):
     is_superuser: bool = Field(False, nullable=False)
     is_verified: bool = Field(False, nullable=False)
 
-    username: Optional[str]
+    username: Optional[str] = Field(default=None)
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",

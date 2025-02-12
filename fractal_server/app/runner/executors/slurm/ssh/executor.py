@@ -85,7 +85,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     wait_thread_cls = FractalSlurmWaitThread
 
     common_script_lines: list[str]
-    slurm_account: Optional[str]
+    slurm_account: Optional[str] = None
 
     jobs: dict[str, tuple[Future, SlurmJob]]
     map_jobid_to_slurm_files_local: dict[str, tuple[str, str, str]]
@@ -1159,7 +1159,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             Path(tarfile_path_local).unlink()
 
         t_1 = time.perf_counter()
-        logger.info("[_get_subfolder_sftp] End - " f"elapsed: {t_1-t_0:.3f} s")
+        logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
 
     def _prepare_sbatch_script(
         self,
@@ -1387,6 +1387,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         t_end_handshake = time.perf_counter()
         logger.info(
             "[FractalSlurmSSHExecutor.ssh_handshake] END"
-            f" - elapsed: {t_end_handshake-t_start_handshake:.3f} s"
+            f" - elapsed: {t_end_handshake - t_start_handshake:.3f} s"
         )
         return remote_versions

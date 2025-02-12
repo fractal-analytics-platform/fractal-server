@@ -22,11 +22,19 @@ class WorkflowTaskV2(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     workflow_id: int = Field(foreign_key="workflowv2.id")
-    order: Optional[int]
-    meta_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    meta_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    args_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    args_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
+    order: Optional[int] = Field(default=None)
+    meta_parallel: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON), default=None
+    )
+    meta_non_parallel: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON), default=None
+    )
+    args_parallel: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON), default=None
+    )
+    args_non_parallel: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON), default=None
+    )
 
     type_filters: dict[str, bool] = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")

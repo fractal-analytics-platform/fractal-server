@@ -137,7 +137,7 @@ class Settings(BaseSettings):
     JWT token lifetime, in seconds.
     """
 
-    JWT_SECRET_KEY: Optional[str]
+    JWT_SECRET_KEY: Optional[str] = None
     """
     JWT secret
 
@@ -200,11 +200,11 @@ class Settings(BaseSettings):
     """
     If `True`, make database operations verbose.
     """
-    POSTGRES_USER: Optional[str]
+    POSTGRES_USER: Optional[str] = None
     """
     User to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_PASSWORD: Optional[str]
+    POSTGRES_PASSWORD: Optional[str] = None
     """
     Password to use when connecting to the PostgreSQL database.
     """
@@ -216,7 +216,7 @@ class Settings(BaseSettings):
     """
     Port number to use when connecting to the PostgreSQL server.
     """
-    POSTGRES_DB: Optional[str]
+    POSTGRES_DB: Optional[str] = None
     """
     Name of the PostgreSQL database to connect to.
     """
@@ -268,7 +268,7 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[Path]
+    FRACTAL_TASKS_DIR: Optional[Path] = None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
@@ -324,7 +324,7 @@ class Settings(BaseSettings):
     Select which runner backend to use.
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path]
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
     """
     Base directory for running jobs / workflows. All artifacts required to set
     up, run and tear down jobs are placed in subdirs of this directory.
@@ -337,7 +337,7 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
+    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path] = None
     """
     Path of JSON file with configuration for the local backend.
     """
@@ -353,7 +353,7 @@ class Settings(BaseSettings):
     Waiting time for the shutdown phase of executors
     """
 
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
+    FRACTAL_SLURM_CONFIG_FILE: Optional[Path] = None
     """
     Path of JSON file with configuration for the SLURM backend.
     """

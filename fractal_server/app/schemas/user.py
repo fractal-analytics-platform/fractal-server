@@ -42,7 +42,7 @@ class UserRead(schemas.BaseUser[int]):
         username:
     """
 
-    username: Optional[str]
+    username: Optional[str] = None
     group_ids_names: Optional[list[tuple[int, str]]] = None
     oauth_accounts: list[OAuthAccountRead]
 
@@ -57,7 +57,7 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     model_config = ConfigDict(extra="forbid")
 
-    username: Optional[str]
+    username: Optional[str] = None
 
     # Validators
     _username = field_validator("username")(classmethod(valstr("username")))
@@ -95,7 +95,7 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[str]
+    username: Optional[str] = None
 
     # Validators
 
