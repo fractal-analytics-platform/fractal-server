@@ -4,6 +4,8 @@
 
 * Runner:
     * Deprecate `FRACTAL_BACKEND_RUNNER="local_experimental"` (\#2273).
+* Dependencies:
+    * Drop `psutil` dependency (\#2273).
 
 # 2.12.1
 
