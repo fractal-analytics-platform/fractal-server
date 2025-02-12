@@ -68,7 +68,7 @@ class WorkflowTaskCreateV2(BaseModel):
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_non_parallel")(value)
+        valdict_keys("args_non_parallel")(cls, value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -83,7 +83,7 @@ class WorkflowTaskCreateV2(BaseModel):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_parallel")(value)
+        valdict_keys("args_parallel")(cls, value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -153,7 +153,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_non_parallel")(value)
+        valdict_keys("args_non_parallel")(cls, value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -168,7 +168,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_parallel")(value)
+        valdict_keys("args_parallel")(cls, value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:

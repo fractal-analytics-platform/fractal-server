@@ -10,7 +10,7 @@ def validate_type_filters(
     if type_filters is None:
         raise ValueError("'type_filters' cannot be 'None'.")
 
-    type_filters = valdict_keys("type_filters")(type_filters)
+    type_filters = valdict_keys("type_filters")(cls, type_filters)
     return type_filters
 
 
