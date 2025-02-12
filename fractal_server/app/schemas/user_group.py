@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
@@ -48,7 +48,8 @@ class UserGroupCreate(BaseModel, extra=Extra.forbid):
     name: str
     viewer_paths: list[str] = Field(default_factory=list)
 
-    @validator("viewer_paths")
+    @field_validator("viewer_paths")
+    @classmethod
     def viewer_paths_validator(cls, value):
         for i, path in enumerate(value):
             value[i] = val_absolute_path(f"viewer_paths[{i}]")(path)
@@ -63,7 +64,8 @@ class UserGroupUpdate(BaseModel, extra=Extra.forbid):
 
     viewer_paths: Optional[list[str]] = None
 
-    @validator("viewer_paths")
+    @field_validator("viewer_paths")
+    @classmethod
     def viewer_paths_validator(cls, value):
         for i, path in enumerate(value):
             value[i] = val_absolute_path(f"viewer_paths[{i}]")(path)

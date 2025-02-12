@@ -28,10 +28,10 @@ class TaskDumpV2(BaseModel):
     name: str
     type: str
 
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     source: Optional[str] = None
-    version: Optional[str]
+    version: Optional[str] = None
 
     input_types: dict[str, bool]
     output_types: dict[str, bool]
@@ -46,12 +46,12 @@ class WorkflowTaskDumpV2(BaseModel):
 
     id: int
     workflow_id: int
-    order: Optional[int]
+    order: Optional[int] = None
 
     type_filters: dict[str, bool]
 
-    task_id: Optional[int]
-    task: Optional[TaskDumpV2]
+    task_id: Optional[int] = None
+    task: Optional[TaskDumpV2] = None
 
 
 class WorkflowDumpV2(BaseModel, extra=Extra.forbid):

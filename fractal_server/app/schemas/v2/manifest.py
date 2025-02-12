@@ -3,7 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
+from pydantic import model_validator
 from pydantic import root_validator
 from pydantic import validator
 
@@ -137,7 +139,8 @@ class ManifestV2(BaseModel):
     args_schema_version: Optional[str] = None
     authors: Optional[str] = None
 
-    @root_validator()
+    @model_validator()
+    @classmethod
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]
         task_list = values["task_list"]
@@ -159,7 +162,8 @@ class ManifestV2(BaseModel):
                         )
         return values
 
-    @root_validator()
+    @model_validator()
+    @classmethod
     def _unique_task_names(cls, values):
         task_list = values["task_list"]
         task_list_names = [t.name for t in task_list]
@@ -172,7 +176,8 @@ class ManifestV2(BaseModel):
             )
         return values
 
-    @validator("manifest_version")
+    @field_validator("manifest_version")
+    @classmethod
     def manifest_version_2(cls, value):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")

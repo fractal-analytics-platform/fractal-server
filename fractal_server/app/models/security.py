@@ -12,6 +12,7 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import ConfigDict
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -54,9 +55,7 @@ class OAuthAccount(SQLModel, table=True):
     refresh_token: Optional[str] = Field(nullable=True)
     account_id: str = Field(index=True, nullable=False)
     account_email: str = Field(nullable=False)
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserOAuth(SQLModel, table=True):
@@ -105,9 +104,7 @@ class UserOAuth(SQLModel, table=True):
     settings: Optional[UserSettings] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserGroup(SQLModel, table=True):

@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import root_validator
+from pydantic import model_validator
 from pydantic import validator
 
 
@@ -32,9 +32,10 @@ class TaskV2Mock(BaseModel):
     command_parallel: Optional[str] = None
     meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
     meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    type: Optional[str] = None
 
-    @root_validator(pre=False)
+    @model_validator()
+    @classmethod
     def _not_both_commands_none(cls, values):
         print(values)
         _command_non_parallel = values.get("command_non_parallel")
@@ -45,6 +46,10 @@ class TaskV2Mock(BaseModel):
             )
         return values
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("type", always=True)
     def _set_type(cls, value, values):
         if values.get("command_non_parallel") is None:
@@ -66,8 +71,8 @@ class WorkflowTaskV2Mock(BaseModel):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    meta_parallel: Optional[dict[str, Any]] = Field(None)
+    meta_non_parallel: Optional[dict[str, Any]] = Field(None)
     task: TaskV2Mock = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     order: int

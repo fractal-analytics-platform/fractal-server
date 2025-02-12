@@ -54,16 +54,16 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
         extra_lines:
     """
 
-    partition: Optional[str]
-    cpus_per_task: Optional[int]
-    mem: Optional[Union[int, str]]
-    constraint: Optional[str]
-    gres: Optional[str]
-    time: Optional[str]
-    account: Optional[str]
-    extra_lines: Optional[list[str]]
-    pre_submission_commands: Optional[list[str]]
-    gpus: Optional[str]
+    partition: Optional[str] = None
+    cpus_per_task: Optional[int] = None
+    mem: Optional[Union[int, str]] = None
+    constraint: Optional[str] = None
+    gres: Optional[str] = None
+    time: Optional[str] = None
+    account: Optional[str] = None
+    extra_lines: Optional[list[str]] = None
+    pre_submission_commands: Optional[list[str]] = None
+    gpus: Optional[str] = None
 
 
 class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
@@ -137,9 +137,9 @@ class SlurmConfigFile(BaseModel, extra=Extra.forbid):
     """
 
     default_slurm_config: _SlurmConfigSet
-    gpu_slurm_config: Optional[_SlurmConfigSet]
+    gpu_slurm_config: Optional[_SlurmConfigSet] = None
     batching_config: _BatchingConfigSet
-    user_local_exports: Optional[dict[str, str]]
+    user_local_exports: Optional[dict[str, str]] = None
 
 
 def load_slurm_config_file(

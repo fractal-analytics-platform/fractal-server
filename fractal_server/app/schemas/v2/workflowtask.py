@@ -6,6 +6,8 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import field_validator
+from pydantic import model_validator
 from pydantic import root_validator
 from pydantic import validator
 
@@ -41,10 +43,10 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 
 class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
-    args_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
+    meta_non_parallel: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
+    args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
@@ -62,7 +64,8 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
         valdict_keys("meta_parallel")
     )
 
-    @validator("args_non_parallel")
+    @field_validator("args_non_parallel")
+    @classmethod
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
@@ -76,7 +79,8 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
             )
         return value
 
-    @validator("args_parallel")
+    @field_validator("args_parallel")
+    @classmethod
     def validate_args_parallel(cls, value):
         if value is None:
             return
@@ -103,12 +107,12 @@ class WorkflowTaskReadV2(BaseModel):
     id: int
 
     workflow_id: int
-    order: Optional[int]
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
+    order: Optional[int] = None
+    meta_non_parallel: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
 
-    args_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
+    args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
 
     type_filters: dict[str, bool]
 
@@ -123,11 +127,11 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
 
 class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
 
-    meta_non_parallel: Optional[dict[str, Any]]
-    meta_parallel: Optional[dict[str, Any]]
-    args_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
-    type_filters: Optional[dict[str, bool]]
+    meta_non_parallel: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
+    args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
+    type_filters: Optional[dict[str, bool]] = None
 
     # Validators
     _dict_keys = root_validator(pre=True, allow_reuse=True)(
@@ -144,7 +148,8 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
         valdict_keys("meta_parallel")
     )
 
-    @validator("args_non_parallel")
+    @field_validator("args_non_parallel")
+    @classmethod
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
@@ -158,7 +163,8 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
             )
         return value
 
-    @validator("args_parallel")
+    @field_validator("args_parallel")
+    @classmethod
     def validate_args_parallel(cls, value):
         if value is None:
             return
@@ -185,7 +191,8 @@ class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
     # Validators
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def update_legacy_filters(cls, values: dict):
         """
         Transform legacy filters (created with fractal-server<2.11.0)

@@ -44,7 +44,7 @@ class ImagePage(BaseModel):
 
 
 class ImageQuery(BaseModel):
-    zarr_url: Optional[str]
+    zarr_url: Optional[str] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 

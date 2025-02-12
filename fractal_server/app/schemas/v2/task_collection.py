@@ -4,7 +4,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
-from pydantic import root_validator
+from pydantic import field_validator
+from pydantic import model_validator
 from pydantic import validator
 
 from .._validators import valstr
@@ -51,7 +52,8 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    @validator("package")
+    @field_validator("package")
+    @classmethod
     def package_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
@@ -59,7 +61,8 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
         validate_cmd(value, attribute_name="package")
         return value
 
-    @validator("package_version")
+    @field_validator("package_version")
+    @classmethod
     def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
@@ -67,7 +70,8 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
         validate_cmd(value, attribute_name="package_version")
         return value
 
-    @validator("pinned_package_versions")
+    @field_validator("pinned_package_versions")
+    @classmethod
     def pinned_package_versions_validator(cls, value):
         if value is None:
             return value
@@ -87,7 +91,8 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
             validate_cmd(version)
         return value
 
-    @validator("package_extras")
+    @field_validator("package_extras")
+    @classmethod
     def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
@@ -117,9 +122,9 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
     manifest: ManifestV2
     python_interpreter: str
     label: str
-    package_root: Optional[str]
-    package_name: Optional[str]
-    version: Optional[str]
+    package_root: Optional[str] = None
+    package_name: Optional[str] = None
+    version: Optional[str] = None
 
     # Valstr
     _python_interpreter = validator("python_interpreter", allow_reuse=True)(
@@ -136,7 +141,8 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
         valstr("version", accept_none=True)
     )
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def one_of_package_root_or_name(cls, values):
         package_root = values.get("package_root")
         package_name = values.get("package_name")
@@ -149,7 +155,8 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
             )
         return values
 
-    @validator("package_name")
+    @field_validator("package_name")
+    @classmethod
     def package_name_validator(cls, value: str):
         """
         Remove all whitespace characters, then check for invalid code.
@@ -160,7 +167,8 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
             value = value.replace(" ", "")
         return value
 
-    @validator("package_root")
+    @field_validator("package_root")
+    @classmethod
     def package_root_validator(cls, value):
         if (value is not None) and (not Path(value).is_absolute()):
             raise ValueError(
@@ -168,7 +176,8 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
             )
         return value
 
-    @validator("python_interpreter")
+    @field_validator("python_interpreter")
+    @classmethod
     def python_interpreter_validator(cls, value):
         if not Path(value).is_absolute():
             raise ValueError(

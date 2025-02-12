@@ -8,7 +8,7 @@ from devtools import debug
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
-from pydantic import root_validator
+from pydantic import model_validator
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
@@ -32,7 +32,7 @@ class TaskV2Mock(BaseModel, extra=Extra.forbid):
     command_parallel: Optional[str] = None
     meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
     meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    type: Optional[str] = None
 
 
 class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
@@ -40,8 +40,8 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    meta_parallel: Optional[dict[str, Any]] = Field(None)
+    meta_non_parallel: Optional[dict[str, Any]] = Field(None)
     task: TaskV2Mock
     type_filters: dict[str, bool] = Field(default_factory=dict)
     order: int = 0
@@ -49,7 +49,8 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     workflow_id: int = 0
     task_id: int
 
-    @root_validator(pre=False)
+    @model_validator()
+    @classmethod
     def merge_meta(cls, values):
         task_meta_parallel = values["task"].meta_parallel
         if task_meta_parallel:

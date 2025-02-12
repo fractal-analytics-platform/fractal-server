@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from ....images import SingleImageTaskOutput
 from fractal_server.urls import normalize_url
@@ -35,7 +35,8 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
                 msg = f"{msg}\n{duplicate}"
             raise ValueError(msg)
 
-    @validator("image_list_removals")
+    @field_validator("image_list_removals")
+    @classmethod
     def normalize_paths(cls, v: list[str]) -> list[str]:
         return [normalize_url(zarr_url) for zarr_url in v]
 
@@ -45,7 +46,8 @@ class InitArgsModel(BaseModel, extra=Extra.forbid):
     zarr_url: str
     init_args: dict[str, Any] = Field(default_factory=dict)
 
-    @validator("zarr_url")
+    @field_validator("zarr_url")
+    @classmethod
     def normalize_path(cls, v: str) -> str:
         return normalize_url(v)
 

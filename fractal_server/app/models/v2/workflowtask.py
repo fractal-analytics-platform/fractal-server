@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Optional
 
+from pydantic import ConfigDict
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -11,9 +12,12 @@ from .task import TaskV2
 
 
 class WorkflowTaskV2(SQLModel, table=True):
-    class Config:
-        arbitrary_types_allowed = True
-        fields = {"parent": {"exclude": True}}
+    # TODO[pydantic]: The following keys were removed: `fields`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for
+    # more information.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True, fields={"parent": {"exclude": True}}
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
 

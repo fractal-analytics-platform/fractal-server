@@ -2,6 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import field_validator
 from pydantic import validator
 from pydantic.types import StrictStr
 
@@ -76,7 +77,8 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
         valstr("slurm_user", accept_none=True)
     )
 
-    @validator("slurm_accounts")
+    @field_validator("slurm_accounts")
+    @classmethod
     def slurm_accounts_validator(cls, value):
         if value is None:
             return value
@@ -84,7 +86,8 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
             value[i] = valstr(f"slurm_accounts[{i}]")(item)
         return val_unique_list("slurm_accounts")(value)
 
-    @validator("project_dir")
+    @field_validator("project_dir")
+    @classmethod
     def project_dir_validator(cls, value):
         if value is None:
             return None

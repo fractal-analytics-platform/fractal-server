@@ -44,7 +44,7 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
     slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[str]
+    worker_init: Optional[str] = None
 
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
@@ -59,6 +59,10 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
         validate_attribute_filters
     )
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("first_task_index", always=True)
     def first_task_index_non_negative(cls, v, values):
         """
@@ -70,6 +74,10 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
             )
         return v
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("last_task_index", always=True)
     def first_last_task_indices(cls, v, values):
         """
@@ -95,23 +103,23 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
 class JobReadV2(BaseModel):
 
     id: int
-    project_id: Optional[int]
+    project_id: Optional[int] = None
     project_dump: ProjectDumpV2
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
+    slurm_account: Optional[str] = None
+    workflow_id: Optional[int] = None
     workflow_dump: WorkflowDumpV2
-    dataset_id: Optional[int]
+    dataset_id: Optional[int] = None
     dataset_dump: DatasetDumpV2
     start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    end_timestamp: Optional[datetime] = None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
-    worker_init: Optional[str]
+    log: Optional[str] = None
+    working_dir: Optional[str] = None
+    working_dir_user: Optional[str] = None
+    first_task_index: Optional[int] = None
+    last_task_index: Optional[int] = None
+    worker_init: Optional[str] = None
     attribute_filters: AttributeFiltersType
 
 

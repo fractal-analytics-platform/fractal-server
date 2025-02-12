@@ -24,6 +24,6 @@ class ProjectReadV2(BaseModel):
 
 class ProjectUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str]
+    name: Optional[str] = None
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

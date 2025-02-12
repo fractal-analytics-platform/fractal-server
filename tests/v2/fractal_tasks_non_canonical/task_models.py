@@ -2,12 +2,11 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class _BaseTask(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     name: str
     executable: str
@@ -18,7 +17,7 @@ class _BaseTask(BaseModel):
 
 class CompoundTask(_BaseTask):
     executable_init: str
-    meta_init: Optional[dict[str, Any]]
+    meta_init: Optional[dict[str, Any]] = None
 
     @property
     def executable_non_parallel(self) -> str:

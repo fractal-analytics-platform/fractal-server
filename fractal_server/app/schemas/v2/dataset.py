@@ -5,6 +5,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import field_validator
+from pydantic import model_validator
 from pydantic import root_validator
 from pydantic import validator
 
@@ -27,7 +29,7 @@ class _DatasetHistoryItemV2(BaseModel):
 
     workflowtask: WorkflowTaskDumpV2
     status: WorkflowTaskStatusTypeV2
-    parallelization: Optional[dict]
+    parallelization: Optional[dict] = None
 
 
 # CRUD
@@ -56,7 +58,8 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
@@ -82,10 +85,10 @@ class DatasetReadV2(BaseModel):
 
 class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str]
-    zarr_dir: Optional[str]
-    type_filters: Optional[dict[str, bool]]
-    attribute_filters: Optional[dict[str, list[Any]]]
+    name: Optional[str] = None
+    zarr_dir: Optional[str] = None
+    type_filters: Optional[dict[str, bool]] = None
+    attribute_filters: Optional[dict[str, list[Any]]] = None
 
     # Validators
 
@@ -101,7 +104,8 @@ class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
@@ -129,7 +133,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def update_legacy_filters(cls, values: dict):
         """
         Transform legacy filters (created with fractal-server<2.11.0)
@@ -166,7 +171,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         validate_attribute_filters
     )
 
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: str) -> str:
         return normalize_url(v)
 

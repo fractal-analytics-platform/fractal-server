@@ -24,11 +24,13 @@ from typing import TypeVar
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from pydantic import BaseSettings
 from pydantic import EmailStr
 from pydantic import Field
+from pydantic import model_validator
 from pydantic import root_validator
 from pydantic import validator
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
@@ -50,7 +52,7 @@ class MailSettings(BaseModel):
     """
 
     sender: EmailStr
-    recipients: list[EmailStr] = Field(min_items=1)
+    recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
     encrypted_password: Optional[str] = None
@@ -97,7 +99,7 @@ class OAuthClientConfig(BaseModel):
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
-    OIDC_CONFIGURATION_ENDPOINT: Optional[str]
+    OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
     @root_validator
@@ -118,8 +120,7 @@ class Settings(BaseSettings):
     The attributes of this class are set from the environment.
     """
 
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
     PROJECT_NAME: str = "Fractal Server"
     PROJECT_VERSION: str = fractal_server.__VERSION__
@@ -150,7 +151,8 @@ class Settings(BaseSettings):
     Cookie token lifetime, in seconds.
     """
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def collect_oauth_clients(cls, values):
         """
         Automatic collection of OAuth Clients
@@ -272,6 +274,10 @@ class Settings(BaseSettings):
     or a path relative to current working directory).
     """
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("FRACTAL_TASKS_DIR", always=True)
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
@@ -289,6 +295,10 @@ class Settings(BaseSettings):
             )
         return FRACTAL_TASKS_DIR_path
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("FRACTAL_RUNNER_WORKING_BASE_DIR", always=True)
     def make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute(cls, v):
         """
@@ -360,6 +370,10 @@ class Settings(BaseSettings):
     nodes. If not specified, the same interpreter that runs the server is used.
     """
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
     def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
         """
@@ -407,7 +421,8 @@ class Settings(BaseSettings):
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def check_tasks_python(cls, values):
         """
         Perform multiple checks of the Python-interpreter variables.
@@ -511,6 +526,10 @@ class Settings(BaseSettings):
     `--no-cache-dir` is used.
     """
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("FRACTAL_PIP_CACHE_DIR", always=True)
     def absolute_FRACTAL_PIP_CACHE_DIR(cls, v):
         """
@@ -615,7 +634,8 @@ class Settings(BaseSettings):
     """
     email_settings: Optional[MailSettings] = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_email_settings(cls, values):
         email_values = {
             k: v for k, v in values.items() if k.startswith("FRACTAL_EMAIL")

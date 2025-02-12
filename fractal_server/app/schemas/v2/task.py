@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import root_validator
 from pydantic import validator
@@ -97,7 +98,8 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
         valstr("authors", accept_none=True)
     )
 
-    @validator("tags")
+    @field_validator("tags")
+    @classmethod
     def validate_list_of_strings(cls, value):
         for i, tag in enumerate(value):
             value[i] = valstr(f"tags[{i}]")(tag)
@@ -145,7 +147,8 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
     tags: Optional[list[str]] = None
 
     # Validators
-    @validator("input_types", "output_types")
+    @field_validator("input_types", "output_types")
+    @classmethod
     def val_is_dict(cls, v):
         if not isinstance(v, dict):
             raise ValueError
@@ -174,7 +177,8 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
         valstr("authors", accept_none=True)
     )
 
-    @validator("tags")
+    @field_validator("tags")
+    @classmethod
     def validate_tags(cls, value):
         for i, tag in enumerate(value):
             value[i] = valstr(f"tags[{i}]")(tag)

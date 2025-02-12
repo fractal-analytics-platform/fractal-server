@@ -59,6 +59,10 @@ class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
     # Validators
     _username = validator("username", allow_reuse=True)(valstr("username"))
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator(
         "is_active",
         "is_verified",
@@ -104,7 +108,7 @@ class UserUpdateGroups(BaseModel, extra=Extra.forbid):
 
     """
 
-    group_ids: list[int] = Field(min_items=1)
+    group_ids: list[int] = Field(min_length=1)
 
     _group_ids = validator("group_ids", allow_reuse=True)(
         val_unique_list("group_ids")
