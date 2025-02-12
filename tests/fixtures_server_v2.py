@@ -147,17 +147,26 @@ async def job_factory_v2(db: AsyncSession):
             dataset_id=dataset_id,
             workflow_id=workflow_id,
             dataset_dump=json.loads(
-                dataset.json(exclude={"history", "images", "filters"})
+                dataset.model_dump_json(
+                    exclude={"history", "images", "filters"}
+                )
             ),
-            workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
-            project_dump=json.loads(project.json(exclude={"user_list"})),
+            workflow_dump=json.loads(
+                workflow.model_dump_json(exclude={"task_list"})
+            ),
+            project_dump=json.loads(
+                project.model_dump_json(exclude={"user_list"})
+            ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
-            working_dir=working_dir,
+            working_dir=working_dir.as_posix(),
             worker_init="WORKER_INIT string",
             user_email="user@example.org",
         )
         args.update(**kwargs)
+        from devtools import debug
+
+        debug(args)
         job = JobV2(**args)
         db.add(job)
         await db.commit()

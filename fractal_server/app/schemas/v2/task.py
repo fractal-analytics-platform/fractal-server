@@ -185,8 +185,8 @@ class TaskUpdateV2(BaseModel):
     @classmethod
     def validate_tags(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(f"tags[{i}]")(tag)
-        return val_unique_list("tags")(value)
+            value[i] = valstr(f"tags[{i}]")(cls, tag)
+        return val_unique_list("tags")(cls, value)
 
 
 class TaskImportV2(BaseModel):

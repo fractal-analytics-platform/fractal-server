@@ -57,7 +57,7 @@ class TaskCollectPipV2(BaseModel):
     def package_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = valstr("package")(value)
+        value = valstr("package")(cls, value)
         validate_cmd(value, attribute_name="package")
         return value
 
@@ -66,7 +66,7 @@ class TaskCollectPipV2(BaseModel):
     def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = valstr("package_version")(value)
+        value = valstr("package_version")(cls, value)
         validate_cmd(value, attribute_name="package_version")
         return value
 
@@ -96,7 +96,7 @@ class TaskCollectPipV2(BaseModel):
     def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = valstr("package_extras")(value)
+        value = valstr("package_extras")(cls, value)
         validate_cmd(value, attribute_name="package_extras")
         return value
 

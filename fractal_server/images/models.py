@@ -103,7 +103,7 @@ class SingleImageUpdate(BaseModel):
     ) -> dict[str, Union[int, float, str, bool]]:
         if v is not None:
             # validate keys
-            valdict_keys("attributes")(v)
+            valdict_keys("attributes")(cls, v)
             # validate values
             for key, value in v.items():
                 if not isinstance(value, (int, float, str, bool)):

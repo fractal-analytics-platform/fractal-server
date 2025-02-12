@@ -550,7 +550,7 @@ async def test_dataset_import(
         res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
         assert res.status_code == 422
-        assert "not a valid list" in str(res.json())
+        assert "should be a valid list" in str(res.json())
 
         # SUCCESS, with new filters only
         payload = dict(

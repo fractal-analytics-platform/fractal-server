@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 from fastapi import status
-from pydantic import BaseModel
 from pydantic import ValidationError
 
 from fractal_server.app.db import AsyncSession
@@ -55,7 +54,7 @@ async def validate_user_settings(
         UserSettingsValidationModel = SlurmSudoUserSettings
     else:
         # For other backends, we don't validate anything
-        UserSettingsValidationModel = BaseModel
+        return user_settings
 
     try:
         UserSettingsValidationModel(**user_settings.model_dump())
