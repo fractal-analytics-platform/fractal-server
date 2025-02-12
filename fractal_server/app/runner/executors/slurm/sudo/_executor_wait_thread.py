@@ -1,11 +1,10 @@
 import os
+import threading
 import time
 import traceback
 from itertools import count
 from typing import Callable
 from typing import Optional
-
-from cfut import FileWaitThread
 
 from ......logger import set_logger
 from ._check_jobs_status import _jobs_finished
@@ -14,7 +13,7 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 logger = set_logger(__name__)
 
 
-class FractalFileWaitThread(FileWaitThread):
+class FractalFileWaitThread(threading.Thread):
     """
     Overrides the original clusterfutures.FileWaitThread, so that:
 
@@ -39,8 +38,15 @@ class FractalFileWaitThread(FileWaitThread):
     shutdown_file: Optional[str] = None
     shutdown_callback: Callable
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, callback, interval=1):
+
+        threading.Thread.__init__(self, daemon=True)
+        self.callback = callback
+        self.interval = interval
+        self.waiting = {}
+        self.lock = threading.Lock()  # To protect the .waiting dict
+        self.shutdown = False
+        self.active_job_ids = []
 
     def wait(
         self,

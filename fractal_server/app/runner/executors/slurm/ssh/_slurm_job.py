@@ -1,11 +1,15 @@
+import random
+import string
 from pathlib import Path
 from typing import Optional
-
-from cfut.util import random_string
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfig,
 )
+
+
+def random_string(length=32, chars=(string.ascii_letters + string.digits)):
+    return "".join(random.choice(chars) for i in range(length))
 
 
 class SlurmJob:

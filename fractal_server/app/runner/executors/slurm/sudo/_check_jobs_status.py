@@ -1,8 +1,19 @@
 from subprocess import run  # nosec
 
-from cfut.slurm import STATES_FINISHED
-
 from ......logger import set_logger
+
+STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
+    "BOOT_FAIL",
+    "CANCELLED",
+    "COMPLETED",
+    "DEADLINE",
+    "FAILED",
+    "NODE_FAIL",
+    "OUT_OF_MEMORY",
+    "PREEMPTED",
+    "SPECIAL_EXIT",
+    "TIMEOUT",
+}
 
 
 logger = set_logger(__name__)

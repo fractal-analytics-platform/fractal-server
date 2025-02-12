@@ -1,10 +1,9 @@
 import os
+import threading
 import time
 import traceback
 from itertools import count
 from typing import Callable
-
-from cfut import FileWaitThread
 
 from ......logger import set_logger
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -12,7 +11,7 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 logger = set_logger(__name__)
 
 
-class FractalSlurmWaitThread(FileWaitThread):
+class FractalSlurmWaitThread(threading.Thread):
     """
     Overrides the original clusterfutures.FileWaitThread, so that:
 
@@ -34,14 +33,23 @@ class FractalSlurmWaitThread(FileWaitThread):
     slurm_poll_interval = 30
     active_job_ids: list[str]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, callback, interval=1):
         """
         Init method
 
         This method is executed on the main thread.
         """
-        super().__init__(*args, **kwargs)
+        threading.Thread.__init__(self, daemon=True)
+        self.callback = callback
+        self.interval = interval
+        self.waiting = {}
+        self.lock = threading.Lock()  # To protect the .waiting dict
+        self.shutdown = False
         self.active_job_ids = []
+
+    def stop(self):
+        """Stop the thread soon."""
+        self.shutdown = True
 
     def wait(self, *, job_id: str):
         """

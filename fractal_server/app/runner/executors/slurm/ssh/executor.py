@@ -15,6 +15,7 @@ import math
 import sys
 import threading
 import time
+from concurrent.futures import Executor
 from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
 from copy import copy
@@ -25,7 +26,6 @@ from typing import Optional
 from typing import Sequence
 
 import cloudpickle
-from cfut import SlurmExecutor
 
 from ....filenames import SHUTDOWN_FILENAME
 from ....task_files import get_task_file_paths
@@ -50,10 +50,23 @@ from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
+STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
+    "BOOT_FAIL",
+    "CANCELLED",
+    "COMPLETED",
+    "DEADLINE",
+    "FAILED",
+    "NODE_FAIL",
+    "OUT_OF_MEMORY",
+    "PREEMPTED",
+    "SPECIAL_EXIT",
+    "TIMEOUT",
+}
 
-class FractalSlurmSSHExecutor(SlurmExecutor):
+
+class FractalSlurmSSHExecutor(Executor):
     """
-    FractalSlurmSSHExecutor (inherits from cfut.SlurmExecutor)
+    FractalSlurmSSHExecutor
 
     FIXME: docstring
 
@@ -1294,8 +1307,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Original Copyright: 2022 Adrian Sampson
         (released under the MIT licence)
         """
-
-        from cfut.slurm import STATES_FINISHED
 
         logger.debug(
             f"[FractalSlurmSSHExecutor._jobs_finished] START ({job_ids=})"

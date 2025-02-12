@@ -12,10 +12,14 @@
 # University of Zurich
 import json
 import math
+import random
 import shlex
+import string
 import subprocess  # nosec
 import sys
+import threading
 import time
+from concurrent.futures import Executor
 from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
 from copy import copy
@@ -27,8 +31,6 @@ from typing import Optional
 from typing import Sequence
 
 import cloudpickle
-from cfut import SlurmExecutor
-from cfut.util import random_string
 
 from ......config import get_settings
 from ......logger import set_logger
@@ -54,6 +56,10 @@ from fractal_server.string_tools import validate_cmd
 
 
 logger = set_logger(__name__)
+
+
+def random_string(length=32, chars=(string.ascii_letters + string.digits)):
+    return "".join(random.choice(chars) for i in range(length))
 
 
 def _subprocess_run_or_raise(full_command: str) -> Optional[CompletedProcess]:
@@ -193,9 +199,9 @@ class SlurmJob:
         return tuple(str(f.as_posix()) for f in self.output_pickle_files)
 
 
-class FractalSlurmExecutor(SlurmExecutor):
+class FractalSlurmExecutor(Executor):
     """
-    FractalSlurmExecutor (inherits from cfut.SlurmExecutor)
+    FractalSlurmExecutor
 
     Attributes:
         slurm_user:
@@ -244,7 +250,13 @@ class FractalSlurmExecutor(SlurmExecutor):
                 "Missing attribute FractalSlurmExecutor.slurm_user"
             )
 
-        super().__init__(*args, **kwargs)
+        self.jobs = {}
+        self.job_outfiles = {}
+        self.jobs_lock = threading.Lock()
+        self.jobs_empty_cond = threading.Condition(self.jobs_lock)
+
+        self.wait_thread = self.wait_thread_cls(self._completion)
+        self.wait_thread.start()
 
         # Assign `wait_thread.shutdown_callback` early, since it may be called
         # from within `_stop_and_join_wait_thread` (e.g. if an exception is
