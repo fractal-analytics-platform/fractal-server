@@ -19,7 +19,7 @@ dependencies = [
     "fastapi-users[oauth] >=14,<15",
     "alembic >=1.13.1, <2.0.0",
     "uvicorn >= 0.29.0, <0.35.0",
-    "pydantic >=1.10.8,<2",
+    "pydantic >=2.10.6",
     "packaging >= 23.2.0, <24.0.0",
     "clusterfutures == 0.5",
     "cloudpickle >=3.0.0,<3.1.0",
