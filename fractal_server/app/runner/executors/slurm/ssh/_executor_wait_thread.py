@@ -42,8 +42,7 @@ class FractalSlurmWaitThread(threading.Thread):
         threading.Thread.__init__(self, daemon=True)
         self.callback = callback
         self.interval = interval
-        self.waiting = {}
-        self.lock = threading.Lock()  # To protect the .waiting dict
+        self.lock = threading.Lock()
         self.shutdown = False
         self.active_job_ids = []
 
