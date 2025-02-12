@@ -18,7 +18,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic.error_wrappers import ValidationError
 
@@ -37,7 +37,7 @@ class SlurmConfigError(ValueError):
     pass
 
 
-class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
+class _SlurmConfigSet(BaseModel):
     """
     Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` for the default/gpu
     SLURM config. Only used as part of `SlurmConfigFile`.
@@ -54,6 +54,8 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
         extra_lines:
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     partition: Optional[str] = None
     cpus_per_task: Optional[int] = None
     mem: Optional[Union[int, str]] = None
@@ -66,7 +68,7 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
     gpus: Optional[str] = None
 
 
-class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
+class _BatchingConfigSet(BaseModel):
     """
     Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` to configure the
     batching strategy (that is, how to combine several tasks in a single SLURM
@@ -83,6 +85,8 @@ class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
         max_num_jobs:
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     target_cpus_per_job: int
     max_cpus_per_job: int
     target_mem_per_job: Union[int, str]
@@ -91,7 +95,7 @@ class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
     max_num_jobs: int
 
 
-class SlurmConfigFile(BaseModel, extra=Extra.forbid):
+class SlurmConfigFile(BaseModel):
     """
     Specifications for the content of `FRACTAL_SLURM_CONFIG_FILE`
 
@@ -135,6 +139,8 @@ class SlurmConfigFile(BaseModel, extra=Extra.forbid):
             submission script, after prepending values with the user's cache
             directory.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     default_slurm_config: _SlurmConfigSet
     gpu_slurm_config: Optional[_SlurmConfigSet] = None
@@ -196,7 +202,7 @@ def load_slurm_config_file(
     return obj
 
 
-class SlurmConfig(BaseModel, extra=Extra.forbid):
+class SlurmConfig(BaseModel):
     """
     Abstraction for SLURM parameters
 
@@ -246,6 +252,8 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         pre_submission_commands: List of commands to be prepended to the sbatch
             command.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     # Required SLURM parameters (note that the integer attributes are those
     # that will need to scale up with the number of parallel tasks per job)

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
@@ -37,13 +37,15 @@ class UserGroupRead(BaseModel):
     viewer_paths: list[str]
 
 
-class UserGroupCreate(BaseModel, extra=Extra.forbid):
+class UserGroupCreate(BaseModel):
     """
     Schema for `UserGroup` creation
 
     Attributes:
         name: Group name
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     viewer_paths: list[str] = Field(default_factory=list)
@@ -57,10 +59,12 @@ class UserGroupCreate(BaseModel, extra=Extra.forbid):
         return value
 
 
-class UserGroupUpdate(BaseModel, extra=Extra.forbid):
+class UserGroupUpdate(BaseModel):
     """
     Schema for `UserGroup` update
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     viewer_paths: Optional[list[str]] = None
 

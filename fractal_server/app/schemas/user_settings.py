@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import validator
 from pydantic.types import StrictStr
@@ -42,10 +42,12 @@ class UserSettingsReadStrict(BaseModel):
     project_dir: Optional[str] = None
 
 
-class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
+class UserSettingsUpdate(BaseModel):
     """
     Schema reserved for superusers
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
@@ -95,7 +97,8 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
         return val_absolute_path("project_dir")(value)
 
 
-class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
+class UserSettingsUpdateStrict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     slurm_accounts: Optional[list[StrictStr]] = None
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(

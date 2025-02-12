@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import validator
 
@@ -32,7 +32,8 @@ class TaskGroupActivityActionV2(str, Enum):
     REACTIVATE = "reactivate"
 
 
-class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
+class TaskGroupCreateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     user_id: int
     user_group_id: Optional[int] = None
     active: bool = True
@@ -103,7 +104,8 @@ class TaskGroupReadV2(BaseModel):
     timestamp_last_used: datetime
 
 
-class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
+class TaskGroupUpdateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     user_group_id: Optional[int] = None
 
 

@@ -6,7 +6,7 @@ from typing import Optional
 import pytest
 from devtools import debug
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
@@ -21,7 +21,8 @@ from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
 )
 
 
-class TaskV2Mock(BaseModel, extra=Extra.forbid):
+class TaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = 1
     name: str = "name_t2"
     source: str = "source_t2"
@@ -35,7 +36,8 @@ class TaskV2Mock(BaseModel, extra=Extra.forbid):
     type: Optional[str] = None
 
 
-class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
+class WorkflowTaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     args_non_parallel: dict[str, Any] = Field(default_factory=dict)
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)

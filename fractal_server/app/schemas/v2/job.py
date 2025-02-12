@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
@@ -39,7 +39,9 @@ class JobStatusTypeV2(str, Enum):
     FAILED = "failed"
 
 
-class JobCreateV2(BaseModel, extra=Extra.forbid):
+class JobCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
@@ -123,6 +125,8 @@ class JobReadV2(BaseModel):
     attribute_filters: AttributeFiltersType
 
 
-class JobUpdateV2(BaseModel, extra=Extra.forbid):
+class JobUpdateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     status: JobStatusTypeV2

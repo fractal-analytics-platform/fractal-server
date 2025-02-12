@@ -3,7 +3,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic import validator
@@ -22,7 +22,7 @@ class WheelFile(BaseModel):
     contents: bytes
 
 
-class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
+class TaskCollectPipV2(BaseModel):
     """
     TaskCollectPipV2 class
 
@@ -46,6 +46,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
 
     """
 
+    model_config = ConfigDict(extra="forbid")
     package: Optional[str] = None
     package_version: Optional[str] = None
     package_extras: Optional[str] = None
@@ -101,7 +102,7 @@ class TaskCollectPipV2(BaseModel, extra=Extra.forbid):
         return value
 
 
-class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
+class TaskCollectCustomV2(BaseModel):
     """
     Attributes:
         manifest: Manifest of a Fractal task package (this is typically the
@@ -119,6 +120,7 @@ class TaskCollectCustomV2(BaseModel, extra=Extra.forbid):
         version: Optional version of tasks to be collected.
     """
 
+    model_config = ConfigDict(extra="forbid")
     manifest: ManifestV2
     python_interpreter: str
     label: str

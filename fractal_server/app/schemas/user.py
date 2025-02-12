@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_users import schemas
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import validator
 
@@ -46,13 +46,15 @@ class UserRead(schemas.BaseUser[int]):
     oauth_accounts: list[OAuthAccountRead]
 
 
-class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
+class UserUpdate(schemas.BaseUserUpdate):
     """
     Schema for `User` update.
 
     Attributes:
         username:
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     username: Optional[str]
 
@@ -77,14 +79,14 @@ class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
         return v
 
 
-class UserUpdateStrict(BaseModel, extra=Extra.forbid):
+class UserUpdateStrict(BaseModel):
     """
     Schema for `User` self-editing.
 
     Attributes:
     """
 
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -102,11 +104,13 @@ class UserCreate(schemas.BaseUserCreate):
     _username = validator("username", allow_reuse=True)(valstr("username"))
 
 
-class UserUpdateGroups(BaseModel, extra=Extra.forbid):
+class UserUpdateGroups(BaseModel):
     """
     Schema for `POST /auth/users/{user_id}/set-groups/`
 
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     group_ids: list[int] = Field(min_length=1)
 

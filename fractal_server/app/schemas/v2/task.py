@@ -3,7 +3,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import HttpUrl
@@ -16,7 +16,9 @@ from fractal_server.app.schemas._validators import valstr
 from fractal_server.string_tools import validate_cmd
 
 
-class TaskCreateV2(BaseModel, extra=Extra.forbid):
+class TaskCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
@@ -134,7 +136,9 @@ class TaskReadV2(BaseModel):
     tags: list[str]
 
 
-class TaskUpdateV2(BaseModel, extra=Extra.forbid):
+class TaskUpdateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     command_parallel: Optional[str] = None
     command_non_parallel: Optional[str] = None
@@ -185,7 +189,9 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
         return val_unique_list("tags")(value)
 
 
-class TaskImportV2(BaseModel, extra=Extra.forbid):
+class TaskImportV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     pkg_name: str
     version: Optional[str] = None

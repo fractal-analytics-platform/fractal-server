@@ -1,7 +1,7 @@
 from typing import Any
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
@@ -9,7 +9,9 @@ from ....images import SingleImageTaskOutput
 from fractal_server.urls import normalize_url
 
 
-class TaskOutput(BaseModel, extra=Extra.forbid):
+class TaskOutput(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     image_list_updates: list[SingleImageTaskOutput] = Field(
         default_factory=list
@@ -41,7 +43,9 @@ class TaskOutput(BaseModel, extra=Extra.forbid):
         return [normalize_url(zarr_url) for zarr_url in v]
 
 
-class InitArgsModel(BaseModel, extra=Extra.forbid):
+class InitArgsModel(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     zarr_url: str
     init_args: dict[str, Any] = Field(default_factory=dict)
@@ -52,6 +56,8 @@ class InitArgsModel(BaseModel, extra=Extra.forbid):
         return normalize_url(v)
 
 
-class InitTaskOutput(BaseModel, extra=Extra.forbid):
+class InitTaskOutput(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     parallelization_list: list[InitArgsModel] = Field(default_factory=list)

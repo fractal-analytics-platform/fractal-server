@@ -4,7 +4,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -41,7 +41,9 @@ class WorkflowTaskStatusTypeV2(str, Enum):
     FAILED = "failed"
 
 
-class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
+class WorkflowTaskCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
@@ -125,7 +127,9 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
     warning: Optional[str] = None
 
 
-class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
+class WorkflowTaskUpdateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
@@ -179,7 +183,9 @@ class WorkflowTaskUpdateV2(BaseModel, extra=Extra.forbid):
         return value
 
 
-class WorkflowTaskImportV2(BaseModel, extra=Extra.forbid):
+class WorkflowTaskImportV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None

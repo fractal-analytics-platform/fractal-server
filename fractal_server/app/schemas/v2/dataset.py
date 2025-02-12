@@ -3,7 +3,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -35,7 +35,9 @@ class _DatasetHistoryItemV2(BaseModel):
 # CRUD
 
 
-class DatasetCreateV2(BaseModel, extra=Extra.forbid):
+class DatasetCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
@@ -83,7 +85,8 @@ class DatasetReadV2(BaseModel):
     attribute_filters: AttributeFiltersType
 
 
-class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
+class DatasetUpdateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     name: Optional[str] = None
     zarr_dir: Optional[str] = None
@@ -112,7 +115,7 @@ class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
         return v
 
 
-class DatasetImportV2(BaseModel, extra=Extra.forbid):
+class DatasetImportV2(BaseModel):
     """
     Class for `Dataset` import.
 
@@ -124,6 +127,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         type_filters:
         attribute_filters:
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     zarr_dir: str

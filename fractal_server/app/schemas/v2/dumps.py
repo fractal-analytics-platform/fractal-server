@@ -11,13 +11,13 @@ These models are used in at least two situations:
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 
 from fractal_server.images.models import AttributeFiltersType
 
 
-class ProjectDumpV2(BaseModel, extra=Extra.forbid):
-
+class ProjectDumpV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     timestamp_created: str
@@ -39,9 +39,9 @@ class TaskDumpV2(BaseModel):
 
 class WorkflowTaskDumpV2(BaseModel):
     """
-    We do not include 'extra=Extra.forbid' because legacy data may include
-    'input_filters' field and we want to avoid response-validation errors
-    for the endpoints that GET datasets.
+    We do not include 'model_config = ConfigDict(extra="forbid")'
+    because legacy data may include 'input_filters' field and we want to avoid
+    response-validation errors for the endpoints that GET datasets.
     """
 
     id: int
@@ -54,14 +54,16 @@ class WorkflowTaskDumpV2(BaseModel):
     task: Optional[TaskDumpV2] = None
 
 
-class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
+class WorkflowDumpV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel, extra=Extra.forbid):
+class DatasetDumpV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     project_id: int

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import validator
 
@@ -14,7 +14,9 @@ from .workflowtask import WorkflowTaskReadV2
 from .workflowtask import WorkflowTaskReadV2WithWarning
 
 
-class WorkflowCreateV2(BaseModel, extra=Extra.forbid):
+class WorkflowCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
@@ -36,7 +38,9 @@ class WorkflowReadV2WithWarnings(WorkflowReadV2):
     task_list: list[WorkflowTaskReadV2WithWarning]
 
 
-class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
+class WorkflowUpdateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: Optional[str] = None
     reordered_workflowtask_ids: Optional[list[int]] = None
@@ -54,7 +58,7 @@ class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
         return value
 
 
-class WorkflowImportV2(BaseModel, extra=Extra.forbid):
+class WorkflowImportV2(BaseModel):
     """
     Class for `Workflow` import.
 
@@ -62,6 +66,7 @@ class WorkflowImportV2(BaseModel, extra=Extra.forbid):
         task_list:
     """
 
+    model_config = ConfigDict(extra="forbid")
     name: str
     task_list: list[WorkflowTaskImportV2]
 
