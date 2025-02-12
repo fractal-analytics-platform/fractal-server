@@ -34,6 +34,7 @@ class TaskV2Mock(BaseModel):
         return values
 
     @field_validator("type")
+    @classmethod
     def _set_type(cls, value, values: ValidationInfo):
         if values.data.get("command_non_parallel") is None:
             if values.data.get("command_parallel") is None:

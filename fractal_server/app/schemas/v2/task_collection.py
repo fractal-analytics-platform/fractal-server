@@ -77,7 +77,8 @@ class TaskCollectPipV2(BaseModel):
             return value
         old_keys = list(value.keys())
         new_keys = [
-            valstr(f"pinned_package_versions[{key}]")(key) for key in old_keys
+            valstr(f"pinned_package_versions[{key}]")(cls, key)
+            for key in old_keys
         ]
         if len(new_keys) != len(set(new_keys)):
             raise ValueError(

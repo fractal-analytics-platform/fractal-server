@@ -95,7 +95,7 @@ async def test_schemas_dataset_v2():
 
     # Read
 
-    DatasetReadV2(**dataset.model_dump(), project=project)
+    DatasetReadV2(**dataset.model_dump(), project=project.model_dump())
 
     # Update
 
