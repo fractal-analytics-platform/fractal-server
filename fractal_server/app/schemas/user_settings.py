@@ -86,8 +86,8 @@ class UserSettingsUpdate(BaseModel):
         if value is None:
             return value
         for i, item in enumerate(value):
-            value[i] = valstr(f"slurm_accounts[{i}]")(item)
-        return val_unique_list("slurm_accounts")(value)
+            value[i] = valstr(f"slurm_accounts[{i}]")(cls, item)
+        return val_unique_list("slurm_accounts")(cls, value)
 
     @field_validator("project_dir")
     @classmethod
@@ -95,7 +95,7 @@ class UserSettingsUpdate(BaseModel):
         if value is None:
             return None
         validate_cmd(value)
-        return val_absolute_path("project_dir")(value)
+        return val_absolute_path("project_dir")(cls, value)
 
 
 class UserSettingsUpdateStrict(BaseModel):

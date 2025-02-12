@@ -54,8 +54,8 @@ class UserGroupCreate(BaseModel):
     @classmethod
     def viewer_paths_validator(cls, value):
         for i, path in enumerate(value):
-            value[i] = val_absolute_path(f"viewer_paths[{i}]")(path)
-        value = val_unique_list("viewer_paths")(value)
+            value[i] = val_absolute_path(f"viewer_paths[{i}]")(cls, path)
+        value = val_unique_list("viewer_paths")(cls, value)
         return value
 
 
@@ -72,6 +72,6 @@ class UserGroupUpdate(BaseModel):
     @classmethod
     def viewer_paths_validator(cls, value):
         for i, path in enumerate(value):
-            value[i] = val_absolute_path(f"viewer_paths[{i}]")(path)
-        value = val_unique_list("viewer_paths")(value)
+            value[i] = val_absolute_path(f"viewer_paths[{i}]")(cls, path)
+        value = val_unique_list("viewer_paths")(cls, value)
         return value
