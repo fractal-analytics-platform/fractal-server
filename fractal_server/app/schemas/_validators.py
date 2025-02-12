@@ -35,7 +35,9 @@ def valdict_keys(attribute: str):
         """
         if d is not None:
             old_keys = list(d.keys())
-            new_keys = [valstr(f"{attribute}[{key}]")(key) for key in old_keys]
+            new_keys = [
+                valstr(f"{attribute}[{key}]")(cls, key) for key in old_keys
+            ]
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
                     f"Dictionary contains multiple identical keys: '{d}'."
