@@ -104,8 +104,8 @@ class TaskCreateV2(BaseModel):
     @classmethod
     def validate_list_of_strings(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(f"tags[{i}]")(tag)
-        return val_unique_list("tags")(value)
+            value[i] = valstr(f"tags[{i}]")(cls, tag)
+        return val_unique_list("tags")(cls, value)
 
 
 class TaskReadV2(BaseModel):
