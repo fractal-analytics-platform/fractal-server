@@ -466,14 +466,14 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "cloudpickle"
-version = "3.0.0"
+version = "3.1.1"
 description = "Pickler class to extend the standard pickle.Pickler functionality"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "cloudpickle-3.0.0-py3-none-any.whl", hash = "sha256:246ee7d0c295602a036e86369c77fecda4ab17b506496730f2f576d9016fd9c7"},
-    {file = "cloudpickle-3.0.0.tar.gz", hash = "sha256:996d9a482c6fb4f33c1a35335cf8afd065d2a56e973270364840712d9131a882"},
+    {file = "cloudpickle-3.1.1-py3-none-any.whl", hash = "sha256:c8c5a44295039331ee9dad40ba100a9c7297b6f988e50e87ccdf3765a668350e"},
+    {file = "cloudpickle-3.1.1.tar.gz", hash = "sha256:b216fa8ae4019d5482a8ac3c95d8f6346115d8835911fd4aefd1a445e4242c64"},
 ]
 
 [[package]]
@@ -965,14 +965,14 @@ colorama = ">=0.4"
 
 [[package]]
 name = "gunicorn"
-version = "22.0.0"
+version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "gunicorn-22.0.0-py3-none-any.whl", hash = "sha256:350679f91b24062c86e386e198a15438d53a7a8207235a78ba1b53df4c4378d9"},
-    {file = "gunicorn-22.0.0.tar.gz", hash = "sha256:4a0b436239ff76fb33f11c07a16482c521a7e09c1ce3cc293c2330afe01bec63"},
+    {file = "gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"},
+    {file = "gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"},
 ]
 
 [package.dependencies]
@@ -999,49 +999,51 @@ files = [
 
 [[package]]
 name = "httpcore"
-version = "0.16.3"
+version = "1.0.7"
 description = "A minimal low-level HTTP client."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "httpcore-0.16.3-py3-none-any.whl", hash = "sha256:da1fb708784a938aa084bde4feb8317056c55037247c787bd7e19eb2c2949dc0"},
-    {file = "httpcore-0.16.3.tar.gz", hash = "sha256:c5d6f04e2fc530f39e0c077e6a30caa53f1451096120f1f38b954afd0b17c0cb"},
+    {file = "httpcore-1.0.7-py3-none-any.whl", hash = "sha256:a3fff8f43dc260d5bd363d9f9cf1830fa3a458b332856f34282de498ed420edd"},
+    {file = "httpcore-1.0.7.tar.gz", hash = "sha256:8551cb62a169ec7162ac7be8d4817d561f60e08eaa485234898414bb5a8a0b4c"},
 ]
 
 [package.dependencies]
-anyio = ">=3.0,<5.0"
 certifi = "*"
 h11 = ">=0.13,<0.15"
-sniffio = "==1.*"
 
 [package.extras]
+asyncio = ["anyio (>=4.0,<5.0)"]
 http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
+trio = ["trio (>=0.22.0,<1.0)"]
 
 [[package]]
 name = "httpx"
-version = "0.23.3"
+version = "0.27.2"
 description = "The next generation HTTP client."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "httpx-0.23.3-py3-none-any.whl", hash = "sha256:a211fcce9b1254ea24f0cd6af9869b3d29aba40154e947d2a07bb499b3e310d6"},
-    {file = "httpx-0.23.3.tar.gz", hash = "sha256:9818458eb565bb54898ccb9b8b251a28785dd4a55afbc23d0eb410754fe7d0f9"},
+    {file = "httpx-0.27.2-py3-none-any.whl", hash = "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0"},
+    {file = "httpx-0.27.2.tar.gz", hash = "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2"},
 ]
 
 [package.dependencies]
+anyio = "*"
 certifi = "*"
-httpcore = ">=0.15.0,<0.17.0"
-rfc3986 = {version = ">=1.3,<2", extras = ["idna2008"]}
+httpcore = "==1.*"
+idna = "*"
 sniffio = "*"
 
 [package.extras]
 brotli = ["brotli", "brotlicffi"]
-cli = ["click (==8.*)", "pygments (==2.*)", "rich (>=10,<13)"]
+cli = ["click (==8.*)", "pygments (==2.*)", "rich (>=10,<14)"]
 http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
+zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "httpx-oauth"
@@ -1550,14 +1552,14 @@ files = [
 
 [[package]]
 name = "packaging"
-version = "23.2"
+version = "24.2"
 description = "Core utilities for Python packages"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main", "dev", "docs"]
 files = [
-    {file = "packaging-23.2-py3-none-any.whl", hash = "sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7"},
-    {file = "packaging-23.2.tar.gz", hash = "sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5"},
+    {file = "packaging-24.2-py3-none-any.whl", hash = "sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759"},
+    {file = "packaging-24.2.tar.gz", hash = "sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f"},
 ]
 
 [[package]]
@@ -2302,24 +2304,6 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
-name = "rfc3986"
-version = "1.5.0"
-description = "Validating URI References per RFC 3986"
-optional = false
-python-versions = "*"
-groups = ["main", "dev"]
-files = [
-    {file = "rfc3986-1.5.0-py2.py3-none-any.whl", hash = "sha256:a86d6e1f5b1dc238b218b012df0aa79409667bb209e58da56d0b94704e712a97"},
-    {file = "rfc3986-1.5.0.tar.gz", hash = "sha256:270aaf10d87d0d4e095063c65bf3ddbc6ee3d0b226328ce21e036f946e421835"},
-]
-
-[package.dependencies]
-idna = {version = "*", optional = true, markers = "extra == \"idna2008\""}
-
-[package.extras]
-idna2008 = ["idna"]
-
-[[package]]
 name = "six"
 version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -2444,14 +2428,14 @@ sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
 name = "sqlmodel"
-version = "0.0.21"
+version = "0.0.22"
 description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "sqlmodel-0.0.21-py3-none-any.whl", hash = "sha256:eca104afe8a643f0764076b29f02e51d19d6b35c458f4c119942960362a4b52a"},
-    {file = "sqlmodel-0.0.21.tar.gz", hash = "sha256:b2034c23d930f66d2091b17a4280a9c23a7ea540a71e7fcf9c746d262f06f74a"},
+    {file = "sqlmodel-0.0.22-py3-none-any.whl", hash = "sha256:a1ed13e28a1f4057cbf4ff6cdb4fc09e85702621d3259ba17b3c230bfb2f941b"},
+    {file = "sqlmodel-0.0.22.tar.gz", hash = "sha256:7d37c882a30c43464d143e35e9ecaf945d88035e20117bf5ec2834a23cbe505e"},
 ]
 
 [package.dependencies]
@@ -2596,19 +2580,19 @@ standard = ["colorama (>=0.4)", "httptools (>=0.6.3)", "python-dotenv (>=0.13)",
 
 [[package]]
 name = "uvicorn-worker"
-version = "0.2.0"
+version = "0.3.0"
 description = "Uvicorn worker for Gunicorn! ✨"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "uvicorn_worker-0.2.0-py3-none-any.whl", hash = "sha256:65dcef25ab80a62e0919640f9582216ee05b3bb1dc2f0e58b354ca0511c398fb"},
-    {file = "uvicorn_worker-0.2.0.tar.gz", hash = "sha256:f6894544391796be6eeed37d48cae9d7739e5a105f7e37061eccef2eac5a0295"},
+    {file = "uvicorn_worker-0.3.0-py3-none-any.whl", hash = "sha256:ef0fe8aad27b0290a9e602a256b03f5a5da3a9e5f942414ca587b645ec77dd52"},
+    {file = "uvicorn_worker-0.3.0.tar.gz", hash = "sha256:6baeab7b2162ea6b9612cbe149aa670a76090ad65a267ce8e27316ed13c7de7b"},
 ]
 
 [package.dependencies]
 gunicorn = ">=20.1.0"
-uvicorn = ">=0.14.0"
+uvicorn = ">=0.15.0"
 
 [[package]]
 name = "virtualenv"
@@ -2766,4 +2750,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "bd25a1a27c5a7b6fd4c7afe9da1b919634721684b2cd067e450e66a84dbc110a"
+content-hash = "83d3202383c2ac82a9acfe3f4df2de34d4dd6c40d189201344b2a40c07a4e1b4"
