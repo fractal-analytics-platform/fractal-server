@@ -47,10 +47,6 @@ class FractalSlurmWaitThread(threading.Thread):
         self.shutdown = False
         self.active_job_ids = []
 
-    def stop(self):
-        """Stop the thread soon."""
-        self.shutdown = True
-
     def wait(self, *, job_id: str):
         """
         Add a a new job to the set of jobs being waited for.

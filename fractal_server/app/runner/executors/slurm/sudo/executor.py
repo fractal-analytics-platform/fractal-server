@@ -1244,7 +1244,7 @@ class FractalSlurmExecutor(Executor):
         logger.debug("Executor shutdown: end")
 
     def _stop_and_join_wait_thread(self):
-        self.wait_thread.stop()
+        self.wait_thread.shutdown = True
         self.wait_thread.join()
 
     def __exit__(self, *args, **kwargs):

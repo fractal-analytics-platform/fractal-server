@@ -109,10 +109,6 @@ class FractalFileWaitThread(threading.Thread):
                 self.check(i)
             time.sleep(self.interval)
 
-    def stop(self):
-        """Stop the thread soon."""
-        self.shutdown = True
-
 
 class FractalSlurmWaitThread(FractalFileWaitThread):
     """
