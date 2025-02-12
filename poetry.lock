@@ -2579,19 +2579,19 @@ standard = ["colorama (>=0.4)", "httptools (>=0.6.3)", "python-dotenv (>=0.13)",
 
 [[package]]
 name = "uvicorn-worker"
-version = "0.2.0"
+version = "0.3.0"
 description = "Uvicorn worker for Gunicorn! ✨"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "uvicorn_worker-0.2.0-py3-none-any.whl", hash = "sha256:65dcef25ab80a62e0919640f9582216ee05b3bb1dc2f0e58b354ca0511c398fb"},
-    {file = "uvicorn_worker-0.2.0.tar.gz", hash = "sha256:f6894544391796be6eeed37d48cae9d7739e5a105f7e37061eccef2eac5a0295"},
+    {file = "uvicorn_worker-0.3.0-py3-none-any.whl", hash = "sha256:ef0fe8aad27b0290a9e602a256b03f5a5da3a9e5f942414ca587b645ec77dd52"},
+    {file = "uvicorn_worker-0.3.0.tar.gz", hash = "sha256:6baeab7b2162ea6b9612cbe149aa670a76090ad65a267ce8e27316ed13c7de7b"},
 ]
 
 [package.dependencies]
 gunicorn = ">=20.1.0"
-uvicorn = ">=0.14.0"
+uvicorn = ">=0.15.0"
 
 [[package]]
 name = "virtualenv"
@@ -2749,4 +2749,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "50aa678f3d6aa940f6712db0da20e30a639bd1fddad05ba03a75cce38087387a"
+content-hash = "2c26f350c1846601809910535fc61f9951404b9845af12b5385f64c452bf697c"
