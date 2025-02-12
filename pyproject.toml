@@ -21,7 +21,6 @@ dependencies = [
     "uvicorn >= 0.29.0, <0.35.0",
     "pydantic >=1.10.8,<2",
     "packaging >= 23.2.0, <24.0.0",
-    "clusterfutures == 0.5",
     "cloudpickle >=3.0.0,<3.1.0",
     "fabric >= 3.2.2, <3.3.0",
     "gunicorn >=21.2,<23.0",
