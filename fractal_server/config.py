@@ -312,7 +312,6 @@ class Settings(BaseSettings):
 
     FRACTAL_RUNNER_BACKEND: Literal[
         "local",
-        "local_experimental",
         "slurm",
         "slurm_ssh",
     ] = "local"
