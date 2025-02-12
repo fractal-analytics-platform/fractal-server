@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Deprecate `FRACTAL_BACKEND_RUNNER="local_experimental"` (\#2273).
+
 # 2.12.1
 
 > Note: this version requires a manual update of email-related configuration variables.
