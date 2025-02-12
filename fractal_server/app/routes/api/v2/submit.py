@@ -169,7 +169,7 @@ async def apply_workflow(
         ),
         workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
         project_dump=json.loads(project.json(exclude={"user_list"})),
-        **job_create.dict(),
+        **job_create.model_dump(),
     )
 
     db.add(job)

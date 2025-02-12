@@ -19,7 +19,7 @@ async def test_schemas_workflow_v2():
     workflow_create = WorkflowCreateV2(name="workflow")
 
     workflow = WorkflowV2(
-        **workflow_create.dict(),
+        **workflow_create.model_dump(),
         id=1,
         project_id=project.id,
     )

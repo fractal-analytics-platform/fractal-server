@@ -40,6 +40,6 @@ def fractal_tasks_mock_no_db(
     and therefore do not need the tasks to be in the database.
     """
     return {
-        task.name: TaskV2Mock(id=_id, **task.dict())
+        task.name: TaskV2Mock(id=_id, **task.model_dump())
         for _id, task in enumerate(fractal_tasks_mock_collection["task_list"])
     }

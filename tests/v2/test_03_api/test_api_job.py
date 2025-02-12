@@ -396,15 +396,15 @@ async def test_project_apply_workflow_subset(
         )
         expected_project_dump = ProjectDumpV2(
             **json.loads(project.json(exclude={"user_list"}))
-        ).dict()
+        ).model_dump()
         expected_workflow_dump = WorkflowDumpV2(
             **json.loads(workflow.json(exclude={"task_list"}))
-        ).dict()
+        ).model_dump()
         expected_dataset_dump = DatasetDumpV2(
             **json.loads(
                 dataset1.json(exclude={"history", "images", "filters"})
             )
-        ).dict()
+        ).model_dump()
         assert res.json()["project_dump"] == expected_project_dump
         assert res.json()["workflow_dump"] == expected_workflow_dump
         assert res.json()["dataset_dump"] == expected_dataset_dump

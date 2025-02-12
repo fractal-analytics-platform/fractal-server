@@ -60,7 +60,7 @@ async def create_dataset(
         db_dataset = DatasetV2(
             project_id=project_id,
             zarr_dir="__PLACEHOLDER__",
-            **dataset.dict(exclude={"zarr_dir"}),
+            **dataset.model_dump(exclude={"zarr_dir"}),
         )
         db.add(db_dataset)
         await db.commit()
@@ -77,7 +77,7 @@ async def create_dataset(
         await db.commit()
         await db.refresh(db_dataset)
     else:
-        db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
+        db_dataset = DatasetV2(project_id=project_id, **dataset.model_dump())
         db.add(db_dataset)
         await db.commit()
         await db.refresh(db_dataset)
@@ -172,7 +172,7 @@ async def update_dataset(
             ),
         )
 
-    for key, value in dataset_update.dict(exclude_unset=True).items():
+    for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)
 
     await db.commit()
@@ -316,7 +316,7 @@ async def import_dataset(
     # Create new Dataset
     db_dataset = DatasetV2(
         project_id=project_id,
-        **dataset.dict(exclude_none=True),
+        **dataset.model_dump(exclude_none=True),
     )
     db.add(db_dataset)
     await db.commit()

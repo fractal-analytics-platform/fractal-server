@@ -229,7 +229,7 @@ async def patch_user_settings(
     verify_user_has_settings(user)
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
-    for k, v in settings_update.dict(exclude_unset=True).items():
+    for k, v in settings_update.model_dump(exclude_unset=True).items():
         setattr(user_settings, k, v)
 
     db.add(user_settings)

@@ -858,7 +858,7 @@ async def test_replace_task_in_workflowtask(
         )
         assert res.status_code == 201
         wft5 = res.json()
-        assert wft5["task"] == task5.dict()
+        assert wft5["task"] == task5.model_dump()
         assert wft5["task_id"] == task5.id
         assert wft5["args_parallel"] == wft3.args_parallel
         assert wft5["args_non_parallel"] == wft3.args_non_parallel

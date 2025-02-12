@@ -57,7 +57,7 @@ async def patch_current_user(
     Note: a user cannot patch their own password (as enforced within the
     `UserUpdateStrict` schema).
     """
-    update = UserUpdate(**user_update.dict(exclude_unset=True))
+    update = UserUpdate(**user_update.model_dump(exclude_unset=True))
 
     # NOTE: here it would be relevant to catch an `InvalidPasswordException`
     # (from `fastapi_users.exceptions`), if we were to allow users change
@@ -102,7 +102,7 @@ async def patch_current_user_settings(
         UserSettings, current_user.user_settings_id
     )
 
-    for k, v in settings_update.dict(exclude_unset=True).items():
+    for k, v in settings_update.model_dump(exclude_unset=True).items():
         setattr(current_user_settings, k, v)
 
     db.add(current_user_settings)

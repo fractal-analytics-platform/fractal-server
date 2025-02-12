@@ -107,7 +107,7 @@ async def patch_task(
     db_task = await _get_task_full_access(
         task_id=task_id, user_id=user.id, db=db
     )
-    update = task_update.dict(exclude_unset=True)
+    update = task_update.model_dump(exclude_unset=True)
 
     # Forbid changes that set a previously unset command
     if db_task.type == "non_parallel" and "command_parallel" in update:
@@ -182,7 +182,7 @@ async def create_task(
         )
 
     # Add task
-    db_task = TaskV2(**task.dict(), type=task_type)
+    db_task = TaskV2(**task.model_dump(), type=task_type)
     pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
         db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version

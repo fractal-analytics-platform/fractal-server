@@ -78,7 +78,7 @@ def execute_tasks_v2(
                 workflowtask=wftask,
                 status=WorkflowTaskStatusTypeV2.SUBMITTED,
                 parallelization=dict(),  # FIXME: re-include parallelization
-            ).dict()
+            ).model_dump()
             db_dataset.history.append(new_history_item)
             flag_modified(db_dataset, "history")
             db.merge(db_dataset)
@@ -132,7 +132,9 @@ def execute_tasks_v2(
             and current_task_output.image_list_removals == []
         ):
             current_task_output = TaskOutput(
-                **current_task_output.dict(exclude={"image_list_updates"}),
+                **current_task_output.model_dump(
+                    exclude={"image_list_updates"}
+                ),
                 image_list_updates=[
                     dict(zarr_url=img["zarr_url"]) for img in filtered_images
                 ],
@@ -141,7 +143,7 @@ def execute_tasks_v2(
         # Update image list
         current_task_output.check_zarr_urls_are_unique()
         for image_obj in current_task_output.image_list_updates:
-            image = image_obj.dict()
+            image = image_obj.model_dump()
             # Edit existing image
             tmp_image_paths = [img["zarr_url"] for img in tmp_images]
             if image["zarr_url"] in tmp_image_paths:

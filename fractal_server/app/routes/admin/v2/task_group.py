@@ -163,7 +163,7 @@ async def patch_task_group(
             detail=f"TaskGroupV2 {task_group_id} not found",
         )
 
-    for key, value in task_group_update.dict(exclude_unset=True).items():
+    for key, value in task_group_update.model_dump(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
             await _verify_user_belongs_to_group(
                 user_id=user.id, user_group_id=value, db=db

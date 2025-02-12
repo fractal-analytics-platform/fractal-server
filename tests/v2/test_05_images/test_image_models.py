@@ -28,7 +28,7 @@ def test_SingleImageBase():
 
     # zarr_url
     image = image_ok(model=_SingleImageBase, zarr_url="/x")
-    assert image.dict() == {
+    assert image.model_dump() == {
         "zarr_url": "/x",
         "origin": None,
         "attributes": {},
@@ -199,7 +199,7 @@ def test_SingleImageUpdate():
 
     # zarr_url
     image = image_ok(model=SingleImageUpdate, zarr_url="/x")
-    assert image.dict() == {
+    assert image.model_dump() == {
         "zarr_url": "/x",
         "attributes": None,
         "types": None,
