@@ -182,7 +182,8 @@ async def create_task(
         )
 
     # Add task
-    db_task = TaskV2(**task.model_dump(), type=task_type)
+
+    db_task = TaskV2(**task.model_dump(exclude_unset=True), type=task_type)
     pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
         db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version
@@ -206,6 +207,7 @@ async def create_task(
     await db.commit()
     await db.refresh(db_task)
     await db.close()
+
     return db_task
 
 
