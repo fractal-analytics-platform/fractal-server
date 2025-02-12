@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from typing import Literal
 from typing import Optional
 
@@ -112,7 +111,7 @@ async def job_factory_v2(db: AsyncSession):
         project_id: int,
         dataset_id: int,
         workflow_id: int,
-        working_dir: Path,
+        working_dir: str,
         db: AsyncSession = db,
         **kwargs,
     ):
@@ -159,14 +158,11 @@ async def job_factory_v2(db: AsyncSession):
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
-            working_dir=working_dir.as_posix(),
+            working_dir=working_dir,
             worker_init="WORKER_INIT string",
             user_email="user@example.org",
         )
         args.update(**kwargs)
-        from devtools import debug
-
-        debug(args)
         job = JobV2(**args)
         db.add(job)
         await db.commit()

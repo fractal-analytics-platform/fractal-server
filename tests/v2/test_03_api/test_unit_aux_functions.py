@@ -282,7 +282,7 @@ async def test_get_job_check_owner(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            working_dir=tmp_path,
+            working_dir=tmp_path.as_posix(),
         )
 
         # Test success
