@@ -6,8 +6,6 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
-from pydantic import root_validator
-from pydantic import validator
 
 from .._validators import valstr
 
@@ -58,7 +56,8 @@ class TaskManifestV2(BaseModel):
     modality: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def validate_executable_args_meta(cls, values):
 
         executable_non_parallel = values.get("executable_non_parallel")
@@ -139,7 +138,7 @@ class ManifestV2(BaseModel):
     args_schema_version: Optional[str] = None
     authors: Optional[str] = None
 
-    @model_validator()
+    @model_validator(mode="before")
     @classmethod
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]
@@ -162,7 +161,7 @@ class ManifestV2(BaseModel):
                         )
         return values
 
-    @model_validator()
+    @model_validator(mode="before")
     @classmethod
     def _unique_task_names(cls, values):
         task_list = values["task_list"]
@@ -183,6 +182,6 @@ class ManifestV2(BaseModel):
             raise ValueError(f"Wrong manifest version (given {value})")
         return value
 
-    _authors = validator("authors", allow_reuse=True)(
-        valstr("authors", accept_none=True)
+    _authors = field_validator("authors")(
+        classmethod(valstr("authors", accept_none=True))
     )

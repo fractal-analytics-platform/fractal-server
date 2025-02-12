@@ -3,7 +3,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_validator
-from pydantic import validator
 from pydantic.types import StrictStr
 
 from ._validators import val_absolute_path
@@ -58,25 +57,27 @@ class UserSettingsUpdate(BaseModel):
     slurm_accounts: Optional[list[StrictStr]] = None
     project_dir: Optional[str] = None
 
-    _ssh_host = validator("ssh_host", allow_reuse=True)(
-        valstr("ssh_host", accept_none=True)
+    _ssh_host = field_validator("ssh_host")(
+        classmethod(valstr("ssh_host", accept_none=True))
     )
-    _ssh_username = validator("ssh_username", allow_reuse=True)(
-        valstr("ssh_username", accept_none=True)
+    _ssh_username = field_validator("ssh_username")(
+        classmethod(valstr("ssh_username", accept_none=True))
     )
-    _ssh_private_key_path = validator(
-        "ssh_private_key_path", allow_reuse=True
-    )(val_absolute_path("ssh_private_key_path", accept_none=True))
-
-    _ssh_tasks_dir = validator("ssh_tasks_dir", allow_reuse=True)(
-        val_absolute_path("ssh_tasks_dir", accept_none=True)
-    )
-    _ssh_jobs_dir = validator("ssh_jobs_dir", allow_reuse=True)(
-        val_absolute_path("ssh_jobs_dir", accept_none=True)
+    _ssh_private_key_path = field_validator("ssh_private_key_path")(
+        classmethod(
+            val_absolute_path("ssh_private_key_path", accept_none=True)
+        )
     )
 
-    _slurm_user = validator("slurm_user", allow_reuse=True)(
-        valstr("slurm_user", accept_none=True)
+    _ssh_tasks_dir = field_validator("ssh_tasks_dir")(
+        classmethod(val_absolute_path("ssh_tasks_dir", accept_none=True))
+    )
+    _ssh_jobs_dir = field_validator("ssh_jobs_dir")(
+        classmethod(val_absolute_path("ssh_jobs_dir", accept_none=True))
+    )
+
+    _slurm_user = field_validator("slurm_user")(
+        classmethod(valstr("slurm_user", accept_none=True))
     )
 
     @field_validator("slurm_accounts")
@@ -101,6 +102,6 @@ class UserSettingsUpdateStrict(BaseModel):
     model_config = ConfigDict(extra="forbid")
     slurm_accounts: Optional[list[StrictStr]] = None
 
-    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
-        val_unique_list("slurm_accounts")
+    _slurm_accounts = field_validator("slurm_accounts")(
+        classmethod(val_unique_list("slurm_accounts"))
     )

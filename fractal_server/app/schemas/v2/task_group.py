@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
@@ -49,21 +49,21 @@ class TaskGroupCreateV2(BaseModel):
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
-    _venv_path = validator("venv_path", allow_reuse=True)(
-        val_absolute_path("venv_path")
+    _path = field_validator("path")(classmethod(val_absolute_path("path")))
+    _venv_path = field_validator("venv_path")(
+        classmethod(val_absolute_path("venv_path"))
     )
-    _wheel_path = validator("wheel_path", allow_reuse=True)(
-        val_absolute_path("wheel_path")
+    _wheel_path = field_validator("wheel_path")(
+        classmethod(val_absolute_path("wheel_path"))
     )
-    _pinned_package_versions = validator(
-        "pinned_package_versions", allow_reuse=True
-    )(valdict_keys("pinned_package_versions"))
-    _pip_extras = validator("pip_extras", allow_reuse=True)(
-        valstr("pip_extras")
+    _pinned_package_versions = field_validator("pinned_package_versions")(
+        valdict_keys("pinned_package_versions")
     )
-    _python_version = validator("python_version", allow_reuse=True)(
-        valstr("python_version")
+    _pip_extras = field_validator("pip_extras")(
+        classmethod(valstr("pip_extras"))
+    )
+    _python_version = field_validator("python_version")(
+        classmethod(valstr("python_version"))
     )
 
 

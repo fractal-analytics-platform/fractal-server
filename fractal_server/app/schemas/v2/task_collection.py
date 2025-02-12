@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import validator
 
 from .._validators import valstr
 from fractal_server.app.schemas.v2 import ManifestV2
@@ -129,18 +128,18 @@ class TaskCollectCustomV2(BaseModel):
     version: Optional[str] = None
 
     # Valstr
-    _python_interpreter = validator("python_interpreter", allow_reuse=True)(
-        valstr("python_interpreter")
+    _python_interpreter = field_validator("python_interpreter")(
+        classmethod(valstr("python_interpreter"))
     )
-    _label = validator("label", allow_reuse=True)(valstr("label"))
-    _package_root = validator("package_root", allow_reuse=True)(
-        valstr("package_root", accept_none=True)
+    _label = field_validator("label")(classmethod(valstr("label")))
+    _package_root = field_validator("package_root")(
+        classmethod(valstr("package_root", accept_none=True))
     )
-    _package_name = validator("package_name", allow_reuse=True)(
-        valstr("package_name", accept_none=True)
+    _package_name = field_validator("package_name")(
+        classmethod(valstr("package_name", accept_none=True))
     )
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
+    _version = field_validator("version")(
+        classmethod(valstr("version", accept_none=True))
     )
 
     @model_validator(mode="before")

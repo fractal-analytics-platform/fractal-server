@@ -26,9 +26,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import root_validator
-from pydantic import validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
@@ -102,7 +101,8 @@ class OAuthClientConfig(BaseModel):
     OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def check_configuration(cls, values):
         if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
             if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
@@ -274,11 +274,8 @@ class Settings(BaseSettings):
     or a path relative to current working directory).
     """
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("FRACTAL_TASKS_DIR", always=True)
+    @field_validator("FRACTAL_TASKS_DIR")
+    @classmethod
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
         If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
@@ -295,11 +292,8 @@ class Settings(BaseSettings):
             )
         return FRACTAL_TASKS_DIR_path
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("FRACTAL_RUNNER_WORKING_BASE_DIR", always=True)
+    @field_validator("FRACTAL_RUNNER_WORKING_BASE_DIR")
+    @classmethod
     def make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute(cls, v):
         """
         (Copy of make_FRACTAL_TASKS_DIR_absolute)
@@ -370,11 +364,8 @@ class Settings(BaseSettings):
     nodes. If not specified, the same interpreter that runs the server is used.
     """
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
+    @field_validator("FRACTAL_SLURM_WORKER_PYTHON")
+    @classmethod
     def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
         """
         If `FRACTAL_SLURM_WORKER_PYTHON` is a relative path, fail.
@@ -526,11 +517,8 @@ class Settings(BaseSettings):
     `--no-cache-dir` is used.
     """
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("FRACTAL_PIP_CACHE_DIR", always=True)
+    @field_validator("FRACTAL_PIP_CACHE_DIR")
+    @classmethod
     def absolute_FRACTAL_PIP_CACHE_DIR(cls, v):
         """
         If `FRACTAL_PIP_CACHE_DIR` is a relative path, fail.

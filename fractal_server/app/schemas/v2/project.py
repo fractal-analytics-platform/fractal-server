@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import validator
+from pydantic import field_validator
 
 from .._validators import valstr
 
@@ -14,7 +14,7 @@ class ProjectCreateV2(BaseModel):
 
     name: str
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
 
 class ProjectReadV2(BaseModel):
@@ -30,4 +30,4 @@ class ProjectUpdateV2(BaseModel):
 
     name: Optional[str] = None
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))

@@ -5,7 +5,6 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
-from pydantic import validator
 
 from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.urls import normalize_url
@@ -31,10 +30,10 @@ class _SingleImageBase(BaseModel):
     types: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        valdict_keys("attributes")
+    _attributes = field_validator("attributes")(
+        classmethod(valdict_keys("attributes"))
     )
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
+    _types = field_validator("types")(classmethod(valdict_keys("types")))
 
     @field_validator("zarr_url")
     @classmethod
@@ -115,4 +114,4 @@ class SingleImageUpdate(BaseModel):
                     )
         return v
 
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
+    _types = field_validator("types")(classmethod(valdict_keys("types")))

@@ -5,9 +5,10 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import model_validator
 from pydantic.types import StrictStr
+from pydantic_core.core_schema import ValidationInfo
 
 from .._filter_validators import validate_attribute_filters
 from .._validators import root_validate_dict_keys
@@ -51,22 +52,19 @@ class JobCreateV2(BaseModel):
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
-    _worker_init = validator("worker_init", allow_reuse=True)(
-        valstr("worker_init")
+    _worker_init = field_validator("worker_init")(
+        classmethod(valstr("worker_init"))
     )
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("first_task_index", always=True)
-    def first_task_index_non_negative(cls, v, values):
+    @field_validator("first_task_index")
+    @classmethod
+    def first_task_index_non_negative(cls, v):
         """
         Check that `first_task_index` is non-negative.
         """
@@ -76,12 +74,9 @@ class JobCreateV2(BaseModel):
             )
         return v
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("last_task_index", always=True)
-    def first_last_task_indices(cls, v, values):
+    @field_validator("last_task_index")
+    @classmethod
+    def first_last_task_indices(cls, v, values: ValidationInfo):
         """
         Check that `last_task_index` is non-negative, and that it is not
         smaller than `first_task_index`.
@@ -91,7 +86,7 @@ class JobCreateV2(BaseModel):
                 f"last_task_index cannot be negative (given: {v})"
             )
 
-        first_task_index = values.get("first_task_index")
+        first_task_index = values.data.get("first_task_index")
         last_task_index = v
         if first_task_index is not None and last_task_index is not None:
             if first_task_index > last_task_index:

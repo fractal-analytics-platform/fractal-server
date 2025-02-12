@@ -7,8 +7,7 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import HttpUrl
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import model_validator
 
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
@@ -43,7 +42,8 @@ class TaskCreateV2(BaseModel):
     authors: Optional[str] = None
 
     # Validators
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def validate_commands(cls, values):
         command_parallel = values.get("command_parallel")
         command_non_parallel = values.get("command_non_parallel")
@@ -59,45 +59,45 @@ class TaskCreateV2(BaseModel):
 
         return values
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _command_non_parallel = validator(
-        "command_non_parallel", allow_reuse=True
-    )(valstr("command_non_parallel"))
-    _command_parallel = validator("command_parallel", allow_reuse=True)(
-        valstr("command_parallel")
+    _name = field_validator("name")(classmethod(valstr("name")))
+    _command_non_parallel = field_validator("command_non_parallel")(
+        classmethod(valstr("command_non_parallel"))
     )
-    _version = validator("version", allow_reuse=True)(valstr("version"))
+    _command_parallel = field_validator("command_parallel")(
+        classmethod(valstr("command_parallel"))
+    )
+    _version = field_validator("version")(classmethod(valstr("version")))
 
-    _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdict_keys("meta_non_parallel")
+    _meta_non_parallel = field_validator("meta_non_parallel")(
+        classmethod(valdict_keys("meta_non_parallel"))
     )
-    _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdict_keys("meta_parallel")
+    _meta_parallel = field_validator("meta_parallel")(
+        classmethod(valdict_keys("meta_parallel"))
     )
-    _args_schema_non_parallel = validator(
-        "args_schema_non_parallel", allow_reuse=True
-    )(valdict_keys("args_schema_non_parallel"))
-    _args_schema_parallel = validator(
-        "args_schema_parallel", allow_reuse=True
-    )(valdict_keys("args_schema_parallel"))
-    _args_schema_version = validator("args_schema_version", allow_reuse=True)(
-        valstr("args_schema_version")
+    _args_schema_non_parallel = field_validator("args_schema_non_parallel")(
+        classmethod(valdict_keys("args_schema_non_parallel"))
     )
-    _input_types = validator("input_types", allow_reuse=True)(
-        valdict_keys("input_types")
+    _args_schema_parallel = field_validator("args_schema_parallel")(
+        classmethod(valdict_keys("args_schema_parallel"))
     )
-    _output_types = validator("output_types", allow_reuse=True)(
-        valdict_keys("output_types")
+    _args_schema_version = field_validator("args_schema_version")(
+        classmethod(valstr("args_schema_version"))
+    )
+    _input_types = field_validator("input_types")(
+        classmethod(valdict_keys("input_types"))
+    )
+    _output_types = field_validator("output_types")(
+        classmethod(valdict_keys("output_types"))
     )
 
-    _category = validator("category", allow_reuse=True)(
-        valstr("category", accept_none=True)
+    _category = field_validator("category")(
+        classmethod(valstr("category", accept_none=True))
     )
-    _modality = validator("modality", allow_reuse=True)(
-        valstr("modality", accept_none=True)
+    _modality = field_validator("modality")(
+        classmethod(valstr("modality", accept_none=True))
     )
-    _authors = validator("authors", allow_reuse=True)(
-        valstr("authors", accept_none=True)
+    _authors = field_validator("authors")(
+        classmethod(valstr("authors", accept_none=True))
     )
 
     @field_validator("tags")
@@ -158,27 +158,27 @@ class TaskUpdateV2(BaseModel):
             raise ValueError
         return v
 
-    _command_parallel = validator("command_parallel", allow_reuse=True)(
-        valstr("command_parallel")
+    _command_parallel = field_validator("command_parallel")(
+        classmethod(valstr("command_parallel"))
     )
-    _command_non_parallel = validator(
-        "command_non_parallel", allow_reuse=True
-    )(valstr("command_non_parallel"))
-    _input_types = validator("input_types", allow_reuse=True)(
-        valdict_keys("input_types")
+    _command_non_parallel = field_validator("command_non_parallel")(
+        classmethod(valstr("command_non_parallel"))
     )
-    _output_types = validator("output_types", allow_reuse=True)(
-        valdict_keys("output_types")
+    _input_types = field_validator("input_types")(
+        classmethod(valdict_keys("input_types"))
+    )
+    _output_types = field_validator("output_types")(
+        classmethod(valdict_keys("output_types"))
     )
 
-    _category = validator("category", allow_reuse=True)(
-        valstr("category", accept_none=True)
+    _category = field_validator("category")(
+        classmethod(valstr("category", accept_none=True))
     )
-    _modality = validator("modality", allow_reuse=True)(
-        valstr("modality", accept_none=True)
+    _modality = field_validator("modality")(
+        classmethod(valstr("modality", accept_none=True))
     )
-    _authors = validator("authors", allow_reuse=True)(
-        valstr("authors", accept_none=True)
+    _authors = field_validator("authors")(
+        classmethod(valstr("authors", accept_none=True))
     )
 
     @field_validator("tags")
@@ -196,16 +196,16 @@ class TaskImportV2(BaseModel):
     pkg_name: str
     version: Optional[str] = None
     name: str
-    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
+    _pkg_name = field_validator("pkg_name")(classmethod(valstr("pkg_name")))
+    _version = field_validator("version")(
+        classmethod(valstr("version", accept_none=True))
     )
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
 
 class TaskImportV2Legacy(BaseModel):
     source: str
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    _source = field_validator("source")(classmethod(valstr("source")))
 
 
 class TaskExportV2(BaseModel):
@@ -214,8 +214,8 @@ class TaskExportV2(BaseModel):
     version: Optional[str] = None
     name: str
 
-    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
+    _pkg_name = field_validator("pkg_name")(classmethod(valstr("pkg_name")))
+    _version = field_validator("version")(
+        classmethod(valstr("version", accept_none=True))
     )
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))

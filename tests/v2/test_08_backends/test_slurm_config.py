@@ -51,7 +51,7 @@ class WorkflowTaskV2Mock(BaseModel):
     workflow_id: int = 0
     task_id: int
 
-    @model_validator()
+    @model_validator(mode="before")
     @classmethod
     def merge_meta(cls, values):
         task_meta_parallel = values["task"].meta_parallel

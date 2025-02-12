@@ -4,7 +4,8 @@ from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from ._validators import val_unique_list
 from ._validators import valstr
@@ -59,23 +60,20 @@ class UserUpdate(schemas.BaseUserUpdate):
     username: Optional[str]
 
     # Validators
-    _username = validator("username", allow_reuse=True)(valstr("username"))
+    _username = field_validator("username")(classmethod(valstr("username")))
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator(
+    @field_validator(
         "is_active",
         "is_verified",
         "is_superuser",
         "email",
         "password",
-        always=False,
+        # TODO: 'always=False'
     )
-    def cant_set_none(cls, v, field):
+    @classmethod
+    def cant_set_none(cls, v, field: ValidationInfo):
         if v is None:
-            raise ValueError(f"Cannot set {field.name}=None")
+            raise ValueError(f"Cannot set {field.field_name}=None")
         return v
 
 
@@ -101,7 +99,7 @@ class UserCreate(schemas.BaseUserCreate):
 
     # Validators
 
-    _username = validator("username", allow_reuse=True)(valstr("username"))
+    _username = field_validator("username")(classmethod(valstr("username")))
 
 
 class UserUpdateGroups(BaseModel):
@@ -114,6 +112,6 @@ class UserUpdateGroups(BaseModel):
 
     group_ids: list[int] = Field(min_length=1)
 
-    _group_ids = validator("group_ids", allow_reuse=True)(
-        val_unique_list("group_ids")
+    _group_ids = field_validator("group_ids")(
+        classmethod(val_unique_list("group_ids"))
     )

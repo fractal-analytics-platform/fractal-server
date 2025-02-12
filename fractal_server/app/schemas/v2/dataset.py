@@ -7,8 +7,6 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import root_validator
-from pydantic import validator
 
 from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
@@ -48,17 +46,17 @@ class DatasetCreateV2(BaseModel):
 
     # Validators
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
     @field_validator("zarr_dir")
     @classmethod
@@ -95,17 +93,17 @@ class DatasetUpdateV2(BaseModel):
 
     # Validators
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
     @field_validator("zarr_dir")
     @classmethod
@@ -169,11 +167,11 @@ class DatasetImportV2(BaseModel):
 
         return values
 
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
     @field_validator("zarr_dir")
