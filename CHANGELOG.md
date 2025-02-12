@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies
+    * Bump `cryptography` version (\#2274).
+
 # 2.12.1
 
 > Note: this version requires a manual update of email-related configuration variables.
