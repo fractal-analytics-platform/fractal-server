@@ -1,7 +1,6 @@
 from typing import Any
 from typing import Optional
 
-from pydantic import HttpUrl
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -33,7 +32,7 @@ class TaskV2(SQLModel, table=True):
     )
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
     input_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
     output_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
