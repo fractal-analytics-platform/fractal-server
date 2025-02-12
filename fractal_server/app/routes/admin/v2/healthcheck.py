@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
@@ -22,6 +23,7 @@ async def run_user_healthcheck(
     user_id: int,
     payload: HealthCheck,
     request: Request,
+    background_tasks: BackgroundTasks,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
@@ -29,5 +31,9 @@ async def run_user_healthcheck(
     if user is None:
         raise HTTPException(404, detail="User not found")
     return await run_healthcheck(
-        payload=payload, request=request, user=user, db=db
+        payload=payload,
+        request=request,
+        background_tasks=background_tasks,
+        user=user,
+        db=db,
     )
