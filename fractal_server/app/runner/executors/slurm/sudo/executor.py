@@ -12,13 +12,12 @@
 # University of Zurich
 import json
 import math
-import random
 import shlex
-import string
 import subprocess  # nosec
 import sys
 import threading
 import time
+import uuid
 from concurrent.futures import Executor
 from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
@@ -56,10 +55,6 @@ from fractal_server.string_tools import validate_cmd
 
 
 logger = set_logger(__name__)
-
-
-def random_string(length=32, chars=(string.ascii_letters + string.digits)):
-    return "".join(random.choice(chars) for i in range(length))
 
 
 def _subprocess_run_or_raise(full_command: str) -> Optional[CompletedProcess]:
@@ -186,9 +181,7 @@ class SlurmJob:
             )
         else:
             self.wftask_file_prefixes = wftask_file_prefixes
-        self.workerids = tuple(
-            random_string() for i in range(self.num_tasks_tot)
-        )
+        self.workerids = tuple(uuid.uuid4() for i in range(self.num_tasks_tot))
         self.slurm_config = slurm_config
 
     def get_clean_output_pickle_files(self) -> tuple[str, ...]:
