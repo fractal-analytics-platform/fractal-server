@@ -4,6 +4,12 @@
 
 * Dependencies
     * Bump `cryptography` version (\#2274).
+    * Bump `sqlmodel` to version `0.0.22` (\#2275).
+    * Bump `packaging` to version `24.*.*` (\#2275).
+    * Bump `cloudpickle` to version `3.1.*` (\#2275).
+    * Bump `uvicorn-workers` to version `0.3.0` (\#2275).
+    * Bump `gunicorn` to version `23.*.*` (\#2275).
+    * Bump `httpx` to version `0.27.*` (\#2275).
 
 # 2.12.1
 
