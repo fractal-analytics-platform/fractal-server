@@ -21,7 +21,9 @@ def validate_attribute_filters(
     if attribute_filters is None:
         raise ValueError("'attribute_filters' cannot be 'None'.")
 
-    attribute_filters = valdict_keys("attribute_filters")(attribute_filters)
+    attribute_filters = valdict_keys("attribute_filters")(
+        cls, attribute_filters
+    )
     for key, values in attribute_filters.items():
         if values == []:
             raise ValueError(
