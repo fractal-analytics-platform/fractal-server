@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
+from pydantic.types import AwareDatetime
 
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
@@ -32,7 +32,7 @@ class UserGroupRead(BaseModel):
 
     id: int
     name: str
-    timestamp_created: datetime
+    timestamp_created: AwareDatetime
     user_ids: Optional[list[int]] = None
     viewer_paths: list[str]
 

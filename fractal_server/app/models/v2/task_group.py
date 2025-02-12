@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timezone
 from typing import Optional
 
+from pydantic.types import AwareDatetime
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -47,11 +48,11 @@ class TaskGroupV2(SQLModel, table=True):
     venv_file_number: Optional[int] = None
 
     active: bool = True
-    timestamp_created: datetime = Field(
+    timestamp_created: AwareDatetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    timestamp_last_used: datetime = Field(
+    timestamp_last_used: AwareDatetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(
             DateTime(timezone=True),
@@ -102,7 +103,7 @@ class TaskGroupActivityV2(SQLModel, table=True):
     taskgroupv2_id: Optional[int] = Field(
         default=None, foreign_key="taskgroupv2.id"
     )
-    timestamp_started: datetime = Field(
+    timestamp_started: AwareDatetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
@@ -111,7 +112,7 @@ class TaskGroupActivityV2(SQLModel, table=True):
     status: str
     action: str
     log: Optional[str] = None
-    timestamp_ended: Optional[datetime] = Field(
+    timestamp_ended: Optional[AwareDatetime] = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True)),
     )

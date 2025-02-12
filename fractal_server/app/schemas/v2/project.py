@@ -1,9 +1,9 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_validator
+from pydantic.types import AwareDatetime
 
 from .._validators import valstr
 
@@ -21,7 +21,7 @@ class ProjectReadV2(BaseModel):
 
     id: int
     name: str
-    timestamp_created: datetime
+    timestamp_created: AwareDatetime
 
 
 class ProjectUpdateV2(BaseModel):

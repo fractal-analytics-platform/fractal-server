@@ -1,4 +1,3 @@
-from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -7,6 +6,7 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
 from pydantic_core.core_schema import ValidationInfo
 
@@ -108,8 +108,8 @@ class JobReadV2(BaseModel):
     workflow_dump: WorkflowDumpV2
     dataset_id: Optional[int] = None
     dataset_dump: DatasetDumpV2
-    start_timestamp: datetime
-    end_timestamp: Optional[datetime] = None
+    start_timestamp: AwareDatetime
+    end_timestamp: Optional[AwareDatetime] = None
     status: str
     log: Optional[str] = None
     working_dir: Optional[str] = None

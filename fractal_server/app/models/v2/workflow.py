@@ -1,6 +1,6 @@
-from datetime import datetime
 from typing import Optional
 
+from pydantic.types import AwareDatetime
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import DateTime
@@ -29,7 +29,7 @@ class WorkflowV2(SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
-    timestamp_created: datetime = Field(
+    timestamp_created: AwareDatetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )

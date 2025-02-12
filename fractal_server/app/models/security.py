@@ -9,11 +9,11 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
-from datetime import datetime
 from typing import Optional
 
 from pydantic import ConfigDict
 from pydantic import EmailStr
+from pydantic.types import AwareDatetime
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -119,7 +119,7 @@ class UserGroup(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
-    timestamp_created: datetime = Field(
+    timestamp_created: AwareDatetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )

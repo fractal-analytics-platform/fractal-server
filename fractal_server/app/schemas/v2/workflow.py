@@ -1,9 +1,9 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_validator
+from pydantic.types import AwareDatetime
 
 from .._validators import valstr
 from .project import ProjectReadV2
@@ -30,7 +30,7 @@ class WorkflowReadV2(BaseModel):
     project_id: int
     task_list: list[WorkflowTaskReadV2]
     project: ProjectReadV2
-    timestamp_created: datetime
+    timestamp_created: AwareDatetime
 
 
 class WorkflowReadV2WithWarnings(WorkflowReadV2):

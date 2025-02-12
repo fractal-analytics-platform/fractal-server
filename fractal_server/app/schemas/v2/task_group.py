@@ -1,4 +1,3 @@
-from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -6,6 +5,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
+from pydantic.types import AwareDatetime
 
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
@@ -100,8 +100,8 @@ class TaskGroupReadV2(BaseModel):
     venv_file_number: Optional[int] = None
 
     active: bool
-    timestamp_created: datetime
-    timestamp_last_used: datetime
+    timestamp_created: AwareDatetime
+    timestamp_last_used: AwareDatetime
 
 
 class TaskGroupUpdateV2(BaseModel):
@@ -113,8 +113,8 @@ class TaskGroupActivityV2Read(BaseModel):
     id: int
     user_id: int
     taskgroupv2_id: Optional[int] = None
-    timestamp_started: datetime
-    timestamp_ended: Optional[datetime] = None
+    timestamp_started: AwareDatetime
+    timestamp_ended: Optional[AwareDatetime] = None
     pkg_name: str
     version: str
     status: TaskGroupActivityStatusV2
