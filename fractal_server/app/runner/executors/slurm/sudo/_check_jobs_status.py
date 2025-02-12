@@ -1,19 +1,7 @@
 from subprocess import run  # nosec
 
 from ......logger import set_logger
-
-STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
-    "BOOT_FAIL",
-    "CANCELLED",
-    "COMPLETED",
-    "DEADLINE",
-    "FAILED",
-    "NODE_FAIL",
-    "OUT_OF_MEMORY",
-    "PREEMPTED",
-    "SPECIAL_EXIT",
-    "TIMEOUT",
-}
+from ...states import STATES_FINISHED
 
 
 logger = set_logger(__name__)

@@ -32,6 +32,7 @@ from ....task_files import get_task_file_paths
 from ....task_files import TaskFiles
 from ....versions import get_versions
 from ...slurm._slurm_config import SlurmConfig
+from ...states import STATES_FINISHED
 from .._batching import heuristics
 from ..utils_executors import get_pickle_file_path
 from ..utils_executors import get_slurm_file_path
@@ -48,20 +49,8 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
 
-logger = set_logger(__name__)
 
-STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
-    "BOOT_FAIL",
-    "CANCELLED",
-    "COMPLETED",
-    "DEADLINE",
-    "FAILED",
-    "NODE_FAIL",
-    "OUT_OF_MEMORY",
-    "PREEMPTED",
-    "SPECIAL_EXIT",
-    "TIMEOUT",
-}
+logger = set_logger(__name__)
 
 
 class FractalSlurmSSHExecutor(Executor):
