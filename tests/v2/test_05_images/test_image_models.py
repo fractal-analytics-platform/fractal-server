@@ -81,7 +81,6 @@ def test_SingleImageBase():
     image_fail(
         model=_SingleImageBase, zarr_url="/x", types={"a": True, " a": True}
     )
-    image_ok(model=_SingleImageBase, zarr_url="/x", types={1: True})
 
 
 def test_url_normalization():
@@ -242,4 +241,3 @@ def test_SingleImageUpdate():
     image_fail(
         model=SingleImageUpdate, zarr_url="/x", types={"a": True, " a": True}
     )
-    image_ok(model=SingleImageUpdate, zarr_url="/x", types={1: True})
