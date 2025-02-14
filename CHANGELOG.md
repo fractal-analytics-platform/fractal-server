@@ -2,8 +2,6 @@
 
 # Unreleased
 
-*
-
 * Dependencies
     * Drop `clustefutures` dependency (\#2272).
     * Bump `cryptography` version (\#2274).
