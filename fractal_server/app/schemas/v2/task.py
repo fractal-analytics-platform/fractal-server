@@ -31,7 +31,7 @@ class TaskCreateV2(BaseModel):
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
@@ -107,6 +107,13 @@ class TaskCreateV2(BaseModel):
             value[i] = valstr(f"tags[{i}]")(cls, tag)
         return val_unique_list("tags")(cls, value)
 
+    @field_validator("docs_link", mode="after")
+    @classmethod
+    def validate_docs_link(cls, value):
+        if value is not None:
+            HttpUrl(value)
+        return value
+
 
 class TaskReadV2(BaseModel):
 
@@ -124,7 +131,7 @@ class TaskReadV2(BaseModel):
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 
