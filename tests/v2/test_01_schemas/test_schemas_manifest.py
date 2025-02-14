@@ -56,6 +56,17 @@ def test_TaskManifestV2():
         )
     assert "`TaskManifestV2.args_schema_parallel` must be None" in msg(e)
 
+    # 6: Invalid URL
+    with pytest.raises(
+        ValidationError,
+        match="Input should be a valid URL",
+    ):
+        assert TaskManifestV2(
+            name="task",
+            executable_parallel="exec",
+            docs_link="not-an-url",
+        )
+
 
 def test_ManifestV2():
     assert ManifestV2(manifest_version="2", task_list=[])
@@ -194,3 +205,19 @@ def test_ManifestV2():
             ],
         )
     assert "Task names in manifest must be unique" in msg(e)
+
+    # 8: Invalid URL
+    with pytest.raises(
+        ValidationError,
+        match="Input should be a valid URL",
+    ):
+        assert ManifestV2(
+            manifest_version="2",
+            has_args_schemas=True,
+            task_list=[
+                compound_both_schemas,
+                parallel_schema,
+                non_parallel_schema,
+            ],
+            docs_link="1234",
+        )

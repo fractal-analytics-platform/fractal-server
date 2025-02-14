@@ -8,7 +8,6 @@ from pydantic import field_validator
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
-from pydantic_core.core_schema import ValidationInfo
 
 from .._filter_validators import validate_attribute_filters
 from .._validators import root_validate_dict_keys
@@ -76,7 +75,7 @@ class JobCreateV2(BaseModel):
 
     @field_validator("last_task_index")
     @classmethod
-    def first_last_task_indices(cls, v, values: ValidationInfo):
+    def first_last_task_indices(cls, v, values):
         """
         Check that `last_task_index` is non-negative, and that it is not
         smaller than `first_task_index`.

@@ -75,7 +75,7 @@ def execute_tasks_v2(
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
             new_history_item = _DatasetHistoryItemV2(
-                workflowtask=wftask,
+                workflowtask=wftask.model_dump(),
                 status=WorkflowTaskStatusTypeV2.SUBMITTED,
                 parallelization=dict(),  # FIXME: re-include parallelization
             ).model_dump()
