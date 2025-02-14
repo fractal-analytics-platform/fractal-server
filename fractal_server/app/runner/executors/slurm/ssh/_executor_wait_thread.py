@@ -3,7 +3,6 @@ import threading
 import time
 import traceback
 from itertools import count
-from typing import callable
 
 from ......logger import set_logger
 from fractal_server.app.runner.exceptions import JobExecutionError
