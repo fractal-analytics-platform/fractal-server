@@ -259,7 +259,7 @@ async def test_invalid_wheel(
                 pkg_name="fractal-tasks-mock",
                 version="0.0.1",
                 origin="local",
-                wheel_path=wheel_path,
+                wheel_path=wheel_path.as_posix(),
                 python_version=current_py_version,
                 path=(tmp_path / name).as_posix(),
                 venv_path=(tmp_path / name / "venv").as_posix(),
