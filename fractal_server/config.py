@@ -620,11 +620,13 @@ class Settings(BaseSettings):
     """
     email_settings: Optional[MailSettings] = None
 
-    @root_validator(pre=True)
+    @root_validator()
     def validate_email_settings(cls, values):
+
         email_values = {
             k: v for k, v in values.items() if k.startswith("FRACTAL_EMAIL")
         }
+
         if email_values:
 
             def assert_key(key: str):
@@ -637,7 +639,7 @@ class Settings(BaseSettings):
             assert_key("FRACTAL_EMAIL_INSTANCE_NAME")
             assert_key("FRACTAL_EMAIL_RECIPIENTS")
 
-            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", True):
+            if email_values["FRACTAL_EMAIL_USE_LOGIN"] is True:
                 if "FRACTAL_EMAIL_PASSWORD" not in email_values:
                     raise ValueError(
                         "'FRACTAL_EMAIL_USE_LOGIN' is True but "
