@@ -1,15 +1,3 @@
-# This adapts clusterfutures <https://github.com/sampsyo/clusterfutures>
-# Original Copyright
-# Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
-# License: MIT
-#
-# Modified by:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-#
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
 import json
 import math
 import sys
@@ -31,13 +19,13 @@ from ....filenames import SHUTDOWN_FILENAME
 from ....task_files import get_task_file_paths
 from ....task_files import TaskFiles
 from ....versions import get_versions
+from ..._job_states import STATES_FINISHED
 from ...slurm._slurm_config import SlurmConfig
-from ...states import STATES_FINISHED
 from .._batching import heuristics
 from ..utils_executors import get_pickle_file_path
 from ..utils_executors import get_slurm_file_path
 from ..utils_executors import get_slurm_script_file_path
-from ._executor_wait_thread import FractalSlurmWaitThread
+from ._executor_wait_thread import FractalSlurmSSHWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -55,19 +43,25 @@ logger = set_logger(__name__)
 
 class FractalSlurmSSHExecutor(Executor):
     """
-    FractalSlurmSSHExecutor
+    Executor to submit SLURM jobs via SSH
 
-    FIXME: docstring
+    This class is a custom re-implementation of the SLURM executor from
+
+    > clusterfutures <https://github.com/sampsyo/clusterfutures>
+    > Original Copyright
+    > Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
+    > License: MIT
+
 
     Attributes:
         fractal_ssh: FractalSSH connection with custom lock
-        shutdown_file:
-        python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
-        wait_thread_cls: Class for waiting thread
         workflow_dir_local:
             Directory for both the cfut/SLURM and fractal-server files and logs
         workflow_dir_remote:
             Directory for both the cfut/SLURM and fractal-server files and logs
+        shutdown_file:
+        python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
+        wait_thread_cls: Class for waiting thread
         common_script_lines:
             Arbitrary script lines that will always be included in the
             sbatch script
@@ -84,7 +78,7 @@ class FractalSlurmSSHExecutor(Executor):
     shutdown_file: str
     python_remote: str
 
-    wait_thread_cls = FractalSlurmWaitThread
+    wait_thread_cls = FractalSlurmSSHWaitThread
 
     common_script_lines: list[str]
     slurm_account: Optional[str]

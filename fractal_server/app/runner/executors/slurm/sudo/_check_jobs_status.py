@@ -1,7 +1,7 @@
 from subprocess import run  # nosec
 
 from ......logger import set_logger
-from ...states import STATES_FINISHED
+from ..._job_states import STATES_FINISHED
 
 
 logger = set_logger(__name__)

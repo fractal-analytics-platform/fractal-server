@@ -1,15 +1,3 @@
-# This adapts clusterfutures <https://github.com/sampsyo/clusterfutures>
-# Original Copyright
-# Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
-# License: MIT
-#
-# Modified by:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-#
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
 import json
 import math
 import shlex
@@ -44,7 +32,7 @@ from .._batching import heuristics
 from ..utils_executors import get_pickle_file_path
 from ..utils_executors import get_slurm_file_path
 from ..utils_executors import get_slurm_script_file_path
-from ._executor_wait_thread import FractalSlurmWaitThread
+from ._executor_wait_thread import FractalSlurmSudoWaitThread
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
 from ._subprocess_run_as_user import _path_exists_as_user
@@ -192,9 +180,17 @@ class SlurmJob:
         return tuple(str(f.as_posix()) for f in self.output_pickle_files)
 
 
-class FractalSlurmExecutor(Executor):
+class FractalSlurmSudoExecutor(Executor):
     """
-    FractalSlurmExecutor
+    Executor to submit SLURM jobs as a different user, via `sudo -u`
+
+    This class is a custom re-implementation of the SLURM executor from
+
+    > clusterfutures <https://github.com/sampsyo/clusterfutures>
+    > Original Copyright
+    > Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
+    > License: MIT
+
 
     Attributes:
         slurm_user:
@@ -210,7 +206,7 @@ class FractalSlurmExecutor(Executor):
             Dictionary with paths of slurm-related files for active jobs
     """
 
-    wait_thread_cls = FractalSlurmWaitThread
+    wait_thread_cls = FractalSlurmSudoWaitThread
     slurm_user: str
     shutdown_file: str
     common_script_lines: list[str]
