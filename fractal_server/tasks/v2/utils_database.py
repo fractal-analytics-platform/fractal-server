@@ -31,9 +31,12 @@ def create_db_tasks_and_update_task_group(
     Returns:
         Updated `TaskGroupV2` object.
     """
+    # Note: we have to manually convert HttpUrl attribute into string,
+    # or sqlalchemy won't be able to add it to the database.
     actual_task_list = [
         TaskV2(
-            **task.model_dump(),
+            **task.model_dump(exclude={"docs_link"}),
+            docs_link=str(task.docs_link),
             type=_get_task_type(task),
         )
         for task in task_list
