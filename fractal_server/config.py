@@ -604,19 +604,17 @@ class Settings(BaseSettings):
     """
     Comma-separated list of recipients of the OAuth-signup emails.
     """
-    FRACTAL_EMAIL_USE_STARTTLS: Optional[bool] = True
+    FRACTAL_EMAIL_USE_STARTTLS: Literal["true", "false"] = "true"
     """
     Whether to use StartTLS when using the SMTP server.
-    Accepted values:
-        anything that lower-cased becomes 'false', 'f', '0', 'true, 't', '1'.
+    Accepted values: 'true', 'false'.
     """
-    FRACTAL_EMAIL_USE_LOGIN: Optional[bool] = True
+    FRACTAL_EMAIL_USE_LOGIN: Literal["true", "false"] = "true"
     """
     Whether to use login when using the SMTP server.
-    If 'True', FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KEY must be
+    If 'true', FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KEY must be
     provided.
-    Accepted values:
-        anything that lower-cased becomes 'false', 'f', '0', 'true, 't', '1'.
+    Accepted values: 'true', 'false'.
     """
     email_settings: Optional[MailSettings] = None
 
@@ -637,15 +635,15 @@ class Settings(BaseSettings):
             assert_key("FRACTAL_EMAIL_INSTANCE_NAME")
             assert_key("FRACTAL_EMAIL_RECIPIENTS")
 
-            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", True):
+            if email_values["FRACTAL_EMAIL_USE_LOGIN"] == "true":
                 if "FRACTAL_EMAIL_PASSWORD" not in email_values:
                     raise ValueError(
-                        "'FRACTAL_EMAIL_USE_LOGIN' is True but "
+                        "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
                         "'FRACTAL_EMAIL_PASSWORD' is not provided."
                     )
                 elif "FRACTAL_EMAIL_PASSWORD_KEY" not in email_values:
                     raise ValueError(
-                        "'FRACTAL_EMAIL_USE_LOGIN' is True but "
+                        "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
                         "'FRACTAL_EMAIL_PASSWORD_KEY' is not provided."
                     )
                 else:
@@ -662,6 +660,16 @@ class Settings(BaseSettings):
                             f"Original error: {str(e)}."
                         )
 
+            if email_values["FRACTAL_EMAIL_USE_STARTTLS"]:
+                use_starttls = True
+            else:
+                use_starttls = False
+
+            if email_values["FRACTAL_EMAIL_USE_LOGIN"]:
+                use_login = True
+            else:
+                use_login = False
+
             values["email_settings"] = MailSettings(
                 sender=email_values["FRACTAL_EMAIL_SENDER"],
                 recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
@@ -670,10 +678,8 @@ class Settings(BaseSettings):
                 encrypted_password=email_values.get("FRACTAL_EMAIL_PASSWORD"),
                 encryption_key=email_values.get("FRACTAL_EMAIL_PASSWORD_KEY"),
                 instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
-                use_starttls=email_values.get(
-                    "FRACTAL_EMAIL_USE_STARTTLS", True
-                ),
-                use_login=email_values.get("FRACTAL_EMAIL_USE_LOGIN", True),
+                use_starttls=use_starttls,
+                use_login=use_login,
             )
 
         return values
