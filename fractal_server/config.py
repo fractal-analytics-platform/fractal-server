@@ -660,12 +660,12 @@ class Settings(BaseSettings):
                             f"Original error: {str(e)}."
                         )
 
-            if email_values["FRACTAL_EMAIL_USE_STARTTLS"]:
+            if email_values["FRACTAL_EMAIL_USE_STARTTLS"] == "true":
                 use_starttls = True
             else:
                 use_starttls = False
 
-            if email_values["FRACTAL_EMAIL_USE_LOGIN"]:
+            if email_values["FRACTAL_EMAIL_USE_LOGIN"] == "true":
                 use_login = True
             else:
                 use_login = False
