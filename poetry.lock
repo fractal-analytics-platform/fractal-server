@@ -477,24 +477,6 @@ files = [
 ]
 
 [[package]]
-name = "clusterfutures"
-version = "0.5"
-description = "futures for remote execution on clusters"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "clusterfutures-0.5-py3-none-any.whl", hash = "sha256:391c9258da445366b7e859ac8ed2883aecfd26de364959fc1910e1a7c63bb933"},
-    {file = "clusterfutures-0.5.tar.gz", hash = "sha256:261e82c44b500e39b71e3a2c41db66d9777e9674d58449cb90aa83a1955e9453"},
-]
-
-[package.dependencies]
-cloudpickle = "*"
-
-[package.extras]
-test = ["pytest", "testpath (>=0.5)"]
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -2721,4 +2703,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "47495b0f636ce5eded6911d618f1278b95934f702bee30a10c54f2ecd7e3d1bc"
+content-hash = "6844d54a1f2c27bb13f7418ff9b6194cc9a960bad275cf9da41361c56241c60f"

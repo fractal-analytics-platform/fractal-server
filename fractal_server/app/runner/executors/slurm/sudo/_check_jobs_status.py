@@ -1,8 +1,7 @@
 from subprocess import run  # nosec
 
-from cfut.slurm import STATES_FINISHED
-
 from ......logger import set_logger
+from ..._job_states import STATES_FINISHED
 
 
 logger = set_logger(__name__)

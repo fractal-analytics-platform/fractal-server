@@ -4,7 +4,9 @@
 
 * Runner:
     * Deprecate `FRACTAL_BACKEND_RUNNER="local_experimental"` (\#2273).
+    * Fully replace `clusterfutures` classes with custom ones (\#2272).
 * Dependencies:
+    * Drop `clusterfutures` dependency (\#2272).
     * Drop `psutil` dependency (\#2273).
     * Bump `cryptography` version (\#2274).
     * Bump `sqlmodel` to version `0.0.22` (\#2275).
