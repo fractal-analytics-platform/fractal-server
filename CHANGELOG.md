@@ -3,7 +3,7 @@
 # Unreleased
 
 * Dependencies
-    * Drop `clustefutures` dependency (\#2272).
+    * Drop `clusterfutures` dependency (\#2272).
     * Bump `cryptography` version (\#2274).
     * Bump `sqlmodel` to version `0.0.22` (\#2275).
     * Bump `packaging` to version `24.*.*` (\#2275).
