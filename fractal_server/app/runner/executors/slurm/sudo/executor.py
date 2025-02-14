@@ -1,21 +1,12 @@
-# This adapts clusterfutures <https://github.com/sampsyo/clusterfutures>
-# Original Copyright
-# Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
-# License: MIT
-#
-# Modified by:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-#
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
 import json
 import math
 import shlex
 import subprocess  # nosec
 import sys
+import threading
 import time
+import uuid
+from concurrent.futures import Executor
 from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
 from copy import copy
@@ -27,8 +18,6 @@ from typing import Optional
 from typing import Sequence
 
 import cloudpickle
-from cfut import SlurmExecutor
-from cfut.util import random_string
 
 from ......config import get_settings
 from ......logger import set_logger
@@ -43,7 +32,7 @@ from .._batching import heuristics
 from ..utils_executors import get_pickle_file_path
 from ..utils_executors import get_slurm_file_path
 from ..utils_executors import get_slurm_script_file_path
-from ._executor_wait_thread import FractalSlurmWaitThread
+from ._executor_wait_thread import FractalSlurmSudoWaitThread
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
 from ._subprocess_run_as_user import _path_exists_as_user
@@ -180,9 +169,7 @@ class SlurmJob:
             )
         else:
             self.wftask_file_prefixes = wftask_file_prefixes
-        self.workerids = tuple(
-            random_string() for i in range(self.num_tasks_tot)
-        )
+        self.workerids = tuple(uuid.uuid4() for i in range(self.num_tasks_tot))
         self.slurm_config = slurm_config
 
     def get_clean_output_pickle_files(self) -> tuple[str, ...]:
@@ -193,9 +180,17 @@ class SlurmJob:
         return tuple(str(f.as_posix()) for f in self.output_pickle_files)
 
 
-class FractalSlurmExecutor(SlurmExecutor):
+class FractalSlurmSudoExecutor(Executor):
     """
-    FractalSlurmExecutor (inherits from cfut.SlurmExecutor)
+    Executor to submit SLURM jobs as a different user, via `sudo -u`
+
+    This class is a custom re-implementation of the SLURM executor from
+
+    > clusterfutures <https://github.com/sampsyo/clusterfutures>
+    > Original Copyright
+    > Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
+    > License: MIT
+
 
     Attributes:
         slurm_user:
@@ -211,7 +206,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             Dictionary with paths of slurm-related files for active jobs
     """
 
-    wait_thread_cls = FractalSlurmWaitThread
+    wait_thread_cls = FractalSlurmSudoWaitThread
     slurm_user: str
     shutdown_file: str
     common_script_lines: list[str]
@@ -244,7 +239,13 @@ class FractalSlurmExecutor(SlurmExecutor):
                 "Missing attribute FractalSlurmExecutor.slurm_user"
             )
 
-        super().__init__(*args, **kwargs)
+        self.jobs = {}
+        self.job_outfiles = {}
+        self.jobs_lock = threading.Lock()
+        self.jobs_empty_cond = threading.Condition(self.jobs_lock)
+
+        self.wait_thread = self.wait_thread_cls(self._completion)
+        self.wait_thread.start()
 
         # Assign `wait_thread.shutdown_callback` early, since it may be called
         # from within `_stop_and_join_wait_thread` (e.g. if an exception is
@@ -1239,7 +1240,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         logger.debug("Executor shutdown: end")
 
     def _stop_and_join_wait_thread(self):
-        self.wait_thread.stop()
+        self.wait_thread.shutdown = True
         self.wait_thread.join()
 
     def __exit__(self, *args, **kwargs):

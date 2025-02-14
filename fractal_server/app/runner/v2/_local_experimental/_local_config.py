@@ -8,7 +8,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 from .....config import get_settings
 from .....syringe import Inject

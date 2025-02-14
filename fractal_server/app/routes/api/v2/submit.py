@@ -202,8 +202,6 @@ async def apply_workflow(
     # Define user-side job directory
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-    elif FRACTAL_RUNNER_BACKEND == "local_experimental":
-        WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
     elif FRACTAL_RUNNER_BACKEND == "slurm":
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":

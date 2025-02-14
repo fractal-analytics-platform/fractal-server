@@ -1,20 +1,9 @@
-# This adapts clusterfutures <https://github.com/sampsyo/clusterfutures>
-# Original Copyright
-# Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
-# License: MIT
-#
-# Modified by:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-#
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
 import json
 import math
 import sys
 import threading
 import time
+from concurrent.futures import Executor
 from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
 from copy import copy
@@ -25,18 +14,18 @@ from typing import Optional
 from typing import Sequence
 
 import cloudpickle
-from cfut import SlurmExecutor
 
 from ....filenames import SHUTDOWN_FILENAME
 from ....task_files import get_task_file_paths
 from ....task_files import TaskFiles
 from ....versions import get_versions
+from ..._job_states import STATES_FINISHED
 from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ..utils_executors import get_pickle_file_path
 from ..utils_executors import get_slurm_file_path
 from ..utils_executors import get_slurm_script_file_path
-from ._executor_wait_thread import FractalSlurmWaitThread
+from ._executor_wait_thread import FractalSlurmSSHWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -48,24 +37,31 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
 
+
 logger = set_logger(__name__)
 
 
-class FractalSlurmSSHExecutor(SlurmExecutor):
+class FractalSlurmSSHExecutor(Executor):
     """
-    FractalSlurmSSHExecutor (inherits from cfut.SlurmExecutor)
+    Executor to submit SLURM jobs via SSH
 
-    FIXME: docstring
+    This class is a custom re-implementation of the SLURM executor from
+
+    > clusterfutures <https://github.com/sampsyo/clusterfutures>
+    > Original Copyright
+    > Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
+    > License: MIT
+
 
     Attributes:
         fractal_ssh: FractalSSH connection with custom lock
-        shutdown_file:
-        python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
-        wait_thread_cls: Class for waiting thread
         workflow_dir_local:
             Directory for both the cfut/SLURM and fractal-server files and logs
         workflow_dir_remote:
             Directory for both the cfut/SLURM and fractal-server files and logs
+        shutdown_file:
+        python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
+        wait_thread_cls: Class for waiting thread
         common_script_lines:
             Arbitrary script lines that will always be included in the
             sbatch script
@@ -82,7 +78,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     shutdown_file: str
     python_remote: str
 
-    wait_thread_cls = FractalSlurmWaitThread
+    wait_thread_cls = FractalSlurmSSHWaitThread
 
     common_script_lines: list[str]
     slurm_account: Optional[str] = None
@@ -1258,7 +1254,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         logger.debug("Executor shutdown: end")
 
     def _stop_and_join_wait_thread(self):
-        self.wait_thread.stop()
+        self.wait_thread.shutdown = True
         self.wait_thread.join()
 
     def __exit__(self, *args, **kwargs):
@@ -1294,8 +1290,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Original Copyright: 2022 Adrian Sampson
         (released under the MIT licence)
         """
-
-        from cfut.slurm import STATES_FINISHED
 
         logger.debug(
             f"[FractalSlurmSSHExecutor._jobs_finished] START ({job_ids=})"

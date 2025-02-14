@@ -1,11 +1,9 @@
 import os
+import threading
 import time
 import traceback
 from itertools import count
-from typing import Callable
 from typing import Optional
-
-from cfut import FileWaitThread
 
 from ......logger import set_logger
 from ._check_jobs_status import _jobs_finished
@@ -14,33 +12,43 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 logger = set_logger(__name__)
 
 
-class FractalFileWaitThread(FileWaitThread):
+class FractalSlurmSudoWaitThread(threading.Thread):
     """
-    Overrides the original clusterfutures.FileWaitThread, so that:
+    Thread that monitors a pool of SLURM jobs
 
-    1. Each jobid in the waiting list is associated to a tuple of filenames,
-       rather than a single one.
-    2. In the `check` method, we avoid output-file existence checks (which
-       would require `sudo -u user ls` calls), and we rather check for the
-       existence of the shutdown file. All the logic to check whether a job is
-       complete is deferred to the `cfut.slurm.jobs_finished` function.
-    3. There are additional attributes (`slurm_user`, `shutdown_file` and
-       `shutdown_callback`).
+    This class is a custom re-implementation of the waiting thread class from:
 
-    This class is copied from clusterfutures 0.5. Original Copyright: 2022
-    Adrian Sampson, released under the MIT licence
+    > clusterfutures <https://github.com/sampsyo/clusterfutures>
+    > Original Copyright
+    > Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
+    > License: MIT
 
-    Note: in principle we could avoid the definition of
-    `FractalFileWaitThread`, and pack all this code in
-    `FractalSlurmWaitThread`.
+    Attributes:
+        slurm_user:
+        shutdown_file:
+        shutdown_callback:
+        slurm_poll_interval:
+        waiting:
+        shutdown:
+        lock:
     """
 
     slurm_user: str
     shutdown_file: Optional[str] = None
-    shutdown_callback: Callable
+    shutdown_callback: callable
+    slurm_poll_interval: int = 30
+    waiting: dict[tuple[str, ...], str]
+    shutdown: bool
+    _lock: threading.Lock
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, callback: callable, interval=1):
+        threading.Thread.__init__(self, daemon=True)
+        self.callback = callback
+        self.interval = interval
+        self.waiting = {}
+        self._lock = threading.Lock()  # To protect the .waiting dict
+        self.shutdown = False
+        self.active_job_ids = []
 
     def wait(
         self,
@@ -61,10 +69,10 @@ class FractalFileWaitThread(FileWaitThread):
             error_msg = "Cannot call `wait` method after executor shutdown."
             logger.warning(error_msg)
             raise JobExecutionError(info=error_msg)
-        with self.lock:
+        with self._lock:
             self.waiting[filenames] = jobid
 
-    def check(self, i):
+    def check_shutdown(self, i):
         """
         Do one shutdown-file-existence check.
 
@@ -99,30 +107,12 @@ class FractalFileWaitThread(FileWaitThread):
             if self.shutdown:
                 self.shutdown_callback()
                 return
-            with self.lock:
+            with self._lock:
                 self.check(i)
             time.sleep(self.interval)
 
-
-class FractalSlurmWaitThread(FractalFileWaitThread):
-    """
-    Replaces the original clusterfutures.SlurmWaitThread, to inherit from
-    FractalFileWaitThread instead of FileWaitThread.
-
-    The function is copied from clusterfutures 0.5. Original Copyright: 2022
-    Adrian Sampson, released under the MIT licence
-
-    **Note**: if `self.interval != 1` then this should be modified, but for
-    `clusterfutures` v0.5 `self.interval` is indeed equal to `1`.
-
-    Changed from clusterfutures:
-    * Rename `id_to_filename` to `id_to_filenames`
-    """
-
-    slurm_poll_interval = 30
-
     def check(self, i):
-        super().check(i)
+        self.check_shutdown(i)
         if i % (self.slurm_poll_interval // self.interval) == 0:
             try:
                 finished_jobs = _jobs_finished(self.waiting.values())
