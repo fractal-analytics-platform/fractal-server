@@ -75,7 +75,7 @@ async def patch_user(
             safe=False,
             request=None,
         )
-        validated_user = schemas.model_validate(UserOAuth, user)
+        validated_user = schemas.model_validate(UserOAuth, user.model_dump())
         patched_user = await db.get(
             UserOAuth, validated_user.id, populate_existing=True
         )
@@ -139,7 +139,6 @@ async def set_user_groups(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
-
     # Preliminary check that all objects exist in the db
     user = await _user_or_404(user_id=user_id, db=db)
     target_group_ids = user_update.group_ids
@@ -209,7 +208,6 @@ async def get_user_settings(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsRead:
-
     user = await _user_or_404(user_id=user_id, db=db)
     verify_user_has_settings(user)
     user_settings = await db.get(UserSettings, user.user_settings_id)

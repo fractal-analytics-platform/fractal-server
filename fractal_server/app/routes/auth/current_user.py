@@ -64,7 +64,7 @@ async def patch_current_user(
     # their own password
 
     user = await user_manager.update(update, current_user, safe=True)
-    validated_user = schemas.model_validate(UserOAuth, user)
+    validated_user = schemas.model_validate(UserOAuth, user.model_dump())
 
     patched_user = await db.get(
         UserOAuth, validated_user.id, populate_existing=True
@@ -82,7 +82,6 @@ async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-
     verify_user_has_settings(current_user)
     user_settings = await db.get(UserSettings, current_user.user_settings_id)
     return user_settings
@@ -96,7 +95,6 @@ async def patch_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-
     verify_user_has_settings(current_user)
     current_user_settings = await db.get(
         UserSettings, current_user.user_settings_id
