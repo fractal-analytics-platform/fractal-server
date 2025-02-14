@@ -2,7 +2,10 @@
 
 # Unreleased
 
-* Dependencies
+* Runner:
+    * Deprecate `FRACTAL_BACKEND_RUNNER="local_experimental"` (\#2273).
+* Dependencies:
+    * Drop `psutil` dependency (\#2273).
     * Bump `cryptography` version (\#2274).
     * Bump `sqlmodel` to version `0.0.22` (\#2275).
     * Bump `packaging` to version `24.*.*` (\#2275).
