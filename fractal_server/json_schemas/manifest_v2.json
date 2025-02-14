@@ -1,68 +1,49 @@
 {
-    "title": "ManifestV2",
-    "description": "Packages containing tasks are required to include a special file\n`__FRACTAL_MANIFEST__.json` in order to be discovered and used by Fractal.\n\nThis model class and the model classes it depends on provide the base\nschema to read, write and validate manifests.\n\nAttributes:\n    manifest_version:\n        A version string that provides indication for compatibility between\n        manifests as the schema evolves. This is for instance used by\n        Fractal to determine which subclass of the present base class needs\n        be used to read and validate the input.\n    task_list : list[TaskManifestType]\n        The list of tasks, represented as specified by subclasses of the\n        _TaskManifestBase (a.k.a. TaskManifestType)\n    has_args_schemas:\n        `True` if the manifest incldues JSON Schemas for the arguments of\n        each task.\n    args_schema_version:\n        Label of how `args_schema`s were generated (e.g. `pydantic_v1`).",
-    "type": "object",
-    "properties": {
-        "manifest_version": {
-            "title": "Manifest Version",
-            "type": "string"
-        },
-        "task_list": {
-            "title": "Task List",
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/TaskManifestV2"
-            }
-        },
-        "has_args_schemas": {
-            "title": "Has Args Schemas",
-            "default": false,
-            "type": "boolean"
-        },
-        "args_schema_version": {
-            "title": "Args Schema Version",
-            "type": "string"
-        },
-        "authors": {
-            "title": "Authors",
-            "type": "string"
-        }
-    },
-    "required": [
-        "manifest_version",
-        "task_list"
-    ],
-    "definitions": {
+    "$defs": {
         "TaskManifestV2": {
-            "title": "TaskManifestV2",
             "description": "Represents a task within a V2 manifest.\n\nAttributes:\n    name:\n        The task name\n    executable:\n        Path to the executable relative to the package root\n\n        Note: by package root we mean \"as it will be installed\". If a\n        package `Pkg` installs in the folder `pkg` the executable\n        `pkg/executable.py`, this attribute must contain only\n        `executable.py`.\n    input_type:\n        The input type accepted by the task\n    output_type:\n        The output type returned by the task\n    meta:\n        Additional information about the package, such as hash of the\n        executable, specific runtime requirements (e.g., need_gpu=True),\n        etc.\n    args_schema:\n        JSON Schema for task arguments\n    docs_info:\n        Additional information about the Task, coming from the docstring.\n    docs_link:\n        Link to Task docs.",
-            "type": "object",
             "properties": {
                 "name": {
                     "title": "Name",
                     "type": "string"
                 },
                 "executable_non_parallel": {
-                    "title": "Executable Non Parallel",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Executable Non Parallel"
                 },
                 "executable_parallel": {
-                    "title": "Executable Parallel",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Executable Parallel"
                 },
                 "input_types": {
-                    "title": "Input Types",
-                    "type": "object",
                     "additionalProperties": {
                         "type": "boolean"
-                    }
+                    },
+                    "title": "Input Types",
+                    "type": "object"
                 },
                 "output_types": {
-                    "title": "Output Types",
-                    "type": "object",
                     "additionalProperties": {
                         "type": "boolean"
-                    }
+                    },
+                    "title": "Output Types",
+                    "type": "object"
                 },
                 "meta_non_parallel": {
                     "title": "Meta Non Parallel",
@@ -73,43 +54,142 @@
                     "type": "object"
                 },
                 "args_schema_non_parallel": {
-                    "title": "Args Schema Non Parallel",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema Non Parallel"
                 },
                 "args_schema_parallel": {
-                    "title": "Args Schema Parallel",
-                    "type": "object"
+                    "anyOf": [
+                        {
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Args Schema Parallel"
                 },
                 "docs_info": {
-                    "title": "Docs Info",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Info"
                 },
                 "docs_link": {
-                    "title": "Docs Link",
-                    "minLength": 1,
-                    "maxLength": 2083,
-                    "format": "uri",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "format": "uri",
+                            "maxLength": 2083,
+                            "minLength": 1,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Docs Link"
                 },
                 "category": {
-                    "title": "Category",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Category"
                 },
                 "modality": {
-                    "title": "Modality",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Modality"
                 },
                 "tags": {
-                    "title": "Tags",
-                    "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "title": "Tags",
+                    "type": "array"
                 }
             },
             "required": [
                 "name"
-            ]
+            ],
+            "title": "TaskManifestV2",
+            "type": "object"
         }
-    }
+    },
+    "description": "Packages containing tasks are required to include a special file\n`__FRACTAL_MANIFEST__.json` in order to be discovered and used by Fractal.\n\nThis model class and the model classes it depends on provide the base\nschema to read, write and validate manifests.\n\nAttributes:\n    manifest_version:\n        A version string that provides indication for compatibility between\n        manifests as the schema evolves. This is for instance used by\n        Fractal to determine which subclass of the present base class needs\n        be used to read and validate the input.\n    task_list : list[TaskManifestType]\n        The list of tasks, represented as specified by subclasses of the\n        _TaskManifestBase (a.k.a. TaskManifestType)\n    has_args_schemas:\n        `True` if the manifest incldues JSON Schemas for the arguments of\n        each task.\n    args_schema_version:\n        Label of how `args_schema`s were generated (e.g. `pydantic_v1`).",
+    "properties": {
+        "manifest_version": {
+            "title": "Manifest Version",
+            "type": "string"
+        },
+        "task_list": {
+            "items": {
+                "$ref": "#/$defs/TaskManifestV2"
+            },
+            "title": "Task List",
+            "type": "array"
+        },
+        "has_args_schemas": {
+            "default": false,
+            "title": "Has Args Schemas",
+            "type": "boolean"
+        },
+        "args_schema_version": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Args Schema Version"
+        },
+        "authors": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Authors"
+        }
+    },
+    "required": [
+        "manifest_version",
+        "task_list"
+    ],
+    "title": "ManifestV2",
+    "type": "object"
 }

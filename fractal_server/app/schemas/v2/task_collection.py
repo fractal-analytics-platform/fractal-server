@@ -165,7 +165,7 @@ class TaskCollectCustomV2(BaseModel):
         """
         if value is not None:
             validate_cmd(value)
-            value = valstr("package_name")(value)
+            value = valstr("package_name")(cls, value)
             value = value.replace(" ", "")
         return value
 

@@ -10,7 +10,6 @@ def msg(e: pytest.ExceptionInfo) -> str:
 
 
 def test_TaskManifestV2():
-
     assert TaskManifestV2(name="task", executable_parallel="exec")
     assert TaskManifestV2(name="task", executable_non_parallel="exec")
     assert TaskManifestV2(
@@ -59,7 +58,6 @@ def test_TaskManifestV2():
 
 
 def test_ManifestV2():
-    assert ManifestV2(manifest_version=2, task_list=[])
     assert ManifestV2(manifest_version="2", task_list=[])
 
     compound_both_schemas = TaskManifestV2(
@@ -117,7 +115,7 @@ def test_ManifestV2():
 
     # 1: invalid manifest_version
     with pytest.raises(ValidationError) as e:
-        ManifestV2(manifest_version=1, task_list=[])
+        ManifestV2(manifest_version="1", task_list=[])
     assert "Wrong manifest version" in msg(e)
 
     # 2: compound_just_parallel_schemas

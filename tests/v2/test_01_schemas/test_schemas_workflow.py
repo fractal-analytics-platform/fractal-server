@@ -11,7 +11,6 @@ from fractal_server.app.schemas.v2 import WorkflowUpdateV2
 
 
 async def test_schemas_workflow_v2():
-
     project = ProjectV2(id=1, name="project")
 
     # Create
@@ -28,7 +27,7 @@ async def test_schemas_workflow_v2():
 
     WorkflowReadV2(
         **workflow.model_dump(),
-        project=project,
+        project=project.model_dump(),
         task_list=workflow.task_list,
     )
 
@@ -45,7 +44,6 @@ async def test_schemas_workflow_v2():
 
 async def test_schemas_workflow_task_v2():
     for attribute in ("args_parallel", "args_non_parallel"):
-
         WorkflowTaskCreateV2(**{attribute: dict(something="else")})
 
         WorkflowTaskUpdateV2(**{attribute: dict(something="else")})
