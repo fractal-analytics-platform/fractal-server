@@ -20,7 +20,7 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 from .....config import get_settings
 from .....logger import set_logger
