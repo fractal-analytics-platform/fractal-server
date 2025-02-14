@@ -635,7 +635,7 @@ class Settings(BaseSettings):
             assert_key("FRACTAL_EMAIL_INSTANCE_NAME")
             assert_key("FRACTAL_EMAIL_RECIPIENTS")
 
-            if email_values["FRACTAL_EMAIL_USE_LOGIN"] == "true":
+            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", "true") == "true":
                 if "FRACTAL_EMAIL_PASSWORD" not in email_values:
                     raise ValueError(
                         "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
@@ -660,12 +660,12 @@ class Settings(BaseSettings):
                             f"Original error: {str(e)}."
                         )
 
-            if email_values["FRACTAL_EMAIL_USE_STARTTLS"] == "true":
+            if email_values.get("FRACTAL_EMAIL_USE_STARTTLS") == "true":
                 use_starttls = True
             else:
                 use_starttls = False
 
-            if email_values["FRACTAL_EMAIL_USE_LOGIN"] == "true":
+            if email_values.get("FRACTAL_EMAIL_USE_LOGIN") == "true":
                 use_login = True
             else:
                 use_login = False

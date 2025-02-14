@@ -443,7 +443,7 @@ def test_fractal_email():
     settings = Settings(
         **common_attributes,
         **required_mail_args,
-        FRACTAL_EMAIL_USE_LOGIN=False,
+        FRACTAL_EMAIL_USE_LOGIN="false",
     )
     assert settings.email_settings is not None
     # 6: missing required arguments
