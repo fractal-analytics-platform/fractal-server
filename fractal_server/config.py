@@ -637,10 +637,12 @@ class Settings(BaseSettings):
         if len(set(email_values)) == 1:
             # All required EMAIL attributes are None
             pass
-        elif len(set(email_values)) < len(email_values):
+        elif None in email_values:
             # Not all required EMAIL attributes are set
-            error_msg = "Invalid FRACTAL_EMAIL configuration. Given values:\n"
-            error_msg += "\n".join(email_values)
+            error_msg = (
+                "Invalid FRACTAL_EMAIL configuration. "
+                f"Given values: {email_values}."
+            )
             raise ValueError(error_msg)
         else:
             use_starttls = self.FRACTAL_EMAIL_USE_STARTTLS == "true"
