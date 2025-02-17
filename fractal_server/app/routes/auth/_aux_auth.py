@@ -59,7 +59,7 @@ async def _get_single_user_with_groups(
     else:
         pass
     oauth_accounts = [
-        oauth_accounts.model_dump() for oauth_accounts in user.oauth_accounts
+        oauth_account.model_dump() for oauth_account in user.oauth_accounts
     ]
 
     return UserRead(
