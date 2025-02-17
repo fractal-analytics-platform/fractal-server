@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API
+    * Add `/admin/v2/impersonate` endpoint (\#2280).
+
 # 2.13.0
 
 With this release we switch to Pydantic v2.
