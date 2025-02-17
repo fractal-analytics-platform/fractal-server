@@ -78,7 +78,7 @@ class UserGroupUpdate(BaseModel):
     @classmethod
     def viewer_paths_validator(cls, value):
         if value is None:
-            raise ValueError
+            raise ValueError("Cannot set `viewer_paths=None`.")
         for i, path in enumerate(value):
             value[i] = val_absolute_path(f"viewer_paths[{i}]")(cls, path)
         value = val_unique_list("viewer_paths")(cls, value)
