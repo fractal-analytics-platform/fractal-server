@@ -40,7 +40,6 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 
 
 class WorkflowTaskCreateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: Optional[dict[str, Any]] = None
@@ -102,7 +101,6 @@ class WorkflowTaskReplaceV2(BaseModel):
 
 
 class WorkflowTaskReadV2(BaseModel):
-
     id: int
 
     workflow_id: int
@@ -125,7 +123,6 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
 
 
 class WorkflowTaskUpdateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: Optional[dict[str, Any]] = None
@@ -180,7 +177,6 @@ class WorkflowTaskUpdateV2(BaseModel):
 
 
 class WorkflowTaskImportV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: Optional[dict[str, Any]] = None
@@ -240,7 +236,6 @@ class WorkflowTaskImportV2(BaseModel):
 
 
 class WorkflowTaskExportV2(BaseModel):
-
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None

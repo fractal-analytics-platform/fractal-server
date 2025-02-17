@@ -16,7 +16,6 @@ from fractal_server.string_tools import validate_cmd
 
 
 class TaskCreateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     name: str
@@ -42,11 +41,10 @@ class TaskCreateV2(BaseModel):
     authors: Optional[str] = None
 
     # Validators
-    @model_validator(mode="before")
-    @classmethod
-    def validate_commands(cls, values):
-        command_parallel = values.get("command_parallel")
-        command_non_parallel = values.get("command_non_parallel")
+    @model_validator(mode="after")
+    def validate_commands(self):
+        command_parallel = self.get("command_parallel")
+        command_non_parallel = self.get("command_non_parallel")
         if (command_parallel is None) and (command_non_parallel is None):
             raise ValueError(
                 "Task must have at least one valid command "
@@ -57,7 +55,7 @@ class TaskCreateV2(BaseModel):
         if command_non_parallel is not None:
             validate_cmd(command_non_parallel)
 
-        return values
+        return self
 
     _name = field_validator("name")(classmethod(valstr("name")))
     _command_non_parallel = field_validator("command_non_parallel")(
@@ -116,7 +114,6 @@ class TaskCreateV2(BaseModel):
 
 
 class TaskReadV2(BaseModel):
-
     id: int
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
@@ -144,7 +141,6 @@ class TaskReadV2(BaseModel):
 
 
 class TaskUpdateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     command_parallel: Optional[str] = None
@@ -197,7 +193,6 @@ class TaskUpdateV2(BaseModel):
 
 
 class TaskImportV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     pkg_name: str
@@ -216,7 +211,6 @@ class TaskImportV2Legacy(BaseModel):
 
 
 class TaskExportV2(BaseModel):
-
     pkg_name: str
     version: Optional[str] = None
     name: str

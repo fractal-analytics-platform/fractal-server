@@ -101,16 +101,15 @@ class OAuthClientConfig(BaseModel):
     OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
-    @model_validator(mode="before")
-    @classmethod
-    def check_configuration(cls, values):
-        if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
-            if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
+    @model_validator(mode="after")
+    def check_configuration(self):
+        if self.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
+            if not self.get("OIDC_CONFIGURATION_ENDPOINT"):
                 raise FractalConfigurationError(
-                    f"Missing OAUTH_{values.get('CLIENT_NAME')}"
+                    f"Missing OAUTH_{self.get('CLIENT_NAME')}"
                     "_OIDC_CONFIGURATION_ENDPOINT"
                 )
-        return values
+        return self
 
 
 class Settings(BaseSettings):
