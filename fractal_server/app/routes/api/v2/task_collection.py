@@ -68,19 +68,18 @@ class CollectionRequestData(BaseModel):
     file: Optional[UploadFile] = None
     origin: TaskGroupV2OriginEnum
 
-    @model_validator(mode="before")
-    @classmethod
-    def validate_data(cls, values):
-        file = values.get("file")
-        package = values.get("task_collect").package
-        package_version = values.get("task_collect").package_version
+    @model_validator(mode="after")
+    def validate_data(self):
+        file = self.get("file")
+        package = self.get("task_collect").package
+        package_version = self.get("task_collect").package_version
 
         if file is None:
             if package is None:
                 raise ValueError(
                     "When no `file` is provided, `package` is required."
                 )
-            values["origin"] = TaskGroupV2OriginEnum.PYPI
+            self["origin"] = TaskGroupV2OriginEnum.PYPI
         else:
             if package is not None:
                 raise ValueError(
@@ -92,7 +91,7 @@ class CollectionRequestData(BaseModel):
                     "Cannot set `package_version` when `file` is "
                     f"provided (given package_version='{package_version}')."
                 )
-            values["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+            self["origin"] = TaskGroupV2OriginEnum.WHEELFILE
 
             for forbidden_char in FORBIDDEN_CHAR_WHEEL:
                 if forbidden_char in file.filename:
@@ -101,7 +100,7 @@ class CollectionRequestData(BaseModel):
                         f"{FORBIDDEN_CHAR_WHEEL}"
                     )
 
-        return values
+        return self
 
 
 def parse_request_data(

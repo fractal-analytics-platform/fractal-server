@@ -36,7 +36,6 @@ class _DatasetHistoryItemV2(BaseModel):
 
 
 class DatasetCreateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     name: str
@@ -69,7 +68,6 @@ class DatasetCreateV2(BaseModel):
 
 
 class DatasetReadV2(BaseModel):
-
     id: int
     name: str
 
