@@ -2,8 +2,10 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import validator
+from pydantic import ConfigDict
+from pydantic import field_serializer
+from pydantic import field_validator
+from pydantic.types import AwareDatetime
 
 from .._validators import valstr
 from .project import ProjectReadV2
@@ -13,12 +15,14 @@ from .workflowtask import WorkflowTaskReadV2
 from .workflowtask import WorkflowTaskReadV2WithWarning
 
 
-class WorkflowCreateV2(BaseModel, extra=Extra.forbid):
+class WorkflowCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
 
 class WorkflowReadV2(BaseModel):
@@ -28,22 +32,29 @@ class WorkflowReadV2(BaseModel):
     project_id: int
     task_list: list[WorkflowTaskReadV2]
     project: ProjectReadV2
-    timestamp_created: datetime
+    timestamp_created: AwareDatetime
+
+    @field_serializer("timestamp_created")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
 class WorkflowReadV2WithWarnings(WorkflowReadV2):
     task_list: list[WorkflowTaskReadV2WithWarning]
 
 
-class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
+class WorkflowUpdateV2(BaseModel):
 
-    name: Optional[str]
-    reordered_workflowtask_ids: Optional[list[int]]
+    model_config = ConfigDict(extra="forbid")
+
+    name: Optional[str] = None
+    reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
-    @validator("reordered_workflowtask_ids")
+    @field_validator("reordered_workflowtask_ids")
+    @classmethod
     def check_positive_and_unique(cls, value):
         if any(i < 0 for i in value):
             raise ValueError("Negative `id` in `reordered_workflowtask_ids`")
@@ -52,7 +63,7 @@ class WorkflowUpdateV2(BaseModel, extra=Extra.forbid):
         return value
 
 
-class WorkflowImportV2(BaseModel, extra=Extra.forbid):
+class WorkflowImportV2(BaseModel):
     """
     Class for `Workflow` import.
 
@@ -60,11 +71,12 @@ class WorkflowImportV2(BaseModel, extra=Extra.forbid):
         task_list:
     """
 
+    model_config = ConfigDict(extra="forbid")
     name: str
     task_list: list[WorkflowTaskImportV2]
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
 
 class WorkflowExportV2(BaseModel):

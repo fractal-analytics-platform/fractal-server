@@ -1,8 +1,8 @@
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import validator
+from pydantic import ConfigDict
+from pydantic import field_validator
 from pydantic.types import StrictStr
 
 from ._validators import val_absolute_path
@@ -41,10 +41,12 @@ class UserSettingsReadStrict(BaseModel):
     project_dir: Optional[str] = None
 
 
-class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
+class UserSettingsUpdate(BaseModel):
     """
     Schema reserved for superusers
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     ssh_host: Optional[str] = None
     ssh_username: Optional[str] = None
@@ -55,46 +57,51 @@ class UserSettingsUpdate(BaseModel, extra=Extra.forbid):
     slurm_accounts: Optional[list[StrictStr]] = None
     project_dir: Optional[str] = None
 
-    _ssh_host = validator("ssh_host", allow_reuse=True)(
-        valstr("ssh_host", accept_none=True)
+    _ssh_host = field_validator("ssh_host")(
+        classmethod(valstr("ssh_host", accept_none=True))
     )
-    _ssh_username = validator("ssh_username", allow_reuse=True)(
-        valstr("ssh_username", accept_none=True)
+    _ssh_username = field_validator("ssh_username")(
+        classmethod(valstr("ssh_username", accept_none=True))
     )
-    _ssh_private_key_path = validator(
-        "ssh_private_key_path", allow_reuse=True
-    )(val_absolute_path("ssh_private_key_path", accept_none=True))
-
-    _ssh_tasks_dir = validator("ssh_tasks_dir", allow_reuse=True)(
-        val_absolute_path("ssh_tasks_dir", accept_none=True)
-    )
-    _ssh_jobs_dir = validator("ssh_jobs_dir", allow_reuse=True)(
-        val_absolute_path("ssh_jobs_dir", accept_none=True)
+    _ssh_private_key_path = field_validator("ssh_private_key_path")(
+        classmethod(
+            val_absolute_path("ssh_private_key_path", accept_none=True)
+        )
     )
 
-    _slurm_user = validator("slurm_user", allow_reuse=True)(
-        valstr("slurm_user", accept_none=True)
+    _ssh_tasks_dir = field_validator("ssh_tasks_dir")(
+        classmethod(val_absolute_path("ssh_tasks_dir", accept_none=True))
+    )
+    _ssh_jobs_dir = field_validator("ssh_jobs_dir")(
+        classmethod(val_absolute_path("ssh_jobs_dir", accept_none=True))
     )
 
-    @validator("slurm_accounts")
+    _slurm_user = field_validator("slurm_user")(
+        classmethod(valstr("slurm_user", accept_none=True))
+    )
+
+    @field_validator("slurm_accounts")
+    @classmethod
     def slurm_accounts_validator(cls, value):
         if value is None:
             return value
         for i, item in enumerate(value):
-            value[i] = valstr(f"slurm_accounts[{i}]")(item)
-        return val_unique_list("slurm_accounts")(value)
+            value[i] = valstr(f"slurm_accounts[{i}]")(cls, item)
+        return val_unique_list("slurm_accounts")(cls, value)
 
-    @validator("project_dir")
+    @field_validator("project_dir")
+    @classmethod
     def project_dir_validator(cls, value):
         if value is None:
             return None
         validate_cmd(value)
-        return val_absolute_path("project_dir")(value)
+        return val_absolute_path("project_dir")(cls, value)
 
 
-class UserSettingsUpdateStrict(BaseModel, extra=Extra.forbid):
+class UserSettingsUpdateStrict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     slurm_accounts: Optional[list[StrictStr]] = None
 
-    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
-        val_unique_list("slurm_accounts")
+    _slurm_accounts = field_validator("slurm_accounts")(
+        classmethod(val_unique_list("slurm_accounts"))
     )

@@ -3,11 +3,11 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import model_validator
 
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
@@ -15,7 +15,8 @@ from fractal_server.app.schemas._validators import valstr
 from fractal_server.string_tools import validate_cmd
 
 
-class TaskCreateV2(BaseModel, extra=Extra.forbid):
+class TaskCreateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
@@ -29,7 +30,7 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
@@ -40,10 +41,10 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     authors: Optional[str] = None
 
     # Validators
-    @root_validator
-    def validate_commands(cls, values):
-        command_parallel = values.get("command_parallel")
-        command_non_parallel = values.get("command_non_parallel")
+    @model_validator(mode="after")
+    def validate_commands(self):
+        command_parallel = self.command_parallel
+        command_non_parallel = self.command_non_parallel
         if (command_parallel is None) and (command_non_parallel is None):
             raise ValueError(
                 "Task must have at least one valid command "
@@ -54,58 +55,65 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
         if command_non_parallel is not None:
             validate_cmd(command_non_parallel)
 
-        return values
+        return self
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _command_non_parallel = validator(
-        "command_non_parallel", allow_reuse=True
-    )(valstr("command_non_parallel"))
-    _command_parallel = validator("command_parallel", allow_reuse=True)(
-        valstr("command_parallel")
+    _name = field_validator("name")(classmethod(valstr("name")))
+    _command_non_parallel = field_validator("command_non_parallel")(
+        classmethod(valstr("command_non_parallel"))
     )
-    _version = validator("version", allow_reuse=True)(valstr("version"))
+    _command_parallel = field_validator("command_parallel")(
+        classmethod(valstr("command_parallel"))
+    )
+    _version = field_validator("version")(classmethod(valstr("version")))
 
-    _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
-        valdict_keys("meta_non_parallel")
+    _meta_non_parallel = field_validator("meta_non_parallel")(
+        classmethod(valdict_keys("meta_non_parallel"))
     )
-    _meta_parallel = validator("meta_parallel", allow_reuse=True)(
-        valdict_keys("meta_parallel")
+    _meta_parallel = field_validator("meta_parallel")(
+        classmethod(valdict_keys("meta_parallel"))
     )
-    _args_schema_non_parallel = validator(
-        "args_schema_non_parallel", allow_reuse=True
-    )(valdict_keys("args_schema_non_parallel"))
-    _args_schema_parallel = validator(
-        "args_schema_parallel", allow_reuse=True
-    )(valdict_keys("args_schema_parallel"))
-    _args_schema_version = validator("args_schema_version", allow_reuse=True)(
-        valstr("args_schema_version")
+    _args_schema_non_parallel = field_validator("args_schema_non_parallel")(
+        classmethod(valdict_keys("args_schema_non_parallel"))
     )
-    _input_types = validator("input_types", allow_reuse=True)(
-        valdict_keys("input_types")
+    _args_schema_parallel = field_validator("args_schema_parallel")(
+        classmethod(valdict_keys("args_schema_parallel"))
     )
-    _output_types = validator("output_types", allow_reuse=True)(
-        valdict_keys("output_types")
+    _args_schema_version = field_validator("args_schema_version")(
+        classmethod(valstr("args_schema_version"))
     )
-
-    _category = validator("category", allow_reuse=True)(
-        valstr("category", accept_none=True)
+    _input_types = field_validator("input_types")(
+        classmethod(valdict_keys("input_types"))
     )
-    _modality = validator("modality", allow_reuse=True)(
-        valstr("modality", accept_none=True)
-    )
-    _authors = validator("authors", allow_reuse=True)(
-        valstr("authors", accept_none=True)
+    _output_types = field_validator("output_types")(
+        classmethod(valdict_keys("output_types"))
     )
 
-    @validator("tags")
+    _category = field_validator("category")(
+        classmethod(valstr("category", accept_none=True))
+    )
+    _modality = field_validator("modality")(
+        classmethod(valstr("modality", accept_none=True))
+    )
+    _authors = field_validator("authors")(
+        classmethod(valstr("authors", accept_none=True))
+    )
+
+    @field_validator("tags")
+    @classmethod
     def validate_list_of_strings(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(f"tags[{i}]")(tag)
-        return val_unique_list("tags")(value)
+            value[i] = valstr(f"tags[{i}]")(cls, tag)
+        return val_unique_list("tags")(cls, value)
+
+    @field_validator("docs_link", mode="after")
+    @classmethod
+    def validate_docs_link(cls, value):
+        if value is not None:
+            HttpUrl(value)
+        return value
 
 
 class TaskReadV2(BaseModel):
-
     id: int
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
@@ -120,7 +128,7 @@ class TaskReadV2(BaseModel):
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 
@@ -132,7 +140,8 @@ class TaskReadV2(BaseModel):
     tags: list[str]
 
 
-class TaskUpdateV2(BaseModel, extra=Extra.forbid):
+class TaskUpdateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     command_parallel: Optional[str] = None
     command_non_parallel: Optional[str] = None
@@ -145,67 +154,69 @@ class TaskUpdateV2(BaseModel, extra=Extra.forbid):
     tags: Optional[list[str]] = None
 
     # Validators
-    @validator("input_types", "output_types")
+    @field_validator("input_types", "output_types")
+    @classmethod
     def val_is_dict(cls, v):
         if not isinstance(v, dict):
             raise ValueError
         return v
 
-    _command_parallel = validator("command_parallel", allow_reuse=True)(
-        valstr("command_parallel")
+    _command_parallel = field_validator("command_parallel")(
+        classmethod(valstr("command_parallel"))
     )
-    _command_non_parallel = validator(
-        "command_non_parallel", allow_reuse=True
-    )(valstr("command_non_parallel"))
-    _input_types = validator("input_types", allow_reuse=True)(
-        valdict_keys("input_types")
+    _command_non_parallel = field_validator("command_non_parallel")(
+        classmethod(valstr("command_non_parallel"))
     )
-    _output_types = validator("output_types", allow_reuse=True)(
-        valdict_keys("output_types")
+    _input_types = field_validator("input_types")(
+        classmethod(valdict_keys("input_types"))
     )
-
-    _category = validator("category", allow_reuse=True)(
-        valstr("category", accept_none=True)
-    )
-    _modality = validator("modality", allow_reuse=True)(
-        valstr("modality", accept_none=True)
-    )
-    _authors = validator("authors", allow_reuse=True)(
-        valstr("authors", accept_none=True)
+    _output_types = field_validator("output_types")(
+        classmethod(valdict_keys("output_types"))
     )
 
-    @validator("tags")
+    _category = field_validator("category")(
+        classmethod(valstr("category", accept_none=True))
+    )
+    _modality = field_validator("modality")(
+        classmethod(valstr("modality", accept_none=True))
+    )
+    _authors = field_validator("authors")(
+        classmethod(valstr("authors", accept_none=True))
+    )
+
+    @field_validator("tags")
+    @classmethod
     def validate_tags(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(f"tags[{i}]")(tag)
-        return val_unique_list("tags")(value)
+            value[i] = valstr(f"tags[{i}]")(cls, tag)
+        return val_unique_list("tags")(cls, value)
 
 
-class TaskImportV2(BaseModel, extra=Extra.forbid):
+class TaskImportV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     pkg_name: str
     version: Optional[str] = None
     name: str
-    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
+    _pkg_name = field_validator("pkg_name")(classmethod(valstr("pkg_name")))
+    _version = field_validator("version")(
+        classmethod(valstr("version", accept_none=True))
     )
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
 
 class TaskImportV2Legacy(BaseModel):
     source: str
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    _source = field_validator("source")(classmethod(valstr("source")))
 
 
 class TaskExportV2(BaseModel):
-
     pkg_name: str
     version: Optional[str] = None
     name: str
 
-    _pkg_name = validator("pkg_name", allow_reuse=True)(valstr("pkg_name"))
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
+    _pkg_name = field_validator("pkg_name")(classmethod(valstr("pkg_name")))
+    _version = field_validator("version")(
+        classmethod(valstr("version", accept_none=True))
     )
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))

@@ -28,7 +28,7 @@ def test_SingleImageBase():
 
     # zarr_url
     image = image_ok(model=_SingleImageBase, zarr_url="/x")
-    assert image.dict() == {
+    assert image.model_dump() == {
         "zarr_url": "/x",
         "origin": None,
         "attributes": {},
@@ -81,7 +81,6 @@ def test_SingleImageBase():
     image_fail(
         model=_SingleImageBase, zarr_url="/x", types={"a": True, " a": True}
     )
-    image_ok(model=_SingleImageBase, zarr_url="/x", types={1: True})
 
 
 def test_url_normalization():
@@ -199,7 +198,7 @@ def test_SingleImageUpdate():
 
     # zarr_url
     image = image_ok(model=SingleImageUpdate, zarr_url="/x")
-    assert image.dict() == {
+    assert image.model_dump() == {
         "zarr_url": "/x",
         "attributes": None,
         "types": None,
@@ -242,4 +241,3 @@ def test_SingleImageUpdate():
     image_fail(
         model=SingleImageUpdate, zarr_url="/x", types={"a": True, " a": True}
     )
-    image_ok(model=SingleImageUpdate, zarr_url="/x", types={1: True})

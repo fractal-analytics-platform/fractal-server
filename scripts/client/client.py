@@ -112,7 +112,7 @@ class FractalClient:
         res = self.make_request(
             endpoint="auth/register/",
             method="POST",
-            data=user.dict(exclude_none=True),
+            data=user.model_dump(exclude_none=True),
         )
         self.detail(res)
         new_user_id = response_json(res)["id"]
@@ -121,7 +121,7 @@ class FractalClient:
         res = self.make_request(
             endpoint=f"auth/users/{new_user_id}/",
             method="PATCH",
-            data=patch_user.dict(exclude_none=True),
+            data=patch_user.model_dump(exclude_none=True),
         )
         self.detail(res)
 
@@ -131,7 +131,7 @@ class FractalClient:
         res = self.make_request(
             endpoint="api/v2/project/",
             method="POST",
-            data=project.dict(),
+            data=project.model_dump(),
         )
         self.detail(res)
         return ProjectReadV2(**response_json(res))
@@ -140,7 +140,7 @@ class FractalClient:
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/dataset/",
             method="POST",
-            data=dataset.dict(),
+            data=dataset.model_dump(),
         )
         self.detail(res)
         return DatasetReadV2(**response_json(res))
@@ -149,7 +149,7 @@ class FractalClient:
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/dataset/import/",
             method="POST",
-            data=dataset.dict(),
+            data=dataset.model_dump(),
         )
         self.detail(res)
         return DatasetReadV2(**response_json(res))
@@ -158,7 +158,7 @@ class FractalClient:
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/workflow/",
             method="POST",
-            data=workflow.dict(),
+            data=workflow.model_dump(),
         )
         self.detail(res)
 
@@ -175,7 +175,7 @@ class FractalClient:
             endpoint=f"api/v2/project/{project_id}/workflow/"
             f"{workflow_id}/wftask/?{task_id=}",
             method="POST",
-            data=wftask.dict(exclude_none=True),
+            data=wftask.model_dump(exclude_none=True),
         )
         self.detail(res)
 
@@ -190,7 +190,7 @@ class FractalClient:
         res = self.make_request(
             endpoint="api/v2/task/",
             method="POST",
-            data=task.dict(exclude_none=True),
+            data=task.model_dump(exclude_none=True),
         )
         self.detail(res)
         return TaskReadV2(**response_json(res))
@@ -203,7 +203,7 @@ class FractalClient:
         res = self.make_request(
             endpoint="api/v2/task/",
             method="POST",
-            data=task.dict(exclude_none=True),
+            data=task.model_dump(exclude_none=True),
         )
         self.detail(res)
         return TaskReadV2(**response_json(res))
@@ -212,7 +212,7 @@ class FractalClient:
         res = self.make_request(
             endpoint="api/v2/task/",
             method="POST",
-            data=task.dict(exclude_none=True),
+            data=task.model_dump(exclude_none=True),
         )
         self.detail(res)
         return TaskReadV2(**response_json(res))
@@ -230,7 +230,7 @@ class FractalClient:
         res = self.make_request(
             endpoint=f"auth/users/{me.id}/",
             method="PATCH",
-            data=user.dict(exclude_none=True),
+            data=user.model_dump(exclude_none=True),
         )
         self.detail(res)
         return UserRead(**response_json(res))
@@ -248,7 +248,7 @@ class FractalClient:
                 f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
             ),
             method="POST",
-            data=applyworkflow.dict(exclude_none=True),
+            data=applyworkflow.model_dump(exclude_none=True),
         )
         self.detail(res)
 
@@ -286,7 +286,7 @@ class FractalClient:
         res = self.make_request(
             endpoint="auth/group/",
             method="POST",
-            data=group.dict(),
+            data=group.model_dump(),
         )
         self.detail(res)
         return UserGroupRead(**response_json(res))

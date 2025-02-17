@@ -58,11 +58,14 @@ async def _get_single_user_with_groups(
         group_ids_names.insert(0, default_group)
     else:
         pass
+    oauth_accounts = [
+        oauth_account.model_dump() for oauth_account in user.oauth_accounts
+    ]
 
     return UserRead(
         **user.model_dump(),
         group_ids_names=group_ids_names,
-        oauth_accounts=user.oauth_accounts,
+        oauth_accounts=oauth_accounts,
     )
 
 

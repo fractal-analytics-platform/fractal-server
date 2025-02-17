@@ -3,10 +3,12 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_serializer
+from pydantic import field_validator
+from pydantic import model_validator
+from pydantic.types import AwareDatetime
 
 from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
@@ -27,13 +29,14 @@ class _DatasetHistoryItemV2(BaseModel):
 
     workflowtask: WorkflowTaskDumpV2
     status: WorkflowTaskStatusTypeV2
-    parallelization: Optional[dict]
+    parallelization: Optional[dict] = None
 
 
 # CRUD
 
 
-class DatasetCreateV2(BaseModel, extra=Extra.forbid):
+class DatasetCreateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     name: str
 
@@ -44,19 +47,20 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     # Validators
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
@@ -64,7 +68,6 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
 
 class DatasetReadV2(BaseModel):
-
     id: int
     name: str
 
@@ -73,42 +76,48 @@ class DatasetReadV2(BaseModel):
 
     history: list[_DatasetHistoryItemV2]
 
-    timestamp_created: datetime
+    timestamp_created: AwareDatetime
 
     zarr_dir: str
     type_filters: dict[str, bool]
     attribute_filters: AttributeFiltersType
 
+    @field_serializer("timestamp_created")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
-class DatasetUpdateV2(BaseModel, extra=Extra.forbid):
 
-    name: Optional[str]
-    zarr_dir: Optional[str]
-    type_filters: Optional[dict[str, bool]]
-    attribute_filters: Optional[dict[str, list[Any]]]
+class DatasetUpdateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Optional[str] = None
+    zarr_dir: Optional[str] = None
+    type_filters: Optional[dict[str, bool]] = None
+    attribute_filters: Optional[dict[str, list[Any]]] = None
 
     # Validators
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(classmethod(valstr("name")))
 
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
         return v
 
 
-class DatasetImportV2(BaseModel, extra=Extra.forbid):
+class DatasetImportV2(BaseModel):
     """
     Class for `Dataset` import.
 
@@ -121,6 +130,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
         attribute_filters:
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
@@ -129,7 +140,8 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def update_legacy_filters(cls, values: dict):
         """
         Transform legacy filters (created with fractal-server<2.11.0)
@@ -159,14 +171,15 @@ class DatasetImportV2(BaseModel, extra=Extra.forbid):
 
         return values
 
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    @validator("zarr_dir")
+    @field_validator("zarr_dir")
+    @classmethod
     def normalize_zarr_dir(cls, v: str) -> str:
         return normalize_url(v)
 

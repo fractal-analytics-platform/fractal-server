@@ -98,7 +98,7 @@ def fractal_tasks_mock_db(
         user_id=first_user.id,
         user_group_id=default_user_group.id,
     )
-    task_group = TaskGroupV2(**task_group_obj.dict())
+    task_group = TaskGroupV2(**task_group_obj.model_dump())
     db_sync.add(task_group)
     db_sync.commit()
     db_sync.refresh(task_group)

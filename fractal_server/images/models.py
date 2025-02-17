@@ -4,7 +4,7 @@ from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.urls import normalize_url
@@ -30,16 +30,18 @@ class _SingleImageBase(BaseModel):
     types: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        valdict_keys("attributes")
+    _attributes = field_validator("attributes")(
+        classmethod(valdict_keys("attributes"))
     )
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
+    _types = field_validator("types")(classmethod(valdict_keys("types")))
 
-    @validator("zarr_url")
+    @field_validator("zarr_url")
+    @classmethod
     def normalize_zarr_url(cls, v: str) -> str:
         return normalize_url(v)
 
-    @validator("origin")
+    @field_validator("origin")
+    @classmethod
     def normalize_orig(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normalize_url(v)
@@ -50,7 +52,8 @@ class SingleImageTaskOutput(_SingleImageBase):
     `SingleImageBase`, with scalar `attributes` values (`None` included).
     """
 
-    @validator("attributes")
+    @field_validator("attributes")
+    @classmethod
     def validate_attributes(
         cls, v: dict[str, Any]
     ) -> dict[str, Union[int, float, str, bool, None]]:
@@ -69,7 +72,8 @@ class SingleImage(_SingleImageBase):
     `SingleImageBase`, with scalar `attributes` values (`None` excluded).
     """
 
-    @validator("attributes")
+    @field_validator("attributes")
+    @classmethod
     def validate_attributes(
         cls, v: dict[str, Any]
     ) -> dict[str, Union[int, float, str, bool]]:
@@ -87,17 +91,19 @@ class SingleImageUpdate(BaseModel):
     attributes: Optional[dict[str, Any]] = None
     types: Optional[dict[str, bool]] = None
 
-    @validator("zarr_url")
+    @field_validator("zarr_url")
+    @classmethod
     def normalize_zarr_url(cls, v: str) -> str:
         return normalize_url(v)
 
-    @validator("attributes")
+    @field_validator("attributes")
+    @classmethod
     def validate_attributes(
         cls, v: dict[str, Any]
     ) -> dict[str, Union[int, float, str, bool]]:
         if v is not None:
             # validate keys
-            valdict_keys("attributes")(v)
+            valdict_keys("attributes")(cls, v)
             # validate values
             for key, value in v.items():
                 if not isinstance(value, (int, float, str, bool)):
@@ -108,4 +114,4 @@ class SingleImageUpdate(BaseModel):
                     )
         return v
 
-    _types = validator("types", allow_reuse=True)(valdict_keys("types"))
+    _types = field_validator("types")(classmethod(valdict_keys("types")))

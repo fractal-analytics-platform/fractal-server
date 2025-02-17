@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from typing import Literal
 from typing import Optional
 
@@ -112,7 +111,7 @@ async def job_factory_v2(db: AsyncSession):
         project_id: int,
         dataset_id: int,
         workflow_id: int,
-        working_dir: Path,
+        working_dir: str,
         db: AsyncSession = db,
         **kwargs,
     ):
@@ -147,10 +146,16 @@ async def job_factory_v2(db: AsyncSession):
             dataset_id=dataset_id,
             workflow_id=workflow_id,
             dataset_dump=json.loads(
-                dataset.json(exclude={"history", "images", "filters"})
+                dataset.model_dump_json(
+                    exclude={"history", "images", "filters"}
+                )
             ),
-            workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
-            project_dump=json.loads(project.json(exclude={"user_list"})),
+            workflow_dump=json.loads(
+                workflow.model_dump_json(exclude={"task_list"})
+            ),
+            project_dump=json.loads(
+                project.model_dump_json(exclude={"user_list"})
+            ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,

@@ -67,7 +67,7 @@ def check_settings() -> None:
 
     logger = set_logger("fractal_server_settings")
     logger.debug("Fractal Settings:")
-    for key, value in settings.dict().items():
+    for key, value in settings.model_dump().items():
         if any(s in key.upper() for s in ["PASSWORD", "SECRET", "KEY"]):
             value = "*****"
         logger.debug(f"  {key}: {value}")

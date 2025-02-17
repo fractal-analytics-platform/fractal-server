@@ -321,7 +321,7 @@ async def import_workflow(
                 detail=f"Could not find a task matching with {wf_task.task}.",
             )
         new_wf_task = WorkflowTaskCreateV2(
-            **wf_task.dict(exclude_none=True, exclude={"task"})
+            **wf_task.model_dump(exclude_none=True, exclude={"task"})
         )
         list_wf_tasks.append(new_wf_task)
         list_task_ids.append(task_id)
@@ -336,7 +336,7 @@ async def import_workflow(
     # Create new Workflow
     db_workflow = WorkflowV2(
         project_id=project_id,
-        **workflow_import.dict(exclude_none=True, exclude={"task_list"}),
+        **workflow_import.model_dump(exclude_none=True, exclude={"task_list"}),
     )
     db.add(db_workflow)
     await db.commit()
@@ -345,7 +345,7 @@ async def import_workflow(
     # Insert task into the workflow
     for ind, new_wf_task in enumerate(list_wf_tasks):
         await _workflow_insert_task(
-            **new_wf_task.dict(),
+            **new_wf_task.model_dump(),
             workflow_id=db_workflow.id,
             task_id=list_task_ids[ind],
             db=db,

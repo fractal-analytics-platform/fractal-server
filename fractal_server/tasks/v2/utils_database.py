@@ -33,7 +33,7 @@ def create_db_tasks_and_update_task_group(
     """
     actual_task_list = [
         TaskV2(
-            **task.dict(),
+            **task.model_dump(),
             type=_get_task_type(task),
         )
         for task in task_list

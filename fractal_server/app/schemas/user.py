@@ -2,9 +2,10 @@ from typing import Optional
 
 from fastapi_users import schemas
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import ValidationInfo
 
 from ._validators import val_unique_list
 from ._validators import valstr
@@ -41,12 +42,12 @@ class UserRead(schemas.BaseUser[int]):
         username:
     """
 
-    username: Optional[str]
+    username: Optional[str] = None
     group_ids_names: Optional[list[tuple[int, str]]] = None
     oauth_accounts: list[OAuthAccountRead]
 
 
-class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
+class UserUpdate(schemas.BaseUserUpdate):
     """
     Schema for `User` update.
 
@@ -54,33 +55,35 @@ class UserUpdate(schemas.BaseUserUpdate, extra=Extra.forbid):
         username:
     """
 
-    username: Optional[str]
+    model_config = ConfigDict(extra="forbid")
+
+    username: Optional[str] = None
 
     # Validators
-    _username = validator("username", allow_reuse=True)(valstr("username"))
+    _username = field_validator("username")(classmethod(valstr("username")))
 
-    @validator(
+    @field_validator(
         "is_active",
         "is_verified",
         "is_superuser",
         "email",
         "password",
-        always=False,
     )
-    def cant_set_none(cls, v, field):
+    @classmethod
+    def cant_set_none(cls, v, info: ValidationInfo):
         if v is None:
-            raise ValueError(f"Cannot set {field.name}=None")
+            raise ValueError(f"Cannot set {info.field_name}=None")
         return v
 
 
-class UserUpdateStrict(BaseModel, extra=Extra.forbid):
+class UserUpdateStrict(BaseModel):
     """
     Schema for `User` self-editing.
 
     Attributes:
     """
 
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -91,21 +94,23 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[str]
+    username: Optional[str] = None
 
     # Validators
 
-    _username = validator("username", allow_reuse=True)(valstr("username"))
+    _username = field_validator("username")(classmethod(valstr("username")))
 
 
-class UserUpdateGroups(BaseModel, extra=Extra.forbid):
+class UserUpdateGroups(BaseModel):
     """
     Schema for `POST /auth/users/{user_id}/set-groups/`
 
     """
 
-    group_ids: list[int] = Field(min_items=1)
+    model_config = ConfigDict(extra="forbid")
 
-    _group_ids = validator("group_ids", allow_reuse=True)(
-        val_unique_list("group_ids")
+    group_ids: list[int] = Field(min_length=1)
+
+    _group_ids = field_validator("group_ids")(
+        classmethod(val_unique_list("group_ids"))
     )

@@ -15,7 +15,6 @@ from fractal_server.app.schemas.v2 import WorkflowTaskDumpV2
 
 
 def test_extra_on_create_models():
-
     # Dataset
     DatasetCreateV2(name="name", zarr_dir="/zarr/dir")
     with pytest.raises(ValidationError):
@@ -60,9 +59,6 @@ def test_dictionary_keys_validation():
     assert TaskCreateV2(**args, input_types={"    a": True}).input_types == {
         "a": True
     }
-    assert TaskCreateV2(**args, input_types={1: True}).input_types == {
-        "1": True
-    }
 
     with pytest.raises(ValidationError):
         TaskCreateV2(**args, input_types={"a": True, "  a   ": False})
@@ -74,7 +70,6 @@ def test_dictionary_keys_validation():
 
 
 def test_task_collect_pip():
-
     TaskCollectPipV2(package="x")
     TaskCollectPipV2(package="/tmp/x.whl")
 

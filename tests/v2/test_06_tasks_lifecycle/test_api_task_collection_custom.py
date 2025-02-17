@@ -36,7 +36,8 @@ async def test_task_collection_custom(
         res = await client.post(
             f"{PREFIX}/collect/custom/",
             json=(
-                payload_name.dict() | dict(python_interpreter=sys.executable)
+                payload_name.model_dump()
+                | dict(python_interpreter=sys.executable)
             ),
         )
         assert res.status_code == 422
@@ -44,7 +45,7 @@ async def test_task_collection_custom(
 
         # Success with 'package_name'
         res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_name.dict()
+            f"{PREFIX}/collect/custom/", json=payload_name.model_dump()
         )
         assert res.status_code == 201
 
@@ -52,7 +53,7 @@ async def test_task_collection_custom(
         res = await client.post(
             f"{PREFIX}/collect/custom/",
             json=(
-                payload_name.dict()
+                payload_name.model_dump()
                 | dict(
                     package_name=package_name.replace("_", "-"),
                     label="label2",
@@ -72,14 +73,14 @@ async def test_task_collection_custom(
             package_name=None,
         )
         res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+            f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
         )
         assert res.status_code == 201
 
         # Fail because python_interpreter does not exist
         payload_root.python_interpreter = "/foo/bar"
         res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+            f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
         )
         assert res.status_code == 422
         assert "doesn't exist or is not a file" in res.json()["detail"]
@@ -88,7 +89,7 @@ async def test_task_collection_custom(
         payload_root.python_interpreter = sys.executable
         payload_root.package_root = "/foo/bar"
         res = await client.post(
-            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+            f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
         )
         assert res.status_code == 422
         assert "doesn't exist or is not a directory" in res.json()["detail"]
@@ -119,7 +120,7 @@ async def test_task_collection_custom_fail_with_ssh(
                 label="label",
                 package_root=None,
                 package_name="c",
-            ).dict(),
+            ).model_dump(),
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (

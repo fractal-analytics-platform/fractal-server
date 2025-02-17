@@ -24,11 +24,12 @@ from typing import TypeVar
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from pydantic import BaseSettings
 from pydantic import EmailStr
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import model_validator
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
@@ -50,7 +51,7 @@ class MailSettings(BaseModel):
     """
 
     sender: EmailStr
-    recipients: list[EmailStr] = Field(min_items=1)
+    recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
     encrypted_password: Optional[str] = None
@@ -97,10 +98,11 @@ class OAuthClientConfig(BaseModel):
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
-    OIDC_CONFIGURATION_ENDPOINT: Optional[str]
+    OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def check_configuration(cls, values):
         if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
             if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
@@ -118,8 +120,7 @@ class Settings(BaseSettings):
     The attributes of this class are set from the environment.
     """
 
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
     PROJECT_NAME: str = "Fractal Server"
     PROJECT_VERSION: str = fractal_server.__VERSION__
@@ -136,7 +137,7 @@ class Settings(BaseSettings):
     JWT token lifetime, in seconds.
     """
 
-    JWT_SECRET_KEY: Optional[str]
+    JWT_SECRET_KEY: Optional[str] = None
     """
     JWT secret
 
@@ -150,7 +151,8 @@ class Settings(BaseSettings):
     Cookie token lifetime, in seconds.
     """
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def collect_oauth_clients(cls, values):
         """
         Automatic collection of OAuth Clients
@@ -198,11 +200,11 @@ class Settings(BaseSettings):
     """
     If `True`, make database operations verbose.
     """
-    POSTGRES_USER: Optional[str]
+    POSTGRES_USER: Optional[str] = None
     """
     User to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_PASSWORD: Optional[str]
+    POSTGRES_PASSWORD: Optional[str] = None
     """
     Password to use when connecting to the PostgreSQL database.
     """
@@ -214,7 +216,7 @@ class Settings(BaseSettings):
     """
     Port number to use when connecting to the PostgreSQL server.
     """
-    POSTGRES_DB: Optional[str]
+    POSTGRES_DB: Optional[str] = None
     """
     Name of the PostgreSQL database to connect to.
     """
@@ -266,13 +268,14 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[Path]
+    FRACTAL_TASKS_DIR: Optional[Path] = None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
 
-    @validator("FRACTAL_TASKS_DIR", always=True)
+    @field_validator("FRACTAL_TASKS_DIR")
+    @classmethod
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
         If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
@@ -289,7 +292,8 @@ class Settings(BaseSettings):
             )
         return FRACTAL_TASKS_DIR_path
 
-    @validator("FRACTAL_RUNNER_WORKING_BASE_DIR", always=True)
+    @field_validator("FRACTAL_RUNNER_WORKING_BASE_DIR")
+    @classmethod
     def make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute(cls, v):
         """
         (Copy of make_FRACTAL_TASKS_DIR_absolute)
@@ -319,7 +323,7 @@ class Settings(BaseSettings):
     Select which runner backend to use.
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path]
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
     """
     Base directory for running jobs / workflows. All artifacts required to set
     up, run and tear down jobs are placed in subdirs of this directory.
@@ -332,7 +336,7 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
+    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path] = None
     """
     Path of JSON file with configuration for the local backend.
     """
@@ -348,7 +352,7 @@ class Settings(BaseSettings):
     Waiting time for the shutdown phase of executors
     """
 
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
+    FRACTAL_SLURM_CONFIG_FILE: Optional[Path] = None
     """
     Path of JSON file with configuration for the SLURM backend.
     """
@@ -359,7 +363,8 @@ class Settings(BaseSettings):
     nodes. If not specified, the same interpreter that runs the server is used.
     """
 
-    @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
+    @field_validator("FRACTAL_SLURM_WORKER_PYTHON")
+    @classmethod
     def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
         """
         If `FRACTAL_SLURM_WORKER_PYTHON` is a relative path, fail.
@@ -406,7 +411,8 @@ class Settings(BaseSettings):
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def check_tasks_python(cls, values):
         """
         Perform multiple checks of the Python-interpreter variables.
@@ -510,7 +516,8 @@ class Settings(BaseSettings):
     `--no-cache-dir` is used.
     """
 
-    @validator("FRACTAL_PIP_CACHE_DIR", always=True)
+    @field_validator("FRACTAL_PIP_CACHE_DIR")
+    @classmethod
     def absolute_FRACTAL_PIP_CACHE_DIR(cls, v):
         """
         If `FRACTAL_PIP_CACHE_DIR` is a relative path, fail.
@@ -614,7 +621,8 @@ class Settings(BaseSettings):
     """
     email_settings: Optional[MailSettings] = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_email_settings(cls, values):
         email_values = {
             k: v for k, v in values.items() if k.startswith("FRACTAL_EMAIL")
@@ -793,7 +801,7 @@ class Settings(BaseSettings):
                 return False
 
         sanitized_settings = {}
-        for k, v in self.dict().items():
+        for k, v in self.model_dump().items():
             if _must_be_sanitized(k):
                 sanitized_settings[k] = "***"
             else:
