@@ -625,75 +625,64 @@ class Settings(BaseSettings):
     """
     email_settings: Optional[MailSettings] = None
 
-    @model_validator(mode="before")
-    @classmethod
-    def validate_email_settings(cls, values):
-        email_values = {
-            k: v for k, v in values.items() if k.startswith("FRACTAL_EMAIL")
-        }
-        if email_values:
+    @model_validator(mode="after")
+    def validate_email_settings(self):
+        email_values = [
+            self.FRACTAL_EMAIL_SENDER,
+            self.FRACTAL_EMAIL_SMTP_SERVER,
+            self.FRACTAL_EMAIL_SMTP_PORT,
+            self.FRACTAL_EMAIL_INSTANCE_NAME,
+            self.FRACTAL_EMAIL_RECIPIENTS,
+        ]
+        if len(set(email_values)) == 1:
+            # All required EMAIL attributes are None
+            pass
+        elif len(set(email_values)) < len(email_values):
+            # Not all required EMAIL attributes are set
+            error_msg = "Invalid FRACTAL_EMAIL configuration. Given values:\n"
+            error_msg += "\n".join(email_values)
+            raise ValueError(error_msg)
+        else:
+            use_starttls = self.FRACTAL_EMAIL_USE_STARTTLS == "true"
+            use_login = self.FRACTAL_EMAIL_USE_LOGIN == "true"
 
-            def assert_key(key: str):
-                if key not in email_values:
-                    raise ValueError(f"Missing '{key}'")
-
-            assert_key("FRACTAL_EMAIL_SENDER")
-            assert_key("FRACTAL_EMAIL_SMTP_SERVER")
-            assert_key("FRACTAL_EMAIL_SMTP_PORT")
-            assert_key("FRACTAL_EMAIL_INSTANCE_NAME")
-            assert_key("FRACTAL_EMAIL_RECIPIENTS")
-
-            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", "true") == "true":
-                if "FRACTAL_EMAIL_PASSWORD" not in email_values:
+            if use_login:
+                if self.FRACTAL_EMAIL_PASSWORD is None:
                     raise ValueError(
                         "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
                         "'FRACTAL_EMAIL_PASSWORD' is not provided."
                     )
-                elif "FRACTAL_EMAIL_PASSWORD_KEY" not in email_values:
+                if self.FRACTAL_EMAIL_PASSWORD_KEY is None:
                     raise ValueError(
                         "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
                         "'FRACTAL_EMAIL_PASSWORD_KEY' is not provided."
                     )
-                else:
-                    try:
-                        (
-                            Fernet(email_values["FRACTAL_EMAIL_PASSWORD_KEY"])
-                            .decrypt(email_values["FRACTAL_EMAIL_PASSWORD"])
-                            .decode("utf-8")
-                        )
-                    except Exception as e:
-                        raise ValueError(
-                            "Invalid pair (FRACTAL_EMAIL_PASSWORD, "
-                            "FRACTAL_EMAIL_PASSWORD_KEY). "
-                            f"Original error: {str(e)}."
-                        )
+                try:
+                    (
+                        Fernet(self.FRACTAL_EMAIL_PASSWORD_KEY)
+                        .decrypt(self.FRACTAL_EMAIL_PASSWORD)
+                        .decode("utf-8")
+                    )
+                except Exception as e:
+                    raise ValueError(
+                        "Invalid pair (FRACTAL_EMAIL_PASSWORD, "
+                        "FRACTAL_EMAIL_PASSWORD_KEY). "
+                        f"Original error: {str(e)}."
+                    )
 
-            if (
-                email_values.get("FRACTAL_EMAIL_USE_STARTTLS", "true")
-                == "true"
-            ):
-                use_starttls = True
-            else:
-                use_starttls = False
-
-            if email_values.get("FRACTAL_EMAIL_USE_LOGIN", "true") == "true":
-                use_login = True
-            else:
-                use_login = False
-
-            values["email_settings"] = MailSettings(
-                sender=email_values["FRACTAL_EMAIL_SENDER"],
-                recipients=email_values["FRACTAL_EMAIL_RECIPIENTS"].split(","),
-                smtp_server=email_values["FRACTAL_EMAIL_SMTP_SERVER"],
-                port=email_values["FRACTAL_EMAIL_SMTP_PORT"],
-                encrypted_password=email_values.get("FRACTAL_EMAIL_PASSWORD"),
-                encryption_key=email_values.get("FRACTAL_EMAIL_PASSWORD_KEY"),
-                instance_name=email_values["FRACTAL_EMAIL_INSTANCE_NAME"],
+            self.email_settings = MailSettings(
+                sender=self.FRACTAL_EMAIL_SENDER,
+                recipients=self.FRACTAL_EMAIL_RECIPIENTS.split(","),
+                smtp_server=self.FRACTAL_EMAIL_SMTP_SERVER,
+                port=self.FRACTAL_EMAIL_SMTP_PORT,
+                encrypted_password=self.FRACTAL_EMAIL_PASSWORD,
+                encryption_key=self.FRACTAL_EMAIL_PASSWORD_KEY,
+                instance_name=self.FRACTAL_EMAIL_INSTANCE_NAME,
                 use_starttls=use_starttls,
                 use_login=use_login,
             )
 
-        return values
+        return self
 
     ###########################################################################
     # BUSINESS LOGIC
