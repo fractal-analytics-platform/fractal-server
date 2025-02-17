@@ -1,3 +1,6 @@
+from fastapi import FastAPI
+from httpx import AsyncClient
+
 from fractal_server.app.models.security import UserOAuth
 
 
@@ -5,7 +8,7 @@ PREFIX = "/admin/v2"
 
 
 async def test_impersonate(
-    client, MockCurrentUser, db, registered_superuser_client
+    app: FastAPI, client, MockCurrentUser, db, registered_superuser_client
 ):
     u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
     db.add(u1)
@@ -16,6 +19,18 @@ async def test_impersonate(
         f"{PREFIX}/impersonate/{u1.id}/"
     )
     assert res.status_code == 200
+
+    token_impersonate = res.json()["access_token"]
+
+    async with AsyncClient(
+        app=app, base_url="http://test"
+    ) as client_impersonate:
+        res = await client_impersonate.get(
+            "/auth/current-user/",
+            headers={"Authorization": f"Bearer {token_impersonate}"},
+        )
+
+    assert res.json()["email"] == u1.email
 
     res = await registered_superuser_client.get(f"{PREFIX}/impersonate/999/")
     assert res.status_code == 404
