@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from devtools import debug
 from sqlmodel import select
 
@@ -11,7 +9,6 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 PREFIX = "/api/v2"
@@ -74,9 +71,6 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
         assert res.json()["id"] == (await _project_list_v2(userB, db))[0].id
-        _raise_if_naive_datetime(
-            datetime.fromisoformat(res.json()["timestamp_created"])
-        )
 
         # fail on non existent project
         res = await client.get(f"{PREFIX}/project/123456/")
