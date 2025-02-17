@@ -1,8 +1,8 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
 from pydantic import ConfigDict
-from pydantic.types import AwareDatetime
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -29,7 +29,7 @@ class DatasetV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
 
-    timestamp_created: AwareDatetime = Field(
+    timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )

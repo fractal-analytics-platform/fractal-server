@@ -1,4 +1,5 @@
-from pydantic.types import AwareDatetime
+from datetime import datetime
+
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
@@ -15,7 +16,7 @@ class LinkUserGroup(SQLModel, table=True):
     group_id: int = Field(foreign_key="usergroup.id", primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", primary_key=True)
 
-    timestamp_created: AwareDatetime = Field(
+    timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
