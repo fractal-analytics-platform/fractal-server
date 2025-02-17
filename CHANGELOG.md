@@ -1,11 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.13.0
+
+With this release we switch to Pydantic v2.
 
 * Runner:
     * Deprecate `FRACTAL_BACKEND_RUNNER="local_experimental"` (\#2273).
     * Fully replace `clusterfutures` classes with custom ones (\#2272).
 * Dependencies:
+    * Bump `pydantic` to v2 (\#2270).
     * Drop `clusterfutures` dependency (\#2272).
     * Drop `psutil` dependency (\#2273).
     * Bump `cryptography` version (\#2274).
