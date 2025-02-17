@@ -27,7 +27,7 @@ CUSTOM_PYDANTIC_MODELS = []
 
 
 for ind, task in enumerate(TASK_LIST):
-    TASK_LIST[ind] = TASK_LIST[ind].model_dump(
+    TASK_LIST[ind] = TASK_LIST[ind].dict(
         exclude={"meta_init", "executable_init", "meta", "executable"},
         exclude_unset=True,
     )

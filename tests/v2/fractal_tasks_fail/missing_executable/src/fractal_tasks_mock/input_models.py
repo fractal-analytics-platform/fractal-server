@@ -26,7 +26,7 @@ class InitArgsCellVoyager(BaseModel):
     """
 
     raw_zarr_url: str
-    acquisition: Optional[int] = None
+    acquisition: Optional[int]
 
 
 class InitArgsIllumination(BaseModel):
