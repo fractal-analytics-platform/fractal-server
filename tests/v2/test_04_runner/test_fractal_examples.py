@@ -13,7 +13,7 @@ from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 
 
-def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
+def execute_tasks_v2(wf_task_list, workflow_dir_local, user_id: int, **kwargs):
     from fractal_server.app.runner.task_files import task_subfolder_name
     from fractal_server.app.runner.v2.runner import (
         execute_tasks_v2 as raw_execute_tasks_v2,
@@ -30,6 +30,7 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
         job_attribute_filters={},
+        user_id=user_id,
         **kwargs,
     )
 
@@ -71,14 +72,14 @@ async def test_fractal_demos_01(
     Mock of fractal-demos/examples/01.
     """
 
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            executor=executor,
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=tmp_path / "job_dir",
+            user_id=user.id,
+        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
@@ -252,12 +253,13 @@ async def test_fractal_demos_01_no_overwrite(
     # The first block (up to yokogawa-to-zarr included) is identical to
     # the previous test
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
     async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            executor=executor,
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=tmp_path / "job_dir",
+            user_id=user.id,
+        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
@@ -473,13 +475,14 @@ async def test_registration_no_overwrite(
     Test registration workflow, based on four tasks.
     """
 
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            executor=executor,
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=tmp_path / "job_dir",
+            user_id=user.id,
+        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
@@ -607,14 +610,14 @@ async def test_registration_overwrite(
     Test registration workflow, based on four tasks.
     """
 
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            executor=executor,
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=tmp_path / "job_dir",
+            user_id=user.id,
+        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
@@ -743,12 +746,13 @@ async def test_channel_parallelization_with_overwrite(
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
     async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            executor=executor,
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=tmp_path / "job_dir",
+            user_id=user.id,
+        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
@@ -810,12 +814,13 @@ async def test_channel_parallelization_no_overwrite(
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
-    execute_tasks_v2_args = dict(
-        executor=executor,
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=tmp_path / "job_dir",
-    )
     async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            executor=executor,
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=tmp_path / "job_dir",
+            user_id=user.id,
+        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir

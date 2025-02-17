@@ -70,6 +70,7 @@ def submit_workflow(
     workflow_id: int,
     dataset_id: int,
     job_id: int,
+    user_id: int,
     user_settings: UserSettings,
     worker_init: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -90,6 +91,8 @@ def submit_workflow(
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
+        user_id:
+            User ID.
         worker_init:
             Custom executor parameters that get parsed before the execution of
             each task.
@@ -312,6 +315,7 @@ def submit_workflow(
         process_workflow(
             workflow=workflow,
             dataset=dataset,
+            user_id=user_id,
             workflow_dir_local=WORKFLOW_DIR_LOCAL,
             workflow_dir_remote=WORKFLOW_DIR_REMOTE,
             logger_name=logger_name,

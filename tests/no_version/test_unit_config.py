@@ -443,16 +443,19 @@ def test_fractal_email():
     settings = Settings(
         **common_attributes,
         **required_mail_args,
-        FRACTAL_EMAIL_USE_LOGIN=False,
+        FRACTAL_EMAIL_USE_LOGIN="false",
     )
     assert settings.email_settings is not None
     # 6: missing required arguments
     for arg in required_mail_args:
-        with pytest.raises(ValidationError):
+        with pytest.raises(
+            ValidationError,
+            match="Invalid FRACTAL_EMAIL configuration",
+        ):
             Settings(
                 **common_attributes,
                 **{k: v for k, v in required_mail_args.items() if k != arg},
-                FRACTAL_EMAIL_USE_LOGIN=False,
+                FRACTAL_EMAIL_USE_LOGIN="false",
             )
     # 7a: fail with Fernet encryption
     with pytest.raises(ValidationError, match="FRACTAL_EMAIL_PASSWORD"):
@@ -479,7 +482,7 @@ def test_fractal_email():
                 if k != "FRACTAL_EMAIL_SENDER"
             },
             FRACTAL_EMAIL_SENDER="not-an-email",
-            FRACTAL_EMAIL_USE_LOGIN=False,
+            FRACTAL_EMAIL_USE_LOGIN="false",
         )
     with pytest.raises(ValidationError):
         Settings(
@@ -490,7 +493,7 @@ def test_fractal_email():
                 if k != "FRACTAL_EMAIL_RECIPIENTS"
             },
             FRACTAL_EMAIL_RECIPIENTS="not,emails",
-            FRACTAL_EMAIL_USE_LOGIN=False,
+            FRACTAL_EMAIL_USE_LOGIN="false",
         )
 
 

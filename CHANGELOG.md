@@ -1,9 +1,20 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
 
-* API
+# 2.13.1
+
+* API:
+    * Add `AccountingRecord` and `AccountingRecordSlurm` tables (\#2267).
     * Add `/admin/v2/impersonate` endpoint (\#2280).
+* Database:
+    * Add `/admin/v2/accounting/` and `/admin/v2/accounting/slurm/` endpoints (\#2267).
+* Runner:
+    * Populate `AccountingRecord` from runner (\#2267).
+* App:
+    * Review configuration variables for email-sending (\#2269).
+    * Reduce error-level log records(\#2282).
+* Testing:
+    * Drop obsolete files/folders from `tests/data` (\#2281).
 
 # 2.13.0
 
