@@ -221,7 +221,7 @@ def test_get_slurm_config_fail(tmp_path):
     with config_path_invalid.open("w") as f:
         json.dump(slurm_config, f)
     with pytest.raises(
-        SlurmConfigError, match="extra fields not permitted"
+        SlurmConfigError, match="Extra inputs are not permitted"
     ) as e:
         get_slurm_config(
             wftask=WorkflowTaskV2Mock(
