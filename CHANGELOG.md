@@ -5,11 +5,8 @@
 
 * API:
     * Add `AccountingRecord` and `AccountingRecordSlurm` tables (\#2267).
-<<<<<<< HEAD
     * Add `/admin/v2/impersonate` endpoint (\#2280).
-=======
     * Replace `_raise_if_naive_datetime` with `AwareDatetime` (\#2283).
->>>>>>> main
 * Database:
     * Add `/admin/v2/accounting/` and `/admin/v2/accounting/slurm/` endpoints (\#2267).
 * Runner:
