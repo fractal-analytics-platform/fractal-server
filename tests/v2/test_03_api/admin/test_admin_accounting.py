@@ -3,6 +3,7 @@ from datetime import datetime
 from devtools import debug
 
 from fractal_server.app.models.v2 import AccountingRecord
+from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.utils import get_timestamp
 
 
@@ -106,3 +107,18 @@ async def test_accounting_api_failure(
         )
         assert res.status_code == 422
         assert "Invalid pagination parameters" in str(res.json())
+
+
+async def test_accounting_slurm(
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
+        db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[1, 4]))
+        db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[2, 3]))
+        await db.commit()
+        res = await client.post("/admin/v2/accounting/slurm/", json={})
+        assert res.status_code == 200
+        debug(res.json())
+        assert set(res.json()) == {1, 2, 3, 4}

@@ -18,7 +18,6 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.routes.auth import current_active_superuser
-from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import AccountingRecordRead
 
 
@@ -95,10 +94,8 @@ async def query_accounting_slurm(
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
 
-    _raise_if_naive_datetime(query.timestamp_min, query.timestamp_max)
-
-    stm = select(AccountingRecordSlurm)
-
+    # stm = select(AccountingRecordSlurm)
+    stm = select(AccountingRecordSlurm.slurm_job_ids)
     if query.user_id is not None:
         stm = stm.where(AccountingRecordSlurm.user_id == query.user_id)
     if query.timestamp_min is not None:
@@ -107,10 +104,6 @@ async def query_accounting_slurm(
         stm = stm.where(AccountingRecordSlurm.timestamp <= query.timestamp_max)
 
     res = await db.execute(stm)
-    accounting_list = res.scalars().all()
-    await db.close()
-
-    ids = list(
-        chain(accounting.slurm_job_ids for accounting in accounting_list)
-    )
-    return JSONResponse(content=ids, status_code=200)
+    nested_slurm_job_ids = res.scalars().all()
+    aggregated_slurm_job_ids = list(chain(*nested_slurm_job_ids))
+    return JSONResponse(content=aggregated_slurm_job_ids, status_code=200)
