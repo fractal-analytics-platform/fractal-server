@@ -2,6 +2,12 @@
 
 # 2.13.1
 
+* API:
+    * Add `AccountingRecord` and `AccountingRecordSlurm` tables (\#2267).
+* Database:
+    * Add `/admin/v2/accounting/` and `/admin/v2/accounting/slurm/` endpoints (\#2267).
+* Runner:
+    * Populate `AccountingRecord` from runner (\#2267).
 * App:
     * Review configuration variables for email-sending (\#2269).
 
