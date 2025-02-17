@@ -22,7 +22,7 @@ class WorkflowTaskV2(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     workflow_id: int = Field(foreign_key="workflowv2.id")
-    order: Optional[int] = Field(default=None)
+    order: Optional[int] = None
     meta_parallel: Optional[dict[str, Any]] = Field(
         sa_column=Column(JSON), default=None
     )

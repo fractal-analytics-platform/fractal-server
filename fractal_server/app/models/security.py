@@ -87,11 +87,11 @@ class UserOAuth(SQLModel, table=True):
         sa_column_kwargs={"unique": True, "index": True}, nullable=False
     )
     hashed_password: str
-    is_active: bool = Field(True, nullable=False)
-    is_superuser: bool = Field(False, nullable=False)
-    is_verified: bool = Field(False, nullable=False)
+    is_active: bool = Field(default=True, nullable=False)
+    is_superuser: bool = Field(default=False, nullable=False)
+    is_verified: bool = Field(default=False, nullable=False)
 
-    username: Optional[str] = Field(default=None)
+    username: Optional[str] = None
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
