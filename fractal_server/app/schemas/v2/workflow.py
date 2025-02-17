@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
@@ -31,6 +33,10 @@ class WorkflowReadV2(BaseModel):
     task_list: list[WorkflowTaskReadV2]
     project: ProjectReadV2
     timestamp_created: AwareDatetime
+
+    @field_serializer("timestamp_created")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
 class WorkflowReadV2WithWarnings(WorkflowReadV2):

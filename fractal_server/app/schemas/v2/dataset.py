@@ -1,9 +1,11 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
@@ -81,6 +83,10 @@ class DatasetReadV2(BaseModel):
     zarr_dir: str
     type_filters: dict[str, bool]
     attribute_filters: AttributeFiltersType
+
+    @field_serializer("timestamp_created")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
 class DatasetUpdateV2(BaseModel):

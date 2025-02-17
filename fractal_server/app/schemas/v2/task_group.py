@@ -1,9 +1,11 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
@@ -103,6 +105,10 @@ class TaskGroupReadV2(BaseModel):
     timestamp_created: AwareDatetime
     timestamp_last_used: AwareDatetime
 
+    @field_serializer("timestamp_created", "timestamp_last_used")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
+
 
 class TaskGroupUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -120,3 +126,14 @@ class TaskGroupActivityV2Read(BaseModel):
     status: TaskGroupActivityStatusV2
     action: TaskGroupActivityActionV2
     log: Optional[str] = None
+
+    @field_serializer("timestamp_started")
+    def serialize_datetime_start(v: datetime) -> str:
+        return v.isoformat()
+
+    @field_serializer("timestamp_ended")
+    def serialize_datetime_end(v: Optional[datetime]) -> Optional[str]:
+        if v is None:
+            return None
+        else:
+            return v.isoformat()

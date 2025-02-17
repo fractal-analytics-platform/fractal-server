@@ -1,9 +1,11 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
@@ -117,6 +119,17 @@ class JobReadV2(BaseModel):
     last_task_index: Optional[int] = None
     worker_init: Optional[str] = None
     attribute_filters: AttributeFiltersType
+
+    @field_serializer("start_timestamp")
+    def serialize_datetime_start(v: datetime) -> str:
+        return v.isoformat()
+
+    @field_serializer("end_timestamp")
+    def serialize_datetime_end(v: Optional[datetime]) -> Optional[str]:
+        if v is None:
+            return None
+        else:
+            return v.isoformat()
 
 
 class JobUpdateV2(BaseModel):

@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
@@ -35,6 +37,10 @@ class UserGroupRead(BaseModel):
     timestamp_created: AwareDatetime
     user_ids: Optional[list[int]] = None
     viewer_paths: list[str]
+
+    @field_serializer("timestamp_created")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
 class UserGroupCreate(BaseModel):
