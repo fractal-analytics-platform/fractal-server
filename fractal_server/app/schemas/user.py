@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import ValidationInfo
 
 from ._validators import val_unique_list
 from ._validators import valstr
@@ -69,9 +70,9 @@ class UserUpdate(schemas.BaseUserUpdate):
         "password",
     )
     @classmethod
-    def cant_set_none(cls, v, field):
+    def cant_set_none(cls, v, info: ValidationInfo):
         if v is None:
-            raise ValueError(f"Cannot set {field.field_name}=None")
+            raise ValueError(f"Cannot set {info.field_name}=None")
         return v
 
 

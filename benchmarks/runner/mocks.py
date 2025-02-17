@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic import ValidationInfo
 
 
 class DatasetV2Mock(BaseModel):
@@ -48,16 +49,16 @@ class TaskV2Mock(BaseModel):
 
     @field_validator("type")
     @classmethod
-    def _set_type(cls, value, values):
-        if values.data.get("command_non_parallel") is None:
-            if values.data.get("command_parallel") is None:
+    def _set_type(cls, value: Optional[str], info: ValidationInfo):
+        if info.data.get("command_non_parallel") is None:
+            if info.data.get("command_parallel") is None:
                 raise ValueError(
                     "This TaskV2Mock object has both commands unset."
                 )
             else:
                 return "parallel"
         else:
-            if values.data.get("command_parallel") is None:
+            if info.data.get("command_parallel") is None:
                 return "non_parallel"
             else:
                 return "compound"
