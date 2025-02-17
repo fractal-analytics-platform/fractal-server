@@ -165,10 +165,14 @@ async def apply_workflow(
         # The 'filters' field is not supported any more but still exists as a
         # database column, therefore we manually exclude it from dumps.
         dataset_dump=json.loads(
-            dataset.json(exclude={"images", "history", "filters"})
+            dataset.model_dump_json(exclude={"images", "history", "filters"})
         ),
-        workflow_dump=json.loads(workflow.json(exclude={"task_list"})),
-        project_dump=json.loads(project.json(exclude={"user_list"})),
+        workflow_dump=json.loads(
+            workflow.model_dump_json(exclude={"task_list"})
+        ),
+        project_dump=json.loads(
+            project.model_dump_json(exclude={"user_list"})
+        ),
         **job_create.model_dump(),
     )
 

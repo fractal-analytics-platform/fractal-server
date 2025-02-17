@@ -482,7 +482,7 @@ async def test_patch_workflow_task_with_args_schema(
         c: Optional[str] = None
         d: list[int] = [1, 2, 3]
 
-    args_schema = _Arguments.schema()
+    args_schema = _Arguments.model_json_schema()
 
     async with MockCurrentUser() as user:
         # Create DB objects
