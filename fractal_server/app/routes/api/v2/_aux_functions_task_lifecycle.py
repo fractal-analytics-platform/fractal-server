@@ -55,7 +55,7 @@ async def get_package_version_from_pypi(
             f"A TimeoutException occurred while getting {url}.\n"
             f"Original error: {str(e)}."
         )
-        logger.error(error_msg)
+        logger.warning(error_msg)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=error_msg,
@@ -65,7 +65,7 @@ async def get_package_version_from_pypi(
             f"An unknown error occurred while getting {url}. "
             f"Original error: {str(e)}."
         )
-        logger.error(error_msg)
+        logger.warning(error_msg)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=error_msg,
@@ -85,7 +85,7 @@ async def get_package_version_from_pypi(
         latest_version = response_data["info"]["version"]
         available_releases = response_data["releases"].keys()
     except KeyError as e:
-        logger.error(
+        logger.warning(
             f"A KeyError occurred while getting {url}. "
             f"Original error: {str(e)}."
         )
