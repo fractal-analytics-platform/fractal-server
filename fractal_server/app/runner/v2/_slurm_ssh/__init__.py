@@ -45,6 +45,7 @@ def process_workflow(
     job_attribute_filters: AttributeFiltersType,
     fractal_ssh: FractalSSH,
     worker_init: Optional[str] = None,
+    user_id: int,
     # Not used
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -94,4 +95,5 @@ def process_workflow(
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
             job_attribute_filters=job_attribute_filters,
+            user_id=user_id,
         )

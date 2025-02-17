@@ -115,9 +115,8 @@ def run_v2_task_non_parallel(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     executor: Executor,
-    logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-) -> TaskOutput:
+) -> tuple[TaskOutput, int]:
     """
     This runs server-side (see `executor` argument)
     """
@@ -154,10 +153,11 @@ def run_v2_task_non_parallel(
         **executor_options,
     )
     output = future.result()
+    num_tasks = 1
     if output is None:
-        return TaskOutput()
+        return (TaskOutput(), num_tasks)
     else:
-        return _cast_and_validate_TaskOutput(output)
+        return (_cast_and_validate_TaskOutput(output), num_tasks)
 
 
 def run_v2_task_parallel(
@@ -168,12 +168,11 @@ def run_v2_task_parallel(
     executor: Executor,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-) -> TaskOutput:
+) -> tuple[TaskOutput, int]:
 
     if len(images) == 0:
-        return TaskOutput()
+        return (TaskOutput(), 0)
 
     _check_parallelization_list_size(images)
 
@@ -216,8 +215,9 @@ def run_v2_task_parallel(
         else:
             outputs[ind] = _cast_and_validate_TaskOutput(output)
 
+    num_tasks = len(images)
     merged_output = merge_outputs(outputs)
-    return merged_output
+    return (merged_output, num_tasks)
 
 
 def run_v2_task_compound(
@@ -229,7 +229,6 @@ def run_v2_task_compound(
     executor: Executor,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 
@@ -273,11 +272,13 @@ def run_v2_task_compound(
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
+    num_task = 1 + len(parallelization_list)
+
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
 
     if len(parallelization_list) == 0:
-        return TaskOutput()
+        return (TaskOutput(), 0)
 
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
@@ -313,4 +314,4 @@ def run_v2_task_compound(
             outputs[ind] = validated_output
 
     merged_output = merge_outputs(outputs)
-    return merged_output
+    return (merged_output, num_task)

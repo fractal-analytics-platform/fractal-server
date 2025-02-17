@@ -18,6 +18,7 @@ from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
@@ -31,6 +32,7 @@ def execute_tasks_v2(
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
     executor: ThreadPoolExecutor,
+    user_id: int,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
@@ -88,7 +90,7 @@ def execute_tasks_v2(
             db.commit()
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
-            current_task_output = run_v2_task_non_parallel(
+            current_task_output, num_tasks = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -96,22 +98,20 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 executor=executor,
-                logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
         elif task.type == "parallel":
-            current_task_output = run_v2_task_parallel(
+            current_task_output, num_tasks = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 executor=executor,
-                logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
         elif task.type == "compound":
-            current_task_output = run_v2_task_compound(
+            current_task_output, num_tasks = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -119,7 +119,6 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 executor=executor,
-                logger_name=logger_name,
                 submit_setup_call=submit_setup_call,
             )
         else:
@@ -144,6 +143,7 @@ def execute_tasks_v2(
             )
 
         # Update image list
+        num_new_images = 0
         current_task_output.check_zarr_urls_are_unique()
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.model_dump()
@@ -246,6 +246,7 @@ def execute_tasks_v2(
                 SingleImage(**new_image)
                 # Add image into the dataset image list
                 tmp_images.append(new_image)
+                num_new_images += 1
 
         # Remove images from tmp_images
         for img_zarr_url in current_task_output.image_list_removals:
@@ -279,6 +280,15 @@ def execute_tasks_v2(
             ]:
                 flag_modified(db_dataset, attribute_name)
             db.merge(db_dataset)
+            db.commit()
+
+            # Create accounting record
+            record = AccountingRecord(
+                user_id=user_id,
+                num_tasks=num_tasks,
+                num_new_images=num_new_images,
+            )
+            db.add(record)
             db.commit()
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')

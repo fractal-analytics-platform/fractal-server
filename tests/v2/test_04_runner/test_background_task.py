@@ -43,14 +43,15 @@ async def test_submit_workflow_failure(
             working_dir=working_dir.as_posix(),
             working_dir_user=working_dir.as_posix(),
         )
-    db.expunge_all()
+        db.expunge_all()
 
-    submit_workflow(
-        workflow_id=workflow.id,
-        dataset_id=dataset.id,
-        job_id=job.id,
-        user_settings=UserSettings(),
-    )
+        submit_workflow(
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            job_id=job.id,
+            user_id=user.id,
+            user_settings=UserSettings(),
+        )
 
     job = await db.get(JobV2, job.id)
     debug(job)
@@ -91,6 +92,7 @@ async def test_mkdir_error(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=job.id,
+            user_id=user.id,
             user_cache_dir=(tmp_path / "xxx").as_posix(),
             user_settings=UserSettings(),
         )

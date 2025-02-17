@@ -2,8 +2,8 @@
 v2 `models` module
 """
 from ..linkuserproject import LinkUserProjectV2
-from .accounting import Accounting
-from .accounting import AccountingSlurm
+from .accounting import AccountingRecord
+from .accounting import AccountingRecordSlurm
 from .dataset import DatasetV2
 from .job import JobV2
 from .project import ProjectV2
@@ -14,8 +14,8 @@ from .workflow import WorkflowV2
 from .workflowtask import WorkflowTaskV2
 
 __all__ = [
-    "Accounting",
-    "AccountingSlurm",
+    "AccountingRecord",
+    "AccountingRecordSlurm",
     "LinkUserProjectV2",
     "DatasetV2",
     "JobV2",

@@ -41,6 +41,7 @@ def process_workflow(
     last_task_index: Optional[int] = None,
     logger_name: str,
     job_attribute_filters: AttributeFiltersType,
+    user_id: int,
     # Slurm-specific
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -75,6 +76,7 @@ def process_workflow(
             Positional index of the last task to execute; if `None`, proceed
             until the last task.
         logger_name: Logger name
+        user_id:
         slurm_user:
             Username to impersonate to run the workflow. This argument is
             present for compatibility with the standard backend interface, but
@@ -126,4 +128,5 @@ def process_workflow(
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
             job_attribute_filters=job_attribute_filters,
+            user_id=user_id,
         )

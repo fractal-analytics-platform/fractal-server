@@ -239,6 +239,7 @@ async def apply_workflow(
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         job_id=job.id,
+        user_id=user.id,
         user_settings=user_settings,
         worker_init=job.worker_init,
         slurm_user=user_settings.slurm_user,
