@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
+from pydantic.types import AwareDatetime
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -16,7 +16,6 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
-from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -37,10 +36,10 @@ async def view_job(
     dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
     status: Optional[JobStatusTypeV2] = None,
-    start_timestamp_min: Optional[datetime] = None,
-    start_timestamp_max: Optional[datetime] = None,
-    end_timestamp_min: Optional[datetime] = None,
-    end_timestamp_max: Optional[datetime] = None,
+    start_timestamp_min: Optional[AwareDatetime] = None,
+    start_timestamp_max: Optional[AwareDatetime] = None,
+    end_timestamp_min: Optional[AwareDatetime] = None,
+    end_timestamp_max: Optional[AwareDatetime] = None,
     log: bool = True,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
@@ -66,13 +65,6 @@ async def view_job(
         log: If `True`, include `job.log`, if `False`
             `job.log` is set to `None`.
     """
-
-    _raise_if_naive_datetime(
-        start_timestamp_min,
-        start_timestamp_max,
-        end_timestamp_min,
-        end_timestamp_max,
-    )
 
     stm = select(JobV2)
 

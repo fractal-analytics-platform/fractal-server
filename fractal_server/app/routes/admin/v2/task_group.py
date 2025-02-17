@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter
@@ -6,6 +5,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
 from sqlmodel import select
@@ -20,7 +20,6 @@ from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -42,12 +41,10 @@ async def get_task_group_activity_list(
     pkg_name: Optional[str] = None,
     status: Optional[TaskGroupActivityStatusV2] = None,
     action: Optional[TaskGroupActivityActionV2] = None,
-    timestamp_started_min: Optional[datetime] = None,
+    timestamp_started_min: Optional[AwareDatetime] = None,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:
-
-    _raise_if_naive_datetime(timestamp_started_min)
 
     stm = select(TaskGroupActivityV2)
     if task_group_activity_id is not None:
@@ -96,18 +93,13 @@ async def query_task_group_list(
     active: Optional[bool] = None,
     pkg_name: Optional[str] = None,
     origin: Optional[TaskGroupV2OriginEnum] = None,
-    timestamp_last_used_min: Optional[datetime] = None,
-    timestamp_last_used_max: Optional[datetime] = None,
+    timestamp_last_used_min: Optional[AwareDatetime] = None,
+    timestamp_last_used_max: Optional[AwareDatetime] = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
 
     stm = select(TaskGroupV2)
-
-    _raise_if_naive_datetime(
-        timestamp_last_used_max,
-        timestamp_last_used_min,
-    )
 
     if user_group_id is not None and private is True:
         raise HTTPException(
