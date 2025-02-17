@@ -3,9 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import model_validator
 
 from .._validators import valstr
 
@@ -50,27 +50,24 @@ class TaskManifestV2(BaseModel):
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[str] = None
 
     category: Optional[str] = None
     modality: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
 
-    @root_validator
-    def validate_executable_args_meta(cls, values):
-
-        executable_non_parallel = values.get("executable_non_parallel")
-        executable_parallel = values.get("executable_parallel")
+    @model_validator(mode="after")
+    def validate_executable_args_meta(self):
+        executable_non_parallel = self.executable_non_parallel
+        executable_parallel = self.executable_parallel
         if (executable_non_parallel is None) and (executable_parallel is None):
-
             raise ValueError(
                 "`TaskManifestV2.executable_non_parallel` and "
                 "`TaskManifestV2.executable_parallel` cannot be both None."
             )
 
         elif executable_non_parallel is None:
-
-            meta_non_parallel = values.get("meta_non_parallel")
+            meta_non_parallel = self.meta_non_parallel
             if meta_non_parallel != {}:
                 raise ValueError(
                     "`TaskManifestV2.meta_non_parallel` must be an empty dict "
@@ -78,7 +75,7 @@ class TaskManifestV2(BaseModel):
                     f"Given: {meta_non_parallel}."
                 )
 
-            args_schema_non_parallel = values.get("args_schema_non_parallel")
+            args_schema_non_parallel = self.args_schema_non_parallel
             if args_schema_non_parallel is not None:
                 raise ValueError(
                     "`TaskManifestV2.args_schema_non_parallel` must be None "
@@ -87,8 +84,7 @@ class TaskManifestV2(BaseModel):
                 )
 
         elif executable_parallel is None:
-
-            meta_parallel = values.get("meta_parallel")
+            meta_parallel = self.meta_parallel
             if meta_parallel != {}:
                 raise ValueError(
                     "`TaskManifestV2.meta_parallel` must be an empty dict if "
@@ -96,7 +92,7 @@ class TaskManifestV2(BaseModel):
                     f"Given: {meta_parallel}."
                 )
 
-            args_schema_parallel = values.get("args_schema_parallel")
+            args_schema_parallel = self.args_schema_parallel
             if args_schema_parallel is not None:
                 raise ValueError(
                     "`TaskManifestV2.args_schema_parallel` must be None if "
@@ -104,7 +100,14 @@ class TaskManifestV2(BaseModel):
                     f"Given: {args_schema_parallel}."
                 )
 
-        return values
+        return self
+
+    @field_validator("docs_link", mode="after")
+    @classmethod
+    def validate_docs_link(cls, value):
+        if value is not None:
+            HttpUrl(value)
+        return value
 
 
 class ManifestV2(BaseModel):
@@ -137,10 +140,10 @@ class ManifestV2(BaseModel):
     args_schema_version: Optional[str] = None
     authors: Optional[str] = None
 
-    @root_validator()
-    def _check_args_schemas_are_present(cls, values):
-        has_args_schemas = values["has_args_schemas"]
-        task_list = values["task_list"]
+    @model_validator(mode="after")
+    def _check_args_schemas_are_present(self):
+        has_args_schemas = self.has_args_schemas
+        task_list = self.task_list
         if has_args_schemas is True:
             for task in task_list:
                 if task.executable_parallel is not None:
@@ -157,11 +160,11 @@ class ManifestV2(BaseModel):
                             f"task '{task.name}' has "
                             f"{task.args_schema_non_parallel=}."
                         )
-        return values
+        return self
 
-    @root_validator()
-    def _unique_task_names(cls, values):
-        task_list = values["task_list"]
+    @model_validator(mode="after")
+    def _unique_task_names(self):
+        task_list = self.task_list
         task_list_names = [t.name for t in task_list]
         if len(set(task_list_names)) != len(task_list_names):
             raise ValueError(
@@ -170,14 +173,15 @@ class ManifestV2(BaseModel):
                     f"Given: {task_list_names}.",
                 )
             )
-        return values
+        return self
 
-    @validator("manifest_version")
+    @field_validator("manifest_version")
+    @classmethod
     def manifest_version_2(cls, value):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
         return value
 
-    _authors = validator("authors", allow_reuse=True)(
-        valstr("authors", accept_none=True)
+    _authors = field_validator("authors")(
+        classmethod(valstr("authors", accept_none=True))
     )

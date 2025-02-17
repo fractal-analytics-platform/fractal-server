@@ -268,7 +268,7 @@ async def test_set_groups_endpoint(
         json=dict(group_ids=[]),
     )
     assert res.status_code == 422
-    MSG = "ensure this value has at least 1 items"
+    MSG = "List should have at least 1 item after validation, not 0"
     assert MSG in str(res.json()["detail"])
 
     # Failure: Repeated request-body values

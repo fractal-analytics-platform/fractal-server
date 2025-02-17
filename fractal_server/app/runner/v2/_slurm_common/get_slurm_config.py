@@ -67,14 +67,14 @@ def get_slurm_config(
 
     # Incorporate slurm_env.default_slurm_config
     slurm_env = load_slurm_config_file(config_path=config_path)
-    slurm_dict = slurm_env.default_slurm_config.dict(
+    slurm_dict = slurm_env.default_slurm_config.model_dump(
         exclude_unset=True, exclude={"mem"}
     )
     if slurm_env.default_slurm_config.mem:
         slurm_dict["mem_per_task_MB"] = slurm_env.default_slurm_config.mem
 
     # Incorporate slurm_env.batching_config
-    for key, value in slurm_env.batching_config.dict().items():
+    for key, value in slurm_env.batching_config.model_dump().items():
         slurm_dict[key] = value
 
     # Incorporate slurm_env.user_local_exports
@@ -82,7 +82,7 @@ def get_slurm_config(
 
     logger.debug(
         "[get_slurm_config] Fractal SLURM configuration file: "
-        f"{slurm_env.dict()=}"
+        f"{slurm_env.model_dump()=}"
     )
 
     # GPU-related options
@@ -97,7 +97,7 @@ def get_slurm_config(
         needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
-        for key, value in slurm_env.gpu_slurm_config.dict(
+        for key, value in slurm_env.gpu_slurm_config.model_dump(
             exclude_unset=True, exclude={"mem"}
         ).items():
             slurm_dict[key] = value

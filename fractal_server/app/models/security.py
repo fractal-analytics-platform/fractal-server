@@ -12,6 +12,7 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import ConfigDict
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
@@ -50,13 +51,11 @@ class OAuthAccount(SQLModel, table=True):
     user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
-    expires_at: Optional[int] = Field(nullable=True)
-    refresh_token: Optional[str] = Field(nullable=True)
+    expires_at: Optional[int] = Field(nullable=True, default=None)
+    refresh_token: Optional[str] = Field(nullable=True, default=None)
     account_id: str = Field(index=True, nullable=False)
     account_email: str = Field(nullable=False)
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserOAuth(SQLModel, table=True):
@@ -88,11 +87,11 @@ class UserOAuth(SQLModel, table=True):
         sa_column_kwargs={"unique": True, "index": True}, nullable=False
     )
     hashed_password: str
-    is_active: bool = Field(True, nullable=False)
-    is_superuser: bool = Field(False, nullable=False)
-    is_verified: bool = Field(False, nullable=False)
+    is_active: bool = Field(default=True, nullable=False)
+    is_superuser: bool = Field(default=False, nullable=False)
+    is_verified: bool = Field(default=False, nullable=False)
 
-    username: Optional[str]
+    username: Optional[str] = None
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
@@ -105,9 +104,7 @@ class UserOAuth(SQLModel, table=True):
     settings: Optional[UserSettings] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserGroup(SQLModel, table=True):

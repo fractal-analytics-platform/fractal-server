@@ -6,7 +6,7 @@ from devtools import debug
 
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.slurm.sudo.executor import (
-    FractalSlurmExecutor,
+    FractalSlurmSudoExecutor,
 )
 from fractal_server.app.runner.executors.slurm.sudo.executor import SlurmJob
 from tests.v2._aux_runner import get_default_slurm_config
@@ -24,7 +24,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
 
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
 
-    with FractalSlurmExecutor(
+    with FractalSlurmSudoExecutor(
         workflow_dir_local=tmp_path / "job_dir1",
         workflow_dir_remote=tmp_path / "remote_job_dir1",
         slurm_user="TEST",
@@ -43,7 +43,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
             fut.result()
         debug(exc_info.value)
 
-    with FractalSlurmExecutor(
+    with FractalSlurmSudoExecutor(
         workflow_dir_local=tmp_path / "job_dir1",
         workflow_dir_remote=tmp_path / "remote_job_dir1",
         slurm_user="TEST",
@@ -63,7 +63,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
             fut.result()
         debug(exc_info.value)
 
-    with FractalSlurmExecutor(
+    with FractalSlurmSudoExecutor(
         workflow_dir_local=tmp_path / "job_dir1",
         workflow_dir_remote=tmp_path / "remote_job_dir1",
         slurm_user="TEST",
@@ -74,7 +74,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
             executor.wait_thread.wait(filenames=("some", "thing"), jobid=1)
         debug(exc_info.value)
 
-    with FractalSlurmExecutor(
+    with FractalSlurmSudoExecutor(
         workflow_dir_local=tmp_path / "job_dir1",
         workflow_dir_remote=tmp_path / "remote_job_dir1",
         slurm_user="TEST",
@@ -103,7 +103,7 @@ def test_check_remote_runner_python_interpreter(
     with pytest.raises(
         RuntimeError, match="No such file or directory: '/remote/python'"
     ):
-        FractalSlurmExecutor(
+        FractalSlurmSudoExecutor(
             slurm_user="test_user",
             workflow_dir_local=Path("/local/workflow"),
             workflow_dir_remote=Path("/remote/workflow"),
@@ -124,7 +124,7 @@ def test_check_remote_runner_python_interpreter(
     )
 
     with pytest.raises(RuntimeError, match="Fractal-server version mismatch"):
-        FractalSlurmExecutor(
+        FractalSlurmSudoExecutor(
             slurm_user="test_user",
             workflow_dir_local=Path("/local/workflow"),
             workflow_dir_remote=Path("/remote/workflow"),
@@ -174,7 +174,7 @@ def test_FractalSlurmExecutor_init(
         RuntimeError,
         match="Missing attribute FractalSlurmExecutor.slurm_user",
     ):
-        with FractalSlurmExecutor(
+        with FractalSlurmSudoExecutor(
             slurm_user=None,
             workflow_dir_local=tmp_path / "job_dir1",
             workflow_dir_remote=tmp_path / "remote_job_dir1",
@@ -185,7 +185,7 @@ def test_FractalSlurmExecutor_init(
         RuntimeError,
         match="Missing attribute FractalSlurmExecutor.slurm_user",
     ):
-        with FractalSlurmExecutor(
+        with FractalSlurmSudoExecutor(
             slurm_user="",
             workflow_dir_local=tmp_path / "job_dir1",
             workflow_dir_remote=tmp_path / "remote_job_dir1",
@@ -196,7 +196,7 @@ def test_FractalSlurmExecutor_init(
         RuntimeError,
         match="SLURM account must be set via the request body",
     ):
-        with FractalSlurmExecutor(
+        with FractalSlurmSudoExecutor(
             slurm_user="something",
             workflow_dir_local=tmp_path / "job_dir1",
             workflow_dir_remote=tmp_path / "remote_job_dir1",

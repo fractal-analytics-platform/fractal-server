@@ -86,7 +86,9 @@ def override_settings_factory():
 
     def _overrride_settings_factory(**kwargs):
         # NOTE: extract patched settings *before* popping out the patch!
-        settings = Settings(**Inject(get_settings).dict(exclude_unset=True))
+        settings = Settings(
+            **Inject(get_settings).model_dump(exclude_unset=True)
+        )
         get_settings_orig.append(Inject.pop(get_settings))
         for k, v in kwargs.items():
             setattr(settings, k, v)

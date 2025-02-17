@@ -106,7 +106,7 @@ def _prepare_tasks_metadata(
             ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
         # Create object
         task_obj = TaskCreateV2(
-            **_task.dict(
+            **_task.model_dump(
                 exclude={
                     "executable_non_parallel",
                     "executable_parallel",

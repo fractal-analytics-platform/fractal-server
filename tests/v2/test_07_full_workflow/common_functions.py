@@ -128,6 +128,9 @@ async def full_workflow(
         assert res.status_code == 200
         dataset = res.json()
         assert len(dataset["history"]) == 2
+        for item in dataset["history"]:
+            _task = item["workflowtask"]["task"]
+            assert _task is not None
         assert dataset["type_filters"] == {"3D": False}
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"

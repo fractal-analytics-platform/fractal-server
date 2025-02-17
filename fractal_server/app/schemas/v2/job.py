@@ -3,10 +3,13 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_serializer
+from pydantic import field_validator
+from pydantic import model_validator
+from pydantic import ValidationInfo
+from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
 
 from .._filter_validators import validate_attribute_filters
@@ -39,28 +42,31 @@ class JobStatusTypeV2(str, Enum):
     FAILED = "failed"
 
 
-class JobCreateV2(BaseModel, extra=Extra.forbid):
+class JobCreateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
     slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[str]
+    worker_init: Optional[str] = None
 
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
-    _worker_init = validator("worker_init", allow_reuse=True)(
-        valstr("worker_init")
+    _worker_init = field_validator("worker_init")(
+        classmethod(valstr("worker_init"))
     )
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
-    @validator("first_task_index", always=True)
-    def first_task_index_non_negative(cls, v, values):
+    @field_validator("first_task_index")
+    @classmethod
+    def first_task_index_non_negative(cls, v):
         """
         Check that `first_task_index` is non-negative.
         """
@@ -70,8 +76,9 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
             )
         return v
 
-    @validator("last_task_index", always=True)
-    def first_last_task_indices(cls, v, values):
+    @field_validator("last_task_index")
+    @classmethod
+    def first_last_task_indices(cls, v, info: ValidationInfo):
         """
         Check that `last_task_index` is non-negative, and that it is not
         smaller than `first_task_index`.
@@ -81,7 +88,7 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
                 f"last_task_index cannot be negative (given: {v})"
             )
 
-        first_task_index = values.get("first_task_index")
+        first_task_index = info.data.get("first_task_index")
         last_task_index = v
         if first_task_index is not None and last_task_index is not None:
             if first_task_index > last_task_index:
@@ -95,26 +102,39 @@ class JobCreateV2(BaseModel, extra=Extra.forbid):
 class JobReadV2(BaseModel):
 
     id: int
-    project_id: Optional[int]
+    project_id: Optional[int] = None
     project_dump: ProjectDumpV2
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
+    slurm_account: Optional[str] = None
+    workflow_id: Optional[int] = None
     workflow_dump: WorkflowDumpV2
-    dataset_id: Optional[int]
+    dataset_id: Optional[int] = None
     dataset_dump: DatasetDumpV2
-    start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    start_timestamp: AwareDatetime
+    end_timestamp: Optional[AwareDatetime] = None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
-    worker_init: Optional[str]
+    log: Optional[str] = None
+    working_dir: Optional[str] = None
+    working_dir_user: Optional[str] = None
+    first_task_index: Optional[int] = None
+    last_task_index: Optional[int] = None
+    worker_init: Optional[str] = None
     attribute_filters: AttributeFiltersType
 
+    @field_serializer("start_timestamp")
+    def serialize_datetime_start(v: datetime) -> str:
+        return v.isoformat()
 
-class JobUpdateV2(BaseModel, extra=Extra.forbid):
+    @field_serializer("end_timestamp")
+    def serialize_datetime_end(v: Optional[datetime]) -> Optional[str]:
+        if v is None:
+            return None
+        else:
+            return v.isoformat()
+
+
+class JobUpdateV2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
 
     status: JobStatusTypeV2

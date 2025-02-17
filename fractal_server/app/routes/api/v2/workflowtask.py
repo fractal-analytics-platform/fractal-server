@@ -281,7 +281,9 @@ async def update_workflowtask(
             ),
         )
 
-    for key, value in workflow_task_update.dict(exclude_unset=True).items():
+    for key, value in workflow_task_update.model_dump(
+        exclude_unset=True
+    ).items():
         if key == "args_parallel":
             # Get default arguments via a Task property method
             actual_args = deepcopy(value)

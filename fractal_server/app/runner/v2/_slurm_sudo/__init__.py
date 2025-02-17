@@ -21,7 +21,7 @@ from typing import Optional
 
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
-from ...executors.slurm.sudo.executor import FractalSlurmExecutor
+from ...executors.slurm.sudo.executor import FractalSlurmSudoExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
@@ -64,7 +64,7 @@ def process_workflow(
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
 
-    with FractalSlurmExecutor(
+    with FractalSlurmSudoExecutor(
         debug=True,
         keep_logs=True,
         slurm_user=slurm_user,

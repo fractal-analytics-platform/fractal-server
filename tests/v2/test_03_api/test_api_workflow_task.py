@@ -482,7 +482,7 @@ async def test_patch_workflow_task_with_args_schema(
         c: Optional[str] = None
         d: list[int] = [1, 2, 3]
 
-    args_schema = _Arguments.schema()
+    args_schema = _Arguments.model_json_schema()
 
     async with MockCurrentUser() as user:
         # Create DB objects
@@ -858,7 +858,7 @@ async def test_replace_task_in_workflowtask(
         )
         assert res.status_code == 201
         wft5 = res.json()
-        assert wft5["task"] == task5.dict()
+        assert wft5["task"] == task5.model_dump()
         assert wft5["task_id"] == task5.id
         assert wft5["args_parallel"] == wft3.args_parallel
         assert wft5["args_non_parallel"] == wft3.args_non_parallel

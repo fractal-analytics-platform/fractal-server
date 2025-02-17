@@ -82,7 +82,7 @@ async def create_workflow(
         name=workflow.name, project_id=project_id, db=db
     )
 
-    db_workflow = WorkflowV2(project_id=project_id, **workflow.dict())
+    db_workflow = WorkflowV2(project_id=project_id, **workflow.model_dump())
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
@@ -149,7 +149,7 @@ async def update_workflow(
             name=patch.name, project_id=project_id, db=db
         )
 
-    for key, value in patch.dict(exclude_unset=True).items():
+    for key, value in patch.model_dump(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
             current_workflowtask_ids = [
                 wftask.id for wftask in workflow.task_list
@@ -262,7 +262,7 @@ async def export_worfklow(
     wf_task_list = []
     for wftask in workflow.task_list:
         task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-        wf_task_list.append(wftask.dict())
+        wf_task_list.append(wftask.model_dump())
         wf_task_list[-1]["task"] = dict(
             pkg_name=task_group.pkg_name,
             version=task_group.version,

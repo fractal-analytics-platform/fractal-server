@@ -1,10 +1,8 @@
 import os
+import threading
 import time
 import traceback
 from itertools import count
-from typing import Callable
-
-from cfut import FileWaitThread
 
 from ......logger import set_logger
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -12,35 +10,46 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 logger = set_logger(__name__)
 
 
-class FractalSlurmWaitThread(FileWaitThread):
+class FractalSlurmSSHWaitThread(threading.Thread):
     """
-    Overrides the original clusterfutures.FileWaitThread, so that:
+    Thread that monitors a pool of SLURM jobs
 
-    1. Each jobid in the waiting list is associated to a tuple of filenames,
-       rather than a single one.
-    2. In the `check` method, we avoid output-file existence checks (which
-       would require `sudo -u user ls` calls), and we rather check for the
-       existence of the shutdown file. All the logic to check whether a job is
-       complete is deferred to the `cfut.slurm.jobs_finished` function.
-    3. There are additional attributes (...).
+    This class is a custom re-implementation of the waiting thread class from:
 
-    This class is based on clusterfutures 0.5. Original Copyright: 2022
-    Adrian Sampson, released under the MIT licence
+    > clusterfutures <https://github.com/sampsyo/clusterfutures>
+    > Original Copyright
+    > Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
+    > License: MIT
+
+    Attributes:
+        shutdown_file:
+        shutdown_callback:
+        slurm_poll_interval:
+        jobs_finished_callback:
+        active_job_ids:
+        shutdown:
+        lock:
     """
 
     shutdown_file: str
-    shutdown_callback: Callable
-    jobs_finished_callback: Callable
+    shutdown_callback: callable
     slurm_poll_interval = 30
+    jobs_finished_callback: callable
     active_job_ids: list[str]
+    shutdown: bool
+    _lock: threading.Lock
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, callback: callable, interval=1):
         """
         Init method
 
         This method is executed on the main thread.
         """
-        super().__init__(*args, **kwargs)
+        threading.Thread.__init__(self, daemon=True)
+        self.callback = callback
+        self.interval = interval
+        self._lock = threading.Lock()
+        self.shutdown = False
         self.active_job_ids = []
 
     def wait(self, *, job_id: str):
@@ -53,7 +62,7 @@ class FractalSlurmWaitThread(FileWaitThread):
             error_msg = "Cannot call `wait` method after executor shutdown."
             logger.warning(error_msg)
             raise JobExecutionError(info=error_msg)
-        with self.lock:
+        with self._lock:
             self.active_job_ids.append(job_id)
 
     def check_shutdown(self):
@@ -109,7 +118,7 @@ class FractalSlurmWaitThread(FileWaitThread):
                     pass
                 return
             if ind % skip == 0:
-                with self.lock:
+                with self._lock:
                     try:
                         self.check_jobs()
                     except Exception:  # nosec

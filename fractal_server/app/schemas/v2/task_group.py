@@ -3,9 +3,11 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_serializer
+from pydantic import field_validator
+from pydantic.types import AwareDatetime
 
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
@@ -32,7 +34,8 @@ class TaskGroupActivityActionV2(str, Enum):
     REACTIVATE = "reactivate"
 
 
-class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
+class TaskGroupCreateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     user_id: int
     user_group_id: Optional[int] = None
     active: bool = True
@@ -48,21 +51,21 @@ class TaskGroupCreateV2(BaseModel, extra=Extra.forbid):
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
-    _venv_path = validator("venv_path", allow_reuse=True)(
-        val_absolute_path("venv_path")
+    _path = field_validator("path")(classmethod(val_absolute_path("path")))
+    _venv_path = field_validator("venv_path")(
+        classmethod(val_absolute_path("venv_path"))
     )
-    _wheel_path = validator("wheel_path", allow_reuse=True)(
-        val_absolute_path("wheel_path")
+    _wheel_path = field_validator("wheel_path")(
+        classmethod(val_absolute_path("wheel_path"))
     )
-    _pinned_package_versions = validator(
-        "pinned_package_versions", allow_reuse=True
-    )(valdict_keys("pinned_package_versions"))
-    _pip_extras = validator("pip_extras", allow_reuse=True)(
-        valstr("pip_extras")
+    _pinned_package_versions = field_validator("pinned_package_versions")(
+        valdict_keys("pinned_package_versions")
     )
-    _python_version = validator("python_version", allow_reuse=True)(
-        valstr("python_version")
+    _pip_extras = field_validator("pip_extras")(
+        classmethod(valstr("pip_extras"))
+    )
+    _python_version = field_validator("python_version")(
+        classmethod(valstr("python_version"))
     )
 
 
@@ -99,11 +102,16 @@ class TaskGroupReadV2(BaseModel):
     venv_file_number: Optional[int] = None
 
     active: bool
-    timestamp_created: datetime
-    timestamp_last_used: datetime
+    timestamp_created: AwareDatetime
+    timestamp_last_used: AwareDatetime
+
+    @field_serializer("timestamp_created", "timestamp_last_used")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
-class TaskGroupUpdateV2(BaseModel, extra=Extra.forbid):
+class TaskGroupUpdateV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     user_group_id: Optional[int] = None
 
 
@@ -111,10 +119,21 @@ class TaskGroupActivityV2Read(BaseModel):
     id: int
     user_id: int
     taskgroupv2_id: Optional[int] = None
-    timestamp_started: datetime
-    timestamp_ended: Optional[datetime] = None
+    timestamp_started: AwareDatetime
+    timestamp_ended: Optional[AwareDatetime] = None
     pkg_name: str
     version: str
     status: TaskGroupActivityStatusV2
     action: TaskGroupActivityActionV2
     log: Optional[str] = None
+
+    @field_serializer("timestamp_started")
+    def serialize_datetime_start(v: datetime) -> str:
+        return v.isoformat()
+
+    @field_serializer("timestamp_ended")
+    def serialize_datetime_end(v: Optional[datetime]) -> Optional[str]:
+        if v is None:
+            return None
+        else:
+            return v.isoformat()

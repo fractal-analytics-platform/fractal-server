@@ -20,7 +20,7 @@ class MockTask(BaseModel):
     type: str
 
     def model_dump(self, *args, **kwargs):
-        return self.dict(*args, **kwargs)
+        return self.model_dump(*args, **kwargs)
 
 
 class MockWorkflowTask(BaseModel):
@@ -30,7 +30,7 @@ class MockWorkflowTask(BaseModel):
     order: int = 42
 
     def model_dump(self, *args, **kwargs):
-        return self.dict(*args, **kwargs)
+        return self.model_dump(*args, **kwargs)
 
 
 @pytest.mark.parametrize("fail", [True, False])
@@ -132,7 +132,7 @@ def test_get_slurm_config(tmp_path, fail):
     assert slurm_config.job_name
     assert " " not in slurm_config.job_name
     assert slurm_config.account == DEFAULT_ACCOUNT
-    assert "time" not in slurm_config.dict(exclude_unset=True).keys()
+    assert "time" not in slurm_config.model_dump(exclude_unset=True).keys()
     # Check that extra_lines from WorkflowTask.meta and config_path
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
@@ -220,7 +220,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     assert slurm_config.job_name
     assert " " not in slurm_config.job_name
     assert slurm_config.account == DEFAULT_ACCOUNT
-    assert "time" not in slurm_config.dict(exclude_unset=True).keys()
+    assert "time" not in slurm_config.model_dump(exclude_unset=True).keys()
     # Check that extra_lines from WorkflowTask.meta and config_path
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
