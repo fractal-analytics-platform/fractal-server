@@ -14,7 +14,7 @@ from fractal_server.syringe import Inject
 router = APIRouter()
 
 
-@router.get("/{user_id}")
+@router.get("/{user_id}/")
 async def impersonate_user(
     user_id: int,
     superuser: UserOAuth = Depends(current_active_superuser),
