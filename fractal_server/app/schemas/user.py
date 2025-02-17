@@ -67,7 +67,6 @@ class UserUpdate(schemas.BaseUserUpdate):
         "is_superuser",
         "email",
         "password",
-        # TODO: 'always=False'
     )
     @classmethod
     def cant_set_none(cls, v, field):
