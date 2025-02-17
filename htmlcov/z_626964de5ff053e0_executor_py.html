@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_07e87e41810c798d__check_jobs_status_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-02-14 09:18 +0000
+            created at 2025-02-17 11:00 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -165,7 +165,7 @@
     <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="nam">wait_thread_cls</span> <span class="op">=</span> <span class="nam">FractalSlurmSSHWaitThread</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="nam">common_script_lines</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">slurm_account</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">slurm_account</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">    <span class="nam">jobs</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">Future</span><span class="op">,</span> <span class="nam">SlurmJob</span><span class="op">]</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">map_jobid_to_slurm_files_local</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">tuple</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">str</span><span class="op">]</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
@@ -1239,7 +1239,7 @@
     <p class="run"><span class="n"><a id="t1155" href="#t1155">1155</a></span><span class="t">            <span class="nam">Path</span><span class="op">(</span><span class="nam">tarfile_path_local</span><span class="op">)</span><span class="op">.</span><span class="nam">unlink</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1156" href="#t1156">1156</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t1157" href="#t1157">1157</a></span><span class="t">        <span class="nam">t_1</span> <span class="op">=</span> <span class="nam">time</span><span class="op">.</span><span class="nam">perf_counter</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t1158" href="#t1158">1158</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"[_get_subfolder_sftp] End - "</span> <span class="fst">f"</span><span class="fst">elapsed: </span><span class="op">{</span><span class="nam">t_1</span><span class="op">-</span><span class="nam">t_0</span><span class="op">:</span><span class="fst">.3f</span><span class="op">}</span><span class="fst"> s</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1158" href="#t1158">1158</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">[_get_subfolder_sftp] End - elapsed: </span><span class="op">{</span><span class="nam">t_1</span> <span class="op">-</span> <span class="nam">t_0</span><span class="op">:</span><span class="fst">.3f</span><span class="op">}</span><span class="fst"> s</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1159" href="#t1159">1159</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t1160" href="#t1160">1160</a></span><span class="t">    <span class="key">def</span> <span class="nam">_prepare_sbatch_script</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1161" href="#t1161">1161</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -1465,7 +1465,7 @@
     <p class="run"><span class="n"><a id="t1381" href="#t1381">1381</a></span><span class="t">        <span class="nam">t_end_handshake</span> <span class="op">=</span> <span class="nam">time</span><span class="op">.</span><span class="nam">perf_counter</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t1382" href="#t1382">1382</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1383" href="#t1383">1383</a></span><span class="t">            <span class="str">"[FractalSlurmSSHExecutor.ssh_handshake] END"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t1384" href="#t1384">1384</a></span><span class="t">            <span class="fst">f"</span><span class="fst"> - elapsed: </span><span class="op">{</span><span class="nam">t_end_handshake</span><span class="op">-</span><span class="nam">t_start_handshake</span><span class="op">:</span><span class="fst">.3f</span><span class="op">}</span><span class="fst"> s</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1384" href="#t1384">1384</a></span><span class="t">            <span class="fst">f"</span><span class="fst"> - elapsed: </span><span class="op">{</span><span class="nam">t_end_handshake</span> <span class="op">-</span> <span class="nam">t_start_handshake</span><span class="op">:</span><span class="fst">.3f</span><span class="op">}</span><span class="fst"> s</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1385" href="#t1385">1385</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t1386" href="#t1386">1386</a></span><span class="t">        <span class="key">return</span> <span class="nam">remote_versions</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -1477,7 +1477,7 @@
             <a class="nav" href="z_07e87e41810c798d__check_jobs_status_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-02-14 09:18 +0000
+            created at 2025-02-17 11:00 +0000
         </p>
     </div>
 </footer>

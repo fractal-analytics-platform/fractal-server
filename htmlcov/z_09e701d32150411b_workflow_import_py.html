@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_workflowtask_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-02-14 09:18 +0000
+            created at 2025-02-17 11:00 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -405,7 +405,7 @@
     <p class="pln"><span class="n"><a id="t321" href="#t321">321</a></span><span class="t">                <span class="nam">detail</span><span class="op">=</span><span class="fst">f"</span><span class="fst">Could not find a task matching with </span><span class="op">{</span><span class="nam">wf_task</span><span class="op">.</span><span class="nam">task</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t322" href="#t322">322</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t323" href="#t323">323</a></span><span class="t">        <span class="nam">new_wf_task</span> <span class="op">=</span> <span class="nam">WorkflowTaskCreateV2</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t324" href="#t324">324</a></span><span class="t">            <span class="op">**</span><span class="nam">wf_task</span><span class="op">.</span><span class="nam">dict</span><span class="op">(</span><span class="nam">exclude_none</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">exclude</span><span class="op">=</span><span class="op">{</span><span class="str">"task"</span><span class="op">}</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t324" href="#t324">324</a></span><span class="t">            <span class="op">**</span><span class="nam">wf_task</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span><span class="nam">exclude_none</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">exclude</span><span class="op">=</span><span class="op">{</span><span class="str">"task"</span><span class="op">}</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t325" href="#t325">325</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t326" href="#t326">326</a></span><span class="t">        <span class="nam">list_wf_tasks</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">new_wf_task</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t327" href="#t327">327</a></span><span class="t">        <span class="nam">list_task_ids</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">task_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -420,7 +420,7 @@
     <p class="pln"><span class="n"><a id="t336" href="#t336">336</a></span><span class="t">    <span class="com"># Create new Workflow</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t337" href="#t337">337</a></span><span class="t">    <span class="nam">db_workflow</span> <span class="op">=</span> <span class="nam">WorkflowV2</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t338" href="#t338">338</a></span><span class="t">        <span class="nam">project_id</span><span class="op">=</span><span class="nam">project_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t339" href="#t339">339</a></span><span class="t">        <span class="op">**</span><span class="nam">workflow_import</span><span class="op">.</span><span class="nam">dict</span><span class="op">(</span><span class="nam">exclude_none</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">exclude</span><span class="op">=</span><span class="op">{</span><span class="str">"task_list"</span><span class="op">}</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t339" href="#t339">339</a></span><span class="t">        <span class="op">**</span><span class="nam">workflow_import</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span><span class="nam">exclude_none</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">exclude</span><span class="op">=</span><span class="op">{</span><span class="str">"task_list"</span><span class="op">}</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t340" href="#t340">340</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t341" href="#t341">341</a></span><span class="t">    <span class="nam">db</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">db_workflow</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -429,7 +429,7 @@
     <p class="pln"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">    <span class="com"># Insert task into the workflow</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">    <span class="key">for</span> <span class="nam">ind</span><span class="op">,</span> <span class="nam">new_wf_task</span> <span class="key">in</span> <span class="nam">enumerate</span><span class="op">(</span><span class="nam">list_wf_tasks</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t">        <span class="key">await</span> <span class="nam">_workflow_insert_task</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">            <span class="op">**</span><span class="nam">new_wf_task</span><span class="op">.</span><span class="nam">dict</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">            <span class="op">**</span><span class="nam">new_wf_task</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t349" href="#t349">349</a></span><span class="t">            <span class="nam">workflow_id</span><span class="op">=</span><span class="nam">db_workflow</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t350" href="#t350">350</a></span><span class="t">            <span class="nam">task_id</span><span class="op">=</span><span class="nam">list_task_ids</span><span class="op">[</span><span class="nam">ind</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t351" href="#t351">351</a></span><span class="t">            <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -456,7 +456,7 @@
             <a class="nav" href="z_09e701d32150411b_workflowtask_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-02-14 09:18 +0000
+            created at 2025-02-17 11:00 +0000
         </p>
     </div>
 </footer>

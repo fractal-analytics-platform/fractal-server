@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_41f8d7b96525c2f1_task_group_lifecycle_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-02-14 09:18 +0000
+            created at 2025-02-17 11:00 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -247,7 +247,7 @@
     <p class="pln"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="fst">f"</span><span class="fst">TaskGroupV2 </span><span class="op">{</span><span class="nam">task_group_id</span><span class="op">}</span><span class="fst"> not found</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">    <span class="key">for</span> <span class="nam">key</span><span class="op">,</span> <span class="nam">value</span> <span class="key">in</span> <span class="nam">task_group_update</span><span class="op">.</span><span class="nam">dict</span><span class="op">(</span><span class="nam">exclude_unset</span><span class="op">=</span><span class="key">True</span><span class="op">)</span><span class="op">.</span><span class="nam">items</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">    <span class="key">for</span> <span class="nam">key</span><span class="op">,</span> <span class="nam">value</span> <span class="key">in</span> <span class="nam">task_group_update</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span><span class="nam">exclude_unset</span><span class="op">=</span><span class="key">True</span><span class="op">)</span><span class="op">.</span><span class="nam">items</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">        <span class="key">if</span> <span class="op">(</span><span class="nam">key</span> <span class="op">==</span> <span class="str">"user_group_id"</span><span class="op">)</span> <span class="key">and</span> <span class="op">(</span><span class="nam">value</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">            <span class="key">await</span> <span class="nam">_verify_user_belongs_to_group</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">                <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span> <span class="nam">user_group_id</span><span class="op">=</span><span class="nam">value</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span>&nbsp;</span><span class="r"></span></p>
@@ -314,7 +314,7 @@
             <a class="nav" href="z_41f8d7b96525c2f1_task_group_lifecycle_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-02-14 09:18 +0000
+            created at 2025-02-17 11:00 +0000
         </p>
     </div>
 </footer>
