@@ -196,7 +196,7 @@ class WorkflowTaskImportV2(BaseModel):
         into type filters
         """
         if self.input_filters is not None:
-            if "type_filters" in self.keys():
+            if "type_filters" in self:
                 raise ValueError(
                     "Cannot set filters both through the legacy field "
                     "('filters') and the new one ('type_filters')."
