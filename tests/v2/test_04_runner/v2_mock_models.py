@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
-from pydantic_core.core_schema import ValidationInfo
 
 
 class TaskV2Mock(BaseModel):
@@ -35,7 +34,7 @@ class TaskV2Mock(BaseModel):
 
     @field_validator("type")
     @classmethod
-    def _set_type(cls, value, values: ValidationInfo):
+    def _set_type(cls, value, values):
         if values.data.get("command_non_parallel") is None:
             if values.data.get("command_parallel") is None:
                 raise ValueError(
