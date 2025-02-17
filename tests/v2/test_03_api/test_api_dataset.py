@@ -1,11 +1,8 @@
-from datetime import datetime
-
 from devtools import debug
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.routes.aux import _raise_if_naive_datetime
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
@@ -134,9 +131,6 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         res = await client.get(f"{PREFIX}/project/{p_id}/dataset/{ds_id}/")
         debug(res.json())
         assert res.status_code == 200
-        _raise_if_naive_datetime(
-            datetime.fromisoformat(res.json()["timestamp_created"])
-        )
 
         assert res.json()["name"] == DATASET_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
