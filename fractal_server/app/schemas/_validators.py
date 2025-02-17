@@ -11,7 +11,7 @@ def valstr(attribute: str, accept_none: bool = False):
     If `accept_none`, the validator also accepts `None`.
     """
 
-    def val(string: Optional[str]) -> Optional[str]:
+    def val(cls, string: Optional[str]) -> Optional[str]:
         if string is None:
             if accept_none:
                 return string
@@ -28,14 +28,16 @@ def valstr(attribute: str, accept_none: bool = False):
 
 
 def valdict_keys(attribute: str):
-    def val(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    def val(cls, d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
         """
         Apply valstr to every key of the dictionary, and fail if there are
         identical keys.
         """
         if d is not None:
             old_keys = list(d.keys())
-            new_keys = [valstr(f"{attribute}[{key}]")(key) for key in old_keys]
+            new_keys = [
+                valstr(f"{attribute}[{key}]")(cls, key) for key in old_keys
+            ]
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
                     f"Dictionary contains multiple identical keys: '{d}'."
@@ -53,7 +55,7 @@ def val_absolute_path(attribute: str, accept_none: bool = False):
     Check that a string attribute is an absolute path
     """
 
-    def val(string: Optional[str]) -> Optional[str]:
+    def val(cls, string: Optional[str]) -> Optional[str]:
         if string is None:
             if accept_none:
                 return string
@@ -75,7 +77,7 @@ def val_absolute_path(attribute: str, accept_none: bool = False):
 
 
 def val_unique_list(attribute: str):
-    def val(must_be_unique: Optional[list]) -> Optional[list]:
+    def val(cls, must_be_unique: Optional[list]) -> Optional[list]:
         if must_be_unique is not None:
             if len(set(must_be_unique)) != len(must_be_unique):
                 raise ValueError(f"`{attribute}` list has repetitions")

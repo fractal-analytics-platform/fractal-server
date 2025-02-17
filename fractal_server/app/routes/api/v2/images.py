@@ -8,8 +8,8 @@ from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import root_validator
-from pydantic import validator
+from pydantic import field_validator
+from pydantic import model_validator
 from sqlalchemy.orm.attributes import flag_modified
 
 from ._aux_functions import _get_dataset_check_owner
@@ -44,18 +44,18 @@ class ImagePage(BaseModel):
 
 
 class ImageQuery(BaseModel):
-    zarr_url: Optional[str]
+    zarr_url: Optional[str] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
-    _dict_keys = root_validator(pre=True, allow_reuse=True)(
-        root_validate_dict_keys
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
     )
-    _type_filters = validator("type_filters", allow_reuse=True)(
-        validate_type_filters
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        validate_attribute_filters
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
     )
 
 
@@ -102,7 +102,7 @@ async def post_new_image(
             ),
         )
 
-    dataset.images.append(new_image.dict())
+    dataset.images.append(new_image.model_dump())
     flag_modified(dataset, "images")
 
     await db.commit()
@@ -278,7 +278,7 @@ async def patch_dataset_image(
         )
     index = ret["index"]
 
-    for key, value in image_update.dict(
+    for key, value in image_update.model_dump(
         exclude_none=True, exclude={"zarr_url"}
     ).items():
         db_dataset.images[index][key] = value

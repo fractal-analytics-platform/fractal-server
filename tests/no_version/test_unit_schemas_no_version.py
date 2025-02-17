@@ -98,10 +98,10 @@ def test_user_settings_read():
         slurm_accounts=[],
     )
     read = UserSettingsRead(**data)
-    assert read.dict().get("ssh_host") == "MY_HOST"
+    assert read.model_dump().get("ssh_host") == "MY_HOST"
     read_strict = UserSettingsReadStrict(**data)
-    assert read_strict.dict().get("ssh_host") is None
-    assert read_strict.dict().get("ssh_username") == "MY_SSH_USERNAME"
+    assert read_strict.model_dump().get("ssh_host") is None
+    assert read_strict.model_dump().get("ssh_username") == "MY_SSH_USERNAME"
 
 
 def test_user_settings_update():
@@ -137,20 +137,20 @@ def test_user_settings_update():
     for key in nullable_attributes:
         update_request_body = UserSettingsUpdate(**{key: None})
         assert getattr(update_request_body, key) is None
-        assert key in update_request_body.dict(exclude_unset=True)
-        assert key not in update_request_body.dict(exclude_none=True)
+        assert key in update_request_body.model_dump(exclude_unset=True)
+        assert key not in update_request_body.model_dump(exclude_none=True)
 
 
 def test_unit_val_absolute_path():
-    val_absolute_path("this_attr")("/path")
-    val_absolute_path("this_attr", accept_none=False)("/path")
-    val_absolute_path("this_attr", accept_none=True)("/path")
+    val_absolute_path("this_attr")(..., "/path")
+    val_absolute_path("this_attr", accept_none=False)(..., "/path")
+    val_absolute_path("this_attr", accept_none=True)(..., "/path")
 
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr")(None)
+        val_absolute_path("this_attr")(..., None)
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr", accept_none=False)(None)
-    val_absolute_path("this_attr", accept_none=True)(None)
+        val_absolute_path("this_attr", accept_none=False)(..., None)
+    val_absolute_path("this_attr", accept_none=True)(..., None)
 
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr")("non/absolute/path")
+        val_absolute_path("this_attr")(..., "non/absolute/path")

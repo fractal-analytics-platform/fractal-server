@@ -19,7 +19,7 @@ async def test_alive(client, override_settings):
 async def test_unit_get_sanitized_settings():
     settings = Inject(get_settings)
     sanitized_settings = settings.get_sanitized()
-    assert settings.dict().keys() == sanitized_settings.keys()
+    assert settings.model_dump().keys() == sanitized_settings.keys()
     for k in sanitized_settings.keys():
         if not k.upper().startswith("FRACTAL") or any(
             s in k.upper()
@@ -27,12 +27,12 @@ async def test_unit_get_sanitized_settings():
         ):
             assert sanitized_settings[k] == "***"
         else:
-            assert sanitized_settings[k] == settings.dict()[k]
+            assert sanitized_settings[k] == settings.model_dump()[k]
 
 
 async def test_settings_endpoint(client, MockCurrentUser):
 
-    settings = Inject(get_settings).dict()
+    settings = Inject(get_settings).model_dump()
     for k, v in settings.items():
         if isinstance(v, Path):
             settings[k] = v.as_posix()  # the client returns strings, not Paths

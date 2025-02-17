@@ -28,7 +28,7 @@ class TaskV2Minimal(BaseModel):
     type: str
     taskgroupv2_id: int
     command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str]
+    command_parallel: Optional[str] = None
     source: Optional[str] = None
     version: Optional[str] = None
 

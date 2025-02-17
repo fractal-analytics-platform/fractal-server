@@ -611,7 +611,7 @@ async def test_import_with_legacy_filters(
         res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
         assert res.status_code == 422
-        assert "value could not be parsed to a boolean" in str(res.json())
+        assert "should be a valid boolean" in str(res.json())
 
         # FAILURE: Attribute filters are now deprecated
         payload = {

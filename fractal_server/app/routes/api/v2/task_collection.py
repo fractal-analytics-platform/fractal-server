@@ -13,7 +13,7 @@ from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
 from pydantic import BaseModel
-from pydantic import root_validator
+from pydantic import model_validator
 from pydantic import ValidationError
 from sqlmodel import select
 
@@ -68,7 +68,8 @@ class CollectionRequestData(BaseModel):
     file: Optional[UploadFile] = None
     origin: TaskGroupV2OriginEnum
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_data(cls, values):
         file = values.get("file")
         package = values.get("task_collect").package

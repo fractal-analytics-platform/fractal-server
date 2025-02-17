@@ -67,7 +67,7 @@ IMAGES = [
         ),
     ),
 ]
-IMAGES = [img.dict() for img in IMAGES]
+IMAGES = [img.model_dump() for img in IMAGES]
 
 
 def test_singleimage_attributes_validation():

@@ -22,7 +22,9 @@ class TaskGroupV2(SQLModel, table=True):
     )
 
     user_id: int = Field(foreign_key="user_oauth.id")
-    user_group_id: Optional[int] = Field(foreign_key="usergroup.id")
+    user_group_id: Optional[int] = Field(
+        foreign_key="usergroup.id", default=None
+    )
 
     origin: str
     pkg_name: str
@@ -97,7 +99,9 @@ class TaskGroupActivityV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id")
-    taskgroupv2_id: Optional[int] = Field(foreign_key="taskgroupv2.id")
+    taskgroupv2_id: Optional[int] = Field(
+        default=None, foreign_key="taskgroupv2.id"
+    )
     timestamp_started: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),

@@ -1,7 +1,6 @@
+import uuid
 from pathlib import Path
 from typing import Optional
-
-from cfut.util import random_string
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfig,
@@ -106,9 +105,7 @@ class SlurmJob:
             )
         else:
             self.wftask_file_prefixes = wftask_file_prefixes
-        self.workerids = tuple(
-            random_string() for i in range(self.num_tasks_tot)
-        )
+        self.workerids = tuple(uuid.uuid4() for i in range(self.num_tasks_tot))
         self.slurm_config = slurm_config
 
     def get_clean_output_pickle_files(self) -> tuple[str, ...]:

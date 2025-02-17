@@ -6,9 +6,9 @@ from typing import Optional
 import pytest
 from devtools import debug
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import root_validator
+from pydantic import model_validator
 
 from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
@@ -21,7 +21,8 @@ from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
 )
 
 
-class TaskV2Mock(BaseModel, extra=Extra.forbid):
+class TaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = 1
     name: str = "name_t2"
     source: str = "source_t2"
@@ -32,16 +33,17 @@ class TaskV2Mock(BaseModel, extra=Extra.forbid):
     command_parallel: Optional[str] = None
     meta_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
     meta_non_parallel: Optional[dict[str, Any]] = Field(default_factory=dict)
-    type: Optional[str]
+    type: Optional[str] = None
 
 
-class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
+class WorkflowTaskV2Mock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     args_non_parallel: dict[str, Any] = Field(default_factory=dict)
     args_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: Optional[dict[str, Any]] = Field()
-    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    meta_parallel: Optional[dict[str, Any]] = Field(None)
+    meta_non_parallel: Optional[dict[str, Any]] = Field(None)
     task: TaskV2Mock
     type_filters: dict[str, bool] = Field(default_factory=dict)
     order: int = 0
@@ -49,7 +51,8 @@ class WorkflowTaskV2Mock(BaseModel, extra=Extra.forbid):
     workflow_id: int = 0
     task_id: int
 
-    @root_validator(pre=False)
+    @model_validator(mode="before")
+    @classmethod
     def merge_meta(cls, values):
         task_meta_parallel = values["task"].meta_parallel
         if task_meta_parallel:
@@ -169,7 +172,7 @@ def test_get_slurm_config(tmp_path: Path):
     assert slurm_config.job_name
     assert " " not in slurm_config.job_name
     assert slurm_config.account == DEFAULT_ACCOUNT
-    assert "time" not in slurm_config.dict(exclude_unset=True).keys()
+    assert "time" not in slurm_config.model_dump(exclude_unset=True).keys()
     # Check that extra_lines from WorkflowTask.meta and config_path
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
@@ -218,7 +221,7 @@ def test_get_slurm_config_fail(tmp_path):
     with config_path_invalid.open("w") as f:
         json.dump(slurm_config, f)
     with pytest.raises(
-        SlurmConfigError, match="extra fields not permitted"
+        SlurmConfigError, match="Extra inputs are not permitted"
     ) as e:
         get_slurm_config(
             wftask=WorkflowTaskV2Mock(
@@ -312,7 +315,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     assert slurm_config.job_name
     assert " " not in slurm_config.job_name
     assert slurm_config.account == DEFAULT_ACCOUNT
-    assert "time" not in slurm_config.dict(exclude_unset=True).keys()
+    assert "time" not in slurm_config.model_dump(exclude_unset=True).keys()
     # Check that extra_lines from WorkflowTask.meta and config_path
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3

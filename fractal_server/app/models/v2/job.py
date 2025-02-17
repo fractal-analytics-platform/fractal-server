@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 from typing import Optional
 
+from pydantic import ConfigDict
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -14,16 +15,17 @@ from fractal_server.images.models import AttributeFiltersType
 
 
 class JobV2(SQLModel, table=True):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: Optional[int] = Field(foreign_key="projectv2.id")
-    workflow_id: Optional[int] = Field(foreign_key="workflowv2.id")
-    dataset_id: Optional[int] = Field(foreign_key="datasetv2.id")
+    project_id: Optional[int] = Field(foreign_key="projectv2.id", default=None)
+    workflow_id: Optional[int] = Field(
+        foreign_key="workflowv2.id", default=None
+    )
+    dataset_id: Optional[int] = Field(foreign_key="datasetv2.id", default=None)
 
     user_email: str = Field(nullable=False)
-    slurm_account: Optional[str]
+    slurm_account: Optional[str] = None
 
     dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
@@ -35,9 +37,9 @@ class JobV2(SQLModel, table=True):
         sa_column=Column(JSON, nullable=False)
     )
 
-    worker_init: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
+    worker_init: Optional[str] = None
+    working_dir: Optional[str] = None
+    working_dir_user: Optional[str] = None
     first_task_index: int
     last_task_index: int
 

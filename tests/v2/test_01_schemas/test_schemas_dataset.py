@@ -90,12 +90,12 @@ async def test_schemas_dataset_v2():
     )
 
     dataset = DatasetV2(
-        **dataset_create.dict(), id=1, project_id=project.id, history=[]
+        **dataset_create.model_dump(), id=1, project_id=project.id, history=[]
     )
 
     # Read
 
-    DatasetReadV2(**dataset.model_dump(), project=project)
+    DatasetReadV2(**dataset.model_dump(), project=project.model_dump())
 
     # Update
 
@@ -111,7 +111,7 @@ async def test_schemas_dataset_v2():
     dataset_update = DatasetUpdateV2(name="new name", zarr_dir="/zarr/")
     assert not dataset_update.zarr_dir.endswith("/")
 
-    for key, value in dataset_update.dict(exclude_unset=True).items():
+    for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(dataset, key, value)
 
     assert dataset.name == "new name"

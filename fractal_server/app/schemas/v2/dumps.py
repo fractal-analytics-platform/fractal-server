@@ -11,13 +11,13 @@ These models are used in at least two situations:
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 
 from fractal_server.images.models import AttributeFiltersType
 
 
-class ProjectDumpV2(BaseModel, extra=Extra.forbid):
-
+class ProjectDumpV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     timestamp_created: str
@@ -28,10 +28,10 @@ class TaskDumpV2(BaseModel):
     name: str
     type: str
 
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     source: Optional[str] = None
-    version: Optional[str]
+    version: Optional[str] = None
 
     input_types: dict[str, bool]
     output_types: dict[str, bool]
@@ -39,29 +39,31 @@ class TaskDumpV2(BaseModel):
 
 class WorkflowTaskDumpV2(BaseModel):
     """
-    We do not include 'extra=Extra.forbid' because legacy data may include
-    'input_filters' field and we want to avoid response-validation errors
-    for the endpoints that GET datasets.
+    We do not include 'model_config = ConfigDict(extra="forbid")'
+    because legacy data may include 'input_filters' field and we want to avoid
+    response-validation errors for the endpoints that GET datasets.
     """
 
     id: int
     workflow_id: int
-    order: Optional[int]
+    order: Optional[int] = None
 
     type_filters: dict[str, bool]
 
-    task_id: Optional[int]
-    task: Optional[TaskDumpV2]
+    task_id: Optional[int] = None
+    task: Optional[TaskDumpV2] = None
 
 
-class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
+class WorkflowDumpV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel, extra=Extra.forbid):
+class DatasetDumpV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     project_id: int

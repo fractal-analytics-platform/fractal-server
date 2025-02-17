@@ -57,14 +57,14 @@ async def patch_current_user(
     Note: a user cannot patch their own password (as enforced within the
     `UserUpdateStrict` schema).
     """
-    update = UserUpdate(**user_update.dict(exclude_unset=True))
+    update = UserUpdate(**user_update.model_dump(exclude_unset=True))
 
     # NOTE: here it would be relevant to catch an `InvalidPasswordException`
     # (from `fastapi_users.exceptions`), if we were to allow users change
     # their own password
 
     user = await user_manager.update(update, current_user, safe=True)
-    validated_user = schemas.model_validate(UserOAuth, user)
+    validated_user = schemas.model_validate(UserOAuth, user.model_dump())
 
     patched_user = await db.get(
         UserOAuth, validated_user.id, populate_existing=True
@@ -82,7 +82,6 @@ async def get_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-
     verify_user_has_settings(current_user)
     user_settings = await db.get(UserSettings, current_user.user_settings_id)
     return user_settings
@@ -96,13 +95,12 @@ async def patch_current_user_settings(
     current_user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserSettingsReadStrict:
-
     verify_user_has_settings(current_user)
     current_user_settings = await db.get(
         UserSettings, current_user.user_settings_id
     )
 
-    for k, v in settings_update.dict(exclude_unset=True).items():
+    for k, v in settings_update.model_dump(exclude_unset=True).items():
         setattr(current_user_settings, k, v)
 
     db.add(current_user_settings)
