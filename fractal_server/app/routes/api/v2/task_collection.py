@@ -70,9 +70,9 @@ class CollectionRequestData(BaseModel):
 
     @model_validator(mode="after")
     def validate_data(self):
-        file = self.get("file")
-        package = self.get("task_collect").package
-        package_version = self.get("task_collect").package_version
+        file = self.file
+        package = self.task_collect.package
+        package_version = self.task_collect.package_version
 
         if file is None:
             if package is None:
@@ -91,7 +91,7 @@ class CollectionRequestData(BaseModel):
                     "Cannot set `package_version` when `file` is "
                     f"provided (given package_version='{package_version}')."
                 )
-            self["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+            self.origin = TaskGroupV2OriginEnum.WHEELFILELFILE
 
             for forbidden_char in FORBIDDEN_CHAR_WHEEL:
                 if forbidden_char in file.filename:

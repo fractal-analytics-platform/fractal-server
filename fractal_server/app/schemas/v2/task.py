@@ -43,8 +43,8 @@ class TaskCreateV2(BaseModel):
     # Validators
     @model_validator(mode="after")
     def validate_commands(self):
-        command_parallel = self.get("command_parallel")
-        command_non_parallel = self.get("command_non_parallel")
+        command_parallel = self.command_parallel
+        command_non_parallel = self.command_non_parallel
         if (command_parallel is None) and (command_non_parallel is None):
             raise ValueError(
                 "Task must have at least one valid command "

@@ -189,15 +189,14 @@ class WorkflowTaskImportV2(BaseModel):
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
     # Validators
-    @model_validator(mode="before")
-    @classmethod
-    def update_legacy_filters(cls, values: dict):
+    @model_validator(mode="after")
+    def update_legacy_filters(self):
         """
         Transform legacy filters (created with fractal-server<2.11.0)
         into type filters
         """
-        if values.get("input_filters") is not None:
-            if "type_filters" in values.keys():
+        if self.input_filters is not None:
+            if "type_filters" in self.keys():
                 raise ValueError(
                     "Cannot set filters both through the legacy field "
                     "('filters') and the new one ('type_filters')."
@@ -206,17 +205,15 @@ class WorkflowTaskImportV2(BaseModel):
             else:
                 # As of 2.11.0, WorkflowTask do not have attribute filters
                 # any more.
-                if values["input_filters"]["attributes"] != {}:
+                if self.input_filters["attributes"] != {}:
                     raise ValueError(
                         "Cannot set attribute filters for WorkflowTasks."
                     )
                 # Convert legacy filters.types into new type_filters
-                values["type_filters"] = values["input_filters"].get(
-                    "types", {}
-                )
-                values["input_filters"] = None
+                self.type_filters = self.input_filters.get("types", {})
+                self.input_filters = None
 
-        return values
+        return self
 
     _type_filters = field_validator("type_filters")(
         classmethod(validate_type_filters)
