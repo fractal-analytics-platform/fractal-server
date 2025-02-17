@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
@@ -6,7 +7,6 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
-from pydantic.types import AwareDatetime
 
 from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
@@ -76,7 +76,7 @@ class DatasetReadV2(BaseModel):
 
     history: list[_DatasetHistoryItemV2]
 
-    timestamp_created: AwareDatetime
+    timestamp_created: datetime
 
     zarr_dir: str
     type_filters: dict[str, bool]
