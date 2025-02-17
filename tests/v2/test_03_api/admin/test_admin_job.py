@@ -134,7 +134,7 @@ async def test_view_job(
             f"{PREFIX}/job/?start_timestamp_min={quote('1999-01-01T00:00:01')}"
         )
         assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert "timezone" in res.json()["detail"][0]["msg"]
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min="
@@ -153,7 +153,7 @@ async def test_view_job(
             f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
         )
         assert res.status_code == 422  # because timezonee is None
-        assert "timezone" in res.json()["detail"]
+        assert "timezone" in res.json()["detail"][0]["msg"]
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max="
