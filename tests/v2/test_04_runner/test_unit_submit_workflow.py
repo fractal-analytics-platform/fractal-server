@@ -30,6 +30,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=9999999,
+            user_id=user.id,
             user_settings=UserSettings(),
         )
 
@@ -44,6 +45,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=9999999,
             dataset_id=9999999,
             job_id=job.id,
+            user_id=user.id,
             user_settings=UserSettings(),
         )
         await db.refresh(job)
@@ -83,6 +85,7 @@ async def test_fail_submit_workflows_wrong_backend(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=job.id,
+            user_id=user.id,
             user_settings=UserSettings(),
         )
         await db.refresh(job)
