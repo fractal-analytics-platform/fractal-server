@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from httpx import ASGITransport
 from httpx import AsyncClient
 
 from fractal_server.app.models.security import UserOAuth
@@ -23,7 +24,8 @@ async def test_impersonate(
     token_impersonate = res.json()["access_token"]
 
     async with AsyncClient(
-        app=app, base_url="http://test"
+        base_url="http://test",
+        transport=ASGITransport(app=app),
     ) as client_impersonate:
         res = await client_impersonate.get(
             "/auth/current-user/",
