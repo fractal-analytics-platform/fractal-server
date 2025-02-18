@@ -1,8 +1,8 @@
 """Add HistoryItem table
 
-Revision ID: c1405504e6e6
+Revision ID: 87cd72a537a2
 Revises: af1ef1c83c9b
-Create Date: 2025-02-18 10:31:46.908805
+Create Date: 2025-02-18 10:48:16.401995
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "c1405504e6e6"
+revision = "87cd72a537a2"
 down_revision = "af1ef1c83c9b"
 branch_labels = None
 depends_on = None
@@ -29,11 +29,6 @@ def upgrade() -> None:
         ),
         sa.Column(
             "worfklowtask_dump",
-            postgresql.JSONB(astext_type=sa.Text()),
-            nullable=False,
-        ),
-        sa.Column(
-            "task_dump",
             postgresql.JSONB(astext_type=sa.Text()),
             nullable=False,
         ),

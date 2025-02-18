@@ -1,7 +1,9 @@
+import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
+from enum import Enum
 from pathlib import Path
 from typing import Callable
 from typing import Optional
@@ -20,11 +22,28 @@ from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import HistoryItemV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
+
+
+class HistoryItemImageStatus(str, Enum):
+    """
+    Available image-status values within a `HistoryItemV2`
+
+    Attributes:
+        SUBMITTED:
+        DONE:
+        FAILED:
+    """
+
+    SUBMITTED = "submitted"
+    DONE = "done"
+    FAILED = "failed"
 
 
 def execute_tasks_v2(
@@ -43,8 +62,8 @@ def execute_tasks_v2(
 
     if not workflow_dir_local.exists():
         logger.warning(
-            f"Now creating {workflow_dir_local}, "
-            "but it should have already happened."
+            f"Now creating {workflow_dir_local}, but it "
+            "should have already happened."
         )
         workflow_dir_local.mkdir()
 
@@ -60,19 +79,60 @@ def execute_tasks_v2(
 
         # PRE TASK EXECUTION
 
-        # Get filtered images
+        # Filter images by types and attributes (in two steps)
         type_filters = copy(current_dataset_type_filters)
         type_filters_patch = merge_type_filters(
             task_input_types=task.input_types,
             wftask_type_filters=wftask.type_filters,
         )
         type_filters.update(type_filters_patch)
-        filtered_images = filter_image_list(
+        type_filtered_images = filter_image_list(
             images=tmp_images,
             type_filters=type_filters,
+            attribute_filters=None,
+        )
+        filtered_images = filter_image_list(
+            images=type_filtered_images,
+            type_filters=None,
             attribute_filters=job_attribute_filters,
         )
 
+        # Create history item
+        with next(get_sync_db()) as db:
+            workflowtask_dump = dict(
+                **wftask.model_dump(exclude={"task"}),
+                task=wftask.task.model_dump(),
+            )
+            task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+            task_group_dump = task_group.model_dump()
+            parameters_hash = str(
+                hash(
+                    json.dumps(
+                        [workflowtask_dump, task_group_dump],
+                        sort_keys=True,
+                        indent=None,
+                    ).encode("utf-8")
+                )
+            )
+            images = {
+                image.zarr_url: HistoryItemImageStatus.SUBMITTED
+                for image in filtered_images
+            }
+            history_item = HistoryItemV2(
+                dataset_id=dataset.id,
+                workflowtask_id=wftask.id,
+                worfklowtask_dump=workflowtask_dump,
+                task_group_dump=task_group_dump,
+                parameters_hash=parameters_hash,
+                num_available_images=len(type_filtered_images),
+                num_current_images=len(filtered_images),
+                images=images,
+            )
+            db.add(history_item)
+            db.commit()
+            db.refresh(history_item)
+            history_item_id = history_item.id
+            print(history_item_id)
         # First, set status SUBMITTED in dataset.history for each wftask
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
@@ -88,6 +148,7 @@ def execute_tasks_v2(
             flag_modified(db_dataset, "history")
             db.merge(db_dataset)
             db.commit()
+
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
             current_task_output, num_tasks = run_v2_task_non_parallel(

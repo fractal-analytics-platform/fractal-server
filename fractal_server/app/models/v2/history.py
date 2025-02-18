@@ -31,7 +31,6 @@ class HistoryItemV2(SQLModel, table=True):
     worfklowtask_dump: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False)
     )
-    task_dump: dict[str, Any] = Field(sa_column=Column(JSONB, nullable=False))
     task_group_dump: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False)
     )
