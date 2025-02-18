@@ -16,6 +16,8 @@
     * Reduce error-level log records(\#2282).
 * Testing:
     * Drop obsolete files/folders from `tests/data` (\#2281).
+* Dependencies:
+    * Bump `httpx` to version `0.28.*` (\#2284).
 
 # 2.13.0
 
@@ -28,7 +30,7 @@ With this release we switch to Pydantic v2.
     * Bump `pydantic` to v2 (\#2270).
     * Drop `clusterfutures` dependency (\#2272).
     * Drop `psutil` dependency (\#2273).
-    * Bump `cryptography` version (\#2274).
+    * Bump `cryptography` to version `44.0.*` (\#2274).
     * Bump `sqlmodel` to version `0.0.22` (\#2275).
     * Bump `packaging` to version `24.*.*` (\#2275).
     * Bump `cloudpickle` to version `3.1.*` (\#2275).
