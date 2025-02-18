@@ -11,6 +11,7 @@ from typing import Optional
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
+from httpx import ASGITransport
 from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -167,7 +168,7 @@ async def client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
     async with AsyncClient(
-        app=app, base_url="http://test"
+        base_url="http://test", transport=ASGITransport(app=app)
     ) as client, LifespanManager(app):
         yield client
 
@@ -182,7 +183,7 @@ async def registered_client(
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
 
     async with AsyncClient(
-        app=app, base_url="http://test"
+        base_url="http://test", transport=ASGITransport(app=app)
     ) as client, LifespanManager(app):
         data_login = dict(
             username=EMAIL,
@@ -202,7 +203,7 @@ async def registered_superuser_client(
     PWD = "some-admin-password"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
     async with AsyncClient(
-        app=app, base_url="http://test"
+        base_url="http://test", transport=ASGITransport(app=app)
     ) as client, LifespanManager(app):
         data_login = dict(username=EMAIL, password=PWD)
         res = await client.post("auth/token/login/", data=data_login)

@@ -56,7 +56,9 @@ class FractalClient:
     ):
         # base_url is needed to determine the communication protocol
         # for httpx, that uses requests, otherwise a KeyError is raised.
-        with httpx.Client(app=wsgi_app, base_url="http://") as client:
+        with httpx.Client(
+            base_url="http://", transport=httpx.WSGITransport(app=wsgi_app)
+        ) as client:
             response = client.post(
                 "/auth/token/login/",
                 data=credentials,
@@ -75,7 +77,9 @@ class FractalClient:
         url = f"/{endpoint}"
 
         try:
-            with httpx.Client(app=wsgi_app, base_url="http://") as client:
+            with httpx.Client(
+                base_url="http://", transport=httpx.WSGITransport(app=wsgi_app)
+            ) as client:
                 time_start = time.perf_counter()
                 if method == "GET":
                     response = client.get(url, headers=headers)
