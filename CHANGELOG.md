@@ -1,9 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
 # 2.13.1
 
 * API:
     * Add `AccountingRecord` and `AccountingRecordSlurm` tables (\#2267).
+    * Add `/admin/v2/impersonate` endpoint (\#2280).
     * Replace `_raise_if_naive_datetime` with `AwareDatetime` (\#2283).
 * Database:
     * Add `/admin/v2/accounting/` and `/admin/v2/accounting/slurm/` endpoints (\#2267).
