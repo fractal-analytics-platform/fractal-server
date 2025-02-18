@@ -23,8 +23,9 @@
 | fractal\_server/app/models/v2/workflowtask.py                                  |       22 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/\_\_init\_\_.py                               |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/routes/admin/v2/\_\_init\_\_.py                            |       14 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/routes/admin/v2/\_\_init\_\_.py                            |       16 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/accounting.py                              |       65 |        0 |       16 |        3 |     96% |98->100, 100->102, 102->105 |
+| fractal\_server/app/routes/admin/v2/impersonate.py                             |       19 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/job.py                                     |      101 |        0 |       36 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/project.py                                 |       22 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task.py                                    |       68 |        0 |       18 |        0 |    100% |           |
@@ -159,7 +160,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8757** |  **403** | **1820** |  **136** | **94%** |           |
+|                                                                      **TOTAL** | **8778** |  **403** | **1820** |  **136** | **94%** |           |
 
 
 ## Setup coverage badge
