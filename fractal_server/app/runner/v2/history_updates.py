@@ -31,6 +31,8 @@ def update_all_images(
     history_item_id: int,
     status: HistoryItemImageStatus,
 ) -> None:
+    # Note: thanks to `with_for_update`, a lock is acquired and kept
+    # until `db.commit()`
     stm = (
         select(HistoryItemV2)
         .where(HistoryItemV2.id == history_item_id)
