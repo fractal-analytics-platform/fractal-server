@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _history_access_control
+from ._aux_functions import _get_workflow_check_history_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.history.parse_history import (
@@ -46,57 +46,23 @@ async def get_dataset_history(
     return items
 
 
-@router.get(
-    "/history/",
-    response_model=list[HistoryItemV2Read],
-)
-async def get_wftask_dataset_history(
+@router.get("/history/latest-status/")
+async def get_workflow_dataset_latest_status(
+    workflow_id: int,
     dataset_id: int,
-    workflowtask_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryItemV2Read]:
-    await _history_access_control(
-        dataset_id=dataset_id,
-        workflow_task_id=workflowtask_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    stm = (
-        select(HistoryItemV2)
-        .where(HistoryItemV2.dataset_id == dataset_id)
-        .where(HistoryItemV2.workflowtask_id == workflowtask_id)
-        .order_by(HistoryItemV2.timestamp_started)
-    )
-    res = await db.execute(stm)
-    items = res.scalars().all()
-
-    return items
-
-
-@router.get(
-    "/history/latest-status/",
-)
-async def get_wftask_dataset_latest_status(
-    dataset_id: int,
-    workflowtask_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-    await _history_access_control(
+    workflowtask_ids = await _get_workflow_check_history_owner(
         dataset_id=dataset_id,
-        workflow_task_id=workflowtask_id,
+        workflow_id=workflow_id,
         user_id=user.id,
         db=db,
     )
 
-    images = await parse_history_given_async_db(
+    statuses = await parse_history_given_async_db(
         dataset_id=dataset_id,
-        workflowtask_id=workflowtask_id,
+        workflowtask_ids=workflowtask_ids,
         db=db,
     )
-    return JSONResponse(
-        content=images,
-        status_code=status.HTTP_200_OK,
-    )
+    return JSONResponse(content=statuses, status_code=status.HTTP_200_OK)
