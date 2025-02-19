@@ -10,6 +10,7 @@ from sqlmodel import select
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
+from ....models.v2 import HistoryItemV2
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
@@ -206,9 +207,9 @@ async def delete_dataset(
     # current dataset.
     stm = _get_submitted_jobs_statement().where(JobV2.dataset_id == dataset_id)
     res = await db.execute(stm)
-    jobs = res.scalars().all()
-    if jobs:
-        string_ids = str([job.id for job in jobs])[1:-1]
+    history_items = res.scalars().all()
+    if history_items:
+        string_ids = str([job.id for job in history_items])[1:-1]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
@@ -221,9 +222,17 @@ async def delete_dataset(
     # relationship with the current dataset
     stm = select(JobV2).where(JobV2.dataset_id == dataset_id)
     res = await db.execute(stm)
-    jobs = res.scalars().all()
-    for job in jobs:
-        job.dataset_id = None
+    history_items = res.scalars().all()
+    for history_item in history_items:
+        history_item.dataset_id = None
+
+    # Cascade operations: set foreign-keys to null for history items which are
+    # in relationship with the current dataset
+    stm = select(HistoryItemV2).where(HistoryItemV2.dataset_id == dataset_id)
+    res = await db.execute(stm)
+    history_items = res.scalars().all()
+    for history_item in history_items:
+        history_item.dataset_id = None
 
     # Delete dataset
     await db.delete(dataset)
