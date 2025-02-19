@@ -222,9 +222,9 @@ async def delete_dataset(
     # relationship with the current dataset
     stm = select(JobV2).where(JobV2.dataset_id == dataset_id)
     res = await db.execute(stm)
-    history_items = res.scalars().all()
-    for history_item in history_items:
-        history_item.dataset_id = None
+    jobs = res.scalars().all()
+    for job in jobs:
+        job.dataset_id = None
 
     # Cascade operations: set foreign-keys to null for history items which are
     # in relationship with the current dataset
