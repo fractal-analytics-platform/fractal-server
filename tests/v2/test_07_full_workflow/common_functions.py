@@ -66,6 +66,7 @@ async def full_workflow(
             ),
         )
         assert res.status_code == 201
+        wftask_id_A = res.json()["id"]
         # Add "MIP_compound" task
         task_id_B = tasks["MIP_compound"].id
         res = await client.post(
@@ -74,6 +75,7 @@ async def full_workflow(
             json={},
         )
         assert res.status_code == 201
+        wftask_id_B = res.json()["id"]
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -187,6 +189,30 @@ async def full_workflow(
             for file in actual_files
             if "1_mip_compound" in file
         )
+
+        # FIXME: first test of history
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/history/"
+        )
+        debug(res.json())
+        res = await client.get(
+            f"{PREFIX}/history/"
+            f"?dataset_id={dataset_id}&workflowtask_id={wftask_id_A}"
+        )
+        debug(res.json()[0]["images"])
+        res = await client.get(
+            f"{PREFIX}/history/"
+            f"?dataset_id={dataset_id}&workflowtask_id={wftask_id_B}"
+        )
+        debug(res.json()[0]["images"])
+
+        res = await client.get(
+            (
+                f"{PREFIX}/history/latest-status/?"
+                f"dataset_id={dataset_id}&workflowtask_id={wftask_id_B}"
+            )
+        )
+        debug(res.json())
 
 
 async def full_workflow_TaskExecutionError(
