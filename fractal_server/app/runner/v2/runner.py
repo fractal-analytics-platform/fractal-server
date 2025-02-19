@@ -88,8 +88,14 @@ def execute_tasks_v2(
                 **wftask.model_dump(exclude={"task"}),
                 task=wftask.task.model_dump(),
             )
+            # Exclude timestamps since they'd need to be serialized properly
             task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-            task_group_dump = task_group.model_dump()
+            task_group_dump = task_group.model_dump(
+                exclude={
+                    "timestamp_created",
+                    "timestamp_last_used",
+                }
+            )
             parameters_hash = str(
                 hash(
                     json.dumps(
@@ -100,7 +106,7 @@ def execute_tasks_v2(
                 )
             )
             images = {
-                image.zarr_url: HistoryItemImageStatus.SUBMITTED
+                image["zarr_url"]: HistoryItemImageStatus.SUBMITTED
                 for image in filtered_images
             }
             history_item = HistoryItemV2(
