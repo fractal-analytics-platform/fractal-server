@@ -207,9 +207,9 @@ async def delete_dataset(
     # current dataset.
     stm = _get_submitted_jobs_statement().where(JobV2.dataset_id == dataset_id)
     res = await db.execute(stm)
-    history_items = res.scalars().all()
-    if history_items:
-        string_ids = str([job.id for job in history_items])[1:-1]
+    jobs = res.scalars().all()
+    if jobs:
+        string_ids = str([job.id for job in jobs])[1:-1]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
