@@ -117,7 +117,6 @@ def execute_tasks_v2(
             db.commit()
             db.refresh(history_item)
             history_item_id = history_item.id
-            print(history_item_id)
         # First, set status SUBMITTED in dataset.history for each wftask
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
@@ -145,6 +144,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=executor,
                 submit_setup_call=submit_setup_call,
+                history_item_id=history_item_id,
             )
         elif task.type == "parallel":
             current_task_output, num_tasks = run_v2_task_parallel(
@@ -155,6 +155,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=executor,
                 submit_setup_call=submit_setup_call,
+                history_item_id=history_item_id,
             )
         elif task.type == "compound":
             current_task_output, num_tasks = run_v2_task_compound(
@@ -166,6 +167,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=executor,
                 submit_setup_call=submit_setup_call,
+                history_item_id=history_item_id,
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")

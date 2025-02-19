@@ -16,6 +16,8 @@ from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
+from fractal_server.app.history import HistoryItemImageStatus
+from fractal_server.app.history import update_all_images
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
@@ -116,6 +118,7 @@ def run_v2_task_non_parallel(
     workflow_dir_remote: Optional[Path] = None,
     executor: Executor,
     submit_setup_call: Callable = no_op_submit_setup_call,
+    history_item_id: int,
 ) -> tuple[TaskOutput, int]:
     """
     This runs server-side (see `executor` argument)
@@ -153,6 +156,12 @@ def run_v2_task_non_parallel(
         **executor_options,
     )
     output = future.result()
+
+    update_all_images(
+        history_item_id=history_item_id,
+        status=HistoryItemImageStatus.DONE,
+    )
+
     num_tasks = 1
     if output is None:
         return (TaskOutput(), num_tasks)
@@ -169,6 +178,7 @@ def run_v2_task_parallel(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
+    history_item_id: int,
 ) -> tuple[TaskOutput, int]:
 
     if len(images) == 0:
@@ -230,6 +240,7 @@ def run_v2_task_compound(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
+    history_item_id: int,
 ) -> TaskOutput:
 
     executor_options_init = _get_executor_options(
@@ -302,6 +313,12 @@ def run_v2_task_compound(
         list_function_kwargs,
         **executor_options_compute,
     )
+
+    update_all_images(
+        history_item_id=history_item_id,
+        status=HistoryItemImageStatus.DONE,
+    )
+
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
 
