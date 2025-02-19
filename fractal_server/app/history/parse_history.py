@@ -11,7 +11,9 @@ def parse_history(
 ):
     """
     FIXME: this is the naive approach, which loops over *all*
-    history items. We can likely do better.
+    history items. We can likely do better. Examples:
+    1. Do the concatenation in SQL (tried with func.jsonb_agg but failed).
+    2. Do a reverse search, starting from the last record.
     """
     current_images = {}
     with next(get_sync_db()) as db:

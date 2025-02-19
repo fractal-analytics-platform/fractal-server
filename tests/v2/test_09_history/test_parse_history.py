@@ -57,18 +57,30 @@ async def test_update_image_status(
             **common_dummy_args,
             images={
                 "/1": HistoryItemImageStatus.FAILED,
+                "/2": HistoryItemImageStatus.FAILED,
+            },
+        )
+    )
+    db.add(
+        HistoryItemV2(
+            dataset_id=datasetA.id,
+            workflowtask_id=wftask0.id,
+            **common_dummy_args,
+            images={
+                "/1": HistoryItemImageStatus.DONE,
+                "/4": HistoryItemImageStatus.FAILED,
             },
         )
     )
 
     # Spurious history items, corresponding to different
     # dataset or wftask
+    common_dummy_args["images"] = {}
     db.add(
         HistoryItemV2(
             dataset_id=datasetA.id,
             workflowtask_id=wftask1.id,
             **common_dummy_args,
-            images={},
         )
     )
     db.add(
@@ -76,7 +88,6 @@ async def test_update_image_status(
             dataset_id=datasetB.id,
             workflowtask_id=wftask0.id,
             **common_dummy_args,
-            images={},
         )
     )
     await db.commit()
@@ -87,3 +98,9 @@ async def test_update_image_status(
         workflowtask_id=wftask0.id,
     )
     debug(current_images)
+    assert current_images == {
+        "/1": HistoryItemImageStatus.DONE,
+        "/2": HistoryItemImageStatus.FAILED,
+        "/3": HistoryItemImageStatus.DONE,
+        "/4": HistoryItemImageStatus.FAILED,
+    }
