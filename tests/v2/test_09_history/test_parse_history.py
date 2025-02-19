@@ -82,7 +82,8 @@ async def test_update_image_status(
     await db.commit()
     db.expunge_all()
 
-    parse_history(
+    current_images = parse_history(
         dataset_id=datasetA.id,
         workflowtask_id=wftask0.id,
     )
+    debug(current_images)

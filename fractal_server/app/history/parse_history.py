@@ -9,6 +9,11 @@ def parse_history(
     dataset_id: int,
     workflowtask_id: int,
 ):
+    """
+    FIXME: this is the naive approach, which loops over *all*
+    history items. We can likely do better.
+    """
+    current_images = {}
     with next(get_sync_db()) as db:
         stm = (
             select(HistoryItemV2)
@@ -18,4 +23,5 @@ def parse_history(
         )
         history_items = db.execute(stm).scalars().all()
         for item in history_items:
-            print(item)
+            current_images.update(item.images)
+    return current_images
