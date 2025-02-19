@@ -417,3 +417,44 @@ async def clean_app_job_list_v2(
         if job.status == JobStatusTypeV2.SUBMITTED
     ]
     return submitted_job_ids
+
+
+async def _history_access_control(
+    *,
+    dataset_id: int,
+    workflow_task_id: int,
+    user_id: int,
+    db: AsyncSession,
+) -> None:
+    """
+    Verify user access for the history of this dataset and workflowtask.
+
+    Args:
+        dataset_id:
+        workflow_task_id:
+        user_id:
+        db:
+    """
+    dataset = await db.get(DatasetV2, dataset_id)
+    if dataset is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dataset not found.",
+        )
+    await _get_project_check_owner(
+        project_id=dataset.project_id,
+        user_id=user_id,
+        db=db,
+    )
+    wftask = await db.get(WorkflowTaskV2, workflow_task_id)
+    if wftask is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WorkflowTask not found.",
+        )
+    workflow = await db.get(WorkflowV2, wftask.workflow_id)
+    if workflow.project_id != dataset.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Dataset and workflow belong to different projects.",
+        )
