@@ -12,9 +12,8 @@ def update_single_image(
     zarr_url: str,
     status: HistoryItemImageStatus,
 ) -> None:
-
     # Note: thanks to `with_for_update`, a lock is acquired and kept
-    # until `db.commit()``
+    # until `db.commit()`
     with next(get_sync_db()) as db:
         stm = (
             select(HistoryItemV2)
