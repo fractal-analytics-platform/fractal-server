@@ -3,10 +3,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 from devtools import debug
 
+from fractal_server.app.history import HistoryItemImageStatus
+from fractal_server.app.history import update_all_images
+from fractal_server.app.history import update_single_image
 from fractal_server.app.models.v2 import HistoryItemV2
-from fractal_server.app.runner.v2.history_updates import update_all_images
-from fractal_server.app.runner.v2.history_updates import update_single_image
-from fractal_server.app.runner.v2.runner import HistoryItemImageStatus
 
 
 async def test_update_image_status(
@@ -74,7 +74,7 @@ async def test_update_image_status(
     }
 
     # Test two concurrent single-image writes
-    import fractal_server.app.runner.v2.history_updates
+    import fractal_server.app.history.image_updates
     from sqlalchemy.orm.attributes import flag_modified as raw_flag_modified
 
     def _flag_modified_patched(*args, **kwargs):
@@ -82,7 +82,7 @@ async def test_update_image_status(
         return raw_flag_modified(*args, **kwargs)
 
     monkeypatch.setattr(
-        fractal_server.app.runner.v2.history_updates,
+        fractal_server.app.history.image_updates,
         "flag_modified",
         _flag_modified_patched,
     )

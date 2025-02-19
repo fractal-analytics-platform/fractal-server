@@ -3,7 +3,6 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
-from enum import Enum
 from pathlib import Path
 from typing import Callable
 from typing import Optional
@@ -20,6 +19,7 @@ from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryItemV2
@@ -29,21 +29,6 @@ from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
-
-
-class HistoryItemImageStatus(str, Enum):
-    """
-    Available image-status values within a `HistoryItemV2`
-
-    Attributes:
-        SUBMITTED:
-        DONE:
-        FAILED:
-    """
-
-    SUBMITTED = "submitted"
-    DONE = "done"
-    FAILED = "failed"
 
 
 def execute_tasks_v2(

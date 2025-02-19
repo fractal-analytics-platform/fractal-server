@@ -1,8 +1,8 @@
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 
-from .runner import HistoryItemImageStatus
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import HistoryItemV2
 
 
