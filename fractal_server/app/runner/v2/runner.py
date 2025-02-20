@@ -354,6 +354,6 @@ def execute_tasks_v2(
                 f'END    {wftask.order}-th task (name="{task_name}") '
                 "- SOMETHING FAILED, STOP."
             )
-            break
+            raise JobExecutionError("something failed")  # FIXME
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
