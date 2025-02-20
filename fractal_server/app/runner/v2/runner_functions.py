@@ -19,7 +19,7 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
-from fractal_server.app.runner.v2._local.executor import BaseRunner
+from fractal_server.app.runner.executors.base_runner import BaseRunner
 
 
 __all__ = [
@@ -276,7 +276,7 @@ def run_v2_task_compound(
         ),
         parameters=function_kwargs,
         history_item_id=history_item_id,
-        init_of_compound_task=True,
+        in_compound_task=True,
         **executor_options_init,
     )
 

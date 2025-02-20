@@ -14,7 +14,7 @@ Submodule to determine the number of total/parallel tasks per SLURM job.
 import math
 from typing import Optional
 
-from .....logger import set_logger
+from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 

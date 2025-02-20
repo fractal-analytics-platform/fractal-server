@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _mkdir_as_user,
 )
-from fractal_server.app.runner.executors.slurm.sudo.executor import (
+from fractal_server.app.runner.executors.slurm_sudo.executor import (
     FractalSlurmSudoExecutor,
 )
 from tests.fixtures_slurm import run_squeue

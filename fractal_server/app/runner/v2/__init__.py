@@ -27,7 +27,7 @@ from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from ..executors.slurm.sudo._subprocess_run_as_user import _mkdir_as_user
+from ..executors.slurm_sudo._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow

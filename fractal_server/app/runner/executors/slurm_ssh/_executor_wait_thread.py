@@ -4,8 +4,8 @@ import time
 import traceback
 from itertools import count
 
-from ......logger import set_logger
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 

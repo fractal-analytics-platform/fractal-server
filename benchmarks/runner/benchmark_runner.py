@@ -119,7 +119,7 @@ def benchmark(N: int, tmp_path: str):
         dataset=DatasetV2Mock(name="dataset", zarr_dir=ZARR_DIR),
         workflow_dir_local=WORKING_DIR,
         workflow_dir_remote=WORKING_DIR,
-        executor=LocalRunner(),
+        runner=LocalRunner(),
     )
 
 

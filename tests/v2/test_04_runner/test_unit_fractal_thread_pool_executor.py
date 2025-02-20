@@ -13,10 +13,10 @@ Zurich.
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.v2._local._local_config import (
+from fractal_server.app.runner.executors.local._local_config import (
     LocalBackendConfig,
 )
-from fractal_server.app.runner.v2._local.executor import (
+from fractal_server.app.runner.executors.local.runner import (
     LocalRunner,
 )
 

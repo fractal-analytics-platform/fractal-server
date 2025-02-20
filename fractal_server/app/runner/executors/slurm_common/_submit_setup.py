@@ -18,7 +18,7 @@ from typing import Literal
 
 from ...task_files import get_task_file_paths
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.v2._slurm_common.get_slurm_config import (
+from fractal_server.app.runner.executors.slurm_common.get_slurm_config import (
     get_slurm_config,
 )
 

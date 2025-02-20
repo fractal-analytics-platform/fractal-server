@@ -1,7 +1,7 @@
 import pytest
 
 from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.v2._local.executor import (
+from fractal_server.app.runner.executors.local.runner import (
     LocalRunner,
 )
 from fractal_server.app.runner.v2.runner_functions_low_level import (

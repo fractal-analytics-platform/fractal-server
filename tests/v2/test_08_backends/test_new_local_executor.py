@@ -2,7 +2,7 @@ import time
 
 from devtools import debug
 
-from fractal_server.app.runner.v2._local.executor import (
+from fractal_server.app.runner.executors.local.runner import (
     LocalRunner,
 )
 

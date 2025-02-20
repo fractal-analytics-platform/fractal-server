@@ -19,19 +19,6 @@ from typing import Sequence
 
 import cloudpickle
 
-from ......config import get_settings
-from ......logger import set_logger
-from ......syringe import Inject
-from ....exceptions import JobExecutionError
-from ....exceptions import TaskExecutionError
-from ....filenames import SHUTDOWN_FILENAME
-from ....task_files import get_task_file_paths
-from ....task_files import TaskFiles
-from ...slurm._slurm_config import SlurmConfig
-from .._batching import heuristics
-from ..utils_executors import get_pickle_file_path
-from ..utils_executors import get_slurm_file_path
-from ..utils_executors import get_slurm_script_file_path
 from ._executor_wait_thread import FractalSlurmSudoWaitThread
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
@@ -39,7 +26,30 @@ from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.exceptions import TaskExecutionError
+from fractal_server.app.runner.executors.slurm_common._batching import (
+    heuristics,
+)
+from fractal_server.app.runner.executors.slurm_common._slurm_config import (
+    SlurmConfig,
+)
+from fractal_server.app.runner.executors.slurm_common.utils_executors import (
+    get_pickle_file_path,
+)
+from fractal_server.app.runner.executors.slurm_common.utils_executors import (
+    get_slurm_file_path,
+)
+from fractal_server.app.runner.executors.slurm_common.utils_executors import (
+    get_slurm_script_file_path,
+)
+from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.task_files import get_task_file_paths
+from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
+from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
