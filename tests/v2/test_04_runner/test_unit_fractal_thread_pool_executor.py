@@ -17,12 +17,12 @@ from fractal_server.app.runner.v2._local._local_config import (
     LocalBackendConfig,
 )
 from fractal_server.app.runner.v2._local.executor import (
-    FractalThreadPoolExecutor,
+    LocalRunner,
 )
 
 
 def test_executor_submit():
-    with FractalThreadPoolExecutor() as executor:
+    with LocalRunner() as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
 
@@ -32,7 +32,7 @@ def test_executor_submit_with_exception():
         raise ValueError
 
     with pytest.raises(ValueError) as e:
-        with FractalThreadPoolExecutor() as executor:
+        with LocalRunner() as executor:
             fut = executor.submit(raise_ValueError)
             debug(fut.result())
     debug(e.value)
@@ -47,7 +47,7 @@ def test_executor_map(parallel_tasks_per_job: int):
     NUM = 7
 
     # Test function of a single variable
-    with FractalThreadPoolExecutor() as executor:
+    with LocalRunner() as executor:
 
         def fun_x(x):
             return 3 * x + 1
@@ -62,7 +62,7 @@ def test_executor_map(parallel_tasks_per_job: int):
         assert results == [fun_x(x) for x in inputs]
 
     # Test function of two variables
-    with FractalThreadPoolExecutor() as executor:
+    with LocalRunner() as executor:
 
         def fun_xy(x, y):
             return 2 * x + y
@@ -92,7 +92,7 @@ def test_executor_map_with_exception(parallel_tasks_per_job):
     )
 
     with pytest.raises(ValueError):
-        with FractalThreadPoolExecutor() as executor:
+        with LocalRunner() as executor:
             _ = executor.map(
                 _raise,
                 range(10),
@@ -106,7 +106,7 @@ def test_executor_map_failure():
     """
 
     with pytest.raises(ValueError):
-        with FractalThreadPoolExecutor() as executor:
+        with LocalRunner() as executor:
             executor.map(
                 lambda x, y: 42,
                 [0, 1],

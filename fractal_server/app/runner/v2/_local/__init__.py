@@ -27,7 +27,7 @@ from ....models.v2 import WorkflowV2
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
-from .executor import FractalThreadPoolExecutor
+from .executor import LocalRunner
 from fractal_server.images.models import AttributeFiltersType
 
 
@@ -116,7 +116,7 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    with FractalThreadPoolExecutor() as executor:
+    with LocalRunner() as executor:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)

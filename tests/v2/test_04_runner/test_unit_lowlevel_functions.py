@@ -2,7 +2,7 @@ import pytest
 
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.v2._local.executor import (
-    FractalThreadPoolExecutor,
+    LocalRunner,
 )
 from fractal_server.app.runner.v2.runner_functions_low_level import (
     _call_command_wrapper,
@@ -10,7 +10,7 @@ from fractal_server.app.runner.v2.runner_functions_low_level import (
 
 
 async def test_command_wrapper(tmp_path):
-    with FractalThreadPoolExecutor() as executor:
+    with LocalRunner() as executor:
         future1 = executor.submit(
             _call_command_wrapper, "ls -al .", log_path="/tmp/fractal_log"
         )

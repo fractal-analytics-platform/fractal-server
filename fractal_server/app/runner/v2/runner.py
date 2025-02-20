@@ -35,7 +35,7 @@ def execute_tasks_v2(
     *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
-    executor: ThreadPoolExecutor,
+    executor: ThreadPoolExecutor,  # FIXME: FractalRunner
     user_id: int,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
@@ -140,9 +140,12 @@ def execute_tasks_v2(
             db.commit()
 
         # TASK EXECUTION (V2)
-        exceptions = {}
         if task.type == "non_parallel":
-            current_task_output, num_tasks = run_v2_task_non_parallel(
+            (
+                current_task_output,
+                num_tasks,
+                exceptions,
+            ) = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -165,7 +168,7 @@ def execute_tasks_v2(
                 history_item_id=history_item_id,
             )
         elif task.type == "compound":
-            current_task_output, num_tasks = run_v2_task_compound(
+            current_task_output, num_tasks, exceptions = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,

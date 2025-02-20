@@ -60,7 +60,7 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
 
 
 def run_single_task(
-    args: dict[str, Any],
+    parameters: dict[str, Any],
     command: str,
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
@@ -79,7 +79,7 @@ def run_single_task(
 
     task_name = wftask.task.name
 
-    component = args.pop(_COMPONENT_KEY_, None)
+    component = parameters.pop(_COMPONENT_KEY_, None)
     task_files = get_task_file_paths(
         workflow_dir_local=workflow_dir_local,
         workflow_dir_remote=workflow_dir_remote,
@@ -90,7 +90,7 @@ def run_single_task(
 
     # Write arguments to args.json file
     with task_files.args.open("w") as f:
-        json.dump(args, f, indent=2)
+        json.dump(parameters, f, indent=2)
 
     # Assemble full command
     full_command = (
