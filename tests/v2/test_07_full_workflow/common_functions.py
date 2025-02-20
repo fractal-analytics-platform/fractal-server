@@ -77,6 +77,16 @@ async def full_workflow(
         assert res.status_code == 201
         wftask1_id = res.json()["id"]
 
+        # Add "generic_task_parallel" task
+        task_id_C = tasks["generic_task_parallel"].id
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_C}",
+            json={},
+        )
+        assert res.status_code == 201
+        wftask1_id = res.json()["id"]
+
         # EXECUTE WORKFLOW
         res = await client.post(
             f"{PREFIX}/project/{project_id}/job/submit/"
@@ -129,11 +139,11 @@ async def full_workflow(
         )
         assert res.status_code == 200
         dataset = res.json()
-        assert len(dataset["history"]) == 2
+        assert len(dataset["history"]) == 3
         for item in dataset["history"]:
             _task = item["workflowtask"]["task"]
             assert _task is not None
-        assert dataset["type_filters"] == {"3D": False}
+        assert dataset["type_filters"] == {"3D": False, "my_type": True}
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
             "images/query/",
