@@ -140,6 +140,7 @@ def execute_tasks_v2(
             db.commit()
 
         # TASK EXECUTION (V2)
+        exceptions = {}
         if task.type == "non_parallel":
             current_task_output, num_tasks = run_v2_task_non_parallel(
                 images=filtered_images,
@@ -153,7 +154,7 @@ def execute_tasks_v2(
                 history_item_id=history_item_id,
             )
         elif task.type == "parallel":
-            current_task_output, num_tasks = run_v2_task_parallel(
+            current_task_output, num_tasks, exceptions = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task=task,
@@ -344,5 +345,12 @@ def execute_tasks_v2(
             )
             db.add(record)
             db.commit()
+
+        if exceptions != {}:
+            logger.error(
+                f'END    {wftask.order}-th task (name="{task_name}") '
+                "- SOMETHING FAILED, STOP."
+            )
+            break
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')

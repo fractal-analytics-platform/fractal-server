@@ -20,6 +20,8 @@ from typing import Sequence
 
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
+from fractal_server.app.history import HistoryItemImageStatus
+from fractal_server.app.history import update_single_image
 
 
 class FractalThreadPoolExecutor(ThreadPoolExecutor):
@@ -98,3 +100,76 @@ class FractalThreadPoolExecutor(ThreadPoolExecutor):
             results.extend(list(map_iter))
 
         return iter(results)
+
+    def multisubmit(
+        self,
+        func: Callable,
+        list_kwargs: list[dict],
+        local_backend_config: Optional[LocalBackendConfig] = None,
+        history_item_id: Optional[int] = None,
+    ):
+        """
+        FIXME
+        """
+
+        for kwargs in list_kwargs:
+            if not isinstance(kwargs, dict):
+                raise RuntimeError("kwargs itemt must be a dictionary.")
+            if "zarr_url" not in kwargs.keys():
+                raise RuntimeError(f"No 'zarr_url' in {list(kwargs.keys())}")
+        zarr_urls = [kwargs["zarr_url"] for kwargs in list_kwargs]
+        if len(zarr_urls) != len(set(zarr_urls)):
+            raise RuntimeError("Non-unique zarr_urls")
+
+        # Set parallel_tasks_per_job
+        n_elements = len(list_kwargs)
+        if local_backend_config is None:
+            local_backend_config = get_default_local_backend_config()
+        parallel_tasks_per_job = local_backend_config.parallel_tasks_per_job
+        if parallel_tasks_per_job is None:
+            parallel_tasks_per_job = n_elements
+
+        # Execute tasks, in chunks of size parallel_tasks_per_job
+        results = {}
+        exceptions = {}
+        for ind_chunk in range(0, n_elements, parallel_tasks_per_job):
+            chunk_kwargs = list_kwargs[
+                ind_chunk : ind_chunk + parallel_tasks_per_job
+            ]
+            from concurrent.futures import Future
+
+            futures: dict[int, Future] = {}
+            for ind_within_chunk, kwargs in enumerate(chunk_kwargs):
+                positional_index = ind_chunk + ind_within_chunk
+                future = super().submit(func, **kwargs)
+                futures[positional_index] = future
+
+            while futures:
+                finished_futures = [
+                    keyval
+                    for keyval in futures.items()
+                    if not keyval[1].running()
+                ]
+                for positional_index, fut in finished_futures:
+                    futures.pop(positional_index)
+                    zarr_url = list_kwargs[positional_index]["zarr_url"]
+                    try:
+                        results[positional_index] = fut.result()
+                        print(f"Mark {zarr_url=} as done, {kwargs}")
+                        if history_item_id is not None:
+                            update_single_image(
+                                history_item_id=history_item_id,
+                                zarr_url=zarr_url,
+                                status=HistoryItemImageStatus.DONE,
+                            )
+                    except Exception as e:
+                        print(f"Mark {zarr_url=} as failed, {kwargs} - {e}")
+                        exceptions[positional_index] = e
+                        if history_item_id is not None:
+                            update_single_image(
+                                history_item_id=history_item_id,
+                                zarr_url=zarr_url,
+                                status=HistoryItemImageStatus.FAILED,
+                            )
+
+        return results, exceptions

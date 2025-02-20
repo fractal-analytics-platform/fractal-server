@@ -204,7 +204,7 @@ def run_v2_task_parallel(
         )
         list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
-    results_iterator = executor.map(
+    results, exceptions = executor.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -215,19 +215,25 @@ def run_v2_task_parallel(
         list_function_kwargs,
         **executor_options,
     )
-    # Explicitly iterate over the whole list, so that all futures are waited
-    outputs = list(results_iterator)
 
-    # Validate all non-None outputs
-    for ind, output in enumerate(outputs):
-        if output is None:
-            outputs[ind] = TaskOutput()
+    outputs = []
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
+            pass
         else:
-            outputs[ind] = _cast_and_validate_TaskOutput(output)
+            print("VERY BAD - should have not reached this point")
 
     num_tasks = len(images)
     merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks)
+    return (merged_output, num_tasks, exceptions)
 
 
 def run_v2_task_compound(
