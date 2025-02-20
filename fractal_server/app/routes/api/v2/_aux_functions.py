@@ -462,3 +462,36 @@ async def _get_workflow_check_history_owner(
         )
 
     return [wftask.id for wftask in workflow.task_list]
+
+
+async def _get_workflowtask_check_history_owner(
+    *,
+    workflowtask_id: int,
+    dataset_id: int,
+    user_id: int,
+    db: AsyncSession,
+) -> list[int]:
+    """
+    Verify user access for the history of this dataset and workflowtask.
+
+    Args:
+        dataset_id:
+        workflow_task_id:
+        user_id:
+        db:
+
+    Returns:
+        List of WorkflowTask IDs
+    """
+    workflowtask = await db.get(WorkflowTaskV2, workflowtask_id)
+    if workflowtask is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WorkflowTask not found.",
+        )
+    await _get_workflow_check_history_owner(
+        workflow_id=workflowtask.workflow_id,
+        dataset_id=dataset_id,
+        user_id=user_id,
+        db=db,
+    )

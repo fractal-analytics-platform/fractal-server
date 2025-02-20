@@ -31,7 +31,7 @@ def _parse_image_status_list(
     return result
 
 
-async def parse_history_given_async_db(
+async def get_workflow_statuses(
     *,
     dataset_id: int,
     workflowtask_ids: list[int],
@@ -39,29 +39,78 @@ async def parse_history_given_async_db(
 ) -> dict[str, HistoryItemImageStatus]:
     output = {}
     for workflowtask_id in workflowtask_ids:
+        key = str(workflowtask_id)
+
+        # Query database for a specific (wftask,dataset) pairs
         stm = (
-            select(HistoryItemV2.images)
+            select(HistoryItemV2)
             .where(HistoryItemV2.dataset_id == dataset_id)
             .where(HistoryItemV2.workflowtask_id == workflowtask_id)
             .order_by(HistoryItemV2.timestamp_started)
         )
         result = await db.execute(stm)
-        history_items_images = result.scalars().all()
-        current_images = {}
-        for images in history_items_images:
-            current_images.update(images)
-        current_status = _parse_image_status_list(current_images)
+        list_results = list(result.scalars().all())
 
-        stm = (
-            select(HistoryItemV2.num_available_images)
-            .where(HistoryItemV2.dataset_id == dataset_id)
-            .where(HistoryItemV2.workflowtask_id == workflowtask_id)
-            .order_by(HistoryItemV2.timestamp_started.desc())
-        )
-        result = await db.execute(stm)
-        num_available_images = result.scalars().first()
-        current_status["num_available_images"] = num_available_images
-        output[str(workflowtask_id)] = current_status
+        # Set value to None if this pair (wftask,dataset) was never run
+        if len(list_results) == 0:
+            output[key] = None
+            continue
+
+        # Merge images with their statuses, and keep track of latest
+        # `num_available_images`
+        current_images = {}
+        for history_item in list_results:
+            current_images.update(history_item.images)
+            latest_num_available_images = history_item.num_available_images
+
+        # Create and assign status object
+        current_status = _parse_image_status_list(current_images)
+        current_status["num_available_images"] = latest_num_available_images
+        output[key] = current_status
+
+    return output
+
+
+async def get_workflowtask_image_statuses(
+    *,
+    dataset_id: int,
+    workflowtask_id: int,
+    db: AsyncSession,
+) -> dict[str, HistoryItemImageStatus]:
+    output = {}
+    key = str(workflowtask_id)
+
+    # Query database for a specific (wftask,dataset) pairs
+    stm = (
+        select(HistoryItemV2)
+        .where(HistoryItemV2.dataset_id == dataset_id)
+        .where(HistoryItemV2.workflowtask_id == workflowtask_id)
+        .order_by(HistoryItemV2.timestamp_started)
+    )
+    result = await db.execute(stm)
+    list_results = list(result.scalars().all())
+
+    # Set value to None if this pair (wftask,dataset) was never run
+    if len(list_results) == 0:
+        return None
+
+    # Merge images with their statuses, and keep track of latest
+    # `num_available_images`
+    current_images = {}
+    for history_item in list_results:
+        current_images.update(history_item.images)
+
+    # Naive group-by-status operation
+    # FIXME: Can we improve this, without all those `append`s?
+    output = {status.value: [] for status in HistoryItemImageStatus}
+    for key, value in current_images.items():
+        output[value].append(key)
+
+    # This repeats the loop once per status, but with list comprehension
+    # all_statuses = [status.value for status in HistoryItemImageStatus]
+    # for status in all_statuses:
+    #     output[status] = [key for key, value in current_images if
+    # value == status]
 
     return output
 
