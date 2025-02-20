@@ -67,7 +67,7 @@ def patched_run_squeue(monkeypatch):
         return res
 
     monkeypatch.setattr(
-        fractal_server.app.runner.executors.slurm.sudo._check_jobs_status,
+        fractal_server.app.runner.executors.slurm_sudo._check_jobs_status,
         "run_squeue",
         patched_run_squeue,
     )
