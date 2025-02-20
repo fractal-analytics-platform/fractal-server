@@ -4,14 +4,14 @@ from typing import Any
 import pytest
 from v2_mock_models import TaskV2Mock
 
-from fractal_server.app.runner.v2._local import FractalThreadPoolExecutor
+from fractal_server.app.runner.v2._local import LocalRunner
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.tasks.v2.utils_database import _get_task_type
 
 
 @pytest.fixture()
 def executor():
-    with FractalThreadPoolExecutor() as e:
+    with LocalRunner() as e:
         yield e
 
 

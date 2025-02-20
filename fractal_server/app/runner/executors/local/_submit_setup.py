@@ -1,22 +1,9 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original authors:
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
-"""
-Submodule to define _local_submit_setup
-"""
 from pathlib import Path
 from typing import Literal
 from typing import Optional
 
-from ....models.v2 import WorkflowTaskV2
 from ._local_config import get_local_backend_config
+from fractal_server.app.models.v2 import WorkflowTaskV2
 
 
 def _local_submit_setup(

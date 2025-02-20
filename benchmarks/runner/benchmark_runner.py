@@ -14,7 +14,7 @@ import tests.v2.fractal_tasks_mock.dist as dist
 from benchmarks.runner.mocks import DatasetV2Mock
 from benchmarks.runner.mocks import TaskV2Mock
 from benchmarks.runner.mocks import WorkflowTaskV2Mock
-from fractal_server.app.runner.v2._local import FractalThreadPoolExecutor
+from fractal_server.app.runner.v2._local import LocalRunner
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 
 
@@ -119,7 +119,7 @@ def benchmark(N: int, tmp_path: str):
         dataset=DatasetV2Mock(name="dataset", zarr_dir=ZARR_DIR),
         workflow_dir_local=WORKING_DIR,
         workflow_dir_remote=WORKING_DIR,
-        executor=FractalThreadPoolExecutor(),
+        runner=LocalRunner(),
     )
 
 

@@ -9,7 +9,7 @@ from devtools import debug
 from fabric.connection import Connection
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.ssh.executor import (
+from fractal_server.app.runner.executors.slurm_ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
 from fractal_server.logger import set_logger

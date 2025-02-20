@@ -4,14 +4,14 @@ import pytest
 from devtools import debug
 from pydantic import BaseModel
 
-from fractal_server.app.runner.executors.slurm._slurm_config import (
+from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfigError,
 )
-from fractal_server.app.runner.v2._slurm_common.get_slurm_config import (
-    get_slurm_config,
-)
-from fractal_server.app.runner.v2._slurm_sudo._submit_setup import (
+from fractal_server.app.runner.executors.slurm_common._submit_setup import (
     _slurm_submit_setup,
+)
+from fractal_server.app.runner.executors.slurm_common.get_slurm_config import (
+    get_slurm_config,
 )
 
 

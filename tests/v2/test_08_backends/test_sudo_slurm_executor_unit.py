@@ -5,10 +5,10 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.sudo.executor import (
+from fractal_server.app.runner.executors.slurm_sudo.executor import (
     FractalSlurmSudoExecutor,
 )
-from fractal_server.app.runner.executors.slurm.sudo.executor import SlurmJob
+from fractal_server.app.runner.executors.slurm_sudo.executor import SlurmJob
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2._aux_runner import get_default_task_files
 

@@ -1,7 +1,9 @@
 from subprocess import run  # nosec
 
-from ......logger import set_logger
-from ..._job_states import STATES_FINISHED
+from fractal_server.app.runner.executors.slurm_common._job_states import (
+    STATES_FINISHED,
+)
+from fractal_server.logger import set_logger
 
 
 logger = set_logger(__name__)

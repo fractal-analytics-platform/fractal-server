@@ -4,13 +4,13 @@ import subprocess
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _glob_as_user,
 )
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _glob_as_user_strict,
 )
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _path_exists_as_user,
 )
 

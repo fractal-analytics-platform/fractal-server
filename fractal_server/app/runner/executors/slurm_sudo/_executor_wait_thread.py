@@ -5,9 +5,9 @@ import traceback
 from itertools import count
 from typing import Optional
 
-from ......logger import set_logger
 from ._check_jobs_status import _jobs_finished
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 

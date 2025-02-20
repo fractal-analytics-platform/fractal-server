@@ -19,7 +19,7 @@ import shlex
 import subprocess  # nosec
 from typing import Optional
 
-from ......logger import set_logger
+from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
 logger = set_logger(__name__)
