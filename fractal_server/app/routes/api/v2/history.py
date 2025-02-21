@@ -90,3 +90,13 @@ async def get_workflowtask_detailed_status(
         db=db,
     )
     return JSONResponse(content=images, status_code=status.HTTP_200_OK)
+
+
+@router.get("/history/details/")
+async def get_history_details(
+    workflowtask_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+    pass
