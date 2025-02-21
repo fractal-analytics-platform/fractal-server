@@ -114,7 +114,7 @@ class LocalRunner(BaseRunner):
                     except Exception as e:
                         print(f"Mark {zarr_url=} as failed, {kwargs} - {e}")
                         exceptions[positional_index] = e
-                        if in_compound_task:
+                        if not in_compound_task:
                             update_single_image(
                                 history_item_id=history_item_id,
                                 zarr_url=zarr_url,

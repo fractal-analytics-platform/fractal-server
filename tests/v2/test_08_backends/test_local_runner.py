@@ -3,30 +3,65 @@ import time
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.executors.local._local_config import (
-    LocalBackendConfig,
-)
+from fractal_server.app.history import HistoryItemImageStatus
+from fractal_server.app.models.v2.history import HistoryItemV2
 from fractal_server.app.runner.executors.local.runner import (
     LocalRunner,
 )
 
+ALL_IMAGES = ["a", "b", "c", "d"]
 
-def test_submit_success():
+
+@pytest.fixture
+async def mock_history_item(
+    db,
+    project_factory_v2,
+    dataset_factory_v2,
+    MockCurrentUser,
+):
+    # Create test data
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user=user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+    item = HistoryItemV2(
+        dataset_id=dataset.id,
+        workflowtask_id=None,
+        worfklowtask_dump={},
+        task_group_dump={},
+        parameters_hash="xxx",
+        num_current_images=4,
+        num_available_images=4,
+        images={
+            zarr_url: HistoryItemImageStatus.SUBMITTED
+            for zarr_url in ALL_IMAGES
+        },
+    )
+    db.add(item)
+    await db.commit()
+    await db.refresh(item)
+    return item
+
+
+async def test_submit_success(db, mock_history_item):
     def do_nothing(parameters: dict) -> int:
         return 42
 
     with LocalRunner() as runner:
         result, exception = runner.submit(
             do_nothing,
-            parameters=dict(zarr_urls=[]),
-            history_item_id=999,
-            in_compound_task=True,
+            parameters=dict(zarr_urls=["a", "b", "c", "d"]),
+            history_item_id=mock_history_item.id,
         )
         assert result == 42
         assert exception is None
+    db.expunge_all()
+    history_item = await db.get(HistoryItemV2, mock_history_item.id)
+    assert history_item.images == {
+        zarr_url: HistoryItemImageStatus.DONE for zarr_url in ALL_IMAGES
+    }
 
 
-def test_submit_fail():
+async def test_submit_fail(db, mock_history_item):
     def raise_ValueError(parameters: dict):
         raise ValueError("error message")
 
@@ -34,11 +69,15 @@ def test_submit_fail():
         result, exception = runner.submit(
             raise_ValueError,
             parameters=dict(zarr_urls=[]),
-            history_item_id=999,
-            in_compound_task=True,
+            history_item_id=mock_history_item.id,
         )
     assert result is None
     assert isinstance(exception, ValueError)
+    db.expunge_all()
+    history_item = await db.get(HistoryItemV2, mock_history_item.id)
+    assert history_item.images == {
+        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ALL_IMAGES
+    }
 
 
 def fun(parameters: int):
@@ -54,7 +93,7 @@ def fun(parameters: int):
         raise ValueError("parameter=3 is very very bad")
 
 
-def test_multisubmit():
+async def test_multisubmit(db, mock_history_item):
     with LocalRunner() as runner:
         results, exceptions = runner.multisubmit(
             fun,
@@ -64,10 +103,19 @@ def test_multisubmit():
                 dict(zarr_url="c", parameter=3),
                 dict(zarr_url="d", parameter=4),
             ],
-            history_item_id=999,
+            history_item_id=mock_history_item.id,
         )
         debug(results)
         debug(exceptions)
+    db.expunge_all()
+    history_item = await db.get(HistoryItemV2, mock_history_item.id)
+    debug(history_item.images)
+    assert history_item.images == {
+        "a": "done",
+        "b": "done",
+        "c": "failed",
+        "d": "done",
+    }
 
 
 # @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 2, 3, 4, 8, 16])
@@ -129,18 +177,4 @@ def test_multisubmit():
 #                 _raise,
 #                 range(10),
 #                 local_backend_config=local_backend_config,
-#             )
-
-
-# def test_executor_map_failure():
-#     """
-#     Iterables of different length -> ValueError
-#     """
-
-#     with pytest.raises(ValueError):
-#         with LocalRunner() as executor:
-#             executor.map(
-#                 lambda x, y: 42,
-#                 [0, 1],
-#                 [2, 3, 4],
 #             )
