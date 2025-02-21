@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _mkdir_as_user,
 )
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _run_command_as_user,
 )
 
@@ -41,7 +41,7 @@ def patched_run_squeue(monkeypatch):
     marked via # CHANGED comments.
     """
 
-    import fractal_server.app.runner.executors.slurm.sudo._check_jobs_status
+    import fractal_server.app.runner.executors.slurm_sudo._check_jobs_status  # noqa: E501
     from subprocess import run
 
     def patched_run_squeue(job_ids):
@@ -67,7 +67,7 @@ def patched_run_squeue(monkeypatch):
         return res
 
     monkeypatch.setattr(
-        fractal_server.app.runner.executors.slurm.sudo._check_jobs_status,
+        fractal_server.app.runner.executors.slurm_sudo._check_jobs_status,
         "run_squeue",
         patched_run_squeue,
     )

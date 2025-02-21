@@ -2,18 +2,12 @@ from pathlib import Path
 from typing import Literal
 from typing import Optional
 
+from ._slurm_config import _parse_mem_value
+from ._slurm_config import load_slurm_config_file
+from ._slurm_config import logger
+from ._slurm_config import SlurmConfig
+from ._slurm_config import SlurmConfigError
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.executors.slurm._slurm_config import (
-    _parse_mem_value,
-)
-from fractal_server.app.runner.executors.slurm._slurm_config import (
-    load_slurm_config_file,
-)
-from fractal_server.app.runner.executors.slurm._slurm_config import logger
-from fractal_server.app.runner.executors.slurm._slurm_config import SlurmConfig
-from fractal_server.app.runner.executors.slurm._slurm_config import (
-    SlurmConfigError,
-)
 
 
 def get_slurm_config(
@@ -142,8 +136,8 @@ def get_slurm_config(
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
         logger.debug(
-            "[get_slurm_config] Removing repeated elements "
-            f"from {extra_lines=}."
+            "[get_slurm_config] Removing repeated elements from "
+            f"{extra_lines=}."
         )
         extra_lines = list(set(extra_lines))
     slurm_dict["extra_lines"] = extra_lines
@@ -162,8 +156,8 @@ def get_slurm_config(
 
     # Put everything together
     logger.debug(
-        "[get_slurm_config] Now create a SlurmConfig object based "
-        f"on {slurm_dict=}"
+        "[get_slurm_config] Now create a SlurmConfig object based on "
+        f"{slurm_dict=}"
     )
     slurm_config = SlurmConfig(**slurm_dict)
 
