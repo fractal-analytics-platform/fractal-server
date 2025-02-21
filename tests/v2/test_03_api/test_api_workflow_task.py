@@ -674,9 +674,9 @@ async def test_reorder_task_list(
 
             # All WorkflowTask attributes have a predictable order
             workflow = await get_workflow(client, project.id, wf_id)
-            old_worfklowtask_ids = [wft["id"] for wft in workflow["task_list"]]
+            old_workflowtask_ids = [wft["id"] for wft in workflow["task_list"]]
             reordered_workflowtask_ids = [
-                old_worfklowtask_ids[i - 1] for i in permutation
+                old_workflowtask_ids[i - 1] for i in permutation
             ]
 
             # Call PATCH endpoint to reorder the task_list (and simultaneously

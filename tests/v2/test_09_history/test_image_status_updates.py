@@ -32,7 +32,7 @@ async def test_update_image_status(
     item = HistoryItemV2(
         dataset_id=dataset.id,
         workflowtask_id=wftask.id,
-        worfklowtask_dump={},
+        workflowtask_dump={},
         task_group_dump={},
         parameters_hash="xxx",
         num_current_images=1,

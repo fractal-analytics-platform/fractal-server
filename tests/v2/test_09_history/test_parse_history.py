@@ -31,7 +31,7 @@ async def test_update_image_status(
         )
 
     common_dummy_args = dict(
-        worfklowtask_dump={},
+        workflowtask_dump={},
         task_group_dump={},
         parameters_hash="N/A",
         num_current_images=1,
