@@ -1,3 +1,4 @@
+from subprocess import CompletedProcess
 from subprocess import run  # nosec
 
 from fractal_server.app.runner.executors.slurm_common._job_states import (
@@ -9,12 +10,12 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 
-def run_squeue(job_ids):
+def run_squeue(job_ids: list[str]) -> CompletedProcess:
     res = run(  # nosec
         [
             "squeue",
             "--noheader",
-            "--format=%i %T",
+            "--format='%i %T'",
             "--jobs",
             ",".join([str(j) for j in job_ids]),
             "--states=all",
@@ -32,7 +33,7 @@ def run_squeue(job_ids):
     return res
 
 
-def _jobs_finished(job_ids) -> set[str]:
+def _jobs_finished(job_ids: list[str]) -> set[str]:
     """
     Check which ones of the given Slurm jobs already finished
 
