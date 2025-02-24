@@ -472,9 +472,6 @@ async def test_registration_no_overwrite(
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
 ):
-    """
-    Test registration workflow, based on four tasks.
-    """
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
@@ -584,133 +581,115 @@ async def test_registration_overwrite(
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
     tmp_path: Path,
-    local_runner: Executor,
+    local_runner: LocalRunner,
     fractal_tasks_mock_db,
 ):
-    """
-    Test registration workflow, based on four tasks.
-    """
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=local_runner,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
+        user_id = user.id
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db[
-                        "create_ome_zarr_multiplex_compound"
-                    ],
-                    task_id=fractal_tasks_mock_db[
-                        "create_ome_zarr_multiplex_compound"
-                    ].id,
-                    args_non_parallel=dict(image_dir="/tmp/input_images"),
-                    id=0,
-                    order=0,
-                ),
-            ],
-            dataset=dataset,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
-        # Run init registration
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db[
-                        "calculate_registration_compound"
-                    ],
-                    task_id=fractal_tasks_mock_db[
-                        "calculate_registration_compound"
-                    ].id,
-                    args_non_parallel={"ref_acquisition": 0},
-                    order=1,
-                    id=1,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir
+    )
+    workflow = await workflow_factory_v2(project_id=project.id)
 
-        # In all non-reference-cycle images, a certain table was updated
-        for image in dataset_attrs["images"]:
-            if image["attributes"]["acquisition"] == 0:
-                assert not os.path.isfile(
-                    f"{image['zarr_url']}/registration_table"
-                )
-            else:
-                assert os.path.isfile(
-                    f"{image['zarr_url']}/registration_table"
-                )
+    wftask0 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["create_ome_zarr_multiplex_compound"].id,
+        order=0,
+        args_non_parallel=dict(image_dir="/tmp/input_images"),
+        args_parallel={},
+    )
+    wftask1 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["calculate_registration_compound"].id,
+        args_non_parallel={"ref_acquisition": 0},
+        order=1,
+    )
+    wftask2 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["find_registration_consensus"].id,
+        order=2,
+    )
+    wftask3 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["apply_registration_to_image"].id,
+        args_parallel={"overwrite_input": True},
+        order=3,
+    )
 
-        # Run find_registration_consensus
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db["find_registration_consensus"],
-                    task_id=fractal_tasks_mock_db[
-                        "find_registration_consensus"
-                    ].id,
-                    id=2,
-                    order=2,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    execute_tasks_v2(
+        wf_task_list=[wftask0],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        user_id=user_id,
+        runner=local_runner,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
-        # In all images, a certain (post-consensus) table was updated
-        for image in dataset_attrs["images"]:
-            assert os.path.isfile(
-                f"{image['zarr_url']}/registration_table_final"
+    # Run init registration
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask1],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job1",
+        user_id=user_id,
+        runner=local_runner,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+
+    # In all non-reference-cycle images, a certain table was updated
+    for image in dataset_attrs["images"]:
+        if image["attributes"]["acquisition"] == 0:
+            assert not os.path.isfile(
+                f"{image['zarr_url']}/registration_table"
             )
+        else:
+            assert os.path.isfile(f"{image['zarr_url']}/registration_table")
 
-        # The image list still has the original six images only
-        assert len(dataset_attrs["images"]) == 6
+    # Run find_registration_consensus
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask2],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job2",
+        user_id=user_id,
+        runner=local_runner,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
-        # Run apply_registration_to_image
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db["apply_registration_to_image"],
-                    task_id=fractal_tasks_mock_db[
-                        "apply_registration_to_image"
-                    ].id,
-                    args_parallel={"overwrite_input": True},
-                    id=3,
-                    order=3,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    # In all images, a certain (post-consensus) table was updated
+    for image in dataset_attrs["images"]:
+        assert os.path.isfile(f"{image['zarr_url']}/registration_table_final")
 
-        # Images are still the same number, but they are marked as registered
-        assert len(dataset_attrs["images"]) == 6
-        for image in dataset_attrs["images"]:
-            assert image["types"]["registration"] is True
+    # The image list still has the original six images only
+    assert len(dataset_attrs["images"]) == 6
+
+    # Run apply_registration_to_image
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask3],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job3",
+        user_id=user_id,
+        runner=local_runner,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+
+    # Images are still the same number, but they are marked as registered
+    assert len(dataset_attrs["images"]) == 6
+    for image in dataset_attrs["images"]:
+        assert image["types"]["registration"] is True
 
 
 async def test_channel_parallelization_with_overwrite(
