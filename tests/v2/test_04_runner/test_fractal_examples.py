@@ -103,7 +103,6 @@ async def test_fractal_demos_01(
         args_parallel=dict(overwrite_input=True),
         order=1,
     )
-
     wftask2 = await workflowtask_factory_v2(
         workflow_id=workflow.id,
         task_id=fractal_tasks_mock_db["MIP_compound"].id,
@@ -244,6 +243,8 @@ async def test_fractal_demos_01_no_overwrite(
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -252,214 +253,212 @@ async def test_fractal_demos_01_no_overwrite(
     Similar to fractal-demos/examples/01, but illumination
     correction task does not override its input images.
     """
-    # The first block (up to yokogawa-to-zarr included) is identical to
-    # the previous test
+
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=local_runner,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
+        user_id = user.id
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db["create_ome_zarr_compound"],
-                    task_id=fractal_tasks_mock_db[
-                        "create_ome_zarr_compound"
-                    ].id,
-                    args_non_parallel=dict(image_dir="/tmp/input_images"),
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-        assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
-            f"{zarr_dir}/my_plate.zarr/A/01/0",
-            f"{zarr_dir}/my_plate.zarr/A/02/0",
-        ]
 
-        _assert_image_data_exist(dataset_attrs["images"])
-        # Run illumination correction with overwrite_input=False
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db["illumination_correction"],
-                    task_id=fractal_tasks_mock_db[
-                        "illumination_correction"
-                    ].id,
-                    args_parallel=dict(overwrite_input=False),
-                    id=1,
-                    order=1,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound",
-            "illumination_correction",
-        ]
-        assert dataset_attrs["attribute_filters"] == {}
-        assert dataset_attrs["type_filters"] == {
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir
+    )
+    workflow = await workflow_factory_v2(project_id=project.id)
+
+    wftask0 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["create_ome_zarr_compound"].id,
+        order=0,
+        args_non_parallel=dict(image_dir="/tmp/input_images"),
+        args_parallel={},
+    )
+    wftask1 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["illumination_correction"].id,
+        args_parallel=dict(overwrite_input=False),
+        order=1,
+    )
+    wftask2 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["MIP_compound"].id,
+        args_non_parallel=dict(suffix="mip"),
+        args_parallel={},
+        order=2,
+    )
+    wftask3 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
+        args_parallel={},
+        order=3,
+    )
+
+    execute_tasks_v2(
+        wf_task_list=[wftask0],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset.id)
+    assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+    ]
+
+    _assert_image_data_exist(dataset_attrs["images"])
+
+    # Run illumination correction with overwrite_input=False
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask1],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job1",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+    ]
+    assert dataset_attrs["attribute_filters"] == {}
+    assert dataset_attrs["type_filters"] == {
+        "illumination_correction": True,
+    }
+    assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+    ]
+    assert dataset_attrs["images"][0] == {
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "origin": None,
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate.zarr",
+        },
+        "types": {
+            "3D": True,
+        },
+    }
+    assert dataset_attrs["images"][1] == {
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "origin": None,
+        "attributes": {
+            "well": "A02",
+            "plate": "my_plate.zarr",
+        },
+        "types": {
+            "3D": True,
+        },
+    }
+    assert dataset_attrs["images"][2] == {
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate.zarr",
+        },
+        "types": {
             "illumination_correction": True,
-        }
-        assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
-            f"{zarr_dir}/my_plate.zarr/A/01/0",
-            f"{zarr_dir}/my_plate.zarr/A/02/0",
-            f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-            f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
-        ]
-        assert dataset_attrs["images"][0] == {
-            "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "origin": None,
-            "attributes": {
-                "well": "A01",
-                "plate": "my_plate.zarr",
-            },
-            "types": {
-                "3D": True,
-            },
-        }
-        assert dataset_attrs["images"][1] == {
-            "zarr_url": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "origin": None,
-            "attributes": {
-                "well": "A02",
-                "plate": "my_plate.zarr",
-            },
-            "types": {
-                "3D": True,
-            },
-        }
-        assert dataset_attrs["images"][2] == {
-            "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-            "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "attributes": {
-                "well": "A01",
-                "plate": "my_plate.zarr",
-            },
-            "types": {
-                "illumination_correction": True,
-                "3D": True,
-            },
-        }
-        assert dataset_attrs["images"][3] == {
-            "zarr_url": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
-            "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "attributes": {
-                "well": "A02",
-                "plate": "my_plate.zarr",
-            },
-            "types": {
-                "3D": True,
-                "illumination_correction": True,
-            },
-        }
-        _assert_image_data_exist(dataset_attrs["images"])
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db["MIP_compound"],
-                    task_id=fractal_tasks_mock_db["MIP_compound"].id,
-                    args_non_parallel=dict(suffix="mip"),
-                    id=2,
-                    order=2,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+            "3D": True,
+        },
+    }
+    assert dataset_attrs["images"][3] == {
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "attributes": {
+            "well": "A02",
+            "plate": "my_plate.zarr",
+        },
+        "types": {
+            "3D": True,
+            "illumination_correction": True,
+        },
+    }
+    _assert_image_data_exist(dataset_attrs["images"])
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask2],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job2",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound",
-            "illumination_correction",
-            "MIP_compound",
-        ]
-        assert dataset_attrs["attribute_filters"] == {}
-        assert dataset_attrs["type_filters"] == {
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+    ]
+    assert dataset_attrs["attribute_filters"] == {}
+    assert dataset_attrs["type_filters"] == {
+        "3D": False,
+        "illumination_correction": True,
+    }
+    assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+    ]
+
+    assert dataset_attrs["images"][4] == {
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate_mip.zarr",
+        },
+        "types": {
             "3D": False,
             "illumination_correction": True,
-        }
-        assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
-            f"{zarr_dir}/my_plate.zarr/A/01/0",
-            f"{zarr_dir}/my_plate.zarr/A/02/0",
-            f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-            f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
-            f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
-            f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
-        ]
-
-        assert dataset_attrs["images"][4] == {
-            "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
-            "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-            "attributes": {
-                "well": "A01",
-                "plate": "my_plate_mip.zarr",
-            },
-            "types": {
-                "3D": False,
-                "illumination_correction": True,
-            },
-        }
-        assert dataset_attrs["images"][5] == {
-            "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
-            "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
-            "attributes": {
-                "well": "A02",
-                "plate": "my_plate_mip.zarr",
-            },
-            "types": {
-                "3D": False,
-                "illumination_correction": True,
-            },
-        }
-
-        assert dataset_attrs["attribute_filters"] == {}
-        assert dataset_attrs["type_filters"] == {
+        },
+    }
+    assert dataset_attrs["images"][5] == {
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        "attributes": {
+            "well": "A02",
+            "plate": "my_plate_mip.zarr",
+        },
+        "types": {
             "3D": False,
             "illumination_correction": True,
-        }
+        },
+    }
 
-        _assert_image_data_exist(dataset_attrs["images"])
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_db["cellpose_segmentation"],
-                    task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
-                    id=3,
-                    order=3,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound",
-            "illumination_correction",
-            "MIP_compound",
-            "cellpose_segmentation",
-        ]
+    assert dataset_attrs["attribute_filters"] == {}
+    assert dataset_attrs["type_filters"] == {
+        "3D": False,
+        "illumination_correction": True,
+    }
+
+    _assert_image_data_exist(dataset_attrs["images"])
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask3],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job3",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+        "cellpose_segmentation",
+    ]
 
 
 async def test_registration_no_overwrite(
