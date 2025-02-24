@@ -1,4 +1,6 @@
+from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import HistoryItemV2
+from fractal_server.app.models.v2 import ImageStatus
 
 
 async def test_delete_workflow_associated_to_history(
@@ -77,3 +79,94 @@ async def test_delete_workflow_associated_to_history(
 
         await db.refresh(history)
         assert history.workflowtask_id is None
+
+
+async def test_status(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+
+        task = await task_factory_v2(user_id=user.id)
+        wftask1 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        wftask2 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        wftask3 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+
+        db.add(
+            ImageStatus(
+                zarr_url="/a",
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.DONE,
+                logfile="abc",
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/b",
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.DONE,
+                logfile="abc",
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/c",
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.FAILED,
+                logfile="abc",
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/d",
+                workflowtask_id=wftask2.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.DONE,
+                logfile="abc",
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/e",
+                workflowtask_id=wftask2.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.SUBMITTED,
+                logfile="abc",
+            )
+        )
+        await db.commit()
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
+        )
+
+        assert res.json() == {
+            str(wftask1.id): {"done": 2, "submitted": 0, "failed": 1},
+            str(wftask2.id): {"done": 1, "submitted": 1, "failed": 0},
+            str(wftask3.id): {"done": 0, "submitted": 0, "failed": 0},
+        }
