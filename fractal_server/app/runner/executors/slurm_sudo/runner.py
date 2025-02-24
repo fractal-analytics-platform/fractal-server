@@ -1,10 +1,10 @@
 import logging
 import shlex
-import subprocess
+import subprocess  # nosec
 import sys
 import time
 from pathlib import Path
-from subprocess import CompletedProcess
+from subprocess import CompletedProcess  # nosec
 from typing import Any
 from typing import Optional
 
@@ -22,7 +22,8 @@ from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-TASK_LOG_FILE = "/tmp/slurm/task.log"
+TASK_LOG_FILE = "/tmp/slurm/task.log"  # nosec
+BASEDIR = "/tmp/slurm"  # nosec
 
 
 def _handle_exception_proxy(proxy):
@@ -41,10 +42,10 @@ def _handle_exception_proxy(proxy):
 
 
 class SlurmTask(BaseModel):
-    input_pickle_file_local: str
-    input_pickle_file_remote: str
-    output_pickle_file_local: str
-    output_pickle_file_remote: str
+    input_pickle_file_loc: str
+    input_pickle_file_rem: str
+    output_pickle_file_loc: str
+    output_pickle_file_rem: str
     task_log_file_local: str = TASK_LOG_FILE
     task_log_file_remote: str = TASK_LOG_FILE
     zarr_url: Optional[str] = None
@@ -109,7 +110,7 @@ class RunnerSlurmSudo(BaseRunner):
             # TODO: make parameters task-dependent
             _kwargs = dict(parameters=parameters)
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
-            with open(task.input_pickle_file_local, "wb") as f:
+            with open(task.input_pickle_file_loc, "wb") as f:
                 f.write(funcser)
 
         # Prepare commands to be included in SLURM submission script
@@ -126,7 +127,7 @@ class RunnerSlurmSudo(BaseRunner):
             "#SBATCH --mem=10M",
             f"#SBATCH --err={slurm_job.slurm_log_file_remote}",
             f"#SBATCH --out={slurm_job.slurm_log_file_remote}",
-            "#SBATCH -D /tmp/slurm/",
+            f"#SBATCH -D {BASEDIR}",
             "#SBATCH --job-name=test",
             "\n",
         ]
@@ -136,8 +137,8 @@ class RunnerSlurmSudo(BaseRunner):
             cmd = (
                 f"{python_worker_interpreter}"
                 " -m fractal_server.app.runner.executors.slurm_common.remote "
-                f"--input-file {task.input_pickle_file_remote} "
-                f"--output-file {task.output_pickle_file_remote}"
+                f"--input-file {task.input_pickle_file_rem} "
+                f"--output-file {task.output_pickle_file_rem}"
             )
             cmdlines.append(
                 f"srun --ntasks=1 --cpus-per-task=1 --mem=10MB {cmd} &"
@@ -168,18 +169,18 @@ class RunnerSlurmSudo(BaseRunner):
     ) -> tuple[Any, Exception]:
         try:
             # TODO: Copy files from remote to local folder
-            Path(task.input_pickle_file_local).unlink()
-            if not Path(task.output_pickle_file_local).exists():
+            Path(task.input_pickle_file_loc).unlink()
+            if not Path(task.output_pickle_file_loc).exists():
                 # TODO: Prepare appropriate exception
                 exception = JobExecutionError(
-                    f"Missing {task.output_pickle_file_local}"
+                    f"Missing {task.output_pickle_file_loc}"
                 )
                 return None, exception
             else:
-                with open(task.output_pickle_file_local, "rb") as f:
+                with open(task.output_pickle_file_loc, "rb") as f:
                     outdata = f.read()
                 success, output = cloudpickle.loads(outdata)
-                Path(task.output_pickle_file_local).unlink()
+                Path(task.output_pickle_file_loc).unlink()
                 if success:
                     result = output
                     return result, None
@@ -203,16 +204,16 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Submission phase
         slurm_job = SlurmJob(
-            slurm_log_file_local="/tmp/slurm/slurm.log",
-            slurm_log_file_remote="/tmp/slurm/slurm.log",
-            slurm_submission_script_local="/tmp/slurm/submit.sh",
-            slurm_submission_script_remote="/tmp/slurm/submit.sh",
+            slurm_log_file_local=f"{BASEDIR}/slurm.log",
+            slurm_log_file_remote=f"{BASEDIR}/slurm.log",
+            slurm_submission_script_local=f"{BASEDIR}/submit.sh",
+            slurm_submission_script_remote=f"{BASEDIR}/submit.sh",
             tasks=[
                 SlurmTask(
-                    input_pickle_file_local="/tmp/slurm/input.pickle",
-                    input_pickle_file_remote="/tmp/slurm/input.pickle",
-                    output_pickle_file_local="/tmp/slurm/output.pickle",
-                    output_pickle_file_remote="/tmp/slurm/output.pickle",
+                    input_pickle_file_loc=f"{BASEDIR}/input.pickle",
+                    input_pickle_file_rem=f"{BASEDIR}/input.pickle",
+                    output_pickle_file_loc=f"{BASEDIR}/output.pickle",
+                    output_pickle_file_rem=f"{BASEDIR}/output.pickle",
                 )
             ],
         )  # TODO: replace with actual values
@@ -271,16 +272,16 @@ class RunnerSlurmSudo(BaseRunner):
         for ind, parameters in enumerate(list_parameters):
             # TODO: replace with actual values
             slurm_job = SlurmJob(
-                slurm_log_file_local=f"/tmp/slurm/slurm-{ind}.log",
-                slurm_log_file_remote=f"/tmp/slurm/slurm-{ind}.log",
-                slurm_submission_script_local=f"/tmp/slurm/submit-{ind}.sh",
-                slurm_submission_script_remote=f"/tmp/slurm/submit-{ind}.sh",
+                slurm_log_file_local=f"{BASEDIR}/slurm-{ind}.log",
+                slurm_log_file_remote=f"{BASEDIR}/slurm-{ind}.log",
+                slurm_submission_script_local=f"{BASEDIR}/submit-{ind}.sh",
+                slurm_submission_script_remote=f"{BASEDIR}/submit-{ind}.sh",
                 tasks=[
                     SlurmTask(
-                        input_pickle_file_local=f"/tmp/slurm/input-{ind}.pickle",
-                        input_pickle_file_remote=f"/tmp/slurm/input-{ind}.pickle",
-                        output_pickle_file_local=f"/tmp/slurm/output-{ind}.pickle",
-                        output_pickle_file_remote=f"/tmp/slurm/output-{ind}.pickle",
+                        input_pickle_file_loc=f"{BASEDIR}/in-{ind}.pickle",
+                        input_pickle_file_rem=f"{BASEDIR}/in-{ind}.pickle",
+                        output_pickle_file_loc=f"{BASEDIR}/out-{ind}.pickle",
+                        output_pickle_file_rem=f"{BASEDIR}/out-{ind}.pickle",
                         zarr_url=parameters["zarr_url"],
                     )
                 ],

@@ -1,5 +1,4 @@
-from subprocess import CompletedProcess
-from subprocess import run  # nosec
+import subprocess  # nosec
 
 from fractal_server.app.runner.executors.slurm_common._job_states import (
     STATES_FINISHED,
@@ -10,8 +9,8 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 
-def run_squeue(job_ids: list[str]) -> CompletedProcess:
-    res = run(  # nosec
+def run_squeue(job_ids: list[str]) -> subprocess.CompletedProcess:
+    res = subprocess.run(  # nosec
         [
             "squeue",
             "--noheader",
@@ -26,8 +25,8 @@ def run_squeue(job_ids: list[str]) -> CompletedProcess:
     )
     if res.returncode != 0:
         logger.warning(
-            f"squeue command with {job_ids}"
-            f" failed with:\n{res.stderr=}\n{res.stdout=}"
+            f"squeue command with {job_ids} failed with:"
+            f"\n{res.stderr=}\n{res.stdout=}"
         )
 
     return res
