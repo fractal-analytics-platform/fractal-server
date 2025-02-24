@@ -43,6 +43,7 @@ async def mock_history_item(
     return item
 
 
+@pytest.mark.container
 async def test_submit_success(
     db,
     mock_history_item,
@@ -66,6 +67,7 @@ async def test_submit_success(
     }
 
 
+@pytest.mark.container
 async def test_submit_fail(
     db,
     mock_history_item,
@@ -92,6 +94,7 @@ async def test_submit_fail(
     }
 
 
+@pytest.mark.container
 async def test_multisubmit(
     db,
     mock_history_item,
