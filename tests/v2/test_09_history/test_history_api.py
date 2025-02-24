@@ -107,7 +107,31 @@ async def test_status(
         wftask3 = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
-
+        # WorkflowTask 1
+        db.add(
+            HistoryItemV2(
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                worfklowtask_dump={},
+                task_group_dump={},
+                images={},
+                parameters_hash="xxx",
+                num_available_images=1,
+                num_current_images=1,
+            )
+        )
+        db.add(
+            HistoryItemV2(
+                images={},
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                worfklowtask_dump={},
+                task_group_dump={},
+                parameters_hash="xxx",
+                num_available_images=20,
+                num_current_images=1,
+            )
+        )
         db.add(
             ImageStatus(
                 zarr_url="/a",
@@ -138,6 +162,19 @@ async def test_status(
                 logfile="abc",
             )
         )
+        # WorkflowTask 2
+        db.add(
+            HistoryItemV2(
+                images={},
+                workflowtask_id=wftask2.id,
+                dataset_id=dataset.id,
+                worfklowtask_dump={},
+                task_group_dump={},
+                parameters_hash="xxx",
+                num_available_images=33,
+                num_current_images=1,
+            )
+        )
         db.add(
             ImageStatus(
                 zarr_url="/d",
@@ -166,7 +203,17 @@ async def test_status(
         )
 
         assert res.json() == {
-            str(wftask1.id): {"done": 2, "submitted": 0, "failed": 1},
-            str(wftask2.id): {"done": 1, "submitted": 1, "failed": 0},
-            str(wftask3.id): {"done": 0, "submitted": 0, "failed": 0},
+            str(wftask1.id): {
+                "num_done_images": 2,
+                "num_submitted_images": 0,
+                "num_failed_images": 1,
+                "num_available_images": 20,
+            },
+            str(wftask2.id): {
+                "num_done_images": 1,
+                "num_submitted_images": 1,
+                "num_failed_images": 0,
+                "num_available_images": 33,
+            },
+            str(wftask3.id): None,
         }

@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 from fastapi.responses import JSONResponse
-from sqlmodel import case
 from sqlmodel import func
 from sqlmodel import select
 
@@ -18,7 +17,6 @@ from fractal_server.app.history.parse_history import (
 )
 from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import WorkflowTaskV2
 from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.routes.auth import current_active_user
@@ -61,7 +59,7 @@ async def get_per_workflow_aggregated_info(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> JSONResponse:
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
         workflow_id=workflow_id,
@@ -69,63 +67,57 @@ async def get_per_workflow_aggregated_info(
         db=db,
     )
 
-    res = await db.execute(
-        select(
-            WorkflowTaskV2.id,
-            func.coalesce(
-                func.count(
-                    case(
-                        (ImageStatus.status == HistoryItemImageStatus.DONE, 1)
-                    )
-                ),
-                0,
-            ),
-            func.coalesce(
-                func.count(
-                    case(
-                        (
-                            ImageStatus.status
-                            == HistoryItemImageStatus.FAILED,
-                            1,
-                        )
-                    )
-                ),
-                0,
-            ),
-            func.coalesce(
-                func.count(
-                    case(
-                        (
-                            ImageStatus.status
-                            == HistoryItemImageStatus.SUBMITTED,
-                            1,
-                        )
-                    )
-                ),
-                0,
-            ),
-        )
-        .select_from(WorkflowTaskV2)
-        .outerjoin(
-            ImageStatus,
-            (ImageStatus.workflowtask_id == WorkflowTaskV2.id)
-            & (ImageStatus.dataset_id == dataset_id),
-        )
-        .where(WorkflowTaskV2.id.in_([wft.id for wft in workflow.task_list]))
-        .group_by(WorkflowTaskV2.id)
-    )
+    result = {}
+    for wftask in workflow.task_list:
 
-    return {
-        _id: {
-            HistoryItemImageStatus.DONE: done,
-            HistoryItemImageStatus.FAILED: failed,
-            HistoryItemImageStatus.SUBMITTED: submitted,
+        stm = (
+            select(HistoryItemV2.num_available_images)
+            .where(HistoryItemV2.dataset_id == dataset_id)
+            .where(HistoryItemV2.workflowtask_id == wftask.id)
+            .order_by(HistoryItemV2.timestamp_started.desc())
+            .limit(1)
+        )
+        res = await db.execute(stm)
+        num_available_images = res.scalar_one_or_none()
+
+        if num_available_images is None:
+            result[str(wftask.id)] = None
+            continue
+
+        done_stm = (
+            select(func.count(ImageStatus.zarr_url))
+            .where(ImageStatus.workflowtask_id == wftask.id)
+            .where(ImageStatus.dataset_id == dataset_id)
+            .where(ImageStatus.status == HistoryItemImageStatus.DONE)
+        )
+        failed_stm = (
+            select(func.count(ImageStatus.zarr_url))
+            .where(ImageStatus.workflowtask_id == wftask.id)
+            .where(ImageStatus.dataset_id == dataset_id)
+            .where(ImageStatus.status == HistoryItemImageStatus.FAILED)
+        )
+        submitted_stm = (
+            select(func.count(ImageStatus.zarr_url))
+            .where(ImageStatus.workflowtask_id == wftask.id)
+            .where(ImageStatus.dataset_id == dataset_id)
+            .where(ImageStatus.status == HistoryItemImageStatus.SUBMITTED)
+        )
+
+        done_res = await db.execute(done_stm)
+        done = done_res.scalar()
+        failed_res = await db.execute(failed_stm)
+        failed = failed_res.scalar()
+        submitted_res = await db.execute(submitted_stm)
+        submitted = submitted_res.scalar()
+
+        result[str(wftask.id)] = {
+            "num_done_images": done,
+            "num_failed_images": failed,
+            "num_submitted_images": submitted,
+            "num_available_images": num_available_images,
         }
-        for _id, done, failed, submitted in res.fetchall()
-    }
 
-
-# -------
+    return JSONResponse(content=result, status_code=200)
 
 
 @router.get("/history/latest-status/")
