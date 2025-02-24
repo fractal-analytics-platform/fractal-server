@@ -48,7 +48,6 @@ async def create_dataset(
     )
 
     if dataset.zarr_dir is None:
-
         if user.settings.project_dir is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -228,11 +227,12 @@ async def delete_dataset(
 
     # Cascade operations: set foreign-keys to null for history items which are
     # in relationship with the current dataset
+
     stm = select(HistoryItemV2).where(HistoryItemV2.dataset_id == dataset_id)
     res = await db.execute(stm)
     history_items = res.scalars().all()
     for history_item in history_items:
-        history_item.dataset_id = None
+        await db.delete(history_item)
 
     # Delete dataset
     await db.delete(dataset)
