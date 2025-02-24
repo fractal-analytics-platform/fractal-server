@@ -2,9 +2,9 @@ import logging
 from pathlib import Path
 
 import pytest
-from aux_get_dataset_attrs import _get_dataset_attrs
 from devtools import debug  # noqa: F401
 
+from .aux_get_dataset_attrs import _get_dataset_attrs
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
