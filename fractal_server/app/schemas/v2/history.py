@@ -15,7 +15,7 @@ class HistoryItemV2Read(BaseModel):
     num_available_images: int
     num_current_images: int
     images: dict[str, str]
-    worfklowtask_dump: dict[str, Any]
+    workflowtask_dump: dict[str, Any]
     task_group_dump: dict[str, Any]
 
     @field_serializer("timestamp_started")

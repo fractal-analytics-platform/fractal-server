@@ -935,7 +935,7 @@ dataset (300 wells with 25 cycles each).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
-    * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+    * Make `WorkflowTask.workflow_id` and `WorkflowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
     * Start a new `current.py` fix-db script (\#1152, \#1195).
     * Add to `migrations.yml` a new script (`validate_db_data_with_read_schemas.py`) that validates test-DB data with Read schemas (\#1187).

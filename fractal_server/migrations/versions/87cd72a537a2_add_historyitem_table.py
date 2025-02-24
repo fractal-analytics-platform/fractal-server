@@ -28,7 +28,7 @@ def upgrade() -> None:
             "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column(
-            "worfklowtask_dump",
+            "workflowtask_dump",
             postgresql.JSONB(astext_type=sa.Text()),
             nullable=False,
         ),
