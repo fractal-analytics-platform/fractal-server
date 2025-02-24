@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
 from sqlmodel import func
@@ -8,6 +9,7 @@ from sqlmodel import select
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_history_owner
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _get_workflowtask_check_history_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -19,6 +21,7 @@ from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2.history import HistoryItemV2Read
 
@@ -50,6 +53,53 @@ async def get_dataset_history(
     res = await db.execute(stm)
     items = res.scalars().all()
     return items
+
+
+@router.get("/history/latest-status/")
+async def get_workflow_dataset_latest_status(
+    workflow_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+    workflowtask_ids = await _get_workflow_check_history_owner(
+        dataset_id=dataset_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    statuses = await get_workflow_statuses(
+        dataset_id=dataset_id,
+        workflowtask_ids=workflowtask_ids,
+        db=db,
+    )
+    return JSONResponse(content=statuses, status_code=status.HTTP_200_OK)
+
+
+@router.get("/history/latest-status/images/")
+async def get_workflowtask_detailed_status(
+    workflowtask_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+    await _get_workflowtask_check_history_owner(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    images = await get_workflowtask_image_statuses(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+        db=db,
+    )
+    return JSONResponse(content=images, status_code=status.HTTP_200_OK)
+
+
+# ---
 
 
 @router.get("/project/{project_id}/status/")
@@ -120,45 +170,61 @@ async def get_per_workflow_aggregated_info(
     return JSONResponse(content=result, status_code=200)
 
 
-@router.get("/history/latest-status/")
-async def get_workflow_dataset_latest_status(
-    workflow_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
-    workflowtask_ids = await _get_workflow_check_history_owner(
-        dataset_id=dataset_id,
-        workflow_id=workflow_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    statuses = await get_workflow_statuses(
-        dataset_id=dataset_id,
-        workflowtask_ids=workflowtask_ids,
-        db=db,
-    )
-    return JSONResponse(content=statuses, status_code=status.HTTP_200_OK)
-
-
-@router.get("/history/latest-status/images/")
-async def get_workflowtask_detailed_status(
+@router.get("/project/{project_id}/status/subsets/")
+async def get_per_workflowtask_subsets_aggregated_info(
+    project_id: int,
     workflowtask_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-    await _get_workflowtask_check_history_owner(
-        dataset_id=dataset_id,
-        workflowtask_id=workflowtask_id,
+    wftask = await db.get(WorkflowTaskV2, workflowtask_id)
+    if wftask is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WorkflowTask not found",
+        )
+    await _get_workflow_task_check_owner(
+        project_id=project_id,
+        workflow_id=wftask.workflow_id,
+        workflow_task_id=workflowtask_id,
         user_id=user.id,
         db=db,
     )
 
-    images = await get_workflowtask_image_statuses(
-        dataset_id=dataset_id,
-        workflowtask_id=workflowtask_id,
-        db=db,
+    stm = (
+        select(ImageStatus.parameters_hash, func.array_agg(ImageStatus.status))
+        .where(ImageStatus.dataset_id == dataset_id)
+        .where(ImageStatus.workflowtask_id == workflowtask_id)
+        .group_by(ImageStatus.parameters_hash)
     )
-    return JSONResponse(content=images, status_code=status.HTTP_200_OK)
+    res = await db.execute(stm)
+    hash_statuses = res.all()
+
+    result = []
+    for _hash, statuses in hash_statuses:
+        dump = await db.execute(
+            select(HistoryItemV2.workflowtask_dump)
+            .where(HistoryItemV2.workflowtask_id == workflowtask_id)
+            .where(HistoryItemV2.dataset_id == dataset_id)
+            .where(HistoryItemV2.parameters_hash == _hash)
+        )
+        result.append(
+            {
+                "workflowtask_dump": dump.scalar_one(),
+                "parameters_hash": _hash,
+                "info": {
+                    "num_done_images": statuses.count(
+                        HistoryItemImageStatus.DONE
+                    ),
+                    "num_failed_images": statuses.count(
+                        HistoryItemImageStatus.FAILED
+                    ),
+                    "num_submitted_images": statuses.count(
+                        HistoryItemImageStatus.SUBMITTED
+                    ),
+                },
+            }
+        )
+
+    return JSONResponse(content=result, status_code=200)
