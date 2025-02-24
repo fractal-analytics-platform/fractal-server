@@ -1,6 +1,9 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import status
 from fastapi.responses import JSONResponse
 from sqlmodel import func
@@ -228,3 +231,76 @@ async def get_per_workflowtask_subsets_aggregated_info(
         )
 
     return JSONResponse(content=result, status_code=200)
+
+
+@router.get("/project/{project_id}/status/images/")
+async def get_per_workflowtask_images(
+    project_id: int,
+    workflowtask_id: int,
+    dataset_id: int,
+    status: HistoryItemImageStatus,
+    parameters_hash: Optional[str] = None,
+    # Pagination
+    page: int = Query(default=1, ge=1),
+    page_size: Optional[int] = Query(default=None, ge=1),
+    # Dependencies
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+
+    if page_size is None and page > 1:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(f"Invalid pagination parameters: {page=}, {page_size=}."),
+        )
+
+    wftask = await db.get(WorkflowTaskV2, workflowtask_id)
+    if wftask is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WorkflowTask not found",
+        )
+    await _get_workflow_task_check_owner(
+        project_id=project_id,
+        workflow_id=wftask.workflow_id,
+        workflow_task_id=workflowtask_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    total_count_stm = (
+        select(func.count(ImageStatus.zarr_url))
+        .where(ImageStatus.dataset_id == dataset_id)
+        .where(ImageStatus.workflowtask_id == workflowtask_id)
+        .where(ImageStatus.status == status)
+    )
+    query = (
+        select(ImageStatus.zarr_url)
+        .where(ImageStatus.dataset_id == dataset_id)
+        .where(ImageStatus.workflowtask_id == workflowtask_id)
+        .where(ImageStatus.status == status)
+    )
+
+    if parameters_hash is not None:
+        total_count_stm = total_count_stm.where(
+            ImageStatus.parameters_hash == parameters_hash
+        )
+        query = query.where(ImageStatus.parameters_hash == parameters_hash)
+
+    if page_size is not None:
+        query = query.limit(page_size)
+    if page > 1:
+        query = query.offset((page - 1) * page_size)
+
+    res_total_count = await db.execute(total_count_stm)
+    total_count = res_total_count.scalar()
+
+    res = await db.execute(query)
+    images = res.scalars().all()
+
+    return {
+        "total_count": total_count,
+        "page_size": page_size,
+        "current_page": page,
+        "images": images,
+    }

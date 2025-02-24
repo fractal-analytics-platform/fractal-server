@@ -331,3 +331,133 @@ async def test_status_subsets(
                 },
             },
         ]
+
+
+async def test_status_images(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+
+        task = await task_factory_v2(user_id=user.id)
+        wftask1 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+
+        # WorkflowTask 1
+        for i in range(10):
+            db.add(
+                ImageStatus(
+                    zarr_url=f"/image{i}",
+                    workflowtask_id=wftask1.id,
+                    dataset_id=dataset.id,
+                    parameters_hash="xxx",
+                    status=HistoryItemImageStatus.DONE,
+                    logfile="abc",
+                )
+            )
+        db.add(
+            ImageStatus(
+                zarr_url="/broken",
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.FAILED,
+                logfile="abc",
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/new",
+                workflowtask_id=wftask1.id,
+                dataset_id=dataset.id,
+                parameters_hash="yyy",
+                status=HistoryItemImageStatus.DONE,
+                logfile="abc",
+            )
+        )
+
+        await db.commit()
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask1.id}"
+            f"&dataset_id={dataset.id}"
+            "&status=done"
+        )
+        assert res.json()["total_count"] == 11
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask1.id}"
+            f"&dataset_id={dataset.id}"
+            "&status=done"
+            "&parameters_hash=xxx"
+        )
+        assert res.json()["total_count"] == 10
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask1.id}"
+            f"&dataset_id={dataset.id}"
+            "&status=failed"
+        )
+        assert res.json()["total_count"] == 1
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask1.id}"
+            f"&dataset_id={dataset.id}"
+            "&status=done"
+            "&parameters_hash=xxx"
+            "&page_size=3"
+            "&page=2"
+        )
+        assert res.json() == {
+            "total_count": 10,
+            "page_size": 3,
+            "current_page": 2,
+            "images": ["/image3", "/image4", "/image5"],
+        }
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask1.id}"
+            f"&dataset_id={dataset.id}"
+            "&status=done"
+            "&parameters_hash=xxx"
+            "&page_size=3"
+            "&page=4"
+        )
+        assert res.json() == {
+            "total_count": 10,
+            "page_size": 3,
+            "current_page": 4,
+            "images": ["/image9"],
+        }
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask1.id}"
+            f"&dataset_id={dataset.id}"
+            "&status=done"
+            "&parameters_hash=xxx"
+            "&page_size=3"
+            "&page=999"
+        )
+        assert res.json() == {
+            "total_count": 10,
+            "page_size": 3,
+            "current_page": 999,
+            "images": [],
+        }
