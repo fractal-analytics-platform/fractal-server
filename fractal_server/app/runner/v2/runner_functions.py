@@ -321,7 +321,7 @@ def run_v2_task_compound(
         ),
         list_parameters=list_function_kwargs,
         history_item_id=history_item_id,
-        compute_of_compound_task=True,
+        in_compound_task=True,
         **executor_options_compute,
     )
 

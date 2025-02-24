@@ -41,7 +41,7 @@ class BaseRunner(object):
         func: callable,
         list_parameters: list[dict[str, Any]],
         history_item_id: int,
-        compute_of_compound_task: bool,
+        in_compound_task: bool,
         **kwargs,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
