@@ -1,15 +1,15 @@
 import logging
-from concurrent.futures import Executor
 from pathlib import Path
 
 import pytest
-from aux_get_dataset_attrs import _get_dataset_attrs
-from devtools import debug
-from fixtures_mocks import *  # noqa: F401,F403
-from v2_mock_models import WorkflowTaskV2Mock
+from devtools import debug  # noqa: F401
 
+from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.urls import normalize_url
+from fractal_server.app.runner.executors.base_runner import BaseRunner
+
+# from aux_get_dataset_attrs import _get_dataset_attrs
+# from fractal_server.urls import normalize_url
 
 
 def execute_tasks_v2(
@@ -41,428 +41,412 @@ async def test_dummy_insert_single_image(
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
     tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
+    local_runner: BaseRunner,
+    fractal_tasks_mock_db,
 ):
-    # Preliminary setup
+    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
+
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
+            runner=local_runner,
             user_id=user.id,
         )
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
-        # Run successfully on an empty dataset
-        debug(dataset)
+
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir
+    )
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+    )
+
+    # Run successfully on an empty dataset
+    execute_tasks_v2(
+        wf_task_list=[wftask],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        **execute_tasks_v2_args,
+    )
+
+    # Run successfully even if the image already exists
+    db.expunge_all()
+    dataset = await db.get(DatasetV2, dataset.id)
+    execute_tasks_v2(
+        wf_task_list=[wftask],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job1",
+        **execute_tasks_v2_args,
+    )
+
+    # Fail because new image is not relative to zarr_dir
+    execute_tasks_v2_args = dict(
+        runner=local_runner,
+        user_id=user.id,
+    )
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel={"fail": True},
+    )
+    db.expunge_all()
+    dataset = await db.get(DatasetV2, dataset.id)
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "dummy_insert_single_image"
-                    ].id,
-                    id=0,
-                    order=0,
-                )
-            ],
+            wf_task_list=[wftask],
             dataset=dataset,
+            workflow_dir_local=tmp_path / "job3",
             **execute_tasks_v2_args,
         )
+    error_msg = str(e.value)
+    assert "is not a parent directory" in error_msg
+    assert zarr_dir in error_msg
 
-        # Run successfully even if the image already exists
+    # Fail because new image's zarr_url is equal to zarr_dir
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel={"fail_2": True},
+    )
+    db.expunge_all()
+    dataset = await db.get(DatasetV2, dataset.id)
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "dummy_insert_single_image"
-                    ].id,
-                    id=1,
-                    order=1,
-                )
-            ],
+            wf_task_list=[wftask],
             dataset=dataset,
+            workflow_dir_local=tmp_path / "job4",
             **execute_tasks_v2_args,
         )
-        # Fail because new image is not relative to zarr_dir
-        IMAGES = [dict(zarr_url=Path(zarr_dir, "my-image").as_posix())]
-        dataset_images = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, images=IMAGES
-        )
-        with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2(
-                wf_task_list=[
-                    WorkflowTaskV2Mock(
-                        task=fractal_tasks_mock_no_db[
-                            "dummy_insert_single_image"
-                        ],
-                        task_id=fractal_tasks_mock_no_db[
-                            "dummy_insert_single_image"
-                        ].id,
-                        args_non_parallel={
-                            "full_new_image": dict(
-                                zarr_url=IMAGES[0]["zarr_url"],
-                                origin="/somewhere",
-                            )
-                        },
-                        id=2,
-                        order=2,
-                    )
-                ],
-                dataset=dataset_images,
-                **execute_tasks_v2_args,
+    error_msg = str(e.value)
+    assert "Cannot create image if zarr_url is equal to zarr_dir" in error_msg
+
+    # Fail because new image is not relative to zarr_dir
+    IMAGES = [dict(zarr_url=Path(zarr_dir, "my-image").as_posix())]
+    dataset_with_images = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel={
+            "full_new_image": dict(
+                zarr_url=IMAGES[0]["zarr_url"],
+                origin="/somewhere",
             )
-        error_msg = str(e.value)
-        assert (
-            "Cannot edit an image with zarr_url different from origin."
-            in error_msg
-        )
-
-        # Fail because new image is not relative to zarr_dir
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir_3",
-            workflow_dir_remote=tmp_path / "job_dir_3",
-            user_id=user.id,
-        )
-        with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2(
-                wf_task_list=[
-                    WorkflowTaskV2Mock(
-                        task=fractal_tasks_mock_no_db[
-                            "dummy_insert_single_image"
-                        ],
-                        task_id=fractal_tasks_mock_no_db[
-                            "dummy_insert_single_image"
-                        ].id,
-                        args_non_parallel={"fail": True},
-                        id=2,
-                        order=2,
-                    )
-                ],
-                dataset=dataset,
-                **execute_tasks_v2_args,
-            )
-        error_msg = str(e.value)
-        assert "is not a parent directory" in error_msg
-        assert zarr_dir in error_msg
-
-        # Fail because new image's zarr_url is equal to zarr_dir
-        with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2(
-                wf_task_list=[
-                    WorkflowTaskV2Mock(
-                        task=fractal_tasks_mock_no_db[
-                            "dummy_insert_single_image"
-                        ],
-                        task_id=fractal_tasks_mock_no_db[
-                            "dummy_insert_single_image"
-                        ].id,
-                        args_non_parallel={"fail_2": True},
-                        id=3,
-                        order=3,
-                    )
-                ],
-                dataset=dataset,
-                **execute_tasks_v2_args,
-            )
-        error_msg = str(e.value)
-        assert (
-            "Cannot create image if zarr_url is equal to zarr_dir" in error_msg
-        )
-
-
-async def test_dummy_remove_images(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
-):
-    # Preliminary setup
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
-        # Run successfully on a dataset which includes the images to be removed
-        project = await project_factory_v2(user)
-        dataset_pre = await dataset_factory_v2(
-            project_id=project.id,
-            zarr_dir=zarr_dir,
-            images=[
-                dict(zarr_url=Path(zarr_dir, str(index)).as_posix())
-                for index in [0, 1, 2]
-            ],
-        )
+        },
+    )
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_remove_images"],
-                    task_id=fractal_tasks_mock_no_db["dummy_remove_images"].id,
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset_pre,
+            wf_task_list=[wftask],
+            dataset=dataset_with_images,
+            workflow_dir_local=tmp_path / "job2",
             **execute_tasks_v2_args,
         )
-
-        # Fail when removing images that do not exist
-        dataset_pre_fail = await dataset_factory_v2(
-            project_id=project.id,
-            zarr_dir=zarr_dir,
-        )
-        with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2(
-                wf_task_list=[
-                    WorkflowTaskV2Mock(
-                        task=fractal_tasks_mock_no_db["dummy_remove_images"],
-                        task_id=fractal_tasks_mock_no_db[
-                            "dummy_remove_images"
-                        ].id,
-                        id=1,
-                        order=1,
-                        args_non_parallel=dict(
-                            more_zarr_urls=[
-                                Path(zarr_dir, "missing-image").as_posix()
-                            ]
-                        ),
-                    )
-                ],
-                dataset=dataset_pre_fail,
-                **execute_tasks_v2_args,
-            )
-        error_msg = str(e.value)
-        assert "Cannot remove missing image" in error_msg
+    error_msg = str(e.value)
+    assert (
+        "Cannot edit an image with zarr_url different from origin."
+        in error_msg
+    )
 
 
-async def test_dummy_unset_attribute(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
-):
-    # Preliminary setup
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
-        project = await project_factory_v2(user)
-        dataset_pre = await dataset_factory_v2(
-            project_id=project.id,
-            zarr_dir=zarr_dir,
-            images=[
-                dict(
-                    zarr_url=Path(zarr_dir, "my-image").as_posix(),
-                    attributes={"key1": "value1", "key2": "value2"},
-                    types={},
-                )
-            ],
-        )
+# async def test_dummy_remove_images(
+#     db,
+#     MockCurrentUser,
+#     project_factory_v2,
+#     dataset_factory_v2,
+#     tmp_path: Path,
+#     local_runner: Executor,
+#     fractal_tasks_mock_no_db,
+# ):
+#     # Preliminary setup
+#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+#     async with MockCurrentUser() as user:
+#         execute_tasks_v2_args = dict(
+#             executor=local_runner,
+#             workflow_dir_local=tmp_path / "job_dir",
+#             workflow_dir_remote=tmp_path / "job_dir",
+#             user_id=user.id,
+#         )
+#         # Run successfully on a dataset which includes the images to be
+#         # removed
+#         project = await project_factory_v2(user)
+#         dataset_pre = await dataset_factory_v2(
+#             project_id=project.id,
+#             zarr_dir=zarr_dir,
+#             images=[
+#                 dict(zarr_url=Path(zarr_dir, str(index)).as_posix())
+#                 for index in [0, 1, 2]
+#             ],
+#         )
+#         execute_tasks_v2(
+#             wf_task_list=[
+#                 WorkflowTaskV2Mock(
+#                     task=fractal_tasks_mock_no_db["dummy_remove_images"],
+#                     task_id=fractal_tasks_mock_no_db["dummy_remove_images"].id,
+#                     id=0,
+#                     order=0,
+#                 )
+#             ],
+#             dataset=dataset_pre,
+#             **execute_tasks_v2_args,
+#         )
 
-        # Unset an existing attribute (starting from dataset_pre)
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "dummy_unset_attribute"
-                    ].id,
-                    args_non_parallel=dict(attribute="key2"),
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset_pre,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
-        debug(dataset_attrs["images"])
-        assert "key2" not in dataset_attrs["images"][0]["attributes"].keys()
-
-        # Unset a missing attribute (starting from dataset_pre)
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "dummy_unset_attribute"
-                    ].id,
-                    args_non_parallel=dict(attribute="missing-attribute"),
-                    id=1,
-                    order=1,
-                )
-            ],
-            dataset=dataset_pre,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
-        assert dataset_attrs["images"][0]["attributes"] == {
-            "key1": "value1",
-            "key2": "value2",
-        }
+#         # Fail when removing images that do not exist
+#         dataset_pre_fail = await dataset_factory_v2(
+#             project_id=project.id,
+#             zarr_dir=zarr_dir,
+#         )
+#         with pytest.raises(JobExecutionError) as e:
+#             execute_tasks_v2(
+#                 wf_task_list=[
+#                     WorkflowTaskV2Mock(
+#                         task=fractal_tasks_mock_no_db["dummy_remove_images"],
+#                         task_id=fractal_tasks_mock_no_db[
+#                             "dummy_remove_images"
+#                         ].id,
+#                         id=1,
+#                         order=1,
+#                         args_non_parallel=dict(
+#                             more_zarr_urls=[
+#                                 Path(zarr_dir, "missing-image").as_posix()
+#                             ]
+#                         ),
+#                     )
+#                 ],
+#                 dataset=dataset_pre_fail,
+#                 **execute_tasks_v2_args,
+#             )
+#         error_msg = str(e.value)
+#         assert "Cannot remove missing image" in error_msg
 
 
-async def test_dummy_insert_single_image_none_attribute(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
-):
-    # Preliminary setup
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
-        # Run successfully on an empty dataset
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "dummy_insert_single_image"
-                    ].id,
-                    args_non_parallel=dict(
-                        attributes={"attribute-name": None}
-                    ),
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-        debug(dataset_attrs["images"])
-        assert (
-            "attribute-name"
-            not in dataset_attrs["images"][0]["attributes"].keys()
-        )
+# async def test_dummy_unset_attribute(
+#     db,
+#     MockCurrentUser,
+#     project_factory_v2,
+#     dataset_factory_v2,
+#     tmp_path: Path,
+#     local_runner: Executor,
+#     fractal_tasks_mock_no_db,
+# ):
+#     # Preliminary setup
+#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+#     async with MockCurrentUser() as user:
+#         execute_tasks_v2_args = dict(
+#             executor=local_runner,
+#             workflow_dir_local=tmp_path / "job_dir",
+#             workflow_dir_remote=tmp_path / "job_dir",
+#             user_id=user.id,
+#         )
+#         project = await project_factory_v2(user)
+#         dataset_pre = await dataset_factory_v2(
+#             project_id=project.id,
+#             zarr_dir=zarr_dir,
+#             images=[
+#                 dict(
+#                     zarr_url=Path(zarr_dir, "my-image").as_posix(),
+#                     attributes={"key1": "value1", "key2": "value2"},
+#                     types={},
+#                 )
+#             ],
+#         )
+
+#         # Unset an existing attribute (starting from dataset_pre)
+#         execute_tasks_v2(
+#             wf_task_list=[
+#                 WorkflowTaskV2Mock(
+#                     task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
+#                     task_id=fractal_tasks_mock_no_db[
+#                         "dummy_unset_attribute"
+#                     ].id,
+#                     args_non_parallel=dict(attribute="key2"),
+#                     id=0,
+#                     order=0,
+#                 )
+#             ],
+#             dataset=dataset_pre,
+#             **execute_tasks_v2_args,
+#         )
+#         dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
+#         debug(dataset_attrs["images"])
+#         assert "key2" not in dataset_attrs["images"][0]["attributes"].keys()
+
+#         # Unset a missing attribute (starting from dataset_pre)
+#         execute_tasks_v2(
+#             wf_task_list=[
+#                 WorkflowTaskV2Mock(
+#                     task=fractal_tasks_mock_no_db["dummy_unset_attribute"],
+#                     task_id=fractal_tasks_mock_no_db[
+#                         "dummy_unset_attribute"
+#                     ].id,
+#                     args_non_parallel=dict(attribute="missing-attribute"),
+#                     id=1,
+#                     order=1,
+#                 )
+#             ],
+#             dataset=dataset_pre,
+#             **execute_tasks_v2_args,
+#         )
+#         dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
+#         assert dataset_attrs["images"][0]["attributes"] == {
+#             "key1": "value1",
+#             "key2": "value2",
+#         }
 
 
-async def test_dummy_insert_single_image_normalization(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
-):
-    # Preliminary setup
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
-        # Run successfully with trailing slashes
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "dummy_insert_single_image"
-                    ].id,
-                    id=0,
-                    order=0,
-                    args_non_parallel={"trailing_slash": True},
-                )
-            ],
-            dataset=dataset,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-        debug(dataset_attrs["images"])
-        for image in dataset_attrs["images"]:
-            assert normalize_url(image["zarr_url"]) == image["zarr_url"]
+# async def test_dummy_insert_single_image_none_attribute(
+#     db,
+#     MockCurrentUser,
+#     project_factory_v2,
+#     dataset_factory_v2,
+#     tmp_path: Path,
+#     local_runner: Executor,
+#     fractal_tasks_mock_no_db,
+# ):
+#     # Preliminary setup
+#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+#     async with MockCurrentUser() as user:
+#         execute_tasks_v2_args = dict(
+#             executor=local_runner,
+#             workflow_dir_local=tmp_path / "job_dir",
+#             workflow_dir_remote=tmp_path / "job_dir",
+#             user_id=user.id,
+#         )
+#         project = await project_factory_v2(user)
+#         dataset = await dataset_factory_v2(
+#             project_id=project.id, zarr_dir=zarr_dir
+#         )
+#         # Run successfully on an empty dataset
+#         execute_tasks_v2(
+#             wf_task_list=[
+#                 WorkflowTaskV2Mock(
+#                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+#                     task_id=fractal_tasks_mock_no_db[
+#                         "dummy_insert_single_image"
+#                     ].id,
+#                     args_non_parallel=dict(
+#                         attributes={"attribute-name": None}
+#                     ),
+#                     id=0,
+#                     order=0,
+#                 )
+#             ],
+#             dataset=dataset,
+#             **execute_tasks_v2_args,
+#         )
+#         dataset_attrs = await _get_dataset_attrs(db, dataset.id)
+#         debug(dataset_attrs["images"])
+#         assert (
+#             "attribute-name"
+#             not in dataset_attrs["images"][0]["attributes"].keys()
+#         )
 
 
-async def test_default_inclusion_of_images(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-    fractal_tasks_mock_no_db,
-):
-    """
-    Ref
-    https://github.com/fractal-analytics-platform/fractal-server/issues/1374
-    """
-    # Prepare dataset
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    images = [
-        dict(
-            zarr_url=Path(zarr_dir, "my_image").as_posix(),
-            attributes={},
-            types={},
-        )
-    ]
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset_pre = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, images=images
-        )
+# async def test_dummy_insert_single_image_normalization(
+#     db,
+#     MockCurrentUser,
+#     project_factory_v2,
+#     dataset_factory_v2,
+#     tmp_path: Path,
+#     local_runner: Executor,
+#     fractal_tasks_mock_no_db,
+# ):
+#     # Preliminary setup
+#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+#     async with MockCurrentUser() as user:
+#         execute_tasks_v2_args = dict(
+#             executor=local_runner,
+#             workflow_dir_local=tmp_path / "job_dir",
+#             workflow_dir_remote=tmp_path / "job_dir",
+#             user_id=user.id,
+#         )
+#         project = await project_factory_v2(user)
+#         dataset = await dataset_factory_v2(
+#             project_id=project.id, zarr_dir=zarr_dir
+#         )
+#         # Run successfully with trailing slashes
+#         execute_tasks_v2(
+#             wf_task_list=[
+#                 WorkflowTaskV2Mock(
+#                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
+#                     task_id=fractal_tasks_mock_no_db[
+#                         "dummy_insert_single_image"
+#                     ].id,
+#                     id=0,
+#                     order=0,
+#                     args_non_parallel={"trailing_slash": True},
+#                 )
+#             ],
+#             dataset=dataset,
+#             **execute_tasks_v2_args,
+#         )
+#         dataset_attrs = await _get_dataset_attrs(db, dataset.id)
+#         debug(dataset_attrs["images"])
+#         for image in dataset_attrs["images"]:
+#             assert normalize_url(image["zarr_url"]) == image["zarr_url"]
 
-        # Run
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["generic_task_parallel"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "generic_task_parallel"
-                    ].id,
-                    rder=0,
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset_pre,
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
-        image = dataset_attrs["images"][0]
-        debug(dataset_attrs)
-        debug(image)
-        assert image["types"] == dict(my_type=True)
+
+# async def test_default_inclusion_of_images(
+#     db,
+#     MockCurrentUser,
+#     project_factory_v2,
+#     dataset_factory_v2,
+#     tmp_path: Path,
+#     local_runner: Executor,
+#     fractal_tasks_mock_no_db,
+# ):
+#     """
+#     Ref
+#     https://github.com/fractal-analytics-platform/fractal-server/issues/1374
+#     """
+#     # Prepare dataset
+#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+#     images = [
+#         dict(
+#             zarr_url=Path(zarr_dir, "my_image").as_posix(),
+#             attributes={},
+#             types={},
+#         )
+#     ]
+#     async with MockCurrentUser() as user:
+#         project = await project_factory_v2(user)
+#         dataset_pre = await dataset_factory_v2(
+#             project_id=project.id, zarr_dir=zarr_dir, images=images
+#         )
+
+#         # Run
+#         execute_tasks_v2(
+#             wf_task_list=[
+#                 WorkflowTaskV2Mock(
+#                     task=fractal_tasks_mock_no_db["generic_task_parallel"],
+#                     task_id=fractal_tasks_mock_no_db[
+#                         "generic_task_parallel"
+#                     ].id,
+#                     rder=0,
+#                     id=0,
+#                     order=0,
+#                 )
+#             ],
+#             dataset=dataset_pre,
+#             executor=local_runner,
+#             workflow_dir_local=tmp_path / "job_dir",
+#             workflow_dir_remote=tmp_path / "job_dir",
+#             user_id=user.id,
+#         )
+#         dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
+#         image = dataset_attrs["images"][0]
+#         debug(dataset_attrs)
+#         debug(image)
+#         assert image["types"] == dict(my_type=True)

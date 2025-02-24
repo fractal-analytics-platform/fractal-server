@@ -10,9 +10,9 @@ from fractal_server.tasks.v2.utils_database import _get_task_type
 
 
 @pytest.fixture()
-def executor():
-    with LocalRunner() as e:
-        yield e
+def local_runner():
+    with LocalRunner() as r:
+        yield r
 
 
 def _run_cmd(*, cmd: str, label: str) -> str:

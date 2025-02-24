@@ -35,7 +35,7 @@ async def test_parallelize_on_no_images(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
 ):
     """
     Run a parallel task on a dataset with no images.
@@ -44,7 +44,7 @@ async def test_parallelize_on_no_images(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
@@ -80,7 +80,7 @@ async def test_parallelize_on_no_images_compound(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
 ):
     """
     Run a compound task with an empty parallelization list.
@@ -89,7 +89,7 @@ async def test_parallelize_on_no_images_compound(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,

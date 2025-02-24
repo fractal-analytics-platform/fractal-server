@@ -7,6 +7,8 @@ from pydantic import field_validator
 from pydantic import model_validator
 from pydantic import ValidationInfo
 
+from fractal_server.app.models.v2 import TaskV2
+
 
 class TaskV2Mock(BaseModel):
     id: int
@@ -57,7 +59,7 @@ class WorkflowTaskV2Mock(BaseModel):
     meta_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_parallel: Optional[dict[str, Any]] = Field(None)
     meta_non_parallel: Optional[dict[str, Any]] = Field(None)
-    task: TaskV2Mock
+    task: TaskV2
     type_filters: dict[str, bool] = Field(default_factory=dict)
     order: int
     id: int

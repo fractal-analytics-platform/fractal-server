@@ -65,7 +65,7 @@ async def test_fractal_demos_01(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
     fractal_tasks_mock_no_db,
 ):
     """
@@ -75,7 +75,7 @@ async def test_fractal_demos_01(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
@@ -243,7 +243,7 @@ async def test_fractal_demos_01_no_overwrite(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
     fractal_tasks_mock_no_db,
 ):
     """
@@ -255,7 +255,7 @@ async def test_fractal_demos_01_no_overwrite(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
@@ -468,7 +468,7 @@ async def test_registration_no_overwrite(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
     fractal_tasks_mock_no_db,
 ):
     """
@@ -478,7 +478,7 @@ async def test_registration_no_overwrite(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
@@ -603,7 +603,7 @@ async def test_registration_overwrite(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
     fractal_tasks_mock_no_db,
 ):
     """
@@ -613,7 +613,7 @@ async def test_registration_overwrite(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
@@ -741,14 +741,14 @@ async def test_channel_parallelization_with_overwrite(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
     fractal_tasks_mock_no_db,
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
@@ -809,14 +809,14 @@ async def test_channel_parallelization_no_overwrite(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
     fractal_tasks_mock_no_db,
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
-            executor=executor,
+            executor=local_runner,
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=tmp_path / "job_dir",
             user_id=user.id,
