@@ -177,7 +177,6 @@ async def test_dummy_remove_images(
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
 ):
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_remove_images"].id
 
@@ -247,7 +246,6 @@ async def test_dummy_unset_attribute(
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
 ):
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_unset_attribute"].id
 
@@ -320,7 +318,7 @@ async def test_dummy_unset_attribute(
     }
 
 
-# async def test_dummy_insert_single_image_none_attribute(
+# async def test_dummy_insert_single_image_none_attribute(  # FIXME re-include
 #     db,
 #     MockCurrentUser,
 #     project_factory_v2,
@@ -368,7 +366,7 @@ async def test_dummy_unset_attribute(
 #         )
 
 
-# async def test_dummy_insert_single_image_normalization(
+# async def test_dummy_insert_single_image_normalization(  # FIXME re-include
 #     db,
 #     MockCurrentUser,
 #     project_factory_v2,
@@ -412,7 +410,7 @@ async def test_dummy_unset_attribute(
 #             assert normalize_url(image["zarr_url"]) == image["zarr_url"]
 
 
-# async def test_default_inclusion_of_images(
+# async def test_default_inclusion_of_images(  # FIXME re-include
 #     db,
 #     MockCurrentUser,
 #     project_factory_v2,
