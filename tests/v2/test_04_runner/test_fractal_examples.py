@@ -4,13 +4,19 @@ from concurrent.futures import Executor
 from pathlib import Path
 from typing import Any
 
-from aux_get_dataset_attrs import _get_dataset_attrs
+import pytest
 from devtools import debug
-from fixtures_mocks import *  # noqa: F401,F403
-from v2_mock_models import WorkflowTaskV2Mock
 
+from .aux_get_dataset_attrs import _get_dataset_attrs
+from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
+
+
+@pytest.fixture()
+def local_runner():
+    with LocalRunner() as r:
+        yield r
 
 
 def execute_tasks_v2(wf_task_list, workflow_dir_local, user_id: int, **kwargs):
@@ -64,9 +70,11 @@ async def test_fractal_demos_01(
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
     tmp_path: Path,
-    local_runner: Executor,
-    fractal_tasks_mock_no_db,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
 ):
     """
     Mock of fractal-demos/examples/01.
@@ -74,167 +82,161 @@ async def test_fractal_demos_01(
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=local_runner,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
+        user_id = user.id
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "create_ome_zarr_compound"
-                    ].id,
-                    args_non_parallel=dict(image_dir="/tmp/input_images"),
-                    args_parallel={},
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-        debug(dataset_attrs["history"])
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound"
-        ]
-        assert dataset_attrs["attribute_filters"] == {}
-        assert dataset_attrs["type_filters"] == {}
-        _assert_image_data_exist(dataset_attrs["images"])
-        assert len(dataset_attrs["images"]) == 2
 
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["illumination_correction"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "illumination_correction"
-                    ].id,
-                    args_parallel=dict(overwrite_input=True),
-                    id=1,
-                    order=1,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound",
-            "illumination_correction",
-        ]
-        assert dataset_attrs["attribute_filters"] == {}
-        assert dataset_attrs["type_filters"] == {
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir
+    )
+    workflow = await workflow_factory_v2(project_id=project.id)
+
+    wftask0 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["create_ome_zarr_compound"].id,
+        order=0,
+        args_non_parallel=dict(image_dir="/tmp/input_images"),
+        args_parallel={},
+    )
+    wftask1 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["illumination_correction"].id,
+        args_parallel=dict(overwrite_input=True),
+        order=1,
+    )
+
+    wftask2 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["MIP_compound"].id,
+        args_non_parallel=dict(suffix="mip"),
+        args_parallel={},
+        order=2,
+    )
+    wftask3 = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
+        args_parallel={},
+        order=3,
+    )
+
+    execute_tasks_v2(
+        wf_task_list=[wftask0],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset.id)
+    debug(dataset_attrs["history"])
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound"
+    ]
+    assert dataset_attrs["attribute_filters"] == {}
+    assert dataset_attrs["type_filters"] == {}
+    _assert_image_data_exist(dataset_attrs["images"])
+    assert len(dataset_attrs["images"]) == 2
+
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask1],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job1",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+    ]
+    assert dataset_attrs["attribute_filters"] == {}
+    assert dataset_attrs["type_filters"] == {
+        "illumination_correction": True,
+    }
+    assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+    }
+
+    img = find_image_by_zarr_url(
+        zarr_url=f"{zarr_dir}/my_plate.zarr/A/01/0",
+        images=dataset_attrs["images"],
+    )["image"]
+    assert img == {
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate.zarr",
+        },
+        "types": {
             "illumination_correction": True,
-        }
-        assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
-            f"{zarr_dir}/my_plate.zarr/A/01/0",
-            f"{zarr_dir}/my_plate.zarr/A/02/0",
-        }
+            "3D": True,
+        },
+        "origin": None,
+    }
 
-        img = find_image_by_zarr_url(
-            zarr_url=f"{zarr_dir}/my_plate.zarr/A/01/0",
-            images=dataset_attrs["images"],
-        )["image"]
-        assert img == {
-            "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "attributes": {
-                "well": "A01",
-                "plate": "my_plate.zarr",
-            },
-            "types": {
-                "illumination_correction": True,
-                "3D": True,
-            },
-            "origin": None,
-        }
+    _assert_image_data_exist(dataset_attrs["images"])
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask2],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job2",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    debug(dataset_attrs)
 
-        _assert_image_data_exist(dataset_attrs["images"])
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["MIP_compound"],
-                    task_id=fractal_tasks_mock_no_db["MIP_compound"].id,
-                    args_non_parallel=dict(suffix="mip"),
-                    args_parallel={},
-                    id=2,
-                    order=2,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-        debug(dataset_attrs)
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+    ]
 
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound",
-            "illumination_correction",
-            "MIP_compound",
-        ]
-
-        assert dataset_attrs["attribute_filters"] == {}
-        assert dataset_attrs["type_filters"] == {
-            "illumination_correction": True,
+    assert dataset_attrs["attribute_filters"] == {}
+    assert dataset_attrs["type_filters"] == {
+        "illumination_correction": True,
+        "3D": False,
+    }
+    img = find_image_by_zarr_url(
+        zarr_url=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        images=dataset_attrs["images"],
+    )["image"]
+    assert img == {
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate_mip.zarr",
+        },
+        "types": {
             "3D": False,
-        }
-        img = find_image_by_zarr_url(
-            zarr_url=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
-            images=dataset_attrs["images"],
-        )["image"]
-        assert img == {
-            "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
-            "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "attributes": {
-                "well": "A01",
-                "plate": "my_plate_mip.zarr",
-            },
-            "types": {
-                "3D": False,
-                "illumination_correction": True,
-            },
-        }
-        _assert_image_data_exist(dataset_attrs["images"])
-        dataset_with_attrs = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
-        )
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["cellpose_segmentation"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "cellpose_segmentation"
-                    ].id,
-                    args_parallel={},
-                    id=3,
-                    order=3,
-                )
-            ],
-            dataset=dataset_with_attrs,
-            **execute_tasks_v2_args,
-        )
-        dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-        debug(dataset_attrs)
+            "illumination_correction": True,
+        },
+    }
+    _assert_image_data_exist(dataset_attrs["images"])
+    dataset_with_attrs = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
+    )
+    execute_tasks_v2(
+        wf_task_list=[wftask3],
+        dataset=dataset_with_attrs,
+        workflow_dir_local=tmp_path / "job3",
+        runner=local_runner,
+        user_id=user_id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
+    debug(dataset_attrs)
 
-        assert _task_names_from_history(dataset_attrs["history"]) == [
-            "create_ome_zarr_compound",
-            "illumination_correction",
-            "MIP_compound",
-            "cellpose_segmentation",
-        ]
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+        "cellpose_segmentation",
+    ]
 
 
 async def test_fractal_demos_01_no_overwrite(
@@ -243,8 +245,8 @@ async def test_fractal_demos_01_no_overwrite(
     project_factory_v2,
     dataset_factory_v2,
     tmp_path: Path,
-    local_runner: Executor,
-    fractal_tasks_mock_no_db,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
 ):
     """
     Similar to fractal-demos/examples/01, but illumination
@@ -267,8 +269,8 @@ async def test_fractal_demos_01_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["create_ome_zarr_compound"],
+                    task_id=fractal_tasks_mock_db[
                         "create_ome_zarr_compound"
                     ].id,
                     args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -293,8 +295,8 @@ async def test_fractal_demos_01_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["illumination_correction"],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["illumination_correction"],
+                    task_id=fractal_tasks_mock_db[
                         "illumination_correction"
                     ].id,
                     args_parallel=dict(overwrite_input=False),
@@ -373,8 +375,8 @@ async def test_fractal_demos_01_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["MIP_compound"],
-                    task_id=fractal_tasks_mock_no_db["MIP_compound"].id,
+                    task=fractal_tasks_mock_db["MIP_compound"],
+                    task_id=fractal_tasks_mock_db["MIP_compound"].id,
                     args_non_parallel=dict(suffix="mip"),
                     id=2,
                     order=2,
@@ -442,10 +444,8 @@ async def test_fractal_demos_01_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["cellpose_segmentation"],
-                    task_id=fractal_tasks_mock_no_db[
-                        "cellpose_segmentation"
-                    ].id,
+                    task=fractal_tasks_mock_db["cellpose_segmentation"],
+                    task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
                     id=3,
                     order=3,
                 )
@@ -469,7 +469,7 @@ async def test_registration_no_overwrite(
     dataset_factory_v2,
     tmp_path: Path,
     local_runner: Executor,
-    fractal_tasks_mock_no_db,
+    fractal_tasks_mock_db,
 ):
     """
     Test registration workflow, based on four tasks.
@@ -490,10 +490,10 @@ async def test_registration_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db[
                         "create_ome_zarr_multiplex_compound"
                     ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task_id=fractal_tasks_mock_db[
                         "create_ome_zarr_multiplex_compound"
                     ].id,
                     args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -512,10 +512,10 @@ async def test_registration_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db[
                         "calculate_registration_compound"
                     ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task_id=fractal_tasks_mock_db[
                         "calculate_registration_compound"
                     ].id,
                     args_non_parallel={"ref_acquisition": 0},
@@ -546,10 +546,8 @@ async def test_registration_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
-                        "find_registration_consensus"
-                    ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["find_registration_consensus"],
+                    task_id=fractal_tasks_mock_db[
                         "find_registration_consensus"
                     ].id,
                     id=2,
@@ -577,10 +575,8 @@ async def test_registration_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
-                        "apply_registration_to_image"
-                    ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["apply_registration_to_image"],
+                    task_id=fractal_tasks_mock_db[
                         "apply_registration_to_image"
                     ].id,
                     args_parallel={"overwrite_input": False},
@@ -604,7 +600,7 @@ async def test_registration_overwrite(
     dataset_factory_v2,
     tmp_path: Path,
     local_runner: Executor,
-    fractal_tasks_mock_no_db,
+    fractal_tasks_mock_db,
 ):
     """
     Test registration workflow, based on four tasks.
@@ -625,10 +621,10 @@ async def test_registration_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db[
                         "create_ome_zarr_multiplex_compound"
                     ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task_id=fractal_tasks_mock_db[
                         "create_ome_zarr_multiplex_compound"
                     ].id,
                     args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -648,10 +644,10 @@ async def test_registration_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db[
                         "calculate_registration_compound"
                     ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task_id=fractal_tasks_mock_db[
                         "calculate_registration_compound"
                     ].id,
                     args_non_parallel={"ref_acquisition": 0},
@@ -682,10 +678,8 @@ async def test_registration_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
-                        "find_registration_consensus"
-                    ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["find_registration_consensus"],
+                    task_id=fractal_tasks_mock_db[
                         "find_registration_consensus"
                     ].id,
                     id=2,
@@ -713,10 +707,8 @@ async def test_registration_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
-                        "apply_registration_to_image"
-                    ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["apply_registration_to_image"],
+                    task_id=fractal_tasks_mock_db[
                         "apply_registration_to_image"
                     ].id,
                     args_parallel={"overwrite_input": True},
@@ -742,7 +734,7 @@ async def test_channel_parallelization_with_overwrite(
     dataset_factory_v2,
     tmp_path: Path,
     local_runner: Executor,
-    fractal_tasks_mock_no_db,
+    fractal_tasks_mock_db,
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -761,8 +753,8 @@ async def test_channel_parallelization_with_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["create_ome_zarr_compound"],
+                    task_id=fractal_tasks_mock_db[
                         "create_ome_zarr_compound"
                     ].id,
                     args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -782,10 +774,10 @@ async def test_channel_parallelization_with_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db[
                         "illumination_correction_compound"
                     ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task_id=fractal_tasks_mock_db[
                         "illumination_correction_compound"
                     ].id,
                     args_non_parallel=dict(overwrite_input=True),
@@ -810,7 +802,7 @@ async def test_channel_parallelization_no_overwrite(
     dataset_factory_v2,
     tmp_path: Path,
     local_runner: Executor,
-    fractal_tasks_mock_no_db,
+    fractal_tasks_mock_db,
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -829,8 +821,8 @@ async def test_channel_parallelization_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db["create_ome_zarr_compound"],
-                    task_id=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db["create_ome_zarr_compound"],
+                    task_id=fractal_tasks_mock_db[
                         "create_ome_zarr_compound"
                     ].id,
                     args_non_parallel=dict(image_dir="/tmp/input_images"),
@@ -850,10 +842,10 @@ async def test_channel_parallelization_no_overwrite(
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
-                    task=fractal_tasks_mock_no_db[
+                    task=fractal_tasks_mock_db[
                         "illumination_correction_compound"
                     ],
-                    task_id=fractal_tasks_mock_no_db[
+                    task_id=fractal_tasks_mock_db[
                         "illumination_correction_compound"
                     ].id,
                     args_non_parallel=dict(overwrite_input=False),
