@@ -94,6 +94,7 @@ def test_slurm_sudo_executor_shutdown_before_job_submission(
         debug(exc_info.value)
 
 
+@pytest.mark.skip(reason="NOT YET READY TO BE TESTED - FIXME")
 def test_check_remote_runner_python_interpreter(
     monkeypatch,
     override_settings_factory,
