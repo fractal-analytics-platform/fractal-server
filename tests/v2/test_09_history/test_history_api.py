@@ -463,7 +463,7 @@ async def test_status_images(
         }
 
 
-async def test_delete_image_status_on_cascade(
+async def test_cascade_delete_image_status(
     project_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
