@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 from typing import Optional
 
+from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.history import update_all_images
@@ -69,14 +70,15 @@ class LocalRunner(BaseRunner):
             in_compound_task=in_compound_task,
         )
 
-        # Set parallel_tasks_per_job
-        n_elements = len(list_parameters)
+        # Get local_backend_config
         if local_backend_config is None:
+            local_backend_config = get_default_local_backend_config()
+
+        # Set `n_elements` and `parallel_tasks_per_job`
+        n_elements = len(list_parameters)
+        parallel_tasks_per_job = local_backend_config.parallel_tasks_per_job
+        if parallel_tasks_per_job is None:
             parallel_tasks_per_job = n_elements
-        else:
-            parallel_tasks_per_job = (
-                local_backend_config.parallel_tasks_per_job
-            )
 
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
         results = {}
