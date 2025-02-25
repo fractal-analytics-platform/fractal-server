@@ -461,3 +461,86 @@ async def test_status_images(
             "current_page": 999,
             "images": [],
         }
+
+
+async def test_delete_dataset_associated_to_image_status(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+
+        task = await task_factory_v2(user_id=user.id)
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        image_status = ImageStatus(
+            zarr_url="/a",
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            parameters_hash="xxx",
+            status=HistoryItemImageStatus.DONE,
+            logfile="abc",
+        )
+        db.add(image_status)
+        await db.commit()
+        db.expunge_all()
+
+        # Using cascade operations
+        res = await client.delete(
+            f"/api/v2/project/{project.id}/dataset/{dataset.id}/"
+        )
+        assert res.status_code == 204
+
+        image_status = await db.get(ImageStatus, ("/a", wftask.id, dataset.id))
+        assert image_status is None
+
+
+async def test_delete_workflow_associated_to_image_status(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+
+        task = await task_factory_v2(user_id=user.id)
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        image_status = ImageStatus(
+            zarr_url="/a",
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            parameters_hash="xxx",
+            status=HistoryItemImageStatus.DONE,
+            logfile="abc",
+        )
+        db.add(image_status)
+        await db.commit()
+        db.expunge_all()
+
+        res = await client.delete(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 204
+
+        image_status = await db.get(ImageStatus, ("/a", wftask.id, dataset.id))
+        assert image_status is None
