@@ -22,7 +22,7 @@ from typing import Optional
 from ...models.v2 import DatasetV2
 from ...models.v2 import WorkflowV2
 from ..executors.slurm_common._submit_setup import _slurm_submit_setup
-from ..executors.slurm_sudo.executor import FractalSlurmSudoExecutor
+from ..executors.slurm_sudo.runner import RunnerSlurmSudo
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.images.models import AttributeFiltersType
@@ -65,13 +65,11 @@ def process_workflow(
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
 
-    with FractalSlurmSudoExecutor(
-        debug=True,
-        keep_logs=True,
+    with RunnerSlurmSudo(
         slurm_user=slurm_user,
         user_cache_dir=user_cache_dir,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
         slurm_account=slurm_account,
     ) as executor:

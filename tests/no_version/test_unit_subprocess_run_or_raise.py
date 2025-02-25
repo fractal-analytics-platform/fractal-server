@@ -4,7 +4,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm_sudo.executor import (
+from fractal_server.app.runner.executors.slurm_sudo.runner import (
     _subprocess_run_or_raise,
 )
 
