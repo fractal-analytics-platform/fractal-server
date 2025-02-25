@@ -117,6 +117,10 @@ async def full_workflow(
         debug(job_status_data)
         assert job_status_data["log"]
         debug(job_status_data["working_dir"])
+        if job_status_data["status"] != "done":
+            debug(job_status_data["status"])
+            debug(job_status_data["log"])
+            raise RuntimeError("Status is not 'done'.")
         assert job_status_data["status"] == "done"
         assert "START workflow" in job_status_data["log"]
         assert "END workflow" in job_status_data["log"]
