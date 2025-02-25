@@ -5,7 +5,6 @@ import subprocess  # nosec
 import sys
 import time
 from pathlib import Path
-from subprocess import CompletedProcess  # nosec
 from typing import Any
 from typing import Optional
 
@@ -112,7 +111,9 @@ class SlurmJob(BaseModel):
         ).as_posix()
 
 
-def _subprocess_run_or_raise(full_command: str) -> Optional[CompletedProcess]:
+def _subprocess_run_or_raise(
+    full_command: str,
+) -> Optional[subprocess.CompletedProcess]:
     try:
         output = subprocess.run(  # nosec
             shlex.split(full_command),
