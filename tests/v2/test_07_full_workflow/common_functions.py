@@ -12,10 +12,11 @@ from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
 @contextmanager
-def informative_assertion_block(args):
+def informative_assertion_block(*args):
     try:
         yield
     except AssertionError as e:
+        debug("SOME ASSERTION FAILED")
         for arg in args:
             debug(arg)
         raise e
