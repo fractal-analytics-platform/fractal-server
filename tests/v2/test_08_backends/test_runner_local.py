@@ -26,7 +26,7 @@ async def mock_history_item(
     item = HistoryItemV2(
         dataset_id=dataset.id,
         workflowtask_id=None,
-        worfklowtask_dump={},
+        workflowtask_dump={},
         task_group_dump={},
         parameters_hash="xxx",
         num_current_images=4,
