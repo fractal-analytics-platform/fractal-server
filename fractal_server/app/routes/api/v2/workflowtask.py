@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
@@ -348,13 +349,10 @@ async def delete_workflowtask(
     for history_item in history_items:
         history_item.workflowtask_id = None
 
-    stm = select(ImageStatus).where(
+    stm = delete(ImageStatus).where(
         ImageStatus.workflowtask_id == db_workflow_task.id
     )
-    res = await db.execute(stm)
-    image_statuses = res.scalars().all()
-    for image_status in image_statuses:
-        await db.delete(image_status)
+    await db.execute(stm)
 
     # Delete WorkflowTask
     await db.delete(db_workflow_task)

@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
+from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
@@ -244,11 +245,8 @@ async def delete_workflow(
     for history_item in history_items:
         history_item.workflowtask_id = None
 
-    stm = select(ImageStatus).where(ImageStatus.workflowtask_id.in_(wft_ids))
-    res = await db.execute(stm)
-    image_statuses = res.scalars().all()
-    for image_status in image_statuses:
-        await db.delete(image_status)
+    stm = delete(ImageStatus).where(ImageStatus.workflowtask_id.in_(wft_ids))
+    await db.execute(stm)
 
     # Delete workflow
     await db.delete(workflow)

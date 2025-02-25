@@ -5,6 +5,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
@@ -229,17 +230,11 @@ async def delete_dataset(
     # Cascade operations: delete history items and image status which are in
     # relationship with the current dataset
 
-    stm = select(HistoryItemV2).where(HistoryItemV2.dataset_id == dataset_id)
-    res = await db.execute(stm)
-    history_items = res.scalars().all()
-    for history_item in history_items:
-        await db.delete(history_item)
+    stm = delete(HistoryItemV2).where(HistoryItemV2.dataset_id == dataset_id)
+    await db.execute(stm)
 
-    stm = select(ImageStatus).where(ImageStatus.dataset_id == dataset_id)
-    res = await db.execute(stm)
-    image_statuses = res.scalars().all()
-    for image_status in image_statuses:
-        await db.delete(image_status)
+    stm = delete(ImageStatus).where(ImageStatus.dataset_id == dataset_id)
+    await db.execute(stm)
 
     # Delete dataset
     await db.delete(dataset)
