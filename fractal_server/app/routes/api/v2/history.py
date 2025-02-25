@@ -93,6 +93,7 @@ async def get_per_workflow_aggregated_info(
             .where(ImageStatus.dataset_id == dataset_id)
             .where(ImageStatus.workflowtask_id.in_(wft_ids))
             .where(ImageStatus.status == _status)
+            # https://docs.sqlalchemy.org/en/20/tutorial/data_select.html#tutorial-group-by-w-aggregates
             .group_by(ImageStatus.workflowtask_id)
         )
         res = await db.execute(stm)
