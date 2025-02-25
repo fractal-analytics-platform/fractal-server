@@ -23,7 +23,7 @@ logger = set_logger(__name__)
 
 
 @router.get(
-    "/project/{project_id}/status/",
+    "/project/{project_id}/status-legacy/",
     response_model=StatusReadV2,
 )
 async def get_workflowtask_status(

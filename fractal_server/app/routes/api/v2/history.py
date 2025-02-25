@@ -10,16 +10,10 @@ from sqlmodel import func
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_workflow_check_history_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
-from ._aux_functions import _get_workflowtask_check_history_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.history.parse_history import get_workflow_statuses
-from fractal_server.app.history.parse_history import (
-    get_workflowtask_image_statuses,
-)
 from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryItemV2
@@ -56,53 +50,6 @@ async def get_dataset_history(
     res = await db.execute(stm)
     items = res.scalars().all()
     return items
-
-
-@router.get("/history/latest-status/")
-async def get_workflow_dataset_latest_status(
-    workflow_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
-    workflowtask_ids = await _get_workflow_check_history_owner(
-        dataset_id=dataset_id,
-        workflow_id=workflow_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    statuses = await get_workflow_statuses(
-        dataset_id=dataset_id,
-        workflowtask_ids=workflowtask_ids,
-        db=db,
-    )
-    return JSONResponse(content=statuses, status_code=status.HTTP_200_OK)
-
-
-@router.get("/history/latest-status/images/")
-async def get_workflowtask_detailed_status(
-    workflowtask_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
-    await _get_workflowtask_check_history_owner(
-        dataset_id=dataset_id,
-        workflowtask_id=workflowtask_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    images = await get_workflowtask_image_statuses(
-        dataset_id=dataset_id,
-        workflowtask_id=workflowtask_id,
-        db=db,
-    )
-    return JSONResponse(content=images, status_code=status.HTTP_200_OK)
-
-
-# ---
 
 
 @router.get("/project/{project_id}/status/")
