@@ -5,12 +5,14 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
 from ....models.v2 import HistoryItemV2
+from ....models.v2 import ImageStatus
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
@@ -225,14 +227,14 @@ async def delete_dataset(
     for job in jobs:
         job.dataset_id = None
 
-    # Cascade operations: set foreign-keys to null for history items which are
-    # in relationship with the current dataset
+    # Cascade operations: delete history items and image status which are in
+    # relationship with the current dataset
 
-    stm = select(HistoryItemV2).where(HistoryItemV2.dataset_id == dataset_id)
-    res = await db.execute(stm)
-    history_items = res.scalars().all()
-    for history_item in history_items:
-        await db.delete(history_item)
+    stm = delete(HistoryItemV2).where(HistoryItemV2.dataset_id == dataset_id)
+    await db.execute(stm)
+
+    stm = delete(ImageStatus).where(ImageStatus.dataset_id == dataset_id)
+    await db.execute(stm)
 
     # Delete dataset
     await db.delete(dataset)
