@@ -328,7 +328,14 @@ def execute_tasks_v2(
         # information
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
+            if exceptions == {}:
+                db_dataset.history[-1][
+                    "status"
+                ] = WorkflowTaskStatusTypeV2.DONE
+            else:
+                db_dataset.history[-1][
+                    "status"
+                ] = WorkflowTaskStatusTypeV2.FAILED
             db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
             for attribute_name in [
