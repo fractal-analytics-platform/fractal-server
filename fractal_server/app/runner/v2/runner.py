@@ -352,8 +352,12 @@ def execute_tasks_v2(
         if exceptions != {}:
             logger.error(
                 f'END    {wftask.order}-th task (name="{task_name}") '
-                "- SOMETHING FAILED, STOP."
+                "- ERROR."
             )
-            raise JobExecutionError("something failed")  # FIXME
+            # Raise first error
+            for key, value in exceptions.items():
+                raise JobExecutionError(
+                    info=(f"An error occurred.\nOriginal error:\n{value}")
+                )
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
