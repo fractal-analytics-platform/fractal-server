@@ -9,6 +9,7 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
     RunnerSlurmSudo,
 )
+from tests.fixtures_slurm import SLURM_USER
 
 ALL_IMAGES = ["a", "b", "c", "d"]
 
@@ -47,16 +48,24 @@ async def mock_history_item(
 async def test_submit_success(
     db,
     mock_history_item,
+    tmp777_path,
     monkey_slurm,
 ):
     def do_nothing(parameters: dict) -> int:
         return 42
 
-    with RunnerSlurmSudo() as runner:
+    with RunnerSlurmSudo(
+        slurm_user=SLURM_USER,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        slurm_poll_interval=0,
+    ) as runner:
         result, exception = runner.submit(
             do_nothing,
             parameters=dict(zarr_urls=["a", "b", "c", "d"]),
             history_item_id=mock_history_item.id,
+            workdir_local=tmp777_path / "server/task",
+            workdir_remote=tmp777_path / "user/task",
         )
         assert result == 42
         assert exception is None
@@ -71,6 +80,7 @@ async def test_submit_success(
 async def test_submit_fail(
     db,
     mock_history_item,
+    tmp777_path,
     monkey_slurm,
 ):
     ERROR_MSG = "very nice error"
@@ -78,11 +88,18 @@ async def test_submit_fail(
     def raise_ValueError(parameters: dict):
         raise ValueError(ERROR_MSG)
 
-    with RunnerSlurmSudo() as runner:
+    with RunnerSlurmSudo(
+        slurm_user=SLURM_USER,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        slurm_poll_interval=0,
+    ) as runner:
         result, exception = runner.submit(
             raise_ValueError,
             parameters=dict(zarr_urls=[]),
             history_item_id=mock_history_item.id,
+            workdir_local=tmp777_path / "server/task",
+            workdir_remote=tmp777_path / "user/task",
         )
     assert result is None
     assert isinstance(exception, TaskExecutionError)
@@ -98,6 +115,7 @@ async def test_submit_fail(
 async def test_multisubmit(
     db,
     mock_history_item,
+    tmp777_path,
     monkey_slurm,
 ):
     def fun(parameters: int):
@@ -112,7 +130,12 @@ async def test_multisubmit(
             time.sleep(1)
             raise ValueError("parameter=3 is very very bad")
 
-    with RunnerSlurmSudo() as runner:
+    with RunnerSlurmSudo(
+        slurm_user=SLURM_USER,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        slurm_poll_interval=0,
+    ) as runner:
         results, exceptions = runner.multisubmit(
             fun,
             [
@@ -122,6 +145,8 @@ async def test_multisubmit(
                 dict(zarr_url="d", parameter=4),
             ],
             history_item_id=mock_history_item.id,
+            workdir_local=tmp777_path / "server/task",
+            workdir_remote=tmp777_path / "user/task",
         )
         debug(results)
         debug(exceptions)
