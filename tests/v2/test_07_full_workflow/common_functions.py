@@ -154,7 +154,7 @@ async def full_workflow(
         # Test get_workflowtask_status endpoint
         res = await client.get(
             (
-                f"{PREFIX}/project/{project_id}/status/?"
+                f"{PREFIX}/project/{project_id}/status-legacy/?"
                 f"dataset_id={dataset_id}&workflow_id={workflow_id}"
             )
         )
@@ -197,21 +197,21 @@ async def full_workflow(
         debug(res.json())
         res = await client.get(
             (
-                f"{PREFIX}/history/latest-status/?"
+                f"{PREFIX}/history/latest-status-legacy/?"
                 f"dataset_id={dataset_id}&workflow_id={workflow.id}"
             )
         )
         debug(res.json())
         res = await client.get(
             (
-                f"{PREFIX}/history/latest-status/images/?"
+                f"{PREFIX}/history/latest-status-legacy/images/?"
                 f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
             )
         )
         debug(res.json())
         res = await client.get(
             (
-                f"{PREFIX}/history/latest-status/images/?"
+                f"{PREFIX}/history/latest-status-legacy/images/?"
                 f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
             )
         )
@@ -334,7 +334,7 @@ async def full_workflow_TaskExecutionError(
         # Test get_workflowtask_status endpoint
         res = await client.get(
             (
-                f"{PREFIX}/project/{project_id}/status/?"
+                f"{PREFIX}/project/{project_id}/status-legacy/?"
                 f"dataset_id={dataset_id}&workflow_id={workflow_id}"
             )
         )
@@ -504,7 +504,7 @@ async def failing_workflow_UnknownError(
         # Test get_workflowtask_status endpoint
         res = await client.get(
             (
-                f"{PREFIX}/project/{project_id}/status/?"
+                f"{PREFIX}/project/{project_id}/status-legacy/?"
                 f"dataset_id={dataset_id}&workflow_id={workflow_id}"
             )
         )

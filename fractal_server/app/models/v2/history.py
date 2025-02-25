@@ -28,7 +28,7 @@ class HistoryItemV2(SQLModel, table=True):
             nullable=False,
         ),
     )
-    worfklowtask_dump: dict[str, Any] = Field(
+    workflowtask_dump: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False)
     )
     task_group_dump: dict[str, Any] = Field(
@@ -38,3 +38,16 @@ class HistoryItemV2(SQLModel, table=True):
     num_available_images: int
     num_current_images: int
     images: dict[str, str] = Field(sa_column=Column(JSONB, nullable=False))
+
+
+class ImageStatus(SQLModel, table=True):
+
+    zarr_url: str = Field(primary_key=True)
+    workflowtask_id: int = Field(
+        primary_key=True, foreign_key="workflowtaskv2.id"
+    )
+    dataset_id: int = Field(primary_key=True, foreign_key="datasetv2.id")
+
+    parameters_hash: str
+    status: str
+    logfile: str

@@ -31,7 +31,7 @@ async def test_status_no_history_no_running_job(
         dataset = await dataset_factory_v2(project_id=project.id, history=[])
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )
@@ -78,7 +78,7 @@ async def test_status_yes_history_no_running_job(
         # Test the endpoint
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )
@@ -94,7 +94,7 @@ async def test_status_yes_history_no_running_job(
         # Test the endpoint
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )
@@ -110,7 +110,7 @@ async def test_status_yes_history_no_running_job(
         # Test the endpoint
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )
@@ -128,7 +128,7 @@ async def test_status_yes_history_no_running_job(
         # Test the endpoint
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )
@@ -184,7 +184,7 @@ async def test_status_yes_history_yes_running_job(
     await db.commit()
     res = await client.get(
         (
-            f"api/v2/project/{project.id}/status/?"
+            f"api/v2/project/{project.id}/status-legacy/?"
             f"dataset_id={dataset.id}&workflow_id={workflow.id}"
         )
     )
@@ -207,7 +207,7 @@ async def test_status_yes_history_yes_running_job(
     await db.commit()
     res = await client.get(
         (
-            f"api/v2/project/{project.id}/status/?"
+            f"api/v2/project/{project.id}/status-legacy/?"
             f"dataset_id={dataset.id}&workflow_id={workflow.id}"
         )
     )
@@ -230,7 +230,7 @@ async def test_status_yes_history_yes_running_job(
     await db.commit()
     res = await client.get(
         (
-            f"api/v2/project/{project.id}/status/?"
+            f"api/v2/project/{project.id}/status-legacy/?"
             f"dataset_id={dataset.id}&workflow_id={workflow.id}"
         )
     )
@@ -273,7 +273,7 @@ async def test_workflowtask_status_two_jobs(
             )
     res = await client.get(
         (
-            f"api/v2/project/{project.id}/status/?"
+            f"api/v2/project/{project.id}/status-legacy/?"
             f"dataset_id={dataset.id}&workflow_id={workflow.id}"
         )
     )
@@ -351,7 +351,7 @@ async def test_workflowtask_status_modified_workflow(
         # non-existing WorkflowTask's.
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )
@@ -375,7 +375,7 @@ async def test_workflowtask_status_modified_workflow(
         # non-existing WorkflowTask's.
         res = await client.get(
             (
-                f"api/v2/project/{project.id}/status/?"
+                f"api/v2/project/{project.id}/status-legacy/?"
                 f"dataset_id={dataset.id}&workflow_id={workflow.id}"
             )
         )

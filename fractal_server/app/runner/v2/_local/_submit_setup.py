@@ -27,7 +27,7 @@ def _local_submit_setup(
     which_type: Literal["non_parallel", "parallel"],
 ) -> dict[str, object]:
     """
-    Collect WorfklowTask-specific configuration parameters from different
+    Collect WorkflowTask-specific configuration parameters from different
     sources, and inject them for execution.
 
     Arguments:
