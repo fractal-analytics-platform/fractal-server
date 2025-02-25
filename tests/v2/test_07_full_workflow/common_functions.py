@@ -315,9 +315,13 @@ async def full_workflow_TaskExecutionError(
         job_status_data = res.json()
         debug(job_status_data)
         debug(job_status_data["working_dir"])
-        assert job_status_data["log"]
-        assert job_status_data["status"] == "failed"
-        assert "ValueError" in job_status_data["log"]
+        try:
+            assert job_status_data["log"]
+            assert job_status_data["status"] == "failed"
+            assert "ValueError" in job_status_data["log"]
+        except AssertionError as e:
+            debug(job_status_data)
+            raise e
 
         # The temporary output of the successful tasks must have been written
         # into the dataset filters&images attributes, and the history must
