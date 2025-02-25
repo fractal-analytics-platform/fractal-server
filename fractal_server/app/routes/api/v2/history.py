@@ -85,44 +85,25 @@ async def get_per_workflow_aggregated_info(
     res = await db.execute(stm)
     num_available_images = {k: v for k, v in res.all()}
 
-    stm = (
-        select(ImageStatus.workflowtask_id, func.count())
-        .where(ImageStatus.dataset_id == dataset_id)
-        .where(ImageStatus.workflowtask_id.in_(wft_ids))
-        .where(ImageStatus.status == HistoryItemImageStatus.DONE)
-        .group_by(ImageStatus.workflowtask_id)
-    )
-    res = await db.execute(stm)
-    done = {k: v for k, v in res.all()}
-
-    stm = (
-        select(ImageStatus.workflowtask_id, func.count())
-        .where(ImageStatus.dataset_id == dataset_id)
-        .where(ImageStatus.workflowtask_id.in_(wft_ids))
-        .where(ImageStatus.status == HistoryItemImageStatus.FAILED)
-        .group_by(ImageStatus.workflowtask_id)
-    )
-    res = await db.execute(stm)
-    failed = {k: v for k, v in res.all()}
-
-    stm = (
-        select(ImageStatus.workflowtask_id, func.count())
-        .where(ImageStatus.dataset_id == dataset_id)
-        .where(ImageStatus.workflowtask_id.in_(wft_ids))
-        .where(ImageStatus.status == HistoryItemImageStatus.SUBMITTED)
-        .group_by(ImageStatus.workflowtask_id)
-    )
-    res = await db.execute(stm)
-    submitted = {k: v for k, v in res.all()}
-
+    count = {}
+    for _status in HistoryItemImageStatus:
+        stm = (
+            select(ImageStatus.workflowtask_id, func.count())
+            .where(ImageStatus.dataset_id == dataset_id)
+            .where(ImageStatus.workflowtask_id.in_(wft_ids))
+            .where(ImageStatus.status == _status)
+            .group_by(ImageStatus.workflowtask_id)
+        )
+        res = await db.execute(stm)
+        count[_status] = {k: v for k, v in res.all()}
     result = {
         str(_id): None
         if _id not in num_available_images
         else {
             "num_available_images": num_available_images[_id],
-            "num_done_images": done.get(_id, 0),
-            "num_submitted_images": submitted.get(_id, 0),
-            "num_failed_images": failed.get(_id, 0),
+            "num_done_images": count["done"].get(_id, 0),
+            "num_submitted_images": count["submitted"].get(_id, 0),
+            "num_failed_images": count["failed"].get(_id, 0),
         }
         for _id in wft_ids
     }
