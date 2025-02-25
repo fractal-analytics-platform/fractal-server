@@ -5,7 +5,7 @@ import traceback
 from itertools import count
 from typing import Optional
 
-from ._check_jobs_status import _jobs_finished
+from ._check_jobs_status import get_finished_jobs
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.logger import set_logger
 
@@ -115,7 +115,7 @@ class FractalSlurmSudoWaitThread(threading.Thread):
         self.check_shutdown(i)
         if i % (self.slurm_poll_interval // self.interval) == 0:
             try:
-                finished_jobs = _jobs_finished(self.waiting.values())
+                finished_jobs = get_finished_jobs(self.waiting.values())
             except Exception:
                 # Don't abandon completion checking if jobs_finished errors
                 traceback.print_exc()
