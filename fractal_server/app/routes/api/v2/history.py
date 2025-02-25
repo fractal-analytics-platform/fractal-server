@@ -67,55 +67,65 @@ async def get_per_workflow_aggregated_info(
         db=db,
     )
 
-    result = {}
-    for wftask in workflow.task_list:
+    wft_ids = [wftask.id for wftask in workflow.task_list]
 
-        stm = (
-            select(HistoryItemV2.num_available_images)
-            .where(HistoryItemV2.dataset_id == dataset_id)
-            .where(HistoryItemV2.workflowtask_id == wftask.id)
-            .order_by(HistoryItemV2.timestamp_started.desc())
-            .limit(1)
+    # num_available_images
+    stm = (
+        select(
+            HistoryItemV2.workflowtask_id, HistoryItemV2.num_available_images
         )
-        res = await db.execute(stm)
-        num_available_images = res.scalar_one_or_none()
-
-        if num_available_images is None:
-            result[str(wftask.id)] = None
-            continue
-
-        done_stm = (
-            select(func.count(ImageStatus.zarr_url))
-            .where(ImageStatus.workflowtask_id == wftask.id)
-            .where(ImageStatus.dataset_id == dataset_id)
-            .where(ImageStatus.status == HistoryItemImageStatus.DONE)
+        .where(HistoryItemV2.dataset_id == dataset_id)
+        .where(HistoryItemV2.workflowtask_id.in_(wft_ids))
+        .order_by(
+            HistoryItemV2.workflowtask_id,
+            HistoryItemV2.timestamp_started.desc(),
         )
-        failed_stm = (
-            select(func.count(ImageStatus.zarr_url))
-            .where(ImageStatus.workflowtask_id == wftask.id)
-            .where(ImageStatus.dataset_id == dataset_id)
-            .where(ImageStatus.status == HistoryItemImageStatus.FAILED)
-        )
-        submitted_stm = (
-            select(func.count(ImageStatus.zarr_url))
-            .where(ImageStatus.workflowtask_id == wftask.id)
-            .where(ImageStatus.dataset_id == dataset_id)
-            .where(ImageStatus.status == HistoryItemImageStatus.SUBMITTED)
-        )
+        .distinct(HistoryItemV2.workflowtask_id)
+    )
+    res = await db.execute(stm)
+    num_available_images = {k: v for k, v in res.all()}
 
-        done_res = await db.execute(done_stm)
-        done = done_res.scalar()
-        failed_res = await db.execute(failed_stm)
-        failed = failed_res.scalar()
-        submitted_res = await db.execute(submitted_stm)
-        submitted = submitted_res.scalar()
+    stm = (
+        select(ImageStatus.workflowtask_id, func.count())
+        .where(ImageStatus.dataset_id == dataset_id)
+        .where(ImageStatus.workflowtask_id.in_(wft_ids))
+        .where(ImageStatus.status == HistoryItemImageStatus.DONE)
+        .group_by(ImageStatus.workflowtask_id)
+    )
+    res = await db.execute(stm)
+    done = {k: v for k, v in res.all()}
 
-        result[str(wftask.id)] = {
-            "num_done_images": done,
-            "num_failed_images": failed,
-            "num_submitted_images": submitted,
-            "num_available_images": num_available_images,
+    stm = (
+        select(ImageStatus.workflowtask_id, func.count())
+        .where(ImageStatus.dataset_id == dataset_id)
+        .where(ImageStatus.workflowtask_id.in_(wft_ids))
+        .where(ImageStatus.status == HistoryItemImageStatus.FAILED)
+        .group_by(ImageStatus.workflowtask_id)
+    )
+    res = await db.execute(stm)
+    failed = {k: v for k, v in res.all()}
+
+    stm = (
+        select(ImageStatus.workflowtask_id, func.count())
+        .where(ImageStatus.dataset_id == dataset_id)
+        .where(ImageStatus.workflowtask_id.in_(wft_ids))
+        .where(ImageStatus.status == HistoryItemImageStatus.SUBMITTED)
+        .group_by(ImageStatus.workflowtask_id)
+    )
+    res = await db.execute(stm)
+    submitted = {k: v for k, v in res.all()}
+
+    result = {
+        str(_id): None
+        if _id not in num_available_images
+        else {
+            "num_available_images": num_available_images[_id],
+            "num_done_images": done.get(_id, 0),
+            "num_submitted_images": submitted.get(_id, 0),
+            "num_failed_images": failed.get(_id, 0),
         }
+        for _id in wft_ids
+    }
 
     return JSONResponse(content=result, status_code=200)
 
