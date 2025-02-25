@@ -243,8 +243,8 @@ async def test_get_workflow(
         p_id = project.id
 
         # Create workflow
-        WORFKLOW_NAME = "My Workflow"
-        wf = await workflow_factory_v2(project_id=p_id, name=WORFKLOW_NAME)
+        WORKFLOW_NAME = "My Workflow"
+        wf = await workflow_factory_v2(project_id=p_id, name=WORKFLOW_NAME)
         wf_id = wf.id
 
         for task in [t1, t2, t3]:
@@ -260,7 +260,7 @@ async def test_get_workflow(
         # Get workflow, and check relationship
         res = await client.get(f"{PREFIX}/project/{p_id}/workflow/{wf_id}/")
         assert res.status_code == 200
-        assert res.json()["name"] == WORFKLOW_NAME
+        assert res.json()["name"] == WORKFLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
 
         # Assert warnings

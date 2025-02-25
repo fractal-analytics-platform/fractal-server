@@ -255,7 +255,7 @@ async def delete_workflow(
     "/project/{project_id}/workflow/{workflow_id}/export/",
     response_model=WorkflowExportV2,
 )
-async def export_worfklow(
+async def export_workflow(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),

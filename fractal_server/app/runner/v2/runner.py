@@ -112,7 +112,7 @@ def execute_tasks_v2(
             history_item = HistoryItemV2(
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
-                worfklowtask_dump=workflowtask_dump,
+                workflowtask_dump=workflowtask_dump,
                 task_group_dump=task_group_dump,
                 parameters_hash=parameters_hash,
                 num_available_images=len(type_filtered_images),
