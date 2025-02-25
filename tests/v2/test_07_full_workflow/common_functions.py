@@ -1,6 +1,7 @@
 import os
 import shutil
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +9,17 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+
+
+@contextmanager
+def informative_assertion_block(args):
+    try:
+        yield
+    except AssertionError as e:
+        for arg in args:
+            debug(arg)
+        raise e
+
 
 PREFIX = "/api/v2"
 NUM_IMAGES = 4
@@ -315,13 +327,10 @@ async def full_workflow_TaskExecutionError(
         job_status_data = res.json()
         debug(job_status_data)
         debug(job_status_data["working_dir"])
-        try:
+        with informative_assertion_block(job_status_data):
             assert job_status_data["log"]
             assert job_status_data["status"] == "failed"
             assert "ValueError" in job_status_data["log"]
-        except AssertionError as e:
-            debug(job_status_data)
-            raise e
 
         # The temporary output of the successful tasks must have been written
         # into the dataset filters&images attributes, and the history must
@@ -333,14 +342,15 @@ async def full_workflow_TaskExecutionError(
         dataset = res.json()
         EXPECTED_TYPE_FILTERS = {"3D": False}
         EXPECTED_ATTRIBUTE_FILTERS = {}
-        assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-        assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-        assert len(dataset["history"]) == 3
-        assert [item["status"] for item in dataset["history"]] == [
-            "done",
-            "done",
-            "failed",
-        ]
+        with informative_assertion_block(dataset):
+            assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
+            assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
+            assert len(dataset["history"]) == 3
+            assert [item["status"] for item in dataset["history"]] == [
+                "done",
+                "done",
+                "failed",
+            ]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
         )
