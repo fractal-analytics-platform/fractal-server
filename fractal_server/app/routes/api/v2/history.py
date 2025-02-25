@@ -80,6 +80,7 @@ async def get_per_workflow_aggregated_info(
             HistoryItemV2.workflowtask_id,
             HistoryItemV2.timestamp_started.desc(),
         )
+        # https://www.postgresql.org/docs/current/sql-select.html#SQL-DISTINCT
         .distinct(HistoryItemV2.workflowtask_id)
     )
     res = await db.execute(stm)
@@ -96,6 +97,7 @@ async def get_per_workflow_aggregated_info(
         )
         res = await db.execute(stm)
         count[_status] = {k: v for k, v in res.all()}
+
     result = {
         str(_id): None
         if _id not in num_available_images
