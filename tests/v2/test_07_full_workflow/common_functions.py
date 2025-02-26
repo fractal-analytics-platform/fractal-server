@@ -177,20 +177,6 @@ async def full_workflow(
         assert len(list(images_2D)) == NUM_IMAGES
         assert len(list(images_3D)) == NUM_IMAGES
 
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-
-        debug(res.status_code)
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert set(statuses.values()) == {"done"}
-
         # Check files in zipped root job folder
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
@@ -351,18 +337,6 @@ async def full_workflow_TaskExecutionError(
         debug(image_list)
         assert len(image_list) == 2 * NUM_IMAGES
 
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == EXPECTED_STATUSES
-
 
 async def non_executable_task_command(
     *,
@@ -520,18 +494,6 @@ async def failing_workflow_UnknownError(
         assert job_status_data["status"] == "failed"
         assert "UNKNOWN ERROR" in job_status_data["log"]
         assert ERROR_MSG in job_status_data["log"]
-
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == EXPECTED_STATUSES
 
 
 async def workflow_with_non_python_task(
