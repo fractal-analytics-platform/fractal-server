@@ -17,14 +17,6 @@ from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
 
-# from fractal_server.app.runner.exceptions import JobExecutionError
-# from fractal_server.app.runner.exceptions import TaskExecutionError
-# from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
-#     _mkdir_as_user,
-# )
-# from tests.v2._aux_runner import get_default_slurm_config
-# from tests.v2._aux_runner import get_default_task_files
-
 ALL_IMAGES = ["a", "b", "c", "d"]
 
 
