@@ -147,17 +147,6 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         datasets = res.json()
         assert len(datasets) == 1
         assert datasets[0]["project"] == EXPECTED_PROJECT
-        assert datasets[0]["history"] == []
-        debug(datasets[0]["timestamp_created"])
-
-        res = await client.get(
-            f"{PREFIX}/project/{p_id}/dataset/?history=false"
-        )
-        assert res.status_code == 200
-        datasets = res.json()
-        assert len(datasets) == 1
-        assert datasets[0]["project"] == EXPECTED_PROJECT
-        assert datasets[0]["history"] == []
         debug(datasets[0]["timestamp_created"])
 
 
@@ -178,16 +167,6 @@ async def test_get_user_datasets(
         datasets = res.json()
         assert len(res.json()) == 3
         assert set(ds["name"] for ds in datasets) == {"ds1a", "ds1b", "ds2a"}
-        for ds in datasets:
-            assert len(ds["history"]) == 0
-
-        res = await client.get(f"{PREFIX}/dataset/?history=false")
-        assert res.status_code == 200
-        datasets = res.json()
-        assert len(res.json()) == 3
-        assert set(ds["name"] for ds in datasets) == {"ds1a", "ds1b", "ds2a"}
-        for ds in datasets:
-            assert len(ds["history"]) == 0
 
 
 async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
@@ -390,14 +369,6 @@ async def test_patch_dataset(
         dataset = res.json()
         debug(dataset)
         assert dataset["name"] == NEW_NAME
-
-        # Check that history cannot be modified
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(history=[]),
-        )
-        debug(res.json())
-        assert res.status_code == 422
 
         # Check that zarr_dir can be modified only if Dataset.images is empty
         NEW_ZARR_DIR = "/new_zarr_dir"
