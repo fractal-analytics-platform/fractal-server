@@ -13,7 +13,6 @@ from pydantic import BaseModel
 
 from ._check_jobs_status import get_finished_jobs
 from ._subprocess_run_as_user import _mkdir_as_user
-from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.history import HistoryItemImageStatus
@@ -136,7 +135,7 @@ def _subprocess_run_or_raise(
 class RunnerSlurmSudo(BaseRunner):
     slurm_user: str
     slurm_user: str
-    shutdown_file: str
+    shutdown_file: Path
     common_script_lines: list[str]
     user_cache_dir: str
     root_dir_local: Path
@@ -144,6 +143,7 @@ class RunnerSlurmSudo(BaseRunner):
     slurm_account: Optional[str] = None
     poll_interval: int
     python_worker_interpreter: str
+    jobs: dict[str, SlurmJob]
 
     def __init__(
         self,
@@ -189,11 +189,13 @@ class RunnerSlurmSudo(BaseRunner):
 
         self.root_dir_local = root_dir_local
         self.root_dir_remote = root_dir_remote
-        if not _path_exists_as_user(
-            path=root_dir_remote.as_posix(),
+
+        # Create folders
+        self.root_dir_local.mkdir(parents=True, exist_ok=True)
+        _mkdir_as_user(
+            folder=self.root_dir_remote.as_posix(),
             user=self.slurm_user,
-        ):
-            logger.info(f"Missing folder {root_dir_remote=}")
+        )
 
         self.user_cache_dir = user_cache_dir
 
@@ -201,13 +203,13 @@ class RunnerSlurmSudo(BaseRunner):
             slurm_poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
         )
 
-        self.shutdown_file = (
-            self.root_dir_local / SHUTDOWN_FILENAME
-        ).as_posix()
+        self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
 
         self.python_worker_interpreter = (
             settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
+
+        self.jobs = {}
 
     def __enter__(self):
         return self
@@ -215,12 +217,38 @@ class RunnerSlurmSudo(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
+    def is_shutdown(self) -> bool:
+        return self.shutdown_file.exists()
+
+    def scancel_if_shutdown(self) -> None:
+
+        logger.debug("[exit_if_shutdown] START")
+
+        if self.jobs:
+            scancel_string = " ".join(self.job_ids)
+            scancel_cmd = f"scancel {scancel_string}"
+            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
+            try:
+                _run_command_as_user(
+                    cmd=scancel_cmd,
+                    user=self.slurm_user,
+                    check=True,
+                )
+            except RuntimeError as e:
+                logger.warning(
+                    "[exit_if_shutdown] `scancel` command failed. "
+                    f"Original error:\n{str(e)}"
+                )
+
+        logger.debug("[exit_if_shutdown] END")
+
     def submit_single_sbatch(
         self,
         func,
         parameters,
         slurm_job: SlurmJob,
     ) -> str:
+
         if len(slurm_job.tasks) > 1:
             raise NotImplementedError()
 
@@ -261,6 +289,7 @@ class RunnerSlurmSudo(BaseRunner):
                 f"--input-file {task.input_pickle_file_local} "
                 f"--output-file {task.output_pickle_file_remote}"
             )
+            cmdlines.append("whoami")
             cmdlines.append(
                 f"srun --ntasks=1 --cpus-per-task=1 --mem=10MB {cmd} &"
             )
@@ -280,8 +309,15 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Submit SLURM job and retrieve job ID
         res = _subprocess_run_or_raise(full_command)
-        job_id = int(res.stdout)
-        return str(job_id)
+        submitted_job_id = int(res.stdout)
+        slurm_job.slurm_job_id = str(submitted_job_id)
+
+        # Add job to self.jobs
+        self.jobs[slurm_job.slurm_job_id] = slurm_job
+
+    @property
+    def job_ids(self) -> list[str]:
+        return list(self.jobs.keys())
 
     def copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
         source_target_list = [
@@ -351,6 +387,23 @@ class RunnerSlurmSudo(BaseRunner):
         in_compound_task: bool = False,
         **kwargs,
     ) -> tuple[Any, Exception]:
+
+        if self.jobs != {}:
+            if not in_compound_task:
+                update_all_images(
+                    history_item_id=history_item_id,
+                    status=HistoryItemImageStatus.FAILED,
+                )
+            raise JobExecutionError("Unexpected branch: jobs should be empty.")
+
+        if self.is_shutdown():
+            if not in_compound_task:
+                update_all_images(
+                    history_item_id=history_item_id,
+                    status=HistoryItemImageStatus.FAILED,
+                )
+            raise JobExecutionError("Cannot continue after shutdown.")
+
         # Validation phase
         self.validate_submit_parameters(parameters)
 
@@ -374,36 +427,36 @@ class RunnerSlurmSudo(BaseRunner):
                 )
             ],
         )  # TODO: replace with actual values
-        slurm_job_id = self.submit_single_sbatch(
+        self.submit_single_sbatch(
             func,
             parameters=parameters,
             slurm_job=slurm_job,
         )
-        slurm_job.slurm_job_id = slurm_job_id
-        jobs = {slurm_job_id: slurm_job}
 
         # Retrieval phase
-        while len(jobs) > 0:
-            # TODO: Check shutdown condition, and act accordingly
-            finished_jobs = get_finished_jobs(job_ids=[slurm_job_id])
-            if slurm_job_id in finished_jobs:
-                slurm_job = jobs.pop(slurm_job_id)
+        while len(self.jobs) > 0:
+            self.scancel_if_shutdown()
+            finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            for slurm_job_id in finished_job_ids:
+                slurm_job = self.jobs.pop(slurm_job_id)
                 self.copy_files_from_remote_to_local(slurm_job)
                 result, exception = self.postprocess_single_task(
                     task=slurm_job.tasks[0]
                 )
-                if not in_compound_task:
-                    if exception is None:
-                        update_all_images(
-                            history_item_id=history_item_id,
-                            status=HistoryItemImageStatus.DONE,
-                        )
-                    else:
-                        update_all_images(
-                            history_item_id=history_item_id,
-                            status=HistoryItemImageStatus.FAILED,
-                        )
             time.sleep(self.slurm_poll_interval)
+
+        if not in_compound_task:
+            if exception is None:
+                update_all_images(
+                    history_item_id=history_item_id,
+                    status=HistoryItemImageStatus.DONE,
+                )
+            else:
+                update_all_images(
+                    history_item_id=history_item_id,
+                    status=HistoryItemImageStatus.FAILED,
+                )
+
         return result, exception
 
     def multisubmit(
@@ -416,6 +469,8 @@ class RunnerSlurmSudo(BaseRunner):
         in_compound_task: bool = False,
         **kwargs,
     ):
+        self.scancel_if_shutdown(active_slurm_jobs=[])
+
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             in_compound_task=in_compound_task,
@@ -461,7 +516,7 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Retrieval phase
         while len(jobs) > 0:
-            # TODO: Check shutdown condition, and act accordingly
+            self.scancel_if_shutdown(active_slurm_jobs=jobs)
             remaining_jobs = list(jobs.keys())
             finished_jobs = get_finished_jobs(job_ids=remaining_jobs)
             for slurm_job_id in finished_jobs:
