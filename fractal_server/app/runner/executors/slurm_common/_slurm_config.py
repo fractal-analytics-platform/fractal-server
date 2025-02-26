@@ -22,9 +22,9 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import ValidationError
 
-from .....config import get_settings
-from .....logger import set_logger
-from .....syringe import Inject
+from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 

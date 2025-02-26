@@ -19,7 +19,7 @@ import shlex
 import subprocess  # nosec
 from typing import Optional
 
-from ......logger import set_logger
+from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
 logger = set_logger(__name__)
@@ -65,10 +65,7 @@ def _run_command_as_user(
 
     if check and not res.returncode == 0:
         raise RuntimeError(
-            f"{cmd=}\n\n"
-            f"{res.returncode=}\n\n"
-            f"{res.stdout=}\n\n"
-            f"{res.stderr=}\n"
+            f"{cmd=}\n\n{res.returncode=}\n\n{res.stdout=}\n\n{res.stderr=}\n"
         )
 
     return res
@@ -91,69 +88,6 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
 
     cmd = f"mkdir -p {folder}"
     _run_command_as_user(cmd=cmd, user=user, check=True)
-
-
-def _glob_as_user(
-    *, folder: str, user: str, startswith: Optional[str] = None
-) -> list[str]:
-    """
-    Run `ls` in a folder (as a user) and filter results
-
-    Execute `ls` on a folder (impersonating a user, if `user` is not `None`)
-    and select results that start with `startswith` (if not `None`).
-
-    Arguments:
-        folder: Absolute path to the folder
-        user: If not `None`, the user to be impersonated via `sudo -u`
-        startswith: If not `None`, this is used to filter output of `ls`.
-    """
-
-    res = _run_command_as_user(cmd=f"ls {folder}", user=user, check=True)
-    output = res.stdout.split()
-    if startswith:
-        output = [f for f in output if f.startswith(startswith)]
-    return output
-
-
-def _glob_as_user_strict(
-    *,
-    folder: str,
-    user: str,
-    startswith: str,
-) -> list[str]:
-    """
-    Run `ls` in a folder (as a user) and filter results
-
-    Execute `ls` on a folder (impersonating a user, if `user` is not `None`)
-    and select results that comply with a set of rules. They all start with
-    `startswith` (if not `None`), and they match one of the known filename
-    patterns. See details in
-    https://github.com/fractal-analytics-platform/fractal-server/issues/1240
-
-
-    Arguments:
-        folder: Absolute path to the folder
-        user: If not `None`, the user to be impersonated via `sudo -u`
-        startswith: If not `None`, this is used to filter output of `ls`.
-    """
-
-    res = _run_command_as_user(cmd=f"ls {folder}", user=user, check=True)
-    output = res.stdout.split()
-
-    new_output = []
-    known_filenames = [
-        f"{startswith}{suffix}"
-        for suffix in [".args.json", ".metadiff.json", ".err", ".out", ".log"]
-    ]
-    for filename in output:
-        if filename in known_filenames:
-            new_output.append(filename)
-        elif filename.startswith(f"{startswith}_out_") and filename.endswith(
-            ".pickle"
-        ):
-            new_output.append(filename)
-
-    return new_output
 
 
 def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:

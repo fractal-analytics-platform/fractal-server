@@ -1,7 +1,6 @@
 import functools
 import logging
 import traceback
-from concurrent.futures import Executor
 from pathlib import Path
 from typing import Any
 from typing import Callable
@@ -16,12 +15,11 @@ from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
-from fractal_server.app.history import HistoryItemImageStatus
-from fractal_server.app.history import update_all_images
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
+from fractal_server.app.runner.executors.base_runner import BaseRunner
 
 
 __all__ = [
@@ -116,10 +114,10 @@ def run_v2_task_non_parallel(
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    executor: Executor,
+    executor: BaseRunner,
     submit_setup_call: Callable = no_op_submit_setup_call,
     history_item_id: int,
-) -> tuple[TaskOutput, int]:
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
     """
     This runs server-side (see `executor` argument)
     """
@@ -144,7 +142,7 @@ def run_v2_task_non_parallel(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
-    future = executor.submit(
+    result, exception = executor.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -152,21 +150,19 @@ def run_v2_task_non_parallel(
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
         ),
-        function_kwargs,
-        **executor_options,
-    )
-    output = future.result()
-
-    update_all_images(
+        parameters=function_kwargs,
         history_item_id=history_item_id,
-        status=HistoryItemImageStatus.DONE,
+        **executor_options,
     )
 
     num_tasks = 1
-    if output is None:
-        return (TaskOutput(), num_tasks)
+    if exception is None:
+        if result is None:
+            return (TaskOutput(), num_tasks, {})
+        else:
+            return (_cast_and_validate_TaskOutput(result), num_tasks, {})
     else:
-        return (_cast_and_validate_TaskOutput(output), num_tasks)
+        return (TaskOutput(), num_tasks, {0: exception})
 
 
 def run_v2_task_parallel(
@@ -174,15 +170,15 @@ def run_v2_task_parallel(
     images: list[dict[str, Any]],
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: Executor,
+    executor: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     history_item_id: int,
-) -> tuple[TaskOutput, int]:
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
     if len(images) == 0:
-        return (TaskOutput(), 0)
+        return (TaskOutput(), 0, {})
 
     _check_parallelization_list_size(images)
 
@@ -204,7 +200,7 @@ def run_v2_task_parallel(
         )
         list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
-    results_iterator = executor.map(
+    results, exceptions = executor.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -212,22 +208,28 @@ def run_v2_task_parallel(
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
         ),
-        list_function_kwargs,
+        list_parameters=list_function_kwargs,
+        history_item_id=history_item_id,
         **executor_options,
     )
-    # Explicitly iterate over the whole list, so that all futures are waited
-    outputs = list(results_iterator)
 
-    # Validate all non-None outputs
-    for ind, output in enumerate(outputs):
-        if output is None:
-            outputs[ind] = TaskOutput()
+    outputs = []
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
         else:
-            outputs[ind] = _cast_and_validate_TaskOutput(output)
+            print("VERY BAD - should have not reached this point")
 
     num_tasks = len(images)
     merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks)
+    return (merged_output, num_tasks, exceptions)
 
 
 def run_v2_task_compound(
@@ -236,12 +238,12 @@ def run_v2_task_compound(
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: Executor,
+    executor: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     history_item_id: int,
-) -> TaskOutput:
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
     executor_options_init = _get_executor_options(
         wftask=wftask,
@@ -264,7 +266,7 @@ def run_v2_task_compound(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
-    future = executor.submit(
+    result, exception = executor.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -272,24 +274,31 @@ def run_v2_task_compound(
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
         ),
-        function_kwargs,
+        parameters=function_kwargs,
+        history_item_id=history_item_id,
+        in_compound_task=True,
         **executor_options_init,
     )
-    output = future.result()
-    if output is None:
-        init_task_output = InitTaskOutput()
+
+    num_tasks = 1
+    if exception is None:
+        if result is None:
+            init_task_output = InitTaskOutput()
+        else:
+            init_task_output = _cast_and_validate_InitTaskOutput(result)
     else:
-        init_task_output = _cast_and_validate_InitTaskOutput(output)
+        return (TaskOutput(), num_tasks, {0: exception})
+
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
-    num_task = 1 + len(parallelization_list)
+    num_tasks = 1 + len(parallelization_list)
 
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
 
     if len(parallelization_list) == 0:
-        return (TaskOutput(), 0)
+        return (TaskOutput(), 0, {})
 
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
@@ -302,7 +311,7 @@ def run_v2_task_compound(
         )
         list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
-    results_iterator = executor.map(
+    results, exceptions = executor.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -310,25 +319,23 @@ def run_v2_task_compound(
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
         ),
-        list_function_kwargs,
+        list_parameters=list_function_kwargs,
+        history_item_id=history_item_id,
+        in_compound_task=True,
         **executor_options_compute,
     )
 
-    update_all_images(
-        history_item_id=history_item_id,
-        status=HistoryItemImageStatus.DONE,
-    )
-
-    # Explicitly iterate over the whole list, so that all futures are waited
-    outputs = list(results_iterator)
-
-    # Validate all non-None outputs
-    for ind, output in enumerate(outputs):
-        if output is None:
-            outputs[ind] = TaskOutput()
-        else:
-            validated_output = _cast_and_validate_TaskOutput(output)
-            outputs[ind] = validated_output
+    outputs = []
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
 
     merged_output = merge_outputs(outputs)
-    return (merged_output, num_task)
+    return (merged_output, num_tasks, exceptions)

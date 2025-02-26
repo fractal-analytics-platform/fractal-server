@@ -20,9 +20,9 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import ValidationError
 
-from .....config import get_settings
-from .....syringe import Inject
-from ....models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 
 class LocalBackendConfigError(ValueError):

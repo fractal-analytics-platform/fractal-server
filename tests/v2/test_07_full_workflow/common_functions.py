@@ -1,6 +1,7 @@
 import os
 import shutil
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +9,18 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+
+
+@contextmanager
+def informative_assertion_block(*args):
+    try:
+        yield
+    except AssertionError as e:
+        debug("SOME ASSERTION FAILED")
+        for arg in args:
+            debug(arg)
+        raise e
+
 
 PREFIX = "/api/v2"
 NUM_IMAGES = 4
@@ -77,6 +90,16 @@ async def full_workflow(
         assert res.status_code == 201
         wftask1_id = res.json()["id"]
 
+        # Add "generic_task_parallel" task
+        task_id_C = tasks["generic_task_parallel"].id
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_C}",
+            json={},
+        )
+        assert res.status_code == 201
+        wftask1_id = res.json()["id"]
+
         # EXECUTE WORKFLOW
         res = await client.post(
             f"{PREFIX}/project/{project_id}/job/submit/"
@@ -107,6 +130,10 @@ async def full_workflow(
         debug(job_status_data)
         assert job_status_data["log"]
         debug(job_status_data["working_dir"])
+        if job_status_data["status"] != "done":
+            debug(job_status_data["status"])
+            debug(job_status_data["log"])
+            raise RuntimeError("Status is not 'done'.")
         assert job_status_data["status"] == "done"
         assert "START workflow" in job_status_data["log"]
         assert "END workflow" in job_status_data["log"]
@@ -129,14 +156,16 @@ async def full_workflow(
         )
         assert res.status_code == 200
         dataset = res.json()
-        assert len(dataset["history"]) == 2
+        assert len(dataset["history"]) == 3
         for item in dataset["history"]:
             _task = item["workflowtask"]["task"]
             assert _task is not None
-        assert dataset["type_filters"] == {"3D": False}
+        assert dataset["type_filters"] == {"3D": False, "my_type": True}
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
-            "images/query/",
+            (
+                f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+                "images/query/"
+            ),
             json={},
         )
         assert res.status_code == 200
@@ -150,20 +179,6 @@ async def full_workflow(
         images_2D = filter(lambda img: not img["types"]["3D"], images)
         assert len(list(images_2D)) == NUM_IMAGES
         assert len(list(images_3D)) == NUM_IMAGES
-
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-
-        debug(res.status_code)
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert set(statuses.values()) == {"done"}
 
         # Check files in zipped root job folder
         working_dir = job_status_data["working_dir"]
@@ -191,31 +206,24 @@ async def full_workflow(
         )
 
         # FIXME: first test of history
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/history/"
-        )
-        debug(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/history/latest-status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow.id}"
-            )
-        )
-        debug(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/history/latest-status-legacy/images/?"
-                f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
-            )
-        )
-        debug(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/history/latest-status-legacy/images/?"
-                f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
-            )
-        )
-        debug(res.json())
+        query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
+        query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
+        query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
+        this_prefix = f"api/v2/project/{project_id}"
+        for url in [
+            f"{this_prefix}/dataset/{dataset_id}/history/",
+            f"{this_prefix}/status/?{query_wf}",
+            f"{this_prefix}/status/subsets/?{query_wft0}",
+            f"{this_prefix}/status/images/?status=done&{query_wft0}",
+            f"{this_prefix}/status/images/?status=failed&{query_wft0}",
+            f"{this_prefix}/status/images/?status=submitted&{query_wft0}",
+            f"{this_prefix}/status/subsets/?{query_wft1}",
+            f"{this_prefix}/status/images/?status=done&{query_wft1}",
+            f"{this_prefix}/status/images/?status=failed&{query_wft1}",
+            f"{this_prefix}/status/images/?status=submitted&{query_wft1}",
+        ]:
+            res = await client.get(url)
+            debug(url, res.status_code, res.json())
 
 
 async def full_workflow_TaskExecutionError(
@@ -301,9 +309,10 @@ async def full_workflow_TaskExecutionError(
         job_status_data = res.json()
         debug(job_status_data)
         debug(job_status_data["working_dir"])
-        assert job_status_data["log"]
-        assert job_status_data["status"] == "failed"
-        assert "ValueError" in job_status_data["log"]
+        with informative_assertion_block(job_status_data):
+            assert job_status_data["log"]
+            assert job_status_data["status"] == "failed"
+            assert "ValueError" in job_status_data["log"]
 
         # The temporary output of the successful tasks must have been written
         # into the dataset filters&images attributes, and the history must
@@ -315,14 +324,15 @@ async def full_workflow_TaskExecutionError(
         dataset = res.json()
         EXPECTED_TYPE_FILTERS = {"3D": False}
         EXPECTED_ATTRIBUTE_FILTERS = {}
-        assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-        assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-        assert len(dataset["history"]) == 3
-        assert [item["status"] for item in dataset["history"]] == [
-            "done",
-            "done",
-            "failed",
-        ]
+        with informative_assertion_block(dataset):
+            assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
+            assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
+            assert len(dataset["history"]) == 3
+            assert [item["status"] for item in dataset["history"]] == [
+                "done",
+                "done",
+                "failed",
+            ]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
         )
@@ -330,18 +340,6 @@ async def full_workflow_TaskExecutionError(
         image_list = res.json()["images"]
         debug(image_list)
         assert len(image_list) == 2 * NUM_IMAGES
-
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == EXPECTED_STATUSES
 
 
 async def non_executable_task_command(
@@ -500,18 +498,6 @@ async def failing_workflow_UnknownError(
         assert job_status_data["status"] == "failed"
         assert "UNKNOWN ERROR" in job_status_data["log"]
         assert ERROR_MSG in job_status_data["log"]
-
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == EXPECTED_STATUSES
 
 
 async def workflow_with_non_python_task(

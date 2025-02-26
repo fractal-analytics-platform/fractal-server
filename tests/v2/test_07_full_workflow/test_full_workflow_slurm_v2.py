@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
 )
 from tests.fixtures_slurm import SLURM_USER

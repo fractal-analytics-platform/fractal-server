@@ -705,7 +705,7 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
-            from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+            from fractal_server.app.runner.executors.slurm_common._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
 
@@ -735,7 +735,7 @@ class Settings(BaseSettings):
                     f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
                 )
 
-            from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+            from fractal_server.app.runner.executors.slurm_common._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
 

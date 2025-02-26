@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _mkdir_as_user,
 )
-from fractal_server.app.runner.executors.slurm.sudo.executor import (
-    FractalSlurmSudoExecutor,
+from fractal_server.app.runner.executors.slurm_sudo.runner import (
+    RunnerSlurmSudo,
 )
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
@@ -55,9 +55,9 @@ async def test_scancel_during_execution(
 
     # JOB 1: fail during `submit`
     with pytest.raises(JobExecutionError) as exc_info:
-        with FractalSlurmSudoExecutor(
-            workflow_dir_local=job_folders["job1"]["local"],
-            workflow_dir_remote=job_folders["job1"]["remote"],
+        with RunnerSlurmSudo(
+            root_dir_local=job_folders["job1"]["local"],
+            root_dir_remote=job_folders["job1"]["remote"],
             slurm_user=SLURM_USER,
             slurm_poll_interval=1,
         ) as executor:
@@ -81,9 +81,9 @@ async def test_scancel_during_execution(
 
     # JOB 2: fail during `map`
     with pytest.raises(JobExecutionError) as exc_info:
-        with FractalSlurmSudoExecutor(
-            workflow_dir_local=job_folders["job2"]["local"],
-            workflow_dir_remote=job_folders["job2"]["remote"],
+        with RunnerSlurmSudo(
+            root_dir_local=job_folders["job2"]["local"],
+            root_dir_remote=job_folders["job2"]["remote"],
             slurm_user=SLURM_USER,
             slurm_poll_interval=1,
         ) as executor:

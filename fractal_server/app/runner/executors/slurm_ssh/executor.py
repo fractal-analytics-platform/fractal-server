@@ -15,22 +15,22 @@ from typing import Sequence
 
 import cloudpickle
 
-from ....filenames import SHUTDOWN_FILENAME
-from ....task_files import get_task_file_paths
-from ....task_files import TaskFiles
-from ....versions import get_versions
-from ..._job_states import STATES_FINISHED
-from ...slurm._slurm_config import SlurmConfig
-from .._batching import heuristics
-from ..utils_executors import get_pickle_file_path
-from ..utils_executors import get_slurm_file_path
-from ..utils_executors import get_slurm_script_file_path
+from ...filenames import SHUTDOWN_FILENAME
+from ...task_files import get_task_file_paths
+from ...task_files import TaskFiles
+from ...versions import get_versions
+from ..slurm_common._batching import heuristics
+from ..slurm_common._job_states import STATES_FINISHED
+from ..slurm_common._slurm_config import SlurmConfig
+from ..slurm_common.utils_executors import get_pickle_file_path
+from ..slurm_common.utils_executors import get_slurm_file_path
+from ..slurm_common.utils_executors import get_slurm_script_file_path
 from ._executor_wait_thread import FractalSlurmSSHWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.executors.slurm.ssh._slurm_job import SlurmJob
+from fractal_server.app.runner.executors.slurm_ssh._slurm_job import SlurmJob
 from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger

@@ -1,6 +1,5 @@
 import json
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
@@ -23,8 +22,10 @@ from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryItemV2
+from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images.models import AttributeFiltersType
@@ -35,7 +36,7 @@ def execute_tasks_v2(
     *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
-    executor: ThreadPoolExecutor,
+    runner: BaseRunner,
     user_id: int,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
@@ -120,6 +121,17 @@ def execute_tasks_v2(
                 images=images,
             )
             db.add(history_item)
+            for image in filtered_images:
+                db.add(
+                    ImageStatus(
+                        zarr_url=image["zarr_url"],
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset.id,
+                        parameters_hash=parameters_hash,
+                        status=HistoryItemImageStatus.SUBMITTED,
+                        logfile="/invalid/placeholder",
+                    )
+                )
             db.commit()
             db.refresh(history_item)
             history_item_id = history_item.id
@@ -141,37 +153,41 @@ def execute_tasks_v2(
 
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
-            current_task_output, num_tasks = run_v2_task_non_parallel(
+            (
+                current_task_output,
+                num_tasks,
+                exceptions,
+            ) = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=executor,
+                executor=runner,
                 submit_setup_call=submit_setup_call,
                 history_item_id=history_item_id,
             )
         elif task.type == "parallel":
-            current_task_output, num_tasks = run_v2_task_parallel(
+            current_task_output, num_tasks, exceptions = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=executor,
+                executor=runner,
                 submit_setup_call=submit_setup_call,
                 history_item_id=history_item_id,
             )
         elif task.type == "compound":
-            current_task_output, num_tasks = run_v2_task_compound(
+            current_task_output, num_tasks, exceptions = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=executor,
+                executor=runner,
                 submit_setup_call=submit_setup_call,
                 history_item_id=history_item_id,
             )
@@ -324,7 +340,14 @@ def execute_tasks_v2(
         # information
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
+            if exceptions == {}:
+                db_dataset.history[-1][
+                    "status"
+                ] = WorkflowTaskStatusTypeV2.DONE
+            else:
+                db_dataset.history[-1][
+                    "status"
+                ] = WorkflowTaskStatusTypeV2.FAILED
             db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
             for attribute_name in [
@@ -344,5 +367,16 @@ def execute_tasks_v2(
             )
             db.add(record)
             db.commit()
+
+        if exceptions != {}:
+            logger.error(
+                f'END    {wftask.order}-th task (name="{task_name}") '
+                "- ERROR."
+            )
+            # Raise first error
+            for key, value in exceptions.items():
+                raise JobExecutionError(
+                    info=(f"An error occurred.\nOriginal error:\n{value}")
+                )
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')

@@ -7,6 +7,7 @@ from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.history import update_all_images
 from fractal_server.app.history import update_single_image
 from fractal_server.app.models.v2 import HistoryItemV2
+from fractal_server.app.models.v2 import ImageStatus
 
 
 async def test_update_image_status(
@@ -29,12 +30,13 @@ async def test_update_image_status(
             workflow_id=workflow.id,
             task_id=task.id,
         )
+    parameters_hash = hash("something fake")
     item = HistoryItemV2(
         dataset_id=dataset.id,
         workflowtask_id=wftask.id,
         workflowtask_dump={},
         task_group_dump={},
-        parameters_hash="xxx",
+        parameters_hash=parameters_hash,
         num_current_images=1,
         num_available_images=1,
         images={
@@ -43,6 +45,26 @@ async def test_update_image_status(
         },
     )
     db.add(item)
+    db.add(
+        ImageStatus(
+            zarr_url="/url1",
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            parameters_hash=parameters_hash,
+            status=HistoryItemImageStatus.SUBMITTED,
+            logfile="/invalid/placeholder",
+        )
+    )
+    db.add(
+        ImageStatus(
+            zarr_url="/url2",
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            parameters_hash=parameters_hash,
+            status=HistoryItemImageStatus.SUBMITTED,
+            logfile="/invalid/placeholder",
+        )
+    )
     await db.commit()
     await db.refresh(item)
 
@@ -59,6 +81,10 @@ async def test_update_image_status(
         "/url1": HistoryItemImageStatus.DONE,
         "/url2": HistoryItemImageStatus.SUBMITTED,
     }
+    image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))
+    assert image_status.status == HistoryItemImageStatus.DONE
+    image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))
+    assert image_status.status == HistoryItemImageStatus.SUBMITTED
 
     # Test all-images update
     update_all_images(
@@ -72,6 +98,10 @@ async def test_update_image_status(
         "/url1": HistoryItemImageStatus.FAILED,
         "/url2": HistoryItemImageStatus.FAILED,
     }
+    image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))
+    assert image_status.status == HistoryItemImageStatus.FAILED
+    image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))
+    assert image_status.status == HistoryItemImageStatus.FAILED
 
     # Test two concurrent single-image writes
     import fractal_server.app.history.image_updates
@@ -107,3 +137,7 @@ async def test_update_image_status(
         "/url1": HistoryItemImageStatus.DONE,
         "/url2": HistoryItemImageStatus.DONE,
     }
+    image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))
+    assert image_status.status == HistoryItemImageStatus.DONE
+    image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))
+    assert image_status.status == HistoryItemImageStatus.DONE

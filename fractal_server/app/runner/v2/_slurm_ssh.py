@@ -19,13 +19,18 @@ Executor objects.
 from pathlib import Path
 from typing import Optional
 
-from ....models.v2 import DatasetV2
-from ....models.v2 import WorkflowV2
-from ...executors.slurm.sudo.executor import FractalSlurmSudoExecutor
-from ...set_start_and_last_task_index import set_start_and_last_task_index
-from ..runner import execute_tasks_v2
-from ._submit_setup import _slurm_submit_setup
+from ....ssh._fabric import FractalSSH
+from ...models.v2 import DatasetV2
+from ...models.v2 import WorkflowV2
+from ..exceptions import JobExecutionError
+from ..executors.slurm_common._submit_setup import _slurm_submit_setup
+from ..executors.slurm_ssh.executor import FractalSlurmSSHExecutor
+from ..set_start_and_last_task_index import set_start_and_last_task_index
+from .runner import execute_tasks_v2
 from fractal_server.images.models import AttributeFiltersType
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 def process_workflow(
@@ -38,15 +43,13 @@ def process_workflow(
     last_task_index: Optional[int] = None,
     logger_name: str,
     job_attribute_filters: AttributeFiltersType,
-    user_id: int,
-    # Slurm-specific
-    user_cache_dir: Optional[str] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
+    fractal_ssh: FractalSSH,
     worker_init: Optional[str] = None,
+    user_id: int,
+    **kwargs,  # not used
 ) -> None:
     """
-    Process workflow (SLURM backend public interface).
+    Process workflow (SLURM backend public interface)
     """
 
     # Set values of first_task_index and last_task_index
@@ -57,30 +60,33 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    if not slurm_user:
-        raise RuntimeError(
-            "slurm_user argument is required, for slurm backend"
-        )
-
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
 
-    with FractalSlurmSudoExecutor(
-        debug=True,
-        keep_logs=True,
-        slurm_user=slurm_user,
-        user_cache_dir=user_cache_dir,
+    # Create main remote folder
+    try:
+        fractal_ssh.mkdir(folder=str(workflow_dir_remote))
+        logger.info(f"Created {str(workflow_dir_remote)} via SSH.")
+    except Exception as e:
+        error_msg = (
+            f"Could not create {str(workflow_dir_remote)} via SSH.\n"
+            f"Original error: {str(e)}."
+        )
+        logger.error(error_msg)
+        raise JobExecutionError(info=error_msg)
+
+    with FractalSlurmSSHExecutor(
+        fractal_ssh=fractal_ssh,
         workflow_dir_local=workflow_dir_local,
         workflow_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
-        slurm_account=slurm_account,
     ) as executor:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)
             ],
             dataset=dataset,
-            executor=executor,
+            runner=executor,
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
             logger_name=logger_name,

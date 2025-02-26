@@ -2,7 +2,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from fractal_server.app.runner.executors.slurm._slurm_config import (
+from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfig,
 )
 

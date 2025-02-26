@@ -2,9 +2,9 @@ import logging
 from concurrent.futures import Executor
 from pathlib import Path
 
-from fixtures_mocks import *  # noqa: F401,F403
-from v2_mock_models import TaskV2Mock
-from v2_mock_models import WorkflowTaskV2Mock
+import pytest
+
+from fractal_server.app.runner.executors.local.runner import LocalRunner
 
 
 def execute_tasks_v2(wf_task_list, workflow_dir_local, user_id: int, **kwargs):
@@ -29,93 +29,70 @@ def execute_tasks_v2(wf_task_list, workflow_dir_local, user_id: int, **kwargs):
     )
 
 
+@pytest.fixture()
+def local_runner():
+    with LocalRunner() as r:
+        yield r
+
+
 async def test_parallelize_on_no_images(
     db,
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    workflowtask_factory_v2,
     tmp_path: Path,
-    executor: Executor,
+    local_runner: Executor,
 ):
     """
-    Run a parallel task on a dataset with no images.
+    Run parallel&compound tasks on a dataset with no images.
     """
     # Preliminary setup
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
-            user_id=user.id,
-        )
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, zarr_dir=zarr_dir
         )
-        # Run successfully on an empty dataset
-        execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=TaskV2Mock(
-                        name="name",
-                        type="parallel",
-                        command_parallel="echo",
-                        id=0,
-                        source="source",
-                    ),
-                    task_id=0,
-                    id=0,
-                    order=0,
-                )
-            ],
-            dataset=dataset,
-            **execute_tasks_v2_args,
-        )
+        workflow = await workflow_factory_v2(project_id=project.id)
 
-
-async def test_parallelize_on_no_images_compound(
-    db,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    tmp_path: Path,
-    executor: Executor,
-):
-    """
-    Run a compound task with an empty parallelization list.
-    """
-    # Preliminary setup
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
-            executor=executor,
-            workflow_dir_local=tmp_path / "job_dir",
-            workflow_dir_remote=tmp_path / "job_dir",
+        task = await task_factory_v2(
+            name="name",
+            type="parallel",
+            command_parallel="echo",
             user_id=user.id,
         )
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task.id,
+            order=0,
         )
-        # Run successfully on an empty dataset
         execute_tasks_v2(
-            wf_task_list=[
-                WorkflowTaskV2Mock(
-                    task=TaskV2Mock(
-                        name="name",
-                        type="compound",
-                        # this produces an empty parallelization list
-                        command_non_parallel="echo",
-                        command_parallel="echo",
-                        id=0,
-                        source="source",
-                    ),
-                    task_id=0,
-                    id=0,
-                    order=0,
-                )
-            ],
+            wf_task_list=[wftask],
             dataset=dataset,
-            **execute_tasks_v2_args,
+            workflow_dir_local=tmp_path / "job0",
+            runner=local_runner,
+            user_id=user.id,
+        )
+
+        task = await task_factory_v2(
+            name="name",
+            type="compound",
+            command_non_parallel="echo",
+            command_parallel="echo",
+            user_id=user.id,
+        )
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task.id,
+            order=0,
+        )
+        execute_tasks_v2(
+            wf_task_list=[wftask],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / "job1",
+            runner=local_runner,
+            user_id=user.id,
         )
