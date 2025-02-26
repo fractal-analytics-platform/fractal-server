@@ -1,45 +1,15 @@
 import time
 
-import pytest
 from devtools import debug
 
+from ..aux_unit_runner import *  # noqa
+from ..aux_unit_runner import ZARR_URLS
 from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.models.v2.history import HistoryItemV2
+from fractal_server.app.models.v2.history import ImageStatus
 from fractal_server.app.runner.executors.local.runner import (
     LocalRunner,
 )
-
-ALL_IMAGES = ["a", "b", "c", "d"]
-
-
-@pytest.fixture
-async def mock_history_item(
-    db,
-    project_factory_v2,
-    dataset_factory_v2,
-    MockCurrentUser,
-):
-    # Create test data
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user=user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-    item = HistoryItemV2(
-        dataset_id=dataset.id,
-        workflowtask_id=None,
-        workflowtask_dump={},
-        task_group_dump={},
-        parameters_hash="xxx",
-        num_current_images=4,
-        num_available_images=4,
-        images={
-            zarr_url: HistoryItemImageStatus.SUBMITTED
-            for zarr_url in ALL_IMAGES
-        },
-    )
-    db.add(item)
-    await db.commit()
-    await db.refresh(item)
-    return item
 
 
 async def test_submit_success(db, mock_history_item):
@@ -55,9 +25,18 @@ async def test_submit_success(db, mock_history_item):
         assert result == 42
         assert exception is None
     db.expunge_all()
+
+    # Assertions on ImageStatus and HistoryItemV2 data
+    wftask_id = mock_history_item.workflowtask_id
+    dataset_id = mock_history_item.dataset_id
+    for zarr_url in ZARR_URLS:
+        image_status = await db.get(
+            ImageStatus, (zarr_url, wftask_id, dataset_id)
+        )
+        assert image_status.status == HistoryItemImageStatus.DONE
     history_item = await db.get(HistoryItemV2, mock_history_item.id)
     assert history_item.images == {
-        zarr_url: HistoryItemImageStatus.DONE for zarr_url in ALL_IMAGES
+        zarr_url: HistoryItemImageStatus.DONE for zarr_url in ZARR_URLS
     }
 
 
@@ -74,9 +53,18 @@ async def test_submit_fail(db, mock_history_item):
     assert result is None
     assert isinstance(exception, ValueError)
     db.expunge_all()
+
+    # Assertions on ImageStatus and HistoryItemV2 data
+    wftask_id = mock_history_item.workflowtask_id
+    dataset_id = mock_history_item.dataset_id
+    for zarr_url in ZARR_URLS:
+        image_status = await db.get(
+            ImageStatus, (zarr_url, wftask_id, dataset_id)
+        )
+        assert image_status.status == HistoryItemImageStatus.FAILED
     history_item = await db.get(HistoryItemV2, mock_history_item.id)
     assert history_item.images == {
-        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ALL_IMAGES
+        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ZARR_URLS
     }
 
 
@@ -108,8 +96,21 @@ async def test_multisubmit(db, mock_history_item):
         debug(results)
         debug(exceptions)
     db.expunge_all()
+
+    # Assertions on ImageStatus and HistoryItemV2 data
+    wftask_id = mock_history_item.workflowtask_id
+    dataset_id = mock_history_item.dataset_id
+    for zarr_url in ["a", "b", "d"]:
+        image_status = await db.get(
+            ImageStatus, (zarr_url, wftask_id, dataset_id)
+        )
+        assert image_status.status == HistoryItemImageStatus.DONE
+    for zarr_url in ["c"]:
+        image_status = await db.get(
+            ImageStatus, (zarr_url, wftask_id, dataset_id)
+        )
+        assert image_status.status == HistoryItemImageStatus.FAILED
     history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    debug(history_item.images)
     assert history_item.images == {
         "a": "done",
         "b": "done",
