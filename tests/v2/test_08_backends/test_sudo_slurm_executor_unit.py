@@ -3,7 +3,7 @@
 # import pytest
 # from devtools import debug
 # from fractal_server.app.runner.exceptions import JobExecutionError
-# from fractal_server.app.runner.executors.slurm_sudo.runner import RunnerSlurmSudo, SlurmJob
+# from fractal_server.app.runner.executors.slurm_sudo.runner import RunnerSlurmSudo, SlurmJob  # noqa
 # from tests.v2._aux_runner import get_default_slurm_config
 # from tests.v2._aux_runner import get_default_task_files
 # def test_slurm_sudo_executor_shutdown_before_job_submission(
@@ -105,7 +105,7 @@
 #         ),
 #         mock_subprocess_run_or_raise,
 #     )
-#     with pytest.raises(RuntimeError, match="Fractal-server version mismatch"):
+#     with pytest.raises(RuntimeError, match="Fractal-server version mismatch"):  # noqa
 #         FractalSlurmSudoExecutor(
 #             slurm_user="test_user",
 #             workflow_dir_local=Path("/local/workflow"),

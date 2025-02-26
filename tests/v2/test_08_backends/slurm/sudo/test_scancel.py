@@ -197,7 +197,7 @@ async def test_shutdown_during_multisubmit(
 #             user=SLURM_USER,
 #         )
 
-#     scancel_cmd = f"sudo --non-interactive -u {SLURM_USER} scancel -u {SLURM_USER} -v"
+#     scancel_cmd = f"sudo --non-interactive -u {SLURM_USER} scancel -u {SLURM_USER} -v"  # noqa
 
 #     # JOB 1: fail during `submit`
 #     with pytest.raises(JobExecutionError) as exc_info:
@@ -218,7 +218,7 @@ async def test_shutdown_during_multisubmit(
 #             while "RUNNING" not in run_squeue(squeue_format="%i %T"):
 #                 time.sleep(0.1)
 #             subprocess.run(
-#                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"
+#                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"  # noqa
 #             )
 #             # Trigger exception
 #             fut.result()
@@ -244,7 +244,7 @@ async def test_shutdown_during_multisubmit(
 #             while "RUNNING" not in run_squeue(squeue_format="%i %T"):
 #                 time.sleep(0.1)
 #             subprocess.run(
-#                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"
+#                 shlex.split(scancel_cmd), capture_output=True, encoding="utf-8"  # noqa
 #             )
 #             # Trigger exception
 #             list(res)
