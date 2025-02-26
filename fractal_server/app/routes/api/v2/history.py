@@ -67,55 +67,49 @@ async def get_per_workflow_aggregated_info(
         db=db,
     )
 
-    result = {}
-    for wftask in workflow.task_list:
+    wft_ids = [wftask.id for wftask in workflow.task_list]
 
+    # num_available_images
+    stm = (
+        select(
+            HistoryItemV2.workflowtask_id, HistoryItemV2.num_available_images
+        )
+        .where(HistoryItemV2.dataset_id == dataset_id)
+        .where(HistoryItemV2.workflowtask_id.in_(wft_ids))
+        .order_by(
+            HistoryItemV2.workflowtask_id,
+            HistoryItemV2.timestamp_started.desc(),
+        )
+        # https://www.postgresql.org/docs/current/sql-select.html#SQL-DISTINCT
+        .distinct(HistoryItemV2.workflowtask_id)
+    )
+    res = await db.execute(stm)
+    num_available_images = {k: v for k, v in res.all()}
+
+    count = {}
+    for _status in HistoryItemImageStatus:
         stm = (
-            select(HistoryItemV2.num_available_images)
-            .where(HistoryItemV2.dataset_id == dataset_id)
-            .where(HistoryItemV2.workflowtask_id == wftask.id)
-            .order_by(HistoryItemV2.timestamp_started.desc())
-            .limit(1)
+            select(ImageStatus.workflowtask_id, func.count())
+            .where(ImageStatus.dataset_id == dataset_id)
+            .where(ImageStatus.workflowtask_id.in_(wft_ids))
+            .where(ImageStatus.status == _status)
+            # https://docs.sqlalchemy.org/en/20/tutorial/data_select.html#tutorial-group-by-w-aggregates
+            .group_by(ImageStatus.workflowtask_id)
         )
         res = await db.execute(stm)
-        num_available_images = res.scalar_one_or_none()
+        count[_status] = {k: v for k, v in res.all()}
 
-        if num_available_images is None:
-            result[str(wftask.id)] = None
-            continue
-
-        done_stm = (
-            select(func.count(ImageStatus.zarr_url))
-            .where(ImageStatus.workflowtask_id == wftask.id)
-            .where(ImageStatus.dataset_id == dataset_id)
-            .where(ImageStatus.status == HistoryItemImageStatus.DONE)
-        )
-        failed_stm = (
-            select(func.count(ImageStatus.zarr_url))
-            .where(ImageStatus.workflowtask_id == wftask.id)
-            .where(ImageStatus.dataset_id == dataset_id)
-            .where(ImageStatus.status == HistoryItemImageStatus.FAILED)
-        )
-        submitted_stm = (
-            select(func.count(ImageStatus.zarr_url))
-            .where(ImageStatus.workflowtask_id == wftask.id)
-            .where(ImageStatus.dataset_id == dataset_id)
-            .where(ImageStatus.status == HistoryItemImageStatus.SUBMITTED)
-        )
-
-        done_res = await db.execute(done_stm)
-        done = done_res.scalar()
-        failed_res = await db.execute(failed_stm)
-        failed = failed_res.scalar()
-        submitted_res = await db.execute(submitted_stm)
-        submitted = submitted_res.scalar()
-
-        result[str(wftask.id)] = {
-            "num_done_images": done,
-            "num_failed_images": failed,
-            "num_submitted_images": submitted,
-            "num_available_images": num_available_images,
+    result = {
+        str(_id): None
+        if _id not in num_available_images
+        else {
+            "num_available_images": num_available_images[_id],
+            "num_done_images": count["done"].get(_id, 0),
+            "num_submitted_images": count["submitted"].get(_id, 0),
+            "num_failed_images": count["failed"].get(_id, 0),
         }
+        for _id in wft_ids
+    }
 
     return JSONResponse(content=result, status_code=200)
 
