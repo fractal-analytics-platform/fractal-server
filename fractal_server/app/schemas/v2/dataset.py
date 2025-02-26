@@ -14,25 +14,10 @@ from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
 from .._validators import root_validate_dict_keys
 from .._validators import valstr
-from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
-from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import SingleImage
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.urls import normalize_url
-
-
-class _DatasetHistoryItemV2(BaseModel):
-    """
-    Class for an item of `Dataset.history`.
-    """
-
-    workflowtask: WorkflowTaskDumpV2
-    status: WorkflowTaskStatusTypeV2
-    parallelization: Optional[dict] = None
-
-
-# CRUD
 
 
 class DatasetCreateV2(BaseModel):
@@ -73,8 +58,6 @@ class DatasetReadV2(BaseModel):
 
     project_id: int
     project: ProjectReadV2
-
-    history: list[_DatasetHistoryItemV2]
 
     timestamp_created: AwareDatetime
 

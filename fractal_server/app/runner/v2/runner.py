@@ -26,8 +26,6 @@ from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
-from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
-from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
 
@@ -135,21 +133,6 @@ def execute_tasks_v2(
             db.commit()
             db.refresh(history_item)
             history_item_id = history_item.id
-        # First, set status SUBMITTED in dataset.history for each wftask
-        with next(get_sync_db()) as db:
-            db_dataset = db.get(DatasetV2, dataset.id)
-            new_history_item = _DatasetHistoryItemV2(
-                workflowtask=dict(
-                    **wftask.model_dump(exclude={"task"}),
-                    task=wftask.task.model_dump(),
-                ),
-                status=WorkflowTaskStatusTypeV2.SUBMITTED,
-                parallelization=dict(),  # FIXME: re-include parallelization
-            ).model_dump()
-            db_dataset.history.append(new_history_item)
-            flag_modified(db_dataset, "history")
-            db.merge(db_dataset)
-            db.commit()
 
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
@@ -340,14 +323,6 @@ def execute_tasks_v2(
         # information
         with next(get_sync_db()) as db:
             db_dataset = db.get(DatasetV2, dataset.id)
-            if exceptions == {}:
-                db_dataset.history[-1][
-                    "status"
-                ] = WorkflowTaskStatusTypeV2.DONE
-            else:
-                db_dataset.history[-1][
-                    "status"
-                ] = WorkflowTaskStatusTypeV2.FAILED
             db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
             for attribute_name in [
