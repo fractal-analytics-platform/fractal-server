@@ -22,6 +22,7 @@ from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryItemV2
+from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -120,6 +121,17 @@ def execute_tasks_v2(
                 images=images,
             )
             db.add(history_item)
+            for image in filtered_images:
+                db.add(
+                    ImageStatus(
+                        zarr_url=image["zarr_url"],
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset.id,
+                        parameters_hash=parameters_hash,
+                        status=HistoryItemImageStatus.SUBMITTED,
+                        logfile="/invalid/placeholder",
+                    )
+                )
             db.commit()
             db.refresh(history_item)
             history_item_id = history_item.id

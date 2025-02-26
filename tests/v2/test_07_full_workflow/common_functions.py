@@ -162,8 +162,7 @@ async def full_workflow(
             assert _task is not None
         assert dataset["type_filters"] == {"3D": False, "my_type": True}
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
-            "images/query/",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/",
             json={},
         )
         assert res.status_code == 200
@@ -218,31 +217,23 @@ async def full_workflow(
         )
 
         # FIXME: first test of history
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/history/"
-        )
-        debug(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/history/latest-status-legacy/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow.id}"
-            )
-        )
-        debug(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/history/latest-status-legacy/images/?"
-                f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
-            )
-        )
-        debug(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/history/latest-status-legacy/images/?"
-                f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
-            )
-        )
-        debug(res.json())
+        query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
+        query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
+        query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
+        for url in [
+            f"api/v2/project/{project_id}/dataset/{dataset_id}/history/",
+            f"api/v2/project/{project_id}/status/?{query_wf}",
+            f"/api/v2/project/{project_id}/status/subsets/?{query_wft0}",
+            f"/api/v2/project/{project_id}/status/images/?status=done&{query_wft0}",
+            f"/api/v2/project/{project_id}/status/images/?status=failed&{query_wft0}",
+            f"/api/v2/project/{project_id}/status/images/?status=submitted&{query_wft0}",
+            f"/api/v2/project/{project_id}/status/subsets/?{query_wft1}",
+            f"/api/v2/project/{project_id}/status/images/?status=done&{query_wft1}",
+            f"/api/v2/project/{project_id}/status/images/?status=failed&{query_wft1}",
+            f"/api/v2/project/{project_id}/status/images/?status=submitted&{query_wft1}",
+        ]:
+            res = await client.get(url)
+            debug(url, res.status_code, res.json())
 
 
 async def full_workflow_TaskExecutionError(
