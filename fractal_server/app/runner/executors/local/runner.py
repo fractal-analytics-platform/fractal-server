@@ -49,11 +49,10 @@ class LocalRunner(BaseRunner):
             return result, None
         except Exception as e:
             exception = e
-            if not in_compound_task:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.FAILED,
-                )
+            update_all_images(
+                history_item_id=history_item_id,
+                status=HistoryItemImageStatus.FAILED,
+            )
             return None, exception
 
     def multisubmit(
