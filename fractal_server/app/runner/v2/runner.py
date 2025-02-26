@@ -122,7 +122,7 @@ def execute_tasks_v2(
             )
             db.add(history_item)
             for image in filtered_images:
-                db.add(
+                db.merge(
                     ImageStatus(
                         zarr_url=image["zarr_url"],
                         workflowtask_id=wftask.id,
