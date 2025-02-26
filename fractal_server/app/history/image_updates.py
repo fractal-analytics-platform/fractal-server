@@ -6,6 +6,9 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 def _update_single_image_status(
@@ -39,6 +42,11 @@ def update_single_image(
     zarr_url: str,
     status: HistoryItemImageStatus,
 ) -> None:
+
+    logger.debug(
+        f"[update_single_image] {history_item_id=}, {status=}, {zarr_url=}"
+    )
+
     # Note: thanks to `with_for_update`, a lock is acquired and kept
     # until `db.commit()`
     with next(get_sync_db()) as db:
@@ -67,6 +75,9 @@ def update_all_images(
     history_item_id: int,
     status: HistoryItemImageStatus,
 ) -> None:
+
+    logger.debug(f"[update_all_images] {history_item_id=}, {status=}")
+
     # Note: thanks to `with_for_update`, a lock is acquired and kept
     # until `db.commit()`
     stm = (

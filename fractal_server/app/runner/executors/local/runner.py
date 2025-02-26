@@ -8,6 +8,9 @@ from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.history import update_all_images
 from fractal_server.app.history import update_single_image
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 class LocalRunner(BaseRunner):
@@ -15,17 +18,21 @@ class LocalRunner(BaseRunner):
 
     def __init__(self):
         self.executor = ThreadPoolExecutor()
+        logger.debug("Create LocalRunner")
 
     def __enter__(self):
+        logger.debug("Enter LocalRunner")
         return self
 
     def shutdown(self):
+        logger.debug("Now shut LocalRunner.executor down")
         self.executor.shutdown(
             wait=False,
             cancel_futures=True,
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        logger.debug("Exit LocalRunner")
         self.shutdown()
         return self.executor.__exit__(exc_type, exc_val, exc_tb)
 
@@ -37,6 +44,8 @@ class LocalRunner(BaseRunner):
         in_compound_task: bool = False,
         **kwargs,
     ) -> tuple[Any, Exception]:
+        logger.debug("[submit] START")
+
         self.validate_submit_parameters(parameters)
         future = self.executor.submit(func, parameters=parameters)
         try:
@@ -46,6 +55,7 @@ class LocalRunner(BaseRunner):
                     history_item_id=history_item_id,
                     status=HistoryItemImageStatus.DONE,
                 )
+            logger.debug(f"[submit] END {result=}")
             return result, None
         except Exception as e:
             exception = e
@@ -53,6 +63,7 @@ class LocalRunner(BaseRunner):
                 history_item_id=history_item_id,
                 status=HistoryItemImageStatus.FAILED,
             )
+            logger.debug(f"[submit] END {exception=}")
             return None, exception
 
     def multisubmit(
@@ -64,6 +75,8 @@ class LocalRunner(BaseRunner):
         local_backend_config: Optional[LocalBackendConfig] = None,
         **kwargs,
     ):
+        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
+
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             in_compound_task=in_compound_task,
@@ -132,5 +145,6 @@ class LocalRunner(BaseRunner):
                     history_item_id=history_item_id,
                     status=HistoryItemImageStatus.FAILED,
                 )
+        logger.debug(f"[multisubmit] END, {results=}, {exceptions=}")
 
         return results, exceptions

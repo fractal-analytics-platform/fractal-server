@@ -33,7 +33,6 @@ from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
-from .handle_failed_job import mark_last_wftask_as_failed
 from fractal_server import __VERSION__
 from fractal_server.app.models import UserSettings
 
@@ -345,10 +344,6 @@ def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        mark_last_wftask_as_failed(
-            dataset_id=dataset_id,
-            logger_name=logger_name,
-        )
         exception_args_string = "\n".join(e.args)
         log_msg = (
             f"TASK ERROR: "
@@ -361,10 +356,7 @@ def submit_workflow(
     except JobExecutionError as e:
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
-        mark_last_wftask_as_failed(
-            dataset_id=dataset_id,
-            logger_name=logger_name,
-        )
+
         fail_job(
             db=db_sync,
             job=job,
@@ -378,10 +370,7 @@ def submit_workflow(
     except Exception:
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
-        mark_last_wftask_as_failed(
-            dataset_id=dataset_id,
-            logger_name=logger_name,
-        )
+
         current_traceback = traceback.format_exc()
         fail_job(
             db=db_sync,
