@@ -19,11 +19,11 @@ async def test_submit_success(db, mock_history_item):
     with LocalRunner() as runner:
         result, exception = runner.submit(
             do_nothing,
-            parameters=dict(zarr_urls=["a", "b", "c", "d"]),
+            parameters=dict(zarr_urls=ZARR_URLS),
             history_item_id=mock_history_item.id,
         )
-        assert result == 42
-        assert exception is None
+    assert result == 42
+    assert exception is None
     db.expunge_all()
 
     # Assertions on ImageStatus and HistoryItemV2 data
@@ -41,17 +41,21 @@ async def test_submit_success(db, mock_history_item):
 
 
 async def test_submit_fail(db, mock_history_item):
+    ERROR_MSG = "very nice error"
+
     def raise_ValueError(parameters: dict):
-        raise ValueError("error message")
+        raise ValueError(ERROR_MSG)
 
     with LocalRunner() as runner:
         result, exception = runner.submit(
             raise_ValueError,
-            parameters=dict(zarr_urls=[]),
+            parameters=dict(zarr_urls=ZARR_URLS),
             history_item_id=mock_history_item.id,
         )
     assert result is None
     assert isinstance(exception, ValueError)
+    assert ERROR_MSG in str(exception)
+
     db.expunge_all()
 
     # Assertions on ImageStatus and HistoryItemV2 data
