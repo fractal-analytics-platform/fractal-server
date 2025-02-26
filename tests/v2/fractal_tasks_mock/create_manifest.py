@@ -19,6 +19,7 @@ TASK_LIST = [
         category="Conversion",
         modality="HCS",
         tags=["Yokogawa", "Cellvoyager"],
+        input_types={"__no_images__": True},
     ),
     CompoundTask(
         name="create_ome_zarr_multiplex_compound",
@@ -27,6 +28,7 @@ TASK_LIST = [
         category="Conversion",
         modality="HCS",
         tags=["Yokogawa", "Cellvoyager"],
+        input_types={"__no_images__": True},
     ),
     CompoundTask(
         name="MIP_compound",
