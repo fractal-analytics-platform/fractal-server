@@ -16,7 +16,6 @@ from typing import Sequence
 import cloudpickle
 
 from ...filenames import SHUTDOWN_FILENAME
-from ...task_files import get_task_file_paths
 from ...task_files import TaskFiles
 from ...versions import get_versions
 from ..slurm_common._batching import heuristics
@@ -533,9 +532,9 @@ class FractalSlurmSSHExecutor(Executor):
                 except AttributeError:
                     actual_component = str(component)
 
-                _task_file_paths = get_task_file_paths(
-                    workflow_dir_local=task_files.workflow_dir_local,
-                    workflow_dir_remote=task_files.workflow_dir_remote,
+                _task_file_paths = TaskFiles(
+                    root_dir_local=task_files.workflow_dir_local,
+                    root_dir_remote=task_files.workflow_dir_remote,
                     task_name=task_files.task_name,
                     task_order=task_files.task_order,
                     component=actual_component,

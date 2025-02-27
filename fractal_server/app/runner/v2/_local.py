@@ -68,7 +68,7 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    with LocalRunner() as runner:
+    with LocalRunner(root_dir_local=workflow_dir_local) as runner:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)

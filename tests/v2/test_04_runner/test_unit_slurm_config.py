@@ -245,8 +245,8 @@ def test_slurm_submit_setup(
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
         which_type="parallel",
-        workflow_dir_local=tmp_path,
-        workflow_dir_remote=tmp_path,
+        root_dir_local=tmp_path,
+        root_dir_remote=tmp_path,
     )
     debug(slurm_config)
     assert slurm_config["slurm_config"].account is None
@@ -261,8 +261,8 @@ def test_slurm_submit_setup(
         _slurm_submit_setup(
             wftask=wftask,
             which_type="parallel",
-            workflow_dir_local=tmp_path,
-            workflow_dir_remote=tmp_path,
+            root_dir_local=tmp_path,
+            root_dir_remote=tmp_path,
         )
     debug(e.value)
     assert "SLURM account" in str(e.value)

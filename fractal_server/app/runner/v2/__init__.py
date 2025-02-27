@@ -200,7 +200,7 @@ def submit_workflow(
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
 
-            # Create all tasks subfolders
+            # Create all tasks subfolders # FIXME: do this with Runner
             for order in range(job.first_task_index, job.last_task_index + 1):
                 this_wftask = workflow.task_list[order]
                 task_name = this_wftask.task.name
@@ -218,10 +218,7 @@ def submit_workflow(
                         folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
                         user=slurm_user,
                     )
-                else:
-                    # Create local subfolder (with standard permission set)
-                    (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir()
-                    logger.info("Skip remote-subfolder creation")
+
         except Exception as e:
             error_type = type(e).__name__
             fail_job(

@@ -11,9 +11,10 @@ from fractal_server.app.runner.executors.slurm_common.utils_executors import (
 from fractal_server.app.runner.executors.slurm_common.utils_executors import (
     get_slurm_script_file_path,
 )
-from tests.v2._aux_runner import (
-    get_default_task_files,
-)
+
+
+def get_default_task_files(*arg, **kwargs):
+    raise NotImplementedError("function was removed")
 
 
 def test_get_default_task_files():

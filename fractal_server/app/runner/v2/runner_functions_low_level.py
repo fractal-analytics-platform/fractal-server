@@ -11,11 +11,11 @@ from ..components import _COMPONENT_KEY_
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.task_files import get_task_file_paths
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.string_tools import validate_cmd
 
 
-def _call_command_wrapper(cmd: str, log_path: Path) -> None:
+def _call_command_wrapper(cmd: str, log_path: str) -> None:
     """
     Call a command and write its stdout and stderr to files
 
@@ -50,7 +50,7 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
             raise e
 
     if result.returncode > 0:
-        with log_path.open("r") as fp_stderr:
+        with open(log_path, "r") as fp_stderr:
             err = fp_stderr.read()
         raise TaskExecutionError(err)
     elif result.returncode < 0:
@@ -63,46 +63,46 @@ def run_single_task(
     parameters: dict[str, Any],
     command: str,
     wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
+    root_dir_local: Path,
+    root_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
 ) -> dict[str, Any]:
     """
-    Runs within an executor.
+    Runs within an executor (AKA on the SLURM cluster).
     """
 
     logger = logging.getLogger(logger_name)
     logger.debug(f"Now start running {command=}")
 
-    if not workflow_dir_remote:
-        workflow_dir_remote = workflow_dir_local
+    if not root_dir_remote:
+        root_dir_remote = root_dir_local
 
     task_name = wftask.task.name
 
-    component = parameters.pop(_COMPONENT_KEY_, None)
-    task_files = get_task_file_paths(
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        task_order=wftask.order,
+    component = parameters.pop(_COMPONENT_KEY_)
+    task_files = TaskFiles(
+        root_dir_local=root_dir_local,
+        root_dir_remote=root_dir_remote,
         task_name=task_name,
+        task_order=wftask.order,
         component=component,
     )
 
     # Write arguments to args.json file
-    with task_files.args.open("w") as f:
+    with open(task_files.args_file_remote, "w") as f:
         json.dump(parameters, f, indent=2)
 
     # Assemble full command
     full_command = (
         f"{command} "
-        f"--args-json {task_files.args.as_posix()} "
-        f"--out-json {task_files.metadiff.as_posix()}"
+        f"--args-json {task_files.args_file_remote} "
+        f"--out-json {task_files.metadiff_file_remote}"
     )
 
     try:
         _call_command_wrapper(
             full_command,
-            log_path=task_files.log,
+            log_path=task_files.log_file_remote,
         )
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
@@ -111,7 +111,7 @@ def run_single_task(
         raise e
 
     try:
-        with task_files.metadiff.open("r") as f:
+        with open(task_files.metadiff_file_remote, "r") as f:
             out_meta = json.load(f)
     except FileNotFoundError as e:
         logger.debug(

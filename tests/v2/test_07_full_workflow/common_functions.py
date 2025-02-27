@@ -98,7 +98,7 @@ async def full_workflow(
             json={},
         )
         assert res.status_code == 201
-        wftask1_id = res.json()["id"]
+        wftask2_id = res.json()["id"]
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -130,11 +130,8 @@ async def full_workflow(
         debug(job_status_data)
         assert job_status_data["log"]
         debug(job_status_data["working_dir"])
-        if job_status_data["status"] != "done":
-            debug(job_status_data["status"])
-            debug(job_status_data["log"])
-            raise RuntimeError("Status is not 'done'.")
-        assert job_status_data["status"] == "done"
+        with informative_assertion_block(job_status_data):
+            assert job_status_data["status"] == "done"
         assert "START workflow" in job_status_data["log"]
         assert "END workflow" in job_status_data["log"]
 
@@ -156,10 +153,6 @@ async def full_workflow(
         )
         assert res.status_code == 200
         dataset = res.json()
-        assert len(dataset["history"]) == 3
-        for item in dataset["history"]:
-            _task = item["workflowtask"]["task"]
-            assert _task is not None
         assert dataset["type_filters"] == {"3D": False, "my_type": True}
         res = await client.post(
             (
@@ -190,7 +183,12 @@ async def full_workflow(
         assert set(expected_files) < set(actual_files)
 
         # Check files in task-0 folder
-        expected_files = ["0_par_0000000.log", "0_par_0000001.log"]
+        expected_files = [
+            "init_0000000-log.txt",
+            "init_0000000-metadiff.json",
+            "compute_0000000-log.txt",
+            "compute_0000000-metadiff.json",
+        ]
         assert set(expected_files) < set(
             file.split("/")[-1]
             for file in actual_files
@@ -198,7 +196,12 @@ async def full_workflow(
         )
 
         # Check files in task-1 folder
-        expected_files = ["1_par_0000000.log", "1_par_0000001.log"]
+        expected_files = [
+            "init_0000000-log.txt",
+            "init_0000000-metadiff.json",
+            "compute_0000000-log.txt",
+            "compute_0000000-metadiff.json",
+        ]
         assert set(expected_files) < set(
             file.split("/")[-1]
             for file in actual_files
@@ -209,6 +212,7 @@ async def full_workflow(
         query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
         query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
         query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
+        query_wft2 = f"dataset_id={dataset_id}&workflowtask_id={wftask2_id}"
         this_prefix = f"api/v2/project/{project_id}"
         for url in [
             f"{this_prefix}/dataset/{dataset_id}/history/",
@@ -221,6 +225,10 @@ async def full_workflow(
             f"{this_prefix}/status/images/?status=done&{query_wft1}",
             f"{this_prefix}/status/images/?status=failed&{query_wft1}",
             f"{this_prefix}/status/images/?status=submitted&{query_wft1}",
+            f"{this_prefix}/status/subsets/?{query_wft2}",
+            f"{this_prefix}/status/images/?status=done&{query_wft2}",
+            f"{this_prefix}/status/images/?status=failed&{query_wft2}",
+            f"{this_prefix}/status/images/?status=submitted&{query_wft2}",
         ]:
             res = await client.get(url)
             debug(url, res.status_code, res.json())

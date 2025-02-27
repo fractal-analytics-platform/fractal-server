@@ -14,9 +14,10 @@ Submodule to define _slurm_submit_setup, which is also the reference
 implementation of `submit_setup_call`.
 """
 from pathlib import Path
+from typing import Any
 from typing import Literal
 
-from ...task_files import get_task_file_paths
+from ...task_files import TaskFiles
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.slurm_common.get_slurm_config import (
     get_slurm_config,
@@ -26,13 +27,15 @@ from fractal_server.app.runner.executors.slurm_common.get_slurm_config import (
 def _slurm_submit_setup(
     *,
     wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
+    root_dir_local: Path,
+    root_dir_remote: Path,
     which_type: Literal["non_parallel", "parallel"],
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """
     Collect WorkflowTask-specific configuration parameters from different
     sources, and inject them for execution.
+
+    FIXME
 
     Here goes all the logic for reading attributes from the appropriate sources
     and transforming them into an appropriate `SlurmConfig` object (encoding
@@ -68,16 +71,14 @@ def _slurm_submit_setup(
     )
 
     # Get TaskFiles object
-    task_files = get_task_file_paths(
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
+    task_files = TaskFiles(
+        root_dir_local=root_dir_local,
+        root_dir_remote=root_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
     )
 
-    # Prepare and return output dictionary
-    submit_setup_dict = dict(
+    return dict(
         slurm_config=slurm_config,
         task_files=task_files,
     )
-    return submit_setup_dict

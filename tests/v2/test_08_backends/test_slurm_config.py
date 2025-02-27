@@ -335,8 +335,8 @@ def test_slurm_submit_setup(
     wftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
-        workflow_dir_local=tmp_path,
-        workflow_dir_remote=tmp_path,
+        root_dir_local=tmp_path,
+        root_dir_remote=tmp_path,
         which_type="non_parallel",
     )
     debug(slurm_config)
@@ -351,8 +351,8 @@ def test_slurm_submit_setup(
     with pytest.raises(SlurmConfigError) as e:
         _slurm_submit_setup(
             wftask=wftask,
-            workflow_dir_local=tmp_path,
-            workflow_dir_remote=tmp_path,
+            root_dir_local=tmp_path,
+            root_dir_remote=tmp_path,
             which_type="non_parallel",
         )
     debug(e.value)
