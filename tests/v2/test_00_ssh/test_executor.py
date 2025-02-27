@@ -17,9 +17,11 @@ from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import (
     get_default_slurm_config,
 )
-from tests.v2._aux_runner import (
-    get_default_task_files,
-)
+
+
+def get_default_task_files(*args, **kwargs):
+    raise NotImplementedError("This function was removed")
+
 
 logger = set_logger(__file__)
 
