@@ -10,6 +10,7 @@ from typing import Optional
 
 import cloudpickle
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 from ._check_jobs_status import get_finished_jobs
 from ._subprocess_run_as_user import _mkdir_as_user
@@ -18,13 +19,19 @@ from fractal_server import __VERSION__
 from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.history import update_all_images
 from fractal_server.app.history import update_single_image
+from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.executors.slurm_common._slurm_config import (
+    SlurmConfig,
+)
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+
 
 logger = set_logger(__name__)
 
@@ -45,31 +52,36 @@ def _handle_exception_proxy(proxy):  # FIXME
 
 
 class SlurmTask(BaseModel):
-    label: str
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    component: str
     workdir_local: Path
     workdir_remote: Path
     zarr_url: Optional[str] = None
-
-    log_file_local: Optional[str] = None
-    log_file_remote: Optional[str] = None
-    args_file_local: Optional[str] = None
-    args_file_remote: Optional[str] = None
+    task_files: TaskFiles
 
     @property
     def input_pickle_file_local(self) -> str:
-        return (self.workdir_local / f"{self.label}-input.pickle").as_posix()
+        return (
+            self.workdir_local / f"{self.component}-input.pickle"
+        ).as_posix()
 
     @property
     def output_pickle_file_local(self) -> str:
-        return (self.workdir_local / f"{self.label}-output.pickle").as_posix()
+        return (
+            self.workdir_local / f"{self.component}-output.pickle"
+        ).as_posix()
 
     @property
     def input_pickle_file_remote(self) -> str:
-        return (self.workdir_remote / f"{self.label}-input.pickle").as_posix()
+        return (
+            self.workdir_remote / f"{self.component}-input.pickle"
+        ).as_posix()
 
     @property
     def output_pickle_file_remote(self) -> str:
-        return (self.workdir_remote / f"{self.label}-output.pickle").as_posix()
+        return (
+            self.workdir_remote / f"{self.component}-output.pickle"
+        ).as_posix()
 
 
 class SlurmJob(BaseModel):
@@ -81,9 +93,15 @@ class SlurmJob(BaseModel):
 
     @property
     def slurm_log_file_local(self) -> str:
-        return (
-            self.workdir_local / f"slurm-{self.label}-{self.slurm_job_id}.log"
-        ).as_posix()
+        if self.slurm_job_id:
+            return (
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.log"
+            ).as_posix()
+        else:
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.log"
+            ).as_posix()
 
     @property
     def slurm_log_file_remote(self) -> str:
@@ -108,6 +126,10 @@ class SlurmJob(BaseModel):
         return (
             self.workdir_remote / f"slurm-{self.label}-submit.sh"
         ).as_posix()
+
+    @property
+    def log_files_local(self) -> list[str]:
+        return [task.task_files.log_file_local for task in self.tasks]
 
 
 def _subprocess_run_or_raise(
@@ -166,13 +188,13 @@ class RunnerSlurmSudo(BaseRunner):
         self.common_script_lines = common_script_lines or []
 
         # Check that SLURM account is not set here
+        # FIXME: move to little method
         try:
             invalid_line = next(
                 line
                 for line in self.common_script_lines
                 if line.startswith("#SBATCH --account=")
             )
-            self._stop_and_join_wait_thread()
             raise RuntimeError(
                 "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
                 f"'{invalid_line}'.\n"
@@ -242,11 +264,12 @@ class RunnerSlurmSudo(BaseRunner):
 
         logger.debug("[exit_if_shutdown] END")
 
-    def submit_single_sbatch(
+    def _submit_single_sbatch(
         self,
         func,
-        parameters,
+        parameters,  # FIXME this should be per-task
         slurm_job: SlurmJob,
+        slurm_config: SlurmConfig,
     ) -> str:
 
         if len(slurm_job.tasks) > 1:
@@ -261,7 +284,9 @@ class RunnerSlurmSudo(BaseRunner):
         for task in slurm_job.tasks:
             _args = []
             # TODO: make parameters task-dependent
-            _kwargs = dict(parameters=parameters)
+            _kwargs = dict(
+                parameters=parameters
+            )  # FIXME: this should be per-tas
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
@@ -319,7 +344,10 @@ class RunnerSlurmSudo(BaseRunner):
     def job_ids(self) -> list[str]:
         return list(self.jobs.keys())
 
-    def copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
+    def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
+        """
+        Note: this would differ for SSH
+        """
         source_target_list = [
             (job.slurm_log_file_remote, job.slurm_log_file_local)
         ]
@@ -327,8 +355,20 @@ class RunnerSlurmSudo(BaseRunner):
             source_target_list.append(
                 (task.output_pickle_file_remote, task.output_pickle_file_local)
             )
-            # FIXME: add logfile
-            # FIXME: add args file (or not?)
+            source_target_list.append(
+                (
+                    task.task_files.log_file_remote,
+                    task.task_files.log_file_local,
+                ),
+                (
+                    task.task_files.args_file_remote,
+                    task.task_files.args_file_local,
+                ),
+                (
+                    task.task_files.metadiff_file_remote,
+                    task.task_files.metadiff_file_local,
+                ),
+            )
 
         for source, target in source_target_list:
             # NOTE: By setting encoding=None, we read/write bytes instead
@@ -350,28 +390,21 @@ class RunnerSlurmSudo(BaseRunner):
                 )
             logger.debug(f"Copied {source} into {target}")
 
-    def postprocess_single_task(
+    def _postprocess_single_task(
         self, *, task: SlurmTask
     ) -> tuple[Any, Exception]:
         try:
-            if not Path(task.output_pickle_file_local).exists():
-                # TODO: Prepare appropriate exception
-                exception = JobExecutionError(
-                    f"Missing {task.output_pickle_file_local}"
-                )
-                return None, exception
+            with open(task.output_pickle_file_local, "rb") as f:
+                outdata = f.read()
+            success, output = cloudpickle.loads(outdata)
+            if success:
+                result = output
+                return result, None
             else:
-                with open(task.output_pickle_file_local, "rb") as f:
-                    outdata = f.read()
-                success, output = cloudpickle.loads(outdata)
-                if success:
-                    result = output
-                    return result, None
-                else:
-                    exception = _handle_exception_proxy(output)
-                    return None, exception
+                exception = _handle_exception_proxy(output)
+                return None, exception
         except Exception as e:
-            exception = JobExecutionError(f"unclear, {str(e)}")
+            exception = JobExecutionError(f"ERROR, {str(e)}")
             return None, exception
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
@@ -382,11 +415,21 @@ class RunnerSlurmSudo(BaseRunner):
         func: callable,
         parameters: dict[str, Any],
         history_item_id: int,
-        workdir_local: Path,
-        workdir_remote: Path,
+        task_files: TaskFiles,
         in_compound_task: bool = False,
+        slurm_config: Optional[SlurmConfig] = None,
         **kwargs,
     ) -> tuple[Any, Exception]:
+
+        workdir_local = task_files.wftask_subfolder_local
+        workdir_remote = task_files.wftask_subfolder_remote
+
+        task_files = TaskFiles(
+            **task_files.model_dump(
+                exclude={"component"},
+            ),
+            component=parameters[_COMPONENT_KEY_],
+        )
 
         if self.jobs != {}:
             if not in_compound_task:
@@ -407,7 +450,7 @@ class RunnerSlurmSudo(BaseRunner):
         # Validation phase
         self.validate_submit_parameters(parameters)
 
-        # Create folders
+        # Create task subfolder
         workdir_local.mkdir(parents=True, exist_ok=True)
         _mkdir_as_user(
             folder=workdir_remote.as_posix(),
@@ -421,26 +464,30 @@ class RunnerSlurmSudo(BaseRunner):
             workdir_remote=workdir_remote,
             tasks=[
                 SlurmTask(
-                    label="0",
+                    component="0",
                     workdir_remote=workdir_remote,
                     workdir_local=workdir_local,
+                    task_files=task_files,
                 )
             ],
-        )  # TODO: replace with actual values
-        self.submit_single_sbatch(
+        )  # TODO: replace with actual values (BASED ON TASKFILES)
+        self._submit_single_sbatch(
             func,
             parameters=parameters,
             slurm_job=slurm_job,
         )
 
+        LOGFILE = task_files.log_file_local
+
         # Retrieval phase
         while len(self.jobs) > 0:
-            self.scancel_if_shutdown()
+            if self.is_shutdown():
+                self.scancel_if_shutdown()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
             for slurm_job_id in finished_job_ids:
                 slurm_job = self.jobs.pop(slurm_job_id)
-                self.copy_files_from_remote_to_local(slurm_job)
-                result, exception = self.postprocess_single_task(
+                self._copy_files_from_remote_to_local(slurm_job)
+                result, exception = self._postprocess_single_task(
                     task=slurm_job.tasks[0]
                 )
             time.sleep(self.slurm_poll_interval)
@@ -450,11 +497,13 @@ class RunnerSlurmSudo(BaseRunner):
                 update_all_images(
                     history_item_id=history_item_id,
                     status=HistoryItemImageStatus.DONE,
+                    logfile=LOGFILE,
                 )
             else:
                 update_all_images(
                     history_item_id=history_item_id,
                     status=HistoryItemImageStatus.FAILED,
+                    logfile=LOGFILE,
                 )
 
         return result, exception
@@ -464,8 +513,7 @@ class RunnerSlurmSudo(BaseRunner):
         func: callable,
         list_parameters: list[dict],
         history_item_id: int,
-        workdir_local: Path,
-        workdir_remote: Path,
+        task_files: TaskFiles,
         in_compound_task: bool = False,
         **kwargs,
     ):
@@ -475,6 +523,9 @@ class RunnerSlurmSudo(BaseRunner):
             list_parameters=list_parameters,
             in_compound_task=in_compound_task,
         )
+
+        workdir_local = task_files.wftask_subfolder_local
+        workdir_remote = task_files.wftask_subfolder_remote
 
         # Create folders
         workdir_local.mkdir(parents=True, exist_ok=True)
@@ -490,23 +541,30 @@ class RunnerSlurmSudo(BaseRunner):
         exceptions = []
         jobs: dict[str, SlurmJob] = {}
 
+        original_task_files = task_files
         # TODO: Add batching
         for ind, parameters in enumerate(list_parameters):
             # TODO: replace with actual values
+
+            component = parameters[_COMPONENT_KEY_]
             slurm_job = SlurmJob(
-                label=str(ind),  # FIXME
+                label=f"{ind:06d}",
                 workdir_local=workdir_local,
                 workdir_remote=workdir_remote,
                 tasks=[
                     SlurmTask(
-                        label=str(ind),  # FIXME
+                        component=component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         zarr_url=parameters["zarr_url"],
+                        task_files=TaskFiles(
+                            **original_task_files,
+                            component=component,
+                        ),
                     )
                 ],
             )
-            slurm_job_id = self.submit_single_sbatch(
+            slurm_job_id = self._submit_single_sbatch(
                 func,
                 parameters=parameters,
                 slurm_job=slurm_job,
@@ -516,26 +574,31 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Retrieval phase
         while len(jobs) > 0:
-            self.scancel_if_shutdown(active_slurm_jobs=jobs)
-            remaining_jobs = list(jobs.keys())
+            if self.is_shutdown():
+                self.scancel_if_shutdown(active_slurm_jobs=jobs)
+            remaining_jobs = list(self.job_ids)
             finished_jobs = get_finished_jobs(job_ids=remaining_jobs)
             for slurm_job_id in finished_jobs:
                 slurm_job = jobs.pop(slurm_job_id)
-                self.copy_files_from_remote_to_local(slurm_job)
+                self._copy_files_from_remote_to_local(slurm_job)
                 for task in slurm_job.tasks:
-                    result, exception = self.postprocess_single_task(task=task)
+                    result, exception = self._postprocess_single_task(
+                        task=task
+                    )
                     if not in_compound_task:
                         if exception is None:
                             update_single_image(
                                 zarr_url=task.zarr_url,
                                 history_item_id=history_item_id,
                                 status=HistoryItemImageStatus.DONE,
+                                logfile=task.task_files.log_file_local,
                             )
                         else:
                             update_single_image(
                                 zarr_url=task.zarr_url,
                                 history_item_id=history_item_id,
                                 status=HistoryItemImageStatus.FAILED,
+                                logfile=task.task_files.log_file_local,
                             )
                     # TODO: Now just appending, but this should be done better
                     results.append(result)

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
@@ -19,6 +21,7 @@ def _update_single_image_status(
     status: HistoryItemImageStatus,
     db: Session,
     commit: bool = True,
+    logfile: Optional[str] = None,
 ) -> None:
     image_status = db.get(
         ImageStatus,
@@ -31,6 +34,8 @@ def _update_single_image_status(
     if image_status is None:
         raise RuntimeError("This should have not happened")
     image_status.status = status
+    if logfile is not None:
+        image_status.logfile = logfile
     db.add(image_status)
     if commit:
         db.commit()
@@ -70,10 +75,39 @@ def update_single_image(
         )
 
 
+def update_single_image_logfile(
+    *,
+    history_item_id: int,
+    zarr_url: str,
+    logfile: str,
+) -> None:
+
+    logger.debug(
+        f"[update_single_image_logfile] {history_item_id=}, {logfile=}, {zarr_url=}"
+    )
+
+    with next(get_sync_db()) as db:
+        history_item = db.get(HistoryItemV2, history_item_id)
+        image_status = db.get(
+            ImageStatus,
+            (
+                zarr_url,
+                history_item.workflowtask_id,
+                history_item.dataset_id,
+            ),
+        )
+        if image_status is None:
+            raise RuntimeError("This should have not happened")
+        image_status.logfile = logfile
+        db.merge(image_status)
+        db.commit()
+
+
 def update_all_images(
     *,
     history_item_id: int,
     status: HistoryItemImageStatus,
+    logfile: Optional[str] = None,
 ) -> None:
 
     logger.debug(f"[update_all_images] {history_item_id=}, {status=}")
@@ -95,13 +129,14 @@ def update_all_images(
         db.commit()
 
         # FIXME: Make this a bulk edit, if possible
-        for zarr_url in history_item.images.keys():
+        for ind, zarr_url in enumerate(history_item.images.keys()):
             _update_single_image_status(
                 zarr_url=zarr_url,
                 dataset_id=history_item.dataset_id,
                 workflowtask_id=history_item.workflowtask_id,
                 commit=False,
                 status=status,
+                logfile=logfile,
                 db=db,
             )
         db.commit()

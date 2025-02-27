@@ -59,13 +59,7 @@ def _cast_and_validate_InitTaskOutput(
         )
 
 
-def no_op_submit_setup_call(
-    *,
-    wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
-    which_type: Literal["non_parallel", "parallel"],
-) -> dict:
+def no_op_submit_setup_call(*args, **kwargs) -> dict:
     """
     Default (no-operation) interface of submit_setup_call in V2.
     """
@@ -84,8 +78,8 @@ def _get_executor_options(
     try:
         options = submit_setup_call(
             wftask=wftask,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
             which_type=which_type,
         )
     except Exception as e:
@@ -142,13 +136,15 @@ def run_v2_task_non_parallel(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
+    function_kwargs[_COMPONENT_KEY_] = _index_to_component(0)
+
     result, exception = executor.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
         history_item_id=history_item_id,
@@ -205,8 +201,8 @@ def run_v2_task_parallel(
             run_single_task,
             wftask=wftask,
             command=task.command_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
         list_parameters=list_function_kwargs,
         history_item_id=history_item_id,
@@ -266,13 +262,14 @@ def run_v2_task_compound(
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
+    function_kwargs[_COMPONENT_KEY_] = f"init_{_index_to_component(0)}"
     result, exception = executor.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
         history_item_id=history_item_id,
@@ -309,15 +306,17 @@ def run_v2_task_compound(
                 **(wftask.args_parallel or {}),
             ),
         )
-        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
+        list_function_kwargs[-1][
+            _COMPONENT_KEY_
+        ] = f"compute_{_index_to_component(ind)}"
 
     results, exceptions = executor.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
         list_parameters=list_function_kwargs,
         history_item_id=history_item_id,

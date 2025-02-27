@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
+from pydantic import BaseModel
+
 from fractal_server.string_tools import sanitize_string
 
 
@@ -17,108 +19,80 @@ def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
     return f"{order}_{task_name_slug}"
 
 
-class TaskFiles:
+class TaskFiles(BaseModel):
     """
-    Group all file paths pertaining to a task
-
-    Attributes:
-        workflow_dir_local:
-            Server-owned directory to store all task-execution-related relevant
-            files. Note: users cannot write directly to this folder.
-        workflow_dir_remote:
-            User-side directory with the same scope as `workflow_dir_local`,
-            and where a user can write.
-        subfolder_name:
-            Name of task-specific subfolder
-        remote_subfolder:
-            Path to user-side task-specific subfolder
-        task_name:
-            Name of the task
-        task_order:
-            Positional order of the task within a workflow.
-        component:
-            Specific component to run the task for (relevant for tasks to be
-            executed in parallel over many components).
-        file_prefix:
-            Prefix for all task-related files.
-        args:
-            Path for input json file.
-        metadiff:
-            Path for output json file with metadata update.
-        out:
-            Path for task-execution stdout.
-        err:
-            Path for task-execution stderr.
+    Group all file paths pertaining to a task     FIXME
     """
 
-    workflow_dir_local: Path
-    workflow_dir_remote: Path
-    remote_subfolder: Path
-    subfolder_name: str
+    # Parent directory
+    root_dir_local: Path
+    root_dir_remote: Path
+
+    # Per-wftask
     task_name: str
-    task_order: Optional[int] = None
+    task_order: int
+
+    # Per-single-component
     component: Optional[str] = None
 
-    file_prefix: str
-    file_prefix_with_subfolder: str
-    args: Path
-    out: Path
-    err: Path
-    log: Path
-    metadiff: Path
+    def _check_component(self):
+        if self.component is None:
+            raise ValueError("`component` cannot be None")
 
-    def __init__(
-        self,
-        workflow_dir_local: Path,
-        workflow_dir_remote: Path,
-        task_name: str,
-        task_order: Optional[int] = None,
-        component: Optional[str] = None,
-    ):
-        self.workflow_dir_local = workflow_dir_local
-        self.workflow_dir_remote = workflow_dir_remote
-        self.task_order = task_order
-        self.task_name = task_name
-        self.component = component
-
-        if self.component is not None:
-            component_safe = sanitize_string(str(self.component))
-            component_safe = f"_par_{component_safe}"
-        else:
-            component_safe = ""
-
-        if self.task_order is not None:
-            order = str(self.task_order)
-        else:
-            order = "0"
-        self.file_prefix = f"{order}{component_safe}"
-        self.subfolder_name = task_subfolder_name(
-            order=order, task_name=self.task_name
-        )
-        self.remote_subfolder = self.workflow_dir_remote / self.subfolder_name
-        self.args = self.remote_subfolder / f"{self.file_prefix}.args.json"
-        self.out = self.remote_subfolder / f"{self.file_prefix}.out"
-        self.err = self.remote_subfolder / f"{self.file_prefix}.err"
-        self.log = self.remote_subfolder / f"{self.file_prefix}.log"
-        self.metadiff = (
-            self.remote_subfolder / f"{self.file_prefix}.metadiff.json"
+    @property
+    def subfolder_name(self) -> str:
+        order = str(self.task_order or 0)
+        return task_subfolder_name(
+            order=order,
+            task_name=self.task_name,
         )
 
+    @property
+    def wftask_subfolder_remote(self) -> Path:
+        return self.root_dir_remote / self.subfolder_name
 
-def get_task_file_paths(
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
-    task_name: str,
-    task_order: Optional[int] = None,
-    component: Optional[str] = None,
-) -> TaskFiles:
-    """
-    Return the corrisponding TaskFiles object
-    """
-    return TaskFiles(
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        task_name=task_name,
-        task_order=task_order,
-        component=component,
-    )
+    @property
+    def wftask_subfolder_local(self) -> Path:
+        return self.root_dir_local / self.subfolder_name
+
+    @property
+    def log_file_local(self) -> str:
+        self._check_component()
+        return (
+            self.wftask_subfolder_local / f"{self.component}-log.txt"
+        ).as_posix()
+
+    @property
+    def log_file_remote(self) -> str:
+        self._check_component()
+        return (
+            self.wftask_subfolder_remote / f"{self.component}-log.txt"
+        ).as_posix()
+
+    @property
+    def args_file_local(self) -> str:
+        self._check_component()
+        return (
+            self.wftask_subfolder_local / f"{self.component}-args.json"
+        ).as_posix()
+
+    @property
+    def args_file_remote(self) -> str:
+        self._check_component()
+        return (
+            self.wftask_subfolder_remote / f"{self.component}-args.json"
+        ).as_posix()
+
+    @property
+    def metadiff_file_local(self) -> str:
+        self._check_component()
+        return (
+            self.wftask_subfolder_local / f"{self.component}-metadiff.json"
+        ).as_posix()
+
+    @property
+    def metadiff_file_remote(self) -> str:
+        self._check_component()
+        return (
+            self.wftask_subfolder_remote / f"{self.component}-metadiff.json"
+        ).as_posix()

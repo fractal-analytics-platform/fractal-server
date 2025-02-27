@@ -1,5 +1,7 @@
 from typing import Any
 
+from fractal_server.app.runner.components import _COMPONENT_KEY_
+
 
 class BaseRunner(object):
     """
@@ -77,6 +79,10 @@ class BaseRunner(object):
             raise ValueError(
                 f"No 'zarr_urls' key in in {list(parameters.keys())}"
             )
+        if _COMPONENT_KEY_ not in parameters.keys():
+            raise ValueError(
+                f"No '{_COMPONENT_KEY_}' key in in {list(parameters.keys())}"
+            )
 
     def validate_multisubmit_parameters(
         self,
@@ -94,10 +100,14 @@ class BaseRunner(object):
         for single_kwargs in list_parameters:
             if not isinstance(single_kwargs, dict):
                 raise RuntimeError("kwargs itemt must be a dictionary.")
-        if "zarr_url" not in single_kwargs.keys():
-            raise RuntimeError(
-                f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
-            )
+            if "zarr_url" not in single_kwargs.keys():
+                raise RuntimeError(
+                    f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
+                )
+            if _COMPONENT_KEY_ not in single_kwargs.keys():
+                raise ValueError(
+                    f"No '{_COMPONENT_KEY_}' key in in {list(single_kwargs.keys())}"
+                )
         if not in_compound_task:
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
