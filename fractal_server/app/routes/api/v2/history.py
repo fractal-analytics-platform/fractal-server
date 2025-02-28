@@ -3,8 +3,7 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
-from fastapi import status
+from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 from sqlmodel import func
 from sqlmodel import select
@@ -20,6 +19,9 @@ from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import Page
+from fractal_server.app.routes.pagination import Pagination
 from fractal_server.app.schemas.v2.history import HistoryItemV2Read
 
 router = APIRouter()
@@ -125,7 +127,7 @@ async def get_per_workflowtask_subsets_aggregated_info(
     wftask = await db.get(WorkflowTaskV2, workflowtask_id)
     if wftask is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="WorkflowTask not found",
         )
     await _get_workflow_task_check_owner(
@@ -181,24 +183,19 @@ async def get_per_workflowtask_images(
     dataset_id: int,
     status: HistoryItemImageStatus,
     parameters_hash: Optional[str] = None,
-    # Pagination
-    page: int = Query(default=1, ge=1),
-    page_size: Optional[int] = Query(default=None, ge=1),
     # Dependencies
+    pagination: Pagination = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
+) -> Page[str]:
 
-    if page_size is None and page > 1:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Invalid pagination parameters: {page=}, {page_size=}."),
-        )
+    page = pagination.page
+    page_size = pagination.page_size
 
     wftask = await db.get(WorkflowTaskV2, workflowtask_id)
     if wftask is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="WorkflowTask not found",
         )
     await _get_workflow_task_check_owner(
@@ -242,9 +239,9 @@ async def get_per_workflowtask_images(
     res = await db.execute(query)
     images = res.scalars().all()
 
-    return {
-        "total_count": total_count,
-        "page_size": page_size,
-        "current_page": page,
-        "images": images,
-    }
+    return Page[str](
+        total_count=total_count,
+        page_size=page_size,
+        current_page=page,
+        items=images,
+    )
