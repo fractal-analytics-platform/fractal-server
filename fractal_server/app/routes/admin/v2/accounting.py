@@ -3,8 +3,6 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydantic.types import AwareDatetime
@@ -35,19 +33,13 @@ router = APIRouter()
 @router.post("/", response_model=Page[AccountingRecordRead])
 async def query_accounting(
     query: AccountingQuery,
-    # dependencies
+    # Dependencies
     pagination: Pagination = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Page[AccountingRecordRead]:
     page = pagination.page
     page_size = pagination.page_size
-
-    if page_size is None and page > 1:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Invalid pagination parameters: {page=}, {page_size=}."),
-        )
 
     stm = select(AccountingRecord).order_by(AccountingRecord.id)
     stm_count = select(func.count(AccountingRecord.id))
@@ -76,11 +68,9 @@ async def query_accounting(
     res = await db.execute(stm)
     records = res.scalars().all()
 
-    actual_page_size = page_size or len(records)
-
     return Page[AccountingRecordRead](
         total_count=total_count,
-        page_size=actual_page_size,
+        page_size=page_size,
         current_page=page,
         items=[record.model_dump() for record in records],
     )
