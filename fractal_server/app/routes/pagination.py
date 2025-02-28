@@ -28,14 +28,6 @@ class Pagination(BaseModel):
 def get_pagination_params(
     page: int = 1, page_size: Optional[int] = None
 ) -> Pagination:
-    if page_size is None and page > 1:
-        raise HTTPException(
-            status_code=422,
-            detail=(
-                "Invalid pagination parameters: "
-                "'page_size' is None but page is greater than 1."
-            ),
-        )
     try:
         pagination = Pagination(page=page, page_size=page_size)
     except ValidationError as e:
