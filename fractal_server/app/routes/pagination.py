@@ -13,8 +13,8 @@ T = TypeVar("T")
 
 class Pagination(BaseModel):
 
-    page: int = Field(default=1, ge=1)
-    page_size: Optional[int] = Field(default=None, ge=1)
+    page: int = Field(ge=1)
+    page_size: Optional[int] = Field(ge=1)
 
     @model_validator(mode="after")
     def valid_pagination_parameters(self):
@@ -23,6 +23,7 @@ class Pagination(BaseModel):
                 "Invalid pagination parameters: "
                 f"page_size is None but page={self.page} is greater than 1."
             )
+        return self
 
 
 def get_pagination_params(
