@@ -427,7 +427,7 @@ async def test_status_images(
             "total_count": 10,
             "page_size": 3,
             "current_page": 2,
-            "images": ["/image3", "/image4", "/image5"],
+            "items": ["/image3", "/image4", "/image5"],
         }
 
         res = await client.get(
@@ -443,7 +443,7 @@ async def test_status_images(
             "total_count": 10,
             "page_size": 3,
             "current_page": 4,
-            "images": ["/image9"],
+            "items": ["/image9"],
         }
 
         res = await client.get(
@@ -459,7 +459,7 @@ async def test_status_images(
             "total_count": 10,
             "page_size": 3,
             "current_page": 999,
-            "images": [],
+            "items": [],
         }
 
 
