@@ -68,12 +68,6 @@ class Page(BaseModel, Generic[T]):
                 self.total_count + self.page_size - 1
             ) // self.page_size
 
-        if self.current_page > max_page:
-            raise ValueError(
-                f"'current_page' ({self.current_page}) exceeds "
-                f"the maximum page number ({max_page})."
-            )
-
         if self.current_page == max_page and self.page_size > 0:
             expected_items_on_last_page = self.total_count % self.page_size
             if expected_items_on_last_page == 0 and self.total_count > 0:
