@@ -9,7 +9,7 @@ from pydantic import model_validator
 T = TypeVar("T")
 
 
-class PaginationParameters(BaseModel):
+class Pagination(BaseModel):
 
     page: int = Field(default=1, ge=1)
     page_size: Optional[int] = Field(default=None, ge=1)
@@ -25,8 +25,8 @@ class PaginationParameters(BaseModel):
 
 def get_pagination_params(
     page: int = 1, page_size: Optional[int] = None
-) -> PaginationParameters:
-    return PaginationParameters(page=page, page_size=page_size)
+) -> Pagination:
+    return Pagination(page=page, page_size=page_size)
 
 
 class Page(BaseModel, Generic[T]):
