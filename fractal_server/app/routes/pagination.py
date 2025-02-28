@@ -55,7 +55,6 @@ class Page(BaseModel, Generic[T]):
                 "'page_size' must be greater than 0 "
                 "when 'total_count' is greater than 0."
             )
-
         if self.page_size > 0 and len(self.items) > self.page_size:
             raise ValueError(
                 f"'items' list length ({len(self.items)}) "
@@ -75,7 +74,11 @@ class Page(BaseModel, Generic[T]):
             if len(self.items) > expected_items_on_last_page:
                 raise ValueError(
                     f"Too many items on the last page: got {len(self.items)}, "
-                    f"expected at most {expected_items_on_last_page}"
+                    f"expected at most {expected_items_on_last_page}."
                 )
+        if self.current_page > max_page and len(self.items) > 0:
+            raise ValueError(
+                f"Current page must be empty: got {len(self.items)} items."
+            )
 
         return self
