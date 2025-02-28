@@ -502,14 +502,6 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
-    FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE: str = (
-        "Copy OME-Zarr structure;Convert Metadata Components from 2D to 3D"
-    )
-    """
-    `;`-separated list of names for task that require the `metadata["image"]`
-    attribute in their input-arguments JSON file.
-    """
-
     FRACTAL_PIP_CACHE_DIR: Optional[str] = None
     """
     Absolute path to the cache directory for `pip`; if unset,
