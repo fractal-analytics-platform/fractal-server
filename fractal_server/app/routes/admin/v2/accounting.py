@@ -69,13 +69,17 @@ async def query_accounting(
         stm_count = stm_count.where(
             AccountingRecord.timestamp <= query.timestamp_max
         )
+
+    res_total_count = await db.execute(stm_count)
+    total_count = res_total_count.scalar()
+
     if page_size is not None:
         stm = stm.offset((page - 1) * page_size).limit(page_size)
+    else:
+        page_size = total_count
 
     res = await db.execute(stm)
     records = res.scalars().all()
-    res_total_count = await db.execute(stm_count)
-    total_count = res_total_count.scalar()
 
     actual_page_size = page_size or len(records)
     return AccountingPage(

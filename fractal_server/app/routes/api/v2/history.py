@@ -228,13 +228,16 @@ async def get_per_workflowtask_images(
         )
         query = query.where(ImageStatus.parameters_hash == parameters_hash)
 
-    if page_size is not None:
-        query = query.limit(page_size)
-    if page > 1:
-        query = query.offset((page - 1) * page_size)
-
     res_total_count = await db.execute(total_count_stm)
     total_count = res_total_count.scalar()
+
+    if page_size is not None:
+        query = query.limit(page_size)
+    else:
+        page_size = total_count
+
+    if page > 1:
+        query = query.offset((page - 1) * page_size)
 
     res = await db.execute(query)
     images = res.scalars().all()
