@@ -4,7 +4,6 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -21,6 +20,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas.v2.history import HistoryItemV2Read
 
 router = APIRouter()
@@ -176,19 +178,14 @@ async def get_per_workflowtask_images(
     dataset_id: int,
     status: HistoryItemImageStatus,
     parameters_hash: Optional[str] = None,
-    # Pagination
-    page: int = Query(default=1, ge=1),
-    page_size: Optional[int] = Query(default=None, ge=1),
     # Dependencies
+    pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
+) -> PaginationResponse[str]:
 
-    if page_size is None and page > 1:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Invalid pagination parameters: {page=}, {page_size=}."),
-        )
+    page = pagination.page
+    page_size = pagination.page_size
 
     await _get_workflowtask_check_history_owner(
         dataset_id=dataset_id,
@@ -230,12 +227,12 @@ async def get_per_workflowtask_images(
     res = await db.execute(query)
     images = res.scalars().all()
 
-    return {
-        "total_count": total_count,
-        "page_size": page_size,
-        "current_page": page,
-        "images": images,
-    }
+    return PaginationResponse[str](
+        total_count=total_count,
+        page_size=page_size,
+        current_page=page,
+        items=images,
+    )
 
 
 class ImageLogsRequest(BaseModel):

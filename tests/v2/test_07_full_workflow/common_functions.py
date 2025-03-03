@@ -166,7 +166,7 @@ async def full_workflow(
         debug(image_page)
         # There should be NUM_IMAGES 3D images and NUM_IMAGES 2D images
         assert image_page["total_count"] == 2 * NUM_IMAGES
-        images = image_page["images"]
+        images = image_page["items"]
         debug(images)
         images_3D = filter(lambda img: img["types"]["3D"], images)
         images_2D = filter(lambda img: not img["types"]["3D"], images)
