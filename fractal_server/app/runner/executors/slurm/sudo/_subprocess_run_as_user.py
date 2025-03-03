@@ -50,12 +50,8 @@ def _run_command_as_user(
     """
     validate_cmd(cmd)
     logger.debug(f'[_run_command_as_user] {user=}, cmd="{cmd}"')
-    if user:
-        new_cmd = f"sudo --set-home --non-interactive -u {user} {cmd}"
-    else:
-        new_cmd = cmd
     res = subprocess.run(  # nosec
-        shlex.split(new_cmd),
+        shlex.split(cmd),
         capture_output=True,
         encoding=encoding,
     )

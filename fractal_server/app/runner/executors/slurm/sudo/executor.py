@@ -1097,7 +1097,7 @@ class FractalSlurmSudoExecutor(Executor):
             f.write(sbatch_script)
 
         # Prepare submission command
-        pre_command = f"sudo --set-home --non-interactive -u {self.slurm_user}"
+        pre_command = ""
         submit_command = f"sbatch --parsable {job.slurm_script}"
         full_command = f"{pre_command} {submit_command}"
 
@@ -1214,7 +1214,7 @@ class FractalSlurmSudoExecutor(Executor):
         if slurm_jobs_to_scancel:
             scancel_string = " ".join(slurm_jobs_to_scancel)
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
-            pre_command = f"sudo --non-interactive -u {self.slurm_user}"
+            pre_command = ""
             submit_command = f"scancel {scancel_string}"
             full_command = f"{pre_command} {submit_command}"
             validate_cmd(full_command)
