@@ -1,3 +1,4 @@
+import math
 from typing import Generic
 from typing import Optional
 from typing import TypeVar
@@ -61,11 +62,7 @@ class PaginationResponse(BaseModel, Generic[T]):
                 f"exceeds 'page_size' ({self.page_size})."
             )
 
-        max_page = 1
-        if self.page_size > 0 and self.total_count > 0:
-            max_page = (
-                self.total_count + self.page_size - 1
-            ) // self.page_size
+        max_page = math.ceil(self.total_count / self.page_size)
 
         if self.current_page == max_page and self.page_size > 0:
             expected_items_on_last_page = self.total_count % self.page_size
