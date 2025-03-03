@@ -18,8 +18,8 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import Page
-from fractal_server.app.routes.pagination import Pagination
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas._filter_validators import (
     validate_attribute_filters,
 )
@@ -34,7 +34,7 @@ from fractal_server.images.tools import match_filter
 router = APIRouter()
 
 
-class ImagePage(Page[SingleImage]):
+class ImagePage(PaginationResponse[SingleImage]):
 
     attributes: dict[str, list[Any]]
     types: list[str]
@@ -116,7 +116,7 @@ async def query_dataset_images(
     project_id: int,
     dataset_id: int,
     query: Optional[ImageQuery] = None,
-    pagination: Pagination = Depends(get_pagination_params),
+    pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:

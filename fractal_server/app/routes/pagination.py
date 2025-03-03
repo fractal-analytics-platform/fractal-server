@@ -11,7 +11,7 @@ from pydantic import ValidationError
 T = TypeVar("T")
 
 
-class Pagination(BaseModel):
+class PaginationRequest(BaseModel):
 
     page: int = Field(ge=1)
     page_size: Optional[int] = Field(ge=1)
@@ -28,9 +28,9 @@ class Pagination(BaseModel):
 
 def get_pagination_params(
     page: int = 1, page_size: Optional[int] = None
-) -> Pagination:
+) -> PaginationRequest:
     try:
-        pagination = Pagination(page=page, page_size=page_size)
+        pagination = PaginationRequest(page=page, page_size=page_size)
     except ValidationError as e:
         raise HTTPException(
             status_code=422,
@@ -39,7 +39,7 @@ def get_pagination_params(
     return pagination
 
 
-class Page(BaseModel, Generic[T]):
+class PaginationResponse(BaseModel, Generic[T]):
 
     current_page: int = Field(ge=1)
     page_size: int = Field(ge=0)

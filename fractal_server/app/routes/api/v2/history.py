@@ -20,8 +20,8 @@ from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import Page
 from fractal_server.app.routes.pagination import Pagination
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas.v2.history import HistoryItemV2Read
 
 router = APIRouter()
@@ -187,7 +187,7 @@ async def get_per_workflowtask_images(
     pagination: Pagination = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Page[str]:
+) -> PaginationResponse[str]:
 
     page = pagination.page
     page_size = pagination.page_size
@@ -239,7 +239,7 @@ async def get_per_workflowtask_images(
     res = await db.execute(query)
     images = res.scalars().all()
 
-    return Page[str](
+    return PaginationResponse[str](
         total_count=total_count,
         page_size=page_size,
         current_page=page,

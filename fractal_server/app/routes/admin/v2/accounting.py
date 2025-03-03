@@ -16,8 +16,8 @@ from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import Page
-from fractal_server.app.routes.pagination import Pagination
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas.v2 import AccountingRecordRead
 
 
@@ -30,14 +30,14 @@ class AccountingQuery(BaseModel):
 router = APIRouter()
 
 
-@router.post("/", response_model=Page[AccountingRecordRead])
+@router.post("/", response_model=PaginationResponse[AccountingRecordRead])
 async def query_accounting(
     query: AccountingQuery,
     # Dependencies
-    pagination: Pagination = Depends(get_pagination_params),
+    pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> Page[AccountingRecordRead]:
+) -> PaginationResponse[AccountingRecordRead]:
     page = pagination.page
     page_size = pagination.page_size
 
@@ -68,7 +68,7 @@ async def query_accounting(
     res = await db.execute(stm)
     records = res.scalars().all()
 
-    return Page[AccountingRecordRead](
+    return PaginationResponse[AccountingRecordRead](
         total_count=total_count,
         page_size=page_size,
         current_page=page,
