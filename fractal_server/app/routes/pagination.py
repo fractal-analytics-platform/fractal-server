@@ -20,7 +20,6 @@ class PaginationRequest(BaseModel):
     def valid_pagination_parameters(self):
         if self.page_size is None and self.page > 1:
             raise ValueError(
-                "Invalid pagination parameters: "
                 f"page_size is None but page={self.page} is greater than 1."
             )
         return self
