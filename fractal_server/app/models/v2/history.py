@@ -50,4 +50,4 @@ class ImageStatus(SQLModel, table=True):
 
     parameters_hash: str
     status: str
-    logfile: str
+    logfile: Optional[str]
