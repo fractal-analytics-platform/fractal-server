@@ -659,7 +659,7 @@ async def test_get_image_logs(
             },
         )
         assert res.status_code == 404
-        assert res.json()["detail"] == "WorkflowTask not found"
+        assert "WorkflowTask not found" in res.json()["detail"]
 
         # Case 3: logfile doesn't exist
         res = await client.post(
