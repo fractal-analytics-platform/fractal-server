@@ -4,6 +4,7 @@
 from fastapi import APIRouter
 
 from .accounting import router as accounting_router
+from .history import router as history_router
 from .impersonate import router as impersonate_router
 from .job import router as job_router
 from .project import router as project_router
@@ -22,3 +23,4 @@ router_admin_v2.include_router(
     task_group_lifecycle_router, prefix="/task-group"
 )
 router_admin_v2.include_router(impersonate_router, prefix="/impersonate")
+router_admin_v2.include_router(history_router, prefix="/history")
