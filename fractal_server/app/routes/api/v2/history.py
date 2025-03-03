@@ -276,7 +276,7 @@ async def get_image_logs(
     if image_status.logfile is None:
         return JSONResponse(
             content=(
-                f"Logs for task {wftask.task.name} in dataset "
+                f"Logs for task '{wftask.task.name}' in dataset "
                 f"{request_data.dataset_id} are not yet available."
             )
         )
@@ -285,7 +285,7 @@ async def get_image_logs(
     if not logfile.exists():
         return JSONResponse(
             content=(
-                f"Error while retrieving logs for task {wftask.task.name} "
+                f"Error while retrieving logs for task '{wftask.task.name}' "
                 f"in dataset {request_data.dataset_id}: "
                 f"file '{logfile}' is not available."
             )
