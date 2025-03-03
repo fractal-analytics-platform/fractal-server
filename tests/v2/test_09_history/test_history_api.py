@@ -647,7 +647,7 @@ async def test_get_image_logs(
             },
         )
         assert res.status_code == 200
-        assert res.json() == {"log": "Test log file"}
+        assert res.json() == "Test log file"
 
         # Case 2: wrong wftask
         res = await client.post(
@@ -671,7 +671,7 @@ async def test_get_image_logs(
             },
         )
         assert res.status_code == 200
-        assert "Error while retrieving logs" in res.json()["log"]
+        assert "Error while retrieving logs" in res.json()
 
         # Case 4: logfile is None
         res = await client.post(
@@ -683,4 +683,4 @@ async def test_get_image_logs(
             },
         )
         assert res.status_code == 200
-        assert "not yet available" in res.json()["log"]
+        assert "not yet available" in res.json()

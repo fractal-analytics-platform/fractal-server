@@ -250,7 +250,7 @@ async def get_image_logs(
     request_data: ImageLogsRequest,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> JSONResponse:
 
     wftask = await _get_workflowtask_check_history_owner(
         dataset_id=request_data.dataset_id,
@@ -274,24 +274,24 @@ async def get_image_logs(
         )
 
     if image_status.logfile is None:
-        return {
-            "log": (
+        return JSONResponse(
+            content=(
                 f"Logs for task {wftask.task.name} in dataset "
                 f"{request_data.dataset_id} are not yet available."
             )
-        }
+        )
 
     logfile = Path(image_status.logfile)
     if not logfile.exists():
-        return {
-            "log": (
+        return JSONResponse(
+            content=(
                 f"Error while retrieving logs for task {wftask.task.name} "
                 f"in dataset {request_data.dataset_id}: "
                 f"file '{logfile}' is not available."
             )
-        }
+        )
 
     with logfile.open("r") as f:
         file_contents = f.read()
 
-    return {"log": file_contents}
+    return JSONResponse(content=file_contents)
