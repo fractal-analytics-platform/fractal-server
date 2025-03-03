@@ -470,7 +470,7 @@ async def _get_workflowtask_check_history_owner(
     dataset_id: int,
     user_id: int,
     db: AsyncSession,
-) -> list[int]:
+) -> WorkflowTaskV2:
     """
     Verify user access for the history of this dataset and workflowtask.
 
@@ -479,9 +479,6 @@ async def _get_workflowtask_check_history_owner(
         workflow_task_id:
         user_id:
         db:
-
-    Returns:
-        List of WorkflowTask IDs
     """
     workflowtask = await db.get(WorkflowTaskV2, workflowtask_id)
     if workflowtask is None:
@@ -495,3 +492,4 @@ async def _get_workflowtask_check_history_owner(
         user_id=user_id,
         db=db,
     )
+    return workflowtask

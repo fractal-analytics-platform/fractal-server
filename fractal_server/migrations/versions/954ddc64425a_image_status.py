@@ -1,8 +1,8 @@
 """image status
 
-Revision ID: 8223fcef886c
+Revision ID: 954ddc64425a
 Revises: 87cd72a537a2
-Create Date: 2025-02-24 11:32:22.267338
+Create Date: 2025-02-28 16:37:38.765883
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "8223fcef886c"
+revision = "954ddc64425a"
 down_revision = "87cd72a537a2"
 branch_labels = None
 depends_on = None
@@ -35,7 +35,7 @@ def upgrade() -> None:
             "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column(
-            "logfile", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+            "logfile", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.ForeignKeyConstraint(
             ["dataset_id"],

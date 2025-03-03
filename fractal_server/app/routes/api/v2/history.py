@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -6,19 +7,19 @@ from fastapi import HTTPException
 from fastapi import Query
 from fastapi import status
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlmodel import func
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _get_workflowtask_check_history_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
-from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2.history import HistoryItemV2Read
 
@@ -122,16 +123,10 @@ async def get_per_workflowtask_subsets_aggregated_info(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-    wftask = await db.get(WorkflowTaskV2, workflowtask_id)
-    if wftask is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="WorkflowTask not found",
-        )
-    await _get_workflow_task_check_owner(
-        project_id=project_id,
-        workflow_id=wftask.workflow_id,
-        workflow_task_id=workflowtask_id,
+
+    await _get_workflowtask_check_history_owner(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
         user_id=user.id,
         db=db,
     )
@@ -195,16 +190,9 @@ async def get_per_workflowtask_images(
             detail=(f"Invalid pagination parameters: {page=}, {page_size=}."),
         )
 
-    wftask = await db.get(WorkflowTaskV2, workflowtask_id)
-    if wftask is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="WorkflowTask not found",
-        )
-    await _get_workflow_task_check_owner(
-        project_id=project_id,
-        workflow_id=wftask.workflow_id,
-        workflow_task_id=workflowtask_id,
+    await _get_workflowtask_check_history_owner(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
         user_id=user.id,
         db=db,
     )
@@ -248,3 +236,62 @@ async def get_per_workflowtask_images(
         "current_page": page,
         "images": images,
     }
+
+
+class ImageLogsRequest(BaseModel):
+    workflowtask_id: int
+    dataset_id: int
+    zarr_url: str
+
+
+@router.post("/project/{project_id}/status/image-logs/")
+async def get_image_logs(
+    project_id: int,
+    request_data: ImageLogsRequest,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+
+    wftask = await _get_workflowtask_check_history_owner(
+        dataset_id=request_data.dataset_id,
+        workflowtask_id=request_data.workflowtask_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    image_status = await db.get(
+        ImageStatus,
+        (
+            request_data.zarr_url,
+            request_data.workflowtask_id,
+            request_data.dataset_id,
+        ),
+    )
+    if image_status is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="ImageStatus not found",
+        )
+
+    if image_status.logfile is None:
+        return JSONResponse(
+            content=(
+                f"Logs for task '{wftask.task.name}' in dataset "
+                f"{request_data.dataset_id} are not yet available."
+            )
+        )
+
+    logfile = Path(image_status.logfile)
+    if not logfile.exists():
+        return JSONResponse(
+            content=(
+                f"Error while retrieving logs for task '{wftask.task.name}' "
+                f"in dataset {request_data.dataset_id}: "
+                f"file '{logfile}' is not available."
+            )
+        )
+
+    with logfile.open("r") as f:
+        file_contents = f.read()
+
+    return JSONResponse(content=file_contents)
