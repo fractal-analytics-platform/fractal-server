@@ -577,3 +577,110 @@ async def test_cascade_delete_image_status(
         assert image_status is None
         image_status = await db.get(ImageStatus, key3b)
         assert image_status is not None
+
+
+async def test_get_image_logs(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+
+        task = await task_factory_v2(user_id=user.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+
+        logfile = tmp_path / "logfile.log"
+        with logfile.open("w") as f:
+            f.write("Test log file")
+
+        db.add(
+            ImageStatus(
+                zarr_url="/a",
+                workflowtask_id=wftask.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.DONE,
+                logfile=logfile.as_posix(),
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/b",
+                workflowtask_id=wftask.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.DONE,
+                logfile=(tmp_path / "do_not_exists.log").as_posix(),
+            )
+        )
+        db.add(
+            ImageStatus(
+                zarr_url="/c",
+                workflowtask_id=wftask.id,
+                dataset_id=dataset.id,
+                parameters_hash="xxx",
+                status=HistoryItemImageStatus.DONE,
+                logfile=None,
+            )
+        )
+        await db.commit()
+
+        # Case 1: OK
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/image-logs/",
+            json={
+                "workflowtask_id": wftask.id,
+                "dataset_id": dataset.id,
+                "zarr_url": "/a",
+            },
+        )
+        assert res.status_code == 200
+        assert res.json() == {"log": "Test log file"}
+
+        # Case 2: wrong wftask
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/image-logs/",
+            json={
+                "workflowtask_id": wftask.id + 1,
+                "dataset_id": dataset.id,
+                "zarr_url": "/a",
+            },
+        )
+        assert res.status_code == 404
+        assert res.json()["detail"] == "WorkflowTask not found"
+
+        # Case 3: logfile doesn't exist
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/image-logs/",
+            json={
+                "workflowtask_id": wftask.id,
+                "dataset_id": dataset.id,
+                "zarr_url": "/b",
+            },
+        )
+        assert res.status_code == 200
+        assert "Error while retrieving logs" in res.json()["log"]
+
+        # Case 4: logfile is None
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/image-logs/",
+            json={
+                "workflowtask_id": wftask.id,
+                "dataset_id": dataset.id,
+                "zarr_url": "/c",
+            },
+        )
+        assert res.status_code == 200
+        assert "not yet available" in res.json()["log"]
