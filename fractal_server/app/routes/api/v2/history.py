@@ -149,6 +149,7 @@ async def get_per_workflowtask_subsets_aggregated_info(
             .where(HistoryItemV2.workflowtask_id == workflowtask_id)
             .where(HistoryItemV2.dataset_id == dataset_id)
             .where(HistoryItemV2.parameters_hash == _hash)
+            .limit(1)
         )
         result.append(
             {
