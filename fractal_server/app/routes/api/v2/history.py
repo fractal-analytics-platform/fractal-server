@@ -20,7 +20,7 @@ from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import Pagination
+from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas.v2.history import HistoryItemV2Read
 
@@ -184,7 +184,7 @@ async def get_per_workflowtask_images(
     status: HistoryItemImageStatus,
     parameters_hash: Optional[str] = None,
     # Dependencies
-    pagination: Pagination = Depends(get_pagination_params),
+    pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> PaginationResponse[str]:
