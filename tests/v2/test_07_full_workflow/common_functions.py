@@ -177,10 +177,7 @@ async def full_workflow(
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
             actual_files = zip_ref.namelist()
-        expected_files = [
-            WORKFLOW_LOG_FILENAME,
-        ]
-        assert set(expected_files) < set(actual_files)
+            assert WORKFLOW_LOG_FILENAME in actual_files
 
         # Check files in task-0 folder
         expected_files = [
@@ -599,21 +596,14 @@ async def workflow_with_non_python_task(
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            glob_list = [name.split("/")[-1] for name in zip_ref.namelist()]
-
-        must_exist = [
-            "0.log",
-            "0.args.json",
-            WORKFLOW_LOG_FILENAME,
-        ]
-
-        for f in must_exist:
-            if f not in glob_list:
-                raise ValueError(f"{f} must exist, but {glob_list=}")
+            actual_files = zip_ref.namelist()
+        assert WORKFLOW_LOG_FILENAME in actual_files
+        assert "0_non_python/0000000-args.json" in actual_files
+        assert "0_non_python/0000000-log.txt" in actual_files
 
         # Check that stderr and stdout are as expected
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            with zip_ref.open("0_non_python/0.log", "r") as file:
+            with zip_ref.open("0_non_python/0000000-log.txt", "r") as file:
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
