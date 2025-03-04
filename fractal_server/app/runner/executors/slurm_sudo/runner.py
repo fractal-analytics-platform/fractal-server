@@ -352,22 +352,25 @@ class RunnerSlurmSudo(BaseRunner):
             (job.slurm_log_file_remote, job.slurm_log_file_local)
         ]
         for task in job.tasks:
-            source_target_list.append(
-                (task.output_pickle_file_remote, task.output_pickle_file_local)
-            )
-            source_target_list.append(
-                (
-                    task.task_files.log_file_remote,
-                    task.task_files.log_file_local,
-                ),
-                (
-                    task.task_files.args_file_remote,
-                    task.task_files.args_file_local,
-                ),
-                (
-                    task.task_files.metadiff_file_remote,
-                    task.task_files.metadiff_file_local,
-                ),
+            source_target_list.extend(
+                [
+                    (
+                        task.output_pickle_file_remote,
+                        task.output_pickle_file_local,
+                    ),
+                    (
+                        task.task_files.log_file_remote,
+                        task.task_files.log_file_local,
+                    ),
+                    (
+                        task.task_files.args_file_remote,
+                        task.task_files.args_file_local,
+                    ),
+                    (
+                        task.task_files.metadiff_file_remote,
+                        task.task_files.metadiff_file_local,
+                    ),
+                ]
             )
 
         for source, target in source_target_list:
