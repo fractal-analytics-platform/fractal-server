@@ -243,7 +243,7 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_SYNC_URL(self):
-        return self.DATABASE_ASYNC_URL  # .set(drivername="postgresql+psycopg")
+        return self.DATABASE_ASYNC_URL.set(drivername="postgresql+psycopg")
 
     ###########################################################################
     # FRACTAL SPECIFIC
