@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import HistoryItemV2
 from fractal_server.app.models.v2 import ImageStatus
@@ -282,6 +284,7 @@ async def test_status_subsets(
                 parameters_hash="yyy",
                 num_available_images=20,
                 num_current_images=1,
+                timestamp_started=datetime(year=2000, month=1, day=1),
             )
         )
         db.add(
@@ -313,21 +316,21 @@ async def test_status_subsets(
 
         assert res.json() == [
             {
-                "workflowtask_dump": {"A": 1},
-                "parameters_hash": "xxx",
-                "info": {
-                    "num_done_images": 2,
-                    "num_failed_images": 0,
-                    "num_submitted_images": 0,
-                },
-            },
-            {
                 "workflowtask_dump": {"B": 2},
                 "parameters_hash": "yyy",
                 "info": {
                     "num_done_images": 0,
                     "num_failed_images": 1,
                     "num_submitted_images": 1,
+                },
+            },
+            {
+                "workflowtask_dump": {"A": 1},
+                "parameters_hash": "xxx",
+                "info": {
+                    "num_done_images": 2,
+                    "num_failed_images": 0,
+                    "num_submitted_images": 0,
                 },
             },
         ]
