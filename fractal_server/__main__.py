@@ -123,7 +123,9 @@ def set_db(skip_init_data: bool = False):
     asyncio.run(
         _create_first_user(
             email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-            password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+            password=(
+                settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value()
+            ),
             username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
             is_superuser=True,
             is_verified=True,
