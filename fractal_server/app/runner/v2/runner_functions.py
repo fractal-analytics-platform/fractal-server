@@ -1,9 +1,7 @@
 import functools
 import logging
-import traceback
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Literal
 from typing import Optional
 
@@ -59,36 +57,16 @@ def _cast_and_validate_InitTaskOutput(
         )
 
 
-def no_op_submit_setup_call(*args, **kwargs) -> dict:
+def no_op_submit_setup_call(
+    *,
+    wftask: WorkflowTaskV2,
+    root_dir_local: Path,
+    which_type: Literal["non_parallel", "parallel"],
+) -> dict[str, Any]:
     """
     Default (no-operation) interface of submit_setup_call in V2.
     """
     return {}
-
-
-# Backend-specific configuration
-def _get_executor_options(
-    *,
-    wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
-    submit_setup_call: Callable,
-    which_type: Literal["non_parallel", "parallel"],
-) -> dict:
-    try:
-        options = submit_setup_call(
-            wftask=wftask,
-            root_dir_local=workflow_dir_local,
-            root_dir_remote=workflow_dir_remote,
-            which_type=which_type,
-        )
-    except Exception as e:
-        tb = "".join(traceback.format_tb(e.__traceback__))
-        raise RuntimeError(
-            f"{type(e)} error in {submit_setup_call=}\n"
-            f"Original traceback:\n{tb}"
-        )
-    return options
 
 
 def _check_parallelization_list_size(my_list):
@@ -109,7 +87,7 @@ def run_v2_task_non_parallel(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     executor: BaseRunner,
-    submit_setup_call: Callable = no_op_submit_setup_call,
+    submit_setup_call: callable = no_op_submit_setup_call,
     history_item_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
     """
@@ -123,11 +101,10 @@ def run_v2_task_non_parallel(
         )
         workflow_dir_remote = workflow_dir_local
 
-    executor_options = _get_executor_options(
+    executor_options = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="non_parallel",
     )
 
@@ -169,7 +146,7 @@ def run_v2_task_parallel(
     executor: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
+    submit_setup_call: callable = no_op_submit_setup_call,
     history_item_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
@@ -178,11 +155,10 @@ def run_v2_task_parallel(
 
     _check_parallelization_list_size(images)
 
-    executor_options = _get_executor_options(
+    executor_options = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="parallel",
     )
 
@@ -237,22 +213,20 @@ def run_v2_task_compound(
     executor: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
+    submit_setup_call: callable = no_op_submit_setup_call,
     history_item_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
-    executor_options_init = _get_executor_options(
+    executor_options_init = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="non_parallel",
     )
-    executor_options_compute = _get_executor_options(
+    executor_options_compute = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="parallel",
     )
 
