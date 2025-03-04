@@ -55,8 +55,8 @@ class MailSettings(BaseModel):
     recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
-    encrypted_password: Optional[str] = None
-    encryption_key: Optional[str] = None
+    encrypted_password: Optional[SecretStr] = None
+    encryption_key: Optional[SecretStr] = None
     instance_name: str
     use_starttls: bool
     use_login: bool
