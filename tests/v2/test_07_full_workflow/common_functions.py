@@ -335,17 +335,11 @@ async def full_workflow_TaskExecutionError(
         with informative_assertion_block(dataset):
             assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
             assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-            assert len(dataset["history"]) == 3
-            assert [item["status"] for item in dataset["history"]] == [
-                "done",
-                "done",
-                "failed",
-            ]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
         )
         assert res.status_code == 200
-        image_list = res.json()["images"]
+        image_list = res.json()["items"]
         debug(image_list)
         assert len(image_list) == 2 * NUM_IMAGES
 
