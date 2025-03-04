@@ -1,10 +1,10 @@
-import logging
 from pathlib import Path
 
 import pytest
 from devtools import debug  # noqa: F401
 
 from .aux_get_dataset_attrs import _get_dataset_attrs
+from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
@@ -13,33 +13,10 @@ from fractal_server.app.runner.executors.local.runner import LocalRunner
 
 
 @pytest.fixture()
-def local_runner():
-    with LocalRunner() as r:
+def local_runner(tmp_path):
+    root_dir_local = tmp_path / "job"
+    with LocalRunner(root_dir_local=root_dir_local) as r:
         yield r
-
-
-def execute_tasks_v2(
-    wf_task_list, workflow_dir_local, user_id: int, **kwargs
-) -> None:
-    from fractal_server.app.runner.task_files import task_subfolder_name
-    from fractal_server.app.runner.v2.runner import (
-        execute_tasks_v2 as raw_execute_tasks_v2,
-    )
-
-    for wftask in wf_task_list:
-        subfolder = workflow_dir_local / task_subfolder_name(
-            order=wftask.order, task_name=wftask.task.name
-        )
-        logging.info(f"Now creating {subfolder.as_posix()}")
-        subfolder.mkdir(parents=True)
-
-    raw_execute_tasks_v2(
-        wf_task_list=wf_task_list,
-        workflow_dir_local=workflow_dir_local,
-        job_attribute_filters={},
-        user_id=user_id,
-        **kwargs,
-    )
 
 
 async def test_dummy_insert_single_image(
@@ -74,7 +51,7 @@ async def test_dummy_insert_single_image(
     )
 
     # Run successfully on an empty dataset
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -84,7 +61,7 @@ async def test_dummy_insert_single_image(
     # Run successfully even if the image already exists
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job1",
@@ -105,7 +82,7 @@ async def test_dummy_insert_single_image(
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
     with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2(
+        execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job3",
@@ -125,7 +102,7 @@ async def test_dummy_insert_single_image(
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
     with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2(
+        execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job4",
@@ -153,7 +130,7 @@ async def test_dummy_insert_single_image(
         },
     )
     with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2(
+        execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset_with_images,
             workflow_dir_local=tmp_path / "job2",
@@ -202,7 +179,7 @@ async def test_dummy_remove_images(
             for index in [0, 1, 2]
         ],
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset_pre,
         workflow_dir_local=tmp_path / "job0",
@@ -224,7 +201,7 @@ async def test_dummy_remove_images(
         ),
     )
     with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2(
+        execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset_pre_fail,
             workflow_dir_local=tmp_path / "job1",
@@ -273,7 +250,7 @@ async def test_dummy_unset_attribute(
         order=0,
         args_non_parallel=dict(attribute="key2"),
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset1,
         workflow_dir_local=tmp_path / "job0",
@@ -303,7 +280,7 @@ async def test_dummy_unset_attribute(
         order=0,
         args_non_parallel=dict(attribute="missing-attribute"),
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset2,
         workflow_dir_local=tmp_path / "job1",
@@ -341,7 +318,7 @@ async def test_dummy_unset_attribute(
 #             project_id=project.id, zarr_dir=zarr_dir
 #         )
 #         # Run successfully on an empty dataset
-#         execute_tasks_v2(
+#         execute_tasks_v2_mod(
 #             wf_task_list=[
 #                 WorkflowTaskV2Mock(
 #                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
@@ -389,7 +366,7 @@ async def test_dummy_unset_attribute(
 #             project_id=project.id, zarr_dir=zarr_dir
 #         )
 #         # Run successfully with trailing slashes
-#         execute_tasks_v2(
+#         execute_tasks_v2_mod(
 #             wf_task_list=[
 #                 WorkflowTaskV2Mock(
 #                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
@@ -439,7 +416,7 @@ async def test_dummy_unset_attribute(
 #         )
 
 #         # Run
-#         execute_tasks_v2(
+#         execute_tasks_v2_mod(
 #             wf_task_list=[
 #                 WorkflowTaskV2Mock(
 #                     task=fractal_tasks_mock_no_db["generic_task_parallel"],
