@@ -674,8 +674,12 @@ class Settings(BaseSettings):
                 recipients=self.FRACTAL_EMAIL_RECIPIENTS.split(","),
                 smtp_server=self.FRACTAL_EMAIL_SMTP_SERVER,
                 port=self.FRACTAL_EMAIL_SMTP_PORT,
-                encrypted_password=self.FRACTAL_EMAIL_PASSWORD,
-                encryption_key=self.FRACTAL_EMAIL_PASSWORD_KEY,
+                encrypted_password=(
+                    self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
+                ),
+                encryption_key=(
+                    self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
+                ),
                 instance_name=self.FRACTAL_EMAIL_INSTANCE_NAME,
                 use_starttls=use_starttls,
                 use_login=use_login,
