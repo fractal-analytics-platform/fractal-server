@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 from devtools import debug
 
@@ -7,20 +8,36 @@ from ..aux_unit_runner import ZARR_URLS
 from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.models.v2.history import HistoryItemV2
 from fractal_server.app.models.v2.history import ImageStatus
-from fractal_server.app.runner.executors.local.runner import (
-    LocalRunner,
-)
+from fractal_server.app.runner.executors.local.runner import LocalRunner
+from fractal_server.app.runner.task_files import TaskFiles
 
 
-async def test_submit_success(db, mock_history_item):
+def get_dummy_task_files(root_dir_local: Path) -> TaskFiles:
+    return TaskFiles(
+        root_dir_local=root_dir_local,
+        root_dir_remote=root_dir_local,
+        task_name="name",
+        task_order=0,
+    )
+
+
+async def test_submit_success(
+    db,
+    mock_history_item,
+    tmp_path,
+):
     def do_nothing(parameters: dict) -> int:
         return 42
 
-    with LocalRunner() as runner:
+    with LocalRunner(tmp_path) as runner:
         result, exception = runner.submit(
             do_nothing,
-            parameters=dict(zarr_urls=ZARR_URLS),
+            parameters={
+                "zarr_urls": ZARR_URLS,
+                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+            },
             history_item_id=mock_history_item.id,
+            task_files=get_dummy_task_files(tmp_path),
         )
     assert result == 42
     assert exception is None
@@ -40,17 +57,25 @@ async def test_submit_success(db, mock_history_item):
     }
 
 
-async def test_submit_fail(db, mock_history_item):
+async def test_submit_fail(
+    db,
+    mock_history_item,
+    tmp_path,
+):
     ERROR_MSG = "very nice error"
 
     def raise_ValueError(parameters: dict):
         raise ValueError(ERROR_MSG)
 
-    with LocalRunner() as runner:
+    with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
             raise_ValueError,
-            parameters=dict(zarr_urls=ZARR_URLS),
+            parameters={
+                "zarr_urls": ZARR_URLS,
+                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+            },
             history_item_id=mock_history_item.id,
+            task_files=get_dummy_task_files(tmp_path),
         )
     assert result is None
     assert isinstance(exception, ValueError)
@@ -85,17 +110,34 @@ def fun(parameters: int):
         raise ValueError("parameter=3 is very very bad")
 
 
-async def test_multisubmit(db, mock_history_item):
-    with LocalRunner() as runner:
+async def test_multisubmit(db, mock_history_item, tmp_path):
+    with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
             fun,
             [
-                dict(zarr_url="a", parameter=1),
-                dict(zarr_url="b", parameter=2),
-                dict(zarr_url="c", parameter=3),
-                dict(zarr_url="d", parameter=4),
+                {
+                    "zarr_url": "a",
+                    "parameter": 1,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+                },
+                {
+                    "zarr_url": "b",
+                    "parameter": 2,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000001",
+                },
+                {
+                    "zarr_url": "c",
+                    "parameter": 3,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000002",
+                },
+                {
+                    "zarr_url": "d",
+                    "parameter": 4,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000003",
+                },
             ],
             history_item_id=mock_history_item.id,
+            task_files=get_dummy_task_files(tmp_path),
         )
         debug(results)
         debug(exceptions)

@@ -177,10 +177,7 @@ async def full_workflow(
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
             actual_files = zip_ref.namelist()
-        expected_files = [
-            WORKFLOW_LOG_FILENAME,
-        ]
-        assert set(expected_files) < set(actual_files)
+            assert WORKFLOW_LOG_FILENAME in actual_files
 
         # Check files in task-0 folder
         expected_files = [
@@ -335,17 +332,11 @@ async def full_workflow_TaskExecutionError(
         with informative_assertion_block(dataset):
             assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
             assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-            assert len(dataset["history"]) == 3
-            assert [item["status"] for item in dataset["history"]] == [
-                "done",
-                "done",
-                "failed",
-            ]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
         )
         assert res.status_code == 200
-        image_list = res.json()["images"]
+        image_list = res.json()["items"]
         debug(image_list)
         assert len(image_list) == 2 * NUM_IMAGES
 
@@ -605,21 +596,14 @@ async def workflow_with_non_python_task(
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            glob_list = [name.split("/")[-1] for name in zip_ref.namelist()]
-
-        must_exist = [
-            "0.log",
-            "0.args.json",
-            WORKFLOW_LOG_FILENAME,
-        ]
-
-        for f in must_exist:
-            if f not in glob_list:
-                raise ValueError(f"{f} must exist, but {glob_list=}")
+            actual_files = zip_ref.namelist()
+        assert WORKFLOW_LOG_FILENAME in actual_files
+        assert "0_non_python/0000000-args.json" in actual_files
+        assert "0_non_python/0000000-log.txt" in actual_files
 
         # Check that stderr and stdout are as expected
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            with zip_ref.open("0_non_python/0.log", "r") as file:
+            with zip_ref.open("0_non_python/0000000-log.txt", "r") as file:
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log

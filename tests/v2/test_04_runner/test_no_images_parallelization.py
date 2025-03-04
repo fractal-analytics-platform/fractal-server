@@ -1,37 +1,16 @@
-import logging
 from concurrent.futures import Executor
 from pathlib import Path
 
 import pytest
 
+from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 
 
-def execute_tasks_v2(wf_task_list, workflow_dir_local, user_id: int, **kwargs):
-    from fractal_server.app.runner.task_files import task_subfolder_name
-    from fractal_server.app.runner.v2.runner import (
-        execute_tasks_v2 as raw_execute_tasks_v2,
-    )
-
-    for wftask in wf_task_list:
-        subfolder = workflow_dir_local / task_subfolder_name(
-            order=wftask.order, task_name=wftask.task.name
-        )
-        logging.info(f"Now creating {subfolder.as_posix()}")
-        subfolder.mkdir(parents=True)
-
-    raw_execute_tasks_v2(
-        wf_task_list=wf_task_list,
-        workflow_dir_local=workflow_dir_local,
-        job_attribute_filters={},
-        user_id=user_id,
-        **kwargs,
-    )
-
-
 @pytest.fixture()
-def local_runner():
-    with LocalRunner() as r:
+def local_runner(tmp_path):
+    root_dir_local = tmp_path / "job"
+    with LocalRunner(root_dir_local=root_dir_local) as r:
         yield r
 
 
@@ -69,7 +48,7 @@ async def test_parallelize_on_no_images(
             task_id=task.id,
             order=0,
         )
-        execute_tasks_v2(
+        execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
@@ -89,7 +68,7 @@ async def test_parallelize_on_no_images(
             task_id=task.id,
             order=0,
         )
-        execute_tasks_v2(
+        execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job1",
