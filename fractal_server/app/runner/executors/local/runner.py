@@ -55,6 +55,7 @@ class LocalRunner(BaseRunner):
         history_item_id: int,
         task_files: TaskFiles,
         in_compound_task: bool = False,
+        local_backend_config: Optional[LocalBackendConfig] = None,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
@@ -68,6 +69,7 @@ class LocalRunner(BaseRunner):
         self.validate_submit_parameters(parameters)
         workdir_local = current_task_files.wftask_subfolder_local
         workdir_local.mkdir()
+
         # SUBMISSION PHASE
         future = self.executor.submit(func, parameters=parameters)
 
@@ -125,8 +127,8 @@ class LocalRunner(BaseRunner):
         original_task_files = task_files
 
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
-        results = {}
-        exceptions = {}
+        results: dict[int, Any] = {}
+        exceptions: dict[int, BaseException] = {}
         for ind_chunk in range(0, n_elements, parallel_tasks_per_job):
             list_parameters_chunk = list_parameters[
                 ind_chunk : ind_chunk + parallel_tasks_per_job
