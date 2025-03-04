@@ -55,8 +55,8 @@ class MailSettings(BaseModel):
     recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
-    encrypted_password: Optional[SecretStr] = None
-    encryption_key: Optional[SecretStr] = None
+    encrypted_password: Optional[str] = None
+    encryption_key: Optional[str] = None
     instance_name: str
     use_starttls: bool
     use_login: bool
@@ -669,17 +669,23 @@ class Settings(BaseSettings):
                         f"Original error: {str(e)}."
                     )
 
+            if self.FRACTAL_EMAIL_PASSWORD is not None:
+                password = self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
+            else:
+                password = None
+
+            if self.FRACTAL_EMAIL_PASSWORD_KEY is not None:
+                key = self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
+            else:
+                key = None
+
             self.email_settings = MailSettings(
                 sender=self.FRACTAL_EMAIL_SENDER,
                 recipients=self.FRACTAL_EMAIL_RECIPIENTS.split(","),
                 smtp_server=self.FRACTAL_EMAIL_SMTP_SERVER,
                 port=self.FRACTAL_EMAIL_SMTP_PORT,
-                encrypted_password=(
-                    self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
-                ),
-                encryption_key=(
-                    self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
-                ),
+                encrypted_password=password,
+                encryption_key=key,
                 instance_name=self.FRACTAL_EMAIL_INSTANCE_NAME,
                 use_starttls=use_starttls,
                 use_login=use_login,
