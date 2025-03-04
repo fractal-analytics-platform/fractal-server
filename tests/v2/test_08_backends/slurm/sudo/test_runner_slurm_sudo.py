@@ -148,14 +148,30 @@ async def test_multisubmit(
         results, exceptions = runner.multisubmit(
             fun,
             [
-                dict(zarr_url="a", parameter=1),
-                dict(zarr_url="b", parameter=2),
-                dict(zarr_url="c", parameter=3),
-                dict(zarr_url="d", parameter=4),
+                {
+                    "zarr_url": "a",
+                    "parameter": 1,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+                },
+                {
+                    "zarr_url": "b",
+                    "parameter": 2,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000001",
+                },
+                {
+                    "zarr_url": "c",
+                    "parameter": 3,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000002",
+                },
+                {
+                    "zarr_url": "d",
+                    "parameter": 4,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000003",
+                },
             ],
             history_item_id=mock_history_item.id,
-            workdir_local=tmp777_path / "server/task",
-            workdir_remote=tmp777_path / "user/task",
+            task_files=get_dummy_task_files(tmp777_path),
+            slurm_config=get_default_slurm_config(),
         )
         debug(results)
         debug(exceptions)
