@@ -127,7 +127,7 @@ def execute_tasks_v2(
                         dataset_id=dataset.id,
                         parameters_hash=parameters_hash,
                         status=HistoryItemImageStatus.SUBMITTED,
-                        logfile="/placeholder",
+                        logfile=None,
                     )
                 )
             db.commit()
