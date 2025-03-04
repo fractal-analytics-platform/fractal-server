@@ -438,7 +438,7 @@ def test_fractal_email():
         FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
     )
     assert settings.email_settings is not None
-    assert len(settings.email_settings.recipients) == 2
+    assert len(settings.email_settings.get_secret_value().recipients) == 2
     # 5: FRACTAL_EMAIL_USE_LOGIN is false and no password needed
     settings = Settings(
         **common_attributes,

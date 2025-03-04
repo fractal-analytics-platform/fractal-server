@@ -28,6 +28,7 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic import Secret
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -616,7 +617,7 @@ class Settings(BaseSettings):
     provided.
     Accepted values: 'true', 'false'.
     """
-    email_settings: Optional[MailSettings] = None
+    email_settings: Optional[Secret[MailSettings]] = None
 
     @model_validator(mode="after")
     def validate_email_settings(self):
