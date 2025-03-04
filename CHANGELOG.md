@@ -1,6 +1,23 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
 
+# 2.14.0a0, 2.14.0a1, 2.14.0a2
+
+All this is from #2287
+
+* Database
+    * New `HistoryItemV2` and `ImageStatus` tables.
+* API
+    * New history endpoints.
+    * Introduce shared tools for pagination.
+* Runner
+    * Introduce new runner interface.
+    * Update to `HistoryItemV2` and `ImageStatus` from within runner.
+    * Stop filling `Dataset.history` from within runner.
+* App:
+    * Drop obsolete `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` configuration variable.
+
+
 # 2.13.1
 
 * API:
