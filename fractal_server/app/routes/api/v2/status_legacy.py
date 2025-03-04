@@ -9,8 +9,8 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....schemas.v2.dataset import WorkflowTaskStatusTypeV2
 from ....schemas.v2.status import StatusReadV2
+from ....schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
