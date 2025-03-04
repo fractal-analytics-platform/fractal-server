@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -12,7 +13,18 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
     RunnerSlurmSudo,
 )
+from fractal_server.app.runner.task_files import TaskFiles
 from tests.fixtures_slurm import SLURM_USER
+from tests.v2._aux_runner import get_default_slurm_config
+
+
+def get_dummy_task_files(root_path: Path) -> TaskFiles:
+    return TaskFiles(
+        root_dir_local=root_path / "server",
+        root_dir_remote=root_path / "user",
+        task_name="name",
+        task_order=0,
+    )
 
 
 @pytest.mark.container
@@ -33,10 +45,13 @@ async def test_submit_success(
     ) as runner:
         result, exception = runner.submit(
             do_nothing,
-            parameters=dict(zarr_urls=ZARR_URLS),
+            parameters={
+                "zarr_urls": ZARR_URLS,
+                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+            },
             history_item_id=mock_history_item.id,
-            workdir_local=tmp777_path / "server/task",
-            workdir_remote=tmp777_path / "user/task",
+            task_files=get_dummy_task_files(tmp777_path),
+            slurm_config=get_default_slurm_config(),
         )
     debug(result, exception)
     assert result == 42
@@ -77,11 +92,15 @@ async def test_submit_fail(
     ) as runner:
         result, exception = runner.submit(
             raise_ValueError,
-            parameters=dict(zarr_urls=ZARR_URLS),
+            parameters={
+                "zarr_urls": ZARR_URLS,
+                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+            },
             history_item_id=mock_history_item.id,
-            workdir_local=tmp777_path / "server/task",
-            workdir_remote=tmp777_path / "user/task",
+            task_files=get_dummy_task_files(tmp777_path),
+            slurm_config=get_default_slurm_config(),
         )
+
     assert result is None
     assert isinstance(exception, TaskExecutionError)
     assert ERROR_MSG in str(exception)

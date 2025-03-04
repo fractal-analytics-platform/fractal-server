@@ -3,7 +3,7 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
 )
 
 
-def get_default_slurm_config():  # FIXME: move to tests
+def get_default_slurm_config():
     """
     Return a default `SlurmConfig` configuration object
     """
