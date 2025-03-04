@@ -1,3 +1,4 @@
+from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -54,7 +55,6 @@ class LocalRunner(BaseRunner):
         history_item_id: int,
         task_files: TaskFiles,
         in_compound_task: bool = False,
-        **kwargs,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
@@ -100,7 +100,6 @@ class LocalRunner(BaseRunner):
         task_files: TaskFiles,
         in_compound_task: bool = False,
         local_backend_config: Optional[LocalBackendConfig] = None,
-        **kwargs,
     ):
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
@@ -132,7 +131,6 @@ class LocalRunner(BaseRunner):
             list_parameters_chunk = list_parameters[
                 ind_chunk : ind_chunk + parallel_tasks_per_job
             ]
-            from concurrent.futures import Future
 
             active_futures: dict[int, Future] = {}
             active_task_files: dict[int, TaskFiles] = {}
