@@ -134,7 +134,7 @@ def worker(
         _extra_import_paths = extra_import_paths.split(":")
         sys.path[:0] = _extra_import_paths
 
-    # Execute the job and catpure exceptions
+    # Execute the job and capture exceptions
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()

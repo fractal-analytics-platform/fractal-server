@@ -24,7 +24,7 @@ FastAPIUsers with Barer Token and cookie transports and register local routes.
 Then, for each OAuth client defined in the Fractal Settings configuration, it
 registers the client and the relative routes.
 
-All routes are registerd under the `auth/` prefix.
+All routes are registered under the `auth/` prefix.
 """
 import contextlib
 from typing import Any
@@ -296,7 +296,7 @@ async def _create_first_user(
     Private method to create the first fractal-server user
 
     Create a user with the given default arguments and return a message with
-    the relevant informations. If the user alredy exists, for example after a
+    the relevant information. If the user already exists, for example after a
     restart, it returns a message to inform that user already exists.
 
     **WARNING**: This function is only meant to create the first user, and then
@@ -312,7 +312,7 @@ async def _create_first_user(
         email: New user's email
         password: New user's password
         is_superuser: `True` if the new user is a superuser
-        is_verified: `True` if the new user is verifie
+        is_verified: `True` if the new user is verified
         username:
     """
     function_logger = set_logger("fractal_server.create_first_user")
