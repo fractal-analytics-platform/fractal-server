@@ -419,8 +419,8 @@ class RunnerSlurmSudo(BaseRunner):
         parameters: dict[str, Any],
         history_item_id: int,
         task_files: TaskFiles,
+        slurm_config: SlurmConfig,
         in_compound_task: bool = False,
-        slurm_config: Optional[SlurmConfig] = None,
         **kwargs,
     ) -> tuple[Any, Exception]:
 
@@ -478,6 +478,7 @@ class RunnerSlurmSudo(BaseRunner):
             func,
             parameters=parameters,
             slurm_job=slurm_job,
+            slurm_config=slurm_config,
         )
 
         LOGFILE = task_files.log_file_local
