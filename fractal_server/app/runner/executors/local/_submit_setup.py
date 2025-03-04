@@ -21,18 +21,10 @@ def _local_submit_setup(
     FIXME
 
     Arguments:
-        wftask:
-            WorkflowTask for which the configuration is to be assembled
-        workflow_dir_local:
-            Not used in this function.
-        workflow_dir_remote:
-            Not used in this function.
-
-    Returns:
-        submit_setup_dict:
-            A dictionary that will be passed on to
-            `FractalThreadPoolExecutor.submit` and
-            `FractalThreadPoolExecutor.map`, so as to set extra options.
+        wftask: WorkflowTask for which the configuration is to be assembled
+        root_dir_local:
+        root_dir_rempote: Not used in this function.
+        which_type: Whether it is a parallel or non-parallel task.
     """
 
     local_backend_config = get_local_backend_config(
@@ -43,7 +35,7 @@ def _local_submit_setup(
     # Get TaskFiles object
     task_files = TaskFiles(
         root_dir_local=root_dir_local,
-        root_dir_remote=root_dir_remote,
+        root_dir_remote=root_dir_local,
         task_order=wftask.order,
         task_name=wftask.task.name,
     )

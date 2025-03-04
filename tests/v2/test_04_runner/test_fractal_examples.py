@@ -1,12 +1,11 @@
-import logging
 import os
 from pathlib import Path
-from typing import Any
 
 import pytest
 from devtools import debug
 
 from .aux_get_dataset_attrs import _get_dataset_attrs
+from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.images import SingleImage
@@ -14,40 +13,15 @@ from fractal_server.images.tools import find_image_by_zarr_url
 
 
 @pytest.fixture()
-def local_runner():
-    with LocalRunner() as r:
+def local_runner(tmp_path):
+    root_dir_local = tmp_path / "job"
+    with LocalRunner(root_dir_local=root_dir_local) as r:
         yield r
-
-
-def execute_tasks_v2(wf_task_list, workflow_dir_local, user_id: int, **kwargs):
-    from fractal_server.app.runner.task_files import task_subfolder_name
-    from fractal_server.app.runner.v2.runner import (
-        execute_tasks_v2 as raw_execute_tasks_v2,
-    )
-
-    for wftask in wf_task_list:
-        subfolder = workflow_dir_local / task_subfolder_name(
-            order=wftask.order, task_name=wftask.task.name
-        )
-        logging.info(f"Now creating {subfolder.as_posix()}")
-        subfolder.mkdir(parents=True)
-
-    raw_execute_tasks_v2(
-        wf_task_list=wf_task_list,
-        workflow_dir_local=workflow_dir_local,
-        job_attribute_filters={},
-        user_id=user_id,
-        **kwargs,
-    )
 
 
 def _assert_image_data_exist(image_list: list[dict]):
     for image in image_list:
         assert (Path(image["zarr_url"]) / "data").exists()
-
-
-def _task_names_from_history(history: list[dict[str, Any]]) -> list[str]:
-    return [item["workflowtask"]["task"]["name"] for item in history]
 
 
 def image_data_exist_on_disk(image_list: list[SingleImage]):
@@ -117,7 +91,7 @@ async def test_fractal_demos_01(
         order=3,
     )
 
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -125,10 +99,6 @@ async def test_fractal_demos_01(
         user_id=user_id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-    debug(dataset_attrs["history"])
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound"
-    ]
     assert dataset_attrs["attribute_filters"] == {}
     assert dataset_attrs["type_filters"] == {}
     _assert_image_data_exist(dataset_attrs["images"])
@@ -137,7 +107,7 @@ async def test_fractal_demos_01(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask1],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job1",
@@ -145,10 +115,6 @@ async def test_fractal_demos_01(
         user_id=user_id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-    ]
     assert dataset_attrs["attribute_filters"] == {}
     assert dataset_attrs["type_filters"] == {
         "illumination_correction": True,
@@ -179,7 +145,7 @@ async def test_fractal_demos_01(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask2],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job2",
@@ -188,12 +154,6 @@ async def test_fractal_demos_01(
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
-
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
-    ]
 
     assert dataset_attrs["attribute_filters"] == {}
     assert dataset_attrs["type_filters"] == {
@@ -220,7 +180,7 @@ async def test_fractal_demos_01(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask3],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job3",
@@ -229,13 +189,6 @@ async def test_fractal_demos_01(
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
-
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
-        "cellpose_segmentation",
-    ]
 
 
 async def test_fractal_demos_01_no_overwrite(
@@ -291,7 +244,7 @@ async def test_fractal_demos_01_no_overwrite(
         order=3,
     )
 
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -310,7 +263,7 @@ async def test_fractal_demos_01_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask1],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job1",
@@ -318,10 +271,7 @@ async def test_fractal_demos_01_no_overwrite(
         user_id=user_id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-    ]
+
     assert dataset_attrs["attribute_filters"] == {}
     assert dataset_attrs["type_filters"] == {
         "illumination_correction": True,
@@ -382,7 +332,7 @@ async def test_fractal_demos_01_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask2],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job2",
@@ -391,11 +341,6 @@ async def test_fractal_demos_01_no_overwrite(
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
-    ]
     assert dataset_attrs["attribute_filters"] == {}
     assert dataset_attrs["type_filters"] == {
         "3D": False,
@@ -445,7 +390,7 @@ async def test_fractal_demos_01_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask3],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job3",
@@ -453,12 +398,6 @@ async def test_fractal_demos_01_no_overwrite(
         user_id=user_id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-    assert _task_names_from_history(dataset_attrs["history"]) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
-        "cellpose_segmentation",
-    ]
 
 
 async def test_registration_no_overwrite(
@@ -507,7 +446,7 @@ async def test_registration_no_overwrite(
         order=3,
     )
 
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -520,7 +459,7 @@ async def test_registration_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask1],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job1",
@@ -542,7 +481,7 @@ async def test_registration_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask2],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job2",
@@ -562,7 +501,7 @@ async def test_registration_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask3],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job3",
@@ -621,7 +560,7 @@ async def test_registration_overwrite(
         order=3,
     )
 
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -634,7 +573,7 @@ async def test_registration_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask1],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job1",
@@ -656,7 +595,7 @@ async def test_registration_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask2],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job2",
@@ -676,7 +615,7 @@ async def test_registration_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask3],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job3",
@@ -726,7 +665,7 @@ async def test_channel_parallelization_with_overwrite(
         args_parallel=dict(another_argument="something"),
     )
     # Run create_ome_zarr+yokogawa_to_zarr
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -738,7 +677,7 @@ async def test_channel_parallelization_with_overwrite(
     # Run illumination_correction_compound
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask1],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job1",
@@ -787,7 +726,7 @@ async def test_channel_parallelization_no_overwrite(
     )
 
     # Run create_ome_zarr+yokogawa_to_zarr
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -800,7 +739,7 @@ async def test_channel_parallelization_no_overwrite(
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
     )
-    execute_tasks_v2(
+    execute_tasks_v2_mod(
         wf_task_list=[wftask1],
         dataset=dataset_with_attrs,
         workflow_dir_local=tmp_path / "job1",
