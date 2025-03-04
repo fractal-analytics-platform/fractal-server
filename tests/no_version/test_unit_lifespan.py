@@ -45,7 +45,7 @@ async def test_app_with_lifespan(
     _create_first_group()
     await _create_first_user(
         email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value(),
+        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
         username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
         is_superuser=True,
         is_verified=True,

@@ -28,7 +28,6 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import Secret
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -617,7 +616,7 @@ class Settings(BaseSettings):
     provided.
     Accepted values: 'true', 'false'.
     """
-    email_settings: Optional[Secret[MailSettings]] = None
+    email_settings: Optional[MailSettings] = None
 
     @model_validator(mode="after")
     def validate_email_settings(self):
@@ -655,12 +654,8 @@ class Settings(BaseSettings):
                     )
                 try:
                     (
-                        Fernet(
-                            self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
-                        )
-                        .decrypt(
-                            self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
-                        )
+                        Fernet(self.FRACTAL_EMAIL_PASSWORD_KEY)
+                        .decrypt(self.FRACTAL_EMAIL_PASSWORD)
                         .decode("utf-8")
                     )
                 except Exception as e:
