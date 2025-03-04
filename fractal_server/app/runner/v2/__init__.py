@@ -29,7 +29,6 @@ from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..executors.slurm_sudo._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
-from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
@@ -199,25 +198,6 @@ def submit_workflow(
                     "Invalid FRACTAL_RUNNER_BACKEND="
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
-
-            # Create all tasks subfolders # FIXME: do this with Runner
-            for order in range(job.first_task_index, job.last_task_index + 1):
-                this_wftask = workflow.task_list[order]
-                task_name = this_wftask.task.name
-                subfolder_name = task_subfolder_name(
-                    order=order,
-                    task_name=task_name,
-                )
-                if FRACTAL_RUNNER_BACKEND == "slurm":
-                    # Create local subfolder (with 755) and remote one
-                    # (via `sudo -u`)
-                    original_umask = os.umask(0)
-                    (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
-                    os.umask(original_umask)
-                    _mkdir_as_user(
-                        folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
-                        user=slurm_user,
-                    )
 
         except Exception as e:
             error_type = type(e).__name__
