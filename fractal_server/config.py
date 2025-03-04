@@ -224,20 +224,13 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_ASYNC_URL(self) -> URL:
-        password = self.POSTGRES_PASSWORD.get_secret_value()
-        # url = URL.create(
-        #     drivername="postgresql+psycopg",
-        #     username=self.POSTGRES_USER,
-        #     password=password,
-        #     host=self.POSTGRES_HOST,
-        #     port=self.POSTGRES_PORT,
-        #     database=self.POSTGRES_DB,
-        # )
-        url = (
-            "postgresql+psycopg:/"
-            f"/{self.POSTGRES_USER}:{password}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}"
-            f"/{self.POSTGRES_DB}"
+        url = URL.create(
+            drivername="postgresql+psycopg",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            database=self.POSTGRES_DB,
         )
         return url
 
