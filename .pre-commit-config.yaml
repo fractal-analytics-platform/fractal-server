@@ -35,5 +35,5 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        files: "./fractal_server/ *.py"
+        files: ./fractal_server
         args: ["--ignore-words", ".codespellignore"]
