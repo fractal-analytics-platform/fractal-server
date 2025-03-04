@@ -654,8 +654,12 @@ class Settings(BaseSettings):
                     )
                 try:
                     (
-                        Fernet(self.FRACTAL_EMAIL_PASSWORD_KEY)
-                        .decrypt(self.FRACTAL_EMAIL_PASSWORD)
+                        Fernet(
+                            self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
+                        )
+                        .decrypt(
+                            self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
+                        )
                         .decode("utf-8")
                     )
                 except Exception as e:
