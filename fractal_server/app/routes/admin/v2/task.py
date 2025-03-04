@@ -68,7 +68,7 @@ async def query_tasks(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
     """
-    Query `TaskV2` table and get informations about related items
+    Query `TaskV2` table and get information about related items
     (WorkflowV2s and ProjectV2s)
 
     Args:

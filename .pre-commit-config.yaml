@@ -31,8 +31,9 @@ repos:
       entry: bash -c 'for file in "$@"; do if grep -n "devtools" "$file"; then echo "$file" && exit 1; fi; done' --
       language: system
       files: fractal_server/
-    - id: grep-for-worfklow
-      name: Check for worfklow typo in fractal_server files
-      entry: bash -c 'for file in "$@"; do if grep --ignore-case -n "worfklow" "$file"; then echo "$file" && exit 1; fi; done' --
-      language: system
-      files: fractal_server/
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args: ["--ignore-words", ".codespellignore"]
+        files: fractal_server/

@@ -83,7 +83,8 @@ def update_single_image_logfile(
 ) -> None:
 
     logger.debug(
-        f"[update_single_image_logfile] {history_item_id=}, {logfile=}, {zarr_url=}"
+        "[update_single_image_logfile] "
+        f"{history_item_id=}, {logfile=}, {zarr_url=}"
     )
 
     with next(get_sync_db()) as db:

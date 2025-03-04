@@ -11,7 +11,7 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-Slurm Bakend
+Slurm Backend
 
 This backend runs fractal workflows in a SLURM cluster using Clusterfutures
 Executor objects.

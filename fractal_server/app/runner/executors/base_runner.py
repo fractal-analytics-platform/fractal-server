@@ -106,7 +106,8 @@ class BaseRunner(object):
                 )
             if _COMPONENT_KEY_ not in single_kwargs.keys():
                 raise ValueError(
-                    f"No '{_COMPONENT_KEY_}' key in in {list(single_kwargs.keys())}"
+                    f"No '{_COMPONENT_KEY_}' key "
+                    f"in {list(single_kwargs.keys())}"
                 )
         if not in_compound_task:
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]

@@ -57,7 +57,7 @@ async def create_project(
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ProjectReadV2]:
     """
-    Create new poject
+    Create new project
     """
 
     # Check that there is no project with the same user and name
