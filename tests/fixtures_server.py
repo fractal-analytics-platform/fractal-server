@@ -13,6 +13,7 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import ASGITransport
 from httpx import AsyncClient
+from pydantic import SecretStr
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -35,7 +36,7 @@ def get_patched_settings(temp_path: Path):
 
     settings.FRACTAL_DEFAULT_ADMIN_USERNAME = "admin"
     settings.POSTGRES_USER = "postgres"
-    settings.POSTGRES_PASSWORD = "postgres"
+    settings.POSTGRES_PASSWORD = SecretStr("postgres")
     settings.POSTGRES_DB = "fractal_test"
     settings.FRACTAL_TASKS_DIR = temp_path / "fractal_tasks_dir"
     settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
