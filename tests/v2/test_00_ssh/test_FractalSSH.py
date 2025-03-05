@@ -72,6 +72,7 @@ def test_fail_and_raise(tmp_path: Path, caplog):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_run_command(fractal_ssh: FractalSSH):
     """
     Basic working of `run_command` method.
@@ -99,6 +100,7 @@ def test_run_command(fractal_ssh: FractalSSH):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_run_command_concurrency(fractal_ssh: FractalSSH):
     """
     Test locking feature for `run_command` method.
@@ -124,6 +126,7 @@ def test_run_command_concurrency(fractal_ssh: FractalSSH):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_run_command_retries(fractal_ssh: FractalSSH):
     """
     Test the multiple-attempts logic of `run_command`.
@@ -168,6 +171,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
     """
     Test basic working of `send_file` and `fetch_file` methods.
@@ -197,6 +201,7 @@ def test_file_transfer(fractal_ssh: FractalSSH, tmp_path: Path):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
     local_file = (tmp_path / "local").as_posix()
     with open(local_file, "w") as f:
@@ -228,6 +233,7 @@ def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     """
     Test basic working of `mkdir` and `remove_folder` methods.
@@ -323,6 +329,7 @@ def test_remove_folder_input_validation():
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_write_remote_file(fractal_ssh: FractalSSH, tmp777_path: Path):
     path = tmp777_path / "file"
     content = "this is what goes into the file"
@@ -386,6 +393,7 @@ def test_novalidconnectionserror_in_sftp_methods(caplog):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
     remote_folder = (tmp777_path / "folder").as_posix()
     remote_file = (tmp777_path / "folder/file").as_posix()
