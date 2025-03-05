@@ -121,6 +121,7 @@ def test_errors_failed_init_2(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_errors_failed_init_3(
     override_settings_factory,
     current_py_version,

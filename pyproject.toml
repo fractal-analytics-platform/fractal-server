@@ -92,7 +92,7 @@ filterwarnings = [
     "error::RuntimeWarning",
     "error::pytest.PytestUnraisableExceptionWarning",
 ]
-markers = ["container"]
+markers = ["container", "ssh"]
 
 [tool.bumpver]
 current_version = "2.14.0a3"

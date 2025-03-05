@@ -404,6 +404,7 @@ def test_remote_file_exists(fractal_ssh: FractalSSH, tmp777_path: Path):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_closed_socket(
     slurmlogin_ip,
     ssh_keys,

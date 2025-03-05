@@ -13,6 +13,7 @@ FRACTAL_RUNNER_BACKEND = "slurm_ssh"
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 async def test_workflow_with_non_python_task_slurm_ssh(
     client,
     app,
@@ -66,6 +67,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 async def test_workflow_with_non_python_task_slurm_ssh_fail(
     client,
     app,

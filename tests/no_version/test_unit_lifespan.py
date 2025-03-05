@@ -160,6 +160,7 @@ async def test_lifespan_shutdown_raise_error(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 async def test_lifespan_slurm_ssh(
     override_settings_factory,
     slurmlogin_ip,
