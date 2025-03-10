@@ -224,10 +224,15 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_ASYNC_URL(self) -> URL:
+        if self.POSTGRES_PASSWORD is None:
+            password = None
+        else:
+            password = self.POSTGRES_PASSWORD.get_secret_value()
+
         url = URL.create(
             drivername="postgresql+psycopg",
             username=self.POSTGRES_USER,
-            password=self.POSTGRES_PASSWORD.get_secret_value(),
+            password=password,
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
@@ -668,8 +673,6 @@ class Settings(BaseSettings):
                         "FRACTAL_EMAIL_PASSWORD_KEY). "
                         f"Original error: {str(e)}."
                     )
-
-            if self.FRACTAL_EMAIL_PASSWORD is not None:
                 password = self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
             else:
                 password = None

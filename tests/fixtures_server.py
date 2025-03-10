@@ -31,33 +31,32 @@ from fractal_server.syringe import Inject
 
 
 def get_patched_settings(temp_path: Path):
-    settings = Settings()
-    settings.JWT_SECRET_KEY = "secret_key"
-
-    settings.FRACTAL_DEFAULT_ADMIN_USERNAME = "admin"
-    settings.POSTGRES_USER = "postgres"
-    settings.POSTGRES_PASSWORD = SecretStr("postgres")
-    settings.POSTGRES_DB = "fractal_test"
-    settings.FRACTAL_TASKS_DIR = temp_path / "fractal_tasks_dir"
-    settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
-    settings.FRACTAL_TASKS_DIR.chmod(0o755)
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR = temp_path / "artifacts"
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
-    settings.FRACTAL_API_MAX_JOB_LIST_LENGTH = 1
-    settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME = 1
-
     INFO = sys.version_info
     CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
     PYTHON_BIN = f"/.venv{CURRENT_PY_VERSION}/bin/python{CURRENT_PY_VERSION}"
-    settings.FRACTAL_SLURM_WORKER_PYTHON = PYTHON_BIN
 
-    settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
+    settings = Settings(
+        JWT_SECRET_KEY="secret_key",
+        FRACTAL_DEFAULT_ADMIN_USERNAME="admin",
+        POSTGRES_USER="postgres",
+        POSTGRES_PASSWORD=SecretStr("postgres"),
+        POSTGRES_DB="fractal_test",
+        FRACTAL_TASKS_DIR=temp_path / "fractal_tasks_dir",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=temp_path / "artifacts",
+        FRACTAL_API_MAX_JOB_LIST_LENGTH=1,
+        FRACTAL_GRACEFUL_SHUTDOWN_TIME=1,
+        FRACTAL_SLURM_WORKER_PYTHON=PYTHON_BIN,
+        FRACTAL_SLURM_CONFIG_FILE=temp_path / "slurm_config.json",
+        FRACTAL_SLURM_POLL_INTERVAL=1,
+        FRACTAL_SLURM_ERROR_HANDLING_INTERVAL=1,
+        FRACTAL_LOGGING_LEVEL=logging.DEBUG,
+    )
 
-    settings.FRACTAL_SLURM_POLL_INTERVAL = 1
-    settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL = 1
+    settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
+    settings.FRACTAL_TASKS_DIR.chmod(0o755)
 
-    settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
 
     return settings
 

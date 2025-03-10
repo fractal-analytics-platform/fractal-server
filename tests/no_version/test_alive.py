@@ -38,6 +38,11 @@ async def test_settings_endpoint(client, MockCurrentUser):
 
     assert settings.keys() == endpoint_settings.keys()
 
+    obfuscated = []
     for k, v in endpoint_settings.items():
         if "***" not in str(v):
             assert v == settings[k]
+        else:
+            obfuscated.append(k)
+    assert len(obfuscated) > 1
+    debug(obfuscated)
