@@ -7,7 +7,7 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validators import String
+from .._validators import NotEmptyString
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
@@ -19,7 +19,7 @@ class WorkflowCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: String
+    name: NotEmptyString
 
 
 class WorkflowReadV2(BaseModel):
@@ -44,7 +44,7 @@ class WorkflowUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[String] = None
+    name: Optional[NotEmptyString] = None
     reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
@@ -68,7 +68,7 @@ class WorkflowImportV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    name: String
+    name: NotEmptyString
     task_list: list[WorkflowTaskImportV2]
 
 

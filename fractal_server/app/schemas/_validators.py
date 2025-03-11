@@ -1,9 +1,14 @@
 import os
-from typing import Annotated
 from typing import Any
 from typing import Optional
 
-from pydantic import AfterValidator
+from pydantic.types import StringConstraints
+from typing_extensions import Annotated
+
+
+NonEmptyString = Annotated[
+    str, StringConstraints(min_length=1, strip_whitespace=True)
+]
 
 
 def is_not_empty(string: str) -> str:
@@ -11,9 +16,6 @@ def is_not_empty(string: str) -> str:
     if not s:
         raise ValueError("Empty string.")
     return s
-
-
-String = Annotated[str, AfterValidator(is_not_empty)]
 
 
 def valdict_keys(attribute: str):

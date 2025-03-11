@@ -7,7 +7,7 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import ValidationInfo
 
-from ._validators import String
+from ._validators import NotEmptyString
 from ._validators import val_unique_list
 
 __all__ = (
@@ -57,7 +57,7 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     model_config = ConfigDict(extra="forbid")
 
-    username: Optional[String] = None
+    username: Optional[NotEmptyString] = None
 
     # Validators
 
@@ -93,7 +93,7 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[String] = None
+    username: Optional[NotEmptyString] = None
 
 
 class UserUpdateGroups(BaseModel):

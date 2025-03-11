@@ -7,7 +7,7 @@ from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
 
-from .._validators import String
+from .._validators import NotEmptyString
 
 
 class TaskManifestV2(BaseModel):
@@ -138,7 +138,7 @@ class ManifestV2(BaseModel):
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
-    authors: Optional[String] = None
+    authors: Optional[NotEmptyString] = None
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):
