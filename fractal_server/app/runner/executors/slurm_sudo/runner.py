@@ -62,7 +62,7 @@ class SlurmTask(BaseModel):
     component: str
     workdir_local: Path
     workdir_remote: Path
-    parameters: list
+    parameters: dict[str, Any]
     zarr_url: Optional[str] = None
     task_files: TaskFiles
     index: int
@@ -279,8 +279,8 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        if len(slurm_job.tasks) > 1:
-            raise NotImplementedError()
+        # if len(slurm_job.tasks) > 1:
+        #     raise NotImplementedError()
 
         # Prepare input pickle(s)
         versions = dict(
@@ -474,6 +474,7 @@ class RunnerSlurmSudo(BaseRunner):
                 SlurmTask(
                     index=0,
                     component="0",
+                    parameters=parameters,
                     workdir_remote=workdir_remote,
                     workdir_local=workdir_local,
                     task_files=task_files,
@@ -482,7 +483,6 @@ class RunnerSlurmSudo(BaseRunner):
         )  # TODO: replace with actual values (BASED ON TASKFILES)
         self._submit_single_sbatch(
             func,
-            parameters=parameters,
             slurm_job=slurm_job,
             slurm_config=slurm_config,
         )
@@ -582,7 +582,7 @@ class RunnerSlurmSudo(BaseRunner):
         batch_size = tasks_per_job
         for ind_chunk in range(0, tot_tasks, batch_size):
             args_batches.append(
-                list_args[ind_chunk : ind_chunk + batch_size]  # noqa
+                list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
             )
         if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
@@ -590,11 +590,11 @@ class RunnerSlurmSudo(BaseRunner):
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
         for ind_batch, chunk in enumerate(args_batches):
             # TODO: replace with actual values
-            component = chunk[_COMPONENT_KEY_]
             tasks = []
             for ind_chunck, parameters in enumerate(chunk):
+                component = parameters[_COMPONENT_KEY_]
                 tasks.append(
-                    task=SlurmTask(
+                    SlurmTask(
                         index=(ind_batch * batch_size) + ind_chunk,
                         component=component,
                         workdir_local=workdir_local,
@@ -610,13 +610,11 @@ class RunnerSlurmSudo(BaseRunner):
                     ),
                 )
 
-            slurm_job = (
-                SlurmJob(
-                    label=f"{ind_batch:06d}",
-                    workdir_local=workdir_local,
-                    workdir_remote=workdir_remote,
-                    tasks=tasks,
-                ),
+            slurm_job = SlurmJob(
+                label=f"{ind_batch:06d}",
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+                tasks=tasks,
             )
             self._submit_single_sbatch(
                 func,

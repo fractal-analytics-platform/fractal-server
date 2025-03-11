@@ -34,7 +34,7 @@ async def test_submit_success(
     tmp777_path,
     monkey_slurm,
 ):
-    def do_nothing(parameters: dict) -> int:
+    def do_nothing(**parameters: dict) -> int:
         return 42
 
     with RunnerSlurmSudo(
@@ -81,7 +81,7 @@ async def test_submit_fail(
 ):
     ERROR_MSG = "very nice error"
 
-    def raise_ValueError(parameters: dict):
+    def raise_ValueError(**parameters: dict):
         raise ValueError(ERROR_MSG)
 
     with RunnerSlurmSudo(
@@ -127,11 +127,11 @@ async def test_multisubmit(
     tmp777_path,
     monkey_slurm,
 ):
-    def fun(parameters: int):
+    def fun(**parameters: int):
         zarr_url = parameters["zarr_url"]
         x = parameters["parameter"]
         if x != 3:
-            print(f"Running with {zarr_url=} and {x=}, returning {2*x=}.")
+            print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
             time.sleep(1)
             return 2 * x
         else:
