@@ -597,7 +597,6 @@ class RunnerSlurmSudo(BaseRunner):
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
             for slurm_job_id in finished_job_ids:
                 slurm_job = self.jobs.pop(slurm_job_id)
-                # current_task_files = self.task_files.pop(None)
                 self._copy_files_from_remote_to_local(slurm_job)
                 for task in slurm_job.tasks:
                     result, exception = self._postprocess_single_task(
