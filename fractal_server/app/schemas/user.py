@@ -7,8 +7,8 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import ValidationInfo
 
+from ._validators import String
 from ._validators import val_unique_list
-from ._validators import valstr
 
 __all__ = (
     "UserRead",
@@ -57,10 +57,9 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     model_config = ConfigDict(extra="forbid")
 
-    username: Optional[str] = None
+    username: Optional[String] = None
 
     # Validators
-    _username = field_validator("username")(classmethod(valstr("username")))
 
     @field_validator(
         "is_active",
@@ -94,11 +93,7 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[str] = None
-
-    # Validators
-
-    _username = field_validator("username")(classmethod(valstr("username")))
+    username: Optional[String] = None
 
 
 class UserUpdateGroups(BaseModel):

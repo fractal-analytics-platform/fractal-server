@@ -13,7 +13,7 @@ from pydantic.types import AwareDatetime
 from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
 from .._validators import root_validate_dict_keys
-from .._validators import valstr
+from .._validators import String
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
 from fractal_server.images.models import AttributeFiltersType
@@ -23,7 +23,7 @@ from fractal_server.urls import normalize_url
 class DatasetCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
+    name: String
 
     zarr_dir: Optional[str] = None
 
@@ -41,8 +41,6 @@ class DatasetCreateV2(BaseModel):
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
-
-    _name = field_validator("name")(classmethod(valstr("name")))
 
     @field_validator("zarr_dir")
     @classmethod
@@ -73,7 +71,7 @@ class DatasetReadV2(BaseModel):
 class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[str] = None
+    name: Optional[String] = None
     zarr_dir: Optional[str] = None
     type_filters: Optional[dict[str, bool]] = None
     attribute_filters: Optional[dict[str, list[Any]]] = None
@@ -89,8 +87,6 @@ class DatasetUpdateV2(BaseModel):
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
-
-    _name = field_validator("name")(classmethod(valstr("name")))
 
     @field_validator("zarr_dir")
     @classmethod

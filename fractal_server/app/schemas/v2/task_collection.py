@@ -7,7 +7,8 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
-from .._validators import valstr
+from .._validators import is_not_empty
+from .._validators import String
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 
@@ -57,7 +58,7 @@ class TaskCollectPipV2(BaseModel):
     def package_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = valstr("package")(cls, value)
+        value = is_not_empty(value)
         validate_cmd(value, attribute_name="package")
         return value
 
@@ -66,7 +67,7 @@ class TaskCollectPipV2(BaseModel):
     def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = valstr("package_version")(cls, value)
+        value = is_not_empty(value)
         validate_cmd(value, attribute_name="package_version")
         return value
 
@@ -76,10 +77,7 @@ class TaskCollectPipV2(BaseModel):
         if value is None:
             return value
         old_keys = list(value.keys())
-        new_keys = [
-            valstr(f"pinned_package_versions[{key}]")(cls, key)
-            for key in old_keys
-        ]
+        new_keys = [is_not_empty(key) for key in old_keys]
         if len(new_keys) != len(set(new_keys)):
             raise ValueError(
                 f"Dictionary contains multiple identical keys: {value}."
@@ -97,7 +95,7 @@ class TaskCollectPipV2(BaseModel):
     def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = valstr("package_extras")(cls, value)
+        value = is_not_empty(value)
         validate_cmd(value, attribute_name="package_extras")
         return value
 
@@ -122,26 +120,11 @@ class TaskCollectCustomV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     manifest: ManifestV2
-    python_interpreter: str
-    label: str
-    package_root: Optional[str] = None
-    package_name: Optional[str] = None
-    version: Optional[str] = None
-
-    # Valstr
-    _python_interpreter = field_validator("python_interpreter")(
-        classmethod(valstr("python_interpreter"))
-    )
-    _label = field_validator("label")(classmethod(valstr("label")))
-    _package_root = field_validator("package_root")(
-        classmethod(valstr("package_root", accept_none=True))
-    )
-    _package_name = field_validator("package_name")(
-        classmethod(valstr("package_name", accept_none=True))
-    )
-    _version = field_validator("version")(
-        classmethod(valstr("version", accept_none=True))
-    )
+    python_interpreter: String
+    label: String
+    package_root: Optional[String] = None
+    package_name: Optional[String] = None
+    version: Optional[String] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -165,7 +148,7 @@ class TaskCollectCustomV2(BaseModel):
         """
         if value is not None:
             validate_cmd(value)
-            value = valstr("package_name")(cls, value)
+            value = is_not_empty(value)
             value = value.replace(" ", "")
         return value
 

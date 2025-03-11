@@ -4,19 +4,16 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validators import valstr
+from .._validators import String
 
 
 class ProjectCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
+    name: String
 
 
 class ProjectReadV2(BaseModel):
@@ -34,6 +31,4 @@ class ProjectUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[str] = None
-    # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
+    name: Optional[String] = None

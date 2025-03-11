@@ -14,7 +14,7 @@ from pydantic.types import StrictStr
 
 from .._filter_validators import validate_attribute_filters
 from .._validators import root_validate_dict_keys
-from .._validators import valstr
+from .._validators import String
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
@@ -49,14 +49,11 @@ class JobCreateV2(BaseModel):
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
     slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[str] = None
+    worker_init: Optional[String] = None
 
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
-    _worker_init = field_validator("worker_init")(
-        classmethod(valstr("worker_init"))
-    )
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
     )

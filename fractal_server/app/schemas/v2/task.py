@@ -9,36 +9,37 @@ from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
 
+from fractal_server.app.schemas._validators import is_not_empty
+from fractal_server.app.schemas._validators import String
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
-from fractal_server.app.schemas._validators import valstr
 from fractal_server.string_tools import validate_cmd
 
 
 class TaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
+    name: String
 
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
+    command_non_parallel: Optional[String] = None
+    command_parallel: Optional[String] = None
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
-    version: Optional[str] = None
+    version: Optional[String] = None
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[str] = None
+    args_schema_version: Optional[String] = None
     docs_info: Optional[str] = None
     docs_link: Optional[str] = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
+    category: Optional[String] = None
+    modality: Optional[String] = None
     tags: list[str] = Field(default_factory=list)
-    authors: Optional[str] = None
+    authors: Optional[String] = None
 
     # Validators
     @model_validator(mode="after")
@@ -57,15 +58,6 @@ class TaskCreateV2(BaseModel):
 
         return self
 
-    _name = field_validator("name")(classmethod(valstr("name")))
-    _command_non_parallel = field_validator("command_non_parallel")(
-        classmethod(valstr("command_non_parallel"))
-    )
-    _command_parallel = field_validator("command_parallel")(
-        classmethod(valstr("command_parallel"))
-    )
-    _version = field_validator("version")(classmethod(valstr("version")))
-
     _meta_non_parallel = field_validator("meta_non_parallel")(
         classmethod(valdict_keys("meta_non_parallel"))
     )
@@ -78,9 +70,6 @@ class TaskCreateV2(BaseModel):
     _args_schema_parallel = field_validator("args_schema_parallel")(
         classmethod(valdict_keys("args_schema_parallel"))
     )
-    _args_schema_version = field_validator("args_schema_version")(
-        classmethod(valstr("args_schema_version"))
-    )
     _input_types = field_validator("input_types")(
         classmethod(valdict_keys("input_types"))
     )
@@ -88,21 +77,11 @@ class TaskCreateV2(BaseModel):
         classmethod(valdict_keys("output_types"))
     )
 
-    _category = field_validator("category")(
-        classmethod(valstr("category", accept_none=True))
-    )
-    _modality = field_validator("modality")(
-        classmethod(valstr("modality", accept_none=True))
-    )
-    _authors = field_validator("authors")(
-        classmethod(valstr("authors", accept_none=True))
-    )
-
     @field_validator("tags")
     @classmethod
     def validate_list_of_strings(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(f"tags[{i}]")(cls, tag)
+            value[i] = is_not_empty(tag)
         return val_unique_list("tags")(cls, value)
 
     @field_validator("docs_link", mode="after")
@@ -143,14 +122,14 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: Optional[str] = None
-    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[String] = None
+    command_non_parallel: Optional[String] = None
     input_types: Optional[dict[str, bool]] = None
     output_types: Optional[dict[str, bool]] = None
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
-    authors: Optional[str] = None
+    category: Optional[String] = None
+    modality: Optional[String] = None
+    authors: Optional[String] = None
     tags: Optional[list[str]] = None
 
     # Validators
@@ -161,12 +140,6 @@ class TaskUpdateV2(BaseModel):
             raise ValueError
         return v
 
-    _command_parallel = field_validator("command_parallel")(
-        classmethod(valstr("command_parallel"))
-    )
-    _command_non_parallel = field_validator("command_non_parallel")(
-        classmethod(valstr("command_non_parallel"))
-    )
     _input_types = field_validator("input_types")(
         classmethod(valdict_keys("input_types"))
     )
@@ -174,49 +147,27 @@ class TaskUpdateV2(BaseModel):
         classmethod(valdict_keys("output_types"))
     )
 
-    _category = field_validator("category")(
-        classmethod(valstr("category", accept_none=True))
-    )
-    _modality = field_validator("modality")(
-        classmethod(valstr("modality", accept_none=True))
-    )
-    _authors = field_validator("authors")(
-        classmethod(valstr("authors", accept_none=True))
-    )
-
     @field_validator("tags")
     @classmethod
     def validate_tags(cls, value):
         for i, tag in enumerate(value):
-            value[i] = valstr(f"tags[{i}]")(cls, tag)
+            value[i] = is_not_empty(tag)
         return val_unique_list("tags")(cls, value)
 
 
 class TaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    pkg_name: str
-    version: Optional[str] = None
-    name: str
-    _pkg_name = field_validator("pkg_name")(classmethod(valstr("pkg_name")))
-    _version = field_validator("version")(
-        classmethod(valstr("version", accept_none=True))
-    )
-    _name = field_validator("name")(classmethod(valstr("name")))
+    pkg_name: String
+    version: Optional[String] = None
+    name: String
 
 
 class TaskImportV2Legacy(BaseModel):
-    source: str
-    _source = field_validator("source")(classmethod(valstr("source")))
+    source: String
 
 
 class TaskExportV2(BaseModel):
-    pkg_name: str
-    version: Optional[str] = None
-    name: str
-
-    _pkg_name = field_validator("pkg_name")(classmethod(valstr("pkg_name")))
-    _version = field_validator("version")(
-        classmethod(valstr("version", accept_none=True))
-    )
-    _name = field_validator("name")(classmethod(valstr("name")))
+    pkg_name: String
+    version: Optional[String] = None
+    name: String

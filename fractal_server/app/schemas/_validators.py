@@ -1,43 +1,29 @@
 import os
+from typing import Annotated
 from typing import Any
 from typing import Optional
 
+from pydantic import AfterValidator
 
-def valstr(attribute: str, accept_none: bool = False):
-    """
-    Check that a string attribute is not an empty string, and remove the
-    leading and trailing whitespace characters.
 
-    If `accept_none`, the validator also accepts `None`.
-    """
+def is_not_empty(string: str) -> str:
+    s = string.strip()
+    if not s:
+        raise ValueError("Empty string.")
+    return s
 
-    def val(cls, string: Optional[str]) -> Optional[str]:
-        if string is None:
-            if accept_none:
-                return string
-            else:
-                raise ValueError(
-                    f"String attribute '{attribute}' cannot be None"
-                )
-        s = string.strip()
-        if not s:
-            raise ValueError(f"String attribute '{attribute}' cannot be empty")
-        return s
 
-    return val
+String = Annotated[str, AfterValidator(is_not_empty)]
 
 
 def valdict_keys(attribute: str):
     def val(cls, d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
         """
-        Apply valstr to every key of the dictionary, and fail if there are
-        identical keys.
+        Strip every key of the dictionary, and fail if there are identical keys
         """
         if d is not None:
             old_keys = list(d.keys())
-            new_keys = [
-                valstr(f"{attribute}[{key}]")(cls, key) for key in old_keys
-            ]
+            new_keys = [is_not_empty(key) for key in old_keys]
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
                     f"Dictionary contains multiple identical keys: '{d}'."
