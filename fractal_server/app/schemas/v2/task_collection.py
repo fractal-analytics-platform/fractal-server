@@ -8,7 +8,7 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from .._validators import is_not_empty
-from .._validators import NotEmptyString
+from .._validators import NonEmptyString
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 
@@ -120,11 +120,11 @@ class TaskCollectCustomV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     manifest: ManifestV2
-    python_interpreter: NotEmptyString
-    label: NotEmptyString
-    package_root: Optional[NotEmptyString] = None
-    package_name: Optional[NotEmptyString] = None
-    version: Optional[NotEmptyString] = None
+    python_interpreter: NonEmptyString
+    label: NonEmptyString
+    package_root: Optional[NonEmptyString] = None
+    package_name: Optional[NonEmptyString] = None
+    version: Optional[NonEmptyString] = None
 
     @model_validator(mode="before")
     @classmethod

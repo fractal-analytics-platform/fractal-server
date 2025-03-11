@@ -9,7 +9,7 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validators import NotEmptyString
+from .._validators import NonEmptyString
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
 from .task import TaskReadV2
@@ -42,11 +42,11 @@ class TaskGroupCreateV2(BaseModel):
     origin: TaskGroupV2OriginEnum
     pkg_name: str
     version: Optional[str] = None
-    python_version: Optional[NotEmptyString] = None
+    python_version: Optional[NonEmptyString] = None
     path: Optional[str] = None
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
-    pip_extras: Optional[NotEmptyString] = None
+    pip_extras: Optional[NonEmptyString] = None
     pip_freeze: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 

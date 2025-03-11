@@ -10,7 +10,7 @@ from pydantic import HttpUrl
 from pydantic import model_validator
 
 from fractal_server.app.schemas._validators import is_not_empty
-from fractal_server.app.schemas._validators import NotEmptyString
+from fractal_server.app.schemas._validators import NonEmptyString
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.string_tools import validate_cmd
@@ -19,27 +19,27 @@ from fractal_server.string_tools import validate_cmd
 class TaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NotEmptyString
+    name: NonEmptyString
 
-    command_non_parallel: Optional[NotEmptyString] = None
-    command_parallel: Optional[NotEmptyString] = None
+    command_non_parallel: Optional[NonEmptyString] = None
+    command_parallel: Optional[NonEmptyString] = None
 
     meta_non_parallel: Optional[dict[str, Any]] = None
     meta_parallel: Optional[dict[str, Any]] = None
-    version: Optional[NotEmptyString] = None
+    version: Optional[NonEmptyString] = None
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[NotEmptyString] = None
+    args_schema_version: Optional[NonEmptyString] = None
     docs_info: Optional[str] = None
     docs_link: Optional[str] = None
 
     input_types: dict[str, bool] = Field(default={})
     output_types: dict[str, bool] = Field(default={})
 
-    category: Optional[NotEmptyString] = None
-    modality: Optional[NotEmptyString] = None
+    category: Optional[NonEmptyString] = None
+    modality: Optional[NonEmptyString] = None
     tags: list[str] = Field(default_factory=list)
-    authors: Optional[NotEmptyString] = None
+    authors: Optional[NonEmptyString] = None
 
     # Validators
     @model_validator(mode="after")
@@ -122,14 +122,14 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: Optional[NotEmptyString] = None
-    command_non_parallel: Optional[NotEmptyString] = None
+    command_parallel: Optional[NonEmptyString] = None
+    command_non_parallel: Optional[NonEmptyString] = None
     input_types: Optional[dict[str, bool]] = None
     output_types: Optional[dict[str, bool]] = None
 
-    category: Optional[NotEmptyString] = None
-    modality: Optional[NotEmptyString] = None
-    authors: Optional[NotEmptyString] = None
+    category: Optional[NonEmptyString] = None
+    modality: Optional[NonEmptyString] = None
+    authors: Optional[NonEmptyString] = None
     tags: Optional[list[str]] = None
 
     # Validators
@@ -158,16 +158,16 @@ class TaskUpdateV2(BaseModel):
 class TaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    pkg_name: NotEmptyString
-    version: Optional[NotEmptyString] = None
-    name: NotEmptyString
+    pkg_name: NonEmptyString
+    version: Optional[NonEmptyString] = None
+    name: NonEmptyString
 
 
 class TaskImportV2Legacy(BaseModel):
-    source: NotEmptyString
+    source: NonEmptyString
 
 
 class TaskExportV2(BaseModel):
-    pkg_name: NotEmptyString
-    version: Optional[NotEmptyString] = None
-    name: NotEmptyString
+    pkg_name: NonEmptyString
+    version: Optional[NonEmptyString] = None
+    name: NonEmptyString

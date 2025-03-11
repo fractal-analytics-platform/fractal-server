@@ -13,7 +13,7 @@ from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
 
 from .._filter_validators import validate_attribute_filters
-from .._validators import NotEmptyString
+from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
@@ -49,7 +49,7 @@ class JobCreateV2(BaseModel):
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
     slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[NotEmptyString] = None
+    worker_init: Optional[NonEmptyString] = None
 
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 

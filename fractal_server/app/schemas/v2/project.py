@@ -6,14 +6,14 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from .._validators import NotEmptyString
+from .._validators import NonEmptyString
 
 
 class ProjectCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NotEmptyString
+    name: NonEmptyString
 
 
 class ProjectReadV2(BaseModel):
@@ -31,4 +31,4 @@ class ProjectUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[NotEmptyString] = None
+    name: Optional[NonEmptyString] = None

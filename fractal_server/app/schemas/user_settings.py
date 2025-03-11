@@ -6,7 +6,7 @@ from pydantic import field_validator
 from pydantic.types import StrictStr
 
 from ._validators import is_not_empty
-from ._validators import NotEmptyString
+from ._validators import NonEmptyString
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
 from fractal_server.string_tools import validate_cmd
@@ -49,12 +49,12 @@ class UserSettingsUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    ssh_host: Optional[NotEmptyString] = None
-    ssh_username: Optional[NotEmptyString] = None
+    ssh_host: Optional[NonEmptyString] = None
+    ssh_username: Optional[NonEmptyString] = None
     ssh_private_key_path: Optional[str] = None
     ssh_tasks_dir: Optional[str] = None
     ssh_jobs_dir: Optional[str] = None
-    slurm_user: Optional[NotEmptyString] = None
+    slurm_user: Optional[NonEmptyString] = None
     slurm_accounts: Optional[list[StrictStr]] = None
     project_dir: Optional[str] = None
 
