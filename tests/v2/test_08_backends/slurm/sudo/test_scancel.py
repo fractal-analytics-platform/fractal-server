@@ -8,21 +8,31 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from ...aux_unit_runner import ZARR_URLS
 from fractal_server.app.history import HistoryItemImageStatus
 from fractal_server.app.models.v2.history import HistoryItemV2
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
     RunnerSlurmSudo,
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.task_files import TaskFiles
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
-
-ALL_IMAGES = ["a", "b", "c", "d"]
+from tests.v2._aux_runner import get_default_slurm_config
 
 
 SCANCEL_CMD = (
     f"sudo --non-interactive -u {SLURM_USER} scancel -u {SLURM_USER} -v"
 )
+
+
+def get_dummy_task_files(root_path: Path) -> TaskFiles:
+    return TaskFiles(
+        root_dir_local=root_path / "server",
+        root_dir_remote=root_path / "user",
+        task_name="name",
+        task_order=0,
+    )
 
 
 @pytest.fixture
@@ -46,7 +56,7 @@ async def mock_history_item(  # FIXME de-duplicate
         num_available_images=4,
         images={
             zarr_url: HistoryItemImageStatus.SUBMITTED
-            for zarr_url in ALL_IMAGES
+            for zarr_url in ZARR_URLS
         },
     )
     db.add(item)
@@ -69,7 +79,7 @@ def _write_shutdown_file(
     shutdown_file.touch()
 
 
-@pytest.mark.xfail(reason="Not ready - FIXME")
+# @pytest.mark.xfail(reason="Not ready - FIXME")
 @pytest.mark.container
 async def test_shutdown_during_submit(
     db,
@@ -77,7 +87,7 @@ async def test_shutdown_during_submit(
     tmp777_path,
     monkey_slurm,
 ):
-    def sleep_long(parameters: dict):
+    def sleep_long(**parameters: dict):
         time.sleep(parameters["sleep_time"])
 
     (tmp777_path / "server").mkdir()
@@ -91,22 +101,23 @@ async def test_shutdown_during_submit(
         ) as runner:
             result, exception = runner.submit(
                 sleep_long,
-                parameters=dict(
-                    zarr_urls=["a", "b", "c", "d"],
-                    sleep_time=5,
-                ),
+                parameters={
+                    "zarr_urls": ZARR_URLS,
+                    "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+                    "sleep_time": 5000,
+                },
                 history_item_id=mock_history_item.id,
-                workdir_local=tmp777_path / "server/task",
-                workdir_remote=tmp777_path / "user/task",
+                task_files=get_dummy_task_files(tmp777_path),
+                slurm_config=get_default_slurm_config(),
             )
             return result, exception
 
-    # shutdown_file = tmp777_path / "server" / SHUTDOWN_FILENAME
+    shutdown_file = tmp777_path / "server" / SHUTDOWN_FILENAME
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         fut1 = executor.submit(main_thread)
-        # fut2 = executor.submit(_write_shutdown_file, shutdown_file, 0.5)
-        # fut2.result()
+        fut2 = executor.submit(_write_shutdown_file, shutdown_file, 0.5)
+        fut2.result()
         result, exception = fut1.result()
         debug(result, exception)
         # assert "Fractal job was shut down" in str(exception)
@@ -114,7 +125,7 @@ async def test_shutdown_during_submit(
     db.expunge_all()
     history_item = await db.get(HistoryItemV2, mock_history_item.id)
     assert history_item.images == {
-        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ALL_IMAGES
+        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ZARR_URLS
     }
 
 
@@ -143,7 +154,7 @@ async def test_shutdown_during_multisubmit(
                         zarr_url=zarr_url,
                         sleep_time=100,
                     )
-                    for zarr_url in ALL_IMAGES
+                    for zarr_url in ZARR_URLS
                 ],
                 history_item_id=mock_history_item.id,
                 workdir_local=tmp777_path / "server/task",
@@ -164,7 +175,7 @@ async def test_shutdown_during_multisubmit(
     db.expunge_all()
     history_item = await db.get(HistoryItemV2, mock_history_item.id)
     assert history_item.images == {
-        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ALL_IMAGES
+        zarr_url: HistoryItemImageStatus.FAILED for zarr_url in ZARR_URLS
     }
 
 
