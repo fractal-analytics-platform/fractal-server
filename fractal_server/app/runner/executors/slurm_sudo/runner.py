@@ -96,7 +96,8 @@ class SlurmJob(BaseModel):
     label: str
     workdir_local: Path
     workdir_remote: Path
-    tasks: tuple[SlurmTask]
+    tasks: list[dict[str, Any]]
+    # tasks: tuple[list, SlurmTask]
 
     @property
     def slurm_log_file_local(self) -> str:
@@ -136,7 +137,9 @@ class SlurmJob(BaseModel):
 
     @property
     def log_files_local(self) -> list[str]:
-        return [task.task_files.log_file_local for task in self.tasks]
+        return [
+            task.get("task").task_files.log_file_local for task in self.tasks
+        ]
 
 
 def _subprocess_run_or_raise(
@@ -275,7 +278,7 @@ class RunnerSlurmSudo(BaseRunner):
     def _submit_single_sbatch(
         self,
         func,
-        parameters,  # FIXME this should be per-task
+        # parameters,  # FIXME this should be per-task
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
@@ -291,9 +294,9 @@ class RunnerSlurmSudo(BaseRunner):
         for task in slurm_job.tasks:
             _args = []
             # TODO: make parameters task-dependent
-            _kwargs = dict(
-                parameters=parameters
-            )  # FIXME: this should be per-tas
+            _kwargs = task.get(
+                "parameters"
+            )  # dict(parameters=parameters)  # FIXME: this should be per-tas
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
@@ -580,7 +583,7 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_config.parallel_tasks_per_job = parallel_tasks_per_job
         slurm_config.tasks_per_job = tasks_per_job
 
-        # Divide arguments in batches of `n_tasks_per_script` tasks each
+        # Divide arguments in batches of `tasks_per_job` tasks each
         args_batches = []
         batch_size = tasks_per_job
         for ind_chunk in range(0, tot_tasks, batch_size):
@@ -592,32 +595,42 @@ class RunnerSlurmSudo(BaseRunner):
 
         # TODO: Add batching
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
-        for ind, parameters in enumerate(list_parameters):
+        for ind, chunk in enumerate(args_batches):
+            # for ind, parameters in enumerate(list_parameters):
             # TODO: replace with actual values
-            component = parameters[_COMPONENT_KEY_]
-            slurm_job = SlurmJob(
-                label=f"{ind:06d}",
-                workdir_local=workdir_local,
-                workdir_remote=workdir_remote,
-                tasks=[
-                    SlurmTask(
-                        index=ind,
-                        component=component,
-                        workdir_local=workdir_local,
-                        workdir_remote=workdir_remote,
-                        zarr_url=parameters["zarr_url"],
-                        task_files=TaskFiles(
-                            **original_task_files.model_dump(
-                                exclude={"component"}
-                            ),
+            component = chunk[_COMPONENT_KEY_]
+            tasks = []
+            for parameters in chunk:
+                tasks.append(
+                    dict(
+                        parameters=parameters,
+                        task=SlurmTask(
+                            index=ind,
                             component=component,
+                            workdir_local=workdir_local,
+                            workdir_remote=workdir_remote,
+                            zarr_url=parameters["zarr_url"],
+                            task_files=TaskFiles(
+                                **original_task_files.model_dump(
+                                    exclude={"component"}
+                                ),
+                                component=component,
+                            ),
                         ),
                     )
-                ],
+                )
+
+            slurm_job = (
+                SlurmJob(
+                    label=f"{ind:06d}",
+                    workdir_local=workdir_local,
+                    workdir_remote=workdir_remote,
+                    tasks=tasks,
+                ),
             )
             self._submit_single_sbatch(
                 func,
-                parameters=parameters,
+                # parameters=parameters,
                 slurm_job=slurm_job,
                 slurm_config=slurm_config,
             )
