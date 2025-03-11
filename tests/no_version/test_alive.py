@@ -44,5 +44,6 @@ async def test_settings_endpoint(client, MockCurrentUser):
             assert v == settings[k]
         else:
             obfuscated.append(k)
-    assert len(obfuscated) > 1
-    debug(obfuscated)
+    assert "JWT_SECRET_KEY" in obfuscated
+    assert "POSTGRES_PASSWORD" in obfuscated
+    assert "FRACTAL_DEFAULT_ADMIN_PASSWORD" in obfuscated
