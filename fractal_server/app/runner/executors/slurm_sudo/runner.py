@@ -594,22 +594,20 @@ class RunnerSlurmSudo(BaseRunner):
             tasks = []
             for ind_chunck, parameters in enumerate(chunk):
                 tasks.append(
-                    dict(
-                        task=SlurmTask(
-                            index=(ind_batch * len(tot_tasks)) + ind_chunk,
-                            component=component,
-                            workdir_local=workdir_local,
-                            workdir_remote=workdir_remote,
-                            parameters=parameters,
-                            zarr_url=parameters["zarr_url"],
-                            task_files=TaskFiles(
-                                **original_task_files.model_dump(
-                                    exclude={"component"}
-                                ),
-                                component=component,
+                    task=SlurmTask(
+                        index=(ind_batch * batch_size) + ind_chunk,
+                        component=component,
+                        workdir_local=workdir_local,
+                        workdir_remote=workdir_remote,
+                        parameters=parameters,
+                        zarr_url=parameters["zarr_url"],
+                        task_files=TaskFiles(
+                            **original_task_files.model_dump(
+                                exclude={"component"}
                             ),
+                            component=component,
                         ),
-                    )
+                    ),
                 )
 
             slurm_job = (
