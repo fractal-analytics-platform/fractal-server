@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import shlex
 import subprocess  # nosec
@@ -25,6 +26,9 @@ from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.executors.slurm_common._batching import (
+    heuristics,
+)
 from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfig,
 )
@@ -248,7 +252,6 @@ class RunnerSlurmSudo(BaseRunner):
         return self.shutdown_file.exists()
 
     def scancel_jobs(self) -> None:
-
         logger.debug("[scancel_jobs] START")
 
         if self.jobs:
@@ -276,7 +279,6 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-
         if len(slurm_job.tasks) > 1:
             raise NotImplementedError()
 
@@ -428,7 +430,6 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_config: SlurmConfig,
         in_compound_task: bool = False,
     ) -> tuple[Any, Exception]:
-
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
 
@@ -556,6 +557,38 @@ class RunnerSlurmSudo(BaseRunner):
         exceptions: dict[int, BaseException] = {}
 
         original_task_files = task_files
+        tot_tasks = len(list_parameters)
+
+        # Set/validate parameters for task batching
+        tasks_per_job, parallel_tasks_per_job = heuristics(
+            # Number of parallel components (always known)
+            tot_tasks=tot_tasks,
+            # Optional WorkflowTask attributes:
+            tasks_per_job=slurm_config.tasks_per_job,
+            parallel_tasks_per_job=slurm_config.parallel_tasks_per_job,  # noqa
+            # Task requirements (multiple possible sources):
+            cpus_per_task=slurm_config.cpus_per_task,
+            mem_per_task=slurm_config.mem_per_task_MB,
+            # Fractal configuration variables (soft/hard limits):
+            target_cpus_per_job=slurm_config.target_cpus_per_job,
+            target_mem_per_job=slurm_config.target_mem_per_job,
+            target_num_jobs=slurm_config.target_num_jobs,
+            max_cpus_per_job=slurm_config.max_cpus_per_job,
+            max_mem_per_job=slurm_config.max_mem_per_job,
+            max_num_jobs=slurm_config.max_num_jobs,
+        )
+        slurm_config.parallel_tasks_per_job = parallel_tasks_per_job
+        slurm_config.tasks_per_job = tasks_per_job
+
+        # Divide arguments in batches of `n_tasks_per_script` tasks each
+        args_batches = []
+        batch_size = tasks_per_job
+        for ind_chunk in range(0, tot_tasks, batch_size):
+            args_batches.append(
+                list_args[ind_chunk : ind_chunk + batch_size]  # noqa
+            )
+        if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
+            raise RuntimeError("Something wrong here while batching tasks")
 
         # TODO: Add batching
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
