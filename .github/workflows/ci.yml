@@ -35,7 +35,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
       - name: Install poetry
-        run: pipx install poetry==2.0.0
+        run: pipx install poetry==2.1.0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -85,7 +85,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
       - name: Install poetry
-        run: pipx install poetry==2.0.0
+        run: pipx install poetry==2.1.0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -148,7 +148,7 @@ jobs:
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
 
       - name: Install poetry
-        run: pipx install poetry==2.0.0
+        run: pipx install poetry==2.1.0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -163,8 +163,8 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-containers-${{ matrix.python-version }}
-        run: echo "skipping for now - FIXME"
-        # run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
+        # run: echo "skipping for now - FIXME"
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" -m "not ssh" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -187,7 +187,7 @@ jobs:
       # py-cov-action/python-coverage-comment-action@v3
       - uses: actions/checkout@v4
 
-      - run: pipx install poetry==2.0.0
+      - run: pipx install poetry==2.1.0
 
       - uses: actions/setup-python@v5
         with:

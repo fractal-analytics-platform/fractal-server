@@ -20,6 +20,7 @@ def test_check_connection_failure():
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_versions(fractal_ssh: FractalSSH, current_py_version: str):
     """
     Check the Python and fractal-server versions available on the cluster.
