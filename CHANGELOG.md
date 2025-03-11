@@ -1,9 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.0a3
+
+* App:
+    * Obfuscate sensitive information from settings using `SecretStr` (\#2333).
+
 
 # 2.14.0a0, 2.14.0a1, 2.14.0a2
 
-All this is from #2287
+All this is from \#2287
 
 * Database
     * New `HistoryItemV2` and `ImageStatus` tables.

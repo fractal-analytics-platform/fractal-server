@@ -25,4 +25,4 @@ async def alive():
 @router_api.get("/settings/")
 async def view_settings(user: UserOAuth = Depends(current_active_superuser)):
     settings = Inject(get_settings)
-    return settings.get_sanitized()
+    return settings.model_dump()
