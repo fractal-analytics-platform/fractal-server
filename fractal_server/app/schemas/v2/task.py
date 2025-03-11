@@ -9,7 +9,6 @@ from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
 
-from fractal_server.app.schemas._validators import is_not_empty
 from fractal_server.app.schemas._validators import NonEmptyString
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
@@ -38,7 +37,7 @@ class TaskCreateV2(BaseModel):
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
-    tags: list[str] = Field(default_factory=list)
+    tags: list[NonEmptyString] = Field(default_factory=list)
     authors: Optional[NonEmptyString] = None
 
     # Validators
@@ -80,8 +79,6 @@ class TaskCreateV2(BaseModel):
     @field_validator("tags")
     @classmethod
     def validate_list_of_strings(cls, value):
-        for i, tag in enumerate(value):
-            value[i] = is_not_empty(tag)
         return val_unique_list("tags")(cls, value)
 
     @field_validator("docs_link", mode="after")
@@ -130,7 +127,7 @@ class TaskUpdateV2(BaseModel):
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
     authors: Optional[NonEmptyString] = None
-    tags: Optional[list[str]] = None
+    tags: Optional[list[NonEmptyString]] = None
 
     # Validators
     @field_validator("input_types", "output_types")
@@ -150,8 +147,6 @@ class TaskUpdateV2(BaseModel):
     @field_validator("tags")
     @classmethod
     def validate_tags(cls, value):
-        for i, tag in enumerate(value):
-            value[i] = is_not_empty(tag)
         return val_unique_list("tags")(cls, value)
 
 

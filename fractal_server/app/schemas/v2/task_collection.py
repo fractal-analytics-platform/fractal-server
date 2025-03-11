@@ -7,7 +7,6 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
-from .._validators import is_not_empty
 from .._validators import NonEmptyString
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
@@ -47,18 +46,19 @@ class TaskCollectPipV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    package: Optional[str] = None
-    package_version: Optional[str] = None
-    package_extras: Optional[str] = None
+    package: Optional[NonEmptyString] = None
+    package_version: Optional[NonEmptyString] = None
+    package_extras: Optional[NonEmptyString] = None
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[dict[str, str]] = None
+    pinned_package_versions: Optional[
+        dict[NonEmptyString, NonEmptyString]
+    ] = None
 
     @field_validator("package")
     @classmethod
     def package_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = is_not_empty(value)
         validate_cmd(value, attribute_name="package")
         return value
 
@@ -67,7 +67,6 @@ class TaskCollectPipV2(BaseModel):
     def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = is_not_empty(value)
         validate_cmd(value, attribute_name="package_version")
         return value
 
@@ -76,15 +75,6 @@ class TaskCollectPipV2(BaseModel):
     def pinned_package_versions_validator(cls, value):
         if value is None:
             return value
-        old_keys = list(value.keys())
-        new_keys = [is_not_empty(key) for key in old_keys]
-        if len(new_keys) != len(set(new_keys)):
-            raise ValueError(
-                f"Dictionary contains multiple identical keys: {value}."
-            )
-        for old_key, new_key in zip(old_keys, new_keys):
-            if new_key != old_key:
-                value[new_key] = value.pop(old_key)
         for pkg, version in value.items():
             validate_cmd(pkg)
             validate_cmd(version)
@@ -95,7 +85,6 @@ class TaskCollectPipV2(BaseModel):
     def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
-        value = is_not_empty(value)
         validate_cmd(value, attribute_name="package_extras")
         return value
 
@@ -148,7 +137,6 @@ class TaskCollectCustomV2(BaseModel):
         """
         if value is not None:
             validate_cmd(value)
-            value = is_not_empty(value)
             value = value.replace(" ", "")
         return value
 
