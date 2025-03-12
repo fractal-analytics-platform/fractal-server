@@ -10,7 +10,6 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from .._filter_validators import validate_type_filters
-from .._validators import cant_set_none
 from .._validators import root_validate_dict_keys
 from .._validators import valdict_keys
 from .task import TaskExportV2
@@ -145,11 +144,6 @@ class WorkflowTaskUpdateV2(BaseModel):
     _meta_parallel = field_validator("meta_parallel")(
         classmethod(valdict_keys("meta_parallel"))
     )
-
-    @field_validator("type_filters", mode="before")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
 
     @field_validator("args_non_parallel")
     @classmethod

@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
 
-from fractal_server.app.schemas._validators import NonEmptyString
 from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.urls import normalize_url
 
@@ -88,7 +87,7 @@ class SingleImage(_SingleImageBase):
 
 
 class SingleImageUpdate(BaseModel):
-    zarr_url: NonEmptyString
+    zarr_url: str
     attributes: Optional[dict[str, Any]] = None
     types: Optional[dict[str, bool]] = None
 

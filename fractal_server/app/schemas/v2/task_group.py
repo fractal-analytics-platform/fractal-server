@@ -9,6 +9,7 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
+from .._validators import cant_set_none
 from .._validators import NonEmptyString
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
@@ -51,6 +52,12 @@ class TaskGroupCreateV2(BaseModel):
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
+
+    @field_validator("python_version", "pip_extras", mode="before")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
+
     _path = field_validator("path")(classmethod(val_absolute_path("path")))
     _venv_path = field_validator("venv_path")(
         classmethod(val_absolute_path("venv_path"))

@@ -50,9 +50,7 @@ class TaskCollectPipV2(BaseModel):
     package_version: Optional[NonEmptyString] = None
     package_extras: Optional[NonEmptyString] = None
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[
-        dict[NonEmptyString, NonEmptyString]
-    ] = None
+    pinned_package_versions: Optional[dict[str, str]] = None
 
     @field_validator("package")
     @classmethod
@@ -75,6 +73,19 @@ class TaskCollectPipV2(BaseModel):
     def pinned_package_versions_validator(cls, value):
         if value is None:
             return value
+
+        old_keys = list(value.keys())
+        new_keys = [key.strip() for key in old_keys]
+        if any(k == "" for k in new_keys):
+            raise ValueError(f"Empty string in {new_keys}.")
+        if len(new_keys) != len(set(new_keys)):
+            raise ValueError(
+                f"Dictionary contains multiple identical keys: {value}."
+            )
+        for old_key, new_key in zip(old_keys, new_keys):
+            if new_key != old_key:
+                value[new_key] = value.pop(old_key)
+
         for pkg, version in value.items():
             validate_cmd(pkg)
             validate_cmd(version)

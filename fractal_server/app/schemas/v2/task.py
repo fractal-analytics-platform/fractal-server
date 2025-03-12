@@ -42,6 +42,19 @@ class TaskCreateV2(BaseModel):
     authors: Optional[NonEmptyString] = None
 
     # Validators
+
+    @field_validator(
+        "name",
+        "command_non_parallel",
+        "command_parallel",
+        "version",
+        "args_schema_version",
+        mode="before",
+    )
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
+
     @model_validator(mode="after")
     def validate_commands(self):
         command_parallel = self.command_parallel
@@ -132,7 +145,14 @@ class TaskUpdateV2(BaseModel):
 
     # Validators
 
-    @field_validator("input_types", "output_types", "tags", mode="before")
+    @field_validator(
+        "command_parallel",
+        "command_non_parallel",
+        "category",
+        "modality",
+        "authors",
+        mode="before",
+    )
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)

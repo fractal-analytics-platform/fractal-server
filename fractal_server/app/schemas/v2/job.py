@@ -13,6 +13,7 @@ from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
 
 from .._filter_validators import validate_attribute_filters
+from .._validators import cant_set_none
 from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
 from .dumps import DatasetDumpV2
@@ -54,6 +55,12 @@ class JobCreateV2(BaseModel):
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
+
+    @field_validator("worker_init", mode="before")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
+
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
     )
