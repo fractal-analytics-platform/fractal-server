@@ -89,7 +89,7 @@ class DatasetUpdateV2(BaseModel):
         classmethod(validate_attribute_filters)
     )
 
-    @field_validator("name", mode="before")
+    @field_validator("name")
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)

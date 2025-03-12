@@ -56,7 +56,7 @@ class JobCreateV2(BaseModel):
 
     # Validators
 
-    @field_validator("worker_init", mode="before")
+    @field_validator("worker_init")
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)

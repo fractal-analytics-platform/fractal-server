@@ -53,7 +53,7 @@ class TaskGroupCreateV2(BaseModel):
 
     # Validators
 
-    @field_validator("python_version", "pip_extras", mode="before")
+    @field_validator("python_version", "pip_extras")
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)

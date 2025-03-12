@@ -48,7 +48,6 @@ class TaskCreateV2(BaseModel):
         "command_parallel",
         "version",
         "args_schema_version",
-        mode="before",
     )
     @classmethod
     def _cant_set_none(cls, v):
@@ -144,7 +143,7 @@ class TaskUpdateV2(BaseModel):
 
     # Validators
 
-    @field_validator("command_parallel", "command_non_parallel", mode="before")
+    @field_validator("command_parallel", "command_non_parallel")
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)

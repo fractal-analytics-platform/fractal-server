@@ -35,7 +35,7 @@ class ProjectUpdateV2(BaseModel):
 
     name: Optional[NonEmptyString] = None
 
-    @field_validator("name", mode="before")
+    @field_validator("name")
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)
