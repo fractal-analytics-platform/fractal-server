@@ -129,7 +129,7 @@
 | fractal\_server/app/security/\_\_init\_\_.py                                   |      178 |       30 |       34 |        1 |     81% |117-130, 149-150, 155-164, 169-177, 210, 268, 350-354 |
 | fractal\_server/app/security/signup\_email.py                                  |       20 |        8 |        4 |        0 |     50% |     33-44 |
 | fractal\_server/app/user\_settings.py                                          |       12 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/config.py                                                      |      309 |        6 |       92 |        6 |     97% |728-729, 734, 743, 748, 755, 760->exit |
+| fractal\_server/config.py                                                      |      307 |        6 |       92 |        6 |     96% |720-721, 726, 735, 740, 747, 752->exit |
 | fractal\_server/images/\_\_init\_\_.py                                         |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                               |       59 |        0 |       16 |        1 |     99% |  104->115 |
 | fractal\_server/images/tools.py                                                |       37 |        0 |       14 |        0 |    100% |           |
@@ -160,7 +160,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8781** |  **403** | **1820** |  **136** | **94%** |           |
+|                                                                      **TOTAL** | **8779** |  **403** | **1820** |  **136** | **94%** |           |
 
 
 ## Setup coverage badge
