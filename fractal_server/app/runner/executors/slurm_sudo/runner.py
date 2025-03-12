@@ -290,7 +290,7 @@ class RunnerSlurmSudo(BaseRunner):
         )
         for task in slurm_job.tasks:
             _args = []
-            _kwargs = task.parameters
+            _kwargs = dict(parameters=task.parameters)
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
