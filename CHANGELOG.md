@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.13.2
+
+* Task lifecycle:
+    * Drop hard-coded use of `--no-cache-dir` for `pip install` command (\#2357).
+
 
 # 2.13.1
 
