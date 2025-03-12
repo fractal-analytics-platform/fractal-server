@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import shlex
 import subprocess  # nosec
@@ -25,6 +26,9 @@ from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.executors.slurm_common._batching import (
+    heuristics,
+)
 from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfig,
 )
@@ -58,6 +62,7 @@ class SlurmTask(BaseModel):
     component: str
     workdir_local: Path
     workdir_remote: Path
+    parameters: dict[str, Any]
     zarr_url: Optional[str] = None
     task_files: TaskFiles
     index: int
@@ -92,7 +97,7 @@ class SlurmJob(BaseModel):
     label: str
     workdir_local: Path
     workdir_remote: Path
-    tasks: tuple[SlurmTask]
+    tasks: list[SlurmTask]
 
     @property
     def slurm_log_file_local(self) -> str:
@@ -248,7 +253,6 @@ class RunnerSlurmSudo(BaseRunner):
         return self.shutdown_file.exists()
 
     def scancel_jobs(self) -> None:
-
         logger.debug("[scancel_jobs] START")
 
         if self.jobs:
@@ -272,13 +276,11 @@ class RunnerSlurmSudo(BaseRunner):
     def _submit_single_sbatch(
         self,
         func,
-        parameters,  # FIXME this should be per-task
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-
-        if len(slurm_job.tasks) > 1:
-            raise NotImplementedError()
+        # if len(slurm_job.tasks) > 1:
+        #     raise NotImplementedError()
 
         # Prepare input pickle(s)
         versions = dict(
@@ -288,10 +290,7 @@ class RunnerSlurmSudo(BaseRunner):
         )
         for task in slurm_job.tasks:
             _args = []
-            # TODO: make parameters task-dependent
-            _kwargs = dict(
-                parameters=parameters
-            )  # FIXME: this should be per-tas
+            _kwargs = dict(parameters=task.parameters)
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
@@ -428,7 +427,6 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_config: SlurmConfig,
         in_compound_task: bool = False,
     ) -> tuple[Any, Exception]:
-
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
 
@@ -476,6 +474,7 @@ class RunnerSlurmSudo(BaseRunner):
                 SlurmTask(
                     index=0,
                     component="0",
+                    parameters=parameters,
                     workdir_remote=workdir_remote,
                     workdir_local=workdir_local,
                     task_files=task_files,
@@ -484,7 +483,6 @@ class RunnerSlurmSudo(BaseRunner):
         )  # TODO: replace with actual values (BASED ON TASKFILES)
         self._submit_single_sbatch(
             func,
-            parameters=parameters,
             slurm_job=slurm_job,
             slurm_config=slurm_config,
         )
@@ -556,22 +554,52 @@ class RunnerSlurmSudo(BaseRunner):
         exceptions: dict[int, BaseException] = {}
 
         original_task_files = task_files
+        tot_tasks = len(list_parameters)
 
-        # TODO: Add batching
+        # Set/validate parameters for task batching
+        tasks_per_job, parallel_tasks_per_job = heuristics(
+            # Number of parallel components (always known)
+            tot_tasks=tot_tasks,
+            # Optional WorkflowTask attributes:
+            tasks_per_job=slurm_config.tasks_per_job,
+            parallel_tasks_per_job=slurm_config.parallel_tasks_per_job,  # noqa
+            # Task requirements (multiple possible sources):
+            cpus_per_task=slurm_config.cpus_per_task,
+            mem_per_task=slurm_config.mem_per_task_MB,
+            # Fractal configuration variables (soft/hard limits):
+            target_cpus_per_job=slurm_config.target_cpus_per_job,
+            target_mem_per_job=slurm_config.target_mem_per_job,
+            target_num_jobs=slurm_config.target_num_jobs,
+            max_cpus_per_job=slurm_config.max_cpus_per_job,
+            max_mem_per_job=slurm_config.max_mem_per_job,
+            max_num_jobs=slurm_config.max_num_jobs,
+        )
+        slurm_config.parallel_tasks_per_job = parallel_tasks_per_job
+        slurm_config.tasks_per_job = tasks_per_job
+
+        # Divide arguments in batches of `tasks_per_job` tasks each
+        args_batches = []
+        batch_size = tasks_per_job
+        for ind_chunk in range(0, tot_tasks, batch_size):
+            args_batches.append(
+                list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
+            )
+        if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
+            raise RuntimeError("Something wrong here while batching tasks")
+
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
-        for ind, parameters in enumerate(list_parameters):
+        for ind_batch, chunk in enumerate(args_batches):
             # TODO: replace with actual values
-            component = parameters[_COMPONENT_KEY_]
-            slurm_job = SlurmJob(
-                label=f"{ind:06d}",
-                workdir_local=workdir_local,
-                workdir_remote=workdir_remote,
-                tasks=[
+            tasks = []
+            for ind_chunk, parameters in enumerate(chunk):
+                component = parameters[_COMPONENT_KEY_]
+                tasks.append(
                     SlurmTask(
-                        index=ind,
+                        index=(ind_batch * batch_size) + ind_chunk,
                         component=component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
+                        parameters=parameters,
                         zarr_url=parameters["zarr_url"],
                         task_files=TaskFiles(
                             **original_task_files.model_dump(
@@ -579,12 +607,17 @@ class RunnerSlurmSudo(BaseRunner):
                             ),
                             component=component,
                         ),
-                    )
-                ],
+                    ),
+                )
+
+            slurm_job = SlurmJob(
+                label=f"{ind_batch:06d}",
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+                tasks=tasks,
             )
             self._submit_single_sbatch(
                 func,
-                parameters=parameters,
                 slurm_job=slurm_job,
                 slurm_config=slurm_config,
             )
