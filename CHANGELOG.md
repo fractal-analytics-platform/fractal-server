@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Make request body required for `replace-task` endpoint (\#2355).
+
 
 # 2.13.1
 
