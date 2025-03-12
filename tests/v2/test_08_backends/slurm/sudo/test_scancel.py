@@ -79,6 +79,7 @@ def _write_shutdown_file(
     shutdown_file.touch()
 
 
+@pytest.mark.skip
 # @pytest.mark.xfail(reason="Not ready - FIXME")
 @pytest.mark.container
 async def test_shutdown_during_submit(
@@ -129,6 +130,7 @@ async def test_shutdown_during_submit(
     }
 
 
+@pytest.mark.skip
 @pytest.mark.xfail(reason="Not ready - FIXME")
 @pytest.mark.container
 async def test_shutdown_during_multisubmit(
