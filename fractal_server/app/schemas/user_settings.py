@@ -50,12 +50,12 @@ class UserSettingsUpdate(BaseModel):
 
     ssh_host: Optional[NonEmptyString] = None
     ssh_username: Optional[NonEmptyString] = None
-    ssh_private_key_path: Optional[str] = None
-    ssh_tasks_dir: Optional[str] = None
-    ssh_jobs_dir: Optional[str] = None
+    ssh_private_key_path: Optional[NonEmptyString] = None
+    ssh_tasks_dir: Optional[NonEmptyString] = None
+    ssh_jobs_dir: Optional[NonEmptyString] = None
     slurm_user: Optional[NonEmptyString] = None
     slurm_accounts: Optional[list[NonEmptyString]] = None
-    project_dir: Optional[str] = None
+    project_dir: Optional[NonEmptyString] = None
 
     _ssh_private_key_path = field_validator("ssh_private_key_path")(
         classmethod(

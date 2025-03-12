@@ -7,6 +7,7 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
+from .._validators import cant_set_none
 from .._validators import NonEmptyString
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
@@ -48,6 +49,11 @@ class WorkflowUpdateV2(BaseModel):
     reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
 
     @field_validator("reordered_workflowtask_ids")
     @classmethod

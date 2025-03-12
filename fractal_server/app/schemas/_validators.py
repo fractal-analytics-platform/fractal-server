@@ -6,7 +6,7 @@ from typing import Optional
 from pydantic.types import StringConstraints
 
 
-def cant_set_none(value) -> Any:
+def cant_set_none(value: Any) -> Any:
     if value is None:
         raise ValueError("Field cannot be set to 'None'.")
     return value

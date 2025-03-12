@@ -12,6 +12,7 @@ from pydantic.types import AwareDatetime
 
 from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
+from .._validators import cant_set_none
 from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
 from .project import ProjectReadV2
@@ -72,7 +73,7 @@ class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: Optional[NonEmptyString] = None
-    zarr_dir: Optional[str] = None
+    zarr_dir: Optional[NonEmptyString] = None
     type_filters: Optional[dict[str, bool]] = None
     attribute_filters: Optional[dict[str, list[Any]]] = None
 
@@ -87,6 +88,13 @@ class DatasetUpdateV2(BaseModel):
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
+
+    @field_validator(
+        "name", "zarr_dir", "type_filters", "attribute_filters", mode="before"
+    )
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
 
     @field_validator("zarr_dir")
     @classmethod

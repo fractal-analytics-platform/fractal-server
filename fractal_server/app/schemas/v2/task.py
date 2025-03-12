@@ -9,6 +9,7 @@ from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
 
+from .._validators import cant_set_none
 from fractal_server.app.schemas._validators import NonEmptyString
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
@@ -130,6 +131,12 @@ class TaskUpdateV2(BaseModel):
     tags: Optional[list[NonEmptyString]] = None
 
     # Validators
+
+    @field_validator("input_types", "output_types", "tags", mode="before")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
+
     @field_validator("input_types", "output_types")
     @classmethod
     def val_is_dict(cls, v):

@@ -8,6 +8,7 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
+from ._validators import NonEmptyString
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
 
@@ -72,7 +73,7 @@ class UserGroupUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    viewer_paths: Optional[list[str]] = None
+    viewer_paths: Optional[list[NonEmptyString]] = None
 
     @field_validator("viewer_paths")
     @classmethod
