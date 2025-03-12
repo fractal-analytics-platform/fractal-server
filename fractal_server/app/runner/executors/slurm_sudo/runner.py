@@ -69,27 +69,19 @@ class SlurmTask(BaseModel):
 
     @property
     def input_pickle_file_local(self) -> str:
-        return (
-            self.workdir_local / f"{self.component}-input.pickle"
-        ).as_posix()
+        return (self.workdir_local / f"{self.component}-input.pickle").as_posix()
 
     @property
     def output_pickle_file_local(self) -> str:
-        return (
-            self.workdir_local / f"{self.component}-output.pickle"
-        ).as_posix()
+        return (self.workdir_local / f"{self.component}-output.pickle").as_posix()
 
     @property
     def input_pickle_file_remote(self) -> str:
-        return (
-            self.workdir_remote / f"{self.component}-input.pickle"
-        ).as_posix()
+        return (self.workdir_remote / f"{self.component}-input.pickle").as_posix()
 
     @property
     def output_pickle_file_remote(self) -> str:
-        return (
-            self.workdir_remote / f"{self.component}-output.pickle"
-        ).as_posix()
+        return (self.workdir_remote / f"{self.component}-output.pickle").as_posix()
 
 
 class SlurmJob(BaseModel):
@@ -103,37 +95,35 @@ class SlurmJob(BaseModel):
     def slurm_log_file_local(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_local
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
+                self.workdir_local / f"slurm-{self.label}-{self.slurm_job_id}.log"
             ).as_posix()
         else:
-            return (
-                self.workdir_local / f"slurm-{self.label}-%j.log"
-            ).as_posix()
+            return (self.workdir_local / f"slurm-{self.label}-%j.log").as_posix()
 
     @property
     def slurm_log_file_remote(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_remote
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
+                self.workdir_remote / f"slurm-{self.label}-{self.slurm_job_id}.log"
             ).as_posix()
         else:
-            return (
-                self.workdir_remote / f"slurm-{self.label}-%j.log"
-            ).as_posix()
+            return (self.workdir_remote / f"slurm-{self.label}-%j.log").as_posix()
 
     @property
     def slurm_submission_script_local(self) -> str:
-        return (
-            self.workdir_local / f"slurm-{self.label}-submit.sh"
-        ).as_posix()
+        return (self.workdir_local / f"slurm-{self.label}-submit.sh").as_posix()
 
     @property
     def slurm_submission_script_remote(self) -> str:
-        return (
-            self.workdir_remote / f"slurm-{self.label}-submit.sh"
-        ).as_posix()
+        return (self.workdir_remote / f"slurm-{self.label}-submit.sh").as_posix()
+
+    @property
+    def slurm_stdout(self) -> str:
+        return (self.workdir_remote / f"slurm-{self.label}.out").as_posix()
+
+    @property
+    def slurm_stderr(self) -> str:
+        return (self.workdir_remote / f"slurm-{self.label}.err").as_posix()
 
     @property
     def log_files_local(self) -> list[str]:
@@ -294,36 +284,105 @@ class RunnerSlurmSudo(BaseRunner):
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
-
+        #############################################################
         # Prepare commands to be included in SLURM submission script
-
-        preamble_lines = [
-            "#!/bin/bash",
-            "#SBATCH --partition=main",
-            "#SBATCH --ntasks=1",
-            "#SBATCH --cpus-per-task=1",
-            "#SBATCH --mem=10M",
-            f"#SBATCH --err={slurm_job.slurm_log_file_remote}",
-            f"#SBATCH --out={slurm_job.slurm_log_file_remote}",
-            f"#SBATCH -D {slurm_job.workdir_remote}",
-            "#SBATCH --job-name=test",
-            "\n",
-        ]
-
+        settings = Inject(get_settings)
+        python_worker_interpreter = (
+            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
+        )
         cmdlines = []
-        for task in slurm_job.tasks:
-            cmd = (
-                f"{self.python_worker_interpreter}"
-                " -m fractal_server.app.runner.executors.slurm_common.remote "
-                f"--input-file {task.input_pickle_file_local} "
-                f"--output-file {task.output_pickle_file_remote}"
+        for ind_task in range(slurm_job.num_tasks_tot):
+            input_pickle_file = slurm_job.input_pickle_files[ind_task]
+        output_pickle_file = slurm_job.output_pickle_files[ind_task]
+        cmdlines.append(
+            (
+                f"{python_worker_interpreter}"
+                " -m fractal_server.app.runner.executors.slurm.remote "
+                f"--input-file {input_pickle_file} "
+                f"--output-file {output_pickle_file}"
             )
-            cmdlines.append("whoami")
-            cmdlines.append(
-                f"srun --ntasks=1 --cpus-per-task=1 --mem=10MB {cmd} &"
-            )
-        cmdlines.append("wait\n")
+        )
 
+        # ...
+        num_tasks_max_running = slurm_config.parallel_tasks_per_job
+        mem_per_task_MB = slurm_config.mem_per_task_MB
+
+        # Set ntasks
+        ntasks = min(len(cmdlines), num_tasks_max_running)
+        if len(cmdlines) < num_tasks_max_running:
+            ntasks = len(cmdlines)
+            slurm_config.parallel_tasks_per_job = ntasks
+            logger.debug(
+                f"{len(cmdlines)=} is smaller than "
+                f"{num_tasks_max_running=}. Setting {ntasks=}."
+            )
+
+        # Prepare SLURM preamble based on SlurmConfig object
+        script_lines = slurm_config.to_sbatch_preamble(
+            remote_export_dir=self.user_cache_dir
+        )
+
+        # Extend SLURM preamble with variable which are not in SlurmConfig, and
+        # fix their order
+        script_lines.extend(
+            [
+                f"#SBATCH --err={slurm_job.slurm_stderr}",
+                f"#SBATCH --out={slurm_job.slurm_stderr}",
+                f"#SBATCH -D {self.workflow_dir_remote}",
+            ]
+        )
+        script_lines = slurm_config.sort_script_lines(script_lines)
+        logger.debug(script_lines)
+
+        # Always print output of `uname -n` and `pwd`
+        script_lines.append('"Hostname: `uname -n`; current directory: `pwd`"\n')
+
+        # Complete script preamble
+        script_lines.append("\n")
+
+        # Include command lines
+        tmp_list_commands = copy(cmdlines)
+        while tmp_list_commands:
+            if tmp_list_commands:
+                cmd = tmp_list_commands.pop(0)  # take first element
+                script_lines.append(
+                    "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
+                    f"--mem={mem_per_task_MB}MB "
+                    f"{cmd} &"
+                )
+        script_lines.append("wait\n")
+
+        script = "\n".join(script_lines)
+
+        ###################################################################
+
+        # preamble_lines = [
+        #     "#!/bin/bash",
+        #     "#SBATCH --partition=main",
+        #     "#SBATCH --ntasks=1",
+        #     "#SBATCH --cpus-per-task=1",
+        #     "#SBATCH --mem=10M",
+        #     f"#SBATCH --err={slurm_job.slurm_log_file_remote}",
+        #     f"#SBATCH --out={slurm_job.slurm_log_file_remote}",
+        #     f"#SBATCH -D {slurm_job.workdir_remote}",
+        #     "#SBATCH --job-name=test",
+        #     "\n",
+        # ]
+        #
+        # cmdlines = []
+        # for task in slurm_job.tasks:
+        #     cmd = (
+        #         f"{self.python_worker_interpreter}"
+        #         " -m fractal_server.app.runner.executors.slurm_common.remote "
+        #         f"--input-file {task.input_pickle_file_local} "
+        #         f"--output-file {task.output_pickle_file_remote}"
+        #     )
+        #     cmdlines.append("whoami")
+        #     cmdlines.append(
+        #         f"srun --ntasks=1 --cpus-per-task=1 --mem=10MB {cmd} &"
+        #     )
+        # cmdlines.append("wait\n")
+        #
         # Write submission script
         submission_script_contents = "\n".join(preamble_lines + cmdlines)
         with open(slurm_job.slurm_submission_script_local, "w") as f:
@@ -331,9 +390,7 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Run sbatch
         pre_command = f"sudo --set-home --non-interactive -u {self.slurm_user}"
-        submit_command = (
-            f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
-        )
+        submit_command = f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
         full_command = f"{pre_command} {submit_command}"
 
         # Submit SLURM job and retrieve job ID
@@ -353,9 +410,7 @@ class RunnerSlurmSudo(BaseRunner):
         """
         Note: this would differ for SSH
         """
-        source_target_list = [
-            (job.slurm_log_file_remote, job.slurm_log_file_local)
-        ]
+        source_target_list = [(job.slurm_log_file_remote, job.slurm_log_file_local)]
         for task in job.tasks:
             source_target_list.extend(
                 [
@@ -394,13 +449,10 @@ class RunnerSlurmSudo(BaseRunner):
                 logger.critical(f"Copied {source} into {target}")
             except RuntimeError as e:
                 logger.warning(
-                    f"SKIP copy {source} into {target}. "
-                    f"Original error: {str(e)}"
+                    f"SKIP copy {source} into {target}. " f"Original error: {str(e)}"
                 )
 
-    def _postprocess_single_task(
-        self, *, task: SlurmTask
-    ) -> tuple[Any, Exception]:
+    def _postprocess_single_task(self, *, task: SlurmTask) -> tuple[Any, Exception]:
         try:
             with open(task.output_pickle_file_local, "rb") as f:
                 outdata = f.read()
@@ -602,9 +654,7 @@ class RunnerSlurmSudo(BaseRunner):
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
                         task_files=TaskFiles(
-                            **original_task_files.model_dump(
-                                exclude={"component"}
-                            ),
+                            **original_task_files.model_dump(exclude={"component"}),
                             component=component,
                         ),
                     ),
@@ -632,9 +682,7 @@ class RunnerSlurmSudo(BaseRunner):
                 slurm_job = self.jobs.pop(slurm_job_id)
                 self._copy_files_from_remote_to_local(slurm_job)
                 for task in slurm_job.tasks:
-                    result, exception = self._postprocess_single_task(
-                        task=task
-                    )
+                    result, exception = self._postprocess_single_task(task=task)
                     if not in_compound_task:
                         update_single_image_logfile(
                             history_item_id=history_item_id,
@@ -672,9 +720,7 @@ class RunnerSlurmSudo(BaseRunner):
                 "-m fractal_server.app.runner.versions"
             )
         )
-        runner_version = json.loads(output.stdout.strip("\n"))[
-            "fractal_server"
-        ]
+        runner_version = json.loads(output.stdout.strip("\n"))["fractal_server"]
         if runner_version != __VERSION__:
             error_msg = (
                 "Fractal-server version mismatch.\n"
