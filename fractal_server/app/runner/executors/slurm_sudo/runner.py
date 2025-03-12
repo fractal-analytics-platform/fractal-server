@@ -591,7 +591,7 @@ class RunnerSlurmSudo(BaseRunner):
         for ind_batch, chunk in enumerate(args_batches):
             # TODO: replace with actual values
             tasks = []
-            for ind_chunck, parameters in enumerate(chunk):
+            for ind_chunk, parameters in enumerate(chunk):
                 component = parameters[_COMPONENT_KEY_]
                 tasks.append(
                     SlurmTask(
