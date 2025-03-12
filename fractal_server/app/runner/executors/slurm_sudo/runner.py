@@ -6,6 +6,7 @@ import shlex
 import subprocess  # nosec
 import sys
 import time
+from copy import copy
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -393,7 +394,7 @@ class RunnerSlurmSudo(BaseRunner):
         # for task in slurm_job.tasks:
         #     cmd = (
         #         f"{self.python_worker_interpreter}"
-        #         " -m fractal_server.app.runner.executors.slurm_common.remote "
+        #         " -m fractal_server.app.runner.executors.slurm_common.remote"
         #         f"--input-file {task.input_pickle_file_local} "
         #         f"--output-file {task.output_pickle_file_remote}"
         #     )
@@ -403,10 +404,11 @@ class RunnerSlurmSudo(BaseRunner):
         #     )
         # cmdlines.append("wait\n")
         #
+
         # Write submission script
-        submission_script_contents = "\n".join(preamble_lines + cmdlines)
+        # submission_script_contents = "\n".join(preamble_lines + cmdlines)
         with open(slurm_job.slurm_submission_script_local, "w") as f:
-            f.write(submission_script_contents)
+            f.write(script)
 
         # Run sbatch
         pre_command = f"sudo --set-home --non-interactive -u {self.slurm_user}"
