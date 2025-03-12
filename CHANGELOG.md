@@ -4,6 +4,8 @@
 
 * Task lifecycle:
     * Drop hard-coded use of `--no-cache-dir` for `pip install` command (\#2357).
+* App:
+    * Drop `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` obsolete configuration variable (\#2359).
 * Development:
     * Add codespell to precommit (\#2358).
 
