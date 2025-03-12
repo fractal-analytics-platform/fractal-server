@@ -1,9 +1,9 @@
 import os
+from typing import Annotated
 from typing import Any
 from typing import Optional
 
 from pydantic.types import StringConstraints
-from typing_extensions import Annotated
 
 
 def cant_set_none(value) -> Any:
