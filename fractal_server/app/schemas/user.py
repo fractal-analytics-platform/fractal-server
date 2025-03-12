@@ -96,6 +96,13 @@ class UserCreate(schemas.BaseUserCreate):
 
     username: Optional[NonEmptyString] = None
 
+    @field_validator("username")
+    @classmethod
+    def cant_set_none(cls, v, info: ValidationInfo):
+        if v is None:
+            raise ValueError(f"Cannot set {info.field_name}=None")
+        return v
+
 
 class UserUpdateGroups(BaseModel):
     """
