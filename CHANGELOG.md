@@ -4,6 +4,8 @@
 
 * App:
     * Obfuscate sensitive information from settings using `SecretStr` (\#2333).
+* Schemas:
+    * Remove `valstr` and introduce `NonEmptyString` (\#2352).
 
 
 # 2.14.0a0, 2.14.0a1, 2.14.0a2
