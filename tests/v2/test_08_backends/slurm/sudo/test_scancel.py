@@ -87,7 +87,7 @@ async def test_shutdown_during_submit(
     tmp777_path,
     monkey_slurm,
 ):
-    def sleep_long(**parameters: dict):
+    def sleep_long(parameters: dict, **kwargs):
         time.sleep(parameters["sleep_time"])
 
     (tmp777_path / "server").mkdir()
@@ -137,7 +137,7 @@ async def test_shutdown_during_multisubmit(
     tmp777_path,
     monkey_slurm,
 ):
-    def sleep_long(parameters: dict):
+    def sleep_long(parameters: dict, **kwargs):
         time.sleep(parameters["sleep_time"])
 
     def main_thread():
