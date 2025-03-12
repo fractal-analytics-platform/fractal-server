@@ -6,16 +6,15 @@ from pydantic.types import StringConstraints
 from typing_extensions import Annotated
 
 
+def cant_set_none(value) -> Any:
+    if value is None:
+        raise ValueError("Field cannot be set to 'None'.")
+    return value
+
+
 NonEmptyString = Annotated[
     str, StringConstraints(min_length=1, strip_whitespace=True)
 ]
-
-
-def is_not_empty(string: str) -> str:
-    s = string.strip()
-    if not s:
-        raise ValueError("Empty string.")
-    return s
 
 
 def valdict_keys(attribute: str):
@@ -25,7 +24,9 @@ def valdict_keys(attribute: str):
         """
         if d is not None:
             old_keys = list(d.keys())
-            new_keys = [is_not_empty(key) for key in old_keys]
+            new_keys = [key.strip() for key in old_keys]
+            if any(k == "" for k in new_keys):
+                raise ValueError(f"Empty string in {new_keys}.")
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
                     f"Dictionary contains multiple identical keys: '{d}'."
