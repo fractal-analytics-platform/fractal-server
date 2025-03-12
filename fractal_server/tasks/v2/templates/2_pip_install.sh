@@ -25,7 +25,7 @@ echo
 
 # Install package
 write_log "START install ${INSTALL_STRING}"
-"$VENVPYTHON" -m pip install --no-cache-dir "$INSTALL_STRING"
+"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} "$INSTALL_STRING"
 write_log "END   install ${INSTALL_STRING}"
 echo
 
