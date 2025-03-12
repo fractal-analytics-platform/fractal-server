@@ -597,11 +597,11 @@ class Settings(BaseSettings):
     """
     FRACTAL_EMAIL_SMTP_SERVER: Optional[str] = None
     """
-    SMPT server for the OAuth-signup emails.
+    SMTP server for the OAuth-signup emails.
     """
     FRACTAL_EMAIL_SMTP_PORT: Optional[int] = None
     """
-    SMPT server port for the OAuth-signup emails.
+    SMTP server port for the OAuth-signup emails.
     """
     FRACTAL_EMAIL_INSTANCE_NAME: Optional[str] = None
     """

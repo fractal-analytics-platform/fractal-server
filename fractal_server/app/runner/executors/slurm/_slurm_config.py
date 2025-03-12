@@ -213,7 +213,7 @@ class SlurmConfig(BaseModel):
     expected file content are defined in
     [`SlurmConfigFile`](./#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
 
-    Part of the attributes map directly to some of the SLURM attribues (see
+    Part of the attributes map directly to some of the SLURM attributes (see
     https://slurm.schedmd.com/sbatch.html), e.g. `partition`. Other attributes
     are metaparameters which are needed in fractal-server to combine multiple
     tasks in the same SLURM job (e.g. `parallel_tasks_per_job` or

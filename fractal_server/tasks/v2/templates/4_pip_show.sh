@@ -20,7 +20,7 @@ echo
 # FIXME: only run pip-show once!
 
 # Extract information about paths
-# WARNING: this block will fail for paths which inlcude whitespace characters
+# WARNING: this block will fail for paths which include whitespace characters
 write_log "START pip show"
 $VENVPYTHON -m pip show ${PACKAGE_NAME}
 write_log "END   pip show"

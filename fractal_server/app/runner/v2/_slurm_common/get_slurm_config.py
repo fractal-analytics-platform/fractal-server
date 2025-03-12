@@ -25,7 +25,7 @@ def get_slurm_config(
     Prepare a `SlurmConfig` configuration object
 
     The argument `which_type` determines whether we use `wftask.meta_parallel`
-    or `wftask.meta_non_parallel`. In the following descritpion, let us assume
+    or `wftask.meta_non_parallel`. In the following description, let us assume
     that `which_type="parallel"`.
 
     The sources for `SlurmConfig` attributes, in increasing priority order, are

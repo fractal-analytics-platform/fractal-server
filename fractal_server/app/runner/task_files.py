@@ -113,7 +113,7 @@ def get_task_file_paths(
     component: Optional[str] = None,
 ) -> TaskFiles:
     """
-    Return the corrisponding TaskFiles object
+    Return the corresponding TaskFiles object
     """
     return TaskFiles(
         workflow_dir_local=workflow_dir_local,
