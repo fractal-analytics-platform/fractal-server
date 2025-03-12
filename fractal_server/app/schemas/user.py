@@ -62,6 +62,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     # Validators
 
     @field_validator(
+        "username",
         "is_active",
         "is_verified",
         "is_superuser",
