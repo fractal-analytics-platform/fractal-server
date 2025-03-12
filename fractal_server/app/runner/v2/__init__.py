@@ -2,7 +2,7 @@
 Runner backend subsystem root V2
 
 This module is the single entry point to the runner backend subsystem V2.
-Other subystems should only import this module and not its submodules or
+Other subsystems should only import this module and not its submodules or
 the individual backends.
 """
 import os
@@ -119,7 +119,7 @@ def submit_workflow(
             )
         except Exception as e:
             logger.error(
-                f"Error conneting to the database. Original error: {str(e)}"
+                f"Error connecting to the database. Original error: {str(e)}"
             )
             reset_logger_handlers(logger)
             return

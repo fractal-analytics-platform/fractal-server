@@ -502,14 +502,6 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
-    FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE: str = (
-        "Copy OME-Zarr structure;Convert Metadata Components from 2D to 3D"
-    )
-    """
-    `;`-separated list of names for task that require the `metadata["image"]`
-    attribute in their input-arguments JSON file.
-    """
-
     FRACTAL_PIP_CACHE_DIR: Optional[str] = None
     """
     Absolute path to the cache directory for `pip`; if unset,
@@ -597,11 +589,11 @@ class Settings(BaseSettings):
     """
     FRACTAL_EMAIL_SMTP_SERVER: Optional[str] = None
     """
-    SMPT server for the OAuth-signup emails.
+    SMTP server for the OAuth-signup emails.
     """
     FRACTAL_EMAIL_SMTP_PORT: Optional[int] = None
     """
-    SMPT server port for the OAuth-signup emails.
+    SMTP server port for the OAuth-signup emails.
     """
     FRACTAL_EMAIL_INSTANCE_NAME: Optional[str] = None
     """

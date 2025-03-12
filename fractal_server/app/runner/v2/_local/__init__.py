@@ -11,7 +11,7 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-Local Bakend
+Local Backend
 
 This backend runs Fractal workflows using `FractalThreadPoolExecutor` (a custom
 version of Python
