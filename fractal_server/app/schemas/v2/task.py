@@ -44,7 +44,6 @@ class TaskCreateV2(BaseModel):
     # Validators
 
     @field_validator(
-        "name",
         "command_non_parallel",
         "command_parallel",
         "version",
@@ -145,14 +144,7 @@ class TaskUpdateV2(BaseModel):
 
     # Validators
 
-    @field_validator(
-        "command_parallel",
-        "command_non_parallel",
-        "category",
-        "modality",
-        "authors",
-        mode="before",
-    )
+    @field_validator("command_parallel", "command_non_parallel", mode="before")
     @classmethod
     def _cant_set_none(cls, v):
         return cant_set_none(v)

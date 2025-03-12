@@ -73,7 +73,7 @@ class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: Optional[NonEmptyString] = None
-    zarr_dir: Optional[NonEmptyString] = None
+    zarr_dir: Optional[str] = None
     type_filters: Optional[dict[str, bool]] = None
     attribute_filters: Optional[dict[str, list[Any]]] = None
 
