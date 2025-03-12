@@ -69,19 +69,27 @@ class SlurmTask(BaseModel):
 
     @property
     def input_pickle_file_local(self) -> str:
-        return (self.workdir_local / f"{self.component}-input.pickle").as_posix()
+        return (
+            self.workdir_local / f"{self.component}-input.pickle"
+        ).as_posix()
 
     @property
     def output_pickle_file_local(self) -> str:
-        return (self.workdir_local / f"{self.component}-output.pickle").as_posix()
+        return (
+            self.workdir_local / f"{self.component}-output.pickle"
+        ).as_posix()
 
     @property
     def input_pickle_file_remote(self) -> str:
-        return (self.workdir_remote / f"{self.component}-input.pickle").as_posix()
+        return (
+            self.workdir_remote / f"{self.component}-input.pickle"
+        ).as_posix()
 
     @property
     def output_pickle_file_remote(self) -> str:
-        return (self.workdir_remote / f"{self.component}-output.pickle").as_posix()
+        return (
+            self.workdir_remote / f"{self.component}-output.pickle"
+        ).as_posix()
 
 
 class SlurmJob(BaseModel):
@@ -95,27 +103,37 @@ class SlurmJob(BaseModel):
     def slurm_log_file_local(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_local / f"slurm-{self.label}-{self.slurm_job_id}.log"
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.log"
             ).as_posix()
         else:
-            return (self.workdir_local / f"slurm-{self.label}-%j.log").as_posix()
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.log"
+            ).as_posix()
 
     @property
     def slurm_log_file_remote(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_remote / f"slurm-{self.label}-{self.slurm_job_id}.log"
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.log"
             ).as_posix()
         else:
-            return (self.workdir_remote / f"slurm-{self.label}-%j.log").as_posix()
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.log"
+            ).as_posix()
 
     @property
     def slurm_submission_script_local(self) -> str:
-        return (self.workdir_local / f"slurm-{self.label}-submit.sh").as_posix()
+        return (
+            self.workdir_local / f"slurm-{self.label}-submit.sh"
+        ).as_posix()
 
     @property
     def slurm_submission_script_remote(self) -> str:
-        return (self.workdir_remote / f"slurm-{self.label}-submit.sh").as_posix()
+        return (
+            self.workdir_remote / f"slurm-{self.label}-submit.sh"
+        ).as_posix()
 
     @property
     def slurm_stdout(self) -> str:
@@ -335,7 +353,9 @@ class RunnerSlurmSudo(BaseRunner):
         logger.debug(script_lines)
 
         # Always print output of `uname -n` and `pwd`
-        script_lines.append('"Hostname: `uname -n`; current directory: `pwd`"\n')
+        script_lines.append(
+            '"Hostname: `uname -n`; current directory: `pwd`"\n'
+        )
 
         # Complete script preamble
         script_lines.append("\n")
@@ -390,7 +410,9 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Run sbatch
         pre_command = f"sudo --set-home --non-interactive -u {self.slurm_user}"
-        submit_command = f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
+        submit_command = (
+            f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
+        )
         full_command = f"{pre_command} {submit_command}"
 
         # Submit SLURM job and retrieve job ID
@@ -410,7 +432,9 @@ class RunnerSlurmSudo(BaseRunner):
         """
         Note: this would differ for SSH
         """
-        source_target_list = [(job.slurm_log_file_remote, job.slurm_log_file_local)]
+        source_target_list = [
+            (job.slurm_log_file_remote, job.slurm_log_file_local)
+        ]
         for task in job.tasks:
             source_target_list.extend(
                 [
@@ -449,10 +473,13 @@ class RunnerSlurmSudo(BaseRunner):
                 logger.critical(f"Copied {source} into {target}")
             except RuntimeError as e:
                 logger.warning(
-                    f"SKIP copy {source} into {target}. " f"Original error: {str(e)}"
+                    f"SKIP copy {source} into {target}. "
+                    f"Original error: {str(e)}"
                 )
 
-    def _postprocess_single_task(self, *, task: SlurmTask) -> tuple[Any, Exception]:
+    def _postprocess_single_task(
+        self, *, task: SlurmTask
+    ) -> tuple[Any, Exception]:
         try:
             with open(task.output_pickle_file_local, "rb") as f:
                 outdata = f.read()
@@ -654,7 +681,9 @@ class RunnerSlurmSudo(BaseRunner):
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
                         task_files=TaskFiles(
-                            **original_task_files.model_dump(exclude={"component"}),
+                            **original_task_files.model_dump(
+                                exclude={"component"}
+                            ),
                             component=component,
                         ),
                     ),
@@ -682,7 +711,9 @@ class RunnerSlurmSudo(BaseRunner):
                 slurm_job = self.jobs.pop(slurm_job_id)
                 self._copy_files_from_remote_to_local(slurm_job)
                 for task in slurm_job.tasks:
-                    result, exception = self._postprocess_single_task(task=task)
+                    result, exception = self._postprocess_single_task(
+                        task=task
+                    )
                     if not in_compound_task:
                         update_single_image_logfile(
                             history_item_id=history_item_id,
@@ -720,7 +751,9 @@ class RunnerSlurmSudo(BaseRunner):
                 "-m fractal_server.app.runner.versions"
             )
         )
-        runner_version = json.loads(output.stdout.strip("\n"))["fractal_server"]
+        runner_version = json.loads(output.stdout.strip("\n"))[
+            "fractal_server"
+        ]
         if runner_version != __VERSION__:
             error_msg = (
                 "Fractal-server version mismatch.\n"
