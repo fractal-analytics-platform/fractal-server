@@ -7,13 +7,10 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
-from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v2 import HistoryItemV2
-from ....models.v2 import ImageStatus
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import WorkflowV2
@@ -228,25 +225,13 @@ async def delete_workflow(
             ),
         )
 
-    # Cascade operation: set foreign-keys to null for jobs and history items
-    # which are in relationship with the current workflow.
+    # Cascade operation: set foreign-keys to null for jobs which are in
+    # relationship with the current workflow.
     stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
     res = await db.execute(stm)
     jobs = res.scalars().all()
     for job in jobs:
         job.workflow_id = None
-
-    wft_ids = [wft.id for wft in workflow.task_list]
-    stm = select(HistoryItemV2).where(
-        HistoryItemV2.workflowtask_id.in_(wft_ids)
-    )
-    res = await db.execute(stm)
-    history_items = res.scalars().all()
-    for history_item in history_items:
-        history_item.workflowtask_id = None
-
-    stm = delete(ImageStatus).where(ImageStatus.workflowtask_id.in_(wft_ids))
-    await db.execute(stm)
 
     # Delete workflow
     await db.delete(workflow)
