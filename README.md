@@ -49,7 +49,7 @@
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                    |       93 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/workflow.py                                  |      141 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/workflow\_import.py                          |      114 |        2 |       28 |        1 |     98% |   248-251 |
-| fractal\_server/app/routes/api/v2/workflowtask.py                              |      107 |        2 |       42 |        3 |     97% |84->98, 291, 301 |
+| fractal\_server/app/routes/api/v2/workflowtask.py                              |      105 |        3 |       40 |        3 |     96% |60, 282, 292 |
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                                |       23 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/\_aux\_auth.py                                 |       60 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/current\_user.py                               |       74 |        0 |       12 |        0 |    100% |           |
@@ -160,7 +160,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8779** |  **403** | **1820** |  **136** | **94%** |           |
+|                                                                      **TOTAL** | **8777** |  **404** | **1818** |  **136** | **94%** |           |
 
 
 ## Setup coverage badge
