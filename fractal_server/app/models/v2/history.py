@@ -58,4 +58,4 @@ class HistoryImageCache(SQLModel, table=True):
         primary_key=True, foreign_key="workflowtaskv2.id"
     )
 
-    history_unit_id: int = Field(foreign_key="historyunit.id")
+    latest_history_unit_id: int = Field(foreign_key="historyunit.id")
