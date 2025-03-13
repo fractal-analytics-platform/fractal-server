@@ -310,17 +310,18 @@ class RunnerSlurmSudo(BaseRunner):
             settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
         cmdlines = []
-        for ind_task in range(slurm_job.num_tasks_tot):
-            input_pickle_file = slurm_job.input_pickle_files[ind_task]
-        output_pickle_file = slurm_job.output_pickle_files[ind_task]
-        cmdlines.append(
-            (
-                f"{python_worker_interpreter}"
-                " -m fractal_server.app.runner.executors.slurm.remote "
-                f"--input-file {input_pickle_file} "
-                f"--output-file {output_pickle_file}"
+        for task in slurm_job.tasks:
+            input_pickle_file = task.input_pickle_file_local
+            output_pickle_file = task.output_pickle_file_remote
+            cmdlines.append(
+                (
+                    f"{python_worker_interpreter}"
+                    " -m fractal_server.app.runner."
+                    "executors.slurm_common.remote "
+                    f"--input-file {input_pickle_file} "
+                    f"--output-file {output_pickle_file}"
+                )
             )
-        )
 
         # ...
         num_tasks_max_running = slurm_config.parallel_tasks_per_job
@@ -328,13 +329,14 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Set ntasks
         ntasks = min(len(cmdlines), num_tasks_max_running)
-        if len(cmdlines) < num_tasks_max_running:
-            ntasks = len(cmdlines)
-            slurm_config.parallel_tasks_per_job = ntasks
-            logger.debug(
-                f"{len(cmdlines)=} is smaller than "
-                f"{num_tasks_max_running=}. Setting {ntasks=}."
-            )
+        slurm_config.parallel_tasks_per_job = ntasks
+        # if len(cmdlines) < num_tasks_max_running:
+        #     ntasks = len(cmdlines)
+        #     slurm_config.parallel_tasks_per_job = ntasks
+        # logger.debug(
+        #     f"{len(cmdlines)=} is smaller than "
+        #     f"{num_tasks_max_running=}. Setting {ntasks=}."
+        # )
 
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble(
@@ -346,8 +348,8 @@ class RunnerSlurmSudo(BaseRunner):
         script_lines.extend(
             [
                 f"#SBATCH --err={slurm_job.slurm_stderr}",
-                f"#SBATCH --out={slurm_job.slurm_stderr}",
-                f"#SBATCH -D {self.workflow_dir_remote}",
+                f"#SBATCH --out={slurm_job.slurm_stdout}",
+                f"#SBATCH -D {slurm_job.workdir_remote}",
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
@@ -562,6 +564,8 @@ class RunnerSlurmSudo(BaseRunner):
                 )
             ],
         )  # TODO: replace with actual values (BASED ON TASKFILES)
+
+        slurm_config.parallel_tasks_per_job = 1
         self._submit_single_sbatch(
             func,
             slurm_job=slurm_job,
