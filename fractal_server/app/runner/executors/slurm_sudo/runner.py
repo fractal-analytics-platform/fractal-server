@@ -288,8 +288,6 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        # if len(slurm_job.tasks) > 1:
-        #     raise NotImplementedError()
 
         # Prepare input pickle(s)
         versions = dict(
@@ -303,7 +301,6 @@ class RunnerSlurmSudo(BaseRunner):
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
-        #############################################################
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
         python_worker_interpreter = (
@@ -330,13 +327,6 @@ class RunnerSlurmSudo(BaseRunner):
         # Set ntasks
         ntasks = min(len(cmdlines), num_tasks_max_running)
         slurm_config.parallel_tasks_per_job = ntasks
-        # if len(cmdlines) < num_tasks_max_running:
-        #     ntasks = len(cmdlines)
-        #     slurm_config.parallel_tasks_per_job = ntasks
-        # logger.debug(
-        #     f"{len(cmdlines)=} is smaller than "
-        #     f"{num_tasks_max_running=}. Setting {ntasks=}."
-        # )
 
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble(
@@ -376,36 +366,6 @@ class RunnerSlurmSudo(BaseRunner):
         script_lines.append("wait\n")
 
         script = "\n".join(script_lines)
-
-        ###################################################################
-
-        # preamble_lines = [
-        #     "#!/bin/bash",
-        #     "#SBATCH --partition=main",
-        #     "#SBATCH --ntasks=1",
-        #     "#SBATCH --cpus-per-task=1",
-        #     "#SBATCH --mem=10M",
-        #     f"#SBATCH --err={slurm_job.slurm_log_file_remote}",
-        #     f"#SBATCH --out={slurm_job.slurm_log_file_remote}",
-        #     f"#SBATCH -D {slurm_job.workdir_remote}",
-        #     "#SBATCH --job-name=test",
-        #     "\n",
-        # ]
-        #
-        # cmdlines = []
-        # for task in slurm_job.tasks:
-        #     cmd = (
-        #         f"{self.python_worker_interpreter}"
-        #         " -m fractal_server.app.runner.executors.slurm_common.remote"
-        #         f"--input-file {task.input_pickle_file_local} "
-        #         f"--output-file {task.output_pickle_file_remote}"
-        #     )
-        #     cmdlines.append("whoami")
-        #     cmdlines.append(
-        #         f"srun --ntasks=1 --cpus-per-task=1 --mem=10MB {cmd} &"
-        #     )
-        # cmdlines.append("wait\n")
-        #
 
         # Write submission script
         # submission_script_contents = "\n".join(preamble_lines + cmdlines)
