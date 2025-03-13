@@ -4,6 +4,8 @@
 
 * App:
     * Obfuscate sensitive information from settings using `SecretStr` (\#2333).
+* API:
+    * Remove `valstr` validator and introduce `NonEmptyString` in schemas (\#2352).
 
 
 # 2.14.0a0, 2.14.0a1, 2.14.0a2
@@ -22,6 +24,15 @@ All this is from \#2287
 * App:
     * Drop obsolete `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` configuration variable.
 
+
+# Unreleased
+
+* Task lifecycle:
+    * Drop hard-coded use of `--no-cache-dir` for `pip install` command (\#2357).
+* App:
+    * Drop `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` obsolete configuration variable (\#2359).
+* Development:
+    * Add codespell to precommit (\#2358).
 
 # 2.13.1
 

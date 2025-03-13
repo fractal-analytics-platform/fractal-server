@@ -7,7 +7,7 @@ from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
 
-from .._validators import valstr
+from .._validators import NonEmptyString
 
 
 class TaskManifestV2(BaseModel):
@@ -138,7 +138,7 @@ class ManifestV2(BaseModel):
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
-    authors: Optional[str] = None
+    authors: Optional[NonEmptyString] = None
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):
@@ -181,7 +181,3 @@ class ManifestV2(BaseModel):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
         return value
-
-    _authors = field_validator("authors")(
-        classmethod(valstr("authors", accept_none=True))
-    )

@@ -9,9 +9,10 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
+from .._validators import cant_set_none
+from .._validators import NonEmptyString
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
-from .._validators import valstr
 from .task import TaskReadV2
 
 
@@ -42,15 +43,21 @@ class TaskGroupCreateV2(BaseModel):
     origin: TaskGroupV2OriginEnum
     pkg_name: str
     version: Optional[str] = None
-    python_version: Optional[str] = None
+    python_version: Optional[NonEmptyString] = None
     path: Optional[str] = None
     venv_path: Optional[str] = None
     wheel_path: Optional[str] = None
-    pip_extras: Optional[str] = None
+    pip_extras: Optional[NonEmptyString] = None
     pip_freeze: Optional[str] = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
     # Validators
+
+    @field_validator("python_version", "pip_extras")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
+
     _path = field_validator("path")(classmethod(val_absolute_path("path")))
     _venv_path = field_validator("venv_path")(
         classmethod(val_absolute_path("venv_path"))
@@ -60,12 +67,6 @@ class TaskGroupCreateV2(BaseModel):
     )
     _pinned_package_versions = field_validator("pinned_package_versions")(
         valdict_keys("pinned_package_versions")
-    )
-    _pip_extras = field_validator("pip_extras")(
-        classmethod(valstr("pip_extras"))
-    )
-    _python_version = field_validator("python_version")(
-        classmethod(valstr("python_version"))
     )
 
 

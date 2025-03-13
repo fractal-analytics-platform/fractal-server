@@ -2,11 +2,14 @@ from pathlib import Path
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 SCRIPTS_SUBFOLDER = "scripts"
+
+logger = set_logger(__name__)
 
 
 def customize_template(
@@ -87,4 +90,7 @@ def get_collection_replacements(
             task_group.pinned_package_versions_string,
         ),
     ]
+    logger.info(
+        f"Cache-dir argument for `pip install`: {settings.PIP_CACHE_DIR_ARG}"
+    )
     return replacements
