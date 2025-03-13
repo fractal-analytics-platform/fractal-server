@@ -855,6 +855,7 @@ async def test_replace_task_in_workflowtask(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft3_id}&task_id={task5.id}",
+            json={},
         )
         assert res.status_code == 201
         wft5 = res.json()
@@ -891,6 +892,7 @@ async def test_replace_task_in_workflowtask(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft1_id}&task_id={task1.id}",
+            json={},
         )
         assert res.status_code == 201
         wft1b = res.json()
@@ -956,11 +958,13 @@ async def test_replace_task_in_workflowtask(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task6.id}",
+            json={},
         )
         assert res.status_code == 422
         assert "filters" in res.json()["detail"]
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task7.id}",
+            json={},
         )
         assert res.status_code == 201
