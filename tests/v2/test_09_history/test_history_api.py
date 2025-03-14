@@ -115,7 +115,7 @@ async def test_status_api(
     res = await client.delete(
         f"/api/v2/project/{project.id}/dataset/{dataset.id}/"
     )
-    debug(res)
+    assert res.status_code == 204
 
 
 # async def test_delete_workflow_associated_to_history(
