@@ -23,7 +23,7 @@ class HistoryRun(SQLModel, table=True):
         ondelete="CASCADE",
     )
     workflowtask_id: Optional[int] = Field(
-        foreign_key="workflowtaskv2.id", default=None
+        foreign_key="workflowtaskv2.id", default=None, ondelete="SET NULL"
     )
 
     workflowtask_dump: dict[str, Any] = Field(
@@ -65,7 +65,7 @@ class HistoryImageCache(SQLModel, table=True):
         ondelete="CASCADE",
     )
     workflowtask_id: int = Field(
-        primary_key=True, foreign_key="workflowtaskv2.id"
+        primary_key=True, foreign_key="workflowtaskv2.id", ondelete="CASCADE"
     )
 
     latest_history_unit_id: int = Field(
