@@ -6,11 +6,12 @@ from typing import Optional
 
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
-from fractal_server.app.history import XXXStatus
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.logger import set_logger
+
+# from fractal_server.app.history import XXXStatus
 
 # from fractal_server.app.history import update_all_images
 # from fractal_server.app.history import update_single_image
