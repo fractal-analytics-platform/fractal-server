@@ -159,9 +159,9 @@ class LocalRunner(BaseRunner):
                 ]
                 for positional_index, fut in finished_futures:
                     active_futures.pop(positional_index)
-                    current_task_files = active_task_files.pop(
-                        positional_index
-                    )
+                    # current_task_files = active_task_files.pop(
+                    #     positional_index
+                    # )
                     zarr_url = list_parameters[positional_index]["zarr_url"]
                     if not in_compound_task:
                         pass
