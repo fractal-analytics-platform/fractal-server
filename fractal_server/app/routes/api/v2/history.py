@@ -39,51 +39,28 @@ async def get_workflow_tasks_statuses(
             .order_by(HistoryRun.timestamp_started.desc())
             .limit(1)
         )
-        last_history_run = res.scalar()
-        if not last_history_run:
+        latest_history_run = res.scalar()
+        if not latest_history_run:
             response[wftask.id] = None
-        else:
-            res = await db.execute(
-                select(func.count(HistoryImageCache))
+            continue
+        response[wftask.id] = dict(
+            status=latest_history_run.status,
+            num_available_images=latest_history_run.num_available_images,
+        )
+
+        for target_status in ["done", "submitted", "failed"]:
+            stm = (
+                select(func.count(HistoryImageCache.zarr_url))
                 .join(HistoryUnit)
-                .where(HistoryUnit.status == "done")
+                .where(HistoryImageCache.dataset_id == dataset_id)
+                .where(HistoryImageCache.workflowtask_id == wftask.id)
                 .where(
                     HistoryImageCache.latest_history_unit_id == HistoryUnit.id
                 )
-                .where(HistoryImageCache.dataset_id == dataset_id)
-                .where(HistoryImageCache.workflowtask_id == wftask.id)
+                .where(HistoryUnit.status == target_status)
             )
-            num_done_images = res.all()
-
-            res = await db.execute(
-                select(func.count(HistoryImageCache))
-                .join(HistoryUnit)
-                .where(HistoryUnit.status == "submitted")
-                .where(
-                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id
-                )
-                .where(HistoryImageCache.dataset_id == dataset_id)
-                .where(HistoryImageCache.workflowtask_id == wftask.id)
-            )
-            num_submitted_images = res.all()
-
-            res = await db.execute(
-                select(func.count(HistoryImageCache))
-                .join(HistoryUnit)
-                .where(HistoryUnit.status == "failed")
-                .where(
-                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id
-                )
-                .where(HistoryImageCache.dataset_id == dataset_id)
-                .where(HistoryImageCache.workflowtask_id == wftask.id)
-            )
-            num_failed_images = res.all()
-
-            response[wftask.id] = {
-                "latest_status": last_history_run.status,
-                "num_done_images": num_done_images,
-                "num_submitted_images": num_submitted_images,
-                "num_failed_images": num_failed_images,
-            }
+            res = await db.execute(stm)
+            num_images = res.scalar()
+            response[wftask.id][f"num_{target_status}_images"] = num_images
 
     return JSONResponse(content=response, status_code=200)
