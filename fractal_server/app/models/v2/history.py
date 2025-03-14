@@ -35,7 +35,7 @@ class HistoryRun(SQLModel, table=True):
         default_factory=get_timestamp,
     )
     status: str
-    num_current_images: int
+    num_available_images: int
 
 
 class HistoryUnit(SQLModel, table=True):

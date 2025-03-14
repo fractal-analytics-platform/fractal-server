@@ -1,8 +1,8 @@
 """Add new history tables
 
-Revision ID: d36afe65c612
+Revision ID: 5f84657878a9
 Revises: af1ef1c83c9b
-Create Date: 2025-03-14 11:44:24.803008
+Create Date: 2025-03-14 11:49:33.356108
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "d36afe65c612"
+revision = "5f84657878a9"
 down_revision = "af1ef1c83c9b"
 branch_labels = None
 depends_on = None
@@ -40,7 +40,7 @@ def upgrade() -> None:
         sa.Column(
             "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
-        sa.Column("num_current_images", sa.Integer(), nullable=False),
+        sa.Column("num_available_images", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["dataset_id"],
             ["datasetv2.id"],
