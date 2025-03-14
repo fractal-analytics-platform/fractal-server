@@ -6,6 +6,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import delete
+from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
@@ -15,6 +17,8 @@ from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import HistoryImageCache
+from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
@@ -323,6 +327,21 @@ async def delete_workflowtask(
         user_id=user.id,
         db=db,
     )
+
+    # Cascade operations:
+    # * Set FK to null for related `HistoryRun`s
+    # * Delete related `HistoryImageCache`
+    stm = select(HistoryRun).where(
+        HistoryRun.workflowtask_id == db_workflow_task.id
+    )
+    res = await db.execute(stm)
+    for run in res.scalars().all():
+        run.workflowtask_id = None
+
+    stm = delete(HistoryImageCache).where(
+        HistoryImageCache.workflowtask_id == db_workflow_task.id
+    )
+    await db.execute(stm)
 
     # Delete WorkflowTask
     await db.delete(db_workflow_task)

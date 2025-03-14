@@ -1,4 +1,8 @@
+from typing import Literal
+
+import pytest
 from devtools import debug
+from sqlmodel import select
 
 from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -111,11 +115,119 @@ async def test_status_api(
             str(wftask2.id): None,
         }
 
-    # Test DELETE dataset
-    res = await client.delete(
-        f"/api/v2/project/{project.id}/dataset/{dataset.id}/"
-    )
-    assert res.status_code == 204
+
+@pytest.mark.parametrize(
+    "object_to_delete",
+    [
+        "project",
+        "dataset",
+        "workflow",
+        "workflowtask",
+    ],
+)
+async def test_cascade_delete(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+    object_to_delete: Literal[
+        "project",
+        "dataset",
+        "workflow",
+        "workflowtask",
+    ],
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        run = HistoryRun(
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            num_available_images=3,
+            status=XXXStatus.SUBMITTED,
+        )
+        db.add(run)
+        await db.commit()
+        await db.refresh(run)
+        unit = HistoryUnit(
+            history_run_id=run.id,
+            status=XXXStatus.SUBMITTED,
+            logfile="/log/a",
+            zarr_urls=["/a"],
+        )
+        db.add(unit)
+        await db.commit()
+        await db.refresh(unit)
+        db.add(
+            HistoryImageCache(
+                zarr_url="/a",
+                workflowtask_id=wftask.id,
+                dataset_id=dataset.id,
+                latest_history_unit_id=unit.id,
+            )
+        )
+        await db.commit()
+
+    if object_to_delete == "project":
+        res = await client.delete(f"/api/v2/project/{project.id}/")
+        assert res.status_code == 204
+        res = await db.execute(select(HistoryImageCache))
+        assert len(res.scalars().all()) == 0
+        res = await db.execute(select(HistoryRun))
+        assert len(res.scalars().all()) == 0
+        res = await db.execute(select(HistoryUnit))
+        assert len(res.scalars().all()) == 0
+
+    elif object_to_delete == "dataset":
+        res = await client.delete(
+            f"/api/v2/project/{project.id}/dataset/{dataset.id}/"
+        )
+        assert res.status_code == 204
+        res = await db.execute(select(HistoryImageCache))
+        assert len(res.scalars().all()) == 0
+        res = await db.execute(select(HistoryRun))
+        assert len(res.scalars().all()) == 0
+        res = await db.execute(select(HistoryUnit))
+        assert len(res.scalars().all()) == 0
+
+    elif object_to_delete == "workflowtask":
+        res = await client.delete(
+            f"/api/v2/project/{project.id}/"
+            f"workflow/{workflow.id}/wftask/{wftask.id}/"
+        )
+        assert res.status_code == 204
+        res = await db.execute(select(HistoryImageCache))
+        assert len(res.scalars().all()) == 0
+        res = await db.execute(select(HistoryRun))
+        assert len(res.scalars().all()) == 1
+        res = await db.execute(select(HistoryUnit))
+        assert len(res.scalars().all()) == 1
+
+    elif object_to_delete == "workflow":
+        res = await client.delete(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 204
+        res = await db.execute(select(HistoryImageCache))
+        assert len(res.scalars().all()) == 0
+        res = await db.execute(select(HistoryRun))
+        assert len(res.scalars().all()) == 1
+        res = await db.execute(select(HistoryUnit))
+        assert len(res.scalars().all()) == 1
+
+    else:
+        raise ValueError(f"Invalid {object_to_delete=}")
 
 
 # async def test_delete_workflow_associated_to_history(

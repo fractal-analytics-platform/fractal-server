@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
+from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
@@ -29,6 +30,8 @@ from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import HistoryImageCache
+from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.images.tools import merge_type_filters
@@ -232,6 +235,19 @@ async def delete_workflow(
     jobs = res.scalars().all()
     for job in jobs:
         job.workflow_id = None
+
+    # Cascade operations: set FK to null for related `HistoryRun`s
+    wft_ids = [wft.id for wft in workflow.task_list]
+    stm = select(HistoryRun).where(HistoryRun.workflowtask_id.in_(wft_ids))
+    res = await db.execute(stm)
+    for run in res.scalars().all():
+        run.workflowtask_id = None
+
+    # Cascade operation: delete related `HistoryImageCache`
+    stm = delete(HistoryImageCache).where(
+        HistoryImageCache.workflowtask_id.in_(wft_ids)
+    )
+    await db.execute(stm)
 
     # Delete workflow
     await db.delete(workflow)
