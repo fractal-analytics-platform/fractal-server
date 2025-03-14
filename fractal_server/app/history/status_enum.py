@@ -1,9 +1,9 @@
 from enum import Enum
 
 
-class HistoryItemImageStatus(str, Enum):
+class XXXStatus(str, Enum):
     """
-    Available image-status values within a `HistoryItemV2`
+    Available status for images
 
     Attributes:
         SUBMITTED:

@@ -5,7 +5,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import delete
 from sqlmodel import select
 
 from .....logger import reset_logger_handlers
@@ -13,8 +12,6 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
-from ....models.v2 import HistoryItemV2
-from ....models.v2 import ImageStatus
 from ....models.v2 import JobV2
 from ....models.v2 import LinkUserProjectV2
 from ....models.v2 import ProjectV2
@@ -164,22 +161,6 @@ async def delete_project(
         for job in jobs:
             logger.info(f"Setting Job[{job.id}].workflow_id to None.")
             job.workflow_id = None
-        # Cascade operations: set foreign-keys to null for history items
-        # which are in relationship with the current workflow
-        wft_ids = [wft.id for wft in wf.task_list]
-        stm = select(HistoryItemV2).where(
-            HistoryItemV2.workflowtask_id.in_(wft_ids)
-        )
-        res = await db.execute(stm)
-        history_items = res.scalars().all()
-        for history_item in history_items:
-            history_item.workflowtask_id = None
-        # Cascade operations: delete all image status which are in relationship
-        # with the current workflow
-        stm = delete(ImageStatus).where(
-            ImageStatus.workflowtask_id.in_(wft_ids)
-        )
-        await db.execute(stm)
         # Delete workflow
         logger.info(f"Adding Workflow[{wf.id}] to deletion.")
         await db.delete(wf)
@@ -199,12 +180,6 @@ async def delete_project(
         for job in jobs:
             logger.info(f"Setting Job[{job.id}].dataset_id to None.")
             job.dataset_id = None
-        # Cascade operations: delete history items and image statuses which are
-        # in relationship with the current dataset
-        stm = delete(HistoryItemV2).where(HistoryItemV2.dataset_id == ds.id)
-        await db.execute(stm)
-        stm = delete(ImageStatus).where(ImageStatus.dataset_id == ds.id)
-        await db.execute(stm)
         # Delete dataset
         logger.info(f"Adding Dataset[{ds.id}] to deletion.")
         await db.delete(ds)

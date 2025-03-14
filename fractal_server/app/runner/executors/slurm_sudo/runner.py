@@ -18,10 +18,6 @@ from ._check_jobs_status import get_finished_jobs
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
-from fractal_server.app.history import HistoryItemImageStatus
-from fractal_server.app.history import update_all_images
-from fractal_server.app.history import update_single_image
-from fractal_server.app.history import update_single_image_logfile
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
@@ -37,6 +33,11 @@ from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+
+# from fractal_server.app.history import ImageStatus
+# from fractal_server.app.history import update_all_images
+# from fractal_server.app.history import update_single_image
+# from fractal_server.app.history import update_single_image_logfile
 
 
 logger = set_logger(__name__)
@@ -439,18 +440,20 @@ class RunnerSlurmSudo(BaseRunner):
 
         if self.jobs != {}:
             if not in_compound_task:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.FAILED,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.FAILED,
+                # )
             raise JobExecutionError("Unexpected branch: jobs should be empty.")
 
         if self.is_shutdown():
             if not in_compound_task:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.FAILED,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.FAILED,
+                # )
             raise JobExecutionError("Cannot continue after shutdown.")
 
         # Validation phase
@@ -487,7 +490,7 @@ class RunnerSlurmSudo(BaseRunner):
             slurm_config=slurm_config,
         )
 
-        LOGFILE = task_files.log_file_local
+        # LOGFILE = task_files.log_file_local
 
         # Retrieval phase
         while len(self.jobs) > 0:
@@ -504,17 +507,19 @@ class RunnerSlurmSudo(BaseRunner):
 
         if not in_compound_task:
             if exception is None:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.DONE,
-                    logfile=LOGFILE,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.DONE,
+                #     logfile=LOGFILE,
+                # )
             else:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.FAILED,
-                    logfile=LOGFILE,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.FAILED,
+                #     logfile=LOGFILE,
+                # )
 
         return result, exception
 
@@ -636,24 +641,27 @@ class RunnerSlurmSudo(BaseRunner):
                         task=task
                     )
                     if not in_compound_task:
-                        update_single_image_logfile(
-                            history_item_id=history_item_id,
-                            zarr_url=task.zarr_url,
-                            logfile=task.task_files.log_file_local,
-                        )
+                        pass
+                        # update_single_image_logfile(
+                        #     history_item_id=history_item_id,
+                        #     zarr_url=task.zarr_url,
+                        #     logfile=task.task_files.log_file_local,
+                        # )
                     if not in_compound_task:
                         if exception is None:
-                            update_single_image(
-                                zarr_url=task.zarr_url,
-                                history_item_id=history_item_id,
-                                status=HistoryItemImageStatus.DONE,
-                            )
+                            pass
+                            # update_single_image(
+                            #     zarr_url=task.zarr_url,
+                            #     history_item_id=history_item_id,
+                            #     status=ImageStatus.DONE,
+                            # )
                         else:
-                            update_single_image(
-                                zarr_url=task.zarr_url,
-                                history_item_id=history_item_id,
-                                status=HistoryItemImageStatus.FAILED,
-                            )
+                            pass
+                            # update_single_image(
+                            #     zarr_url=task.zarr_url,
+                            #     history_item_id=history_item_id,
+                            #     status=ImageStatus.FAILED,
+                            # )
                     if exception is None:
                         results[task.index] = result
                     else:

@@ -3,8 +3,6 @@ from sqlmodel import select
 
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import HistoryItemV2
-from fractal_server.app.models.v2 import ImageStatus
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -218,9 +216,7 @@ async def test_delete_project(
         # Add a workflow to the project
         wf = await workflow_factory_v2(project_id=p["id"])
         t = await task_factory_v2(user_id=user.id)
-        wft = await _workflow_insert_task(
-            workflow_id=wf.id, task_id=t.id, db=db
-        )
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
 
         # Add a job to the project
         await job_factory_v2(
@@ -238,31 +234,6 @@ async def test_delete_project(
         assert job["project_id"] == p["id"]
         assert job["dataset_id"] == dataset_id
         assert job["workflow_id"] == wf.id
-
-        # Add HistoryItem and ImageStatus in relationship with the Project
-        db.add(
-            HistoryItemV2(
-                images={},
-                workflowtask_id=wft.id,
-                dataset_id=dataset_id,
-                workflowtask_dump=wft.model_dump(),
-                task_group_dump=t.model_dump(),
-                parameters_hash="xyz",
-                num_available_images=42,
-                num_current_images=42,
-            )
-        )
-        db.add(
-            ImageStatus(
-                zarr_url="/a",
-                workflowtask_id=wf.id,
-                dataset_id=dataset_id,
-                parameters_hash="abc",
-                status="done",
-                logfile="xyz",
-            )
-        )
-        await db.commit()
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}/")
