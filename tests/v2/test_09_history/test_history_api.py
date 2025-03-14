@@ -111,6 +111,12 @@ async def test_status_api(
             str(wftask2.id): None,
         }
 
+    # Test DELETE dataset
+    res = await client.delete(
+        f"/api/v2/project/{project.id}/dataset/{dataset.id}/"
+    )
+    debug(res)
+
 
 # async def test_delete_workflow_associated_to_history(
 #     project_factory_v2,
