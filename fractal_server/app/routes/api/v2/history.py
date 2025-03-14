@@ -48,7 +48,11 @@ async def get_workflow_tasks_statuses(
             num_available_images=latest_history_run.num_available_images,
         )
 
-        for target_status in ["done", "submitted", "failed"]:
+        for target_status in [
+            "done",
+            "submitted",
+            "failed",
+        ]:  # FIXME: use enum
             stm = (
                 select(func.count(HistoryImageCache.zarr_url))
                 .join(HistoryUnit)
