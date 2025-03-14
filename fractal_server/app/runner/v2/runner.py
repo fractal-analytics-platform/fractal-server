@@ -18,16 +18,17 @@ from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.history.status_enum import HistoryItemImageStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import HistoryItemV2
-from fractal_server.app.models.v2 import ImageStatus
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
+
+# from fractal_server.app.history.status_enum import ImageStatus
+# from fractal_server.app.models.v2 import HistoryItemV2
+# from fractal_server.app.models.v2 import ImageStatus
+# from fractal_server.app.models.v2 import TaskGroupV2
 
 
 def execute_tasks_v2(
@@ -82,57 +83,57 @@ def execute_tasks_v2(
         )
 
         # Create history item
-        with next(get_sync_db()) as db:
-            workflowtask_dump = dict(
-                **wftask.model_dump(exclude={"task"}),
-                task=wftask.task.model_dump(),
-            )
-            # Exclude timestamps since they'd need to be serialized properly
-            task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-            task_group_dump = task_group.model_dump(
-                exclude={
-                    "timestamp_created",
-                    "timestamp_last_used",
-                }
-            )
-            parameters_hash = str(
-                hash(
-                    json.dumps(
-                        [workflowtask_dump, task_group_dump],
-                        sort_keys=True,
-                        indent=None,
-                    ).encode("utf-8")
-                )
-            )
-            images = {
-                image["zarr_url"]: HistoryItemImageStatus.SUBMITTED
-                for image in filtered_images
-            }
-            history_item = HistoryItemV2(
-                dataset_id=dataset.id,
-                workflowtask_id=wftask.id,
-                workflowtask_dump=workflowtask_dump,
-                task_group_dump=task_group_dump,
-                parameters_hash=parameters_hash,
-                num_available_images=len(type_filtered_images),
-                num_current_images=len(filtered_images),
-                images=images,
-            )
-            db.add(history_item)
-            for image in filtered_images:
-                db.merge(
-                    ImageStatus(
-                        zarr_url=image["zarr_url"],
-                        workflowtask_id=wftask.id,
-                        dataset_id=dataset.id,
-                        parameters_hash=parameters_hash,
-                        status=HistoryItemImageStatus.SUBMITTED,
-                        logfile=None,
-                    )
-                )
-            db.commit()
-            db.refresh(history_item)
-            history_item_id = history_item.id
+        # with next(get_sync_db()) as db:
+        # workflowtask_dump = dict(
+        #     **wftask.model_dump(exclude={"task"}),
+        #     task=wftask.task.model_dump(),
+        # )
+        # Exclude timestamps since they'd need to be serialized properly
+        # task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        # task_group_dump = task_group.model_dump(
+        #     exclude={
+        #         "timestamp_created",
+        #         "timestamp_last_used",
+        #     }
+        # )
+        # parameters_hash = str(
+        #     hash(
+        #         json.dumps(
+        #             [workflowtask_dump, task_group_dump],
+        #             sort_keys=True,
+        #             indent=None,
+        #         ).encode("utf-8")
+        #     )
+        # )
+        # images = {
+        #     image["zarr_url"]: UnitStatus.SUBMITTED
+        #     for image in filtered_images
+        # }
+        # history_item = HistoryItemV2(
+        #     dataset_id=dataset.id,
+        #     workflowtask_id=wftask.id,
+        #     workflowtask_dump=workflowtask_dump,
+        #     task_group_dump=task_group_dump,
+        #     parameters_hash=parameters_hash,
+        #     num_available_images=len(type_filtered_images),
+        #     num_current_images=len(filtered_images),
+        #     images=images,
+        # )
+        # db.add(history_item)
+        # for image in filtered_images:
+        #     db.merge(
+        #         UnitStatus(
+        #             zarr_url=image["zarr_url"],
+        #             workflowtask_id=wftask.id,
+        #             dataset_id=dataset.id,
+        #             parameters_hash=parameters_hash,
+        #             status=UnitStatus.SUBMITTED,
+        #             logfile=None,
+        #         )
+        #     )
+        # db.commit()
+        # db.refresh(history_item)
+        # history_item_id = history_item.id
 
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
@@ -149,7 +150,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_item_id=history_item_id,
+                history_item_id=None,  # FIXME
             )
         elif task.type == "parallel":
             current_task_output, num_tasks, exceptions = run_v2_task_parallel(
@@ -160,7 +161,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_item_id=history_item_id,
+                history_item_id=None,  # FIXME
             )
         elif task.type == "compound":
             current_task_output, num_tasks, exceptions = run_v2_task_compound(
@@ -172,7 +173,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_item_id=history_item_id,
+                history_item_id=None,  # FIXME
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
