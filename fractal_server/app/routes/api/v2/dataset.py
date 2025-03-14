@@ -5,13 +5,11 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import delete
 from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
-from ....models.v2 import HistoryRun
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
@@ -221,10 +219,6 @@ async def delete_dataset(
     jobs = res.scalars().all()
     for job in jobs:
         job.dataset_id = None
-
-    # Cascade operations: delete history runs, units and image caches
-    stm = delete(HistoryRun).where(HistoryRun.dataset_id == dataset_id)
-    await db.execute(stm)
 
     # Delete dataset
     await db.delete(dataset)
