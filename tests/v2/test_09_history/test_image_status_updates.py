@@ -76,9 +76,9 @@
 #         "/url1": ImageStatus.DONE,
 #         "/url2": ImageStatus.SUBMITTED,
 #     }
-#     image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))
+#     image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id)) # noqa
 #     assert image_status.status == ImageStatus.DONE
-#     image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))
+#     image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id)) # noqa
 #     assert image_status.status == ImageStatus.SUBMITTED
 #     # Test all-images update
 #     update_all_images(
@@ -92,9 +92,9 @@
 #         "/url1": ImageStatus.FAILED,
 #         "/url2": ImageStatus.FAILED,
 #     }
-#     image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))
+#     image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))  # noqa
 #     assert image_status.status == ImageStatus.FAILED
-#     image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))
+#     image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))  # noqa
 #     assert image_status.status == ImageStatus.FAILED
 #     # Test two concurrent single-image writes
 #     import fractal_server.app.history.image_updates
@@ -125,7 +125,7 @@
 #         "/url1": ImageStatus.DONE,
 #         "/url2": ImageStatus.DONE,
 #     }
-#     image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id))
+#     image_status = await db.get(ImageStatus, ("/url1", wftask.id, dataset.id)) # noqa
 #     assert image_status.status == ImageStatus.DONE
-#     image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id))
+#     image_status = await db.get(ImageStatus, ("/url2", wftask.id, dataset.id)) # noqa
 #     assert image_status.status == ImageStatus.DONE
