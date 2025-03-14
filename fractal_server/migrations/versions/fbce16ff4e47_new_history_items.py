@@ -1,8 +1,8 @@
-"""Add new history tables
+"""new history items
 
-Revision ID: c743c9f9205f
+Revision ID: fbce16ff4e47
 Revises: af1ef1c83c9b
-Create Date: 2025-03-14 14:21:33.827416
+Create Date: 2025-03-14 15:25:01.083619
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "c743c9f9205f"
+revision = "fbce16ff4e47"
 down_revision = "af1ef1c83c9b"
 branch_labels = None
 depends_on = None
@@ -51,6 +51,7 @@ def upgrade() -> None:
             ["workflowtask_id"],
             ["workflowtaskv2.id"],
             name=op.f("fk_historyrun_workflowtask_id_workflowtaskv2"),
+            ondelete="SET NULL",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_historyrun")),
     )
@@ -99,6 +100,7 @@ def upgrade() -> None:
             ["workflowtask_id"],
             ["workflowtaskv2.id"],
             name=op.f("fk_historyimagecache_workflowtask_id_workflowtaskv2"),
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint(
             "zarr_url",
