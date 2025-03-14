@@ -18,9 +18,12 @@ class HistoryRun(SQLModel, table=True):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    dataset_id: int = Field(foreign_key="datasetv2.id")
+    dataset_id: int = Field(
+        foreign_key="datasetv2.id",
+        ondelete="CASCADE",
+    )
     workflowtask_id: Optional[int] = Field(
-        foreign_key="workflowtaskv2.id", default=None
+        foreign_key="workflowtaskv2.id", default=None, ondelete="SET NULL"
     )
 
     workflowtask_dump: dict[str, Any] = Field(
@@ -41,7 +44,10 @@ class HistoryRun(SQLModel, table=True):
 class HistoryUnit(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    history_run_id: int = Field(foreign_key="historyrun.id")
+    history_run_id: int = Field(
+        foreign_key="historyrun.id",
+        ondelete="CASCADE",
+    )
 
     logfile: Optional[str]
     status: str
@@ -53,9 +59,15 @@ class HistoryUnit(SQLModel, table=True):
 class HistoryImageCache(SQLModel, table=True):
 
     zarr_url: str = Field(primary_key=True)
-    dataset_id: int = Field(primary_key=True, foreign_key="datasetv2.id")
+    dataset_id: int = Field(
+        primary_key=True,
+        foreign_key="datasetv2.id",
+        ondelete="CASCADE",
+    )
     workflowtask_id: int = Field(
-        primary_key=True, foreign_key="workflowtaskv2.id"
+        primary_key=True, foreign_key="workflowtaskv2.id", ondelete="CASCADE"
     )
 
-    latest_history_unit_id: int = Field(foreign_key="historyunit.id")
+    latest_history_unit_id: int = Field(
+        foreign_key="historyunit.id", ondelete="CASCADE"
+    )
