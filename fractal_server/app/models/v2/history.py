@@ -41,7 +41,9 @@ class HistoryRun(SQLModel, table=True):
 class HistoryUnit(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    history_run_id: int = Field(foreign_key="historyrun.id")
+    history_run_id: int = Field(
+        foreign_key="historyrun.id", ondelete="CASCADE"
+    )
 
     logfile: Optional[str]
     status: str
@@ -58,4 +60,6 @@ class HistoryImageCache(SQLModel, table=True):
         primary_key=True, foreign_key="workflowtaskv2.id"
     )
 
-    latest_history_unit_id: int = Field(foreign_key="historyunit.id")
+    latest_history_unit_id: int = Field(
+        foreign_key="historyunit.id", ondelete="CASCADE"
+    )

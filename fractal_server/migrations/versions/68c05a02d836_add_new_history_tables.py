@@ -1,8 +1,8 @@
 """Add new history tables
 
-Revision ID: 5f84657878a9
+Revision ID: 68c05a02d836
 Revises: af1ef1c83c9b
-Create Date: 2025-03-14 11:49:33.356108
+Create Date: 2025-03-14 12:51:55.162208
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "5f84657878a9"
+revision = "68c05a02d836"
 down_revision = "af1ef1c83c9b"
 branch_labels = None
 depends_on = None
@@ -68,6 +68,7 @@ def upgrade() -> None:
             ["history_run_id"],
             ["historyrun.id"],
             name=op.f("fk_historyunit_history_run_id_historyrun"),
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_historyunit")),
     )
@@ -90,6 +91,7 @@ def upgrade() -> None:
             name=op.f(
                 "fk_historyimagecache_latest_history_unit_id_historyunit"
             ),
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["workflowtask_id"],
