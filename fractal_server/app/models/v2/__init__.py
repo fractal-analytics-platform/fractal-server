@@ -5,8 +5,9 @@ from ..linkuserproject import LinkUserProjectV2
 from .accounting import AccountingRecord
 from .accounting import AccountingRecordSlurm
 from .dataset import DatasetV2
-from .history import HistoryItemV2
-from .history import ImageStatus
+from .history import HistoryImageCache
+from .history import HistoryRun
+from .history import HistoryUnit
 from .job import JobV2
 from .project import ProjectV2
 from .task import TaskV2
@@ -27,6 +28,7 @@ __all__ = [
     "TaskV2",
     "WorkflowV2",
     "WorkflowTaskV2",
-    "HistoryItemV2",
-    "ImageStatus",
+    "HistoryRun",
+    "HistoryUnit",
+    "HistoryImageCache",
 ]

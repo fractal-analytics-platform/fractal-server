@@ -6,14 +6,16 @@ from typing import Optional
 
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
-from fractal_server.app.history import HistoryItemImageStatus
-from fractal_server.app.history import update_all_images
-from fractal_server.app.history import update_single_image
-from fractal_server.app.history import update_single_image_logfile
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.logger import set_logger
+
+# from fractal_server.app.history import XXXStatus
+
+# from fractal_server.app.history import update_all_images
+# from fractal_server.app.history import update_single_image
+# from fractal_server.app.history import update_single_image_logfile
 
 logger = set_logger(__name__)
 
@@ -77,20 +79,21 @@ class LocalRunner(BaseRunner):
         try:
             result = future.result()
             if not in_compound_task:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.DONE,
-                    logfile=current_task_files.log_file_local,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.DONE,
+                #     logfile=current_task_files.log_file_local,
+                # )
             logger.debug(f"[submit] END {result=}")
             return result, None
         except Exception as e:
             exception = e
-            update_all_images(
-                history_item_id=history_item_id,
-                status=HistoryItemImageStatus.FAILED,
-                logfile=current_task_files.log_file_local,
-            )
+            # update_all_images(
+            #     history_item_id=history_item_id,
+            #     status=ImageStatus.FAILED,
+            #     logfile=current_task_files.log_file_local,
+            # )
             logger.debug(f"[submit] END {exception=}")
             return None, exception
 
@@ -156,45 +159,50 @@ class LocalRunner(BaseRunner):
                 ]
                 for positional_index, fut in finished_futures:
                     active_futures.pop(positional_index)
-                    current_task_files = active_task_files.pop(
-                        positional_index
-                    )
+                    # current_task_files = active_task_files.pop(
+                    #     positional_index
+                    # )
                     zarr_url = list_parameters[positional_index]["zarr_url"]
                     if not in_compound_task:
-                        update_single_image_logfile(
-                            history_item_id=history_item_id,
-                            zarr_url=zarr_url,
-                            logfile=current_task_files.log_file_local,
-                        )
+                        pass
+                        # update_single_image_logfile(
+                        #     history_item_id=history_item_id,
+                        #     zarr_url=zarr_url,
+                        #     logfile=current_task_files.log_file_local,
+                        # )
                     try:
                         results[positional_index] = fut.result()
                         print(f"Mark {zarr_url=} as done, {kwargs}")
                         if not in_compound_task:
-                            update_single_image(
-                                history_item_id=history_item_id,
-                                zarr_url=zarr_url,
-                                status=HistoryItemImageStatus.DONE,
-                            )
+                            pass
+                            # update_single_image(
+                            #     history_item_id=history_item_id,
+                            #     zarr_url=zarr_url,
+                            #     status=ImageStatus.DONE,
+                            # )
                     except Exception as e:
                         print(f"Mark {zarr_url=} as failed, {kwargs} - {e}")
                         exceptions[positional_index] = e
                         if not in_compound_task:
-                            update_single_image(
-                                history_item_id=history_item_id,
-                                zarr_url=zarr_url,
-                                status=HistoryItemImageStatus.FAILED,
-                            )
+                            pass
+                            # update_single_image(
+                            #     history_item_id=history_item_id,
+                            #     zarr_url=zarr_url,
+                            #     status=ImageStatus.FAILED,
+                            # )
         if in_compound_task:
             if exceptions == {}:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.DONE,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.DONE,
+                # )
             else:
-                update_all_images(
-                    history_item_id=history_item_id,
-                    status=HistoryItemImageStatus.FAILED,
-                )
+                pass
+                # update_all_images(
+                #     history_item_id=history_item_id,
+                #     status=ImageStatus.FAILED,
+                # )
         logger.debug(f"[multisubmit] END, {results=}, {exceptions=}")
 
         return results, exceptions
