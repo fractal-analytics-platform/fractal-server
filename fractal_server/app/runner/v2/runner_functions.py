@@ -320,6 +320,30 @@ def run_v2_task_compound(
         **(wftask.args_non_parallel or {}),
     )
     function_kwargs[_COMPONENT_KEY_] = f"init_{_index_to_component(0)}"
+
+    with next(get_sync_db()) as db:
+        # Always create a HistoryUnit
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=XXXStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=function_kwargs["zarr_urls"],
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+        for zarr_url in function_kwargs["zarr_urls"]:
+            db.add(
+                HistoryImageCache(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit_id,
+                )
+            )
+        db.commit()
+
     result, exception = executor.submit(
         functools.partial(
             run_single_task,
@@ -379,6 +403,7 @@ def run_v2_task_compound(
     )
 
     outputs = []
+    failure = False
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
             result = results[ind]
@@ -387,8 +412,27 @@ def run_v2_task_compound(
             else:
                 output = _cast_and_validate_TaskOutput(result)
             outputs.append(output)
+
         elif ind in exceptions.keys():
             print(f"Bad: {exceptions[ind]}")
+            failure = True
+        else:
+            print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        if failure:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit)
+                .values(status=XXXStatus.FAILED)
+            )
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit)
+                .values(status=XXXStatus.DONE)
+            )
+        db.commit()
 
     merged_output = merge_outputs(outputs)
     return (merged_output, num_tasks, exceptions)
