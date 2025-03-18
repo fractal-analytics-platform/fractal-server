@@ -1,15 +1,14 @@
-from datetime import datetime
 from typing import Any
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime
 from pydantic import BaseModel
-from pydantic import ConfigDict
-from pydantic import field_serializer
+from pydantic import Field
 from sqlmodel import func
 from sqlmodel import select
 
@@ -81,41 +80,46 @@ async def get_workflow_tasks_statuses(
     return JSONResponse(content=response, status_code=200)
 
 
-class HistoryUnitRead(BaseModel):  # FIXME: Move to schemas
+# FIXME MOVE TO SCHEMAS
+
+
+class HistoryUnitRead(BaseModel):
 
     id: int
-    history_run_id: int
     logfile: Optional[str] = None
     status: str
     zarr_urls: list[str]
 
 
-class HistoryRunRead(BaseModel):  # FIXME: move to schemas
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class HistoryRunRead(BaseModel):
 
     id: int
-    dataset_id: int
-    workflowtask_id: int
-    workflowtask_dump: dict[str, Any]
-    task_group_dump: dict[str, Any]
     timestamp_started: AwareDatetime
-    status: str
-    num_available_images: int
+    workflowtask_dump: dict[str, Any]
     units: list[HistoryUnit]
 
-    @field_serializer("timestamp_started")
-    def serialize_datetime(v: datetime) -> str:
-        return v.isoformat()
+
+class HistoryRunReadList(BaseModel):
+
+    id: int
+    timestamp_started: AwareDatetime
+    workflowtask_dump: dict[str, Any]
+    num_submitted_units: int = Field(ge=0)
+    num_done_units: int = Field(ge=0)
+    num_failed_units: int = Field(ge=0)
+
+
+# end FIXME
 
 
 @router.get("/project/{project_id}/status/run/")
-async def get_history_runs(
+async def get_history_run_list(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryRunRead]:
+) -> list[HistoryRunReadList]:
 
     # Access control
     await _get_workflowtask_check_history_owner(
@@ -156,14 +160,14 @@ async def get_history_runs(
 
 
 @router.get("/project/{project_id}/status/run/{history_run_id}/")
-async def get_history_units(
+async def get_history_run(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
     history_run_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryUnitRead]:
+) -> HistoryRunRead:
 
     # Access control
     await _get_workflowtask_check_history_owner(
@@ -173,22 +177,16 @@ async def get_history_units(
         db=db,
     )
 
-    res = await db.execute(
-        select(HistoryRun)
-        .where(HistoryRun.id == history_run_id)
-        .where(HistoryRun.dataset_id == dataset_id)
-        .where(HistoryRun.workflowtask_id == workflowtask_id)
-    )
-    history_run = res.scalar_one_or_none()
+    history_run = await db.get(HistoryRun, history_run_id)
     if history_run is None:
-        raise HTTPException(status_code=404, detail="HistoryRun not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"HistoryRun {history_run_id} not found",
+        )
 
-    # Get all units
-    stm = (
-        select(HistoryUnit)
-        .where(HistoryUnit.history_run_id == history_run_id)
-        .order_by(HistoryUnit.id)
+    res = await db.execute(
+        select(HistoryUnit).where(HistoryUnit.history_run_id == history_run_id)
     )
-    res = await db.execute(stm)
     units = res.scalars().all()
-    return units
+
+    return dict(**history_run.model_dump(), units=units)
