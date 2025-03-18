@@ -136,7 +136,11 @@ async def get_history_runs(
     runs = res.scalars().all()
 
     for ind, run in enumerate(runs):
-        stm = select(HistoryUnit).where(HistoryUnit.history_run_id == run.id)
+        stm = (
+            select(HistoryUnit)
+            .where(HistoryUnit.history_run_id == run.id)
+            .order_by(HistoryUnit.id)
+        )
         res = await db.execute(stm)
         units = res.scalars().all()
         runs[ind] = dict(
