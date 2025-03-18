@@ -14,6 +14,8 @@ from sqlmodel import select
 
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflowtask_check_history_owner
+from ._aux_functions_history import get_history_unit_or_404
+from ._aux_functions_history import read_log_file
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -190,3 +192,86 @@ async def get_history_run(
     units = res.scalars().all()
 
     return dict(**history_run.model_dump(), units=units)
+
+
+class ImageLogsRequest(BaseModel):
+    workflowtask_id: int
+    dataset_id: int
+    zarr_url: str
+
+
+@router.post("/project/{project_id}/status/image-log/")
+async def get_image_log(
+    project_id: int,
+    request_data: ImageLogsRequest,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+    # Access control
+    wftask = await _get_workflowtask_check_history_owner(
+        dataset_id=request_data.dataset_id,
+        workflowtask_id=request_data.workflowtask_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    # Get HistoryImageCache
+    history_image_cache = await db.get(
+        HistoryImageCache,
+        (
+            request_data.zarr_url,
+            request_data.workflowtask_id,
+            request_data.dataset_id,
+        ),
+    )
+    if history_image_cache is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="HistoryImageCache not found",
+        )
+    # Get history unit
+    history_unit = await get_history_unit_or_404(
+        history_image_cache.latest_history_unit_id,
+        db,
+    )
+
+    # Get log or placeholder text
+    log = read_log_file(
+        logfile=history_unit.logfile,
+        wftask=wftask,
+        dataset_id=request_data.dataset_id,
+    )
+    return JSONResponse(content=log)
+
+
+@router.get("/project/{project_id}/status/unit-log/")
+async def get_history_unit_log(
+    project_id: int,
+    history_run_id: int,
+    history_unit_id: int,
+    workflowtask_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JSONResponse:
+    # Access control
+    wftask = await _get_workflowtask_check_history_owner(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    # Get history unit
+    history_unit = await get_history_unit_or_404(
+        history_unit_id=history_unit_id,
+        db=db,
+    )
+
+    # Get log or placeholder text
+    log = read_log_file(
+        logfile=history_unit.logfile,
+        wftask=wftask,
+        dataset_id=dataset_id,
+    )
+    return JSONResponse(content=log)
