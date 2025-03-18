@@ -193,6 +193,7 @@ def run_v2_task_parallel(
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
     if len(images) == 0:
+        # FIXME: Do something with history units/images?
         return (TaskOutput(), 0, {})
 
     _check_parallelization_list_size(images)
@@ -320,6 +321,33 @@ def run_v2_task_compound(
         **(wftask.args_non_parallel or {}),
     )
     function_kwargs[_COMPONENT_KEY_] = f"init_{_index_to_component(0)}"
+
+    # Create database History entries
+    input_image_zarr_urls = function_kwargs["zarr_urls"]
+    with next(get_sync_db()) as db:
+        # Create a single `HistoryUnit` for the whole compound task
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=XXXStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=input_image_zarr_urls,
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+        # Create one `HistoryImageCache` for each input image
+        for zarr_url in input_image_zarr_urls:
+            db.add(
+                HistoryImageCache(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit_id,
+                )
+            )
+        db.commit()
+
     result, exception = executor.submit(
         functools.partial(
             run_single_task,
@@ -339,6 +367,13 @@ def run_v2_task_compound(
         else:
             init_task_output = _cast_and_validate_InitTaskOutput(result)
     else:
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.FAILED)
+            )
+            db.commit()
         return (TaskOutput(), num_tasks, {0: exception})
 
     parallelization_list = init_task_output.parallelization_list
@@ -350,6 +385,13 @@ def run_v2_task_compound(
     _check_parallelization_list_size(parallelization_list)
 
     if len(parallelization_list) == 0:
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.DONE)
+            )
+            db.commit()
         return (TaskOutput(), 0, {})
 
     list_function_kwargs = []
@@ -379,6 +421,7 @@ def run_v2_task_compound(
     )
 
     outputs = []
+    failure = False
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
             result = results[ind]
@@ -387,8 +430,27 @@ def run_v2_task_compound(
             else:
                 output = _cast_and_validate_TaskOutput(result)
             outputs.append(output)
+
         elif ind in exceptions.keys():
             print(f"Bad: {exceptions[ind]}")
+            failure = True
+        else:
+            print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        if failure:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.FAILED)
+            )
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.DONE)
+            )
+        db.commit()
 
     merged_output = merge_outputs(outputs)
     return (merged_output, num_tasks, exceptions)
