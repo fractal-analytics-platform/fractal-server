@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 from typing import Optional
 
@@ -92,7 +92,7 @@ async def get_workflow_tasks_statuses(
 # FIXME MOVE TO SCHEMAS
 
 
-class ImageStatus(StrEnum):
+class ImageStatus(str, Enum):
     DONE = "done"
     SUBMITTED = "submitted"
     FAILED = "failed"
