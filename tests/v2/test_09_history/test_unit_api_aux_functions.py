@@ -41,7 +41,7 @@ def test_read_log_file(tmp_path: Path):
     logfile = (tmp_path / "logs.txt").as_posix()
 
     log = read_log_file(logfile=logfile, wftask=wftask, dataset_id=dataset_id)
-    assert "No such file or directory" in log
+    assert "not available" in log
 
     with open(logfile, "w") as f:
         f.write("some keyword\n")
