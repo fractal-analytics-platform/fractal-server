@@ -34,7 +34,7 @@ def read_log_file(
     if logfile is None:
         return (
             f"Logs for task '{wftask.task.name}' in dataset "
-            f"{dataset_id} are not yet available."
+            f"{dataset_id} are not available."
         )
 
     try:
