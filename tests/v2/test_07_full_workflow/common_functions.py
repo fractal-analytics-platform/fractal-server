@@ -211,12 +211,15 @@ async def full_workflow(
 
         # FIXME: first test of history
         query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
-        # query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
-        # query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
-        # query_wft2 = f"dataset_id={dataset_id}&workflowtask_id={wftask2_id}"
+        query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
+        query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
+        query_wft2 = f"dataset_id={dataset_id}&workflowtask_id={wftask2_id}"
         this_prefix = f"api/v2/project/{project_id}"
         for url in [
             f"{this_prefix}/status/?{query_wf}",
+            f"{this_prefix}/status/run/?{query_wft0}",
+            f"{this_prefix}/status/run/?{query_wft1}",
+            f"{this_prefix}/status/run/?{query_wft2}",
             # f"{this_prefix}/dataset/{dataset_id}/history/",
             # f"{this_prefix}/status/subsets/?{query_wft0}",
             # f"{this_prefix}/status/images/?status=done&{query_wft0}",
