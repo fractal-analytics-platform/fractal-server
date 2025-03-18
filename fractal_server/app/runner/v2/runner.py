@@ -21,9 +21,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
-from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -126,6 +124,7 @@ def execute_tasks_v2(
                 executor=runner,
                 submit_setup_call=submit_setup_call,
                 history_run_id=history_run_id,
+                dataset_id=dataset.id,
             )
         elif task.type == "parallel":
             current_task_output, num_tasks, exceptions = run_v2_task_parallel(
@@ -136,7 +135,8 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,
+                history_run_id=history_run_id,                dataset_id=dataset.id,
+
             )
         elif task.type == "compound":
             current_task_output, num_tasks, exceptions = run_v2_task_compound(
@@ -148,7 +148,8 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,
+                history_run_id=history_run_id,                dataset_id=dataset.id,
+
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")

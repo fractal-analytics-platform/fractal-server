@@ -93,6 +93,7 @@ def run_v2_task_non_parallel(
     workflow_dir_remote: Optional[Path] = None,
     executor: BaseRunner,
     submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
     """
@@ -131,6 +132,16 @@ def run_v2_task_non_parallel(
         db.add(history_unit)
         db.commit()
         db.refresh(history_unit)
+        for zarr_url in function_kwargs["zarr_urls"]:
+            db.add(
+                HistoryImageCache(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit.id,
+                )
+            )
+        db.commit()
         history_unit_id = history_unit.id
 
     result, exception = executor.submit(
@@ -178,6 +189,7 @@ def run_v2_task_parallel(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
@@ -216,6 +228,15 @@ def run_v2_task_parallel(
             db.add(history_unit)
             db.commit()
             db.refresh(history_unit)
+            db.add(
+                HistoryImageCache(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=image["zarr_url"],
+                    latest_history_unit_id=history_unit.id,
+                )
+            )
+            db.commit()
             history_unit_ids.append(history_unit.id)
 
     results, exceptions = executor.multisubmit(
@@ -277,6 +298,7 @@ def run_v2_task_compound(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
