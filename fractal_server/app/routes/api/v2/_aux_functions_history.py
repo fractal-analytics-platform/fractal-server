@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import HTTPException
 from fastapi import status
 
@@ -31,7 +33,7 @@ def read_log_file(
     wftask: WorkflowTaskV2,
     dataset_id: int,
 ):
-    if logfile is None:
+    if logfile is None or not Path(logfile).exists():
         return (
             f"Logs for task '{wftask.task.name}' in dataset "
             f"{dataset_id} are not available."
