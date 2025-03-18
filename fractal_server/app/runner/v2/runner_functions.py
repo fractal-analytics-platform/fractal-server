@@ -153,7 +153,6 @@ def run_v2_task_non_parallel(
             root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
-        history_run_id=history_run_id,
         **executor_options,
     )
 
@@ -248,7 +247,6 @@ def run_v2_task_parallel(
             root_dir_remote=workflow_dir_remote,
         ),
         list_parameters=list_function_kwargs,
-        history_run_id=history_run_id,
         **executor_options,
     )
 
@@ -331,7 +329,6 @@ def run_v2_task_compound(
             root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
-        history_run_id=history_run_id,
         in_compound_task=True,
         **executor_options_init,
     )
@@ -378,7 +375,6 @@ def run_v2_task_compound(
             root_dir_remote=workflow_dir_remote,
         ),
         list_parameters=list_function_kwargs,
-        history_run_id=history_run_id,
         in_compound_task=True,
         **executor_options_compute,
     )
