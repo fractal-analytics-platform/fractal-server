@@ -54,7 +54,7 @@ class LocalRunner(BaseRunner):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_item_id: int,
+        history_run_id: int,
         task_files: TaskFiles,
         in_compound_task: bool = False,
         local_backend_config: Optional[LocalBackendConfig] = None,
@@ -81,7 +81,7 @@ class LocalRunner(BaseRunner):
             if not in_compound_task:
                 pass
                 # update_all_images(
-                #     history_item_id=history_item_id,
+                #     history_run_id=history_run_id,
                 #     status=ImageStatus.DONE,
                 #     logfile=current_task_files.log_file_local,
                 # )
@@ -90,7 +90,7 @@ class LocalRunner(BaseRunner):
         except Exception as e:
             exception = e
             # update_all_images(
-            #     history_item_id=history_item_id,
+            #     history_run_id=history_run_id,
             #     status=ImageStatus.FAILED,
             #     logfile=current_task_files.log_file_local,
             # )
@@ -101,7 +101,7 @@ class LocalRunner(BaseRunner):
         self,
         func: callable,
         list_parameters: list[dict],
-        history_item_id: int,
+        history_run_id: int,
         task_files: TaskFiles,
         in_compound_task: bool = False,
         local_backend_config: Optional[LocalBackendConfig] = None,
@@ -166,7 +166,7 @@ class LocalRunner(BaseRunner):
                     if not in_compound_task:
                         pass
                         # update_single_image_logfile(
-                        #     history_item_id=history_item_id,
+                        #     history_run_id=history_run_id,
                         #     zarr_url=zarr_url,
                         #     logfile=current_task_files.log_file_local,
                         # )
@@ -176,7 +176,7 @@ class LocalRunner(BaseRunner):
                         if not in_compound_task:
                             pass
                             # update_single_image(
-                            #     history_item_id=history_item_id,
+                            #     history_run_id=history_run_id,
                             #     zarr_url=zarr_url,
                             #     status=ImageStatus.DONE,
                             # )
@@ -186,7 +186,7 @@ class LocalRunner(BaseRunner):
                         if not in_compound_task:
                             pass
                             # update_single_image(
-                            #     history_item_id=history_item_id,
+                            #     history_run_id=history_run_id,
                             #     zarr_url=zarr_url,
                             #     status=ImageStatus.FAILED,
                             # )
@@ -194,13 +194,13 @@ class LocalRunner(BaseRunner):
             if exceptions == {}:
                 pass
                 # update_all_images(
-                #     history_item_id=history_item_id,
+                #     history_run_id=history_run_id,
                 #     status=ImageStatus.DONE,
                 # )
             else:
                 pass
                 # update_all_images(
-                #     history_item_id=history_item_id,
+                #     history_run_id=history_run_id,
                 #     status=ImageStatus.FAILED,
                 # )
         logger.debug(f"[multisubmit] END, {results=}, {exceptions=}")

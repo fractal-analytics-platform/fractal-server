@@ -32,6 +32,19 @@ async def get_workflow_tasks_statuses(
     )
     response = {}
     for wftask in workflow.task_list:
+        db.expunge_all()
+
+        res = await db.execute(
+            select(HistoryRun)
+            .where(HistoryRun.dataset_id == dataset_id)
+            .where(HistoryRun.workflowtask_id == wftask.id)
+        )
+        all_runs = res.scalars().all()
+        from devtools import debug
+
+        for _run in all_runs:
+            debug(_run.timestamp_started, _run.status)
+
         res = await db.execute(
             select(HistoryRun)
             .where(HistoryRun.dataset_id == dataset_id)

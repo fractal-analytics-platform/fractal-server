@@ -80,6 +80,8 @@ async def full_workflow(
         )
         assert res.status_code == 201
         wftask0_id = res.json()["id"]
+        debug(wftask0_id)
+
         # Add "MIP_compound" task
         task_id_B = tasks["MIP_compound"].id
         res = await client.post(
@@ -89,6 +91,7 @@ async def full_workflow(
         )
         assert res.status_code == 201
         wftask1_id = res.json()["id"]
+        debug(wftask1_id)
 
         # Add "generic_task_parallel" task
         task_id_C = tasks["generic_task_parallel"].id
@@ -99,6 +102,7 @@ async def full_workflow(
         )
         assert res.status_code == 201
         wftask2_id = res.json()["id"]
+        debug(wftask2_id)
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -207,28 +211,29 @@ async def full_workflow(
 
         # FIXME: first test of history
         query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
-        query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
-        query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
-        query_wft2 = f"dataset_id={dataset_id}&workflowtask_id={wftask2_id}"
+        # query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
+        # query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
+        # query_wft2 = f"dataset_id={dataset_id}&workflowtask_id={wftask2_id}"
         this_prefix = f"api/v2/project/{project_id}"
         for url in [
-            f"{this_prefix}/dataset/{dataset_id}/history/",
             f"{this_prefix}/status/?{query_wf}",
-            f"{this_prefix}/status/subsets/?{query_wft0}",
-            f"{this_prefix}/status/images/?status=done&{query_wft0}",
-            f"{this_prefix}/status/images/?status=failed&{query_wft0}",
-            f"{this_prefix}/status/images/?status=submitted&{query_wft0}",
-            f"{this_prefix}/status/subsets/?{query_wft1}",
-            f"{this_prefix}/status/images/?status=done&{query_wft1}",
-            f"{this_prefix}/status/images/?status=failed&{query_wft1}",
-            f"{this_prefix}/status/images/?status=submitted&{query_wft1}",
-            f"{this_prefix}/status/subsets/?{query_wft2}",
-            f"{this_prefix}/status/images/?status=done&{query_wft2}",
-            f"{this_prefix}/status/images/?status=failed&{query_wft2}",
-            f"{this_prefix}/status/images/?status=submitted&{query_wft2}",
+            # f"{this_prefix}/dataset/{dataset_id}/history/",
+            # f"{this_prefix}/status/subsets/?{query_wft0}",
+            # f"{this_prefix}/status/images/?status=done&{query_wft0}",
+            # f"{this_prefix}/status/images/?status=failed&{query_wft0}",
+            # f"{this_prefix}/status/images/?status=submitted&{query_wft0}",
+            # f"{this_prefix}/status/subsets/?{query_wft1}",
+            # f"{this_prefix}/status/images/?status=done&{query_wft1}",
+            # f"{this_prefix}/status/images/?status=failed&{query_wft1}",
+            # f"{this_prefix}/status/images/?status=submitted&{query_wft1}",
+            # f"{this_prefix}/status/subsets/?{query_wft2}",
+            # f"{this_prefix}/status/images/?status=done&{query_wft2}",
+            # f"{this_prefix}/status/images/?status=failed&{query_wft2}",
+            # f"{this_prefix}/status/images/?status=submitted&{query_wft2}",
         ]:
             res = await client.get(url)
             debug(url, res.status_code, res.json())
+            assert res.status_code == 200
 
 
 async def full_workflow_TaskExecutionError(

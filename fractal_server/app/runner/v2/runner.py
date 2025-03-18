@@ -6,6 +6,7 @@ from typing import Callable
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import update
 
 from ....images import SingleImage
 from ....images.tools import filter_image_list
@@ -17,17 +18,17 @@ from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import HistoryImageCache
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
-
-# from fractal_server.app.history.status_enum import ImageStatus
-# from fractal_server.app.models.v2 import HistoryItemV2
-# from fractal_server.app.models.v2 import ImageStatus
-# from fractal_server.app.models.v2 import TaskGroupV2
 
 
 def execute_tasks_v2(
@@ -82,57 +83,32 @@ def execute_tasks_v2(
         )
 
         # Create history item
-        # with next(get_sync_db()) as db:
-        # workflowtask_dump = dict(
-        #     **wftask.model_dump(exclude={"task"}),
-        #     task=wftask.task.model_dump(),
-        # )
+        with next(get_sync_db()) as db:
+            workflowtask_dump = dict(
+                **wftask.model_dump(exclude={"task"}),
+                task=wftask.task.model_dump(),
+            )
+
         # Exclude timestamps since they'd need to be serialized properly
-        # task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-        # task_group_dump = task_group.model_dump(
-        #     exclude={
-        #         "timestamp_created",
-        #         "timestamp_last_used",
-        #     }
-        # )
-        # parameters_hash = str(
-        #     hash(
-        #         json.dumps(
-        #             [workflowtask_dump, task_group_dump],
-        #             sort_keys=True,
-        #             indent=None,
-        #         ).encode("utf-8")
-        #     )
-        # )
-        # images = {
-        #     image["zarr_url"]: UnitStatus.SUBMITTED
-        #     for image in filtered_images
-        # }
-        # history_item = HistoryItemV2(
-        #     dataset_id=dataset.id,
-        #     workflowtask_id=wftask.id,
-        #     workflowtask_dump=workflowtask_dump,
-        #     task_group_dump=task_group_dump,
-        #     parameters_hash=parameters_hash,
-        #     num_available_images=len(type_filtered_images),
-        #     num_current_images=len(filtered_images),
-        #     images=images,
-        # )
-        # db.add(history_item)
-        # for image in filtered_images:
-        #     db.merge(
-        #         UnitStatus(
-        #             zarr_url=image["zarr_url"],
-        #             workflowtask_id=wftask.id,
-        #             dataset_id=dataset.id,
-        #             parameters_hash=parameters_hash,
-        #             status=UnitStatus.SUBMITTED,
-        #             logfile=None,
-        #         )
-        #     )
-        # db.commit()
-        # db.refresh(history_item)
-        # history_item_id = history_item.id
+        task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        task_group_dump = task_group.model_dump(
+            exclude={
+                "timestamp_created",
+                "timestamp_last_used",
+            }
+        )
+        history_run = HistoryRun(
+            dataset_id=dataset.id,
+            workflowtask_id=wftask.id,
+            workflowtask_dump=workflowtask_dump,
+            task_group_dump=task_group_dump,
+            num_available_images=len(type_filtered_images),
+            status=XXXStatus.SUBMITTED,
+        )
+        db.add(history_run)
+        db.commit()
+        db.refresh(history_run)
+        history_run_id = history_run.id
 
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
@@ -149,7 +125,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_item_id=None,  # FIXME
+                history_run_id=history_run_id,
             )
         elif task.type == "parallel":
             current_task_output, num_tasks, exceptions = run_v2_task_parallel(
@@ -160,7 +136,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_item_id=None,  # FIXME
+                history_run_id=history_run_id,
             )
         elif task.type == "compound":
             current_task_output, num_tasks, exceptions = run_v2_task_compound(
@@ -172,7 +148,7 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_item_id=None,  # FIXME
+                history_run_id=history_run_id,
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
@@ -320,17 +296,14 @@ def execute_tasks_v2(
         type_filters_from_task_manifest = task.output_types
         current_dataset_type_filters.update(type_filters_from_task_manifest)
 
-        # Write current dataset attributes (history, images, filters) into the
-        # database. They can be used (1) to retrieve the latest state
-        # when the job fails, (2) from within endpoints that need up-to-date
-        # information
         with next(get_sync_db()) as db:
+            # Write current dataset attributes (history + filters) into the
+            # database.
             db_dataset = db.get(DatasetV2, dataset.id)
             db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
             for attribute_name in [
                 "type_filters",
-                "history",
                 "images",
             ]:
                 flag_modified(db_dataset, attribute_name)
@@ -346,15 +319,29 @@ def execute_tasks_v2(
             db.add(record)
             db.commit()
 
-        if exceptions != {}:
-            logger.error(
-                f'END    {wftask.order}-th task (name="{task_name}") '
-                "- ERROR."
-            )
-            # Raise first error
-            for key, value in exceptions.items():
-                raise JobExecutionError(
-                    info=(f"An error occurred.\nOriginal error:\n{value}")
+            # Update History tables, and raise an error if task failed
+            if exceptions == {}:
+                db.execute(
+                    update(HistoryRun)
+                    .where(HistoryRun.id == history_run_id)
+                    .values(status=XXXStatus.DONE)
                 )
-
-        logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
+                db.commit()
+            else:
+                db.execute(
+                    update(HistoryRun)
+                    .where(HistoryRun.id == history_run_id)
+                    .values(status=XXXStatus.FAILED)
+                )
+                db.commit()
+                logger.error(
+                    f'END    {wftask.order}-th task (name="{task_name}") - ERROR.'
+                )
+                # Raise first error
+                for key, value in exceptions.items():
+                    raise JobExecutionError(
+                        info=(f"An error occurred.\nOriginal error:\n{value}")
+                    )
+                logger.debug(
+                    f'END    {wftask.order}-th task (name="{task_name}")'
+                )
