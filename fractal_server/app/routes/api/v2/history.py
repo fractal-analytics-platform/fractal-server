@@ -198,7 +198,7 @@ class ImageLogsRequest(BaseModel):
     zarr_url: str
 
 
-@router.get("/project/{project_id}/status/image-log/")
+@router.post("/project/{project_id}/status/image-log/")
 async def get_image_log(
     project_id: int,
     request_data: ImageLogsRequest,
