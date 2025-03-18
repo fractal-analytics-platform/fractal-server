@@ -13,6 +13,7 @@ from pydantic import Field
 from sqlmodel import func
 from sqlmodel import select
 
+from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflowtask_check_history_owner
 from ._aux_functions_history import get_history_unit_or_404
@@ -27,6 +28,8 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.images.tools import filter_image_list
+from fractal_server.images.tools import merge_type_filters
 
 
 router = APIRouter()
@@ -129,7 +132,7 @@ class ImageLogsRequest(BaseModel):
 
 class ImageWithStatus(BaseModel):
     zarr_url: str
-    status: ImageStatus
+    status: Optional[ImageStatus] = None
 
 
 # end FIXME
@@ -220,7 +223,58 @@ async def get_history_images(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[ImageWithStatus]:
-    ...
+
+    res = await _get_dataset_check_owner(
+        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+    )
+    dataset = res["dataset"]
+    wftask = await _get_workflowtask_check_history_owner(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    type_filters = merge_type_filters(
+        task_input_types=wftask.task.input_types,
+        wftask_type_filters=wftask.type_filters,
+    )
+    images = filter_image_list(
+        images=dataset.images, type_filters=type_filters
+    )
+
+    res = await db.execute(
+        select(HistoryImageCache.zarr_url, HistoryUnit.status)
+        .join(HistoryUnit)
+        .where(HistoryImageCache.dataset_id == dataset_id)
+        .where(HistoryImageCache.workflowtask_id == workflowtask_id)
+        .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+    )
+    images_cache_with_status = res.scalars().all()
+
+    url_status = {url: status for url, status in images_cache_with_status}
+    for image in images:
+        if image["zarr_url"] not in url_status:
+            url_status["zarr_url"] = None
+
+    sorted_images = sorted(
+        [
+            {"zarr_url": url, "status": status}
+            for url, status in url_status.items()
+        ],
+        key=lambda x: x["zarr_url"],
+    )
+
+    return PaginationResponse[ImageWithStatus](
+        current_page=pagination.page,
+        page_size=pagination.page_size,
+        total_count=len(sorted_images),
+        items=sorted_images[
+            (pagination.page - 1)
+            * pagination.page_size : pagination.page
+            * pagination.page_size
+        ],
+    )
 
 
 @router.post("/project/{project_id}/status/image-log/")
