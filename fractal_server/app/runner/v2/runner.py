@@ -303,13 +303,11 @@ def execute_tasks_v2(
             db_dataset = db.get(DatasetV2, dataset.id)
             db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
-            for attribute_name in [
-                "type_filters",
-                "images",
-            ]:
+            for attribute_name in ["type_filters", "images", "history"]:
                 flag_modified(db_dataset, attribute_name)
             db.merge(db_dataset)
             db.commit()
+            db.close()  # FIXME: why is this needed?
 
             # Create accounting record
             record = AccountingRecord(
