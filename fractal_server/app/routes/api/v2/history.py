@@ -179,8 +179,10 @@ async def get_history_units(
         raise HTTPException(status_code=404, detail="HistoryRun not found.")
 
     # Get all units
-    stm = select(HistoryUnit).where(
-        HistoryUnit.history_run_id == history_run_id
+    stm = (
+        select(HistoryUnit)
+        .where(HistoryUnit.history_run_id == history_run_id)
+        .order_by(HistoryUnit.id)
     )
     res = await db.execute(stm)
     units = res.scalars().all()
