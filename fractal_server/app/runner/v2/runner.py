@@ -87,26 +87,26 @@ def execute_tasks_v2(
                 task=wftask.task.model_dump(),
             )
 
-        # Exclude timestamps since they'd need to be serialized properly
-        task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-        task_group_dump = task_group.model_dump(
-            exclude={
-                "timestamp_created",
-                "timestamp_last_used",
-            }
-        )
-        history_run = HistoryRun(
-            dataset_id=dataset.id,
-            workflowtask_id=wftask.id,
-            workflowtask_dump=workflowtask_dump,
-            task_group_dump=task_group_dump,
-            num_available_images=len(type_filtered_images),
-            status=XXXStatus.SUBMITTED,
-        )
-        db.add(history_run)
-        db.commit()
-        db.refresh(history_run)
-        history_run_id = history_run.id
+            # Exclude timestamps since they'd need to be serialized properly
+            task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+            task_group_dump = task_group.model_dump(
+                exclude={
+                    "timestamp_created",
+                    "timestamp_last_used",
+                }
+            )
+            history_run = HistoryRun(
+                dataset_id=dataset.id,
+                workflowtask_id=wftask.id,
+                workflowtask_dump=workflowtask_dump,
+                task_group_dump=task_group_dump,
+                num_available_images=len(type_filtered_images),
+                status=XXXStatus.SUBMITTED,
+            )
+            db.add(history_run)
+            db.commit()
+            db.refresh(history_run)
+            history_run_id = history_run.id
 
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
