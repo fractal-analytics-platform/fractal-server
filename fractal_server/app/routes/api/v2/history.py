@@ -135,18 +135,23 @@ async def get_history_runs(
     res = await db.execute(stm)
     runs = res.scalars().all()
 
+    # Add units count by status
     for ind, run in enumerate(runs):
-        stm = (
-            select(HistoryUnit)
-            .where(HistoryUnit.history_run_id == run.id)
-            .order_by(HistoryUnit.id)
-        )
-        res = await db.execute(stm)
-        units = res.scalars().all()
-        runs[ind] = dict(
-            **run.model_dump(), units=[unit.model_dump() for unit in units]
-        )
-
+        count_status = {}
+        for target_status in [
+            "done",
+            "submitted",
+            "failed",
+        ]:
+            stm = (
+                select(func.count(HistoryUnit.id))
+                .where(HistoryUnit.history_run_id == run.id)
+                .where(HistoryUnit.status == target_status)
+            )
+            res = await db.execute(stm)
+            num_units = res.scalar()
+            count_status[f"num_{target_status}_units"] = num_units
+        runs[ind] = dict(**run.model_dump(), **count_status)
     return runs
 
 
