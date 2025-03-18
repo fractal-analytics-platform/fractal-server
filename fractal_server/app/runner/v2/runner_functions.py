@@ -221,7 +221,7 @@ def run_v2_task_parallel(
                 history_run_id=history_run_id,
                 status=XXXStatus.SUBMITTED,
                 logfile=None,  # FIXME
-                zarr_urls=image["zarr_url"],
+                zarr_urls=[image["zarr_url"]],
             )
             # FIXME: this should be a bulk operation
             db.add(history_unit)
