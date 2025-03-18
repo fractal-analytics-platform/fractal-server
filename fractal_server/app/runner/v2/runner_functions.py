@@ -132,17 +132,17 @@ def run_v2_task_non_parallel(
         db.add(history_unit)
         db.commit()
         db.refresh(history_unit)
+        history_unit_id = history_unit.id
         for zarr_url in function_kwargs["zarr_urls"]:
             db.add(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
                     zarr_url=zarr_url,
-                    latest_history_unit_id=history_unit.id,
+                    latest_history_unit_id=history_unit_id,
                 )
             )
         db.commit()
-        history_unit_id = history_unit.id
 
     result, exception = executor.submit(
         functools.partial(
@@ -253,8 +253,8 @@ def run_v2_task_parallel(
     )
 
     outputs = []
-    history_unit_ids_done = []
-    history_unit_ids_failed = []
+    history_unit_ids_done: list[int] = []
+    history_unit_ids_failed: list[int] = []
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
             result = results[ind]
@@ -279,7 +279,7 @@ def run_v2_task_parallel(
         db.execute(
             update(HistoryUnit)
             .where(HistoryUnit.id.in_(history_unit_ids_failed))
-            .values(status=XXXStatus.DONE)
+            .values(status=XXXStatus.FAILED)
         )
         db.commit()
 
