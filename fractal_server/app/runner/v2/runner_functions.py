@@ -370,7 +370,7 @@ def run_v2_task_compound(
         with next(get_sync_db()) as db:
             db.execute(
                 update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit)
+                .where(HistoryUnit.id == history_unit_id)
                 .values(status=XXXStatus.FAILED)
             )
             db.commit()
@@ -388,7 +388,7 @@ def run_v2_task_compound(
         with next(get_sync_db()) as db:
             db.execute(
                 update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit)
+                .where(HistoryUnit.id == history_unit_id)
                 .values(status=XXXStatus.DONE)
             )
             db.commit()
@@ -441,13 +441,13 @@ def run_v2_task_compound(
         if failure:
             db.execute(
                 update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit)
+                .where(HistoryUnit.id == history_unit_id)
                 .values(status=XXXStatus.FAILED)
             )
         else:
             db.execute(
                 update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit)
+                .where(HistoryUnit.id == history_unit_id)
                 .values(status=XXXStatus.DONE)
             )
         db.commit()
