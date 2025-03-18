@@ -134,7 +134,7 @@ def run_v2_task_non_parallel(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         for zarr_url in function_kwargs["zarr_urls"]:
-            db.add(
+            db.merge(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
@@ -228,7 +228,7 @@ def run_v2_task_parallel(
             db.add(history_unit)
             db.commit()
             db.refresh(history_unit)
-            db.add(
+            db.merge(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
@@ -338,7 +338,7 @@ def run_v2_task_compound(
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         for zarr_url in input_image_zarr_urls:
-            db.add(
+            db.merge(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
