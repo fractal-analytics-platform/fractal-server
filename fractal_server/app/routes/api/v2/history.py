@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Any
 from typing import Optional
 
@@ -23,6 +24,9 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 
 
 router = APIRouter()
@@ -85,11 +89,17 @@ async def get_workflow_tasks_statuses(
 # FIXME MOVE TO SCHEMAS
 
 
+class ImageStatus(StrEnum):
+    DONE = "done"
+    SUBMITTED = "submitted"
+    FAILED = "failed"
+
+
 class HistoryUnitRead(BaseModel):
 
     id: int
     logfile: Optional[str] = None
-    status: str
+    status: ImageStatus
     zarr_urls: list[str]
 
 
@@ -98,7 +108,7 @@ class HistoryRunRead(BaseModel):
     id: int
     timestamp_started: AwareDatetime
     workflowtask_dump: dict[str, Any]
-    units: list[HistoryUnit]
+    units: list[HistoryUnitRead]
 
 
 class HistoryRunReadList(BaseModel):
@@ -109,6 +119,17 @@ class HistoryRunReadList(BaseModel):
     num_submitted_units: int = Field(ge=0)
     num_done_units: int = Field(ge=0)
     num_failed_units: int = Field(ge=0)
+
+
+class ImageLogsRequest(BaseModel):
+    workflowtask_id: int
+    dataset_id: int
+    zarr_url: str
+
+
+class ImageWithStatus(BaseModel):
+    zarr_url: str
+    status: ImageStatus
 
 
 # end FIXME
@@ -144,11 +165,7 @@ async def get_history_run_list(
     # Add units count by status
     for ind, run in enumerate(runs):
         count_status = {}
-        for target_status in [
-            "done",
-            "submitted",
-            "failed",
-        ]:
+        for target_status in ImageStatus:
             stm = (
                 select(func.count(HistoryUnit.id))
                 .where(HistoryUnit.history_run_id == run.id)
@@ -194,10 +211,16 @@ async def get_history_run(
     return dict(**history_run.model_dump(), units=units)
 
 
-class ImageLogsRequest(BaseModel):
-    workflowtask_id: int
-    dataset_id: int
-    zarr_url: str
+@router.get("/api/v2/project/{project_id}/status/images/")
+async def get_history_images(
+    project_id: int,
+    dataset_id: int,
+    workflowtask_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+    pagination: PaginationRequest = Depends(get_pagination_params),
+) -> PaginationResponse[ImageWithStatus]:
+    ...
 
 
 @router.post("/project/{project_id}/status/image-log/")
