@@ -329,7 +329,6 @@ def run_v2_task_compound(
             root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
-        in_compound_task=True,
         **executor_options_init,
     )
 
