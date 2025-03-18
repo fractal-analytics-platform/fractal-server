@@ -135,8 +135,8 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,                dataset_id=dataset.id,
-
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
             )
         elif task.type == "compound":
             current_task_output, num_tasks, exceptions = run_v2_task_compound(
@@ -148,8 +148,8 @@ def execute_tasks_v2(
                 workflow_dir_remote=workflow_dir_remote,
                 executor=runner,
                 submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,                dataset_id=dataset.id,
-
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
@@ -336,7 +336,8 @@ def execute_tasks_v2(
                 )
                 db.commit()
                 logger.error(
-                    f'END    {wftask.order}-th task (name="{task_name}") - ERROR.'
+                    f'END    {wftask.order}-th task (name="{task_name}") - '
+                    "ERROR."
                 )
                 # Raise first error
                 for key, value in exceptions.items():
