@@ -129,6 +129,7 @@ def run_v2_task_non_parallel(
             zarr_urls=function_kwargs["zarr_urls"],
         )
         db.add(history_unit)
+        db.commit()
         db.refresh(history_unit)
         history_unit_id = history_unit.id
 
@@ -193,14 +194,29 @@ def run_v2_task_parallel(
     )
 
     list_function_kwargs = []
-    for ind, image in enumerate(images):
-        list_function_kwargs.append(
-            dict(
-                zarr_url=image["zarr_url"],
-                **(wftask.args_parallel or {}),
-            ),
-        )
-        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
+    history_unit_ids = []
+    with next(get_sync_db()) as db:
+        for ind, image in enumerate(images):
+            list_function_kwargs.append(
+                dict(
+                    zarr_url=image["zarr_url"],
+                    **(wftask.args_parallel or {}),
+                ),
+            )
+            list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(
+                ind
+            )
+            history_unit = HistoryUnit(
+                history_run_id=history_run_id,
+                status=XXXStatus.SUBMITTED,
+                logfile=None,  # FIXME
+                zarr_urls=image["zarr_url"],
+            )
+            # FIXME: this should be a bulk operation
+            db.add(history_unit)
+            db.commit()
+            db.refresh(history_unit)
+            history_unit_ids.append(history_unit.id)
 
     results, exceptions = executor.multisubmit(
         functools.partial(
@@ -216,6 +232,8 @@ def run_v2_task_parallel(
     )
 
     outputs = []
+    history_unit_ids_done = []
+    history_unit_ids_failed = []
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
             result = results[ind]
@@ -224,10 +242,25 @@ def run_v2_task_parallel(
             else:
                 output = _cast_and_validate_TaskOutput(result)
             outputs.append(output)
+            history_unit_ids_done.append(history_unit_ids[ind])
         elif ind in exceptions.keys():
             print(f"Bad: {exceptions[ind]}")
+            history_unit_ids_failed.append(history_unit_ids[ind])
         else:
             print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        db.execute(
+            update(HistoryUnit)
+            .where(HistoryUnit.id.in_(history_unit_ids_done))
+            .values(status=XXXStatus.DONE)
+        )
+        db.execute(
+            update(HistoryUnit)
+            .where(HistoryUnit.id.in_(history_unit_ids_failed))
+            .values(status=XXXStatus.DONE)
+        )
+        db.commit()
 
     num_tasks = len(images)
     merged_output = merge_outputs(outputs)
