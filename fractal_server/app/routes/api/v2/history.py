@@ -199,17 +199,19 @@ async def get_history_run_units(
     )
     total_count = res.scalar()
 
+    page_size = pagination.page_size or total_count
+
     res = await db.execute(
         select(HistoryUnit)
         .where(HistoryUnit.history_run_id == history_run_id)
-        .offset((pagination.page - 1) * pagination.page_size)
-        .limit(pagination.page_size)
+        .offset((pagination.page - 1) * page_size)
+        .limit(page_size)
     )
     units = res.scalars().all()
 
     return dict(
         current_page=pagination.page,
-        page_size=pagination.page_size,
+        page_size=page_size,
         total_count=total_count,
         items=units,
     )
