@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Any
 from typing import Optional
 
@@ -20,6 +19,7 @@ from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import read_log_file
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
@@ -30,7 +30,6 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import merge_type_filters
-
 
 router = APIRouter()
 
@@ -92,17 +91,11 @@ async def get_workflow_tasks_statuses(
 # FIXME MOVE TO SCHEMAS
 
 
-class ImageStatus(str, Enum):
-    DONE = "done"
-    SUBMITTED = "submitted"
-    FAILED = "failed"
-
-
 class HistoryUnitRead(BaseModel):
 
     id: int
     logfile: Optional[str] = None
-    status: ImageStatus
+    status: XXXStatus
     zarr_urls: list[str]
 
 
@@ -132,7 +125,7 @@ class ImageLogsRequest(BaseModel):
 
 class ImageWithStatus(BaseModel):
     zarr_url: str
-    status: Optional[ImageStatus] = None
+    status: Optional[XXXStatus] = None
 
 
 # end FIXME
@@ -168,7 +161,7 @@ async def get_history_run_list(
     # Add units count by status
     for ind, run in enumerate(runs):
         count_status = {}
-        for target_status in ImageStatus:
+        for target_status in XXXStatus:
             stm = (
                 select(func.count(HistoryUnit.id))
                 .where(HistoryUnit.history_run_id == run.id)
