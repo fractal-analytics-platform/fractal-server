@@ -10,7 +10,8 @@
     * Drop `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` obsolete configuration variable (\#2359).
 * Development:
     * Add codespell to precommit (\#2358).
-
+* Testing:
+    * Use `fractal-task-tools` to build `fractal-tasks-mock` manifest (\#2374).
 
 # 2.13.1
 
