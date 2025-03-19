@@ -154,20 +154,36 @@ async def get_history_run_list(
     runs = res.scalars().all()
 
     # Add units count by status
-    # FIXME optimize: from 3*N queries to 3
+    if runs:
+        run_ids = [run.id for run in runs]
+        count_map = {_id: {} for _id in run_ids}
 
-    for ind, run in enumerate(runs):
-        count = {}
-        for target_status in XXXStatus:
-            stm = (
-                select(func.count(HistoryUnit.id))
-                .where(HistoryUnit.history_run_id == run.id)
-                .where(HistoryUnit.status == target_status.value)
+        stm = (
+            select(
+                HistoryUnit.history_run_id,
+                HistoryUnit.status,
+                func.count(HistoryUnit.id),
             )
-            res = await db.execute(stm)
-            num_units = res.scalar()
-            count[f"num_{target_status.value}_units"] = num_units
-        runs[ind] = dict(**run.model_dump(), **count)
+            .where(HistoryUnit.history_run_id.in_(run_ids))
+            .group_by(HistoryUnit.history_run_id, HistoryUnit.status)
+        )
+        res = await db.execute(stm)
+        unit_counts = res.fetchall()
+        for _id, _status, count in unit_counts:
+            count_map[_id][f"num_{_status}_units"] = count
+
+        runs = [
+            dict(
+                **run.model_dump(),
+                **count_map[run.id]
+                or {
+                    "num_done_units": 0,
+                    "num_submitted_units": 0,
+                    "num_failed_units": 0,
+                },
+            )
+            for run in runs
+        ]
 
     return runs
 

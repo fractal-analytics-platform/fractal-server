@@ -265,11 +265,21 @@ async def test_get_history_run_list(
             status=XXXStatus.SUBMITTED,
             num_available_images=2000,
         )
+        hr3 = HistoryRun(
+            dataset_id=dataset.id,
+            workflowtask_id=wftask.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            status=XXXStatus.FAILED,
+            num_available_images=2000,
+        )
         db.add(hr1)
         db.add(hr2)
+        db.add(hr3)
         await db.commit()
         await db.refresh(hr1)
         await db.refresh(hr2)
+        await db.refresh(hr3)
 
         def add_units(hr_id: int, quantity: int, status: XXXStatus):
             for _ in range(quantity):
@@ -291,7 +301,7 @@ async def test_get_history_run_list(
         )
         assert res.status_code == 200
         res = res.json()
-        assert len(res) == 2
+        assert len(res) == 3
         assert {
             "id": hr1.id,
             "num_done_units": 10,
@@ -304,6 +314,12 @@ async def test_get_history_run_list(
             "num_submitted_units": 21,
             "num_failed_units": 22,
         }.items() < res[1].items()
+        assert {
+            "id": hr3.id,
+            "num_done_units": 0,
+            "num_submitted_units": 0,
+            "num_failed_units": 0,
+        }.items() < res[2].items()
 
 
 async def test_get_history_run_units(
