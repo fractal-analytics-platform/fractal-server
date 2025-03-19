@@ -65,11 +65,7 @@ async def get_workflow_tasks_statuses(
             num_available_images=latest_history_run.num_available_images,
         )
 
-        for target_status in [
-            "done",
-            "submitted",
-            "failed",
-        ]:  # FIXME: use enum
+        for target_status in XXXStatus:
             stm = (
                 select(func.count(HistoryImageCache.zarr_url))
                 .join(HistoryUnit)
@@ -78,11 +74,13 @@ async def get_workflow_tasks_statuses(
                 .where(
                     HistoryImageCache.latest_history_unit_id == HistoryUnit.id
                 )
-                .where(HistoryUnit.status == target_status)
+                .where(HistoryUnit.status == target_status.value)
             )
             res = await db.execute(stm)
             num_images = res.scalar()
-            response[wftask.id][f"num_{target_status}_images"] = num_images
+            response[wftask.id][
+                f"num_{target_status.value}_images"
+            ] = num_images
 
     return JSONResponse(content=response, status_code=200)
 
@@ -113,7 +111,7 @@ class HistoryRunReadAggregated(BaseModel):
     workflowtask_dump: dict[str, Any]
     num_submitted_units: int
     num_done_units: int
-    num_elfailed_units: int
+    num_failed_units: int
 
 
 class ImageLogsRequest(BaseModel):
@@ -159,18 +157,24 @@ async def get_history_run_list(
 
     # Add units count by status
     # FIXME optimize: from 3*N queries to 3
+
     for ind, run in enumerate(runs):
-        count_status = {}
+        runs[ind] = dict(
+            **run.model_dump(),
+            num_submitted_units=0,
+            num_done_units=0,
+            num_failed_units=0,
+        )
         for target_status in XXXStatus:
             stm = (
                 select(func.count(HistoryUnit.id))
                 .where(HistoryUnit.history_run_id == run.id)
-                .where(HistoryUnit.status == target_status)
+                .where(HistoryUnit.status == target_status.value)
             )
             res = await db.execute(stm)
             num_units = res.scalar()
-            count_status[f"num_{target_status}_units"] = num_units
-        runs[ind] = dict(**run.model_dump(), **count_status)
+            runs[ind][f"num_{target_status.value}_units"] += num_units
+
     return runs
 
 
