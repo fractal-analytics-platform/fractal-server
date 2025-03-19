@@ -275,21 +275,18 @@ async def get_history_images(
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
     )
-    images_cache_with_status = res.fetchall()
-
-    # FIXME optimize
-    url_status = {url: status for url, status in images_cache_with_status}
-    for image in images:
-        if image["zarr_url"] not in url_status:
-            url_status[image["zarr_url"]] = None
-
-    sorted_images = sorted(
-        [
-            {"zarr_url": url, "status": status}
-            for url, status in url_status.items()
-        ],
-        key=lambda x: x["zarr_url"],
-    )
+    images_with_status = res.fetchall()
+    images_with_status += [
+        (url, None)
+        for url in (
+            set(image["zarr_url"] for image in images)
+            - set(x[0] for x in images_with_status)
+        )
+    ]
+    sorted_images = [
+        {"zarr_url": url, "status": _status}
+        for url, _status in sorted(images_with_status, key=lambda x: x[0])
+    ]
 
     total_count = len(sorted_images)
     page_size = pagination.page_size or total_count
