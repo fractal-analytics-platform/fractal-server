@@ -174,7 +174,7 @@ async def get_history_run_list(
     return runs
 
 
-@router.get("/project/{project_id}/status/run/{history_run_id}/")
+@router.get("/project/{project_id}/status/run/{history_run_id}/units/")
 async def get_history_run(
     project_id: int,
     dataset_id: int,
@@ -182,7 +182,8 @@ async def get_history_run(
     history_run_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> HistoryRunRead:
+    pagination: PaginationRequest = Depends(get_pagination_params),
+) -> PaginationResponse[HistoryUnitRead]:
 
     # Access control
     await _get_workflowtask_check_history_owner(
@@ -200,11 +201,26 @@ async def get_history_run(
         )
 
     res = await db.execute(
-        select(HistoryUnit).where(HistoryUnit.history_run_id == history_run_id)
+        select(func.count(HistoryUnit.id)).where(
+            HistoryUnit.history_run_id == history_run_id
+        )
+    )
+    total_count = res.scalar()
+
+    res = await db.execute(
+        select(HistoryUnit)
+        .where(HistoryUnit.history_run_id == history_run_id)
+        .offset((pagination.page - 1) * pagination.page_size)
+        .limit(pagination.page_size)
     )
     units = res.scalars().all()
 
-    return dict(**history_run.model_dump(), units=units)
+    return dict(
+        current_page=pagination.page,
+        page_size=pagination.page_size,
+        total_count=total_count,
+        items=units,
+    )
 
 
 @router.get("/api/v2/project/{project_id}/status/images/")
@@ -245,6 +261,7 @@ async def get_history_images(
     )
     images_cache_with_status = res.scalars().all()
 
+    # FIXME optimize
     url_status = {url: status for url, status in images_cache_with_status}
     for image in images:
         if image["zarr_url"] not in url_status:
@@ -258,7 +275,7 @@ async def get_history_images(
         key=lambda x: x["zarr_url"],
     )
 
-    return PaginationResponse[ImageWithStatus](
+    return dict(
         current_page=pagination.page,
         page_size=pagination.page_size,
         total_count=len(sorted_images),
