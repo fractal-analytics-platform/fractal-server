@@ -154,9 +154,9 @@ async def get_history_run_list(
     runs = res.scalars().all()
 
     # Add units count by status
+
     if runs:
         run_ids = [run.id for run in runs]
-        count_map = {_id: {} for _id in run_ids}
 
         stm = (
             select(
@@ -169,21 +169,19 @@ async def get_history_run_list(
         )
         res = await db.execute(stm)
         unit_counts = res.fetchall()
-        for _id, _status, count in unit_counts:
-            count_map[_id][f"num_{_status}_units"] = count
 
-        runs = [
-            dict(
-                **run.model_dump(),
-                **count_map[run.id]
-                or {
-                    "num_done_units": 0,
-                    "num_submitted_units": 0,
-                    "num_failed_units": 0,
-                },
-            )
-            for run in runs
-        ]
+        count_map = {
+            _id: {
+                "num_done_units": 0,
+                "num_submitted_units": 0,
+                "num_failed_units": 0,
+            }
+            for _id in run_ids
+        }
+        for _id, _status, count in unit_counts:
+            count_map[_id][f"num_{_status}_units"] += count
+
+        runs = [dict(**run.model_dump(), **count_map[run.id]) for run in runs]
 
     return runs
 
