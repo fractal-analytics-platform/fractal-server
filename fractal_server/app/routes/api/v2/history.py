@@ -96,14 +96,6 @@ class HistoryUnitRead(BaseModel):
     zarr_urls: list[str]
 
 
-class HistoryRunRead(BaseModel):
-
-    id: int
-    timestamp_started: AwareDatetime
-    workflowtask_dump: dict[str, Any]
-    units: list[HistoryUnitRead]
-
-
 class HistoryRunReadAggregated(BaseModel):
 
     id: int
@@ -179,7 +171,7 @@ async def get_history_run_list(
 
 
 @router.get("/project/{project_id}/status/run/{history_run_id}/units/")
-async def get_history_run(
+async def get_history_run_units(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
