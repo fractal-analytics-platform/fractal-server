@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main", "dev-2.14"]
   pull_request:
-    branches: ["main", "dev-2.14"]
+    branches: ["main", "dev-2.14", "2354b-new-data-structure-and-api-for-history-tbd"]
 
 permissions: {}
 
