@@ -151,12 +151,7 @@ async def get_history_run_list(
     # FIXME optimize: from 3*N queries to 3
 
     for ind, run in enumerate(runs):
-        runs[ind] = dict(
-            **run.model_dump(),
-            num_submitted_units=0,
-            num_done_units=0,
-            num_failed_units=0,
-        )
+        count = {}
         for target_status in XXXStatus:
             stm = (
                 select(func.count(HistoryUnit.id))
@@ -165,7 +160,8 @@ async def get_history_run_list(
             )
             res = await db.execute(stm)
             num_units = res.scalar()
-            runs[ind][f"num_{target_status.value}_units"] += num_units
+            count[f"num_{target_status.value}_units"] = num_units
+        runs[ind] = dict(**run.model_dump(), **count)
 
     return runs
 
