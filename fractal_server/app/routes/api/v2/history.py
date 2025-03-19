@@ -217,7 +217,7 @@ async def get_history_run_units(
     )
 
 
-@router.get("/api/v2/project/{project_id}/status/images/")
+@router.get("/project/{project_id}/status/images/")
 async def get_history_images(
     project_id: int,
     dataset_id: int,
@@ -253,13 +253,13 @@ async def get_history_images(
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
     )
-    images_cache_with_status = res.scalars().all()
+    images_cache_with_status = res.fetchall()
 
     # FIXME optimize
     url_status = {url: status for url, status in images_cache_with_status}
     for image in images:
         if image["zarr_url"] not in url_status:
-            url_status["zarr_url"] = None
+            url_status[image["zarr_url"]] = None
 
     sorted_images = sorted(
         [
@@ -269,14 +269,15 @@ async def get_history_images(
         key=lambda x: x["zarr_url"],
     )
 
+    total_count = len(sorted_images)
+    page_size = pagination.page_size or total_count
+
     return dict(
         current_page=pagination.page,
-        page_size=pagination.page_size,
-        total_count=len(sorted_images),
+        page_size=page_size,
+        total_count=total_count,
         items=sorted_images[
-            (pagination.page - 1)
-            * pagination.page_size : pagination.page
-            * pagination.page_size
+            (pagination.page - 1) * page_size : pagination.page * page_size
         ],
     )
 
