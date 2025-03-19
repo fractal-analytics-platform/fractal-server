@@ -1,92 +1,14 @@
 {
-  "args_schema_version": "pydantic_v1",
-  "authors": "name1 surname1, name2 surname2",
-  "has_args_schemas": true,
   "manifest_version": "2",
   "task_list": [
     {
-      "args_schema_non_parallel": {
-        "additionalProperties": false,
-        "properties": {
-          "image_dir": {
-            "description": "Image where the raw images are",
-            "title": "Image Dir",
-            "type": "string"
-          },
-          "num_images": {
-            "default": 2,
-            "description": "Number of images that this dummy task will produce.",
-            "title": "Num Images",
-            "type": "integer"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
-          "zarr_urls": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Zarr Urls",
-            "type": "array"
-          }
-        },
-        "required": [
-          "zarr_urls",
-          "zarr_dir",
-          "image_dir"
-        ],
-        "title": "CreateCellvoyagerOmeZarr",
-        "type": "object"
-      },
-      "args_schema_parallel": {
-        "additionalProperties": false,
-        "definitions": {
-          "InitArgsCellVoyager": {
-            "description": "Dummy model description.",
-            "properties": {
-              "acquisition": {
-                "description": "dummy attribute description.",
-                "title": "Acquisition",
-                "type": "integer"
-              },
-              "raw_zarr_url": {
-                "description": "dummy attribute description.",
-                "title": "Raw Zarr Url",
-                "type": "string"
-              }
-            },
-            "required": [
-              "raw_zarr_url"
-            ],
-            "title": "InitArgsCellVoyager",
-            "type": "object"
-          }
-        },
-        "properties": {
-          "init_args": {
-            "$ref": "#/definitions/InitArgsCellVoyager",
-            "description": "description",
-            "title": "Init_Args"
-          },
-          "zarr_url": {
-            "description": "description",
-            "title": "Zarr Url",
-            "type": "string"
-          }
-        },
-        "required": [
-          "zarr_url",
-          "init_args"
-        ],
-        "title": "FillCellvoyagerOmeZarr",
-        "type": "object"
-      },
+      "name": "create_ome_zarr_compound",
       "category": "Conversion",
-      "docs_info": "This is task create_ome_zarr_compound.",
-      "docs_link": "https://example.org",
+      "modality": "HCS",
+      "tags": [
+        "Yokogawa",
+        "Cellvoyager"
+      ],
       "executable_non_parallel": "create_cellvoyager_ome_zarr.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
       "meta_non_parallel": {
@@ -95,34 +17,32 @@
       "meta_parallel": {
         "key2": "value2"
       },
-      "modality": "HCS",
-      "name": "create_ome_zarr_compound",
-      "tags": [
-        "Yokogawa",
-        "Cellvoyager"
-      ]
-    },
-    {
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "image_dir": {
-            "description": "Image where the raw images are",
-            "title": "Image Dir",
-            "type": "string"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "image_dir": {
+            "title": "Image Dir",
+            "type": "string",
+            "description": "Image where the raw images are"
+          },
+          "num_images": {
+            "default": 2,
+            "title": "Num Images",
+            "type": "integer",
+            "description": "Number of images that this dummy task will produce."
           }
         },
         "required": [
@@ -130,24 +50,23 @@
           "zarr_dir",
           "image_dir"
         ],
-        "title": "CreateCellvoyagerOmeZarrMultiplex",
-        "type": "object"
+        "type": "object",
+        "title": "CreateCellvoyagerOmeZarr"
       },
       "args_schema_parallel": {
-        "additionalProperties": false,
-        "definitions": {
+        "$defs": {
           "InitArgsCellVoyager": {
             "description": "Dummy model description.",
             "properties": {
-              "acquisition": {
-                "description": "dummy attribute description.",
-                "title": "Acquisition",
-                "type": "integer"
-              },
               "raw_zarr_url": {
-                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string"
+                "type": "string",
+                "description": "dummy attribute description."
+              },
+              "acquisition": {
+                "title": "Acquisition",
+                "type": "integer",
+                "description": "dummy attribute description."
               }
             },
             "required": [
@@ -157,83 +76,172 @@
             "type": "object"
           }
         },
+        "additionalProperties": false,
         "properties": {
-          "init_args": {
-            "$ref": "#/definitions/InitArgsCellVoyager",
-            "description": "description",
-            "title": "Init_Args"
-          },
           "zarr_url": {
-            "description": "description",
             "title": "Zarr Url",
-            "type": "string"
+            "type": "string",
+            "description": "description"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsCellVoyager",
+            "title": "Init Args",
+            "description": "description"
           }
         },
         "required": [
           "zarr_url",
           "init_args"
         ],
-        "title": "FillCellvoyagerOmeZarr",
-        "type": "object"
+        "type": "object",
+        "title": "FillCellvoyagerOmeZarr"
       },
-      "category": "Conversion",
-      "docs_info": "This is task create_ome_zarr_multiplex_compound.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "create_cellvoyager_ome_zarr_multiplex.py",
-      "executable_parallel": "fill_cellvoyager_ome_zarr.py",
-      "modality": "HCS",
+      "docs_info": "## create_cellvoyager_ome_zarr\nDummy task description.\n## fill_cellvoyager_ome_zarr\nDummy task description.\n"
+    },
+    {
       "name": "create_ome_zarr_multiplex_compound",
+      "category": "Conversion",
+      "modality": "HCS",
       "tags": [
         "Yokogawa",
         "Cellvoyager"
-      ]
-    },
-    {
+      ],
+      "executable_non_parallel": "create_cellvoyager_ome_zarr_multiplex.py",
+      "executable_parallel": "fill_cellvoyager_ome_zarr.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "suffix": {
-            "default": "new",
-            "description": "Missing description",
-            "title": "Suffix",
-            "type": "string"
-          },
-          "zarr_dir": {
-            "description": "Missing description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "Missing description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "image_dir": {
+            "title": "Image Dir",
+            "type": "string",
+            "description": "Image where the raw images are"
+          }
+        },
+        "required": [
+          "zarr_urls",
+          "zarr_dir",
+          "image_dir"
+        ],
+        "type": "object",
+        "title": "CreateCellvoyagerOmeZarrMultiplex"
+      },
+      "args_schema_parallel": {
+        "$defs": {
+          "InitArgsCellVoyager": {
+            "description": "Dummy model description.",
+            "properties": {
+              "raw_zarr_url": {
+                "title": "Raw Zarr Url",
+                "type": "string",
+                "description": "dummy attribute description."
+              },
+              "acquisition": {
+                "title": "Acquisition",
+                "type": "integer",
+                "description": "dummy attribute description."
+              }
+            },
+            "required": [
+              "raw_zarr_url"
+            ],
+            "title": "InitArgsCellVoyager",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "description"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsCellVoyager",
+            "title": "Init Args",
+            "description": "description"
+          }
+        },
+        "required": [
+          "zarr_url",
+          "init_args"
+        ],
+        "type": "object",
+        "title": "FillCellvoyagerOmeZarr"
+      },
+      "docs_info": "## create_cellvoyager_ome_zarr_multiplex\nDummy task description.\n## fill_cellvoyager_ome_zarr\nDummy task description.\n"
+    },
+    {
+      "name": "MIP_compound",
+      "input_types": {
+        "3D": true
+      },
+      "output_types": {
+        "3D": false
+      },
+      "category": "Image Processing",
+      "modality": "HCS",
+      "tags": [
+        "Preprocessing"
+      ],
+      "executable_non_parallel": "new_ome_zarr.py",
+      "executable_parallel": "maximum_intensity_projection.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array",
+            "description": "Missing description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "Missing description"
+          },
+          "suffix": {
+            "default": "new",
+            "title": "Suffix",
+            "type": "string",
+            "description": "Missing description"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "NewOmeZarr",
-        "type": "object"
+        "type": "object",
+        "title": "NewOmeZarr"
       },
       "args_schema_parallel": {
-        "additionalProperties": false,
-        "definitions": {
+        "$defs": {
           "InitArgsMIP": {
             "description": "Dummy model description.",
             "properties": {
-              "new_plate": {
-                "description": "dummy attribute description.",
-                "title": "New Plate",
-                "type": "string"
-              },
               "new_zarr_url": {
-                "description": "dummy attribute description.",
                 "title": "New Zarr Url",
-                "type": "string"
+                "type": "string",
+                "description": "dummy attribute description."
+              },
+              "new_plate": {
+                "title": "New Plate",
+                "type": "string",
+                "description": "dummy attribute description."
               }
             },
             "required": [
@@ -244,128 +252,125 @@
             "type": "object"
           }
         },
+        "additionalProperties": false,
         "properties": {
-          "init_args": {
-            "$ref": "#/definitions/InitArgsMIP",
-            "description": "dummy argument description.",
-            "title": "Init_Args"
-          },
           "zarr_url": {
-            "description": "dummy argument description.",
             "title": "Zarr Url",
-            "type": "string"
+            "type": "string",
+            "description": "dummy argument description."
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsMIP",
+            "title": "Init Args",
+            "description": "dummy argument description."
           }
         },
         "required": [
           "zarr_url",
           "init_args"
         ],
-        "title": "MaximumIntensityProjection",
-        "type": "object"
+        "type": "object",
+        "title": "MaximumIntensityProjection"
       },
-      "category": "Image Processing",
-      "docs_info": "This is task MIP_compound.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "new_ome_zarr.py",
-      "executable_parallel": "maximum_intensity_projection.py",
-      "input_types": {
-        "3D": true
-      },
-      "modality": "HCS",
-      "name": "MIP_compound",
-      "output_types": {
-        "3D": false
-      },
-      "tags": [
-        "Preprocessing"
-      ]
+      "docs_info": "## new_ome_zarr\nDummy task description.\n## maximum_intensity_projection\nDummy task description.\n"
     },
     {
+      "name": "illumination_correction",
+      "input_types": {
+        "illumination_correction": false
+      },
+      "output_types": {
+        "illumination_correction": true
+      },
+      "category": "Image Processing",
+      "tags": [
+        "Preprocessing"
+      ],
+      "executable_parallel": "illumination_correction.py",
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "Missing description"
+          },
           "overwrite_input": {
             "default": false,
-            "description": "Missing description",
             "title": "Overwrite Input",
-            "type": "boolean"
-          },
-          "zarr_url": {
-            "description": "Missing description",
-            "title": "Zarr Url",
-            "type": "string"
+            "type": "boolean",
+            "description": "Missing description"
           }
         },
         "required": [
           "zarr_url"
         ],
-        "title": "IlluminationCorrection",
-        "type": "object"
+        "type": "object",
+        "title": "IlluminationCorrection"
       },
-      "category": "Image Processing",
-      "docs_info": "This is task illumination_correction.",
-      "docs_link": "https://example.org",
-      "executable_parallel": "illumination_correction.py",
+      "docs_info": "## illumination_correction\nDummy task description.\n"
+    },
+    {
+      "name": "illumination_correction_compound",
       "input_types": {
         "illumination_correction": false
       },
-      "name": "illumination_correction",
       "output_types": {
         "illumination_correction": true
       },
+      "category": "Image Processing",
       "tags": [
         "Preprocessing"
-      ]
-    },
-    {
+      ],
+      "executable_non_parallel": "illumination_correction_init.py",
+      "executable_parallel": "illumination_correction_compute.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "overwrite_input": {
-            "default": false,
-            "description": "Whether to overwrite the current image",
-            "title": "Overwrite Input",
-            "type": "boolean"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "overwrite_input": {
+            "default": false,
+            "title": "Overwrite Input",
+            "type": "boolean",
+            "description": "Whether to overwrite the current image"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "IlluminationCorrectionInit",
-        "type": "object"
+        "type": "object",
+        "title": "IlluminationCorrectionInit"
       },
       "args_schema_parallel": {
-        "additionalProperties": false,
-        "definitions": {
+        "$defs": {
           "InitArgsIllumination": {
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
-                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string"
+                "type": "string",
+                "description": "dummy attribute description."
               },
               "subsets": {
                 "additionalProperties": {
                   "type": "integer"
                 },
-                "description": "dummy attribute description.",
                 "title": "Subsets",
-                "type": "object"
+                "type": "object",
+                "description": "dummy attribute description."
               }
             },
             "required": [
@@ -375,21 +380,22 @@
             "type": "object"
           }
         },
+        "additionalProperties": false,
         "properties": {
-          "another_argument": {
-            "description": "Missing description",
-            "title": "Another Argument",
-            "type": "string"
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "description"
           },
           "init_args": {
-            "$ref": "#/definitions/InitArgsIllumination",
-            "description": "description",
-            "title": "Init_Args"
+            "$ref": "#/$defs/InitArgsIllumination",
+            "title": "Init Args",
+            "description": "description"
           },
-          "zarr_url": {
-            "description": "description",
-            "title": "Zarr Url",
-            "type": "string"
+          "another_argument": {
+            "title": "Another Argument",
+            "type": "string",
+            "description": "Missing description"
           }
         },
         "required": [
@@ -397,73 +403,66 @@
           "init_args",
           "another_argument"
         ],
-        "title": "IlluminationCorrectionCompute",
-        "type": "object"
+        "type": "object",
+        "title": "IlluminationCorrectionCompute"
       },
-      "category": "Image Processing",
-      "docs_info": "This is task illumination_correction_compound.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "illumination_correction_init.py",
-      "executable_parallel": "illumination_correction_compute.py",
-      "input_types": {
-        "illumination_correction": false
-      },
-      "name": "illumination_correction_compound",
-      "output_types": {
-        "illumination_correction": true
-      },
-      "tags": [
-        "Preprocessing"
-      ]
+      "docs_info": "## illumination_correction_init\nDummy task description.\n## illumination_correction_compute\nDummy task description.\n"
     },
     {
+      "name": "cellpose_segmentation",
+      "category": "Segmentation",
+      "tags": [
+        "Deep Learning",
+        "Convolutional Neural Network",
+        "Instance Segmentation"
+      ],
+      "executable_parallel": "cellpose_segmentation.py",
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
           "zarr_url": {
-            "description": "description",
             "title": "Zarr Url",
-            "type": "string"
+            "type": "string",
+            "description": "description"
           }
         },
         "required": [
           "zarr_url"
         ],
-        "title": "CellposeSegmentation",
-        "type": "object"
+        "type": "object",
+        "title": "CellposeSegmentation"
       },
-      "category": "Segmentation",
-      "docs_info": "This is task cellpose_segmentation.",
-      "docs_link": "https://example.org",
-      "executable_parallel": "cellpose_segmentation.py",
-      "name": "cellpose_segmentation",
-      "tags": [
-        "Deep Learning",
-        "Convolutional Neural Network",
-        "Instance Segmentation"
-      ]
+      "docs_info": "## cellpose_segmentation\nDummy task description.\n"
     },
     {
+      "name": "calculate_registration_compound",
+      "category": "Registration",
+      "modality": "HCS",
+      "tags": [
+        "Multiplexing"
+      ],
+      "executable_non_parallel": "calculate_registration_init.py",
+      "executable_parallel": "calculate_registration_compute.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "ref_acquisition": {
-            "description": "Reference-cycle acquisition number",
-            "title": "Ref Acquisition",
-            "type": "integer"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "ref_acquisition": {
+            "title": "Ref Acquisition",
+            "type": "integer",
+            "description": "Reference-cycle acquisition number"
           }
         },
         "required": [
@@ -471,19 +470,18 @@
           "zarr_dir",
           "ref_acquisition"
         ],
-        "title": "CalculateRegistrationInit",
-        "type": "object"
+        "type": "object",
+        "title": "CalculateRegistrationInit"
       },
       "args_schema_parallel": {
-        "additionalProperties": false,
-        "definitions": {
+        "$defs": {
           "InitArgsRegistration": {
             "description": "Dummy model description.",
             "properties": {
               "ref_zarr_url": {
-                "description": "dummy attribute description.",
                 "title": "Ref Zarr Url",
-                "type": "string"
+                "type": "string",
+                "description": "dummy attribute description."
               }
             },
             "required": [
@@ -493,273 +491,262 @@
             "type": "object"
           }
         },
+        "additionalProperties": false,
         "properties": {
-          "init_args": {
-            "$ref": "#/definitions/InitArgsRegistration",
-            "description": "description",
-            "title": "Init_Args"
-          },
           "zarr_url": {
-            "description": "Missing description",
             "title": "Zarr Url",
-            "type": "string"
+            "type": "string",
+            "description": "Missing description"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsRegistration",
+            "title": "Init Args",
+            "description": "description"
           }
         },
         "required": [
           "zarr_url",
           "init_args"
         ],
-        "title": "CalculateRegistrationCompute",
-        "type": "object"
+        "type": "object",
+        "title": "CalculateRegistrationCompute"
       },
-      "category": "Registration",
-      "docs_info": "This is task calculate_registration_compound.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "calculate_registration_init.py",
-      "executable_parallel": "calculate_registration_compute.py",
-      "modality": "HCS",
-      "name": "calculate_registration_compound",
-      "tags": [
-        "Multiplexing"
-      ]
+      "docs_info": "## calculate_registration_init\nDummy task description.\n## calculate_registration_compute\nDummy task description.\n"
     },
     {
+      "name": "find_registration_consensus",
+      "category": "Registration",
+      "modality": "HCS",
+      "tags": [
+        "Multiplexing"
+      ],
+      "executable_non_parallel": "find_registration_consensus.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "FindRegistrationConsensus",
-        "type": "object"
+        "type": "object",
+        "title": "FindRegistrationConsensus"
       },
-      "category": "Registration",
-      "docs_info": "This is task find_registration_consensus.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "find_registration_consensus.py",
-      "modality": "HCS",
-      "name": "find_registration_consensus",
-      "tags": [
-        "Multiplexing"
-      ]
+      "docs_info": "## find_registration_consensus\nDummy task description.\n"
     },
     {
+      "name": "apply_registration_to_image",
+      "input_types": {
+        "registration": false
+      },
+      "output_types": {
+        "registration": true
+      },
+      "category": "Registration",
+      "modality": "HCS",
+      "tags": [
+        "Multiplexing"
+      ],
+      "executable_parallel": "apply_registration_to_image.py",
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "description"
+          },
           "overwrite_input": {
             "default": true,
-            "description": "whether to overwrite the existing image",
             "title": "Overwrite Input",
-            "type": "boolean"
-          },
-          "zarr_url": {
-            "description": "description",
-            "title": "Zarr Url",
-            "type": "string"
+            "type": "boolean",
+            "description": "whether to overwrite the existing image"
           }
         },
         "required": [
           "zarr_url"
         ],
-        "title": "ApplyRegistrationToImage",
-        "type": "object"
+        "type": "object",
+        "title": "ApplyRegistrationToImage"
       },
-      "category": "Registration",
-      "docs_info": "This is task apply_registration_to_image.",
-      "docs_link": "https://example.org",
-      "executable_parallel": "apply_registration_to_image.py",
-      "input_types": {
-        "registration": false
-      },
-      "modality": "HCS",
-      "name": "apply_registration_to_image",
-      "output_types": {
-        "registration": true
-      },
-      "tags": [
-        "Multiplexing"
-      ]
+      "docs_info": "## apply_registration_to_image\nDummy task description.\n"
     },
     {
+      "name": "generic_task",
+      "executable_non_parallel": "generic_task.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "raise_error": {
-            "default": false,
-            "description": "If true, the task raises a ValueError",
-            "title": "Raise Error",
-            "type": "boolean"
-          },
-          "sleep_time": {
-            "default": 1,
-            "description": "Time to sleep, in seconds",
-            "title": "Sleep Time",
-            "type": "integer"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "sleep_time": {
+            "default": 1,
+            "title": "Sleep Time",
+            "type": "integer",
+            "description": "Time to sleep, in seconds"
+          },
+          "raise_error": {
+            "default": false,
+            "title": "Raise Error",
+            "type": "boolean",
+            "description": "If true, the task raises a ValueError"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "GenericTask",
-        "type": "object"
+        "type": "object",
+        "title": "GenericTask"
       },
-      "docs_info": "This is task generic_task.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "generic_task.py",
-      "name": "generic_task"
+      "docs_info": "## generic_task\nDummy task description.\n"
     },
     {
+      "name": "dummy_remove_images",
+      "executable_non_parallel": "dummy_remove_images.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
+          "zarr_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "Missing description"
+          },
           "more_zarr_urls": {
-            "description": "Other paths that should be removed",
             "items": {
               "type": "string"
             },
             "title": "More Zarr Urls",
-            "type": "array"
-          },
-          "zarr_dir": {
-            "description": "Missing description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
-          "zarr_urls": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "Other paths that should be removed"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "DummyRemoveImages",
-        "type": "object"
+        "type": "object",
+        "title": "DummyRemoveImages"
       },
-      "docs_info": "This is task dummy_remove_images.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "dummy_remove_images.py",
-      "name": "dummy_remove_images"
+      "docs_info": "## dummy_remove_images\nRemove images\n"
     },
     {
+      "name": "dummy_insert_single_image",
+      "executable_non_parallel": "dummy_insert_single_image.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
+          "zarr_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "Missing description"
+          },
           "attributes": {
-            "description": "Missing description",
             "title": "Attributes",
-            "type": "object"
+            "type": "object",
+            "description": "Missing description"
+          },
+          "types": {
+            "title": "Types",
+            "type": "object",
+            "description": "Missing description"
           },
           "fail": {
             "default": false,
-            "description": "If `True`, make new_zarr_url not relative to zarr_dir",
             "title": "Fail",
-            "type": "boolean"
+            "type": "boolean",
+            "description": "If `True`, make new_zarr_url not relative to zarr_dir"
           },
           "fail_2": {
             "default": false,
-            "description": "If `True`, make new_zarr_url equal to zarr_dir",
             "title": "Fail 2",
-            "type": "boolean"
-          },
-          "full_new_image": {
-            "description": "If set, it takes priority",
-            "title": "Full New Image",
-            "type": "object"
+            "type": "boolean",
+            "description": "If `True`, make new_zarr_url equal to zarr_dir"
           },
           "trailing_slash": {
             "default": false,
-            "description": "If `True`, add 10 trailing slashes to zarr_urls",
             "title": "Trailing Slash",
-            "type": "boolean"
+            "type": "boolean",
+            "description": "If `True`, add 10 trailing slashes to zarr_urls"
           },
-          "types": {
-            "description": "Missing description",
-            "title": "Types",
-            "type": "object"
-          },
-          "zarr_dir": {
-            "description": "Missing description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
-          "zarr_urls": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Zarr Urls",
-            "type": "array"
+          "full_new_image": {
+            "title": "Full New Image",
+            "type": "object",
+            "description": "If set, it takes priority"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "DummyInsertSingleImage",
-        "type": "object"
+        "type": "object",
+        "title": "DummyInsertSingleImage"
       },
-      "docs_info": "This is task dummy_insert_single_image.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "dummy_insert_single_image.py",
-      "name": "dummy_insert_single_image"
+      "docs_info": "## dummy_insert_single_image\nRemove images\n"
     },
     {
+      "name": "dummy_unset_attribute",
+      "executable_non_parallel": "dummy_unset_attribute.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "attribute": {
-            "description": "The attribute that should be unset for all input images.",
-            "title": "Attribute",
-            "type": "string"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "attribute": {
+            "title": "Attribute",
+            "type": "string",
+            "description": "The attribute that should be unset for all input images."
           }
         },
         "required": [
@@ -767,46 +754,45 @@
           "zarr_dir",
           "attribute"
         ],
-        "title": "DummyUnsetAttribute",
-        "type": "object"
+        "type": "object",
+        "title": "DummyUnsetAttribute"
       },
-      "docs_info": "This is task dummy_unset_attribute.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "dummy_unset_attribute.py",
-      "name": "dummy_unset_attribute"
+      "docs_info": "## dummy_unset_attribute\nUnset an attribute for several images\n"
     },
     {
+      "name": "generic_task_parallel",
+      "input_types": {
+        "my_type": false
+      },
+      "output_types": {
+        "my_type": true
+      },
+      "executable_parallel": "generic_task_parallel.py",
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "Missing description"
+          },
           "sleep_time": {
             "default": 0.0,
-            "description": "Missing description",
             "title": "Sleep Time",
-            "type": "number"
-          },
-          "zarr_url": {
-            "description": "Missing description",
-            "title": "Zarr Url",
-            "type": "string"
+            "type": "number",
+            "description": "Missing description"
           }
         },
         "required": [
           "zarr_url"
         ],
-        "title": "GenericTaskParallel",
-        "type": "object"
+        "type": "object",
+        "title": "GenericTaskParallel"
       },
-      "docs_info": "This is task generic_task_parallel.",
-      "docs_link": "https://example.org",
-      "executable_parallel": "generic_task_parallel.py",
-      "input_types": {
-        "my_type": false
-      },
-      "name": "generic_task_parallel",
-      "output_types": {
-        "my_type": true
-      }
+      "docs_info": "## generic_task_parallel\nDummy task description.\n"
     }
-  ]
+  ],
+  "has_args_schemas": true,
+  "args_schema_version": "pydantic_v2",
+  "authors": "name1 surname1, name2 surname2"
 }
