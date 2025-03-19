@@ -106,7 +106,7 @@ class HistoryRunRead(BaseModel):
     units: list[HistoryUnitRead]
 
 
-class HistoryRunReadList(BaseModel):
+class HistoryRunReadAggregated(BaseModel):
 
     id: int
     timestamp_started: AwareDatetime
@@ -137,7 +137,7 @@ async def get_history_run_list(
     workflowtask_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryRunReadList]:
+) -> list[HistoryRunReadAggregated]:
 
     # Access control
     await _get_workflowtask_check_history_owner(
@@ -158,6 +158,7 @@ async def get_history_run_list(
     runs = res.scalars().all()
 
     # Add units count by status
+    # FIXME optimize: from 3*N queries to 3
     for ind, run in enumerate(runs):
         count_status = {}
         for target_status in XXXStatus:
