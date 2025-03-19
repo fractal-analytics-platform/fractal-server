@@ -8,7 +8,6 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime
 from pydantic import BaseModel
-from pydantic import Field
 from sqlmodel import func
 from sqlmodel import select
 
@@ -112,9 +111,9 @@ class HistoryRunReadList(BaseModel):
     id: int
     timestamp_started: AwareDatetime
     workflowtask_dump: dict[str, Any]
-    num_submitted_units: int = Field(ge=0)
-    num_done_units: int = Field(ge=0)
-    num_failed_units: int = Field(ge=0)
+    num_submitted_units: int
+    num_done_units: int
+    num_elfailed_units: int
 
 
 class ImageLogsRequest(BaseModel):
