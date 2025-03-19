@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
@@ -8,6 +9,7 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime
 from pydantic import BaseModel
+from pydantic import field_serializer
 from sqlmodel import func
 from sqlmodel import select
 
@@ -104,6 +106,10 @@ class HistoryRunReadAggregated(BaseModel):
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
+
+    @field_serializer("timestamp_started")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
 class ImageLogsRequest(BaseModel):
