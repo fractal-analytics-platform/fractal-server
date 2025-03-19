@@ -89,9 +89,6 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "create_cellvoyager_ome_zarr.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
-      "input_types": {
-        "__no_images__": true
-      },
       "meta_non_parallel": {
         "key1": "value1"
       },
@@ -184,9 +181,6 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "create_cellvoyager_ome_zarr_multiplex.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
-      "input_types": {
-        "__no_images__": true
-      },
       "modality": "HCS",
       "name": "create_ome_zarr_multiplex_compound",
       "tags": [
