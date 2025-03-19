@@ -304,3 +304,70 @@ async def test_get_history_run_list(
             "num_submitted_units": 21,
             "num_failed_units": 22,
         }.items() < res[1].items()
+
+
+async def test_get_history_run_units(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        hr = HistoryRun(
+            dataset_id=dataset.id,
+            workflowtask_id=wftask.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            status=XXXStatus.DONE,
+            num_available_images=1000,
+        )
+        db.add(hr)
+        await db.commit()
+        await db.refresh(hr)
+
+        for _ in range(13):
+            db.add(HistoryUnit(history_run_id=hr.id, status=XXXStatus.DONE))
+        await db.commit()
+
+        # 404
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/1000/units/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 404
+
+        # Default pagination
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        res = res.json()
+        assert res["current_page"] == 1
+        assert res["page_size"] == 13
+        assert res["total_count"] == 13
+        assert len(res["items"]) == 13
+
+        # With pagination parameters
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            "&page=4&page_size=4"
+        )
+        assert res.status_code == 200
+        res = res.json()
+        assert res["current_page"] == 4
+        assert res["page_size"] == 4
+        assert res["total_count"] == 13
+        assert len(res["items"]) == 1
