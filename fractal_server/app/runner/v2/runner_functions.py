@@ -6,7 +6,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import ValidationError
-from sqlmodel import select
+from sqlmodel import insert
 from sqlmodel import update
 
 from ..exceptions import JobExecutionError
@@ -134,16 +134,19 @@ def run_v2_task_non_parallel(
         db.commit()
         db.refresh(history_unit)
         history_unit_id = history_unit.id
-        for zarr_url in function_kwargs["zarr_urls"]:
-            db.merge(
-                HistoryImageCache(
-                    workflowtask_id=wftask.id,
-                    dataset_id=dataset_id,
-                    zarr_url=zarr_url,
-                    latest_history_unit_id=history_unit_id,
-                )
+        if history_unit.zarr_urls:
+            db.execute(
+                insert(HistoryImageCache),
+                [
+                    dict(
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset_id,
+                        zarr_url=zarr_url,
+                        latest_history_unit_id=history_unit_id,
+                    )
+                    for zarr_url in history_unit.zarr_urls
+                ],
             )
-        db.commit()
 
     result, exception = executor.submit(
         functools.partial(
@@ -228,33 +231,18 @@ def run_v2_task_parallel(
         db.add_all(history_units)
         db.commit()
 
-        stm = (
-            select(HistoryImageCache.zarr_url)
-            .where(HistoryImageCache.workflowtask_id == wftask.id)
-            .where(HistoryImageCache.dataset_id == dataset_id)
-        )
-        res = db.execute(stm)
-        existing_zarr_urls = res.scalars().all()
-
+        history_image_caches = []
         for history_unit in history_units:
             db.refresh(history_unit)
-            if history_unit.zarr_urls[0] in existing_zarr_urls:
-                history_image = db.get(
-                    HistoryImageCache,
-                    (history_unit.zarr_urls[0], dataset_id, wftask.id),
+            history_image_caches.append(
+                dict(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=history_unit.zarr_urls[0],
+                    latest_history_unit_id=history_unit.id,
                 )
-                history_image.latest_history_unit_id = history_unit.id
-            else:
-                db.add(
-                    HistoryImageCache(
-                        workflowtask_id=wftask.id,
-                        dataset_id=dataset_id,
-                        zarr_url=history_unit.zarr_urls[0],
-                        latest_history_unit_id=history_unit.id,
-                    )
-                )
-        db.commit()
-
+            )
+        db.execute(insert(HistoryImageCache), history_image_caches)
         history_unit_ids = [history_unit.id for history_unit in history_units]
 
     results, exceptions = executor.multisubmit(
@@ -355,16 +343,19 @@ def run_v2_task_compound(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
-        for zarr_url in input_image_zarr_urls:
-            db.merge(
-                HistoryImageCache(
-                    workflowtask_id=wftask.id,
-                    dataset_id=dataset_id,
-                    zarr_url=zarr_url,
-                    latest_history_unit_id=history_unit_id,
-                )
+        if input_image_zarr_urls:
+            db.execute(
+                insert(HistoryImageCache),
+                [
+                    dict(
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset_id,
+                        zarr_url=zarr_url,
+                        latest_history_unit_id=history_unit_id,
+                    )
+                    for zarr_url in input_image_zarr_urls
+                ],
             )
-        db.commit()
 
     result, exception = executor.submit(
         functools.partial(
