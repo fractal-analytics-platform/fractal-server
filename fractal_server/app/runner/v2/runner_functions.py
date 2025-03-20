@@ -152,7 +152,9 @@ def run_v2_task_non_parallel(
                     HistoryImageCache.dataset_id,
                     HistoryImageCache.workflowtask_id,
                 ],
-                set_=dict(name=stmt.excluded.latest_history_unit_id),
+                set_=dict(
+                    latest_history_unit_id=stmt.excluded.latest_history_unit_id
+                ),
             )
             db.execute(stmt)
             db.commit()
@@ -258,7 +260,9 @@ def run_v2_task_parallel(
                 HistoryImageCache.dataset_id,
                 HistoryImageCache.workflowtask_id,
             ],
-            set_=dict(name=stmt.excluded.latest_history_unit_id),
+            set_=dict(
+                latest_history_unit_id=stmt.excluded.latest_history_unit_id
+            ),
         )
         db.execute(stmt)
         db.commit()
@@ -380,7 +384,9 @@ def run_v2_task_compound(
                     HistoryImageCache.dataset_id,
                     HistoryImageCache.workflowtask_id,
                 ],
-                set_=dict(name=stmt.excluded.latest_history_unit_id),
+                set_=dict(
+                    latest_history_unit_id=stmt.excluded.latest_history_unit_id
+                ),
             )
             db.execute(stmt)
             db.commit()
