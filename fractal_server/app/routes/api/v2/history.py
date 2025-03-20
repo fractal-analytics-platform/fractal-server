@@ -308,8 +308,8 @@ async def get_image_log(
         HistoryImageCache,
         (
             request_data.zarr_url,
-            request_data.workflowtask_id,
             request_data.dataset_id,
+            request_data.workflowtask_id,
         ),
     )
     if history_image_cache is None:
@@ -319,8 +319,8 @@ async def get_image_log(
         )
     # Get history unit
     history_unit = await get_history_unit_or_404(
-        history_image_cache.latest_history_unit_id,
-        db,
+        history_unit_id=history_image_cache.latest_history_unit_id,
+        db=db,
     )
 
     # Get log or placeholder text

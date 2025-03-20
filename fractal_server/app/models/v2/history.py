@@ -23,14 +23,16 @@ class HistoryRun(SQLModel, table=True):
         ondelete="CASCADE",
     )
     workflowtask_id: Optional[int] = Field(
-        foreign_key="workflowtaskv2.id", default=None, ondelete="SET NULL"
+        foreign_key="workflowtaskv2.id",
+        default=None,
+        ondelete="SET NULL",
     )
 
     workflowtask_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False)
+        sa_column=Column(JSONB, nullable=False),
     )
     task_group_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False)
+        sa_column=Column(JSONB, nullable=False),
     )
 
     timestamp_started: datetime = Field(
@@ -42,7 +44,6 @@ class HistoryRun(SQLModel, table=True):
 
 
 class HistoryUnit(SQLModel, table=True):
-
     id: Optional[int] = Field(default=None, primary_key=True)
     history_run_id: int = Field(
         foreign_key="historyrun.id",
@@ -52,12 +53,12 @@ class HistoryUnit(SQLModel, table=True):
     logfile: Optional[str]
     status: str
     zarr_urls: list[str] = Field(
-        sa_column=Column(ARRAY(String)), default_factory=list
+        sa_column=Column(ARRAY(String)),
+        default_factory=list,
     )
 
 
 class HistoryImageCache(SQLModel, table=True):
-
     zarr_url: str = Field(primary_key=True)
     dataset_id: int = Field(
         primary_key=True,
@@ -65,9 +66,12 @@ class HistoryImageCache(SQLModel, table=True):
         ondelete="CASCADE",
     )
     workflowtask_id: int = Field(
-        primary_key=True, foreign_key="workflowtaskv2.id", ondelete="CASCADE"
+        primary_key=True,
+        foreign_key="workflowtaskv2.id",
+        ondelete="CASCADE",
     )
 
     latest_history_unit_id: int = Field(
-        foreign_key="historyunit.id", ondelete="CASCADE"
+        foreign_key="historyunit.id",
+        ondelete="CASCADE",
     )
