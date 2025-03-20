@@ -1,21 +1,19 @@
 [project]
 name = "FrAcTaL-TaSkS-NoN-CaNoNiCaL"
 version = "0.0.1"
-description = "Fake tasks package with non-canonical project name"
+description = "Fake tasks package"
 readme = "README.md"
-license = { text = "BSD-3-Clause" }
 authors = [
     { name = "Your Name", email = "first.last@example.com" },
 ]
-requires-python = ">=3.8"
-dependencies = ["pydantic<2"]
+requires-python = ">=3.9"
+dependencies = ["pydantic>=2", "fractal-task-tools==0.0.8",]
 
 [project.optional-dependencies]
-dev = ["fractal-tasks-core", "build"]
-my_extra = ["devtools"]
+dev = ["devtools", "build"]
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
