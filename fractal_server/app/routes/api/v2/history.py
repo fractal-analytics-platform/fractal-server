@@ -169,7 +169,7 @@ async def get_history_run_list(
         .group_by(HistoryUnit.history_run_id, HistoryUnit.status)
     )
     res = await db.execute(stm)
-    unit_counts = res.fetchall()
+    unit_counts = res.all()
 
     count_map = {
         _id: {
@@ -274,7 +274,7 @@ async def get_history_images(
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
     )
-    images_with_status = res.fetchall()
+    images_with_status = res.all()
     images_with_status += [
         (url, None)
         for url in (
