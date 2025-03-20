@@ -154,20 +154,35 @@ async def get_history_run_list(
     runs = res.scalars().all()
 
     # Add units count by status
-    # FIXME optimize: from 3*N queries to 3
 
-    for ind, run in enumerate(runs):
-        count = {}
-        for target_status in XXXStatus:
-            stm = (
-                select(func.count(HistoryUnit.id))
-                .where(HistoryUnit.history_run_id == run.id)
-                .where(HistoryUnit.status == target_status.value)
-            )
-            res = await db.execute(stm)
-            num_units = res.scalar()
-            count[f"num_{target_status.value}_units"] = num_units
-        runs[ind] = dict(**run.model_dump(), **count)
+    if not runs:
+        return []
+
+    run_ids = [run.id for run in runs]
+    stm = (
+        select(
+            HistoryUnit.history_run_id,
+            HistoryUnit.status,
+            func.count(HistoryUnit.id),
+        )
+        .where(HistoryUnit.history_run_id.in_(run_ids))
+        .group_by(HistoryUnit.history_run_id, HistoryUnit.status)
+    )
+    res = await db.execute(stm)
+    unit_counts = res.all()
+
+    count_map = {
+        run_id: {
+            "num_done_units": 0,
+            "num_submitted_units": 0,
+            "num_failed_units": 0,
+        }
+        for run_id in run_ids
+    }
+    for run_id, unit_status, count in unit_counts:
+        count_map[run_id][f"num_{unit_status}_units"] = count
+
+    runs = [dict(**run.model_dump(), **count_map[run.id]) for run in runs]
 
     return runs
 
@@ -248,7 +263,7 @@ async def get_history_images(
         task_input_types=wftask.task.input_types,
         wftask_type_filters=wftask.type_filters,
     )
-    images = filter_image_list(
+    dataset_images = filter_image_list(
         images=dataset.images, type_filters=type_filters
     )
 
@@ -258,21 +273,20 @@ async def get_history_images(
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+        .order_by(HistoryImageCache.zarr_url)
     )
-    images_cache_with_status = res.fetchall()
+    images_with_status = res.all()
 
-    # FIXME optimize
-    url_status = {url: status for url, status in images_cache_with_status}
-    for image in images:
-        if image["zarr_url"] not in url_status:
-            url_status[image["zarr_url"]] = None
-
-    sorted_images = sorted(
-        [
-            {"zarr_url": url, "status": status}
-            for url, status in url_status.items()
-        ],
-        key=lambda x: x["zarr_url"],
+    missing_images = set(image["zarr_url"] for image in dataset_images) - set(
+        x[0] for x in images_with_status
+    )
+    images_with_status.extend([(url, None) for url in missing_images])
+    sorted_images_with_status = sorted(images_with_status, key=lambda x: x[0])
+    sorted_images = list(
+        map(
+            lambda x: {"zarr_url": x[0], "status": x[1]},
+            sorted_images_with_status,
+        )
     )
 
     total_count = len(sorted_images)
