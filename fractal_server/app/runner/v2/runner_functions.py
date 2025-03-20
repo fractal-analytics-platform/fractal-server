@@ -6,7 +6,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import ValidationError
-from sqlmodel import insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlmodel import update
 
 from ..exceptions import JobExecutionError
@@ -135,8 +135,7 @@ def run_v2_task_non_parallel(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         if history_unit.zarr_urls:
-            db.execute(
-                insert(HistoryImageCache),
+            stmt = pg_insert(HistoryImageCache).values(
                 [
                     dict(
                         workflowtask_id=wftask.id,
@@ -147,6 +146,16 @@ def run_v2_task_non_parallel(
                     for zarr_url in history_unit.zarr_urls
                 ],
             )
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[
+                    HistoryImageCache.zarr_url,
+                    HistoryImageCache.dataset_id,
+                    HistoryImageCache.workflowtask_id,
+                ],
+                set_=dict(name=stmt.excluded.latest_history_unit_id),
+            )
+            db.execute(stmt)
+            db.commit()
 
     result, exception = executor.submit(
         functools.partial(
@@ -242,7 +251,17 @@ def run_v2_task_parallel(
                     latest_history_unit_id=history_unit.id,
                 )
             )
-        db.execute(insert(HistoryImageCache), history_image_caches)
+        stmt = pg_insert(HistoryImageCache).values(history_image_caches)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[
+                HistoryImageCache.zarr_url,
+                HistoryImageCache.dataset_id,
+                HistoryImageCache.workflowtask_id,
+            ],
+            set_=dict(name=stmt.excluded.latest_history_unit_id),
+        )
+        db.execute(stmt)
+        db.commit()
         history_unit_ids = [history_unit.id for history_unit in history_units]
 
     results, exceptions = executor.multisubmit(
@@ -344,8 +363,7 @@ def run_v2_task_compound(
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         if input_image_zarr_urls:
-            db.execute(
-                insert(HistoryImageCache),
+            stmt = pg_insert(HistoryImageCache).values(
                 [
                     dict(
                         workflowtask_id=wftask.id,
@@ -356,6 +374,16 @@ def run_v2_task_compound(
                     for zarr_url in input_image_zarr_urls
                 ],
             )
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[
+                    HistoryImageCache.zarr_url,
+                    HistoryImageCache.dataset_id,
+                    HistoryImageCache.workflowtask_id,
+                ],
+                set_=dict(name=stmt.excluded.latest_history_unit_id),
+            )
+            db.execute(stmt)
+            db.commit()
 
     result, exception = executor.submit(
         functools.partial(
