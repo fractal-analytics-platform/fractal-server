@@ -180,7 +180,7 @@ async def get_history_run_list(
         for run_id in run_ids
     }
     for run_id, unit_status, count in unit_counts:
-        count_map[run_id][f"num_{unit_status}_units"] += count
+        count_map[run_id][f"num_{unit_status}_units"] = count
 
     runs = [dict(**run.model_dump(), **count_map[run.id]) for run in runs]
 
