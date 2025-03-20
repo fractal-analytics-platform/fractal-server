@@ -207,6 +207,7 @@ def run_v2_task_parallel(
 
     list_function_kwargs = []
     history_unit_ids = []
+    history_units = []
     with next(get_sync_db()) as db:
         for ind, image in enumerate(images):
             list_function_kwargs.append(
@@ -224,20 +225,23 @@ def run_v2_task_parallel(
                 logfile=None,  # FIXME
                 zarr_urls=[image["zarr_url"]],
             )
-            # FIXME: this should be a bulk operation
-            db.add(history_unit)
-            db.commit()
+            history_units.append(history_unit)
+
+        db.add_all(history_units)
+        db.commit()
+        for history_unit in history_units:
             db.refresh(history_unit)
             db.merge(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
-                    zarr_url=image["zarr_url"],
+                    zarr_url=history_unit.zarr_urls[0],
                     latest_history_unit_id=history_unit.id,
                 )
             )
-            db.commit()
-            history_unit_ids.append(history_unit.id)
+        db.commit()
+
+        history_unit_ids = [history_unit.id for history_unit in history_units]
 
     results, exceptions = executor.multisubmit(
         functools.partial(
