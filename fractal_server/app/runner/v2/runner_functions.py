@@ -212,9 +212,9 @@ def run_v2_task_parallel(
             list_function_kwargs.append(
                 {
                     "zarr_url": image["zarr_url"],
-                    **(wftask.args_parallel or {}),
                     _COMPONENT_KEY_: _index_to_component(ind),
-                },
+                    **(wftask.args_parallel or {}),
+                }
             )
             history_unit = HistoryUnit(
                 history_run_id=history_run_id,
@@ -401,8 +401,8 @@ def run_v2_task_compound(
             {
                 "zarr_url": parallelization_item.zarr_url,
                 "init_args": parallelization_item.init_args,
-                _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}"
-                ** (wftask.args_parallel or {}),
+                _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
+                **(wftask.args_parallel or {}),
             }
         )
 
