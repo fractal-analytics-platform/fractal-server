@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 import pytest
@@ -240,6 +241,9 @@ async def test_get_history_run_list(
     client,
     MockCurrentUser,
 ):
+    local_tz = datetime.now().astimezone().tzinfo
+    timestamp = datetime.now(tz=local_tz)
+
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
@@ -256,6 +260,7 @@ async def test_get_history_run_list(
             task_group_dump={},
             status=XXXStatus.DONE,
             num_available_images=1000,
+            timestamp_started=timestamp,
         )
         hr2 = HistoryRun(
             dataset_id=dataset.id,
@@ -264,6 +269,7 @@ async def test_get_history_run_list(
             task_group_dump={},
             status=XXXStatus.SUBMITTED,
             num_available_images=2000,
+            timestamp_started=timestamp,
         )
         hr3 = HistoryRun(
             dataset_id=dataset.id,
@@ -272,6 +278,7 @@ async def test_get_history_run_list(
             task_group_dump={},
             status=XXXStatus.FAILED,
             num_available_images=2000,
+            timestamp_started=timestamp,
         )
         db.add(hr1)
         db.add(hr2)
@@ -302,24 +309,32 @@ async def test_get_history_run_list(
         assert res.status_code == 200
         res = res.json()
         assert len(res) == 3
-        assert {
-            "id": hr1.id,
-            "num_done_units": 10,
-            "num_submitted_units": 11,
-            "num_failed_units": 12,
-        }.items() < res[0].items()
-        assert {
-            "id": hr2.id,
-            "num_done_units": 20,
-            "num_submitted_units": 21,
-            "num_failed_units": 22,
-        }.items() < res[1].items()
-        assert {
-            "id": hr3.id,
-            "num_done_units": 0,
-            "num_submitted_units": 0,
-            "num_failed_units": 0,
-        }.items() < res[2].items()
+        assert res == [
+            {
+                "id": hr1.id,
+                "num_done_units": 10,
+                "num_submitted_units": 11,
+                "num_failed_units": 12,
+                "timestamp_started": timestamp.isoformat(),
+                "workflowtask_dump": {},
+            },
+            {
+                "id": hr2.id,
+                "num_done_units": 20,
+                "num_submitted_units": 21,
+                "num_failed_units": 22,
+                "timestamp_started": timestamp.isoformat(),
+                "workflowtask_dump": {},
+            },
+            {
+                "id": hr3.id,
+                "num_done_units": 0,
+                "num_submitted_units": 0,
+                "num_failed_units": 0,
+                "timestamp_started": timestamp.isoformat(),
+                "workflowtask_dump": {},
+            },
+        ]
 
 
 async def test_get_history_run_units(
