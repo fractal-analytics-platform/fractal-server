@@ -417,12 +417,15 @@ async def test_get_history_images(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
-        dataset_images = [
-            {"zarr_url": f"/a{i}", "types": {"x": True}} for i in range(5)
-        ] + [
-            {"zarr_url": f"/b{i}", "types": {"x": True, "y": True}}
+        images_x_no_y = [
+            dict(zarr_url=f"/a{i}", types={"x": True}) for i in range(5)
+        ]
+        images_x_and_y = [
+            dict(zarr_url=f"/b{i}", types={"x": True, "y": True})
             for i in range(5)
         ]
+
+        dataset_images = images_x_no_y + images_x_and_y
         dataset = await dataset_factory_v2(
             project_id=project.id, images=dataset_images
         )
@@ -430,7 +433,9 @@ async def test_get_history_images(
         task = await task_factory_v2(user_id=user.id, input_types={"y": True})
 
         wftask = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id, type_filters={"x": True}
+            workflow_id=workflow.id,
+            task_id=task.id,
+            type_filters={"x": True},
         )
 
         hr = HistoryRun(
@@ -439,7 +444,7 @@ async def test_get_history_images(
             workflowtask_dump={},
             task_group_dump={},
             status=XXXStatus.DONE,
-            num_available_images=1000,
+            num_available_images=9999,
         )
         db.add(hr)
         await db.commit()
@@ -448,7 +453,7 @@ async def test_get_history_images(
             history_run_id=hr.id,
             logfile=None,
             status=XXXStatus.DONE,
-            zarr_urls=["/a1", "/a2"],
+            zarr_urls=["/a1", "/b1"],
         )
         db.add(hu)
         await db.commit()
@@ -463,7 +468,7 @@ async def test_get_history_images(
         )
         db.add(
             HistoryImageCache(
-                zarr_url="/a2",
+                zarr_url="/b1",
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
                 latest_history_unit_id=hu.id,
@@ -479,14 +484,29 @@ async def test_get_history_images(
         assert res.status_code == 200
         res = res.json()
         assert res["current_page"] == 1
-        assert res["page_size"] == 7
-        assert res["total_count"] == 7
-        assert set(img["zarr_url"] for img in res["items"]) == {
-            "/a1",
-            "/a2",
-            "/b0",
-            "/b1",
-            "/b2",
-            "/b3",
-            "/b4",
-        }
+        debug(res["total_count"])
+        assert res["page_size"] == 5
+        assert res["total_count"] == 5
+        debug(res["items"])
+        assert res["items"] == [
+            {
+                "zarr_url": "/b0",
+                "status": None,
+            },
+            {
+                "zarr_url": "/b1",
+                "status": "done",
+            },
+            {
+                "zarr_url": "/b2",
+                "status": None,
+            },
+            {
+                "zarr_url": "/b3",
+                "status": None,
+            },
+            {
+                "zarr_url": "/b4",
+                "status": None,
+            },
+        ]
