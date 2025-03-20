@@ -117,8 +117,8 @@ def run_v2_task_non_parallel(
     function_kwargs = {
         "zarr_urls": [image["zarr_url"] for image in images],
         "zarr_dir": zarr_dir,
-        _COMPONENT_KEY_: _index_to_component(0)
-        ** (wftask.args_non_parallel or {}),
+        _COMPONENT_KEY_: _index_to_component(0),
+        **(wftask.args_non_parallel or {}),
     }
 
     # Database History operations
@@ -339,6 +339,7 @@ def run_v2_task_compound(
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         for zarr_url in input_image_zarr_urls:
+            db.bulk
             db.merge(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
