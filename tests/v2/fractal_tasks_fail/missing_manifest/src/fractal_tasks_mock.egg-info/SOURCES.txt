@@ -1,6 +1,0 @@
-pyproject.toml
-src/fractal_tasks_mock/__init__.py
-src/fractal_tasks_mock.egg-info/PKG-INFO
-src/fractal_tasks_mock.egg-info/SOURCES.txt
-src/fractal_tasks_mock.egg-info/dependency_links.txt
-src/fractal_tasks_mock.egg-info/top_level.txt
