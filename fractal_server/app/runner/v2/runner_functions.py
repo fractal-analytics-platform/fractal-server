@@ -206,7 +206,6 @@ def run_v2_task_parallel(
     )
 
     list_function_kwargs = []
-    history_unit_ids = []
     history_units = []
     with next(get_sync_db()) as db:
         for ind, image in enumerate(images):
