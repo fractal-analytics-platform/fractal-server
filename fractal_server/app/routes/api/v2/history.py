@@ -263,7 +263,7 @@ async def get_history_images(
         task_input_types=wftask.task.input_types,
         wftask_type_filters=wftask.type_filters,
     )
-    images = filter_image_list(
+    dataset_images = filter_image_list(
         images=dataset.images, type_filters=type_filters
     )
 
@@ -273,19 +273,21 @@ async def get_history_images(
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+        .order_by(HistoryImageCache.zarr_url)
     )
     images_with_status = res.all()
-    images_with_status += [
-        (url, None)
-        for url in (
-            set(image["zarr_url"] for image in images)
-            - set(x[0] for x in images_with_status)
+
+    missing_images = set(image["zarr_url"] for image in dataset_images) - set(
+        x[0] for x in images_with_status
+    )
+    images_with_status.extend([(url, None) for url in missing_images])
+    sorted_images_with_status = sorted(images_with_status, key=lambda x: x[0])
+    sorted_images = list(
+        map(
+            lambda x: {"zarr_url": x[0], "status": x[1]},
+            sorted_images_with_status,
         )
-    ]
-    sorted_images = [
-        {"zarr_url": url, "status": _status}
-        for url, _status in sorted(images_with_status, key=lambda x: x[0])
-    ]
+    )
 
     total_count = len(sorted_images)
     page_size = pagination.page_size or total_count
