@@ -1,76 +1,75 @@
 {
-  "args_schema_version": "pydantic_v1",
-  "has_args_schemas": true,
   "manifest_version": "2",
   "task_list": [
     {
+      "name": "generic_task",
+      "executable_non_parallel": "generic_task.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "raise_error": {
-            "default": false,
-            "description": "If true, the task raises a ValueError",
-            "title": "Raise Error",
-            "type": "boolean"
-          },
-          "sleep_time": {
-            "default": 1,
-            "description": "Time to sleep, in seconds",
-            "title": "Sleep Time",
-            "type": "integer"
-          },
-          "zarr_dir": {
-            "description": "description",
-            "title": "Zarr Dir",
-            "type": "string"
-          },
           "zarr_urls": {
-            "description": "description",
             "items": {
               "type": "string"
             },
             "title": "Zarr Urls",
-            "type": "array"
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "sleep_time": {
+            "default": 1,
+            "title": "Sleep Time",
+            "type": "integer",
+            "description": "Time to sleep, in seconds"
+          },
+          "raise_error": {
+            "default": false,
+            "title": "Raise Error",
+            "type": "boolean",
+            "description": "If true, the task raises a ValueError"
           }
         },
         "required": [
           "zarr_urls",
           "zarr_dir"
         ],
-        "title": "GenericTask",
-        "type": "object"
+        "type": "object",
+        "title": "GenericTask"
       },
-      "docs_info": "This is task generic_task.",
-      "docs_link": "https://example.org",
-      "executable_non_parallel": "generic_task.py",
-      "name": "generic_task"
+      "docs_info": "## generic_task\nDummy task description.\n"
     },
     {
+      "name": "generic_task_parallel",
+      "input_types": {
+        "my_type": false
+      },
+      "output_types": {
+        "my_type": true
+      },
+      "executable_parallel": "generic_task_parallel.py",
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
           "zarr_url": {
-            "description": "Missing description",
             "title": "Zarr Url",
-            "type": "string"
+            "type": "string",
+            "description": "Missing description"
           }
         },
         "required": [
           "zarr_url"
         ],
-        "title": "GenericTaskParallel",
-        "type": "object"
+        "type": "object",
+        "title": "GenericTaskParallel"
       },
-      "docs_info": "This is task generic_task_parallel.",
-      "docs_link": "https://example.org",
-      "executable_parallel": "generic_task_parallel.py",
-      "input_types": {
-        "my_type": false
-      },
-      "name": "generic_task_parallel",
-      "output_types": {
-        "my_type": true
-      }
+      "docs_info": "## generic_task_parallel\nDummy task description.\n"
     }
-  ]
+  ],
+  "has_args_schemas": true,
+  "args_schema_version": "pydantic_v2",
+  "authors": "name1 surname1, name2 surname2"
 }

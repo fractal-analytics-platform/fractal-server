@@ -8,10 +8,6 @@ from ..aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.app.runner.task_files import TaskFiles
 
-# from fractal_server.app.history import ImageStatus
-# from fractal_server.app.models.v2.history import HistoryItemV2
-# from fractal_server.app.models.v2.history import ImageStatus
-
 
 def get_dummy_task_files(root_dir_local: Path) -> TaskFiles:
     return TaskFiles(
@@ -37,25 +33,11 @@ async def test_submit_success(
                 "zarr_urls": ZARR_URLS,
                 "__FRACTAL_PARALLEL_COMPONENT__": "000000",
             },
-            history_item_id=mock_history_item.id,
             task_files=get_dummy_task_files(tmp_path),
         )
     assert result == 42
     assert exception is None
     db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ZARR_URLS:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.DONE
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     zarr_url: UnitStatus.DONE for zarr_url in ZARR_URLS
-    # }
 
 
 async def test_submit_fail(
@@ -75,27 +57,11 @@ async def test_submit_fail(
                 "zarr_urls": ZARR_URLS,
                 "__FRACTAL_PARALLEL_COMPONENT__": "000000",
             },
-            history_item_id=mock_history_item.id,
             task_files=get_dummy_task_files(tmp_path),
         )
     assert result is None
     assert isinstance(exception, ValueError)
     assert ERROR_MSG in str(exception)
-
-    db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ZARR_URLS:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.FAILED
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     zarr_url: ImageStatus.FAILED for zarr_url in ZARR_URLS
-    # }
 
 
 def fun(parameters: int):
@@ -137,33 +103,10 @@ async def test_multisubmit(db, mock_history_item, tmp_path):
                     "__FRACTAL_PARALLEL_COMPONENT__": "000003",
                 },
             ],
-            history_item_id=mock_history_item.id,
             task_files=get_dummy_task_files(tmp_path),
         )
         debug(results)
         debug(exceptions)
-    db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ["a", "b", "d"]:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.DONE
-    # for zarr_url in ["c"]:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.FAILED
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     "a": "done",
-    #     "b": "done",
-    #     "c": "failed",
-    #     "d": "done",
-    # }
 
 
 # @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 2, 3, 4, 8, 16])
