@@ -339,7 +339,6 @@ def run_v2_task_compound(
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         for zarr_url in input_image_zarr_urls:
-            db.bulk
             db.merge(
                 HistoryImageCache(
                     workflowtask_id=wftask.id,
