@@ -114,12 +114,12 @@ def run_v2_task_non_parallel(
         which_type="non_parallel",
     )
 
-    function_kwargs = dict(
-        zarr_urls=[image["zarr_url"] for image in images],
-        zarr_dir=zarr_dir,
-        **(wftask.args_non_parallel or {}),
-    )
-    function_kwargs[_COMPONENT_KEY_] = _index_to_component(0)
+    function_kwargs = {
+        "zarr_urls": [image["zarr_url"] for image in images],
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: _index_to_component(0)
+        ** (wftask.args_non_parallel or {}),
+    }
 
     # Database History operations
     with next(get_sync_db()) as db:
@@ -316,12 +316,12 @@ def run_v2_task_compound(
     )
 
     # 3/A: non-parallel init task
-    function_kwargs = dict(
-        zarr_urls=[image["zarr_url"] for image in images],
-        zarr_dir=zarr_dir,
-        **(wftask.args_non_parallel or {}),
-    )
-    function_kwargs[_COMPONENT_KEY_] = f"init_{_index_to_component(0)}"
+    function_kwargs = {
+        "zarr_urls": [image["zarr_url"] for image in images],
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: f"init_{_index_to_component(0)}"
+        ** (wftask.args_non_parallel or {}),
+    }
 
     # Create database History entries
     input_image_zarr_urls = function_kwargs["zarr_urls"]
@@ -398,15 +398,13 @@ def run_v2_task_compound(
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
         list_function_kwargs.append(
-            dict(
-                zarr_url=parallelization_item.zarr_url,
-                init_args=parallelization_item.init_args,
-                **(wftask.args_parallel or {}),
-            ),
+            {
+                "zarr_url": parallelization_item.zarr_url,
+                "init_args": parallelization_item.init_args,
+                _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}"
+                ** (wftask.args_parallel or {}),
+            }
         )
-        list_function_kwargs[-1][
-            _COMPONENT_KEY_
-        ] = f"compute_{_index_to_component(ind)}"
 
     results, exceptions = executor.multisubmit(
         functools.partial(
