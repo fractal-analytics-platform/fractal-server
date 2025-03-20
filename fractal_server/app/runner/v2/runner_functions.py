@@ -210,13 +210,11 @@ def run_v2_task_parallel(
     with next(get_sync_db()) as db:
         for ind, image in enumerate(images):
             list_function_kwargs.append(
-                dict(
-                    zarr_url=image["zarr_url"],
+                {
+                    "zarr_url": image["zarr_url"],
                     **(wftask.args_parallel or {}),
-                ),
-            )
-            list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(
-                ind
+                    _COMPONENT_KEY_: _index_to_component(ind),
+                },
             )
             history_unit = HistoryUnit(
                 history_run_id=history_run_id,
