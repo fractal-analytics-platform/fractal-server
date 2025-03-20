@@ -7,6 +7,6 @@ if [ ! -d "venv" ]; then
 fi
 source venv/bin/activate
 python3 -m pip install -e ".[dev]"
-python3 create_manifest.py
+fractal-manifest create --package fractal-tasks-non-canonical
 python3 -m build
 deactivate

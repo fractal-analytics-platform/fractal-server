@@ -1,8 +1,13 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: fractal-tasks-mock
 Version: 0.0.1
 Summary: Fake tasks package
 Author-email: Your Name <first.last@example.com>
 License: BSD-3-Clause
-Requires-Python: >=3.8
+Requires-Python: >=3.9
 Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2
+Requires-Dist: fractal-task-tools==0.0.8
+Provides-Extra: dev
+Requires-Dist: devtools; extra == "dev"
+Requires-Dist: build; extra == "dev"
