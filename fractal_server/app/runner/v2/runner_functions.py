@@ -6,6 +6,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import ValidationError
+from sqlmodel import select
 from sqlmodel import update
 
 from ..exceptions import JobExecutionError
@@ -226,16 +227,32 @@ def run_v2_task_parallel(
 
         db.add_all(history_units)
         db.commit()
+
+        stm = (
+            select(HistoryImageCache.zarr_url)
+            .where(HistoryImageCache.workflowtask_id == wftask.id)
+            .where(HistoryImageCache.dataset_id == dataset_id)
+        )
+        res = db.execute(stm)
+        existing_zarr_urls = res.scalars().all()
+
         for history_unit in history_units:
             db.refresh(history_unit)
-            db.merge(
-                HistoryImageCache(
-                    workflowtask_id=wftask.id,
-                    dataset_id=dataset_id,
-                    zarr_url=history_unit.zarr_urls[0],
-                    latest_history_unit_id=history_unit.id,
+            if history_unit.zarr_urls[0] in existing_zarr_urls:
+                history_image = db.get(
+                    HistoryImageCache,
+                    (history_unit.zarr_urls[0], dataset_id, wftask.id),
                 )
-            )
+                history_image.latest_history_unit_id = history_unit.id
+            else:
+                db.add(
+                    HistoryImageCache(
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset_id,
+                        zarr_url=history_unit.zarr_urls[0],
+                        latest_history_unit_id=history_unit.id,
+                    )
+                )
         db.commit()
 
         history_unit_ids = [history_unit.id for history_unit in history_units]
