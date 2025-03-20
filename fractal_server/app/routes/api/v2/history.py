@@ -308,8 +308,8 @@ async def get_image_log(
         HistoryImageCache,
         (
             request_data.zarr_url,
-            request_data.workflowtask_id,
             request_data.dataset_id,
+            request_data.workflowtask_id,
         ),
     )
     if history_image_cache is None:
