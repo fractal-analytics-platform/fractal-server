@@ -319,8 +319,8 @@ def run_v2_task_compound(
     function_kwargs = {
         "zarr_urls": [image["zarr_url"] for image in images],
         "zarr_dir": zarr_dir,
-        _COMPONENT_KEY_: f"init_{_index_to_component(0)}"
-        ** (wftask.args_non_parallel or {}),
+        _COMPONENT_KEY_: f"init_{_index_to_component(0)}",
+        **(wftask.args_non_parallel or {}),
     }
 
     # Create database History entries
