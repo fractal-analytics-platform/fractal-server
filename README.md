@@ -118,7 +118,7 @@
 | fractal\_server/app/schemas/v2/dataset.py                                      |       99 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/dumps.py                                        |       41 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/job.py                                          |       81 |        0 |       10 |        0 |    100% |           |
-| fractal\_server/app/schemas/v2/manifest.py                                     |       83 |        0 |       32 |        1 |     99% |  108->110 |
+| fractal\_server/app/schemas/v2/manifest.py                                     |       83 |        0 |       32 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/project.py                                      |       23 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/status.py                                       |        5 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/task.py                                         |      138 |        0 |       14 |        0 |    100% |           |
@@ -160,7 +160,7 @@
 | fractal\_server/urls.py                                                        |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                  |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                      **TOTAL** | **8777** |  **404** | **1818** |  **136** | **94%** |           |
+|                                                                      **TOTAL** | **8777** |  **404** | **1818** |  **135** | **94%** |           |
 
 
 ## Setup coverage badge
