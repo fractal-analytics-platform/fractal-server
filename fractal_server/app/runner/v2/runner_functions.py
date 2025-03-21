@@ -16,13 +16,13 @@ from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.history.status_enum import XXXStatus
-from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
 
 
 __all__ = [
@@ -114,12 +114,12 @@ def run_v2_task_non_parallel(
         which_type="non_parallel",
     )
 
-    function_kwargs = dict(
-        zarr_urls=[image["zarr_url"] for image in images],
-        zarr_dir=zarr_dir,
+    function_kwargs = {
+        "zarr_urls": [image["zarr_url"] for image in images],
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: _index_to_component(0),
         **(wftask.args_non_parallel or {}),
-    )
-    function_kwargs[_COMPONENT_KEY_] = _index_to_component(0)
+    }
 
     # Database History operations
     with next(get_sync_db()) as db:
@@ -133,16 +133,18 @@ def run_v2_task_non_parallel(
         db.commit()
         db.refresh(history_unit)
         history_unit_id = history_unit.id
-        for zarr_url in function_kwargs["zarr_urls"]:
-            db.merge(
-                HistoryImageCache(
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=[
+                dict(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
                     zarr_url=zarr_url,
                     latest_history_unit_id=history_unit_id,
                 )
-            )
-        db.commit()
+                for zarr_url in history_unit.zarr_urls
+            ],
+        )
 
     result, exception = executor.submit(
         functools.partial(
@@ -191,7 +193,6 @@ def run_v2_task_parallel(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-
     if len(images) == 0:
         # FIXME: Do something with history units/images?
         return (TaskOutput(), 0, {})
@@ -205,39 +206,45 @@ def run_v2_task_parallel(
         which_type="parallel",
     )
 
-    list_function_kwargs = []
-    history_unit_ids = []
+    list_function_kwargs = [
+        {
+            "zarr_url": image["zarr_url"],
+            _COMPONENT_KEY_: _index_to_component(ind),
+            **(wftask.args_parallel or {}),
+        }
+        for ind, image in enumerate(images)
+    ]
+    history_units = [
+        HistoryUnit(
+            history_run_id=history_run_id,
+            status=XXXStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[image["zarr_url"]],
+        )
+        for image in images
+    ]
+
     with next(get_sync_db()) as db:
-        for ind, image in enumerate(images):
-            list_function_kwargs.append(
-                dict(
-                    zarr_url=image["zarr_url"],
-                    **(wftask.args_parallel or {}),
-                ),
-            )
-            list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(
-                ind
-            )
-            history_unit = HistoryUnit(
-                history_run_id=history_run_id,
-                status=XXXStatus.SUBMITTED,
-                logfile=None,  # FIXME
-                zarr_urls=[image["zarr_url"]],
-            )
-            # FIXME: this should be a bulk operation
-            db.add(history_unit)
-            db.commit()
+        db.add_all(history_units)
+        db.commit()
+
+        for history_unit in history_units:
             db.refresh(history_unit)
-            db.merge(
-                HistoryImageCache(
-                    workflowtask_id=wftask.id,
-                    dataset_id=dataset_id,
-                    zarr_url=image["zarr_url"],
-                    latest_history_unit_id=history_unit.id,
-                )
+        history_unit_ids = [history_unit.id for history_unit in history_units]
+
+        history_image_caches = [
+            dict(
+                workflowtask_id=wftask.id,
+                dataset_id=dataset_id,
+                zarr_url=history_unit.zarr_urls[0],
+                latest_history_unit_id=history_unit.id,
             )
-            db.commit()
-            history_unit_ids.append(history_unit.id)
+            for history_unit in history_units
+        ]
+
+        bulk_upsert_image_cache_fast(
+            db=db, list_upsert_objects=history_image_caches
+        )
 
     results, exceptions = executor.multisubmit(
         functools.partial(
@@ -300,7 +307,6 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-
     executor_options_init = submit_setup_call(
         wftask=wftask,
         root_dir_local=workflow_dir_local,
@@ -315,12 +321,12 @@ def run_v2_task_compound(
     )
 
     # 3/A: non-parallel init task
-    function_kwargs = dict(
-        zarr_urls=[image["zarr_url"] for image in images],
-        zarr_dir=zarr_dir,
+    function_kwargs = {
+        "zarr_urls": [image["zarr_url"] for image in images],
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: f"init_{_index_to_component(0)}",
         **(wftask.args_non_parallel or {}),
-    )
-    function_kwargs[_COMPONENT_KEY_] = f"init_{_index_to_component(0)}"
+    }
 
     # Create database History entries
     input_image_zarr_urls = function_kwargs["zarr_urls"]
@@ -337,16 +343,18 @@ def run_v2_task_compound(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
-        for zarr_url in input_image_zarr_urls:
-            db.merge(
-                HistoryImageCache(
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=[
+                dict(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
                     zarr_url=zarr_url,
                     latest_history_unit_id=history_unit_id,
                 )
-            )
-        db.commit()
+                for zarr_url in input_image_zarr_urls
+            ],
+        )
 
     result, exception = executor.submit(
         functools.partial(
@@ -394,18 +402,15 @@ def run_v2_task_compound(
             db.commit()
         return (TaskOutput(), 0, {})
 
-    list_function_kwargs = []
-    for ind, parallelization_item in enumerate(parallelization_list):
-        list_function_kwargs.append(
-            dict(
-                zarr_url=parallelization_item.zarr_url,
-                init_args=parallelization_item.init_args,
-                **(wftask.args_parallel or {}),
-            ),
-        )
-        list_function_kwargs[-1][
-            _COMPONENT_KEY_
-        ] = f"compute_{_index_to_component(ind)}"
+    list_function_kwargs = [
+        {
+            "zarr_url": parallelization_item.zarr_url,
+            "init_args": parallelization_item.init_args,
+            _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
+            **(wftask.args_parallel or {}),
+        }
+        for ind, parallelization_item in enumerate(parallelization_list)
+    ]
 
     results, exceptions = executor.multisubmit(
         functools.partial(
