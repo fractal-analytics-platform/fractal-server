@@ -230,41 +230,43 @@ def run_v2_task_parallel(
         which_type="parallel",
     )
 
-    list_function_kwargs = []
-    history_units = []
+    list_function_kwargs = [
+        {
+            "zarr_url": image["zarr_url"],
+            _COMPONENT_KEY_: _index_to_component(ind),
+            **(wftask.args_parallel or {}),
+        }
+        for ind, image in enumerate(images)
+    ]
+    history_units = [
+        HistoryUnit(
+            history_run_id=history_run_id,
+            status=XXXStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[image["zarr_url"]],
+        )
+        for image in images
+    ]
+
     with next(get_sync_db()) as db:
-        for ind, image in enumerate(images):
-            list_function_kwargs.append(
-                {
-                    "zarr_url": image["zarr_url"],
-                    _COMPONENT_KEY_: _index_to_component(ind),
-                    **(wftask.args_parallel or {}),
-                }
-            )
-            history_unit = HistoryUnit(
-                history_run_id=history_run_id,
-                status=XXXStatus.SUBMITTED,
-                logfile=None,  # FIXME
-                zarr_urls=[image["zarr_url"]],
-            )
-            history_units.append(history_unit)
 
         db.add_all(history_units)
         db.commit()
 
-        history_image_caches = []
         for history_unit in history_units:
             db.refresh(history_unit)
-            history_image_caches.append(
-                dict(
-                    workflowtask_id=wftask.id,
-                    dataset_id=dataset_id,
-                    zarr_url=history_unit.zarr_urls[0],
-                    latest_history_unit_id=history_unit.id,
-                )
-            )
-
         history_unit_ids = [history_unit.id for history_unit in history_units]
+
+        history_image_caches = [
+            dict(
+                workflowtask_id=wftask.id,
+                dataset_id=dataset_id,
+                zarr_url=history_unit.zarr_urls[0],
+                latest_history_unit_id=history_unit.id,
+            )
+            for history_unit in history_units
+        ]
+
         bulk_upsert_image_cache_fast(
             db=db, list_upsert_objects=history_image_caches
         )
@@ -427,16 +429,15 @@ def run_v2_task_compound(
             db.commit()
         return (TaskOutput(), 0, {})
 
-    list_function_kwargs = []
-    for ind, parallelization_item in enumerate(parallelization_list):
-        list_function_kwargs.append(
-            {
-                "zarr_url": parallelization_item.zarr_url,
-                "init_args": parallelization_item.init_args,
-                _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
-                **(wftask.args_parallel or {}),
-            }
-        )
+    list_function_kwargs = [
+        {
+            "zarr_url": parallelization_item.zarr_url,
+            "init_args": parallelization_item.init_args,
+            _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
+            **(wftask.args_parallel or {}),
+        }
+        for ind, parallelization_item in enumerate(parallelization_list)
+    ]
 
     results, exceptions = executor.multisubmit(
         functools.partial(
