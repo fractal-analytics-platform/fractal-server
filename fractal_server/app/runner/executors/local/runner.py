@@ -11,11 +11,6 @@ from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.logger import set_logger
 
-# from fractal_server.app.history import XXXStatus
-
-# from fractal_server.app.history import update_all_images
-# from fractal_server.app.history import update_single_image
-# from fractal_server.app.history import update_single_image_logfile
 
 logger = set_logger(__name__)
 
@@ -54,9 +49,7 @@ class LocalRunner(BaseRunner):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_item_id: int,
         task_files: TaskFiles,
-        in_compound_task: bool = False,
         local_backend_config: Optional[LocalBackendConfig] = None,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
@@ -78,22 +71,10 @@ class LocalRunner(BaseRunner):
         # RETRIEVAL PHASE
         try:
             result = future.result()
-            if not in_compound_task:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.DONE,
-                #     logfile=current_task_files.log_file_local,
-                # )
             logger.debug(f"[submit] END {result=}")
             return result, None
         except Exception as e:
             exception = e
-            # update_all_images(
-            #     history_item_id=history_item_id,
-            #     status=ImageStatus.FAILED,
-            #     logfile=current_task_files.log_file_local,
-            # )
             logger.debug(f"[submit] END {exception=}")
             return None, exception
 
@@ -101,7 +82,6 @@ class LocalRunner(BaseRunner):
         self,
         func: callable,
         list_parameters: list[dict],
-        history_item_id: int,
         task_files: TaskFiles,
         in_compound_task: bool = False,
         local_backend_config: Optional[LocalBackendConfig] = None,
@@ -163,46 +143,13 @@ class LocalRunner(BaseRunner):
                     #     positional_index
                     # )
                     zarr_url = list_parameters[positional_index]["zarr_url"]
-                    if not in_compound_task:
-                        pass
-                        # update_single_image_logfile(
-                        #     history_item_id=history_item_id,
-                        #     zarr_url=zarr_url,
-                        #     logfile=current_task_files.log_file_local,
-                        # )
                     try:
                         results[positional_index] = fut.result()
                         print(f"Mark {zarr_url=} as done, {kwargs}")
-                        if not in_compound_task:
-                            pass
-                            # update_single_image(
-                            #     history_item_id=history_item_id,
-                            #     zarr_url=zarr_url,
-                            #     status=ImageStatus.DONE,
-                            # )
                     except Exception as e:
                         print(f"Mark {zarr_url=} as failed, {kwargs} - {e}")
                         exceptions[positional_index] = e
-                        if not in_compound_task:
-                            pass
-                            # update_single_image(
-                            #     history_item_id=history_item_id,
-                            #     zarr_url=zarr_url,
-                            #     status=ImageStatus.FAILED,
-                            # )
-        if in_compound_task:
-            if exceptions == {}:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.DONE,
-                # )
-            else:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.FAILED,
-                # )
+
         logger.debug(f"[multisubmit] END, {results=}, {exceptions=}")
 
         return results, exceptions
