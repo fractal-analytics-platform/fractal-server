@@ -270,30 +270,39 @@ async def get_history_images(
     # FIXME reduce logging?
     prefix = f"[DS{dataset.id}-WFT{wftask.id}-images]"
 
-    # Reconstruct type filters by going through the workflow task list
-    latest_type_filters = {}
-    for current_wftask in workflow.task_list[0 : wftask.order + 1]:
-        patch = merge_type_filters(
-            wftask_type_filters=current_wftask.type_filters,
-            task_input_types=current_wftask.task.input_types,
-        )
-        latest_type_filters.update(patch)
-    logger.debug(f"{prefix} {latest_type_filters=}")
+    # (1) Get the type-filtered list of dataset images
 
-    # Get all matching images from the dataset
+    # (1A) Reconstruct dataset type filters by starting from {} and making
+    # incremental updates with `output_types` of all previous tasks
+    inferred_dataset_type_filters = {}
+    for current_wftask in workflow.task_list[0 : wftask.order]:
+        inferred_dataset_type_filters.update(current_wftask.task.output_types)
+    logger.debug(f"{prefix} {inferred_dataset_type_filters=}")
+    # (1B) Compute type filters for the current wftask
+    type_filters_patch = merge_type_filters(
+        task_input_types=wftask.task.input_types,
+        wftask_type_filters=wftask.type_filters,
+    )
+    logger.debug(f"{prefix} {type_filters_patch=}")
+    # (1C) Combine dataset type filters (lower priority) and current-wftask
+    # filters (higher priority)
+    actual_filters = inferred_dataset_type_filters
+    actual_filters.update(type_filters_patch)
+    logger.debug(f"{prefix} {actual_filters=}")
+    # (1D) Get all matching images from the dataset
     filtered_dataset_images = filter_image_list(
         images=dataset.images,
-        type_filters=latest_type_filters,
+        type_filters=inferred_dataset_type_filters,
     )
     logger.debug(f"{prefix} {len(dataset.images)=}")
     logger.debug(f"{prefix} {len(filtered_dataset_images)=}")
-
+    # (1E) Extract the list of URLs for filtered images
     filtered_dataset_images_url = list(
         img["zarr_url"] for img in filtered_dataset_images
     )
-    logger.debug(f"{prefix} {len(filtered_dataset_images_url)=}")
 
-    # Get pairs (zarr_url,status) for all processed images
+    # (2) Get `(zarr_url, status)` pairs for all images that have already
+    # been processed
     res = await db.execute(
         select(HistoryImageCache.zarr_url, HistoryUnit.status)
         .join(HistoryUnit)
@@ -306,8 +315,7 @@ async def get_history_images(
     list_processed_url_status = res.all()
     logger.debug(f"{prefix} {len(list_processed_url_status)=}")
 
-    # Further processing
-
+    # (3) Combine outputs from 1 and 2
     list_processed_url = list(item[0] for item in list_processed_url_status)
     logger.debug(f"{prefix} {len(list_processed_url)=}")
 
