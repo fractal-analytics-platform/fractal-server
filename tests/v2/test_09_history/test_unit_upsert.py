@@ -1,6 +1,8 @@
+import time
 from typing import Any
 
 import pytest
+from devtools import debug
 from sqlalchemy.orm import Session
 from sqlmodel import select
 
@@ -8,7 +10,7 @@ from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.runner.v2.runner_functions import (
+from fractal_server.app.runner.v2._db_tools import (
     bulk_upsert_image_cache_fast,
 )
 
@@ -56,50 +58,63 @@ async def test_upsert_function(
         db_sync.commit()
         db_sync.refresh(run)
 
+        NUM = 200
+        OLD_ZARR_URLS = [f"/already-there/{i:05d}" for i in range(NUM)]
+        NEW_ZARR_URLS = [f"/not-there/{i:05d}" for i in range(NUM)]
+
+        # Create an `HistoryImageCache` that should be updated
         unit1 = HistoryUnit(
             history_run_id=run.id,
             status=XXXStatus.SUBMITTED,
-            logfile="/log/a",
-            zarr_urls=["/a"],
+            zarr_urls=OLD_ZARR_URLS,
         )
+        db_sync.add(unit1)
+        db_sync.commit()
+        db_sync.refresh(unit1)
+        db_sync.add_all(
+            [
+                HistoryImageCache(
+                    zarr_url=zarr_url,
+                    dataset_id=dataset.id,
+                    workflowtask_id=wftask.id,
+                    latest_history_unit_id=unit1.id,
+                )
+                for zarr_url in OLD_ZARR_URLS
+            ]
+        )
+        db_sync.commit()
+
+        # Create `HistoryImageCache` rows that should be inserted
         unit2 = HistoryUnit(
             history_run_id=run.id,
             status=XXXStatus.DONE,
-            logfile="/log/b",
-            zarr_urls=["/a", "/b"],
+            zarr_urls=OLD_ZARR_URLS + NEW_ZARR_URLS,
         )
-        db_sync.add_all([unit1, unit2])
+        db_sync.add(unit2)
         db_sync.commit()
-        db_sync.refresh(unit1)
         db_sync.refresh(unit2)
 
-        cache1 = HistoryImageCache(
-            zarr_url="/a",
-            dataset_id=dataset.id,
-            workflowtask_id=wftask.id,
-            latest_history_unit_id=unit1.id,
-        )
-        db_sync.add(cache1)
-        db_sync.commit()
+        # Run upsert function
+        list_upsert_objects = [
+            {
+                "zarr_url": zarr_url,
+                "dataset_id": dataset.id,
+                "workflowtask_id": wftask.id,
+                "latest_history_unit_id": unit2.id,
+            }
+            for zarr_url in sorted(OLD_ZARR_URLS + NEW_ZARR_URLS)
+        ]
 
+        t0 = time.perf_counter()
         upsert_function(
             db=db_sync,
-            list_upsert_objects=[
-                {
-                    "zarr_url": "/a",
-                    "dataset_id": dataset.id,
-                    "workflowtask_id": wftask.id,
-                    "latest_history_unit_id": unit2.id,
-                },
-                {
-                    "zarr_url": "/b",
-                    "dataset_id": dataset.id,
-                    "workflowtask_id": wftask.id,
-                    "latest_history_unit_id": unit2.id,
-                },
-            ],
+            list_upsert_objects=list_upsert_objects,
         )
+        elapsed_time = time.perf_counter() - t0
+        debug(upsert_function)
+        debug(elapsed_time)
 
+        # Assert correctness
         caches = (
             db_sync.execute(
                 select(HistoryImageCache).order_by(HistoryImageCache.zarr_url)
@@ -107,18 +122,14 @@ async def test_upsert_function(
             .scalars()
             .all()
         )
-
-        assert [cache.model_dump() for cache in caches] == [
+        actual_caches = [cache.model_dump() for cache in caches]
+        expected_chaches = [
             {
-                "zarr_url": "/a",
+                "zarr_url": zarr_url,
                 "dataset_id": dataset.id,
                 "workflowtask_id": wftask.id,
                 "latest_history_unit_id": unit2.id,
-            },
-            {
-                "zarr_url": "/b",
-                "dataset_id": dataset.id,
-                "workflowtask_id": wftask.id,
-                "latest_history_unit_id": unit2.id,
-            },
+            }
+            for zarr_url in (OLD_ZARR_URLS + NEW_ZARR_URLS)
         ]
+        assert actual_caches == expected_chaches

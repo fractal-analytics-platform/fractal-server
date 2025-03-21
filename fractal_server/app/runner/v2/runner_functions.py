@@ -6,8 +6,6 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import ValidationError
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.orm import Session
 from sqlmodel import update
 
 from ..exceptions import JobExecutionError
@@ -18,13 +16,13 @@ from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.history.status_enum import XXXStatus
-from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
 
 
 __all__ = [
@@ -34,28 +32,6 @@ __all__ = [
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
-
-
-def bulk_upsert_image_cache_fast(
-    *, db: Session, list_upsert_objects: list[dict[str, Any]]
-) -> None:
-    """
-    https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
-    """
-    if len(list_upsert_objects) == 0:
-        return None
-    stmt = pg_insert(HistoryImageCache).values(list_upsert_objects)
-    stmt = stmt.on_conflict_do_update(
-        # constraint="pk_historyimagecache",
-        index_elements=[
-            HistoryImageCache.zarr_url,
-            HistoryImageCache.dataset_id,
-            HistoryImageCache.workflowtask_id,
-        ],
-        set_=dict(latest_history_unit_id=stmt.excluded.latest_history_unit_id),
-    )
-    db.execute(stmt)
-    db.commit()
 
 
 def _cast_and_validate_TaskOutput(
@@ -217,7 +193,6 @@ def run_v2_task_parallel(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-
     if len(images) == 0:
         # FIXME: Do something with history units/images?
         return (TaskOutput(), 0, {})
@@ -250,7 +225,6 @@ def run_v2_task_parallel(
     ]
 
     with next(get_sync_db()) as db:
-
         db.add_all(history_units)
         db.commit()
 
@@ -333,7 +307,6 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-
     executor_options_init = submit_setup_call(
         wftask=wftask,
         root_dir_local=workflow_dir_local,
