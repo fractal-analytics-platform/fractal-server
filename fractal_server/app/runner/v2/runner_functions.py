@@ -135,6 +135,7 @@ def run_v2_task_non_parallel(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         if history_unit.zarr_urls:
+            # https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
             stmt = pg_insert(HistoryImageCache).values(
                 [
                     dict(
@@ -253,6 +254,7 @@ def run_v2_task_parallel(
                     latest_history_unit_id=history_unit.id,
                 )
             )
+        # https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
         stmt = pg_insert(HistoryImageCache).values(history_image_caches)
         stmt = stmt.on_conflict_do_update(
             index_elements=[
@@ -367,6 +369,7 @@ def run_v2_task_compound(
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         if input_image_zarr_urls:
+            # https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
             stmt = pg_insert(HistoryImageCache).values(
                 [
                     dict(
