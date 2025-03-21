@@ -735,7 +735,10 @@ class RunnerSlurmSSH(BaseRunner):
 
     def check_remote_python_interpreter(self):
         settings = Inject(get_settings)
-        cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
+        cmd = (
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.versions"
+        )
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
         if remote_version != __VERSION__:

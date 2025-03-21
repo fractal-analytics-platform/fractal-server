@@ -30,11 +30,10 @@ def get_dummy_task_files(root_path: Path) -> TaskFiles:
 @pytest.mark.ssh
 @pytest.mark.container
 async def test_submit_success(
-    db,
-    mock_history_item,
-    tmp777_path,
-    monkey_slurm,
+    db, mock_history_item, tmp777_path, monkey_slurm, override_settings_factory
 ):
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
+
     def do_nothing(parameters: dict, **kwargs) -> int:
         return 42
 
