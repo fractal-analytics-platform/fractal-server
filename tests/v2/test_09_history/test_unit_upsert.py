@@ -24,7 +24,7 @@ def bulk_upsert_image_cache_slow(
 
 
 @pytest.mark.parametrize(
-    "upsert_function",
+    "bulk_upsert_image_cache_function",
     [bulk_upsert_image_cache_fast, bulk_upsert_image_cache_slow],
 )
 async def test_upsert_function(
@@ -34,7 +34,7 @@ async def test_upsert_function(
     dataset_factory_v2,
     workflowtask_factory_v2,
     db_sync,
-    upsert_function,
+    bulk_upsert_image_cache_function,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
@@ -106,12 +106,12 @@ async def test_upsert_function(
         ]
 
         t0 = time.perf_counter()
-        upsert_function(
+        bulk_upsert_image_cache_function(
             db=db_sync,
             list_upsert_objects=list_upsert_objects,
         )
         elapsed_time = time.perf_counter() - t0
-        debug(upsert_function)
+        debug(bulk_upsert_image_cache_function)
         debug(elapsed_time)
 
         # Assert correctness
