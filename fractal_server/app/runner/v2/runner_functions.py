@@ -7,6 +7,7 @@ from typing import Optional
 
 from pydantic import ValidationError
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.orm import Session
 from sqlmodel import update
 
 from ..exceptions import JobExecutionError
@@ -33,6 +34,35 @@ __all__ = [
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
+
+
+def bulk_upsert_image_cache_fast(
+    db: Session,
+    list_upsert_objects: list[dict[str, Any]],
+) -> None:
+    """
+    https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
+    """
+    stmt = pg_insert(HistoryImageCache).values(list_upsert_objects)
+    stmt = stmt.on_conflict_do_update(
+        # constraint="pk_historyimagecache",
+        index_elements=[
+            HistoryImageCache.zarr_url,
+            HistoryImageCache.dataset_id,
+            HistoryImageCache.workflowtask_id,
+        ],
+        set_=dict(latest_history_unit_id=stmt.excluded.latest_history_unit_id),
+    )
+    db.execute(stmt)
+    db.commit()
+
+
+def bulk_upsert_image_cache_slow(
+    db: Session, list_upsert_objects: list[dict[str, Any]]
+) -> None:
+    for obj in list_upsert_objects:
+        db.merge(HistoryImageCache(**obj))
+    db.commit()
 
 
 def _cast_and_validate_TaskOutput(
@@ -135,8 +165,8 @@ def run_v2_task_non_parallel(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         if history_unit.zarr_urls:
-            # https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
-            stmt = pg_insert(HistoryImageCache).values(
+            bulk_upsert_image_cache_fast(
+                db,
                 [
                     dict(
                         workflowtask_id=wftask.id,
@@ -147,18 +177,6 @@ def run_v2_task_non_parallel(
                     for zarr_url in history_unit.zarr_urls
                 ],
             )
-            stmt = stmt.on_conflict_do_update(
-                index_elements=[
-                    HistoryImageCache.zarr_url,
-                    HistoryImageCache.dataset_id,
-                    HistoryImageCache.workflowtask_id,
-                ],
-                set_=dict(
-                    latest_history_unit_id=stmt.excluded.latest_history_unit_id
-                ),
-            )
-            db.execute(stmt)
-            db.commit()
 
     result, exception = executor.submit(
         functools.partial(
@@ -254,21 +272,9 @@ def run_v2_task_parallel(
                     latest_history_unit_id=history_unit.id,
                 )
             )
-        # https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
-        stmt = pg_insert(HistoryImageCache).values(history_image_caches)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[
-                HistoryImageCache.zarr_url,
-                HistoryImageCache.dataset_id,
-                HistoryImageCache.workflowtask_id,
-            ],
-            set_=dict(
-                latest_history_unit_id=stmt.excluded.latest_history_unit_id
-            ),
-        )
-        db.execute(stmt)
-        db.commit()
+
         history_unit_ids = [history_unit.id for history_unit in history_units]
+        bulk_upsert_image_cache_fast(db, history_image_caches)
 
     results, exceptions = executor.multisubmit(
         functools.partial(
@@ -369,8 +375,8 @@ def run_v2_task_compound(
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         if input_image_zarr_urls:
-            # https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
-            stmt = pg_insert(HistoryImageCache).values(
+            bulk_upsert_image_cache_fast(
+                db,
                 [
                     dict(
                         workflowtask_id=wftask.id,
@@ -381,18 +387,6 @@ def run_v2_task_compound(
                     for zarr_url in input_image_zarr_urls
                 ],
             )
-            stmt = stmt.on_conflict_do_update(
-                index_elements=[
-                    HistoryImageCache.zarr_url,
-                    HistoryImageCache.dataset_id,
-                    HistoryImageCache.workflowtask_id,
-                ],
-                set_=dict(
-                    latest_history_unit_id=stmt.excluded.latest_history_unit_id
-                ),
-            )
-            db.execute(stmt)
-            db.commit()
 
     result, exception = executor.submit(
         functools.partial(
