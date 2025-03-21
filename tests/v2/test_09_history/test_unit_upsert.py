@@ -83,8 +83,8 @@ async def test_upsert_function(
         db_sync.commit()
 
         upsert_function(
-            db_sync,
-            [
+            db=db_sync,
+            list_upsert_objects=[
                 {
                     "zarr_url": "/a",
                     "dataset_id": dataset.id,

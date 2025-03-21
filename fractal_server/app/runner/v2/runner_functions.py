@@ -42,6 +42,8 @@ def bulk_upsert_image_cache_fast(
     """
     https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
     """
+    if len(list_upsert_objects) == 0:
+        return None
     stmt = pg_insert(HistoryImageCache).values(list_upsert_objects)
     stmt = stmt.on_conflict_do_update(
         # constraint="pk_historyimagecache",
@@ -155,19 +157,18 @@ def run_v2_task_non_parallel(
         db.commit()
         db.refresh(history_unit)
         history_unit_id = history_unit.id
-        if history_unit.zarr_urls:
-            bulk_upsert_image_cache_fast(
-                db=db,
-                list_upsert_objects=[
-                    dict(
-                        workflowtask_id=wftask.id,
-                        dataset_id=dataset_id,
-                        zarr_url=zarr_url,
-                        latest_history_unit_id=history_unit_id,
-                    )
-                    for zarr_url in history_unit.zarr_urls
-                ],
-            )
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=[
+                dict(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit_id,
+                )
+                for zarr_url in history_unit.zarr_urls
+            ],
+        )
 
     result, exception = executor.submit(
         functools.partial(
@@ -369,19 +370,18 @@ def run_v2_task_compound(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
-        if input_image_zarr_urls:
-            bulk_upsert_image_cache_fast(
-                db=db,
-                list_upsert_objects=[
-                    dict(
-                        workflowtask_id=wftask.id,
-                        dataset_id=dataset_id,
-                        zarr_url=zarr_url,
-                        latest_history_unit_id=history_unit_id,
-                    )
-                    for zarr_url in input_image_zarr_urls
-                ],
-            )
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=[
+                dict(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit_id,
+                )
+                for zarr_url in input_image_zarr_urls
+            ],
+        )
 
     result, exception = executor.submit(
         functools.partial(
