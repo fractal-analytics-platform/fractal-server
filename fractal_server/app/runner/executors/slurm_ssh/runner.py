@@ -11,7 +11,9 @@ import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ._check_jobs_status import get_finished_jobs
+from ..slurm_common._check_jobs_status import (
+    get_finished_jobs,
+)
 from fractal_server import __VERSION__
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError

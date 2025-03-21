@@ -15,7 +15,9 @@ import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ._check_jobs_status import get_finished_jobs
+from ..slurm_common._check_jobs_status import (
+    get_finished_jobs,
+)
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
@@ -289,7 +291,6 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-
         # Prepare input pickle(s)
         versions = dict(
             python=sys.version_info[:3],
