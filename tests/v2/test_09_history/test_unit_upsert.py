@@ -1,4 +1,7 @@
+from typing import Any
+
 import pytest
+from sqlalchemy.orm import Session
 from sqlmodel import select
 
 from fractal_server.app.history.status_enum import XXXStatus
@@ -8,9 +11,14 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.v2.runner_functions import (
     bulk_upsert_image_cache_fast,
 )
-from fractal_server.app.runner.v2.runner_functions import (
-    bulk_upsert_image_cache_slow,
-)
+
+
+def bulk_upsert_image_cache_slow(
+    *, db: Session, list_upsert_objects: list[dict[str, Any]]
+) -> None:
+    for obj in list_upsert_objects:
+        db.merge(HistoryImageCache(**obj))
+    db.commit()
 
 
 @pytest.mark.parametrize(
