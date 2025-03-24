@@ -27,6 +27,7 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -488,7 +489,7 @@ class RunnerSlurmSSH(BaseRunner):
         history_item_id: int,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
-        in_compound_task: bool = False,
+        task_type: TaskTypeType,
     ) -> tuple[Any, Exception]:
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
@@ -501,25 +502,16 @@ class RunnerSlurmSSH(BaseRunner):
         )
 
         if self.jobs != {}:
-            if not in_compound_task:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.FAILED,
-                # )
             raise JobExecutionError("Unexpected branch: jobs should be empty.")
 
         if self.is_shutdown():
-            if not in_compound_task:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.FAILED,
-                # )
             raise JobExecutionError("Cannot continue after shutdown.")
 
         # Validation phase
-        self.validate_submit_parameters(parameters)
+        self.validate_submit_parameters(
+            parameters=parameters,
+            task_type=task_type,
+        )
 
         # Create task subfolder
         # original_umask = os.umask(0)
@@ -569,22 +561,6 @@ class RunnerSlurmSSH(BaseRunner):
                 )
             time.sleep(self.slurm_poll_interval)
 
-        if not in_compound_task:
-            if exception is None:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.DONE,
-                #     logfile=LOGFILE,
-                # )
-            else:
-                pass
-                # update_all_images(
-                #     history_item_id=history_item_id,
-                #     status=ImageStatus.FAILED,
-                #     logfile=LOGFILE,
-                # )
-
         return result, exception
 
     def multisubmit(
@@ -594,13 +570,13 @@ class RunnerSlurmSSH(BaseRunner):
         history_item_id: int,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
-        in_compound_task: bool = False,
+        task_type: TaskTypeType,
     ):
         # self.scancel_jobs()
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
-            in_compound_task=in_compound_task,
+            task_type=task_type,
         )
 
         workdir_local = task_files.wftask_subfolder_local
@@ -704,28 +680,6 @@ class RunnerSlurmSSH(BaseRunner):
                     result, exception = self._postprocess_single_task(
                         task=task
                     )
-                    if not in_compound_task:
-                        pass
-                        # update_single_image_logfile(
-                        #     history_item_id=history_item_id,
-                        #     zarr_url=task.zarr_url,
-                        #     logfile=task.task_files.log_file_local,
-                        # )
-                    if not in_compound_task:
-                        if exception is None:
-                            pass
-                            # update_single_image(
-                            #     zarr_url=task.zarr_url,
-                            #     history_item_id=history_item_id,
-                            #     status=ImageStatus.DONE,
-                            # )
-                        else:
-                            pass
-                            # update_single_image(
-                            #     zarr_url=task.zarr_url,
-                            #     history_item_id=history_item_id,
-                            #     status=ImageStatus.FAILED,
-                            # )
                     if exception is None:
                         results[task.index] = result
                     else:
