@@ -4,6 +4,19 @@ from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.schemas.v2.task import TaskTypeType
 
 
+TASK_TYPES_SUBMIT: list[TaskTypeType] = [
+    "compound",
+    "converter_compound",
+    "non_parallel",
+    "converter_non_parallel",
+]
+TASK_TYPES_MULTISUBMIT: list[TaskTypeType] = [
+    "compound",
+    "converter_compound",
+    "parallel",
+]
+
+
 class BaseRunner(object):
     """
     Base class for Fractal runners.
@@ -73,6 +86,8 @@ class BaseRunner(object):
             parameters: Parameters dictionary.
             task_type: Task type.s
         """
+        if task_type not in TASK_TYPES_SUBMIT:
+            raise ValueError(f"Invalid {task_type=} for `submit`.")
         if not isinstance(parameters, dict):
             raise ValueError("`parameters` must be a dictionary.")
         if task_type in ["non_parallel", "compound"]:
@@ -103,11 +118,17 @@ class BaseRunner(object):
             list_parameters: List of parameters dictionaries.
             task_type: Task type.
         """
+        if task_type not in TASK_TYPES_MULTISUBMIT:
+            raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
+
+        if not isinstance(list_parameters, list):
+            raise ValueError("`parameters` must be a list.")
+
         for single_kwargs in list_parameters:
             if not isinstance(single_kwargs, dict):
-                raise RuntimeError("kwargs itemt must be a dictionary.")
+                raise ValueError("kwargs itemt must be a dictionary.")
             if "zarr_url" not in single_kwargs.keys():
-                raise RuntimeError(
+                raise ValueError(
                     f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
                 )
             if _COMPONENT_KEY_ not in single_kwargs.keys():
@@ -118,4 +139,4 @@ class BaseRunner(object):
         if task_type == "parallel":
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
-                raise RuntimeError("Non-unique zarr_urls")
+                raise ValueError("Non-unique zarr_urls")
