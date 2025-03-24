@@ -1,12 +1,15 @@
 from pathlib import Path
+from typing import Literal
 
 from fastapi import HTTPException
 from fastapi import status
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import WorkflowTaskV2
+from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_project_check_owner,
@@ -86,7 +89,7 @@ async def _verify_workflow_and_dataset_access(
     dataset_id: int,
     user_id: int,
     db: AsyncSession,
-) -> list[int]:
+) -> dict[Literal["dataset", "workflow"], DatasetV2 | WorkflowV2]:
     """
     Verify user access to a dataset/workflow pair.
 
@@ -119,6 +122,8 @@ async def _verify_workflow_and_dataset_access(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Dataset does not belong to expected project.",
         )
+
+    return dict(dataset=dataset, workflow=workflow)
 
 
 async def get_wftask_check_owner(

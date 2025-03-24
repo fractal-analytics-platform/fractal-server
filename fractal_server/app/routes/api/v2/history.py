@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import get_wftask_check_owner
@@ -216,15 +217,16 @@ async def get_history_images(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[ZarrUrlAndStatus]:
+
     # Access control and object retrieval
-    # FIXME: Provide a single function that checks/gets what is needed
-    res = await _get_dataset_check_owner(
+    res = await _verify_workflow_and_dataset_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
         db=db,
     )
     dataset = res["dataset"]
+    workflow = res["workflow"]
     wftask = await get_wftask_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -232,14 +234,8 @@ async def get_history_images(
         user_id=user.id,
         db=db,
     )
-    workflow = await _get_workflow_check_owner(
-        project_id=project_id,
-        workflow_id=wftask.workflow_id,
-        user_id=user.id,
-        db=db,
-    )
 
-    # FIXME reduce logging?
+    # Setup prefix for logging
     prefix = f"[DS{dataset.id}-WFT{wftask.id}-images]"
 
     # (1) Get the type-filtered list of dataset images
