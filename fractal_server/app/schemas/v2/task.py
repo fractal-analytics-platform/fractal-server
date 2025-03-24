@@ -135,7 +135,7 @@ class TaskCreateV2(BaseModel):
 class TaskReadV2(BaseModel):
     id: int
     name: str
-    type: Literal["parallel", "non_parallel", "compound"]
+    type: TaskTypeType
     source: Optional[str] = None
     version: Optional[str] = None
 
@@ -157,8 +157,6 @@ class TaskReadV2(BaseModel):
     modality: Optional[str] = None
     authors: Optional[str] = None
     tags: list[str]
-
-    type: Optional[TaskTypeType] = None
 
 
 class TaskUpdateV2(BaseModel):

@@ -26,6 +26,8 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskDumpV2
+from fractal_server.app.schemas.v2 import TaskGroupDumpV2
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
 
@@ -85,21 +87,15 @@ def execute_tasks_v2(
         else:
             num_available_images = 0
 
-        # Create history item
         with next(get_sync_db()) as db:
+            # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
                 **wftask.model_dump(exclude={"task"}),
-                task=wftask.task.model_dump(),
+                task=TaskDumpV2(**wftask.task.model_dump()),
             )
-
-            # Exclude timestamps since they'd need to be serialized properly
             task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-            task_group_dump = task_group.model_dump(
-                exclude={
-                    "timestamp_created",
-                    "timestamp_last_used",
-                }
-            )
+            task_group_dump = TaskGroupDumpV2(**task_group.model_dump())
+            # Create HistoryRun
             history_run = HistoryRun(
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
