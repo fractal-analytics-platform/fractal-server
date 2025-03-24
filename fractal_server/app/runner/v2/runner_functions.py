@@ -15,7 +15,6 @@ from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -23,12 +22,15 @@ from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
 __all__ = [
-    "run_v2_task_non_parallel",
     "run_v2_task_parallel",
+    "run_v2_task_non_parallel",
     "run_v2_task_compound",
+    "run_v2_task_converter_non_parallel",
+    "run_v2_task_converter_compound",
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
@@ -125,7 +127,7 @@ def run_v2_task_non_parallel(
     with next(get_sync_db()) as db:
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
             logfile=None,  # FIXME
             zarr_urls=function_kwargs["zarr_urls"],
         )
@@ -165,7 +167,7 @@ def run_v2_task_non_parallel(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.DONE)
+                .values(status=HistoryUnitStatus.DONE)
             )
             db.commit()
             if result is None:
@@ -176,7 +178,7 @@ def run_v2_task_non_parallel(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.FAILED)
+                .values(status=HistoryUnitStatus.FAILED)
             )
             db.commit()
             return (TaskOutput(), num_tasks, {0: exception})
@@ -222,7 +224,7 @@ def run_v2_task_converter_non_parallel(
     with next(get_sync_db()) as db:
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
             logfile=None,  # FIXME
             zarr_urls=[],
         )
@@ -250,7 +252,7 @@ def run_v2_task_converter_non_parallel(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.DONE)
+                .values(status=HistoryUnitStatus.DONE)
             )
             db.commit()
             if result is None:
@@ -261,7 +263,7 @@ def run_v2_task_converter_non_parallel(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.FAILED)
+                .values(status=HistoryUnitStatus.FAILED)
             )
             db.commit()
             return (TaskOutput(), num_tasks, {0: exception})
@@ -303,7 +305,7 @@ def run_v2_task_parallel(
     history_units = [
         HistoryUnit(
             history_run_id=history_run_id,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
             logfile=None,  # FIXME
             zarr_urls=[image["zarr_url"]],
         )
@@ -367,12 +369,12 @@ def run_v2_task_parallel(
         db.execute(
             update(HistoryUnit)
             .where(HistoryUnit.id.in_(history_unit_ids_done))
-            .values(status=XXXStatus.DONE)
+            .values(status=HistoryUnitStatus.DONE)
         )
         db.execute(
             update(HistoryUnit)
             .where(HistoryUnit.id.in_(history_unit_ids_failed))
-            .values(status=XXXStatus.FAILED)
+            .values(status=HistoryUnitStatus.FAILED)
         )
         db.commit()
 
@@ -421,7 +423,7 @@ def run_v2_task_compound(
         # Create a single `HistoryUnit` for the whole compound task
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
             logfile=None,  # FIXME
             zarr_urls=input_image_zarr_urls,
         )
@@ -467,7 +469,7 @@ def run_v2_task_compound(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.FAILED)
+                .values(status=HistoryUnitStatus.FAILED)
             )
             db.commit()
         return (TaskOutput(), num_tasks, {0: exception})
@@ -485,7 +487,7 @@ def run_v2_task_compound(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.DONE)
+                .values(status=HistoryUnitStatus.DONE)
             )
             db.commit()
         return (TaskOutput(), 0, {})
@@ -535,13 +537,13 @@ def run_v2_task_compound(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.FAILED)
+                .values(status=HistoryUnitStatus.FAILED)
             )
         else:
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.DONE)
+                .values(status=HistoryUnitStatus.DONE)
             )
         db.commit()
 
@@ -586,7 +588,7 @@ def run_v2_task_converter_compound(
         # Create a single `HistoryUnit` for the whole compound task
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
             logfile=None,  # FIXME
             zarr_urls=[],
         )
@@ -619,7 +621,7 @@ def run_v2_task_converter_compound(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.FAILED)
+                .values(status=HistoryUnitStatus.FAILED)
             )
             db.commit()
         return (TaskOutput(), num_tasks, {0: exception})
@@ -637,7 +639,7 @@ def run_v2_task_converter_compound(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.DONE)
+                .values(status=HistoryUnitStatus.DONE)
             )
             db.commit()
         return (TaskOutput(), 0, {})
@@ -687,13 +689,13 @@ def run_v2_task_converter_compound(
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.FAILED)
+                .values(status=HistoryUnitStatus.FAILED)
             )
         else:
             db.execute(
                 update(HistoryUnit)
                 .where(HistoryUnit.id == history_unit_id)
-                .values(status=XXXStatus.DONE)
+                .values(status=HistoryUnitStatus.DONE)
             )
         db.commit()
 

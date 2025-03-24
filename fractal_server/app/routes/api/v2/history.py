@@ -1,26 +1,20 @@
-from datetime import datetime
-from typing import Any
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
-from pydantic import AwareDatetime
-from pydantic import BaseModel
-from pydantic import field_serializer
 from sqlmodel import func
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _get_workflowtask_check_history_owner
+from ._aux_functions_history import _verify_workflow_and_dataset_access
+from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
+from ._aux_functions_history import get_wftask_check_owner
 from ._aux_functions_history import read_log_file
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
@@ -29,6 +23,11 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
+from fractal_server.app.schemas.v2 import HistoryUnitRead
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import ImageLogsRequest
+from fractal_server.app.schemas.v2 import ZarrUrlAndStatus
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
@@ -45,12 +44,21 @@ async def get_workflow_tasks_statuses(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
+
+    # Access control
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
         db=db,
     )
+    await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+
     response = {}
     for wftask in workflow.task_list:
         res = await db.execute(
@@ -69,7 +77,7 @@ async def get_workflow_tasks_statuses(
             num_available_images=latest_history_run.num_available_images,
         )
 
-        for target_status in XXXStatus:
+        for target_status in HistoryUnitStatus:
             stm = (
                 select(func.count(HistoryImageCache.zarr_url))
                 .join(HistoryUnit)
@@ -89,43 +97,6 @@ async def get_workflow_tasks_statuses(
     return JSONResponse(content=response, status_code=200)
 
 
-# FIXME MOVE TO SCHEMAS
-
-
-class HistoryUnitRead(BaseModel):
-    id: int
-    logfile: Optional[str] = None
-    status: XXXStatus
-    zarr_urls: list[str]
-
-
-class HistoryRunReadAggregated(BaseModel):
-    id: int
-    timestamp_started: AwareDatetime
-    workflowtask_dump: dict[str, Any]
-    num_submitted_units: int
-    num_done_units: int
-    num_failed_units: int
-
-    @field_serializer("timestamp_started")
-    def serialize_datetime(v: datetime) -> str:
-        return v.isoformat()
-
-
-class ImageLogsRequest(BaseModel):
-    workflowtask_id: int
-    dataset_id: int
-    zarr_url: str
-
-
-class ImageWithStatus(BaseModel):
-    zarr_url: str
-    status: Optional[XXXStatus] = None
-
-
-# end FIXME
-
-
 @router.get("/project/{project_id}/status/run/")
 async def get_history_run_list(
     project_id: int,
@@ -134,8 +105,10 @@ async def get_history_run_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[HistoryRunReadAggregated]:
+
     # Access control
-    await _get_workflowtask_check_history_owner(
+    await get_wftask_check_owner(
+        project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
@@ -152,11 +125,11 @@ async def get_history_run_list(
     res = await db.execute(stm)
     runs = res.scalars().all()
 
-    # Add units count by status
-
+    # Respond early if there are no runs
     if not runs:
         return []
 
+    # Add units count by status
     run_ids = [run.id for run in runs]
     stm = (
         select(
@@ -196,30 +169,29 @@ async def get_history_run_units(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[HistoryUnitRead]:
+
     # Access control
-    await _get_workflowtask_check_history_owner(
+    await get_wftask_check_owner(
+        project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
         db=db,
     )
 
-    history_run = await db.get(HistoryRun, history_run_id)
-    if history_run is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"HistoryRun {history_run_id} not found",
-        )
+    # Check that `HistoryRun` exists
+    await get_history_run_or_404(history_run_id=history_run_id, db=db)
 
+    # Count `HistoryUnit`s
     res = await db.execute(
         select(func.count(HistoryUnit.id)).where(
             HistoryUnit.history_run_id == history_run_id
         )
     )
     total_count = res.scalar()
-
     page_size = pagination.page_size or total_count
 
+    # Query `HistoryUnit`s
     res = await db.execute(
         select(HistoryUnit)
         .where(HistoryUnit.history_run_id == history_run_id)
@@ -244,30 +216,27 @@ async def get_history_images(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[ImageWithStatus]:
+) -> PaginationResponse[ZarrUrlAndStatus]:
+
     # Access control and object retrieval
-    # FIXME: Provide a single function that checks/gets what is needed
-    res = await _get_dataset_check_owner(
+    wftask = await get_wftask_check_owner(
         project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    dataset = res["dataset"]
-    wftask = await _get_workflowtask_check_history_owner(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
         db=db,
     )
-    workflow = await _get_workflow_check_owner(
+    res = await _verify_workflow_and_dataset_access(
         project_id=project_id,
         workflow_id=wftask.workflow_id,
+        dataset_id=dataset_id,
         user_id=user.id,
         db=db,
     )
+    dataset = res["dataset"]
+    workflow = res["workflow"]
 
-    # FIXME reduce logging?
+    # Setup prefix for logging
     prefix = f"[DS{dataset.id}-WFT{wftask.id}-images]"
 
     # (1) Get the type-filtered list of dataset images
@@ -359,7 +328,8 @@ async def get_image_log(
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
-    wftask = await _get_workflowtask_check_history_owner(
+    wftask = await get_wftask_check_owner(
+        project_id=project_id,
         dataset_id=request_data.dataset_id,
         workflowtask_id=request_data.workflowtask_id,
         user_id=user.id,
@@ -406,7 +376,8 @@ async def get_history_unit_log(
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
-    wftask = await _get_workflowtask_check_history_owner(
+    wftask = await get_wftask_check_owner(
+        project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,

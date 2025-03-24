@@ -9,8 +9,8 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....schemas.v2.status import StatusReadV2
-from ....schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
+from ....schemas.v2.status_legacy import LegacyStatusReadV2
+from ....schemas.v2.status_legacy import WorkflowTaskStatusTypeV2
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
@@ -24,7 +24,7 @@ logger = set_logger(__name__)
 
 @router.get(
     "/project/{project_id}/status-legacy/",
-    response_model=StatusReadV2,
+    response_model=LegacyStatusReadV2,
 )
 async def get_workflowtask_status(
     project_id: int,
@@ -32,7 +32,7 @@ async def get_workflowtask_status(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[StatusReadV2]:
+) -> Optional[LegacyStatusReadV2]:
     """
     Extract the status of all `WorkflowTaskV2` of a given `WorkflowV2` that ran
     on a given `DatasetV2`.
@@ -164,5 +164,5 @@ async def get_workflowtask_status(
             # first time that you hit `last_valid_wftask_id``
             break
 
-    response_body = StatusReadV2(status=clean_workflow_tasks_status_dict)
+    response_body = LegacyStatusReadV2(status=clean_workflow_tasks_status_dict)
     return response_body

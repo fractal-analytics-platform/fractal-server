@@ -4,7 +4,6 @@ import os
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Callable
 
 
 def _extract_common_root(zarr_urls: list[str]) -> dict[str, str]:
@@ -50,7 +49,7 @@ def _group_zarr_urls_by_well(zarr_urls: list[str]) -> dict[str, list[str]]:
     return well_to_zarr_urls
 
 
-def run_fractal_task(task_function: Callable) -> None:
+def run_fractal_task(task_function: callable) -> None:
     # Parse command-line-interface arguments
     parser = ArgumentParser()
     parser.add_argument(
