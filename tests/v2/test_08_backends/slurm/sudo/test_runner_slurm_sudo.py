@@ -14,10 +14,6 @@ from fractal_server.app.runner.task_files import TaskFiles
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 
-# from fractal_server.app.history import ImageStatus
-# from fractal_server.app.models.v2.history import HistoryItemV2
-# from fractal_server.app.models.v2.history import ImageStatus
-
 
 def get_dummy_task_files(root_path: Path) -> TaskFiles:
     return TaskFiles(
@@ -30,8 +26,6 @@ def get_dummy_task_files(root_path: Path) -> TaskFiles:
 
 @pytest.mark.container
 async def test_submit_success(
-    db,
-    mock_history_item,
     tmp777_path,
     monkey_slurm,
 ):
@@ -50,33 +44,18 @@ async def test_submit_success(
                 "zarr_urls": ZARR_URLS,
                 "__FRACTAL_PARALLEL_COMPONENT__": "000000",
             },
-            history_item_id=mock_history_item.id,
+            history_item_id=None,
             task_files=get_dummy_task_files(tmp777_path),
             slurm_config=get_default_slurm_config(),
+            task_type="non_parallel",
         )
     debug(result, exception)
     assert result == 42
     assert exception is None
-    db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ZARR_URLS:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.DONE
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     zarr_url: ImageStatus.DONE for zarr_url in ZARR_URLS
-    # }
 
 
 @pytest.mark.container
 async def test_submit_fail(
-    db,
-    mock_history_item,
     tmp777_path,
     monkey_slurm,
 ):
@@ -97,34 +76,19 @@ async def test_submit_fail(
                 "zarr_urls": ZARR_URLS,
                 "__FRACTAL_PARALLEL_COMPONENT__": "000000",
             },
-            history_item_id=mock_history_item.id,
+            history_item_id=None,
             task_files=get_dummy_task_files(tmp777_path),
             slurm_config=get_default_slurm_config(),
+            task_type="non_parallel",
         )
 
     assert result is None
     assert isinstance(exception, TaskExecutionError)
     assert ERROR_MSG in str(exception)
-    db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ZARR_URLS:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.FAILED
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     zarr_url: ImageStatus.FAILED for zarr_url in ZARR_URLS
-    # }
 
 
 @pytest.mark.container
 async def test_multisubmit(
-    db,
-    mock_history_item,
     tmp777_path,
     monkey_slurm,
 ):
@@ -170,31 +134,10 @@ async def test_multisubmit(
                     "__FRACTAL_PARALLEL_COMPONENT__": "000003",
                 },
             ],
-            history_item_id=mock_history_item.id,
+            history_item_id=None,
             task_files=get_dummy_task_files(tmp777_path),
             slurm_config=get_default_slurm_config(),
+            task_type="parallel",
         )
         debug(results)
         debug(exceptions)
-    db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ["a", "b", "d"]:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.DONE
-    # for zarr_url in ["c"]:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.FAILED
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     "a": "done",
-    #     "b": "done",
-    #     "c": "failed",
-    #     "d": "done",
-    # }

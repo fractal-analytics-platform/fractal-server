@@ -9,8 +9,8 @@ from ._local_config import LocalBackendConfig
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.logger import set_logger
-
 
 logger = set_logger(__name__)
 
@@ -50,6 +50,7 @@ class LocalRunner(BaseRunner):
         func: callable,
         parameters: dict[str, Any],
         task_files: TaskFiles,
+        task_type: TaskTypeType,
         local_backend_config: Optional[LocalBackendConfig] = None,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
@@ -61,7 +62,7 @@ class LocalRunner(BaseRunner):
             component=parameters[_COMPONENT_KEY_],
         )
 
-        self.validate_submit_parameters(parameters)
+        self.validate_submit_parameters(parameters, task_type=task_type)
         workdir_local = current_task_files.wftask_subfolder_local
         workdir_local.mkdir()
 
@@ -83,18 +84,18 @@ class LocalRunner(BaseRunner):
         func: callable,
         list_parameters: list[dict],
         task_files: TaskFiles,
-        in_compound_task: bool = False,
+        task_type: TaskTypeType,
         local_backend_config: Optional[LocalBackendConfig] = None,
     ):
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
-            in_compound_task=in_compound_task,
+            task_type=task_type,
         )
 
         workdir_local = task_files.wftask_subfolder_local
-        if not in_compound_task:
+        if task_type not in ["compound", "converter_compound"]:
             workdir_local.mkdir()
 
         # Get local_backend_config

@@ -155,6 +155,92 @@ def run_v2_task_non_parallel(
             root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
+        task_type="non_parallel",
+        **executor_options,
+    )
+
+    num_tasks = 1
+    with next(get_sync_db()) as db:
+        if exception is None:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.DONE)
+            )
+            db.commit()
+            if result is None:
+                return (TaskOutput(), num_tasks, {})
+            else:
+                return (_cast_and_validate_TaskOutput(result), num_tasks, {})
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.FAILED)
+            )
+            db.commit()
+            return (TaskOutput(), num_tasks, {0: exception})
+
+
+def run_v2_task_converter_non_parallel(
+    *,
+    zarr_dir: str,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
+    executor: BaseRunner,
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+    """
+    This runs server-side (see `executor` argument)
+    """
+
+    if workflow_dir_remote is None:
+        workflow_dir_remote = workflow_dir_local
+        logging.warning(
+            "In `run_single_task`, workflow_dir_remote=None. Is this right?"
+        )
+        workflow_dir_remote = workflow_dir_local
+
+    executor_options = submit_setup_call(
+        wftask=wftask,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        which_type="non_parallel",
+    )
+
+    function_kwargs = {
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: _index_to_component(0),
+        **(wftask.args_non_parallel or {}),
+    }
+
+    # Database History operations
+    with next(get_sync_db()) as db:
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=XXXStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[],
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+
+    result, exception = executor.submit(
+        functools.partial(
+            run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+        ),
+        task_type="converter_non_parallel",
+        parameters=function_kwargs,
         **executor_options,
     )
 
@@ -255,6 +341,7 @@ def run_v2_task_parallel(
             root_dir_remote=workflow_dir_remote,
         ),
         list_parameters=list_function_kwargs,
+        task_type="parallel",
         **executor_options,
     )
 
@@ -365,6 +452,7 @@ def run_v2_task_compound(
             root_dir_remote=workflow_dir_remote,
         ),
         parameters=function_kwargs,
+        task_type="compound",
         **executor_options_init,
     )
 
@@ -421,7 +509,159 @@ def run_v2_task_compound(
             root_dir_remote=workflow_dir_remote,
         ),
         list_parameters=list_function_kwargs,
-        in_compound_task=True,
+        task_type="compound",
+        **executor_options_compute,
+    )
+
+    outputs = []
+    failure = False
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
+            failure = True
+        else:
+            print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        if failure:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.FAILED)
+            )
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.DONE)
+            )
+        db.commit()
+
+    merged_output = merge_outputs(outputs)
+    return (merged_output, num_tasks, exceptions)
+
+
+def run_v2_task_converter_compound(
+    *,
+    zarr_dir: str,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
+    executor: BaseRunner,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+    executor_options_init = submit_setup_call(
+        wftask=wftask,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        which_type="non_parallel",
+    )
+    executor_options_compute = submit_setup_call(
+        wftask=wftask,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        which_type="parallel",
+    )
+
+    # 3/A: non-parallel init task
+    function_kwargs = {
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: f"init_{_index_to_component(0)}",
+        **(wftask.args_non_parallel or {}),
+    }
+
+    # Create database History entries
+    with next(get_sync_db()) as db:
+        # Create a single `HistoryUnit` for the whole compound task
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=XXXStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[],
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+
+    result, exception = executor.submit(
+        functools.partial(
+            run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+        ),
+        parameters=function_kwargs,
+        task_type="converter_compound",
+        **executor_options_init,
+    )
+
+    num_tasks = 1
+    if exception is None:
+        if result is None:
+            init_task_output = InitTaskOutput()
+        else:
+            init_task_output = _cast_and_validate_InitTaskOutput(result)
+    else:
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.FAILED)
+            )
+            db.commit()
+        return (TaskOutput(), num_tasks, {0: exception})
+
+    parallelization_list = init_task_output.parallelization_list
+    parallelization_list = deduplicate_list(parallelization_list)
+
+    num_tasks = 1 + len(parallelization_list)
+
+    # 3/B: parallel part of a compound task
+    _check_parallelization_list_size(parallelization_list)
+
+    if len(parallelization_list) == 0:
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=XXXStatus.DONE)
+            )
+            db.commit()
+        return (TaskOutput(), 0, {})
+
+    list_function_kwargs = [
+        {
+            "zarr_url": parallelization_item.zarr_url,
+            "init_args": parallelization_item.init_args,
+            _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
+            **(wftask.args_parallel or {}),
+        }
+        for ind, parallelization_item in enumerate(parallelization_list)
+    ]
+
+    results, exceptions = executor.multisubmit(
+        functools.partial(
+            run_single_task,
+            wftask=wftask,
+            command=task.command_parallel,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+        ),
+        list_parameters=list_function_kwargs,
+        task_type="converter_compound",
         **executor_options_compute,
     )
 
