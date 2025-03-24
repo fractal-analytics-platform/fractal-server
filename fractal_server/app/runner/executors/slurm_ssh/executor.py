@@ -215,7 +215,7 @@ class FractalSlurmSSHExecutor(Executor):
 
     def submit(
         self,
-        fun: callable[..., Any],
+        fun: callable,
         *fun_args: Sequence[Any],
         slurm_config: SlurmConfig,
         task_files: TaskFiles,
@@ -277,7 +277,7 @@ class FractalSlurmSSHExecutor(Executor):
 
     def map(
         self,
-        fn: callable[..., Any],
+        fn: callable,
         iterable: list[Sequence[Any]],
         *,
         slurm_config: SlurmConfig,
@@ -445,7 +445,7 @@ class FractalSlurmSSHExecutor(Executor):
 
     def _prepare_job(
         self,
-        fun: callable[..., Any],
+        fun: callable,
         slurm_file_prefix: str,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
