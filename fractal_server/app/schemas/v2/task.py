@@ -158,6 +158,16 @@ class TaskReadV2(BaseModel):
     authors: Optional[str] = None
     tags: list[str]
 
+    type: Optional[
+        Literal[
+            "compound",
+            "converter_compound",
+            "non_parallel",
+            "converter_non_parallel",
+            "parallel",
+        ]
+    ] = None
+
 
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
