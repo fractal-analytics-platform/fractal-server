@@ -77,13 +77,14 @@ def execute_tasks_v2(
                 type_filters=type_filters,
                 attribute_filters=None,
             )
+            num_available_images = len(type_filtered_images)
             filtered_images = filter_image_list(
                 images=type_filtered_images,
                 type_filters=None,
                 attribute_filters=job_attribute_filters,
             )
         else:
-            filtered_images = None
+            num_available_images = 0
 
         # Create history item
         with next(get_sync_db()) as db:
@@ -105,7 +106,7 @@ def execute_tasks_v2(
                 workflowtask_id=wftask.id,
                 workflowtask_dump=workflowtask_dump,
                 task_group_dump=task_group_dump,
-                num_available_images=len(type_filtered_images),
+                num_available_images=num_available_images,
                 status=XXXStatus.SUBMITTED,
             )
             db.add(history_run)
