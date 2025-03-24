@@ -514,3 +514,87 @@ async def test_get_history_images(
                 "status": None,
             },
         ]
+
+
+async def test_get_logs(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db,
+    tmp_path,
+    client,
+    MockCurrentUser,
+):
+
+    ZARR_URL = "/zarr"
+    LOGFILE = (tmp_path / "log").as_posix()
+    LOGS = "something nice"
+    with open(LOGFILE, "w") as f:
+        f.write(LOGS)
+
+    async with MockCurrentUser() as user:
+        proj = await project_factory_v2(user)
+        ds = await dataset_factory_v2(
+            project_id=proj.id, images=[dict(zarr_url=ZARR_URL)]
+        )
+        wf = await workflow_factory_v2(project_id=proj.id)
+        task = await task_factory_v2(user_id=user.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=wf.id,
+            task_id=task.id,
+        )
+
+        run = HistoryRun(
+            dataset_id=ds.id,
+            workflowtask_id=wftask.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            status=HistoryUnitStatus.DONE,
+            num_available_images=1,
+        )
+        db.add(run)
+        await db.commit()
+        await db.refresh(run)
+        history_run_id = run.id
+
+        unit = HistoryUnit(
+            history_run_id=history_run_id,
+            logfile=LOGFILE,
+            status=HistoryUnitStatus.DONE,
+            zarr_urls=[ZARR_URL],
+        )
+        db.add(unit)
+        await db.commit()
+        await db.refresh(unit)
+        history_unit_id = unit.id
+
+        db.add(
+            HistoryImageCache(
+                zarr_url=ZARR_URL,
+                dataset_id=ds.id,
+                workflowtask_id=wftask.id,
+                latest_history_unit_id=history_unit_id,
+            )
+        )
+        await db.commit()
+
+        res = await client.get(
+            f"/api/v2/project/{proj.id}/status/unit-log/"
+            f"?workflowtask_id={wftask.id}&dataset_id={ds.id}"
+            f"&{history_run_id=}&{history_unit_id=}"
+        )
+        assert res.status_code == 200
+        assert res.json() == LOGS
+
+        res = await client.post(
+            f"/api/v2/project/{proj.id}/status/image-log/",
+            json=dict(
+                workflowtask_id=wftask.id,
+                dataset_id=ds.id,
+                zarr_url=ZARR_URL,
+            ),
+        )
+        assert res.status_code == 200
+        assert res.json() == LOGS
