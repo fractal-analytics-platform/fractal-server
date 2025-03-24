@@ -445,8 +445,6 @@ class RunnerSlurmSSH(BaseRunner):
             )
 
         for source, target in source_target_list:
-            # NOTE: By setting encoding=None, we read/write bytes instead
-            # of strings; this is needed to also handle pickle files.
             try:
                 self.fractal_ssh.fetch_file(local=target, remote=source)
                 # res = _run_command_as_user(
@@ -459,7 +457,7 @@ class RunnerSlurmSSH(BaseRunner):
                 # with open(target, "wb") as f:
                 #     f.write(res.stdout)
                 # logger.critical(f"Copied {source} into {target}")
-            except RuntimeError as e:
+            except (RuntimeError, FileNotFoundError) as e:
                 logger.warning(
                     f"SKIP copy {target} into {source}. "
                     f"Original error: {str(e)}"
