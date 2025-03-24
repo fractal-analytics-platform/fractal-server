@@ -2,7 +2,6 @@ import logging
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
-from typing import Callable
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
@@ -20,13 +19,15 @@ from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskDumpV2
+from fractal_server.app.schemas.v2 import TaskGroupDumpV2
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
 
@@ -40,7 +41,7 @@ def execute_tasks_v2(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
+    submit_setup_call: callable = no_op_submit_setup_call,
     job_attribute_filters: AttributeFiltersType,
 ) -> None:
     logger = logging.getLogger(logger_name)
@@ -86,28 +87,24 @@ def execute_tasks_v2(
         else:
             num_available_images = 0
 
-        # Create history item
         with next(get_sync_db()) as db:
+            # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
                 **wftask.model_dump(exclude={"task"}),
-                task=wftask.task.model_dump(),
+                task=TaskDumpV2(**wftask.task.model_dump()).model_dump(),
             )
-
-            # Exclude timestamps since they'd need to be serialized properly
             task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-            task_group_dump = task_group.model_dump(
-                exclude={
-                    "timestamp_created",
-                    "timestamp_last_used",
-                }
-            )
+            task_group_dump = TaskGroupDumpV2(
+                **task_group.model_dump()
+            ).model_dump()
+            # Create HistoryRun
             history_run = HistoryRun(
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
                 workflowtask_dump=workflowtask_dump,
                 task_group_dump=task_group_dump,
                 num_available_images=num_available_images,
-                status=XXXStatus.SUBMITTED,
+                status=HistoryUnitStatus.SUBMITTED,
             )
             db.add(history_run)
             db.commit()
@@ -361,14 +358,14 @@ def execute_tasks_v2(
                 db.execute(
                     update(HistoryRun)
                     .where(HistoryRun.id == history_run_id)
-                    .values(status=XXXStatus.DONE)
+                    .values(status=HistoryUnitStatus.DONE)
                 )
                 db.commit()
             else:
                 db.execute(
                     update(HistoryRun)
                     .where(HistoryRun.id == history_run_id)
-                    .values(status=XXXStatus.FAILED)
+                    .values(status=HistoryUnitStatus.FAILED)
                 )
                 db.commit()
                 logger.error(
