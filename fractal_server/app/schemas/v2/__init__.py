@@ -23,6 +23,7 @@ from .manifest import TaskManifestV2  # noqa F401
 from .project import ProjectCreateV2  # noqa F401
 from .project import ProjectReadV2  # noqa F401
 from .project import ProjectUpdateV2  # noqa F401
+from .status_legacy import WorkflowTaskStatusTypeV2  # noqa F401
 from .task import TaskCreateV2  # noqa F401
 from .task import TaskExportV2  # noqa F401
 from .task import TaskImportV2  # noqa F401
@@ -52,5 +53,4 @@ from .workflowtask import WorkflowTaskImportV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2  # noqa F401
 from .workflowtask import WorkflowTaskReadV2WithWarning  # noqa F401
 from .workflowtask import WorkflowTaskReplaceV2  # noqa F401
-from .workflowtask import WorkflowTaskStatusTypeV2  # noqa F401
 from .workflowtask import WorkflowTaskUpdateV2  # noqa F401
