@@ -56,7 +56,14 @@ async def replace_workflowtask(
     )
 
     # Preliminary checks
-    if old_wftask.task_type != new_task.type:
+    EQUIVALENT_TASK_TYPES = [
+        {"non_parallel", "converter_non_parallel"},
+        {"compound", "converter_compound"},
+    ]
+    if (
+        old_wftask.task_type != new_task.type
+        and {old_wftask.task_type, new_task.type} not in EQUIVALENT_TASK_TYPES
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
@@ -64,6 +71,7 @@ async def replace_workflowtask(
                 f"{old_wftask.task_type} to {new_task.type}."
             ),
         )
+
     if replace.args_non_parallel is not None and new_task.type == "parallel":
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -259,7 +267,10 @@ async def update_workflowtask(
                 "parallel."
             ),
         )
-    elif db_wf_task.task_type == "non_parallel" and (
+    elif db_wf_task.task_type in [
+        "non_parallel",
+        "converter_non_parallel",
+    ] and (
         workflow_task_update.args_parallel is not None
         or workflow_task_update.meta_parallel is not None
     ):
