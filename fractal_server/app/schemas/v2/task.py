@@ -13,7 +13,11 @@ from .._validators import cant_set_none
 from fractal_server.app.schemas._validators import NonEmptyString
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
+from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
+
+
+logger = set_logger(__name__)
 
 
 class TaskCreateV2(BaseModel):
@@ -41,6 +45,16 @@ class TaskCreateV2(BaseModel):
     tags: list[NonEmptyString] = Field(default_factory=list)
     authors: Optional[NonEmptyString] = None
 
+    type: Optional[
+        Literal[
+            "compound",
+            "converter_compound",
+            "non_parallel",
+            "converter_non_parallel",
+            "parallel",
+        ]
+    ] = None
+
     # Validators
 
     @field_validator(
@@ -66,6 +80,23 @@ class TaskCreateV2(BaseModel):
             validate_cmd(command_parallel)
         if command_non_parallel is not None:
             validate_cmd(command_non_parallel)
+
+        return self
+
+    @model_validator(mode="after")
+    def set_task_type(self):
+        if self.type is None:
+            logger.warning(
+                f"Task type is not set for task '{self.name}', "
+                "which will be deprecated in a future version. "
+                "Please move to `fractal-task-tools`."
+            )
+            if self.command_non_parallel is None:
+                self.type = "parallel"
+            elif self.command_parallel is None:
+                self.type = "non_parallel"
+            else:
+                self.type = "compound"
 
         return self
 

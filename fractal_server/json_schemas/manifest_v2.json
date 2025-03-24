@@ -131,6 +131,25 @@
                     },
                     "title": "Tags",
                     "type": "array"
+                },
+                "type": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "compound",
+                                "converter_compound",
+                                "non_parallel",
+                                "converter_non_parallel",
+                                "parallel"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Type"
                 }
             },
             "required": [

@@ -5,15 +5,6 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 
 
-def _get_task_type(task: TaskCreateV2) -> str:
-    if task.command_non_parallel is None:
-        return "parallel"
-    elif task.command_parallel is None:
-        return "non_parallel"
-    else:
-        return "compound"
-
-
 def create_db_tasks_and_update_task_group(
     *,
     task_group_id: int,
@@ -34,7 +25,6 @@ def create_db_tasks_and_update_task_group(
     actual_task_list = [
         TaskV2(
             **task.model_dump(),
-            type=_get_task_type(task),
         )
         for task in task_list
     ]

@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -55,6 +56,16 @@ class TaskManifestV2(BaseModel):
     category: Optional[str] = None
     modality: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
+
+    type: Optional[
+        Literal[
+            "compound",
+            "converter_compound",
+            "non_parallel",
+            "converter_non_parallel",
+            "parallel",
+        ]
+    ] = None
 
     @model_validator(mode="after")
     def validate_executable_args_meta(self):
