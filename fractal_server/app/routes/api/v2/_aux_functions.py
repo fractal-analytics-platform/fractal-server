@@ -419,42 +419,6 @@ async def clean_app_job_list_v2(
     return submitted_job_ids
 
 
-async def _verify_workflow_and_dataset_access(
-    *,
-    workflow_id: int,
-    dataset_id: int,
-    user_id: int,
-    db: AsyncSession,
-) -> list[int]:
-    """
-    Verify user access to a dataset/workflow pair.
-
-    Args:
-        dataset_id:
-        workflow_task_id:
-        user_id:
-        db:
-    """
-    workflow = await _get_workflow_or_404(
-        workflow_id=workflow_id,
-        db=db,
-    )
-    dataset = await _get_dataset_or_404(
-        dataset_id=dataset_id,
-        db=db,
-    )
-    if workflow.project_id != dataset.project_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Dataset and workflow belong to different projects.",
-        )
-    await _get_project_check_owner(
-        project_id=workflow.project_id,
-        user_id=user_id,
-        db=db,
-    )
-
-
 async def _get_dataset_or_404(
     *,
     dataset_id: int,
@@ -519,32 +483,3 @@ async def _get_workflowtask_or_404(
         )
     else:
         return wftask
-
-
-async def _get_workflowtask_check_history_owner(
-    *,
-    workflowtask_id: int,
-    dataset_id: int,
-    user_id: int,
-    db: AsyncSession,
-) -> WorkflowTaskV2:
-    """
-    Verify user access for the history of this dataset and workflowtask.
-
-    Args:
-        dataset_id:
-        workflow_task_id:
-        user_id:
-        db:
-    """
-    wftask = await _get_workflowtask_or_404(
-        workflowtask_id=workflowtask_id,
-        db=db,
-    )
-    await _verify_workflow_and_dataset_access(
-        workflow_id=wftask.workflow_id,
-        dataset_id=dataset_id,
-        user_id=user_id,
-        db=db,
-    )
-    return wftask
