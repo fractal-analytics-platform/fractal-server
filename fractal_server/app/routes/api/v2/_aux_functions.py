@@ -419,7 +419,7 @@ async def clean_app_job_list_v2(
     return submitted_job_ids
 
 
-async def _get_workflow_check_history_owner(
+async def _verify_workflow_and_dataset_access(
     *,
     workflow_id: int,
     dataset_id: int,
@@ -427,41 +427,98 @@ async def _get_workflow_check_history_owner(
     db: AsyncSession,
 ) -> list[int]:
     """
-    Verify user access for the history of this dataset and workflowtask.
+    Verify user access to a dataset/workflow pair.
 
     Args:
         dataset_id:
         workflow_task_id:
         user_id:
         db:
-
-    Returns:
-        List of WorkflowTask IDs
     """
-    workflow = await db.get(WorkflowV2, workflow_id)
-    if workflow is None:
+    workflow = await _get_workflow_or_404(
+        workflow_id=workflow_id,
+        db=db,
+    )
+    dataset = await _get_dataset_or_404(
+        dataset_id=dataset_id,
+        db=db,
+    )
+    if workflow.project_id != dataset.project_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workflow not found.",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Dataset and workflow belong to different projects.",
         )
     await _get_project_check_owner(
         project_id=workflow.project_id,
         user_id=user_id,
         db=db,
     )
-    dataset = await db.get(DatasetV2, dataset_id)
-    if dataset is None:
+
+
+async def _get_dataset_or_404(
+    *,
+    dataset_id: int,
+    db: AsyncSession,
+) -> DatasetV2:
+    """
+    Get a dataset or raise 404.
+
+    Args:
+        dataset_id:
+        db:
+    """
+    ds = await db.get(DatasetV2, dataset_id)
+    if ds is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Dataset not found.",
+            detail=f"Dataset {dataset_id} not found.",
         )
-    if workflow.project_id != dataset.project_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Dataset and workflow belong to different projects.",
-        )
+    else:
+        return ds
 
-    return [wftask.id for wftask in workflow.task_list]
+
+async def _get_workflow_or_404(
+    *,
+    workflow_id: int,
+    db: AsyncSession,
+) -> WorkflowV2:
+    """
+    Get a workflow or raise 404.
+
+    Args:
+        workflow_id:
+        db:
+    """
+    wf = await db.get(WorkflowV2, workflow_id)
+    if wf is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found.",
+        )
+    else:
+        return wf
+
+
+async def _get_workflowtask_or_404(
+    *,
+    workflowtask_id: int,
+    db: AsyncSession,
+) -> WorkflowTaskV2:
+    """
+    Get a workflow task or raise 404.
+
+    Args:
+        workflowtask_id:
+        db:
+    """
+    wftask = await db.get(WorkflowTaskV2, workflowtask_id)
+    if wftask is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTask {workflowtask_id} not found.",
+        )
+    else:
+        return wftask
 
 
 async def _get_workflowtask_check_history_owner(
@@ -480,16 +537,14 @@ async def _get_workflowtask_check_history_owner(
         user_id:
         db:
     """
-    workflowtask = await db.get(WorkflowTaskV2, workflowtask_id)
-    if workflowtask is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="WorkflowTask not found.",
-        )
-    await _get_workflow_check_history_owner(
-        workflow_id=workflowtask.workflow_id,
+    wftask = await _get_workflowtask_or_404(
+        workflowtask_id=workflowtask_id,
+        db=db,
+    )
+    await _verify_workflow_and_dataset_access(
+        workflow_id=wftask.workflow_id,
         dataset_id=dataset_id,
         user_id=user_id,
         db=db,
     )
-    return workflowtask
+    return wftask

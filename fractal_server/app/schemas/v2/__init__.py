@@ -9,6 +9,11 @@ from .dumps import ProjectDumpV2  # noqa F401
 from .dumps import TaskDumpV2  # noqa F401
 from .dumps import WorkflowDumpV2  # noqa F401
 from .dumps import WorkflowTaskDumpV2  # noqa F401
+from .history import HistoryRunReadAggregated  # noqa F401
+from .history import HistoryUnitRead  # noqa F401
+from .history import HistoryUnitStatus  # noqa F401
+from .history import ImageLogsRequest  # noqa F401
+from .history import ZarrUrlAndStatus  # noqa F401
 from .job import JobCreateV2  # noqa F401
 from .job import JobReadV2  # noqa F401
 from .job import JobStatusTypeV2  # noqa F401

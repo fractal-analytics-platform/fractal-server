@@ -6,13 +6,13 @@ from devtools import debug
 from sqlalchemy.orm import Session
 from sqlmodel import select
 
-from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.v2._db_tools import (
     bulk_upsert_image_cache_fast,
 )
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
 def bulk_upsert_image_cache_slow(
@@ -52,7 +52,7 @@ async def test_upsert_function(
             workflowtask_dump={},
             task_group_dump={},
             num_available_images=3,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
         )
         db_sync.add(run)
         db_sync.commit()
@@ -65,7 +65,7 @@ async def test_upsert_function(
         # Create an `HistoryImageCache` that should be updated
         unit1 = HistoryUnit(
             history_run_id=run.id,
-            status=XXXStatus.SUBMITTED,
+            status=HistoryUnitStatus.SUBMITTED,
             zarr_urls=OLD_ZARR_URLS,
         )
         db_sync.add(unit1)
@@ -87,7 +87,7 @@ async def test_upsert_function(
         # Create `HistoryImageCache` rows that should be inserted
         unit2 = HistoryUnit(
             history_run_id=run.id,
-            status=XXXStatus.DONE,
+            status=HistoryUnitStatus.DONE,
             zarr_urls=OLD_ZARR_URLS + NEW_ZARR_URLS,
         )
         db_sync.add(unit2)

@@ -1,15 +1,8 @@
-from datetime import datetime
-from typing import Any
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
-from pydantic import AwareDatetime
-from pydantic import BaseModel
-from pydantic import field_serializer
 from sqlmodel import func
 from sqlmodel import select
 
@@ -20,7 +13,6 @@ from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import read_log_file
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.history.status_enum import XXXStatus
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
@@ -29,6 +21,11 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
+from fractal_server.app.schemas.v2 import HistoryUnitRead
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import ImageLogsRequest
+from fractal_server.app.schemas.v2 import ZarrUrlAndStatus
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
@@ -69,7 +66,7 @@ async def get_workflow_tasks_statuses(
             num_available_images=latest_history_run.num_available_images,
         )
 
-        for target_status in XXXStatus:
+        for target_status in HistoryUnitStatus:
             stm = (
                 select(func.count(HistoryImageCache.zarr_url))
                 .join(HistoryUnit)
@@ -87,43 +84,6 @@ async def get_workflow_tasks_statuses(
             ] = num_images
 
     return JSONResponse(content=response, status_code=200)
-
-
-# FIXME MOVE TO SCHEMAS
-
-
-class HistoryUnitRead(BaseModel):
-    id: int
-    logfile: Optional[str] = None
-    status: XXXStatus
-    zarr_urls: list[str]
-
-
-class HistoryRunReadAggregated(BaseModel):
-    id: int
-    timestamp_started: AwareDatetime
-    workflowtask_dump: dict[str, Any]
-    num_submitted_units: int
-    num_done_units: int
-    num_failed_units: int
-
-    @field_serializer("timestamp_started")
-    def serialize_datetime(v: datetime) -> str:
-        return v.isoformat()
-
-
-class ImageLogsRequest(BaseModel):
-    workflowtask_id: int
-    dataset_id: int
-    zarr_url: str
-
-
-class ImageWithStatus(BaseModel):
-    zarr_url: str
-    status: Optional[XXXStatus] = None
-
-
-# end FIXME
 
 
 @router.get("/project/{project_id}/status/run/")
@@ -244,7 +204,7 @@ async def get_history_images(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[ImageWithStatus]:
+) -> PaginationResponse[ZarrUrlAndStatus]:
     # Access control and object retrieval
     # FIXME: Provide a single function that checks/gets what is needed
     res = await _get_dataset_check_owner(

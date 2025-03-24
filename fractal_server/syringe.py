@@ -35,7 +35,6 @@ or popped from the directory.
     42
 """
 from typing import Any
-from typing import Callable
 from typing import TypeVar
 
 
@@ -63,7 +62,7 @@ class _Inject:
         _instance_count += 1
 
     @classmethod
-    def __call__(cls, _callable: Callable[..., T]) -> T:
+    def __call__(cls, _callable: callable[..., T]) -> T:
         """
         Call the dependency
 
@@ -80,7 +79,7 @@ class _Inject:
             return _callable()
 
     @classmethod
-    def pop(cls, _callable: Callable[..., T]) -> T:
+    def pop(cls, _callable: callable[..., T]) -> T:
         """
         Remove the dependency from the directory
 
@@ -95,7 +94,7 @@ class _Inject:
 
     @classmethod
     def override(
-        cls, _callable: Callable[..., T], value: Callable[..., T]
+        cls, _callable: callable[..., T], value: callable[..., T]
     ) -> None:
         """
         Override dependency

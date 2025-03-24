@@ -9,7 +9,6 @@ from concurrent.futures import InvalidStateError
 from copy import copy
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Optional
 from typing import Sequence
 
@@ -216,7 +215,7 @@ class FractalSlurmSSHExecutor(Executor):
 
     def submit(
         self,
-        fun: Callable[..., Any],
+        fun: callable[..., Any],
         *fun_args: Sequence[Any],
         slurm_config: SlurmConfig,
         task_files: TaskFiles,
@@ -278,7 +277,7 @@ class FractalSlurmSSHExecutor(Executor):
 
     def map(
         self,
-        fn: Callable[..., Any],
+        fn: callable[..., Any],
         iterable: list[Sequence[Any]],
         *,
         slurm_config: SlurmConfig,
@@ -446,7 +445,7 @@ class FractalSlurmSSHExecutor(Executor):
 
     def _prepare_job(
         self,
-        fun: Callable[..., Any],
+        fun: callable[..., Any],
         slurm_file_prefix: str,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
