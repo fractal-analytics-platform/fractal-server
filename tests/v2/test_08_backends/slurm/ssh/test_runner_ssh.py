@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from fabric.connection import Connection
 
 from ...aux_unit_runner import *  # noqa
 from ...aux_unit_runner import ZARR_URLS
@@ -11,11 +10,8 @@ from fractal_server.app.runner.executors.slurm_ssh.runner import (
     RunnerSlurmSSH,
 )
 from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.ssh._fabric import FractalSSH
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
-
-# from fractal_server.app.runner.exceptions import TaskExecutionError
 
 
 def get_dummy_task_files(root_path: Path) -> TaskFiles:
@@ -30,48 +26,36 @@ def get_dummy_task_files(root_path: Path) -> TaskFiles:
 @pytest.mark.ssh
 @pytest.mark.container
 async def test_submit_success(
-    db, mock_history_item, tmp777_path, monkey_slurm, override_settings_factory
+    tmp777_path,
+    fractal_ssh,
+    override_settings_factory,
 ):
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
 
     def do_nothing(parameters: dict, **kwargs) -> int:
         return 42
 
-    with Connection("localhost") as connection:
-        with RunnerSlurmSSH(
-            fractal_ssh=FractalSSH(connection=connection),
-            slurm_user=SLURM_USER,
-            root_dir_local=tmp777_path / "server",
-            root_dir_remote=tmp777_path / "user",
-            slurm_poll_interval=0,
-        ) as runner:
-            result, exception = runner.submit(
-                do_nothing,
-                parameters={
-                    "zarr_urls": ZARR_URLS,
-                    "__FRACTAL_PARALLEL_COMPONENT__": "000000",
-                },
-                history_item_id=mock_history_item.id,
-                task_files=get_dummy_task_files(tmp777_path),
-                slurm_config=get_default_slurm_config(),
-            )
+    with RunnerSlurmSSH(
+        fractal_ssh=fractal_ssh,
+        slurm_user=SLURM_USER,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        slurm_poll_interval=0,
+    ) as runner:
+        result, exception = runner.submit(
+            do_nothing,
+            parameters={
+                "zarr_urls": ZARR_URLS,
+                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
+            },
+            history_item_id=None,
+            task_files=get_dummy_task_files(tmp777_path),
+            slurm_config=get_default_slurm_config(),
+            task_type="non_parallel",
+        )
     debug(result, exception)
     assert result == 42
     assert exception is None
-    db.expunge_all()
-
-    # Assertions on ImageStatus and HistoryItemV2 data
-    # wftask_id = mock_history_item.workflowtask_id
-    # dataset_id = mock_history_item.dataset_id
-    # for zarr_url in ZARR_URLS:
-    #     image_status = await db.get(
-    #         ImageStatus, (zarr_url, wftask_id, dataset_id)
-    #     )
-    #     assert image_status.status == ImageStatus.DONE
-    # history_item = await db.get(HistoryItemV2, mock_history_item.id)
-    # assert history_item.images == {
-    #     zarr_url: ImageStatus.DONE for zarr_url in ZARR_URLS
-    # }
 
 
 #
