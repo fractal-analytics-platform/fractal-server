@@ -219,14 +219,6 @@ async def get_history_images(
 ) -> PaginationResponse[ZarrUrlAndStatus]:
 
     # Access control and object retrieval
-    res = await _verify_workflow_and_dataset_access(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        db=db,
-    )
-    dataset = res["dataset"]
-    workflow = res["workflow"]
     wftask = await get_wftask_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -234,6 +226,15 @@ async def get_history_images(
         user_id=user.id,
         db=db,
     )
+    res = await _verify_workflow_and_dataset_access(
+        project_id=project_id,
+        workflow_id=wftask.workflow_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    dataset = res["dataset"]
+    workflow = res["workflow"]
 
     # Setup prefix for logging
     prefix = f"[DS{dataset.id}-WFT{wftask.id}-images]"
