@@ -33,7 +33,7 @@ class HistoryUnitRead(BaseModel):
 class HistoryRunReadAggregated(BaseModel):
     id: int
     timestamp_started: AwareDatetime
-    workflowtask_dump: dict[str, Any]  # FIXME
+    workflowtask_dump: dict[str, Any]
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
