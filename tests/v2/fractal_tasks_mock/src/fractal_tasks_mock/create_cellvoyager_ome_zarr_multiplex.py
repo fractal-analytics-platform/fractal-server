@@ -7,7 +7,6 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def create_cellvoyager_ome_zarr_multiplex(
     *,
-    zarr_urls: list[str],
     zarr_dir: str,
     image_dir: str,
 ) -> dict:
@@ -16,16 +15,9 @@ def create_cellvoyager_ome_zarr_multiplex(
 
 
     Arguments:
-        zarr_urls: description
         zarr_dir: description
         image_dir: Image where the raw images are
     """
-
-    if len(zarr_urls) > 0:
-        raise ValueError(
-            "Error in create_cellvoyager_ome_zarr_multiplex, "
-            f"`zarr_urls` argument must be empty, but {zarr_urls=}."
-        )
 
     # Based on images in image_folder, create plate OME-Zarr
     zarr_dir = zarr_dir.rstrip("/")
