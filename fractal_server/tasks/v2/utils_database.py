@@ -22,12 +22,7 @@ def create_db_tasks_and_update_task_group(
     Returns:
         Updated `TaskGroupV2` object.
     """
-    actual_task_list = [
-        TaskV2(
-            **task.model_dump(),
-        )
-        for task in task_list
-    ]
+    actual_task_list = [TaskV2(**task.model_dump()) for task in task_list]
     task_group = db.get(TaskGroupV2, task_group_id)
     task_group.task_list = actual_task_list
     db.add(task_group)
