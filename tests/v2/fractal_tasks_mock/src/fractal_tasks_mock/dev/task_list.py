@@ -1,10 +1,11 @@
 from fractal_task_tools.task_models import CompoundTask
+from fractal_task_tools.task_models import ConverterCompoundTask
 from fractal_task_tools.task_models import NonParallelTask
 from fractal_task_tools.task_models import ParallelTask
 
 
 TASK_LIST = [
-    CompoundTask(
+    ConverterCompoundTask(
         name="create_ome_zarr_compound",
         executable_init="create_cellvoyager_ome_zarr.py",
         executable="fill_cellvoyager_ome_zarr.py",
@@ -14,7 +15,7 @@ TASK_LIST = [
         modality="HCS",
         tags=["Yokogawa", "Cellvoyager"],
     ),
-    CompoundTask(
+    ConverterCompoundTask(
         name="create_ome_zarr_multiplex_compound",
         executable_init="create_cellvoyager_ome_zarr_multiplex.py",
         executable="fill_cellvoyager_ome_zarr.py",

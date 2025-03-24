@@ -19,8 +19,6 @@ def get_dummy_task_files(root_dir_local: Path) -> TaskFiles:
 
 
 async def test_submit_success(
-    db,
-    mock_history_item,
     tmp_path,
 ):
     def do_nothing(parameters: dict) -> int:
@@ -34,15 +32,13 @@ async def test_submit_success(
                 "__FRACTAL_PARALLEL_COMPONENT__": "000000",
             },
             task_files=get_dummy_task_files(tmp_path),
+            task_type="non_parallel",
         )
     assert result == 42
     assert exception is None
-    db.expunge_all()
 
 
 async def test_submit_fail(
-    db,
-    mock_history_item,
     tmp_path,
 ):
     ERROR_MSG = "very nice error"
@@ -58,6 +54,7 @@ async def test_submit_fail(
                 "__FRACTAL_PARALLEL_COMPONENT__": "000000",
             },
             task_files=get_dummy_task_files(tmp_path),
+            task_type="non_parallel",
         )
     assert result is None
     assert isinstance(exception, ValueError)
@@ -77,7 +74,7 @@ def fun(parameters: int):
         raise ValueError("parameter=3 is very very bad")
 
 
-async def test_multisubmit(db, mock_history_item, tmp_path):
+async def test_multisubmit(tmp_path):
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
             fun,
@@ -104,6 +101,7 @@ async def test_multisubmit(db, mock_history_item, tmp_path):
                 },
             ],
             task_files=get_dummy_task_files(tmp_path),
+            task_type="parallel",
         )
         debug(results)
         debug(exceptions)
