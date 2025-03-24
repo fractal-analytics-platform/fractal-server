@@ -382,7 +382,7 @@ class RunnerSlurmSSH(BaseRunner):
         submit_command = (
             f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
         )
-        pre_submission_cmds = slurm_job.slurm_config.pre_submission_commands
+        pre_submission_cmds = slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
             sbatch_stdout = self.fractal_ssh.run_command(cmd=submit_command)
         else:
