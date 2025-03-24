@@ -416,6 +416,7 @@ class RunnerSlurmSSH(BaseRunner):
         return list(self.jobs.keys())
 
     def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
+        # FIXME: This should only transfer archives, not single files
         """
         Note: this would differ for SSH
         """
