@@ -16,6 +16,7 @@ from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
 from .task import TaskReadV2
+from .task import TaskTypeType
 
 RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
 
@@ -113,7 +114,7 @@ class WorkflowTaskReadV2(BaseModel):
 
     type_filters: dict[str, bool]
 
-    task_type: str
+    task_type: TaskTypeType
     task_id: int
     task: TaskReadV2
 
