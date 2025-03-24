@@ -11,9 +11,7 @@ import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..slurm_common._check_jobs_status import (
-    get_finished_jobs,
-)
+from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -378,6 +376,11 @@ class RunnerSlurmSSH(BaseRunner):
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
 
+        self.fractal_ssh.send_file(
+            local=slurm_job.slurm_submission_script_local,
+            remote=slurm_job.slurm_submission_script_remote,
+        )
+
         # Run sbatch
         submit_command = (
             f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
@@ -550,7 +553,10 @@ class RunnerSlurmSSH(BaseRunner):
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
-            finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            finished_job_ids = get_finished_jobs_ssh(
+                job_ids=self.job_ids,
+                fractal_ssh=self.fractal_ssh,
+            )
             for slurm_job_id in finished_job_ids:
                 slurm_job = self.jobs.pop(slurm_job_id)
                 self._copy_files_from_remote_to_local(slurm_job)
@@ -668,7 +674,10 @@ class RunnerSlurmSSH(BaseRunner):
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
-            finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            finished_job_ids = get_finished_jobs_ssh(
+                job_ids=self.job_ids,
+                fractal_ssh=self.fractal_ssh,
+            )
             for slurm_job_id in finished_job_ids:
                 slurm_job = self.jobs.pop(slurm_job_id)
                 self._copy_files_from_remote_to_local(slurm_job)
