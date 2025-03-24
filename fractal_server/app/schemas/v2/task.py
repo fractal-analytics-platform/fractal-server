@@ -16,6 +16,14 @@ from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
+TaskTypeType = Literal[
+    "compound",
+    "converter_compound",
+    "non_parallel",
+    "converter_non_parallel",
+    "parallel",
+]
+
 
 logger = set_logger(__name__)
 
@@ -45,15 +53,7 @@ class TaskCreateV2(BaseModel):
     tags: list[NonEmptyString] = Field(default_factory=list)
     authors: Optional[NonEmptyString] = None
 
-    type: Optional[
-        Literal[
-            "compound",
-            "converter_compound",
-            "non_parallel",
-            "converter_non_parallel",
-            "parallel",
-        ]
-    ] = None
+    type: Optional[TaskTypeType] = None
 
     # Validators
 
@@ -158,15 +158,7 @@ class TaskReadV2(BaseModel):
     authors: Optional[str] = None
     tags: list[str]
 
-    type: Optional[
-        Literal[
-            "compound",
-            "converter_compound",
-            "non_parallel",
-            "converter_non_parallel",
-            "parallel",
-        ]
-    ] = None
+    type: Optional[TaskTypeType] = None
 
 
 class TaskUpdateV2(BaseModel):
