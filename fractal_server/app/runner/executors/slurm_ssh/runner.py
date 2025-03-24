@@ -514,13 +514,11 @@ class RunnerSlurmSSH(BaseRunner):
         )
 
         # Create task subfolder
-        # original_umask = os.umask(0)
-        # workdir_local.mkdir(parents=True, mode=0o755)
-        # os.umask(original_umask)
-        # _mkdir_as_user(
-        #     folder=workdir_remote.as_posix(),
-        #     user=self.slurm_user,
-        # )
+        workdir_local.mkdir(parents=True)
+        self.fractal_ssh.mkdir(
+            folder=workdir_remote.as_posix(),
+            parents=True,
+        )
 
         # Submission phase
         slurm_job = SlurmJob(
@@ -583,14 +581,12 @@ class RunnerSlurmSSH(BaseRunner):
         workdir_remote = task_files.wftask_subfolder_remote
 
         # Create local&remote task subfolders
-        # if not in_compound_task:
-        #     original_umask = os.umask(0)
-        #     workdir_local.mkdir(parents=True, mode=0o755)
-        #     os.umask(original_umask)
-        #     _mkdir_as_user(
-        #         folder=workdir_remote.as_posix(),
-        #         user=self.slurm_user,
-        #     )
+        if task_type not in ["compound", "converter_compound"]:
+            workdir_local.mkdir(parents=True)
+            self.fractal_ssh.mkdir(
+                folder=workdir_remote.as_posix(),
+                parents=True,
+            )
 
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
         # TODO Pick a data structure for results and exceptions, or review the
