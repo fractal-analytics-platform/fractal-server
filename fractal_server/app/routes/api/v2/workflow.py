@@ -221,8 +221,8 @@ async def delete_workflow(
             ),
         )
 
-    # Cascade operations: set foreign-keys to null for jobs which are in
-    # relationship with the current workflow
+    # Cascade operation: set foreign-keys to null for jobs which are in
+    # relationship with the current workflow.
     stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
     res = await db.execute(stm)
     jobs = res.scalars().all()
@@ -240,7 +240,7 @@ async def delete_workflow(
     "/project/{project_id}/workflow/{workflow_id}/export/",
     response_model=WorkflowExportV2,
 )
-async def export_worfklow(
+async def export_workflow(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),

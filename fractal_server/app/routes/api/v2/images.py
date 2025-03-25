@@ -17,6 +17,9 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas._filter_validators import (
     validate_attribute_filters,
 )
@@ -31,16 +34,10 @@ from fractal_server.images.tools import match_filter
 router = APIRouter()
 
 
-class ImagePage(BaseModel):
-
-    total_count: int
-    page_size: int
-    current_page: int
+class ImagePage(PaginationResponse[SingleImage]):
 
     attributes: dict[str, list[Any]]
     types: list[str]
-
-    images: list[SingleImage]
 
 
 class ImageQuery(BaseModel):
@@ -118,18 +115,14 @@ async def post_new_image(
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
-    page: int = 1,  # query param
-    page_size: Optional[int] = None,  # query param
-    query: Optional[ImageQuery] = None,  # body
+    query: Optional[ImageQuery] = None,
+    pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:
 
-    if page < 1:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid pagination parameter: page={page} < 1",
-        )
+    page = pagination.page
+    page_size = pagination.page_size
 
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
@@ -177,20 +170,10 @@ async def query_dataset_images(
 
     total_count = len(images)
 
-    if page_size is not None:
-        if page_size <= 0:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Invalid pagination parameter: page_size={page_size} <= 0"
-                ),
-            )
-    else:
+    if page_size is None:
         page_size = total_count
 
-    if total_count == 0:
-        page = 1
-    else:
+    if total_count > 0:
         last_page = (total_count // page_size) + (total_count % page_size > 0)
         if page > last_page:
             page = last_page
@@ -201,9 +184,9 @@ async def query_dataset_images(
         total_count=total_count,
         current_page=page,
         page_size=page_size,
+        items=images,
         attributes=attributes,
         types=types,
-        images=images,
     )
 
 

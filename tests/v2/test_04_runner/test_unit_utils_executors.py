@@ -1,33 +1,14 @@
-from pathlib import Path
-
 import pytest
 
-from fractal_server.app.runner.executors.slurm.utils_executors import (
+from fractal_server.app.runner.executors.slurm_common.utils_executors import (
     get_pickle_file_path,
 )
-from fractal_server.app.runner.executors.slurm.utils_executors import (
+from fractal_server.app.runner.executors.slurm_common.utils_executors import (
     get_slurm_file_path,
 )
-from fractal_server.app.runner.executors.slurm.utils_executors import (
+from fractal_server.app.runner.executors.slurm_common.utils_executors import (
     get_slurm_script_file_path,
 )
-from tests.v2._aux_runner import (
-    get_default_task_files,
-)
-
-
-def test_get_default_task_files():
-    local_dir = Path("/tmp/local_workflow")
-    remote_dir = Path("/tmp/remote_workflow")
-
-    result = get_default_task_files(
-        workflow_dir_local=local_dir, workflow_dir_remote=remote_dir
-    )
-
-    assert result.workflow_dir_local == local_dir
-    assert result.workflow_dir_remote == remote_dir
-    assert result.task_order is None
-    assert result.task_name == "name"
 
 
 @pytest.mark.parametrize(

@@ -417,3 +417,69 @@ async def clean_app_job_list_v2(
         if job.status == JobStatusTypeV2.SUBMITTED
     ]
     return submitted_job_ids
+
+
+async def _get_dataset_or_404(
+    *,
+    dataset_id: int,
+    db: AsyncSession,
+) -> DatasetV2:
+    """
+    Get a dataset or raise 404.
+
+    Args:
+        dataset_id:
+        db:
+    """
+    ds = await db.get(DatasetV2, dataset_id)
+    if ds is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Dataset {dataset_id} not found.",
+        )
+    else:
+        return ds
+
+
+async def _get_workflow_or_404(
+    *,
+    workflow_id: int,
+    db: AsyncSession,
+) -> WorkflowV2:
+    """
+    Get a workflow or raise 404.
+
+    Args:
+        workflow_id:
+        db:
+    """
+    wf = await db.get(WorkflowV2, workflow_id)
+    if wf is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found.",
+        )
+    else:
+        return wf
+
+
+async def _get_workflowtask_or_404(
+    *,
+    workflowtask_id: int,
+    db: AsyncSession,
+) -> WorkflowTaskV2:
+    """
+    Get a workflow task or raise 404.
+
+    Args:
+        workflowtask_id:
+        db:
+    """
+    wftask = await db.get(WorkflowTaskV2, workflowtask_id)
+    if wftask is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTask {workflowtask_id} not found.",
+        )
+    else:
+        return wftask

@@ -2,9 +2,9 @@ name: Benchmarks
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "dev-2.14"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev-2.14"]
 
 jobs:
 
@@ -23,7 +23,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
      - name: Install poetry
-       run: pipx install poetry==2.0.0
+       run: pipx install poetry==2.1.0
 
      - name: Set up Python 3.10
        uses: actions/setup-python@v5
@@ -96,7 +96,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
      - name: Install poetry
-       run: pipx install poetry==2.0.0
+       run: pipx install poetry==2.1.0
 
      - name: Set up Python 3.10
        uses: actions/setup-python@v5

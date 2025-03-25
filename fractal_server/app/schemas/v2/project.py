@@ -7,16 +7,15 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validators import valstr
+from .._validators import cant_set_none
+from .._validators import NonEmptyString
 
 
 class ProjectCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
+    name: NonEmptyString
 
 
 class ProjectReadV2(BaseModel):
@@ -34,6 +33,9 @@ class ProjectUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[str] = None
-    # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
+    name: Optional[NonEmptyString] = None
+
+    @field_validator("name")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)

@@ -28,6 +28,7 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
@@ -54,8 +55,8 @@ class MailSettings(BaseModel):
     recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
-    encrypted_password: Optional[str] = None
-    encryption_key: Optional[str] = None
+    encrypted_password: Optional[SecretStr] = None
+    encryption_key: Optional[SecretStr] = None
     instance_name: str
     use_starttls: bool
     use_login: bool
@@ -97,7 +98,7 @@ class OAuthClientConfig(BaseModel):
 
     CLIENT_NAME: str
     CLIENT_ID: str
-    CLIENT_SECRET: str
+    CLIENT_SECRET: SecretStr
     OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
@@ -137,7 +138,7 @@ class Settings(BaseSettings):
     JWT token lifetime, in seconds.
     """
 
-    JWT_SECRET_KEY: Optional[str] = None
+    JWT_SECRET_KEY: Optional[SecretStr] = None
     """
     JWT secret
 
@@ -204,7 +205,7 @@ class Settings(BaseSettings):
     """
     User to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_PASSWORD: Optional[str] = None
+    POSTGRES_PASSWORD: Optional[SecretStr] = None
     """
     Password to use when connecting to the PostgreSQL database.
     """
@@ -223,10 +224,15 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_ASYNC_URL(self) -> URL:
+        if self.POSTGRES_PASSWORD is None:
+            password = None
+        else:
+            password = self.POSTGRES_PASSWORD.get_secret_value()
+
         url = URL.create(
             drivername="postgresql+psycopg",
             username=self.POSTGRES_USER,
-            password=self.POSTGRES_PASSWORD,
+            password=password,
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
@@ -250,7 +256,7 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_DEFAULT_ADMIN_PASSWORD: str = "1234"
+    FRACTAL_DEFAULT_ADMIN_PASSWORD: SecretStr = "1234"
     """
     Admin default password, used upon creation of the first superuser during
     server startup.
@@ -579,11 +585,11 @@ class Settings(BaseSettings):
     """
     Address of the OAuth-signup email sender.
     """
-    FRACTAL_EMAIL_PASSWORD: Optional[str] = None
+    FRACTAL_EMAIL_PASSWORD: Optional[SecretStr] = None
     """
     Password for the OAuth-signup email sender.
     """
-    FRACTAL_EMAIL_PASSWORD_KEY: Optional[str] = None
+    FRACTAL_EMAIL_PASSWORD_KEY: Optional[SecretStr] = None
     """
     Key value for `cryptography.fernet` decrypt
     """
@@ -653,8 +659,12 @@ class Settings(BaseSettings):
                     )
                 try:
                     (
-                        Fernet(self.FRACTAL_EMAIL_PASSWORD_KEY)
-                        .decrypt(self.FRACTAL_EMAIL_PASSWORD)
+                        Fernet(
+                            self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
+                        )
+                        .decrypt(
+                            self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
+                        )
                         .decode("utf-8")
                     )
                 except Exception as e:
@@ -663,14 +673,22 @@ class Settings(BaseSettings):
                         "FRACTAL_EMAIL_PASSWORD_KEY). "
                         f"Original error: {str(e)}."
                     )
+                password = self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
+            else:
+                password = None
+
+            if self.FRACTAL_EMAIL_PASSWORD_KEY is not None:
+                key = self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
+            else:
+                key = None
 
             self.email_settings = MailSettings(
                 sender=self.FRACTAL_EMAIL_SENDER,
                 recipients=self.FRACTAL_EMAIL_RECIPIENTS.split(","),
                 smtp_server=self.FRACTAL_EMAIL_SMTP_SERVER,
                 port=self.FRACTAL_EMAIL_SMTP_PORT,
-                encrypted_password=self.FRACTAL_EMAIL_PASSWORD,
-                encryption_key=self.FRACTAL_EMAIL_PASSWORD_KEY,
+                encrypted_password=password,
+                encryption_key=key,
                 instance_name=self.FRACTAL_EMAIL_INSTANCE_NAME,
                 use_starttls=use_starttls,
                 use_login=use_login,
@@ -697,7 +715,7 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
-            from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+            from fractal_server.app.runner.executors.slurm_common._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
 
@@ -727,7 +745,7 @@ class Settings(BaseSettings):
                     f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
                 )
 
-            from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+            from fractal_server.app.runner.executors.slurm_common._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
 
@@ -787,25 +805,6 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
-
-    def get_sanitized(self) -> dict:
-        def _must_be_sanitized(string) -> bool:
-            if not string.upper().startswith("FRACTAL") or any(
-                s in string.upper()
-                for s in ["PASSWORD", "SECRET", "PWD", "TOKEN", "KEY"]
-            ):
-                return True
-            else:
-                return False
-
-        sanitized_settings = {}
-        for k, v in self.model_dump().items():
-            if _must_be_sanitized(k):
-                sanitized_settings[k] = "***"
-            else:
-                sanitized_settings[k] = v
-
-        return sanitized_settings
 
 
 def get_settings(settings=Settings()) -> Settings:

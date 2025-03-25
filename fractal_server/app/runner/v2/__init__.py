@@ -27,13 +27,11 @@ from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from ..executors.slurm.sudo._subprocess_run_as_user import _mkdir_as_user
+from ..executors.slurm_sudo._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
-from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
-from .handle_failed_job import mark_last_wftask_as_failed
 from fractal_server import __VERSION__
 from fractal_server.app.models import UserSettings
 
@@ -201,28 +199,6 @@ def submit_workflow(
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
 
-            # Create all tasks subfolders
-            for order in range(job.first_task_index, job.last_task_index + 1):
-                this_wftask = workflow.task_list[order]
-                task_name = this_wftask.task.name
-                subfolder_name = task_subfolder_name(
-                    order=order,
-                    task_name=task_name,
-                )
-                if FRACTAL_RUNNER_BACKEND == "slurm":
-                    # Create local subfolder (with 755) and remote one
-                    # (via `sudo -u`)
-                    original_umask = os.umask(0)
-                    (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
-                    os.umask(original_umask)
-                    _mkdir_as_user(
-                        folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
-                        user=slurm_user,
-                    )
-                else:
-                    # Create local subfolder (with standard permission set)
-                    (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir()
-                    logger.info("Skip remote-subfolder creation")
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
@@ -345,10 +321,6 @@ def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        mark_last_wftask_as_failed(
-            dataset_id=dataset_id,
-            logger_name=logger_name,
-        )
         exception_args_string = "\n".join(e.args)
         log_msg = (
             f"TASK ERROR: "
@@ -361,10 +333,7 @@ def submit_workflow(
     except JobExecutionError as e:
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
-        mark_last_wftask_as_failed(
-            dataset_id=dataset_id,
-            logger_name=logger_name,
-        )
+
         fail_job(
             db=db_sync,
             job=job,
@@ -378,10 +347,7 @@ def submit_workflow(
     except Exception:
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
-        mark_last_wftask_as_failed(
-            dataset_id=dataset_id,
-            logger_name=logger_name,
-        )
+
         current_traceback = traceback.format_exc()
         fail_job(
             db=db_sync,

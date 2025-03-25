@@ -45,7 +45,7 @@ async def test_app_with_lifespan(
     _create_first_group()
     await _create_first_user(
         email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value(),
         username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
         is_superuser=True,
         is_verified=True,
@@ -160,6 +160,7 @@ async def test_lifespan_shutdown_raise_error(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 async def test_lifespan_slurm_ssh(
     override_settings_factory,
     slurmlogin_ip,

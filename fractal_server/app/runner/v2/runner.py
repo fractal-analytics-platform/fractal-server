@@ -1,12 +1,11 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
-from typing import Callable
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import update
 
 from ....images import SingleImage
 from ....images.tools import filter_image_list
@@ -14,15 +13,21 @@ from ....images.tools import find_image_by_zarr_url
 from ..exceptions import JobExecutionError
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
+from .runner_functions import run_v2_task_converter_compound
+from .runner_functions import run_v2_task_converter_non_parallel
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
-from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
+from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskDumpV2
+from fractal_server.app.schemas.v2 import TaskGroupDumpV2
 from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
 
@@ -31,20 +36,20 @@ def execute_tasks_v2(
     *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
-    executor: ThreadPoolExecutor,
+    runner: BaseRunner,
     user_id: int,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
+    submit_setup_call: callable = no_op_submit_setup_call,
     job_attribute_filters: AttributeFiltersType,
 ) -> None:
     logger = logging.getLogger(logger_name)
 
     if not workflow_dir_local.exists():
         logger.warning(
-            f"Now creating {workflow_dir_local}, "
-            "but it should have already happened."
+            f"Now creating {workflow_dir_local}, but it "
+            "should have already happened."
         )
         workflow_dir_local.mkdir()
 
@@ -60,66 +65,126 @@ def execute_tasks_v2(
 
         # PRE TASK EXECUTION
 
-        # Get filtered images
-        type_filters = copy(current_dataset_type_filters)
-        type_filters_patch = merge_type_filters(
-            task_input_types=task.input_types,
-            wftask_type_filters=wftask.type_filters,
-        )
-        type_filters.update(type_filters_patch)
-        filtered_images = filter_image_list(
-            images=tmp_images,
-            type_filters=type_filters,
-            attribute_filters=job_attribute_filters,
-        )
+        # Filter images by types and attributes (in two steps)
+        if wftask.task_type in ["compound", "parallel", "non_parallel"]:
+            type_filters = copy(current_dataset_type_filters)
+            type_filters_patch = merge_type_filters(
+                task_input_types=task.input_types,
+                wftask_type_filters=wftask.type_filters,
+            )
+            type_filters.update(type_filters_patch)
+            type_filtered_images = filter_image_list(
+                images=tmp_images,
+                type_filters=type_filters,
+                attribute_filters=None,
+            )
+            num_available_images = len(type_filtered_images)
+            filtered_images = filter_image_list(
+                images=type_filtered_images,
+                type_filters=None,
+                attribute_filters=job_attribute_filters,
+            )
+        else:
+            num_available_images = 0
 
-        # First, set status SUBMITTED in dataset.history for each wftask
         with next(get_sync_db()) as db:
-            db_dataset = db.get(DatasetV2, dataset.id)
-            new_history_item = _DatasetHistoryItemV2(
-                workflowtask=dict(
-                    **wftask.model_dump(exclude={"task"}),
-                    task=wftask.task.model_dump(),
-                ),
-                status=WorkflowTaskStatusTypeV2.SUBMITTED,
-                parallelization=dict(),  # FIXME: re-include parallelization
+            # Create dumps for workflowtask and taskgroup
+            workflowtask_dump = dict(
+                **wftask.model_dump(exclude={"task"}),
+                task=TaskDumpV2(**wftask.task.model_dump()).model_dump(),
+            )
+            task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+            task_group_dump = TaskGroupDumpV2(
+                **task_group.model_dump()
             ).model_dump()
-            db_dataset.history.append(new_history_item)
-            flag_modified(db_dataset, "history")
-            db.merge(db_dataset)
+            # Create HistoryRun
+            history_run = HistoryRun(
+                dataset_id=dataset.id,
+                workflowtask_id=wftask.id,
+                workflowtask_dump=workflowtask_dump,
+                task_group_dump=task_group_dump,
+                num_available_images=num_available_images,
+                status=HistoryUnitStatus.SUBMITTED,
+            )
+            db.add(history_run)
             db.commit()
+            db.refresh(history_run)
+            history_run_id = history_run.id
+
         # TASK EXECUTION (V2)
         if task.type == "non_parallel":
-            current_task_output, num_tasks = run_v2_task_non_parallel(
+            (
+                current_task_output,
+                num_tasks,
+                exceptions,
+            ) = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=executor,
+                executor=runner,
                 submit_setup_call=submit_setup_call,
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
+            )
+        elif task.type == "converter_non_parallel":
+            (
+                current_task_output,
+                num_tasks,
+                exceptions,
+            ) = run_v2_task_converter_non_parallel(
+                zarr_dir=zarr_dir,
+                wftask=wftask,
+                task=task,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
+                executor=runner,
+                submit_setup_call=submit_setup_call,
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
             )
         elif task.type == "parallel":
-            current_task_output, num_tasks = run_v2_task_parallel(
+            current_task_output, num_tasks, exceptions = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=executor,
+                executor=runner,
                 submit_setup_call=submit_setup_call,
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
             )
         elif task.type == "compound":
-            current_task_output, num_tasks = run_v2_task_compound(
+            current_task_output, num_tasks, exceptions = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=executor,
+                executor=runner,
                 submit_setup_call=submit_setup_call,
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
+            )
+        elif task.type == "converter_compound":
+            (
+                current_task_output,
+                num_tasks,
+                exceptions,
+            ) = run_v2_task_converter_compound(
+                zarr_dir=zarr_dir,
+                wftask=wftask,
+                task=task,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
+                executor=runner,
+                submit_setup_call=submit_setup_call,
+                history_run_id=history_run_id,
+                dataset_id=dataset.id,
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
@@ -145,6 +210,9 @@ def execute_tasks_v2(
         # Update image list
         num_new_images = 0
         current_task_output.check_zarr_urls_are_unique()
+        # FIXME: Introduce for loop over task outputs, and processe them
+        # sequentially
+        # each failure should lead to an update of the specific image status
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.model_dump()
             # Edit existing image
@@ -264,23 +332,17 @@ def execute_tasks_v2(
         type_filters_from_task_manifest = task.output_types
         current_dataset_type_filters.update(type_filters_from_task_manifest)
 
-        # Write current dataset attributes (history, images, filters) into the
-        # database. They can be used (1) to retrieve the latest state
-        # when the job fails, (2) from within endpoints that need up-to-date
-        # information
         with next(get_sync_db()) as db:
+            # Write current dataset attributes (history + filters) into the
+            # database.
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.history[-1]["status"] = WorkflowTaskStatusTypeV2.DONE
             db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
-            for attribute_name in [
-                "type_filters",
-                "history",
-                "images",
-            ]:
+            for attribute_name in ["type_filters", "images"]:
                 flag_modified(db_dataset, attribute_name)
             db.merge(db_dataset)
             db.commit()
+            db.close()  # FIXME: why is this needed?
 
             # Create accounting record
             record = AccountingRecord(
@@ -291,4 +353,30 @@ def execute_tasks_v2(
             db.add(record)
             db.commit()
 
-        logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
+            # Update History tables, and raise an error if task failed
+            if exceptions == {}:
+                db.execute(
+                    update(HistoryRun)
+                    .where(HistoryRun.id == history_run_id)
+                    .values(status=HistoryUnitStatus.DONE)
+                )
+                db.commit()
+            else:
+                db.execute(
+                    update(HistoryRun)
+                    .where(HistoryRun.id == history_run_id)
+                    .values(status=HistoryUnitStatus.FAILED)
+                )
+                db.commit()
+                logger.error(
+                    f'END    {wftask.order}-th task (name="{task_name}") - '
+                    "ERROR."
+                )
+                # Raise first error
+                for key, value in exceptions.items():
+                    raise JobExecutionError(
+                        info=(f"An error occurred.\nOriginal error:\n{value}")
+                    )
+                logger.debug(
+                    f'END    {wftask.order}-th task (name="{task_name}")'
+                )

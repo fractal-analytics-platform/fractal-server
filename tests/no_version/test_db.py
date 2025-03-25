@@ -21,6 +21,15 @@ async def test_db_connection(db):
     debug(res)
 
 
+async def test_db_connection_url(db, override_settings_factory):
+    from fractal_server.syringe import Inject
+    from fractal_server.config import get_settings
+
+    override_settings_factory(POSTGRES_PASSWORD=None)
+    settings = Inject(get_settings)
+    assert settings.DATABASE_ASYNC_URL
+
+
 async def test_sync_db(db_sync, db):
     """
     GIVEN a database and a sync and an async connections to it

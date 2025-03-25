@@ -1,14 +1,12 @@
 import functools
 import logging
-import traceback
-from concurrent.futures import Executor
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Literal
 from typing import Optional
 
 from pydantic import ValidationError
+from sqlmodel import update
 
 from ..exceptions import JobExecutionError
 from .deduplicate_list import deduplicate_list
@@ -16,16 +14,23 @@ from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
+from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
+from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
 __all__ = [
-    "run_v2_task_non_parallel",
     "run_v2_task_parallel",
+    "run_v2_task_non_parallel",
     "run_v2_task_compound",
+    "run_v2_task_converter_non_parallel",
+    "run_v2_task_converter_compound",
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
@@ -62,39 +67,13 @@ def _cast_and_validate_InitTaskOutput(
 def no_op_submit_setup_call(
     *,
     wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
+    root_dir_local: Path,
     which_type: Literal["non_parallel", "parallel"],
-) -> dict:
+) -> dict[str, Any]:
     """
     Default (no-operation) interface of submit_setup_call in V2.
     """
     return {}
-
-
-# Backend-specific configuration
-def _get_executor_options(
-    *,
-    wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Path,
-    submit_setup_call: Callable,
-    which_type: Literal["non_parallel", "parallel"],
-) -> dict:
-    try:
-        options = submit_setup_call(
-            wftask=wftask,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
-            which_type=which_type,
-        )
-    except Exception as e:
-        tb = "".join(traceback.format_tb(e.__traceback__))
-        raise RuntimeError(
-            f"{type(e)} error in {submit_setup_call=}\n"
-            f"Original traceback:\n{tb}"
-        )
-    return options
 
 
 def _check_parallelization_list_size(my_list):
@@ -114,9 +93,11 @@ def run_v2_task_non_parallel(
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    executor: Executor,
-    submit_setup_call: Callable = no_op_submit_setup_call,
-) -> tuple[TaskOutput, int]:
+    executor: BaseRunner,
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
     """
     This runs server-side (see `executor` argument)
     """
@@ -128,36 +109,164 @@ def run_v2_task_non_parallel(
         )
         workflow_dir_remote = workflow_dir_local
 
-    executor_options = _get_executor_options(
+    executor_options = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="non_parallel",
     )
 
-    function_kwargs = dict(
-        zarr_urls=[image["zarr_url"] for image in images],
-        zarr_dir=zarr_dir,
+    function_kwargs = {
+        "zarr_urls": [image["zarr_url"] for image in images],
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: _index_to_component(0),
         **(wftask.args_non_parallel or {}),
-    )
-    future = executor.submit(
+    }
+
+    # Database History operations
+    with next(get_sync_db()) as db:
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=function_kwargs["zarr_urls"],
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=[
+                dict(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit_id,
+                )
+                for zarr_url in history_unit.zarr_urls
+            ],
+        )
+
+    result, exception = executor.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
-        function_kwargs,
+        parameters=function_kwargs,
+        task_type="non_parallel",
         **executor_options,
     )
-    output = future.result()
+
     num_tasks = 1
-    if output is None:
-        return (TaskOutput(), num_tasks)
-    else:
-        return (_cast_and_validate_TaskOutput(output), num_tasks)
+    with next(get_sync_db()) as db:
+        if exception is None:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.DONE)
+            )
+            db.commit()
+            if result is None:
+                return (TaskOutput(), num_tasks, {})
+            else:
+                return (_cast_and_validate_TaskOutput(result), num_tasks, {})
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.FAILED)
+            )
+            db.commit()
+            return (TaskOutput(), num_tasks, {0: exception})
+
+
+def run_v2_task_converter_non_parallel(
+    *,
+    zarr_dir: str,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
+    executor: BaseRunner,
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+    """
+    This runs server-side (see `executor` argument)
+    """
+
+    if workflow_dir_remote is None:
+        workflow_dir_remote = workflow_dir_local
+        logging.warning(
+            "In `run_single_task`, workflow_dir_remote=None. Is this right?"
+        )
+        workflow_dir_remote = workflow_dir_local
+
+    executor_options = submit_setup_call(
+        wftask=wftask,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        which_type="non_parallel",
+    )
+
+    function_kwargs = {
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: _index_to_component(0),
+        **(wftask.args_non_parallel or {}),
+    }
+
+    # Database History operations
+    with next(get_sync_db()) as db:
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[],
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+
+    result, exception = executor.submit(
+        functools.partial(
+            run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+        ),
+        task_type="converter_non_parallel",
+        parameters=function_kwargs,
+        **executor_options,
+    )
+
+    num_tasks = 1
+    with next(get_sync_db()) as db:
+        if exception is None:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.DONE)
+            )
+            db.commit()
+            if result is None:
+                return (TaskOutput(), num_tasks, {})
+            else:
+                return (_cast_and_validate_TaskOutput(result), num_tasks, {})
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.FAILED)
+            )
+            db.commit()
+            return (TaskOutput(), num_tasks, {0: exception})
 
 
 def run_v2_task_parallel(
@@ -165,59 +274,113 @@ def run_v2_task_parallel(
     images: list[dict[str, Any]],
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: Executor,
+    executor: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
-) -> tuple[TaskOutput, int]:
-
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
     if len(images) == 0:
-        return (TaskOutput(), 0)
+        # FIXME: Do something with history units/images?
+        return (TaskOutput(), 0, {})
 
     _check_parallelization_list_size(images)
 
-    executor_options = _get_executor_options(
+    executor_options = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="parallel",
     )
 
-    list_function_kwargs = []
-    for ind, image in enumerate(images):
-        list_function_kwargs.append(
-            dict(
-                zarr_url=image["zarr_url"],
-                **(wftask.args_parallel or {}),
-            ),
+    list_function_kwargs = [
+        {
+            "zarr_url": image["zarr_url"],
+            _COMPONENT_KEY_: _index_to_component(ind),
+            **(wftask.args_parallel or {}),
+        }
+        for ind, image in enumerate(images)
+    ]
+    history_units = [
+        HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[image["zarr_url"]],
         )
-        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
+        for image in images
+    ]
 
-    results_iterator = executor.map(
+    with next(get_sync_db()) as db:
+        db.add_all(history_units)
+        db.commit()
+
+        for history_unit in history_units:
+            db.refresh(history_unit)
+        history_unit_ids = [history_unit.id for history_unit in history_units]
+
+        history_image_caches = [
+            dict(
+                workflowtask_id=wftask.id,
+                dataset_id=dataset_id,
+                zarr_url=history_unit.zarr_urls[0],
+                latest_history_unit_id=history_unit.id,
+            )
+            for history_unit in history_units
+        ]
+
+        bulk_upsert_image_cache_fast(
+            db=db, list_upsert_objects=history_image_caches
+        )
+
+    results, exceptions = executor.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
-        list_function_kwargs,
+        list_parameters=list_function_kwargs,
+        task_type="parallel",
         **executor_options,
     )
-    # Explicitly iterate over the whole list, so that all futures are waited
-    outputs = list(results_iterator)
 
-    # Validate all non-None outputs
-    for ind, output in enumerate(outputs):
-        if output is None:
-            outputs[ind] = TaskOutput()
+    outputs = []
+    history_unit_ids_done: list[int] = []
+    history_unit_ids_failed: list[int] = []
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+            history_unit_ids_done.append(history_unit_ids[ind])
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
+            history_unit_ids_failed.append(history_unit_ids[ind])
         else:
-            outputs[ind] = _cast_and_validate_TaskOutput(output)
+            print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        db.execute(
+            update(HistoryUnit)
+            .where(HistoryUnit.id.in_(history_unit_ids_done))
+            .values(status=HistoryUnitStatus.DONE)
+        )
+        db.execute(
+            update(HistoryUnit)
+            .where(HistoryUnit.id.in_(history_unit_ids_failed))
+            .values(status=HistoryUnitStatus.FAILED)
+        )
+        db.commit()
 
     num_tasks = len(images)
     merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks)
+    return (merged_output, num_tasks, exceptions)
 
 
 def run_v2_task_compound(
@@ -226,92 +389,315 @@ def run_v2_task_compound(
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: Executor,
+    executor: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
-) -> TaskOutput:
-
-    executor_options_init = _get_executor_options(
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+    executor_options_init = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="non_parallel",
     )
-    executor_options_compute = _get_executor_options(
+    executor_options_compute = submit_setup_call(
         wftask=wftask,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        submit_setup_call=submit_setup_call,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         which_type="parallel",
     )
 
     # 3/A: non-parallel init task
-    function_kwargs = dict(
-        zarr_urls=[image["zarr_url"] for image in images],
-        zarr_dir=zarr_dir,
+    function_kwargs = {
+        "zarr_urls": [image["zarr_url"] for image in images],
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: f"init_{_index_to_component(0)}",
         **(wftask.args_non_parallel or {}),
-    )
-    future = executor.submit(
+    }
+
+    # Create database History entries
+    input_image_zarr_urls = function_kwargs["zarr_urls"]
+    with next(get_sync_db()) as db:
+        # Create a single `HistoryUnit` for the whole compound task
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=input_image_zarr_urls,
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+        # Create one `HistoryImageCache` for each input image
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=[
+                dict(
+                    workflowtask_id=wftask.id,
+                    dataset_id=dataset_id,
+                    zarr_url=zarr_url,
+                    latest_history_unit_id=history_unit_id,
+                )
+                for zarr_url in input_image_zarr_urls
+            ],
+        )
+
+    result, exception = executor.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
-        function_kwargs,
+        parameters=function_kwargs,
+        task_type="compound",
         **executor_options_init,
     )
-    output = future.result()
-    if output is None:
-        init_task_output = InitTaskOutput()
+
+    num_tasks = 1
+    if exception is None:
+        if result is None:
+            init_task_output = InitTaskOutput()
+        else:
+            init_task_output = _cast_and_validate_InitTaskOutput(result)
     else:
-        init_task_output = _cast_and_validate_InitTaskOutput(output)
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.FAILED)
+            )
+            db.commit()
+        return (TaskOutput(), num_tasks, {0: exception})
+
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
-    num_task = 1 + len(parallelization_list)
+    num_tasks = 1 + len(parallelization_list)
 
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
 
     if len(parallelization_list) == 0:
-        return (TaskOutput(), 0)
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.DONE)
+            )
+            db.commit()
+        return (TaskOutput(), 0, {})
 
-    list_function_kwargs = []
-    for ind, parallelization_item in enumerate(parallelization_list):
-        list_function_kwargs.append(
-            dict(
-                zarr_url=parallelization_item.zarr_url,
-                init_args=parallelization_item.init_args,
-                **(wftask.args_parallel or {}),
-            ),
-        )
-        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
+    list_function_kwargs = [
+        {
+            "zarr_url": parallelization_item.zarr_url,
+            "init_args": parallelization_item.init_args,
+            _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
+            **(wftask.args_parallel or {}),
+        }
+        for ind, parallelization_item in enumerate(parallelization_list)
+    ]
 
-    results_iterator = executor.map(
+    results, exceptions = executor.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
             command=task.command_parallel,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
         ),
-        list_function_kwargs,
+        list_parameters=list_function_kwargs,
+        task_type="compound",
         **executor_options_compute,
     )
-    # Explicitly iterate over the whole list, so that all futures are waited
-    outputs = list(results_iterator)
 
-    # Validate all non-None outputs
-    for ind, output in enumerate(outputs):
-        if output is None:
-            outputs[ind] = TaskOutput()
+    outputs = []
+    failure = False
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
+            failure = True
         else:
-            validated_output = _cast_and_validate_TaskOutput(output)
-            outputs[ind] = validated_output
+            print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        if failure:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.FAILED)
+            )
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.DONE)
+            )
+        db.commit()
 
     merged_output = merge_outputs(outputs)
-    return (merged_output, num_task)
+    return (merged_output, num_tasks, exceptions)
+
+
+def run_v2_task_converter_compound(
+    *,
+    zarr_dir: str,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
+    executor: BaseRunner,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
+    submit_setup_call: callable = no_op_submit_setup_call,
+    dataset_id: int,
+    history_run_id: int,
+) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+    executor_options_init = submit_setup_call(
+        wftask=wftask,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        which_type="non_parallel",
+    )
+    executor_options_compute = submit_setup_call(
+        wftask=wftask,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        which_type="parallel",
+    )
+
+    # 3/A: non-parallel init task
+    function_kwargs = {
+        "zarr_dir": zarr_dir,
+        _COMPONENT_KEY_: f"init_{_index_to_component(0)}",
+        **(wftask.args_non_parallel or {}),
+    }
+
+    # Create database History entries
+    with next(get_sync_db()) as db:
+        # Create a single `HistoryUnit` for the whole compound task
+        history_unit = HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=None,  # FIXME
+            zarr_urls=[],
+        )
+        db.add(history_unit)
+        db.commit()
+        db.refresh(history_unit)
+        history_unit_id = history_unit.id
+
+    result, exception = executor.submit(
+        functools.partial(
+            run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+        ),
+        parameters=function_kwargs,
+        task_type="converter_compound",
+        **executor_options_init,
+    )
+
+    num_tasks = 1
+    if exception is None:
+        if result is None:
+            init_task_output = InitTaskOutput()
+        else:
+            init_task_output = _cast_and_validate_InitTaskOutput(result)
+    else:
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.FAILED)
+            )
+            db.commit()
+        return (TaskOutput(), num_tasks, {0: exception})
+
+    parallelization_list = init_task_output.parallelization_list
+    parallelization_list = deduplicate_list(parallelization_list)
+
+    num_tasks = 1 + len(parallelization_list)
+
+    # 3/B: parallel part of a compound task
+    _check_parallelization_list_size(parallelization_list)
+
+    if len(parallelization_list) == 0:
+        with next(get_sync_db()) as db:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.DONE)
+            )
+            db.commit()
+        return (TaskOutput(), 0, {})
+
+    list_function_kwargs = [
+        {
+            "zarr_url": parallelization_item.zarr_url,
+            "init_args": parallelization_item.init_args,
+            _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
+            **(wftask.args_parallel or {}),
+        }
+        for ind, parallelization_item in enumerate(parallelization_list)
+    ]
+
+    results, exceptions = executor.multisubmit(
+        functools.partial(
+            run_single_task,
+            wftask=wftask,
+            command=task.command_parallel,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+        ),
+        list_parameters=list_function_kwargs,
+        task_type="converter_compound",
+        **executor_options_compute,
+    )
+
+    outputs = []
+    failure = False
+    for ind in range(len(list_function_kwargs)):
+        if ind in results.keys():
+            result = results[ind]
+            if result is None:
+                output = TaskOutput()
+            else:
+                output = _cast_and_validate_TaskOutput(result)
+            outputs.append(output)
+
+        elif ind in exceptions.keys():
+            print(f"Bad: {exceptions[ind]}")
+            failure = True
+        else:
+            print("VERY BAD - should have not reached this point")
+
+    with next(get_sync_db()) as db:
+        if failure:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.FAILED)
+            )
+        else:
+            db.execute(
+                update(HistoryUnit)
+                .where(HistoryUnit.id == history_unit_id)
+                .values(status=HistoryUnitStatus.DONE)
+            )
+        db.commit()
+
+    merged_output = merge_outputs(outputs)
+    return (merged_output, num_tasks, exceptions)
