@@ -691,3 +691,77 @@ async def test_update_timestamp_taskgroup(
 
         await db.refresh(task_group)
         assert task_group.timestamp_last_used > original_timestamp_last_used
+
+
+async def test_get_latest_jobs(
+    db,
+    client,
+    project_factory_v2,
+    job_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    tmp_path,
+    MockCurrentUser,
+):
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="dataset"
+        )
+        task = await task_factory_v2(user_id=user.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="done",
+        )
+        job2 = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/latest-job/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        assert res.json()["id"] == job2.id
+
+        job3 = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="failed",
+        )
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/latest-job/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        assert res.json()["id"] == job3.id
+
+        # 404
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/latest-job/"
+            f"?workflow_id={workflow.id + 1}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 404
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/latest-job/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id + 1}"
+        )
+        assert res.status_code == 404

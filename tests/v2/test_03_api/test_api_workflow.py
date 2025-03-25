@@ -471,24 +471,12 @@ async def test_workflow_type_filters_flow(
     MockCurrentUser,
     task_factory_v2,
     project_factory_v2,
-    dataset_factory_v2,
     workflow_factory_v2,
     db,
 ):
     async with MockCurrentUser() as user:
-        task = await task_factory_v2(
-            user_id=user.id,
-            input_types=dict(typeA=True, typeB=False),
-            output_types=dict(
-                typeC=True,
-            ),
-        )
         proj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=proj.id)
-        ds = await dataset_factory_v2(
-            project_id=proj.id,
-            type_filters=dict(existing=False),
-        )
 
         # FAILURE due to empty workflow
         res = await client.get(
@@ -497,94 +485,63 @@ async def test_workflow_type_filters_flow(
         assert res.status_code == 422
         assert "Workflow has no tasks" in str(res.json())
 
-        await _workflow_insert_task(
+        # Add a workflow task
+        task_converter = await task_factory_v2(user_id=user.id)
+        task_cellpose = await task_factory_v2(user_id=user.id)
+        task_MIP = await task_factory_v2(
+            user_id=user.id,
+            input_types={"is_3D": True},
+            output_types={"is_3D": False},
+        )
+        wftask_converter = await _workflow_insert_task(
             workflow_id=wf.id,
-            task_id=task.id,
+            task_id=task_converter.id,
             db=db,
-            type_filters=dict(typeA=True, typeD=False),
+        )
+        wftask_mip = await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=task_MIP.id,
+            db=db,
+        )
+        wftask_cellpose_2d = await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=task_cellpose.id,
+            db=db,
+        )
+        wftask_cellpose_3d = await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=task_cellpose.id,
+            db=db,
+            type_filters={"is_3D": True},
         )
 
-        # FAILURE due to wrong first/last indices
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
-                "type-filters-flow/?first_task_index=-1"
-            )
-        )
-        assert res.status_code == 422
-        assert "Invalid first/last" in str(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
-                "type-filters-flow/?last_task_index=-1"
-            )
-        )
-        assert res.status_code == 422
-        assert "Invalid first/last" in str(res.json())
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
-                "type-filters-flow/?last_task_index=99"
-            )
-        )
-        assert res.status_code == 422
-        assert "Invalid first/last" in str(res.json())
-
-        # SUCCESS, without dataset
+        # SUCCESS
         res = await client.get(
             f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/",
         )
         assert res.status_code == 200
-        assert res.json() == {
-            "dataset_filters": [
-                {},
-                {
-                    "typeC": True,
-                },
-            ],
-            "input_filters": [
-                {
-                    "typeA": True,
-                    "typeB": False,
-                    "typeD": False,
-                },
-            ],
-            "output_filters": [
-                {
-                    "typeC": True,
-                },
-            ],
+        expected_response = {
+            str(wftask_converter.id): dict(
+                current_type_filters={},
+                input_type_filters={},
+                output_type_filters={},
+            ),
+            str(wftask_mip.id): dict(
+                current_type_filters={},
+                input_type_filters={"is_3D": True},
+                output_type_filters={"is_3D": False},
+            ),
+            str(wftask_cellpose_2d.id): dict(
+                current_type_filters={"is_3D": False},
+                input_type_filters={},
+                output_type_filters={},
+            ),
+            str(wftask_cellpose_3d.id): dict(
+                current_type_filters={"is_3D": False},
+                input_type_filters={"is_3D": True},
+                output_type_filters={},
+            ),
         }
 
-        # SUCCESS, with dataset
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
-                f"type-filters-flow/?dataset_id={ds.id}"
-            )
-        )
-        assert res.status_code == 200
-        assert res.json() == {
-            "dataset_filters": [
-                {
-                    "existing": False,
-                },
-                {
-                    "existing": False,
-                    "typeC": True,
-                },
-            ],
-            "input_filters": [
-                {
-                    "existing": False,
-                    "typeA": True,
-                    "typeB": False,
-                    "typeD": False,
-                },
-            ],
-            "output_filters": [
-                {
-                    "typeC": True,
-                },
-            ],
-        }
+        debug(res.json())
+        assert res.json() == expected_response
