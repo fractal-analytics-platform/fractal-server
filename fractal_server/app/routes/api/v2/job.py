@@ -97,6 +97,7 @@ async def get_latest_job(
     )
     stm = (
         select(JobV2)
+        .where(JobV2.project_id == project_id)
         .where(JobV2.workflow_id == workflow_id)
         .where(JobV2.dataset_id == dataset_id)
         .order_by(JobV2.start_timestamp.desc())
