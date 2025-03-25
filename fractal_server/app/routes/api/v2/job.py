@@ -108,7 +108,7 @@ async def get_latest_job(
     if latest_job is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Found no job with {workflow_id=} and {dataset_id=}.",
+            detail=f"Job with {workflow_id=} and {dataset_id=} not found.",
         )
     return latest_job
 
