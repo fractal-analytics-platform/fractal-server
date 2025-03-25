@@ -84,7 +84,7 @@ async def get_workflow_jobs(
     return job_list
 
 
-@router.get("/project/{project_id}/job/latest/")
+@router.get("/project/{project_id}/latest-job/")
 async def get_latest_job(
     project_id: int,
     workflow_id: int,

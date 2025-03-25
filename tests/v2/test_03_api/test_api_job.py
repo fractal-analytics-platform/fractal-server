@@ -732,7 +732,7 @@ async def test_get_latest_jobs(
         )
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/latest/"
+            f"{PREFIX}/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
@@ -747,7 +747,7 @@ async def test_get_latest_jobs(
         )
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/latest/"
+            f"{PREFIX}/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
@@ -756,12 +756,12 @@ async def test_get_latest_jobs(
         # 404
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/latest/"
+            f"{PREFIX}/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id + 1}&dataset_id={dataset.id}"
         )
         assert res.status_code == 404
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/latest/"
+            f"{PREFIX}/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id}&dataset_id={dataset.id + 1}"
         )
         assert res.status_code == 404
