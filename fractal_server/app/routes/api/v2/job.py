@@ -84,6 +84,34 @@ async def get_workflow_jobs(
     return job_list
 
 
+@router.get("/project/{project_id}/job/latest/")
+async def get_latest_job(
+    project_id: int,
+    workflow_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> JobReadV2:
+    await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+    stm = (
+        select(JobV2)
+        .where(JobV2.workflow_id == workflow_id)
+        .where(JobV2.dataset_id == dataset_id)
+        .order_by(JobV2.start_timestamp.desc())
+        .limit(1)
+    )
+    res = await db.execute(stm)
+    latest_job = res.scalar_one_or_none()
+    if latest_job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Found no job with {workflow_id=} and {dataset_id=}.",
+        )
+    return latest_job
+
+
 @router.get(
     "/project/{project_id}/job/{job_id}/",
     response_model=JobReadV2,
@@ -205,31 +233,3 @@ async def stop_job(
     _write_shutdown_file(job=job)
 
     return Response(status_code=status.HTTP_202_ACCEPTED)
-
-
-@router.get("/project/{project_id}/job/latest/")
-async def get_latest_job(
-    project_id: int,
-    workflow_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> JobReadV2:
-    await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
-    )
-    stm = (
-        select(JobV2)
-        .where(JobV2.workflow_id == workflow_id)
-        .where(JobV2.dataset_id == dataset_id)
-        .order_by(JobV2.start_timestamp.desc())
-        .limit(1)
-    )
-    res = await db.execute(stm)
-    latest_job = res.scalar_one_or_none()
-    if latest_job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Found no job with {workflow_id=} and {dataset_id=}.",
-        )
-    return latest_job
