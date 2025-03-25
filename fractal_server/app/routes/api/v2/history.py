@@ -1,3 +1,4 @@
+from typing import Any
 from typing import Optional
 
 from fastapi import APIRouter
@@ -28,11 +29,20 @@ from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import HistoryUnitStatusQuery
 from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.app.schemas.v2 import ZarrUrlAndStatus
+from fractal_server.app.schemas.v2 import SingleImageWithStatus
 from fractal_server.images.tools import filter_image_list
+from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
+
+
+class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
+
+    attributes: dict[str, list[Any]]
+    types: list[str]
+
 
 router = APIRouter()
 logger = set_logger(__name__)
@@ -218,10 +228,13 @@ async def get_history_images(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
+    unit_status: Optional[HistoryUnitStatusQuery] = (
+        HistoryUnitStatusQuery.UNSET
+    ),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[ZarrUrlAndStatus]:
+) -> ImageWithStatusPage:
 
     # Access control and object retrieval
     wftask = await get_wftask_check_owner(
@@ -293,15 +306,45 @@ async def get_history_images(
     list_processed_url = list(item[0] for item in list_processed_url_status)
     logger.debug(f"{prefix} {len(list_processed_url)=}")
 
-    list_non_processed_url_status = list(
-        (url, None)
-        for url in filtered_dataset_images_url
-        if url not in list_processed_url
-    )
+    if unit_status in [None, "unset"]:
+        list_non_processed_url_status = list(
+            (url, None)
+            for url in filtered_dataset_images_url
+            if url not in list_processed_url
+        )
+    else:
+        list_non_processed_url_status = []
+
+    if unit_status == "unset":
+        full_list = list_processed_url_status + list_non_processed_url_status
+    elif unit_status is None:
+        full_list = list_non_processed_url_status
+    else:
+        full_list == [
+            url_status
+            for url_status in list_processed_url_status
+            if url_status[1] == unit_status
+        ]
+
     logger.debug(f"{prefix} {len(list_non_processed_url_status)=}")
 
+    attributes = {}
+    for image in filtered_dataset_images:
+        for k, v in image["attributes"].items():
+            attributes.setdefault(k, []).append(v)
+        for k, v in attributes.items():
+            attributes[k] = list(set(v))
+
+    types = list(
+        set(
+            type
+            for image in filtered_dataset_images
+            for type in image["types"].keys()
+        )
+    )
+
     sorted_list_url_status = sorted(
-        list_processed_url_status + list_non_processed_url_status,
+        full_list,
         key=lambda url_status: url_status[0],
     )
     logger.debug(f"{prefix} {len(sorted_list_url_status)=}")
@@ -315,13 +358,27 @@ async def get_history_images(
     total_count = len(sorted_list_objects)
     page_size = pagination.page_size or total_count
 
+    items = sorted_list_objects[
+        (pagination.page - 1) * page_size : pagination.page * page_size
+    ]
+
+    items = [
+        {
+            **find_image_by_zarr_url(
+                images=filtered_dataset_images, zarr_url=img["zarr_url"]
+            )["image"],
+            "status": img["status"],
+        }
+        for img in items
+    ]
+
     return dict(
         current_page=pagination.page,
         page_size=page_size,
         total_count=total_count,
-        items=sorted_list_objects[
-            (pagination.page - 1) * page_size : pagination.page * page_size
-        ],
+        items=items,
+        attributes=attributes,
+        types=types,
     )
 
 

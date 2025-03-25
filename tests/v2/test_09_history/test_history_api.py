@@ -438,14 +438,25 @@ async def test_get_history_images(
     client,
     MockCurrentUser,
 ):
+    from fractal_server.images import SingleImage
+
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
         images_x_no_y = [
-            dict(zarr_url=f"/a{i}", types={"x": True}) for i in range(5)
+            SingleImage(
+                zarr_url=f"/a{i}",
+                types={"x": True},
+                attributes={"well": "1A"},
+            ).model_dump()
+            for i in range(5)
         ]
         images_x_and_y = [
-            dict(zarr_url=f"/b{i}", types={"x": True, "y": True})
+            SingleImage(
+                zarr_url=f"/b{i}",
+                types={"x": True, "y": True},
+                attributes={"well": "1B"},
+            ).model_dump()
             for i in range(5)
         ]
 
@@ -511,26 +522,42 @@ async def test_get_history_images(
         debug(res["total_count"])
         assert res["page_size"] == 5
         assert res["total_count"] == 5
-        debug(res["items"])
+        assert res["attributes"] == {"well": ["1B"]}
+        assert set(res["types"]) == {"y", "x"}
         assert res["items"] == [
             {
                 "zarr_url": "/b0",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "1B"},
                 "status": None,
             },
             {
                 "zarr_url": "/b1",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "1B"},
                 "status": "done",
             },
             {
                 "zarr_url": "/b2",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "1B"},
                 "status": None,
             },
             {
                 "zarr_url": "/b3",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "1B"},
                 "status": None,
             },
             {
                 "zarr_url": "/b4",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "1B"},
                 "status": None,
             },
         ]
