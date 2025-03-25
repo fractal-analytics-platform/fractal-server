@@ -290,7 +290,6 @@ async def get_user_workflows(
 
 
 class WorkflowTaskTypeFiltersInfo(BaseModel):
-    wftask_id: int
     current_type_filters: dict[str, bool]
     input_type_filters: dict[str, bool]
     output_type_filters: dict[str, bool]
@@ -302,7 +301,7 @@ async def get_workflow_type_filters(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowTaskTypeFiltersInfo]:
+) -> dict[str, WorkflowTaskTypeFiltersInfo]:
     """
     Get info on type/type-filters flow for a workflow.
     """
@@ -323,7 +322,7 @@ async def get_workflow_type_filters(
 
     current_type_filters = {}
 
-    response = []
+    response = {}
     for wftask in workflow.task_list:
 
         # Compute input_type_filters, based on wftask and task manifest
@@ -333,13 +332,10 @@ async def get_workflow_type_filters(
         )
 
         # Append current item to response list
-        response.append(
-            dict(
-                wftask_id=wftask.id,
-                current_type_filters=copy(current_type_filters),
-                input_type_filters=copy(input_type_filters),
-                output_type_filters=copy(wftask.task.output_types),
-            )
+        response[str(wftask.id)] = dict(
+            current_type_filters=copy(current_type_filters),
+            input_type_filters=copy(input_type_filters),
+            output_type_filters=copy(wftask.task.output_types),
         )
 
         # Update `current_type_filters`
