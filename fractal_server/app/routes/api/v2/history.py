@@ -186,11 +186,12 @@ async def get_history_run_units(
     await get_history_run_or_404(history_run_id=history_run_id, db=db)
 
     # Count `HistoryUnit`s
-    res = await db.execute(
-        select(func.count(HistoryUnit.id)).where(
-            HistoryUnit.history_run_id == history_run_id
-        )
+    stmt = select(func.count(HistoryUnit.id)).where(
+        HistoryUnit.history_run_id == history_run_id
     )
+    if unit_status:
+        stmt = stmt.where(HistoryUnit.status == unit_status)
+    res = await db.execute(stmt)
     total_count = res.scalar()
     page_size = pagination.page_size or total_count
 
@@ -212,7 +213,6 @@ async def get_history_run_units(
     )
 
 
-# !
 @router.get("/project/{project_id}/status/images/")
 async def get_history_images(
     project_id: int,
