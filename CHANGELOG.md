@@ -1,9 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.13.2 (Unreleased)
 
 * API:
     * Make request body required for `replace-task` endpoint (\#2355).
+    * Add `GET /job/latest/` endpoint (\#2389).
 * Task lifecycle:
     * Drop hard-coded use of `--no-cache-dir` for `pip install` command (\#2357).
 * App:
