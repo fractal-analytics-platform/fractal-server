@@ -367,10 +367,16 @@ async def test_get_history_run_units(
         await db.commit()
         await db.refresh(hr)
 
-        for _ in range(13):
+        for _ in range(6):
             db.add(
                 HistoryUnit(
                     history_run_id=hr.id, status=HistoryUnitStatus.DONE
+                )
+            )
+        for _ in range(7):
+            db.add(
+                HistoryUnit(
+                    history_run_id=hr.id, status=HistoryUnitStatus.FAILED
                 )
             )
         await db.commit()
@@ -406,6 +412,20 @@ async def test_get_history_run_units(
         assert res["page_size"] == 4
         assert res["total_count"] == 13
         assert len(res["items"]) == 1
+
+        # With 'unit_status' query parameter
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            "&unit_status=done"
+            "&page=1&page_size=5"
+        )
+        assert res.status_code == 200
+        res = res.json()
+        assert res["current_page"] == 1
+        assert res["page_size"] == 5
+        assert res["total_count"] == 6
+        assert len(res["items"]) == 5
 
 
 async def test_get_history_images(
