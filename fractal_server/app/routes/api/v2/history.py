@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -165,6 +167,7 @@ async def get_history_run_units(
     dataset_id: int,
     workflowtask_id: int,
     history_run_id: int,
+    unit_status: Optional[HistoryUnitStatus] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -192,12 +195,13 @@ async def get_history_run_units(
     page_size = pagination.page_size or total_count
 
     # Query `HistoryUnit`s
-    res = await db.execute(
-        select(HistoryUnit)
-        .where(HistoryUnit.history_run_id == history_run_id)
-        .offset((pagination.page - 1) * page_size)
-        .limit(page_size)
+    stmt = select(HistoryUnit).where(
+        HistoryUnit.history_run_id == history_run_id
     )
+    if unit_status:
+        stmt = stmt.where(HistoryUnit.status == unit_status)
+    stmt = stmt.offset((pagination.page - 1) * page_size).limit(page_size)
+    res = await db.execute(stmt)
     units = res.scalars().all()
 
     return dict(
@@ -208,6 +212,7 @@ async def get_history_run_units(
     )
 
 
+# !
 @router.get("/project/{project_id}/status/images/")
 async def get_history_images(
     project_id: int,
