@@ -72,7 +72,6 @@ class DatasetDumpV2(BaseModel):
     timestamp_created: str
 
     zarr_dir: str
-    type_filters: dict[str, bool]
     attribute_filters: AttributeFiltersType
 
 
