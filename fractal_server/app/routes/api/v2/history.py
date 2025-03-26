@@ -289,19 +289,32 @@ async def get_history_images(
 
     # (2) Get `(zarr_url, status)` pairs for all images that have already
     # been processed
-    stmt = (
-        select(HistoryImageCache.zarr_url, HistoryUnit.status)
-        .join(HistoryUnit)
-        .where(HistoryImageCache.dataset_id == dataset_id)
-        .where(HistoryImageCache.workflowtask_id == workflowtask_id)
-        .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
-    )
-    if unit_status is not None:
-        stmt = stmt.where(HistoryUnit.status == unit_status)
-    stmt = stmt.order_by(HistoryImageCache.zarr_url)
-    res = await db.execute(stmt)
-    list_processed_url_status = res.all()
+    if unit_status == "unset":
+        list_processed_url_status = []
+    elif unit_status is None:
+        res = await db.execute(
+            select(HistoryImageCache.zarr_url, HistoryUnit.status)
+            .join(HistoryUnit)
+            .where(HistoryImageCache.dataset_id == dataset_id)
+            .where(HistoryImageCache.workflowtask_id == workflowtask_id)
+            .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+            .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
+            .order_by(HistoryImageCache.zarr_url)
+        )
+        list_processed_url_status = res.all()
+    else:
+        res = await db.execute(
+            select(HistoryImageCache.zarr_url, HistoryUnit.status)
+            .join(HistoryUnit)
+            .where(HistoryImageCache.dataset_id == dataset_id)
+            .where(HistoryImageCache.workflowtask_id == workflowtask_id)
+            .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+            .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
+            .where(HistoryUnit.status == unit_status)
+            .order_by(HistoryImageCache.zarr_url)
+        )
+        list_processed_url_status = res.all()
+
     logger.debug(f"{prefix} {len(list_processed_url_status)=}")
 
     # (3) Combine outputs from 1 and 2
@@ -339,6 +352,7 @@ async def get_history_images(
         (pagination.page - 1) * page_size : pagination.page * page_size
     ]
 
+    # Aggregate information to create 'SingleImageWithStatus'
     items = [
         {
             **filtered_dataset_images[
