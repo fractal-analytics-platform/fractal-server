@@ -42,6 +42,7 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
+    job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFiltersType,
 ) -> None:
     logger = logging.getLogger(logger_name)
@@ -56,7 +57,7 @@ def execute_tasks_v2(
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    current_dataset_type_filters = deepcopy(dataset.type_filters)
+    current_dataset_type_filters = copy(job_type_filters)
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -336,7 +337,6 @@ def execute_tasks_v2(
             # Write current dataset attributes (history + filters) into the
             # database.
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
             for attribute_name in ["type_filters", "images"]:
                 flag_modified(db_dataset, attribute_name)
