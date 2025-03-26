@@ -511,11 +511,11 @@ async def test_get_history_images(
         )
         await db.commit()
 
-        res = await client.get(
+        res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
-            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
+            json={},
         )
-
         assert res.status_code == 200
         res = res.json()
         assert res["current_page"] == 1

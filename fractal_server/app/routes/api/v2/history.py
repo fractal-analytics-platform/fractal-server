@@ -6,6 +6,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import field_validator
+from pydantic import model_validator
 from sqlmodel import func
 from sqlmodel import select
 
@@ -26,17 +30,33 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.schemas._filter_validators import (
+    validate_attribute_filters,
+)
+from fractal_server.app.schemas._validators import root_validate_dict_keys
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusQuery
 from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.app.schemas.v2 import SingleImageWithStatus
+from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
+
+
+class AttributesQuery(BaseModel):
+    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+
+    _dict_keys = model_validator(mode="before")(
+        classmethod(root_validate_dict_keys)
+    )
+    _attribute_filters = field_validator("attribute_filters")(
+        classmethod(validate_attribute_filters)
+    )
 
 
 class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
@@ -224,11 +244,12 @@ async def get_history_run_units(
     )
 
 
-@router.get("/project/{project_id}/status/images/")
+@router.post("/project/{project_id}/status/images/")
 async def get_history_images(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
+    attributes_query: AttributesQuery,
     unit_status: Optional[HistoryUnitStatusQuery] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -279,6 +300,7 @@ async def get_history_images(
     filtered_dataset_images = filter_image_list(
         images=dataset.images,
         type_filters=inferred_dataset_type_filters,
+        attribute_filters=attributes_query.attribute_filters,
     )
     logger.debug(f"{prefix} {len(dataset.images)=}")
     logger.debug(f"{prefix} {len(filtered_dataset_images)=}")
