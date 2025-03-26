@@ -42,23 +42,22 @@ async def verify_unique_types(
             type_filters=query.type_filters,
         )
 
-    # Explore types
-    set_available_types = set(
+    # Get all available types (#FIXME use aux function)
+    available_types = set(
         _type for _img in filtered_images for _type in _img["types"].keys()
     )
-    set_type_value_pairs = set(
-        (_type, _img["types"].get(_type, False))
-        for _img in filtered_images
-        for _type in set_available_types
-    )
-    dict_type_values = {}
-    for type_value in set_type_value_pairs:
-        dict_type_values[type_value[0]] = dict_type_values.get(
-            type_value[0], []
-        ) + [type_value[1]]
-    list_invalid_types = [
-        key for key, value in dict_type_values.items() if len(value) > 1
-    ]
-    list_invalid_types = sorted(list_invalid_types)
+    # Get actual values for each available type
+    values_per_type: dict[str, set] = {
+        _type: set() for _type in available_types
+    }
+    for _img in filtered_images:
+        for _type in available_types:
+            values_per_type[_type].add(_img["types"].get(_type, False))
 
-    return list_invalid_types
+    # Find types with non-unique value
+    non_unique_types = [
+        key for key, value in values_per_type.items() if len(value) > 1
+    ]
+    non_unique_types = sorted(non_unique_types)
+
+    return non_unique_types
