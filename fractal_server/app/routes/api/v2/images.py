@@ -41,7 +41,6 @@ class ImagePage(PaginationResponse[SingleImage]):
 
 
 class ImageQuery(BaseModel):
-    zarr_url: Optional[str] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
@@ -54,6 +53,10 @@ class ImageQuery(BaseModel):
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
+
+
+class ImageQueryWithZarrUrl(ImageQuery):
+    zarr_url: Optional[str] = None
 
 
 @router.post(
@@ -115,7 +118,7 @@ async def post_new_image(
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
-    query: Optional[ImageQuery] = None,
+    query: Optional[ImageQueryWithZarrUrl] = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
