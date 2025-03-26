@@ -334,12 +334,10 @@ def execute_tasks_v2(
         current_dataset_type_filters.update(type_filters_from_task_manifest)
 
         with next(get_sync_db()) as db:
-            # Write current dataset attributes (history + filters) into the
-            # database.
+            # Write current dataset images into the database.
             db_dataset = db.get(DatasetV2, dataset.id)
             db_dataset.images = tmp_images
-            for attribute_name in ["type_filters", "images"]:
-                flag_modified(db_dataset, attribute_name)
+            flag_modified(db_dataset, "images")
             db.merge(db_dataset)
             db.commit()
             db.close()  # FIXME: why is this needed?
