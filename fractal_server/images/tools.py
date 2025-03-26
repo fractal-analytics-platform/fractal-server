@@ -123,7 +123,7 @@ def merge_type_filters(
     return merged_dict
 
 
-def aggregate_attributes(images: list[dict[str, Any]]) -> AttributeFiltersType:
+def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
     """
     Given a list of images, this function returns a dictionary of all image
     attributes, each mapped to a list of present values.
