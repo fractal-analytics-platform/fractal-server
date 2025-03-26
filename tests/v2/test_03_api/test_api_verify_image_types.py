@@ -67,7 +67,7 @@ async def test_verify_image_types(
     )
 
     # No filters
-    res = await client.post(url, json={})
+    res = await client.post(url)
     assert res.status_code == 200
     assert res.json() == ["bad_type_3", "illum_corr", "is_3D"]
 
