@@ -447,7 +447,7 @@ async def test_get_history_images(
             SingleImage(
                 zarr_url=f"/a{i}",
                 types={"x": True},
-                attributes={"well": "1A"},
+                attributes={"well": f"{i}A"},
             ).model_dump()
             for i in range(5)
         ]
@@ -455,7 +455,7 @@ async def test_get_history_images(
             SingleImage(
                 zarr_url=f"/b{i}",
                 types={"x": True, "y": True},
-                attributes={"well": "1B"},
+                attributes={"well": f"{i}B"},
             ).model_dump()
             for i in range(5)
         ]
@@ -522,14 +522,17 @@ async def test_get_history_images(
         debug(res["total_count"])
         assert res["page_size"] == 5
         assert res["total_count"] == 5
-        assert res["attributes"] == {"well": ["1B"]}
+        assert len(res["attributes"]) == 1
+        assert set(res["attributes"]["well"]) == set(
+            [f"{i}B" for i in range(5)]
+        )
         assert set(res["types"]) == {"y", "x"}
         assert res["items"] == [
             {
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True},
-                "attributes": {"well": "1B"},
+                "attributes": {"well": "0B"},
                 "status": None,
             },
             {
@@ -543,22 +546,45 @@ async def test_get_history_images(
                 "zarr_url": "/b2",
                 "origin": None,
                 "types": {"x": True, "y": True},
-                "attributes": {"well": "1B"},
+                "attributes": {"well": "2B"},
                 "status": None,
             },
             {
                 "zarr_url": "/b3",
                 "origin": None,
                 "types": {"x": True, "y": True},
-                "attributes": {"well": "1B"},
+                "attributes": {"well": "3B"},
                 "status": None,
             },
             {
                 "zarr_url": "/b4",
                 "origin": None,
                 "types": {"x": True, "y": True},
-                "attributes": {"well": "1B"},
+                "attributes": {"well": "4B"},
                 "status": None,
+            },
+        ]
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
+            json=dict(attribute_filters={"well": ["0B", "1B"]}),
+        )
+        assert res.status_code == 200
+        assert res.json()["items"] == [
+            {
+                "zarr_url": "/b0",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "0B"},
+                "status": None,
+            },
+            {
+                "zarr_url": "/b1",
+                "origin": None,
+                "types": {"x": True, "y": True},
+                "attributes": {"well": "1B"},
+                "status": "done",
             },
         ]
 
