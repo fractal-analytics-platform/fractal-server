@@ -11,7 +11,6 @@ from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
 from .._filter_validators import validate_attribute_filters
-from .._filter_validators import validate_type_filters
 from .._validators import cant_set_none
 from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
@@ -28,16 +27,12 @@ class DatasetCreateV2(BaseModel):
 
     zarr_dir: Optional[str] = None
 
-    type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     # Validators
 
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
-    )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
     )
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
@@ -61,7 +56,6 @@ class DatasetReadV2(BaseModel):
     timestamp_created: AwareDatetime
 
     zarr_dir: str
-    type_filters: dict[str, bool]
     attribute_filters: AttributeFiltersType
 
     @field_serializer("timestamp_created")
@@ -74,16 +68,12 @@ class DatasetUpdateV2(BaseModel):
 
     name: Optional[NonEmptyString] = None
     zarr_dir: Optional[str] = None
-    type_filters: Optional[dict[str, bool]] = None
     attribute_filters: Optional[dict[str, list[Any]]] = None
 
     # Validators
 
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
-    )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
     )
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
@@ -111,7 +101,6 @@ class DatasetImportV2(BaseModel):
         zarr_dir:
         images:
         filters:
-        type_filters:
         attribute_filters:
     """
 
@@ -122,7 +111,6 @@ class DatasetImportV2(BaseModel):
     images: list[SingleImage] = Field(default_factory=list)
 
     filters: Optional[dict[str, Any]] = None
-    type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     @model_validator(mode="before")
@@ -133,19 +121,14 @@ class DatasetImportV2(BaseModel):
         into attribute/type filters
         """
         if values.get("filters") is not None:
-            if (
-                "type_filters" in values.keys()
-                or "attribute_filters" in values.keys()
-            ):
+            if "attribute_filters" in values.keys():
                 raise ValueError(
                     "Cannot set filters both through the legacy field "
-                    "('filters') and the new ones ('type_filters' and/or "
-                    "'attribute_filters')."
+                    "('filters') and the new ones ('attribute_filters')."
                 )
 
             else:
-                # Convert legacy filters.types into new type_filters
-                values["type_filters"] = values["filters"].get("types", {})
+                # Convert legacy filters.types into new filters
                 values["attribute_filters"] = {
                     key: [value]
                     for key, value in values["filters"]
@@ -156,9 +139,6 @@ class DatasetImportV2(BaseModel):
 
         return values
 
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
@@ -177,12 +157,10 @@ class DatasetExportV2(BaseModel):
         name:
         zarr_dir:
         images:
-        type_filters:
         attribute_filters:
     """
 
     name: str
     zarr_dir: str
     images: list[SingleImage]
-    type_filters: dict[str, bool]
     attribute_filters: AttributeFiltersType
