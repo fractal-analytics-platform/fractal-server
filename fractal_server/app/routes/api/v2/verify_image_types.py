@@ -46,6 +46,7 @@ async def verify_unique_types(
     available_types = set(
         _type for _img in filtered_images for _type in _img["types"].keys()
     )
+
     # Get actual values for each available type
     values_per_type: dict[str, set] = {
         _type: set() for _type in available_types
