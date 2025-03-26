@@ -34,16 +34,11 @@ class DatasetV2(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
-    # New in V2
-
     zarr_dir: str
     images: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
 
-    type_filters: dict[str, bool] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
-    )
     attribute_filters: AttributeFiltersType = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
