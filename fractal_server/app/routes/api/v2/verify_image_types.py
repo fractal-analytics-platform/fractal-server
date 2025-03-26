@@ -26,7 +26,6 @@ async def verify_unique_types(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
-
     # Get dataset
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
@@ -44,18 +43,22 @@ async def verify_unique_types(
         )
 
     # Explore types
-    available_types = set(
+    set_available_types = set(
         _type for _img in filtered_images for _type in _img["types"].keys()
     )
-    set_type_value = set(
+    set_type_value_pairs = set(
         (_type, _img["types"].get(_type, False))
         for _img in filtered_images
-        for _type in available_types
+        for _type in set_available_types
     )
-    values = {}
-    for type_value in set_type_value:
-        values[type_value[0]] = values.get(type_value[0], []) + [type_value[1]]
-    invalid_types = [key for key, value in values.items() if len(value) > 1]
-    invalid_types = sorted(invalid_types)
+    dict_type_values = {}
+    for type_value in set_type_value_pairs:
+        dict_type_values[type_value[0]] = dict_type_values.get(
+            type_value[0], []
+        ) + [type_value[1]]
+    list_invalid_types = [
+        key for key, value in dict_type_values.items() if len(value) > 1
+    ]
+    list_invalid_types = sorted(list_invalid_types)
 
-    return invalid_types
+    return list_invalid_types
