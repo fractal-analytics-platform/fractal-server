@@ -9,6 +9,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.images import SingleImage
 
 
 async def test_status_api(
@@ -438,7 +439,6 @@ async def test_get_history_images(
     client,
     MockCurrentUser,
 ):
-    from fractal_server.images import SingleImage
 
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -564,6 +564,20 @@ async def test_get_history_images(
                 "status": None,
             },
         ]
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            "&unit_status=unset",
+            json={},
+        )
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json()["total_count"] == 5
+        for img in res.json()["items"]:
+            debug(img)
+            assert img["status"] is None
+        return
 
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"

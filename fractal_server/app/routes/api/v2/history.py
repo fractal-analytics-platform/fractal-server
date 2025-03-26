@@ -313,17 +313,17 @@ async def get_history_images(
     # been processed
     if unit_status == "unset":
         list_processed_url_status = []
-    elif unit_status is None:
-        res = await db.execute(
-            select(HistoryImageCache.zarr_url, HistoryUnit.status)
-            .join(HistoryUnit)
-            .where(HistoryImageCache.dataset_id == dataset_id)
-            .where(HistoryImageCache.workflowtask_id == workflowtask_id)
-            .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-            .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
-            .order_by(HistoryImageCache.zarr_url)
-        )
-        list_processed_url_status = res.all()
+    # elif unit_status is None:
+    #     res = await db.execute(
+    #         select(HistoryImageCache.zarr_url, HistoryUnit.status)
+    #         .join(HistoryUnit)
+    #         .where(HistoryImageCache.dataset_id == dataset_id)
+    #         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
+    #         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+    #         .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
+    #         .order_by(HistoryImageCache.zarr_url)
+    #     )
+    #     list_processed_url_status = res.all()
     else:
         res = await db.execute(
             select(HistoryImageCache.zarr_url, HistoryUnit.status)
