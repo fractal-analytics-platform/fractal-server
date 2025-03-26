@@ -121,3 +121,19 @@ def merge_type_filters(
     merged_dict = task_input_types
     merged_dict.update(wftask_type_filters)
     return merged_dict
+
+
+def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[str]]:
+    attributes = {}
+    for image in images:
+        for k, v in image["attributes"].items():
+            attributes.setdefault(k, []).append(v)
+        for k, v in attributes.items():
+            attributes[k] = list(set(v))
+    return attributes
+
+
+def aggregate_types(images: list[dict[str, Any]]) -> list[str]:
+    return list(
+        set(type for image in images for type in image["types"].keys())
+    )
