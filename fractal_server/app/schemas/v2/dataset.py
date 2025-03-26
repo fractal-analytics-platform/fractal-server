@@ -86,13 +86,15 @@ class DatasetImportV2(BaseModel):
     """
     Class for `Dataset` import.
 
+    We are dropping `model_config = ConfigDict(extra="forbid")` so that any
+    kind of legacy filters can be included in the payload, and ignored in the
+    API.
+
     Attributes:
         name:
         zarr_dir:
         images:
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     name: str
     zarr_dir: str
