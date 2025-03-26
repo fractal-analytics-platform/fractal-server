@@ -99,7 +99,6 @@ async def test_fractal_demos_01(
         user_id=user_id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-    assert dataset_attrs["attribute_filters"] == {}
     _assert_image_data_exist(dataset_attrs["images"])
     assert len(dataset_attrs["images"]) == 2
 
@@ -114,7 +113,6 @@ async def test_fractal_demos_01(
         user_id=user_id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-    assert dataset_attrs["attribute_filters"] == {}
     assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
@@ -154,7 +152,6 @@ async def test_fractal_demos_01(
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
 
-    assert dataset_attrs["attribute_filters"] == {}
     img = find_image_by_zarr_url(
         zarr_url=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         images=dataset_attrs["images"],
@@ -271,7 +268,6 @@ async def test_fractal_demos_01_no_overwrite(
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
-    assert dataset_attrs["attribute_filters"] == {}
     assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
@@ -340,7 +336,6 @@ async def test_fractal_demos_01_no_overwrite(
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
-    assert dataset_attrs["attribute_filters"] == {}
     assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
@@ -374,9 +369,6 @@ async def test_fractal_demos_01_no_overwrite(
             "illumination_correction": True,
         },
     }
-
-    assert dataset_attrs["attribute_filters"] == {}
-
     _assert_image_data_exist(dataset_attrs["images"])
     dataset_with_attrs = await dataset_factory_v2(
         project_id=project.id, zarr_dir=zarr_dir, **dataset_attrs
