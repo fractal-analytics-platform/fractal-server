@@ -73,6 +73,9 @@ class DatasetDumpV2(BaseModel):
 
     zarr_dir: str
     attribute_filters: AttributeFiltersType
+    type_filters: Optional[
+        dict[str, bool]
+    ] = None  # FIMXE: backwards compatibility
 
 
 class TaskGroupDumpV2(BaseModel):
