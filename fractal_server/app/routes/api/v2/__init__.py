@@ -15,6 +15,7 @@ from .task_collection import router as task_collection_router_v2
 from .task_collection_custom import router as task_collection_router_v2_custom
 from .task_group import router as task_group_router_v2
 from .task_group_lifecycle import router as task_group_lifecycle_router_v2
+from .verify_image_types import router as verify_image_types_router
 from .workflow import router as workflow_router_v2
 from .workflow_import import router as workflow_import_router_v2
 from .workflowtask import router as workflowtask_router_v2
@@ -25,6 +26,7 @@ from fractal_server.syringe import Inject
 router_api_v2 = APIRouter()
 
 router_api_v2.include_router(dataset_router_v2, tags=["V2 Dataset"])
+router_api_v2.include_router(verify_image_types_router, tags=["V2 Job"])
 router_api_v2.include_router(job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(images_routes_v2, tags=["V2 Images"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
