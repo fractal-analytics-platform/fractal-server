@@ -350,7 +350,6 @@ async def test_patch_dataset(
         dataset = await dataset_factory_v2(
             project_id=project.id,
             attribute_filters={"a": [1, 2], "b": [3]},
-            type_filters={"c": True, "d": False},
         )
         project_id = project.id
         dataset_id = dataset.id
@@ -393,7 +392,6 @@ async def test_patch_dataset(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
         )
         assert res.json()["attribute_filters"] == {"a": [1, 2], "b": [3]}
-        assert res.json()["type_filters"] == {"c": True, "d": False}
         res = await client.patch(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
             json=dict(attribute_filters={"c": 3}),
@@ -405,26 +403,11 @@ async def test_patch_dataset(
         )
         assert res.status_code == 200
         assert res.json()["attribute_filters"] == {"c": [3]}
-        assert res.json()["type_filters"] == {"c": True, "d": False}
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(type_filters={"x": 42}),
-        )
-        assert res.status_code == 422
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(type_filters={"x": True}),
-        )
-        assert res.status_code == 200
+
         assert res.json()["name"] == "something-new"
         assert res.json()["zarr_dir"] == "/new_zarr_dir"
         assert res.json()["attribute_filters"] == {"c": [3]}
-        assert res.json()["type_filters"] == {"x": True}
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(attribute_filters={}, type_filters=None),
-        )
-        assert res.status_code == 422
+
         res = await client.patch(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
             json=dict(attribute_filters={}),
@@ -433,16 +416,6 @@ async def test_patch_dataset(
         assert res.json()["name"] == "something-new"
         assert res.json()["zarr_dir"] == "/new_zarr_dir"
         assert res.json()["attribute_filters"] == {}
-        assert res.json()["type_filters"] == {"x": True}
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(type_filters={}),
-        )
-        assert res.status_code == 200
-        assert res.json()["name"] == "something-new"
-        assert res.json()["zarr_dir"] == "/new_zarr_dir"
-        assert res.json()["attribute_filters"] == {}
-        assert res.json()["type_filters"] == {}
 
 
 async def test_dataset_import(
@@ -454,7 +427,6 @@ async def test_dataset_import(
     ZARR_DIR = "/something"
     IMAGES = [SingleImage(zarr_url=f"{ZARR_DIR}/image1").model_dump()]
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
-    EXPECTED_TYPE_FILTERS = dict(key3=True)
 
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -466,7 +438,6 @@ async def test_dataset_import(
             zarr_dir="/invalid",
             images=IMAGES,
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
-            type_filters=EXPECTED_TYPE_FILTERS,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
@@ -483,7 +454,6 @@ async def test_dataset_import(
                 "types": dict(key3=True),
             },
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
-            type_filters=EXPECTED_TYPE_FILTERS,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
@@ -523,7 +493,6 @@ async def test_dataset_import(
             zarr_dir=ZARR_DIR,
             images=IMAGES,
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
-            type_filters=EXPECTED_TYPE_FILTERS,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
         assert res.status_code == 201
@@ -532,7 +501,6 @@ async def test_dataset_import(
         assert res_dataset["name"] == "Dataset1"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-        assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
 
         # SUCCESS, with legacy filters only
         payload = dict(
@@ -551,7 +519,6 @@ async def test_dataset_import(
         assert res_dataset["name"] == "Dataset2"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-        assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
 
         # SUCCESS, with no filters
         payload = dict(
@@ -566,7 +533,6 @@ async def test_dataset_import(
         assert res_dataset["name"] == "Dataset3"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == {}
-        assert res_dataset["type_filters"] == {}
 
         # SUCCESS, with filters=None and new filters
         payload = dict(
@@ -575,7 +541,6 @@ async def test_dataset_import(
             images=IMAGES,
             filters=None,
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
-            type_filters=EXPECTED_TYPE_FILTERS,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
         assert res.status_code == 201
@@ -584,4 +549,3 @@ async def test_dataset_import(
         assert res_dataset["name"] == "Dataset4"
         assert res_dataset["zarr_dir"] == ZARR_DIR
         assert res_dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-        assert res_dataset["type_filters"] == EXPECTED_TYPE_FILTERS
