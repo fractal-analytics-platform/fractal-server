@@ -13,6 +13,7 @@ from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
 
 from .._filter_validators import validate_attribute_filters
+from .._filter_validators import validate_type_filters
 from .._validators import cant_set_none
 from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
@@ -44,7 +45,6 @@ class JobStatusTypeV2(str, Enum):
 
 
 class JobCreateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     first_task_index: Optional[int] = None
@@ -53,6 +53,7 @@ class JobCreateV2(BaseModel):
     worker_init: Optional[NonEmptyString] = None
 
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+    type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
 
@@ -66,6 +67,9 @@ class JobCreateV2(BaseModel):
     )
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
+    )
+    _type_filters = field_validator("type_filters")(
+        classmethod(validate_type_filters)
     )
 
     @field_validator("first_task_index")
@@ -104,7 +108,6 @@ class JobCreateV2(BaseModel):
 
 
 class JobReadV2(BaseModel):
-
     id: int
     project_id: Optional[int] = None
     project_dump: ProjectDumpV2
@@ -124,6 +127,7 @@ class JobReadV2(BaseModel):
     last_task_index: Optional[int] = None
     worker_init: Optional[str] = None
     attribute_filters: AttributeFiltersType
+    type_filters: dict[str, bool]
 
     @field_serializer("start_timestamp")
     def serialize_datetime_start(v: datetime) -> str:
@@ -138,7 +142,6 @@ class JobReadV2(BaseModel):
 
 
 class JobUpdateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     status: JobStatusTypeV2
