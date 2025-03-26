@@ -15,7 +15,6 @@ from pydantic import Field
 
 from .task import TaskTypeType
 from .task_group import TaskGroupV2OriginEnum
-from fractal_server.images.models import AttributeFiltersType
 
 
 class ProjectDumpV2(BaseModel):
@@ -65,17 +64,17 @@ class WorkflowDumpV2(BaseModel):
 
 
 class DatasetDumpV2(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    """
+    We do not include 'model_config = ConfigDict(extra="forbid")' because
+    legacy data may include 'type_filters' or 'attribute_filters' and we
+    want to avoid response-validation errors.
+    """
+
     id: int
     name: str
     project_id: int
     timestamp_created: str
-
     zarr_dir: str
-    attribute_filters: AttributeFiltersType
-    type_filters: Optional[
-        dict[str, bool]
-    ] = None  # FIMXE: backwards compatibility
 
 
 class TaskGroupDumpV2(BaseModel):
