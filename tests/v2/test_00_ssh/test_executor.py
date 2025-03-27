@@ -450,3 +450,63 @@ def test_slurm_ssh_executor_error_in_calllback(
                 return
 
         raise RuntimeError(f"Future still pending, {fut}")
+
+
+@pytest.mark.container
+def test_slurm_ssh_executor_submit_pickle(
+    fractal_ssh,
+    tmp_path: Path,
+    tmp777_path: Path,
+    override_settings_factory,
+    current_py_version: str,
+):
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
+    )
+
+    class ModMockFractalSlurmSSHExecutor(MockFractalSlurmSSHExecutor):
+        def _prepare_job(self, *args, **kwargs):
+            import pickletools
+
+            debug("MODIFIED _prepare_job")
+            job = super()._prepare_job(*args, **kwargs)
+            debug(
+                job.input_pickle_files_local[0],
+                job.input_pickle_files_remote[0],
+            )
+            debug(
+                job.output_pickle_files_local[0],
+                job.output_pickle_files_remote[0],
+            )
+
+            import subprocess, shlex
+
+            pickle_path = job.input_pickle_files_local[0].as_posix()
+            res = subprocess.run(
+                shlex.split(f"python3 -m pickletools {pickle_path}"),
+                capture_output=True,
+                encoding="utf-8",
+            )
+            debug(res.stderr)
+            debug(res.stdout)
+            debug("sqlalchemy" in res.stdout)
+
+            raise ValueError("Stop here")
+
+    with pytest.raises(ValueError):
+        with ModMockFractalSlurmSSHExecutor(
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+            slurm_poll_interval=1,
+            fractal_ssh=fractal_ssh,
+        ) as executor:
+            executor.submit(
+                lambda: 1,
+                slurm_config=get_default_slurm_config(),
+                task_files=get_default_task_files(
+                    workflow_dir_local=executor.workflow_dir_local,
+                    workflow_dir_remote=executor.workflow_dir_remote,
+                ),
+            )
