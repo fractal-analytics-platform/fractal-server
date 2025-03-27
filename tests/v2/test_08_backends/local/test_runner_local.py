@@ -110,25 +110,36 @@ async def history_mock_for_multisubmit(
     return history_run_mock.id, unit_ids
 
 
+@pytest.mark.parametrize(
+    "task_type",
+    [
+        "non_parallel",
+        "compound",
+        "converter_non_parallel",
+        "converter_compound",
+    ],
+)
 async def test_submit_success(
     db,
     history_mock_for_submit,
     tmp_path,
+    task_type: str,
 ):
     def do_nothing(parameters: dict) -> int:
         return 42
 
     history_run_id, history_unit_id = history_mock_for_submit
 
+    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
+    if not task_type.startswith("converter_"):
+        parameters["zarr_urls"] = ZARR_URLS
+
     with LocalRunner(tmp_path) as runner:
         result, exception = runner.submit(
             do_nothing,
-            parameters={
-                "zarr_urls": ZARR_URLS,
-                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
-            },
+            parameters=parameters,
             task_files=get_dummy_task_files(tmp_path),
-            task_type="non_parallel",
+            task_type=task_type,
             history_unit_id=history_unit_id,
         )
     assert result == 42
@@ -141,15 +152,28 @@ async def test_submit_success(
     assert run.status == HistoryUnitStatus.SUBMITTED
 
     # `HistoryUnit.status` is updated from within `runner.submit`
-    unit = await db.get(HistoryUnit, history_run_id)
+    unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
-    assert unit.status == HistoryUnitStatus.DONE
+    if task_type in ["non_parallel", "converter_non_parallel"]:
+        assert unit.status == HistoryUnitStatus.DONE
+    else:
+        assert unit.status == HistoryUnitStatus.SUBMITTED
 
 
+@pytest.mark.parametrize(
+    "task_type",
+    [
+        "non_parallel",
+        "compound",
+        "converter_non_parallel",
+        "converter_compound",
+    ],
+)
 async def test_submit_fail(
     db,
     history_mock_for_submit,
     tmp_path,
+    task_type: str,
 ):
     ERROR_MSG = "very nice error"
 
@@ -158,15 +182,16 @@ async def test_submit_fail(
 
     history_run_id, history_unit_id = history_mock_for_submit
 
+    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
+    if not task_type.startswith("converter_"):
+        parameters["zarr_urls"] = ZARR_URLS
+
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
             raise_ValueError,
-            parameters={
-                "zarr_urls": ZARR_URLS,
-                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
-            },
+            parameters=parameters,
             task_files=get_dummy_task_files(tmp_path),
-            task_type="non_parallel",
+            task_type=task_type,
             history_unit_id=history_unit_id,
         )
     assert result is None
@@ -180,7 +205,7 @@ async def test_submit_fail(
     assert run.status == HistoryUnitStatus.SUBMITTED
 
     # `HistoryUnit.status` is updated from within `runner.submit`
-    unit = await db.get(HistoryUnit, history_run_id)
+    unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
     assert unit.status == HistoryUnitStatus.FAILED
 
@@ -198,8 +223,16 @@ def fun(parameters: int):
         raise ValueError("parameter=3 is very very bad")
 
 
-async def test_multisubmit(tmp_path):
+async def test_multisubmit(
+    tmp_path,
+    db,
+    history_mock_for_multisubmit,
+):
+
+    history_run_id, history_unit_ids = history_mock_for_multisubmit
+
     with LocalRunner(root_dir_local=tmp_path) as runner:
+
         results, exceptions = runner.multisubmit(
             fun,
             [
@@ -226,9 +259,32 @@ async def test_multisubmit(tmp_path):
             ],
             task_files=get_dummy_task_files(tmp_path),
             task_type="parallel",
+            history_unit_ids=history_unit_ids,
         )
-        debug(results)
-        debug(exceptions)
+    debug(results)
+    debug(exceptions)
+    assert results == {
+        3: 8,
+        0: 2,
+        1: 4,
+    }
+    assert isinstance(exceptions[2], ValueError)
+    assert "very very bad" in str(exceptions[2])
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    debug(run)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.submit`
+    for ind, _unit_id in enumerate(history_unit_ids):
+        unit = await db.get(HistoryUnit, _unit_id)
+        debug(unit)
+        if ind != 2:
+            assert unit.status == HistoryUnitStatus.DONE
+        else:
+            assert unit.status == HistoryUnitStatus.FAILED
 
 
 # @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 2, 3, 4, 8, 16])
