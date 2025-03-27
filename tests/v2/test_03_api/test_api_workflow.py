@@ -549,6 +549,3 @@ async def test_workflow_type_filters_flow(
 
         debug(res.json())
         assert res.json() == expected_response
-        import json
-
-        print(json.dumps(res.json(), indent=2))
