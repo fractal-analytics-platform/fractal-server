@@ -520,28 +520,32 @@ async def test_workflow_type_filters_flow(
             f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/type-filters-flow/",
         )
         assert res.status_code == 200
-        expected_response = {
-            str(wftask_converter.id): dict(
+        expected_response = [
+            dict(
+                workflowtask_id=wftask_converter.id,
                 current_type_filters={},
                 input_type_filters={},
                 output_type_filters={},
             ),
-            str(wftask_mip.id): dict(
+            dict(
+                workflowtask_id=wftask_mip.id,
                 current_type_filters={},
                 input_type_filters={"is_3D": True},
                 output_type_filters={"is_3D": False},
             ),
-            str(wftask_cellpose_2d.id): dict(
+            dict(
+                workflowtask_id=wftask_cellpose_2d.id,
                 current_type_filters={"is_3D": False},
                 input_type_filters={},
                 output_type_filters={},
             ),
-            str(wftask_cellpose_3d.id): dict(
+            dict(
+                workflowtask_id=wftask_cellpose_3d.id,
                 current_type_filters={"is_3D": False},
                 input_type_filters={"is_3D": True},
                 output_type_filters={},
             ),
-        }
+        ]
 
         debug(res.json())
         assert res.json() == expected_response
