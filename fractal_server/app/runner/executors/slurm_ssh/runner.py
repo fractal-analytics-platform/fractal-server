@@ -1,9 +1,5 @@
 import json
-import logging
 import math
-import os
-import shlex
-import subprocess  # nosec
 import sys
 import time
 from copy import copy
@@ -15,11 +11,7 @@ import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..slurm_common._check_jobs_status import (
-    get_finished_jobs,
-)
-from ._subprocess_run_as_user import _mkdir_as_user
-from ._subprocess_run_as_user import _run_command_as_user
+from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -36,7 +28,13 @@ from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
+
+# from fractal_server.app.history import ImageStatus
+# from fractal_server.app.history import update_all_images
+# from fractal_server.app.history import update_single_image
+# from fractal_server.app.history import update_single_image_logfile
 
 
 logger = set_logger(__name__)
@@ -148,30 +146,31 @@ class SlurmJob(BaseModel):
         return [task.task_files.log_file_local for task in self.tasks]
 
 
-def _subprocess_run_or_raise(
-    full_command: str,
-) -> Optional[subprocess.CompletedProcess]:
-    try:
-        output = subprocess.run(  # nosec
-            shlex.split(full_command),
-            capture_output=True,
-            check=True,
-            encoding="utf-8",
-        )
-        return output
-    except subprocess.CalledProcessError as e:
-        error_msg = (
-            f"Submit command `{full_command}` failed. "
-            f"Original error:\n{str(e)}\n"
-            f"Original stdout:\n{e.stdout}\n"
-            f"Original stderr:\n{e.stderr}\n"
-        )
-        logging.error(error_msg)
-        raise JobExecutionError(info=error_msg)
+# def _subprocess_run_or_raise(
+#     full_command: str,
+# ) -> Optional[subprocess.CompletedProcess]:
+#     try:
+#         output = subprocess.run(  # nosec
+#             shlex.split(full_command),
+#             capture_output=True,
+#             check=True,
+#             encoding="utf-8",
+#         )
+#         return output
+#     except subprocess.CalledProcessError as e:
+#         error_msg = (
+#             f"Submit command `{full_command}` failed. "
+#             f"Original error:\n{str(e)}\n"
+#             f"Original stdout:\n{e.stdout}\n"
+#             f"Original stderr:\n{e.stderr}\n"
+#         )
+#         logging.error(error_msg)
+#         raise JobExecutionError(info=error_msg)
 
 
-class RunnerSlurmSudo(BaseRunner):
-    slurm_user: str
+class RunnerSlurmSSH(BaseRunner):
+    fractal_ssh: FractalSSH
+
     slurm_user: str
     shutdown_file: Path
     common_script_lines: list[str]
@@ -186,6 +185,7 @@ class RunnerSlurmSudo(BaseRunner):
     def __init__(
         self,
         *,
+        fractal_ssh: FractalSSH,
         slurm_user: str,
         root_dir_local: Path,
         root_dir_remote: Path,
@@ -212,7 +212,7 @@ class RunnerSlurmSudo(BaseRunner):
                 if line.startswith("#SBATCH --account=")
             )
             raise RuntimeError(
-                "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
+                "Invalid line in `RunnerSlurmSSH.common_script_lines`: "
                 f"'{invalid_line}'.\n"
                 "SLURM account must be set via the request body of the "
                 "apply-workflow endpoint, or by modifying the user properties."
@@ -222,20 +222,25 @@ class RunnerSlurmSudo(BaseRunner):
 
         # Check Python versions
         settings = Inject(get_settings)
+        self.fractal_ssh = fractal_ssh
+        logger.warning(self.fractal_ssh)
+
+        # It is the new handshanke
         if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
             self.check_remote_python_interpreter()
 
+        # Initialize connection and perform handshake
         self.root_dir_local = root_dir_local
         self.root_dir_remote = root_dir_remote
 
-        # Create folders
-        original_umask = os.umask(0)
-        self.root_dir_local.mkdir(parents=True, exist_ok=True, mode=0o755)
-        os.umask(original_umask)
-        _mkdir_as_user(
-            folder=self.root_dir_remote.as_posix(),
-            user=self.slurm_user,
-        )
+        # # Create folders
+        # original_umask = os.umask(0)
+        # self.root_dir_local.mkdir(parents=True, exist_ok=True, mode=0o755)
+        # os.umask(original_umask)
+        # _mkdir_as_user(
+        #     folder=self.root_dir_remote.as_posix(),
+        #     user=self.slurm_user,
+        # )
 
         self.user_cache_dir = user_cache_dir
 
@@ -268,11 +273,12 @@ class RunnerSlurmSudo(BaseRunner):
             scancel_cmd = f"scancel {scancel_string}"
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             try:
-                _run_command_as_user(
-                    cmd=scancel_cmd,
-                    user=self.slurm_user,
-                    check=True,
-                )
+                self.fractal_ssh.run_command(cmd=scancel_cmd)
+                # _run_command_as_user(
+                #     cmd=scancel_cmd,
+                #     user=self.slurm_user,
+                #     check=True,
+                # )
             except RuntimeError as e:
                 logger.warning(
                     "[scancel_jobs] `scancel` command failed. "
@@ -370,16 +376,35 @@ class RunnerSlurmSudo(BaseRunner):
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
 
-        # Run sbatch
-        pre_command = f"sudo --set-home --non-interactive -u {self.slurm_user}"
-        submit_command = (
-            f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
+        self.fractal_ssh.send_file(
+            local=slurm_job.slurm_submission_script_local,
+            remote=slurm_job.slurm_submission_script_remote,
         )
-        full_command = f"{pre_command} {submit_command}"
+
+        # Run sbatch
+        submit_command = (
+            f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
+        )
+        pre_submission_cmds = slurm_config.pre_submission_commands
+        if len(pre_submission_cmds) == 0:
+            sbatch_stdout = self.fractal_ssh.run_command(cmd=submit_command)
+        else:
+            logger.debug(f"Now using {pre_submission_cmds=}")
+            script_lines = pre_submission_cmds + [submit_command]
+            script_content = "\n".join(script_lines)
+            script_content = f"{script_content}\n"
+            script_path_remote = (
+                f"{slurm_job.slurm_script_remote.as_posix()}_wrapper.sh"
+            )
+            self.fractal_ssh.write_remote_file(
+                path=script_path_remote, content=script_content
+            )
+            cmd = f"bash {script_path_remote}"
+            sbatch_stdout = self.fractal_ssh.run_command(cmd=cmd)
 
         # Submit SLURM job and retrieve job ID
-        res = _subprocess_run_or_raise(full_command)
-        submitted_job_id = int(res.stdout)
+        stdout = sbatch_stdout.strip("\n")
+        submitted_job_id = int(stdout)
         slurm_job.slurm_job_id = str(submitted_job_id)
 
         # Add job to self.jobs
@@ -391,6 +416,7 @@ class RunnerSlurmSudo(BaseRunner):
         return list(self.jobs.keys())
 
     def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
+        # FIXME: This should only transfer archives, not single files
         """
         Note: this would differ for SSH
         """
@@ -420,22 +446,21 @@ class RunnerSlurmSudo(BaseRunner):
             )
 
         for source, target in source_target_list:
-            # NOTE: By setting encoding=None, we read/write bytes instead
-            # of strings; this is needed to also handle pickle files.
             try:
-                res = _run_command_as_user(
-                    cmd=f"cat {source}",
-                    user=self.slurm_user,
-                    encoding=None,
-                    check=True,
-                )
+                self.fractal_ssh.fetch_file(local=target, remote=source)
+                # res = _run_command_as_user(
+                #     cmd=f"cat {source}",
+                #     user=self.slurm_user,
+                #     encoding=None,
+                #     check=True,
+                # )
                 # Write local file
-                with open(target, "wb") as f:
-                    f.write(res.stdout)
-                logger.critical(f"Copied {source} into {target}")
-            except RuntimeError as e:
+                # with open(target, "wb") as f:
+                #     f.write(res.stdout)
+                # logger.critical(f"Copied {source} into {target}")
+            except (RuntimeError, FileNotFoundError) as e:
                 logger.warning(
-                    f"SKIP copy {source} into {target}. "
+                    f"SKIP copy {target} into {source}. "
                     f"Original error: {str(e)}"
                 )
 
@@ -485,15 +510,16 @@ class RunnerSlurmSudo(BaseRunner):
             raise JobExecutionError("Cannot continue after shutdown.")
 
         # Validation phase
-        self.validate_submit_parameters(parameters)
+        self.validate_submit_parameters(
+            parameters=parameters,
+            task_type=task_type,
+        )
 
         # Create task subfolder
-        original_umask = os.umask(0)
-        workdir_local.mkdir(parents=True, mode=0o755)
-        os.umask(original_umask)
-        _mkdir_as_user(
+        workdir_local.mkdir(parents=True)
+        self.fractal_ssh.mkdir(
             folder=workdir_remote.as_posix(),
-            user=self.slurm_user,
+            parents=True,
         )
 
         # Submission phase
@@ -526,7 +552,10 @@ class RunnerSlurmSudo(BaseRunner):
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
-            finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            finished_job_ids = get_finished_jobs_ssh(
+                job_ids=self.job_ids,
+                fractal_ssh=self.fractal_ssh,
+            )
             for slurm_job_id in finished_job_ids:
                 slurm_job = self.jobs.pop(slurm_job_id)
                 self._copy_files_from_remote_to_local(slurm_job)
@@ -549,20 +578,19 @@ class RunnerSlurmSudo(BaseRunner):
         # self.scancel_jobs()
 
         self.validate_multisubmit_parameters(
-            list_parameters=list_parameters, task_type=task_type
+            list_parameters=list_parameters,
+            task_type=task_type,
         )
 
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
 
         # Create local&remote task subfolders
-        if task_type not in ["converter_compound", "compound"]:
-            original_umask = os.umask(0)
-            workdir_local.mkdir(parents=True, mode=0o755)
-            os.umask(original_umask)
-            _mkdir_as_user(
+        if task_type not in ["compound", "converter_compound"]:
+            workdir_local.mkdir(parents=True)
+            self.fractal_ssh.mkdir(
                 folder=workdir_remote.as_posix(),
-                user=self.slurm_user,
+                parents=True,
             )
 
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
@@ -645,7 +673,10 @@ class RunnerSlurmSudo(BaseRunner):
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
-            finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            finished_job_ids = get_finished_jobs_ssh(
+                job_ids=self.job_ids,
+                fractal_ssh=self.fractal_ssh,
+            )
             for slurm_job_id in finished_job_ids:
                 slurm_job = self.jobs.pop(slurm_job_id)
                 self._copy_files_from_remote_to_local(slurm_job)
@@ -661,26 +692,20 @@ class RunnerSlurmSudo(BaseRunner):
         return results, exceptions
 
     def check_remote_python_interpreter(self):
-        """
-        Check fractal-server version on the _remote_ Python interpreter.
-        """
         settings = Inject(get_settings)
-        output = _subprocess_run_or_raise(
-            (
-                f"{settings.FRACTAL_SLURM_WORKER_PYTHON} "
-                "-m fractal_server.app.runner.versions"
-            )
+        cmd = (
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.versions"
         )
-        runner_version = json.loads(output.stdout.strip("\n"))[
-            "fractal_server"
-        ]
-        if runner_version != __VERSION__:
+        stdout = self.fractal_ssh.run_command(cmd=cmd)
+        remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
+        if remote_version != __VERSION__:
             error_msg = (
                 "Fractal-server version mismatch.\n"
                 "Local interpreter: "
                 f"({sys.executable}): {__VERSION__}.\n"
                 "Remote interpreter: "
-                f"({settings.FRACTAL_SLURM_WORKER_PYTHON}): {runner_version}."
+                f"({settings.FRACTAL_SLURM_WORKER_PYTHON}): {remote_version}."
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
