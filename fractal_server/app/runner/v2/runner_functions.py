@@ -193,7 +193,7 @@ def run_v2_task_converter_non_parallel(
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    executor: BaseRunner,
+    runner: BaseRunner,
     submit_setup_call: callable = no_op_submit_setup_call,
     dataset_id: int,
     history_run_id: int,
@@ -235,7 +235,7 @@ def run_v2_task_converter_non_parallel(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
 
-    result, exception = executor.submit(
+    result, exception = runner.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -391,7 +391,7 @@ def run_v2_task_compound(
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: BaseRunner,
+    runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
@@ -450,7 +450,7 @@ def run_v2_task_compound(
             ],
         )
 
-    result, exception = executor.submit(
+    result, exception = runner.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -507,7 +507,7 @@ def run_v2_task_compound(
         for ind, parallelization_item in enumerate(parallelization_list)
     ]
 
-    results, exceptions = executor.multisubmit(
+    results, exceptions = runner.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -561,7 +561,7 @@ def run_v2_task_converter_compound(
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: BaseRunner,
+    runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
@@ -602,7 +602,7 @@ def run_v2_task_converter_compound(
         db.refresh(history_unit)
         history_unit_id = history_unit.id
 
-    result, exception = executor.submit(
+    result, exception = runner.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -659,7 +659,7 @@ def run_v2_task_converter_compound(
         for ind, parallelization_item in enumerate(parallelization_list)
     ]
 
-    results, exceptions = executor.multisubmit(
+    results, exceptions = runner.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
