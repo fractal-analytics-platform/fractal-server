@@ -18,12 +18,12 @@ repos:
     rev: 7.1.1
     hooks:
     - id: flake8
-      args: ["--exclude", "examples/*", "--ignore=E203,W503"]
+      args: ["--ignore=E203,W503"]
 -   repo: https://github.com/PyCQA/bandit
     rev: '1.7.4'
     hooks:
     - id: bandit
-      args: ["--exclude", "tests/*", "benchmarks/*", "examples/*"]
+      args: ["--exclude", "tests/*", "benchmarks/*"]
 -   repo: local
     hooks:
     - id: grep-for-devtools
