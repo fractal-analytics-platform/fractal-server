@@ -151,13 +151,7 @@ async def full_workflow(
         debug(non_accessible_files)
         assert len(non_accessible_files) == 0
 
-        # Check output dataset and image
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
-        )
-        assert res.status_code == 200
-        dataset = res.json()
-        assert dataset["type_filters"] == {"3D": False, "my_type": True}
+        # Check output images
         res = await client.post(
             (
                 f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
@@ -328,18 +322,12 @@ async def full_workflow_TaskExecutionError(
             assert "ValueError" in job_status_data["log"]
 
         # The temporary output of the successful tasks must have been written
-        # into the dataset filters&images attributes, and the history must
-        # include both successful and failed tasks
+        # into the dataset images
         res = await client.get(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
         )
         assert res.status_code == 200
         dataset = res.json()
-        EXPECTED_TYPE_FILTERS = {"3D": False}
-        EXPECTED_ATTRIBUTE_FILTERS = {}
-        with informative_assertion_block(dataset):
-            assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-            assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
         )

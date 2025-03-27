@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.local._submit_setup import (
@@ -11,6 +12,7 @@ def execute_tasks_v2_mod(
     wf_task_list: list[WorkflowTaskV2],
     workflow_dir_local: Path,
     user_id: int,
+    job_type_filters: Optional[dict[str, bool]] = None,
     **kwargs,
 ) -> None:
     """
@@ -20,6 +22,7 @@ def execute_tasks_v2_mod(
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
         job_attribute_filters={},
+        job_type_filters=(job_type_filters or {}),
         user_id=user_id,
         submit_setup_call=_local_submit_setup,
         **kwargs,

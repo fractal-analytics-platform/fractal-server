@@ -299,6 +299,7 @@ def submit_workflow(
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
             job_attribute_filters=job.attribute_filters,
+            job_type_filters=job.type_filters,
             **backend_specific_kwargs,
         )
 
