@@ -12,14 +12,14 @@ def test_NotImplementedError_methods():
         runner.submit(
             func=None,
             parameters=None,
-            history_item_id=None,
+            history_run_id=None,
             task_type=None,
         )
     with pytest.raises(NotImplementedError):
         runner.multisubmit(
             func=None,
             list_parameters=None,
-            history_item_id=None,
+            history_run_id=None,
             task_type=None,
         )
 

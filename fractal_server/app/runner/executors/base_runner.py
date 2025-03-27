@@ -1,6 +1,7 @@
 from typing import Any
 
 from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
 
 
@@ -29,7 +30,9 @@ class BaseRunner(object):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_item_id: int,
+        history_run_id: int,
+        history_unit_id: int,
+        task_files: TaskFiles,
         task_type: TaskTypeType,
         **kwargs,
     ) -> tuple[Any, BaseException]:
@@ -53,7 +56,9 @@ class BaseRunner(object):
         self,
         func: callable,
         list_parameters: list[dict[str, Any]],
-        history_item_id: int,
+        history_run_id: int,
+        history_unit_ids: list[int],
+        task_files: TaskFiles,
         task_type: TaskTypeType,
         **kwargs,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:

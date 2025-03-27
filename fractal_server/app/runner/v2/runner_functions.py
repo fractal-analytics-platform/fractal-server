@@ -21,6 +21,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
@@ -111,10 +112,16 @@ def run_v2_task_non_parallel(
         )
         workflow_dir_remote = workflow_dir_local
 
-    executor_options = submit_setup_call(
-        wftask=wftask,
+    # Get TaskFiles object
+    task_files = TaskFiles(
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
+        task_order=wftask.order,
+        task_name=wftask.task.name,
+    )
+
+    executor_options = submit_setup_call(
+        wftask=wftask,
         which_type="non_parallel",
     )
 
@@ -160,29 +167,20 @@ def run_v2_task_non_parallel(
         ),
         parameters=function_kwargs,
         task_type="non_parallel",
+        task_files=task_files,
+        history_unit_id=history_unit_id,
         **executor_options,
     )
 
     num_tasks = 1
     with next(get_sync_db()) as db:
         if exception is None:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.DONE)
-            )
-            db.commit()
             if result is None:
                 return (TaskOutput(), num_tasks, {})
             else:
                 return (_cast_and_validate_TaskOutput(result), num_tasks, {})
         else:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.FAILED)
-            )
-            db.commit()
+
             return (TaskOutput(), num_tasks, {0: exception})
 
 
@@ -209,10 +207,16 @@ def run_v2_task_converter_non_parallel(
         )
         workflow_dir_remote = workflow_dir_local
 
-    executor_options = submit_setup_call(
-        wftask=wftask,
+    # Get TaskFiles object
+    task_files = TaskFiles(
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
+        task_order=wftask.order,
+        task_name=wftask.task.name,
+    )
+
+    executor_options = submit_setup_call(
+        wftask=wftask,
         which_type="non_parallel",
     )
 
@@ -245,30 +249,21 @@ def run_v2_task_converter_non_parallel(
         ),
         task_type="converter_non_parallel",
         parameters=function_kwargs,
+        task_files=task_files,
+        history_unit_id=history_unit_id,
         **executor_options,
     )
 
     num_tasks = 1
-    with next(get_sync_db()) as db:
-        if exception is None:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.DONE)
-            )
-            db.commit()
-            if result is None:
-                return (TaskOutput(), num_tasks, {})
-            else:
-                return (_cast_and_validate_TaskOutput(result), num_tasks, {})
+    if exception is None:
+
+        if result is None:
+            return (TaskOutput(), num_tasks, {})
         else:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.FAILED)
-            )
-            db.commit()
-            return (TaskOutput(), num_tasks, {0: exception})
+            return (_cast_and_validate_TaskOutput(result), num_tasks, {})
+    else:
+
+        return (TaskOutput(), num_tasks, {0: exception})
 
 
 def run_v2_task_parallel(
@@ -289,10 +284,16 @@ def run_v2_task_parallel(
 
     _check_parallelization_list_size(images)
 
-    executor_options = submit_setup_call(
-        wftask=wftask,
+    # Get TaskFiles object
+    task_files = TaskFiles(
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
+        task_order=wftask.order,
+        task_name=wftask.task.name,
+    )
+
+    executor_options = submit_setup_call(
+        wftask=wftask,
         which_type="parallel",
     )
 
@@ -346,12 +347,12 @@ def run_v2_task_parallel(
         ),
         list_parameters=list_function_kwargs,
         task_type="parallel",
+        task_files=task_files,
+        history_unit_ids=history_unit_ids,
         **executor_options,
     )
 
     outputs = []
-    history_unit_ids_done: list[int] = []
-    history_unit_ids_failed: list[int] = []
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
             result = results[ind]
@@ -360,29 +361,22 @@ def run_v2_task_parallel(
             else:
                 output = _cast_and_validate_TaskOutput(result)
             outputs.append(output)
-            history_unit_ids_done.append(history_unit_ids[ind])
         elif ind in exceptions.keys():
             print(f"Bad: {exceptions[ind]}")
-            history_unit_ids_failed.append(history_unit_ids[ind])
         else:
             print("VERY BAD - should have not reached this point")
-
-    with next(get_sync_db()) as db:
-        db.execute(
-            update(HistoryUnit)
-            .where(HistoryUnit.id.in_(history_unit_ids_done))
-            .values(status=HistoryUnitStatus.DONE)
-        )
-        db.execute(
-            update(HistoryUnit)
-            .where(HistoryUnit.id.in_(history_unit_ids_failed))
-            .values(status=HistoryUnitStatus.FAILED)
-        )
-        db.commit()
 
     num_tasks = len(images)
     merged_output = merge_outputs(outputs)
     return (merged_output, num_tasks, exceptions)
+
+
+# FIXME: THIS FOR CONVERTERS:
+# if task_type in ["converter_non_parallel"]:
+#     run = db.get(HistoryRun, history_run_id)
+#     run.status = HistoryUnitStatus.DONE
+#     db.merge(run)
+#     db.commit()
 
 
 def run_v2_task_compound(
@@ -398,19 +392,21 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-    # FIXME: Add task_files as a required argument, rather than a kwargs
-    # through executor_options_init
+
+    # Get TaskFiles object
+    task_files = TaskFiles(
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        task_order=wftask.order,
+        task_name=wftask.task.name,
+    )
 
     executor_options_init = submit_setup_call(
         wftask=wftask,
-        root_dir_local=workflow_dir_local,
-        root_dir_remote=workflow_dir_remote,
         which_type="non_parallel",
     )
     executor_options_compute = submit_setup_call(
         wftask=wftask,
-        root_dir_local=workflow_dir_local,
-        root_dir_remote=workflow_dir_remote,
         which_type="parallel",
     )
 
@@ -460,6 +456,8 @@ def run_v2_task_compound(
         ),
         parameters=function_kwargs,
         task_type="compound",
+        task_files=task_files,
+        history_unit_id=history_unit_id,
         **executor_options_init,
     )
 
@@ -470,13 +468,6 @@ def run_v2_task_compound(
         else:
             init_task_output = _cast_and_validate_InitTaskOutput(result)
     else:
-        with next(get_sync_db()) as db:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.FAILED)
-            )
-            db.commit()
         return (TaskOutput(), num_tasks, {0: exception})
 
     parallelization_list = init_task_output.parallelization_list
@@ -517,6 +508,8 @@ def run_v2_task_compound(
         ),
         list_parameters=list_function_kwargs,
         task_type="compound",
+        task_files=task_files,
+        history_unit_ids=[history_unit_id],
         **executor_options_compute,
     )
 
@@ -537,6 +530,8 @@ def run_v2_task_compound(
         else:
             print("VERY BAD - should have not reached this point")
 
+    # FIXME: In this case, we are performing db updates from here, rather
+    # than at lower level.
     with next(get_sync_db()) as db:
         if failure:
             db.execute(
@@ -568,16 +563,21 @@ def run_v2_task_converter_compound(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-    executor_options_init = submit_setup_call(
-        wftask=wftask,
+
+    # Get TaskFiles object
+    task_files = TaskFiles(
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
+        task_order=wftask.order,
+        task_name=wftask.task.name,
+    )
+
+    executor_options_init = submit_setup_call(
+        wftask=wftask,
         which_type="non_parallel",
     )
     executor_options_compute = submit_setup_call(
         wftask=wftask,
-        root_dir_local=workflow_dir_local,
-        root_dir_remote=workflow_dir_remote,
         which_type="parallel",
     )
 
@@ -612,6 +612,8 @@ def run_v2_task_converter_compound(
         ),
         parameters=function_kwargs,
         task_type="converter_compound",
+        task_files=task_files,
+        history_unit_id=history_unit_id,
         **executor_options_init,
     )
 
@@ -622,13 +624,6 @@ def run_v2_task_converter_compound(
         else:
             init_task_output = _cast_and_validate_InitTaskOutput(result)
     else:
-        with next(get_sync_db()) as db:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.FAILED)
-            )
-            db.commit()
         return (TaskOutput(), num_tasks, {0: exception})
 
     parallelization_list = init_task_output.parallelization_list
@@ -669,6 +664,8 @@ def run_v2_task_converter_compound(
         ),
         list_parameters=list_function_kwargs,
         task_type="converter_compound",
+        task_files=task_files,
+        history_unit_ids=[history_unit_id],
         **executor_options_compute,
     )
 
