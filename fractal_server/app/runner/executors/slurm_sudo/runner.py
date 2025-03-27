@@ -14,6 +14,7 @@ from typing import Optional
 import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from sqlmodel import update
 
 from ..slurm_common._check_jobs_status import (
     get_finished_jobs,
@@ -21,6 +22,8 @@ from ..slurm_common._check_jobs_status import (
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
+from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
@@ -33,6 +36,7 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -463,7 +467,7 @@ class RunnerSlurmSudo(BaseRunner):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_item_id: int,
+        history_unit_id: int,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         task_type: TaskTypeType,
@@ -485,7 +489,7 @@ class RunnerSlurmSudo(BaseRunner):
             raise JobExecutionError("Cannot continue after shutdown.")
 
         # Validation phase
-        self.validate_submit_parameters(parameters)
+        self.validate_submit_parameters(parameters, task_type=task_type)
 
         # Create task subfolder
         original_umask = os.umask(0)
@@ -527,12 +531,27 @@ class RunnerSlurmSudo(BaseRunner):
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
-            for slurm_job_id in finished_job_ids:
-                slurm_job = self.jobs.pop(slurm_job_id)
-                self._copy_files_from_remote_to_local(slurm_job)
-                result, exception = self._postprocess_single_task(
-                    task=slurm_job.tasks[0]
-                )
+            with next(get_sync_db()) as db:
+                for slurm_job_id in finished_job_ids:
+                    slurm_job = self.jobs.pop(slurm_job_id)
+                    self._copy_files_from_remote_to_local(slurm_job)
+                    result, exception = self._postprocess_single_task(
+                        task=slurm_job.tasks[0]
+                    )
+                    if result is not None:
+                        if task_type not in ["compound", "converter_compound"]:
+                            unit = db.get(HistoryUnit, history_unit_id)
+                            unit.status = HistoryUnitStatus.DONE
+                            db.merge(unit)
+                            db.commit()
+                    if exception is not None:
+                        db.execute(
+                            update(HistoryUnit)
+                            .where(HistoryUnit.id == history_unit_id)
+                            .values(status=HistoryUnitStatus.FAILED)
+                        )
+                        db.commit()
+
             time.sleep(self.slurm_poll_interval)
 
         return result, exception
@@ -541,7 +560,7 @@ class RunnerSlurmSudo(BaseRunner):
         self,
         func: callable,
         list_parameters: list[dict],
-        history_item_id: int,
+        history_unit_ids: list[int],
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
         task_type: TaskTypeType,
@@ -646,17 +665,40 @@ class RunnerSlurmSudo(BaseRunner):
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
-            for slurm_job_id in finished_job_ids:
-                slurm_job = self.jobs.pop(slurm_job_id)
-                self._copy_files_from_remote_to_local(slurm_job)
-                for task in slurm_job.tasks:
-                    result, exception = self._postprocess_single_task(
-                        task=task
-                    )
-                    if exception is None:
-                        results[task.index] = result
-                    else:
-                        exceptions[task.index] = exception
+            with next(get_sync_db()) as db:
+                for slurm_job_id in finished_job_ids:
+                    slurm_job = self.jobs.pop(slurm_job_id)
+                    self._copy_files_from_remote_to_local(slurm_job)
+                    for task in slurm_job.tasks:
+                        result, exception = self._postprocess_single_task(
+                            task=task
+                        )
+
+                        if result is not None:
+                            results[task.index] = result
+                            if task_type not in [
+                                "compound",
+                                "compound_converter",
+                            ]:
+                                unit = db.get(
+                                    HistoryUnit, history_unit_ids[task.index]
+                                )
+                                unit.status = HistoryUnitStatus.DONE
+                                db.merge(unit)
+                                db.commit()
+                        if exception is not None:
+                            exceptions[task.index] = exception
+                            if task_type not in [
+                                "compound",
+                                "compound_converter",
+                            ]:
+                                unit = db.get(
+                                    HistoryUnit, history_unit_ids[task.index]
+                                )
+                                unit.status = HistoryUnitStatus.FAILED
+                                db.merge(unit)
+                                db.commit()
+
             time.sleep(self.slurm_poll_interval)
         return results, exceptions
 
