@@ -467,8 +467,9 @@ class RunnerSlurmSudo(BaseRunner):
             exception = JobExecutionError(f"ERROR, {str(e)}")
             return None, exception
         finally:
-            Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            pass
+            # Path(task.input_pickle_file_local).unlink(missing_ok=True)
+            # Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def submit(
         self,
