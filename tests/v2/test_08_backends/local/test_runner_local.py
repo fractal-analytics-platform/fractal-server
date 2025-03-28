@@ -4,6 +4,7 @@ import pytest
 from devtools import debug
 
 from ..aux_unit_runner import *  # noqa
+from ..aux_unit_runner import get_default_local_backend_config
 from ..aux_unit_runner import ZARR_URLS
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
@@ -44,6 +45,7 @@ async def test_submit_success(
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
             history_unit_id=history_unit_id,
+            config=get_default_local_backend_config(),
         )
 
     assert result == 42
@@ -98,6 +100,7 @@ async def test_submit_fail(
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
             history_unit_id=history_unit_id,
+            config=get_default_local_backend_config(),
         )
     assert result is None
     assert isinstance(exception, ValueError)
@@ -168,6 +171,7 @@ async def test_multisubmit(
             ],
             task_type="parallel",
             history_unit_ids=history_unit_ids,
+            config=get_default_local_backend_config(),
         )
     debug(results)
     debug(exceptions)
