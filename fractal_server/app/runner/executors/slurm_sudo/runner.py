@@ -17,9 +17,8 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from sqlmodel import update
 
-from ..slurm_common._check_jobs_status import (
-    get_finished_jobs,
-)
+from ..slurm_common._check_jobs_status import get_finished_jobs
+from ..slurm_common._check_jobs_status import run_squeue
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
@@ -554,7 +553,14 @@ class RunnerSlurmSudo(BaseRunner):
             slurm_config=config,
         )
 
-        time.sleep(5)  # FIXME
+        # FIXME
+        jobs_that_started = set()
+        while len(jobs_that_started) == len(self.jobs):
+            res = run_squeue(self.job_ids)
+            new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
+            jobs_that_started.union(new_jobs)
+            logger.debug(f"{new_jobs=}")
+            logger.debug(f"{len(jobs_that_started)=}")
 
         # Retrieval phase
         while len(self.jobs) > 0:
@@ -705,8 +711,14 @@ class RunnerSlurmSudo(BaseRunner):
             )
         logger.info(f"END submission phase, {list(self.jobs.keys())=}")
 
-        time.sleep(5)  # FIXME
-
+        # FIXME
+        jobs_that_started = set()
+        while len(jobs_that_started) == len(self.jobs):
+            res = run_squeue(self.job_ids)
+            new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
+            jobs_that_started.union(new_jobs)
+            logger.debug(f"{new_jobs=}")
+            logger.debug(f"{len(jobs_that_started)=}")
         # Retrieval phase
         while len(self.jobs) > 0:
             if self.is_shutdown():
