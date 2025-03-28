@@ -511,6 +511,7 @@ async def test_get_history_images(
         )
         await db.commit()
 
+        # CASE 1: No status filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
             f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
@@ -519,7 +520,6 @@ async def test_get_history_images(
         assert res.status_code == 200
         res = res.json()
         assert res["current_page"] == 1
-        debug(res["total_count"])
         assert res["page_size"] == 5
         assert res["total_count"] == 5
         assert len(res["attributes"]) == 1
@@ -565,6 +565,7 @@ async def test_get_history_images(
             },
         ]
 
+        # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
             f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
@@ -572,13 +573,23 @@ async def test_get_history_images(
             json={},
         )
         assert res.status_code == 200
-        debug(res.json())
-        assert res.json()["total_count"] == 5
+        assert res.json()["total_count"] == 4
         for img in res.json()["items"]:
-            debug(img)
             assert img["status"] is None
-        return
 
+        # CASE 3: status=done filter, no type/attribute filters
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            "&unit_status=done",
+            json={},
+        )
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json()["total_count"] == 1
+        assert res.json()["items"][0]["status"] == "done"
+
+        # CASE 4: no status filter, some type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
             f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
