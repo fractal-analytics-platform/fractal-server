@@ -7,6 +7,8 @@ from pydantic import AwareDatetime
 from pydantic import BaseModel
 from pydantic import field_serializer
 
+from ....images import SingleImage
+
 
 class HistoryUnitStatus(str, Enum):
     """
@@ -21,6 +23,15 @@ class HistoryUnitStatus(str, Enum):
     SUBMITTED = "submitted"
     DONE = "done"
     FAILED = "failed"
+
+
+class HistoryUnitStatusQuery(str, Enum):
+
+    SUBMITTED = "submitted"
+    DONE = "done"
+    FAILED = "failed"
+
+    UNSET = "unset"
 
 
 class HistoryUnitRead(BaseModel):
@@ -49,6 +60,5 @@ class ImageLogsRequest(BaseModel):
     zarr_url: str
 
 
-class ZarrUrlAndStatus(BaseModel):
-    zarr_url: str
+class SingleImageWithStatus(SingleImage):
     status: Optional[HistoryUnitStatus] = None
