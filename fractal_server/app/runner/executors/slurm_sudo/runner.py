@@ -562,7 +562,9 @@ class RunnerSlurmSudo(BaseRunner):
         task_type: Literal["parallel", "compound", "converter_compound"],
     ):
         self.validate_multisubmit_parameters(
-            list_parameters=list_parameters, task_type=task_type
+            list_parameters=list_parameters,
+            task_type=task_type,
+            list_task_files=list_task_files,
         )
 
         workdir_local = list_task_files[0].wftask_subfolder_local
@@ -623,15 +625,16 @@ class RunnerSlurmSudo(BaseRunner):
             # TODO: replace with actual values
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
+                index = (ind_batch * batch_size) + ind_chunk
                 tasks.append(
                     SlurmTask(
-                        index=(ind_batch * batch_size) + ind_chunk,
-                        component=original_task_files[ind_chunk].component,
+                        index=index,
+                        component=original_task_files[index].component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=original_task_files[ind_chunk],
+                        task_files=original_task_files[index],
                     ),
                 )
 

@@ -102,7 +102,16 @@ async def history_mock_for_multisubmit(
 def get_dummy_task_files(
     root_dir_local: Path,
     component: str,
+    is_slurm: bool = False,
 ) -> TaskFiles:
+    if is_slurm:
+        return TaskFiles(
+            root_dir_local=root_dir_local / "server",
+            root_dir_remote=root_dir_local / "user",
+            task_name="name",
+            task_order=0,
+            component=component,
+        )
     return TaskFiles(
         root_dir_local=root_dir_local,
         root_dir_remote=root_dir_local,
