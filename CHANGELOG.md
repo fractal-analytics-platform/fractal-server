@@ -38,6 +38,8 @@ All this is from \#2287
     * Add codespell to precommit (\#2358).
 * Testing:
     * Use `fractal-task-tools` to build `fractal-tasks-mock` manifest (\#2374).
+* Other:
+    * Drop obsolete `examples` folder (\#2405).
 
 # 2.13.1
 

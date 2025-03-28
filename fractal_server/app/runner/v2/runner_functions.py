@@ -33,6 +33,8 @@ __all__ = [
     "run_v2_task_converter_compound",
 ]
 
+# FIXME: Review whether we need 5 functions or 3 are enough
+
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
 
 
@@ -93,7 +95,7 @@ def run_v2_task_non_parallel(
     wftask: WorkflowTaskV2,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
-    executor: BaseRunner,
+    runner: BaseRunner,
     submit_setup_call: callable = no_op_submit_setup_call,
     dataset_id: int,
     history_run_id: int,
@@ -148,7 +150,7 @@ def run_v2_task_non_parallel(
             ],
         )
 
-    result, exception = executor.submit(
+    result, exception = runner.submit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -274,7 +276,7 @@ def run_v2_task_parallel(
     images: list[dict[str, Any]],
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    executor: BaseRunner,
+    runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
@@ -334,7 +336,7 @@ def run_v2_task_parallel(
             db=db, list_upsert_objects=history_image_caches
         )
 
-    results, exceptions = executor.multisubmit(
+    results, exceptions = runner.multisubmit(
         functools.partial(
             run_single_task,
             wftask=wftask,
@@ -396,6 +398,9 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+    # FIXME: Add task_files as a required argument, rather than a kwargs
+    # through executor_options_init
+
     executor_options_init = submit_setup_call(
         wftask=wftask,
         root_dir_local=workflow_dir_local,

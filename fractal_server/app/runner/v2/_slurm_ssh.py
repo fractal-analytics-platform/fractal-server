@@ -43,6 +43,7 @@ def process_workflow(
     last_task_index: Optional[int] = None,
     logger_name: str,
     job_attribute_filters: AttributeFiltersType,
+    job_type_filters: dict[str, bool],
     fractal_ssh: FractalSSH,
     worker_init: Optional[str] = None,
     user_id: int,
@@ -92,5 +93,6 @@ def process_workflow(
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
             job_attribute_filters=job_attribute_filters,
+            job_type_filters=job_type_filters,
             user_id=user_id,
         )
