@@ -1,5 +1,4 @@
 import functools
-import logging
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -31,7 +30,6 @@ __all__ = [
     "run_v2_task_compound",
 ]
 
-# FIXME: Review whether we need 5 functions or 3 are enough
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
 
@@ -107,13 +105,6 @@ def run_v2_task_non_parallel(
         raise ValueError(
             f"Invalid {task_type=} for `run_v2_task_non_parallel`."
         )
-
-    if workflow_dir_remote is None:
-        workflow_dir_remote = workflow_dir_local
-        logging.warning(
-            "In `run_single_task`, workflow_dir_remote=None. Is this right?"
-        )
-        workflow_dir_remote = workflow_dir_local
 
     # Get TaskFiles object
     task_files = TaskFiles(
@@ -201,13 +192,12 @@ def run_v2_task_parallel(
     wftask: WorkflowTaskV2,
     runner: BaseRunner,
     workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
+    workflow_dir_remote: Path,
     submit_setup_call: callable = no_op_submit_setup_call,
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
     if len(images) == 0:
-        # FIXME: Do something with history units/images?
         return (TaskOutput(), 0, {})
 
     _check_parallelization_list_size(images)
