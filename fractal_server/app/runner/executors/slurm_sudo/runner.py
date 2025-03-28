@@ -290,6 +290,7 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
+        logger.debug("[_submit_single_sbatch] START")
         # Prepare input pickle(s)
         versions = dict(
             python=sys.version_info[:3],
@@ -303,8 +304,14 @@ class RunnerSlurmSudo(BaseRunner):
                 remote_files=task.task_files.remote_files_dict,
             )
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
+            logger.debug(
+                f"[_submit_single_sbatch] Now write {task.input_pickle_file_local=}"
+            )
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
+            logger.debug(
+                f"[_submit_single_sbatch] Written {task.input_pickle_file_local=}"
+            )
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
         python_worker_interpreter = (
