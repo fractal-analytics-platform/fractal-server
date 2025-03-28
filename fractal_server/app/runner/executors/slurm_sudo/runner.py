@@ -555,6 +555,8 @@ class RunnerSlurmSudo(BaseRunner):
             slurm_config=config,
         )
 
+        time.sleep(5)  # FIXME
+
         # Retrieval phase
         while len(self.jobs) > 0:
             if self.is_shutdown():
@@ -703,6 +705,8 @@ class RunnerSlurmSudo(BaseRunner):
                 slurm_config=config,
             )
         logger.info(f"END submission phase, {list(self.jobs.keys())=}")
+
+        time.sleep(5)  # FIXME
 
         # Retrieval phase
         while len(self.jobs) > 0:
