@@ -426,9 +426,8 @@ class RunnerSlurmSudo(BaseRunner):
         Note: this would differ for SSH
         """
         source_target_list = [
-            (job.slurm_stdout_remote, job.slurm_stdout_local)(
-                job.slurm_stderr_remote, job.slurm_stderr_local
-            ),
+            (job.slurm_stdout_remote, job.slurm_stdout_local),
+            (job.slurm_stderr_remote, job.slurm_stderr_local),
         ]
         for task in job.tasks:
             source_target_list.extend(
