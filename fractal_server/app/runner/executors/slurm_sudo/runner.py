@@ -562,7 +562,7 @@ class RunnerSlurmSudo(BaseRunner):
             logger.debug("CALL SQUEUE")
             res = run_squeue(self.job_ids)
             new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
-            jobs_that_started.union(new_jobs)
+            jobs_that_started = jobs_that_started.union(new_jobs)
             logger.debug(f"{new_jobs=}")
             logger.debug(f"{len(jobs_that_started)=}")
 
@@ -722,7 +722,7 @@ class RunnerSlurmSudo(BaseRunner):
         while len(jobs_that_started) != len(self.job_ids):
             res = run_squeue(self.job_ids)
             new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
-            jobs_that_started.union(new_jobs)
+            jobs_that_started = jobs_that_started.union(new_jobs)
             logger.debug(f"{new_jobs=}")
             logger.debug(f"{len(jobs_that_started)=}")
 
