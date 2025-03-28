@@ -103,30 +103,6 @@ class SlurmJob(BaseModel):
     tasks: list[SlurmTask]
 
     @property
-    def slurm_log_file_local(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_local
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
-            ).as_posix()
-        else:
-            return (
-                self.workdir_local / f"slurm-{self.label}-%j.log"
-            ).as_posix()
-
-    @property
-    def slurm_log_file_remote(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_remote
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
-            ).as_posix()
-        else:
-            return (
-                self.workdir_remote / f"slurm-{self.label}-%j.log"
-            ).as_posix()
-
-    @property
     def slurm_submission_script_local(self) -> str:
         return (
             self.workdir_local / f"slurm-{self.label}-submit.sh"
@@ -450,7 +426,9 @@ class RunnerSlurmSudo(BaseRunner):
         Note: this would differ for SSH
         """
         source_target_list = [
-            (job.slurm_log_file_remote, job.slurm_log_file_local)
+            (job.slurm_stdout_remote, job.slurm_stdout_local)(
+                job.slurm_stderr_remote, job.slurm_stderr_local
+            ),
         ]
         for task in job.tasks:
             source_target_list.extend(
