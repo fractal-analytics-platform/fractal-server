@@ -1,6 +1,6 @@
 from typing import Any
 
-from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
 
 
@@ -29,9 +29,10 @@ class BaseRunner(object):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_item_id: int,
+        history_unit_id: int,
+        task_files: TaskFiles,
         task_type: TaskTypeType,
-        **kwargs,
+        config: Any,
     ) -> tuple[Any, BaseException]:
         """
         Run a single fractal task.
@@ -45,7 +46,7 @@ class BaseRunner(object):
             history_item_id:
                 Database ID of the corresponding `HistoryItemV2` entry.
             task_type: Task type.
-            kwargs: Runner-specific parameters.
+            config: Runner-specific parameters.
         """
         raise NotImplementedError()
 
@@ -53,9 +54,10 @@ class BaseRunner(object):
         self,
         func: callable,
         list_parameters: list[dict[str, Any]],
-        history_item_id: int,
+        history_unit_ids: list[int],
+        list_task_files: list[TaskFiles],
         task_type: TaskTypeType,
-        **kwargs,
+        config: Any,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Run a parallel fractal task.
@@ -70,7 +72,7 @@ class BaseRunner(object):
             history_item_id:
                 Database ID of the corresponding `HistoryItemV2` entry.
             task_type: Task type.
-            kwargs: Runner-specific parameters.
+            config: Runner-specific parameters.
         """
         raise NotImplementedError()
 
@@ -101,15 +103,11 @@ class BaseRunner(object):
                     f"Forbidden 'zarr_urls' key in {list(parameters.keys())}"
                 )
 
-        if _COMPONENT_KEY_ not in parameters.keys():
-            raise ValueError(
-                f"No '{_COMPONENT_KEY_}' key in in {list(parameters.keys())}"
-            )
-
     def validate_multisubmit_parameters(
         self,
         list_parameters: list[dict[str, Any]],
         task_type: TaskTypeType,
+        list_task_files: list[TaskFiles],
     ) -> None:
         """
         Validate parameters for `multi_submit` method
@@ -121,6 +119,12 @@ class BaseRunner(object):
         if task_type not in TASK_TYPES_MULTISUBMIT:
             raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
 
+        subfolders = set(
+            task_file.wftask_subfolder_local for task_file in list_task_files
+        )
+        if len(subfolders) != 1:
+            raise ValueError(f"More than one subfolders: {subfolders}.")
+
         if not isinstance(list_parameters, list):
             raise ValueError("`parameters` must be a list.")
 
@@ -130,11 +134,6 @@ class BaseRunner(object):
             if "zarr_url" not in single_kwargs.keys():
                 raise ValueError(
                     f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
-                )
-            if _COMPONENT_KEY_ not in single_kwargs.keys():
-                raise ValueError(
-                    f"No '{_COMPONENT_KEY_}' key "
-                    f"in {list(single_kwargs.keys())}"
                 )
         if task_type == "parallel":
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]

@@ -13,7 +13,6 @@ from pydantic import ConfigDict
 
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -30,11 +29,6 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
-
-# from fractal_server.app.history import ImageStatus
-# from fractal_server.app.history import update_all_images
-# from fractal_server.app.history import update_single_image
-# from fractal_server.app.history import update_single_image_logfile
 
 
 logger = set_logger(__name__)
@@ -500,7 +494,9 @@ class RunnerSlurmSSH(BaseRunner):
             **task_files.model_dump(
                 exclude={"component"},
             ),
-            component=parameters[_COMPONENT_KEY_],
+            # FIXME _COMPONENT_KEY_ is deprecated
+            component="FIXME_INVALID_FAKE_VALUE",
+            # component=parameters[_COMPONENT_KEY_],
         )
 
         if self.jobs != {}:
@@ -545,8 +541,6 @@ class RunnerSlurmSSH(BaseRunner):
             slurm_job=slurm_job,
             slurm_config=slurm_config,
         )
-
-        # LOGFILE = task_files.log_file_local
 
         # Retrieval phase
         while len(self.jobs) > 0:
@@ -638,7 +632,9 @@ class RunnerSlurmSSH(BaseRunner):
             # TODO: replace with actual values
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
-                component = parameters[_COMPONENT_KEY_]
+                # FIXME: _COMPONENT_KEY_ is deprecated
+                # component = parameters[_COMPONENT_KEY_]
+                component = "INVALID_FAKE_VALUE_FIXME"
                 tasks.append(
                     SlurmTask(
                         index=(ind_batch * batch_size) + ind_chunk,

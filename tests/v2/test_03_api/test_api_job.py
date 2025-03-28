@@ -11,7 +11,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.app.runner.v2 import _backends
+from fractal_server.app.runner.v2.submit_workflow import _backends
 from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2

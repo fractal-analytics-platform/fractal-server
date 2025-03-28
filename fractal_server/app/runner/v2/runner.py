@@ -2,6 +2,9 @@ import logging
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
+from typing import Callable
+from typing import Literal
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
@@ -11,10 +14,7 @@ from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ..exceptions import JobExecutionError
-from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
-from .runner_functions import run_v2_task_converter_compound
-from .runner_functions import run_v2_task_converter_non_parallel
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
@@ -41,7 +41,14 @@ def execute_tasks_v2(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
-    submit_setup_call: callable = no_op_submit_setup_call,
+    get_runner_config: Callable[
+        [
+            WorkflowTaskV2,
+            Literal["non_parallel", "parallel"],
+            Optional[Path],
+        ],
+        Any,
+    ],
     job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFiltersType,
 ) -> None:
@@ -53,6 +60,10 @@ def execute_tasks_v2(
             "should have already happened."
         )
         workflow_dir_local.mkdir()
+
+    # For local backend, remote and local folders are the same
+    if workflow_dir_remote is None:
+        workflow_dir_remote = workflow_dir_local
 
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
@@ -68,6 +79,7 @@ def execute_tasks_v2(
 
         # Filter images by types and attributes (in two steps)
         if wftask.task_type in ["compound", "parallel", "non_parallel"]:
+            # Non-converter task
             type_filters = copy(current_dataset_type_filters)
             type_filters_patch = merge_type_filters(
                 task_input_types=task.input_types,
@@ -86,6 +98,8 @@ def execute_tasks_v2(
                 attribute_filters=job_attribute_filters,
             )
         else:
+            # Converter task
+            filtered_images = []
             num_available_images = 0
 
         with next(get_sync_db()) as db:
@@ -113,7 +127,7 @@ def execute_tasks_v2(
             history_run_id = history_run.id
 
         # TASK EXECUTION (V2)
-        if task.type == "non_parallel":
+        if task.type in ["non_parallel", "converter_non_parallel"]:
             (
                 current_task_output,
                 num_tasks,
@@ -126,25 +140,10 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 runner=runner,
-                submit_setup_call=submit_setup_call,
+                get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
-            )
-        elif task.type == "converter_non_parallel":
-            (
-                current_task_output,
-                num_tasks,
-                exceptions,
-            ) = run_v2_task_converter_non_parallel(
-                zarr_dir=zarr_dir,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                executor=runner,
-                submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
+                task_type=task.type,
             )
         elif task.type == "parallel":
             current_task_output, num_tasks, exceptions = run_v2_task_parallel(
@@ -154,11 +153,11 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 runner=runner,
-                submit_setup_call=submit_setup_call,
+                get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
             )
-        elif task.type == "compound":
+        elif task.type in ["compound", "converter_compound"]:
             current_task_output, num_tasks, exceptions = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
@@ -166,26 +165,11 @@ def execute_tasks_v2(
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=runner,
-                submit_setup_call=submit_setup_call,
+                runner=runner,
+                get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
-            )
-        elif task.type == "converter_compound":
-            (
-                current_task_output,
-                num_tasks,
-                exceptions,
-            ) = run_v2_task_converter_compound(
-                zarr_dir=zarr_dir,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                executor=runner,
-                submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
+                task_type=task.type,
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")

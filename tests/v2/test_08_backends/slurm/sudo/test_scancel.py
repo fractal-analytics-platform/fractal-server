@@ -111,7 +111,7 @@ async def test_shutdown_during_submit(
                 },
                 history_item_id=mock_history_item.id,
                 task_files=get_dummy_task_files(tmp777_path),
-                slurm_config=get_default_slurm_config(),
+                config=get_default_slurm_config(),
             )
             return result, exception
 
