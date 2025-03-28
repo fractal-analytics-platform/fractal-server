@@ -65,6 +65,6 @@ def create_cellvoyager_ome_zarr_multiplex(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=create_cellvoyager_ome_zarr_multiplex)
