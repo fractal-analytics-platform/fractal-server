@@ -375,7 +375,6 @@ def run_v2_task_compound(
                 for zarr_url in input_image_zarr_urls
             ],
         )
-
     result, exception = runner.submit(
         functools.partial(
             run_single_task,

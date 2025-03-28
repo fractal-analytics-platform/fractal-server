@@ -9,6 +9,7 @@ import time
 from copy import copy
 from pathlib import Path
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 import cloudpickle
@@ -36,7 +37,6 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
@@ -469,20 +469,15 @@ class RunnerSlurmSudo(BaseRunner):
         history_unit_id: int,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
-        task_type: TaskTypeType,
+        task_type: Literal[
+            "non_parallel",
+            "converter_non_parallel",
+            "compound",
+            "converter_compound",
+        ],
     ) -> tuple[Any, Exception]:
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
-
-        task_files = TaskFiles(
-            **task_files.model_dump(
-                exclude={"component"},
-            ),
-            # FIXME: the use of _COMPONENT_KEY_ is now deprecated
-            component="FAKE_INVALID_VALUE_FIXME"
-            # component=parameters[_COMPONENT_KEY_],
-        )
-
         if self.jobs != {}:
             raise JobExecutionError("Unexpected branch: jobs should be empty.")
 
@@ -562,18 +557,16 @@ class RunnerSlurmSudo(BaseRunner):
         func: callable,
         list_parameters: list[dict],
         history_unit_ids: list[int],
-        task_files: TaskFiles,
+        list_task_files: list[TaskFiles],
         slurm_config: SlurmConfig,
-        task_type: TaskTypeType,
+        task_type: Literal["parallel", "compound", "converter_compound"],
     ):
-        # self.scancel_jobs()
-
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters, task_type=task_type
         )
 
-        workdir_local = task_files.wftask_subfolder_local
-        workdir_remote = task_files.wftask_subfolder_remote
+        workdir_local = list_task_files[0].wftask_subfolder_local
+        workdir_remote = list_task_files[0].wftask_subfolder_remote
 
         # Create local&remote task subfolders
         if task_type not in ["converter_compound", "compound"]:
@@ -591,7 +584,7 @@ class RunnerSlurmSudo(BaseRunner):
         results: dict[int, Any] = {}
         exceptions: dict[int, BaseException] = {}
 
-        original_task_files = task_files
+        original_task_files = list_task_files
         tot_tasks = len(list_parameters)
 
         # Set/validate parameters for task batching
@@ -630,23 +623,15 @@ class RunnerSlurmSudo(BaseRunner):
             # TODO: replace with actual values
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
-                # FIXME: the use of _COMPONENT_KEY_ is now deprecated
-                component = "FAKE_INVALID_VALUE_FIXME"
-                # component = parameters[_COMPONENT_KEY_]
                 tasks.append(
                     SlurmTask(
                         index=(ind_batch * batch_size) + ind_chunk,
-                        component=component,
+                        component=original_task_files[ind_chunk].component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=TaskFiles(
-                            **original_task_files.model_dump(
-                                exclude={"component"}
-                            ),
-                            component=component,
-                        ),
+                        task_files=original_task_files[ind_chunk],
                     ),
                 )
 

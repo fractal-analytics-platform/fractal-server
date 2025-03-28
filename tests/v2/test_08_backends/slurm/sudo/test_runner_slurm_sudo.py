@@ -1,5 +1,4 @@
 import time
-from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -12,19 +11,10 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
     RunnerSlurmSudo,
 )
-from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
-
-
-def get_dummy_task_files(root_path: Path) -> TaskFiles:
-    return TaskFiles(
-        root_dir_local=root_path / "server",
-        root_dir_remote=root_path / "user",
-        task_name="name",
-        task_order=0,
-    )
+from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
 @pytest.mark.container
@@ -61,7 +51,7 @@ async def test_submit_success(
             do_nothing,
             parameters=parameters,
             history_unit_id=history_unit_id,
-            task_files=get_dummy_task_files(tmp777_path),
+            task_files=get_dummy_task_files(tmp777_path, component="0"),
             slurm_config=get_default_slurm_config(),
             task_type=task_type,
         )
@@ -121,7 +111,7 @@ async def test_submit_fail(
             raise_ValueError,
             parameters=parameters,
             history_unit_id=history_unit_id,
-            task_files=get_dummy_task_files(tmp777_path),
+            task_files=get_dummy_task_files(tmp777_path, component="0"),
             slurm_config=get_default_slurm_config(),
             task_type=task_type,
         )
@@ -190,7 +180,10 @@ async def test_multisubmit(
                 },
             ],
             history_unit_ids=history_unit_ids,
-            task_files=get_dummy_task_files(tmp777_path),
+            list_task_files=[
+                get_dummy_task_files(tmp777_path, component=str(ind))
+                for ind in range(len(ZARR_URLS))
+            ],
             slurm_config=get_default_slurm_config(),
             task_type="parallel",
         )
