@@ -558,7 +558,7 @@ class RunnerSlurmSudo(BaseRunner):
 
         # FIXME
         jobs_that_started = set()
-        while len(jobs_that_started) == len(self.job_ids):
+        while len(jobs_that_started) != len(self.job_ids):
             logger.debug("CALL SQUEUE")
             res = run_squeue(self.job_ids)
             new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
@@ -719,7 +719,7 @@ class RunnerSlurmSudo(BaseRunner):
 
         # FIXME
         jobs_that_started = set()
-        while len(jobs_that_started) == len(self.job_ids):
+        while len(jobs_that_started) != len(self.job_ids):
             res = run_squeue(self.job_ids)
             new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
             jobs_that_started.union(new_jobs)
