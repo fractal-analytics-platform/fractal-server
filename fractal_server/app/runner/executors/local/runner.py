@@ -11,7 +11,6 @@ from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -67,19 +66,16 @@ class LocalRunner(BaseRunner):
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
-        current_task_files = TaskFiles(
-            **task_files.model_dump(
-                exclude={"component"},
-            ),
-            component=parameters[_COMPONENT_KEY_],
-        )
-
         self.validate_submit_parameters(parameters, task_type=task_type)
-        workdir_local = current_task_files.wftask_subfolder_local
+        workdir_local = task_files.wftask_subfolder_local
         workdir_local.mkdir()
 
         # SUBMISSION PHASE
-        future = self.executor.submit(func, parameters=parameters)
+        future = self.executor.submit(
+            func,
+            parameters=parameters,
+            remote_files=task_files.remote_files_dict,
+        )
 
         # RETRIEVAL PHASE
         with next(get_sync_db()) as db:
@@ -110,7 +106,7 @@ class LocalRunner(BaseRunner):
         func: callable,
         list_parameters: list[dict],
         history_unit_ids: list[int],
-        task_files: TaskFiles,
+        list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         local_backend_config: Optional[LocalBackendConfig] = None,
     ):
@@ -138,9 +134,10 @@ class LocalRunner(BaseRunner):
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
+            list_task_files=list_task_files,
         )
 
-        workdir_local = task_files.wftask_subfolder_local
+        workdir_local = list_task_files[0].wftask_subfolder_local
         if task_type == "parallel":
             workdir_local.mkdir()
 
@@ -154,8 +151,6 @@ class LocalRunner(BaseRunner):
         if parallel_tasks_per_job is None:
             parallel_tasks_per_job = n_elements
 
-        original_task_files = task_files
-
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
         results: dict[int, Any] = {}
         exceptions: dict[int, BaseException] = {}
@@ -165,16 +160,16 @@ class LocalRunner(BaseRunner):
             ]
 
             active_futures: dict[int, Future] = {}
-            active_task_files: dict[int, TaskFiles] = {}
             for ind_within_chunk, kwargs in enumerate(list_parameters_chunk):
                 positional_index = ind_chunk + ind_within_chunk
-                component = kwargs[_COMPONENT_KEY_]
-                future = self.executor.submit(func, parameters=kwargs)
-                active_futures[positional_index] = future
-                active_task_files[positional_index] = TaskFiles(
-                    **original_task_files.model_dump(exclude={"component"}),
-                    component=component,
+                future = self.executor.submit(
+                    func,
+                    parameters=kwargs,
+                    remote_files=list_task_files[
+                        positional_index
+                    ].remote_files_dict,
                 )
+                active_futures[positional_index] = future
 
             while active_futures:
                 # FIXME: add shutdown detection
@@ -190,9 +185,6 @@ class LocalRunner(BaseRunner):
                 with next(get_sync_db()) as db:
                     for positional_index, fut in finished_futures:
                         active_futures.pop(positional_index)
-                        # current_task_files = active_task_files.pop(
-                        #     positional_index
-                        # )
                         zarr_url = list_parameters[positional_index][
                             "zarr_url"
                         ]

@@ -24,7 +24,6 @@ from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -479,7 +478,9 @@ class RunnerSlurmSudo(BaseRunner):
             **task_files.model_dump(
                 exclude={"component"},
             ),
-            component=parameters[_COMPONENT_KEY_],
+            # FIXME: the use of _COMPONENT_KEY_ is now deprecated
+            component="FAKE_INVALID_VALUE_FIXME"
+            # component=parameters[_COMPONENT_KEY_],
         )
 
         if self.jobs != {}:
@@ -629,7 +630,9 @@ class RunnerSlurmSudo(BaseRunner):
             # TODO: replace with actual values
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
-                component = parameters[_COMPONENT_KEY_]
+                # FIXME: the use of _COMPONENT_KEY_ is now deprecated
+                component = "FAKE_INVALID_VALUE_FIXME"
+                # component = parameters[_COMPONENT_KEY_]
                 tasks.append(
                     SlurmTask(
                         index=(ind_batch * batch_size) + ind_chunk,

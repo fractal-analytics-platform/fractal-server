@@ -1,6 +1,5 @@
 from typing import Any
 
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
 
@@ -106,15 +105,11 @@ class BaseRunner(object):
                     f"Forbidden 'zarr_urls' key in {list(parameters.keys())}"
                 )
 
-        if _COMPONENT_KEY_ not in parameters.keys():
-            raise ValueError(
-                f"No '{_COMPONENT_KEY_}' key in in {list(parameters.keys())}"
-            )
-
     def validate_multisubmit_parameters(
         self,
         list_parameters: list[dict[str, Any]],
         task_type: TaskTypeType,
+        list_task_files: list[TaskFiles],
     ) -> None:
         """
         Validate parameters for `multi_submit` method
@@ -126,6 +121,17 @@ class BaseRunner(object):
         if task_type not in TASK_TYPES_MULTISUBMIT:
             raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
 
+        if (
+            len(
+                set(
+                    task_file.wftask_subfolder_local
+                    for task_file in list_task_files
+                )
+            )
+            != 1
+        ):
+            raise ValueError("FIXME")
+
         if not isinstance(list_parameters, list):
             raise ValueError("`parameters` must be a list.")
 
@@ -135,11 +141,6 @@ class BaseRunner(object):
             if "zarr_url" not in single_kwargs.keys():
                 raise ValueError(
                     f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
-                )
-            if _COMPONENT_KEY_ not in single_kwargs.keys():
-                raise ValueError(
-                    f"No '{_COMPONENT_KEY_}' key "
-                    f"in {list(single_kwargs.keys())}"
                 )
         if task_type == "parallel":
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]

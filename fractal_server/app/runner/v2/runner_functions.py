@@ -18,7 +18,6 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
@@ -122,6 +121,7 @@ def run_v2_task_non_parallel(
         root_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
+        component=_index_to_component(0),
     )
 
     executor_options = submit_setup_call(
@@ -131,7 +131,6 @@ def run_v2_task_non_parallel(
 
     function_kwargs = {
         "zarr_dir": zarr_dir,
-        _COMPONENT_KEY_: _index_to_component(0),
         **(wftask.args_non_parallel or {}),
     }
     if task_type == "non_parallel":
@@ -148,7 +147,7 @@ def run_v2_task_non_parallel(
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,  # FIXME
+            logfile=task_files.log_file_local,
             zarr_urls=zarr_urls,
         )
         db.add(history_unit)
@@ -171,10 +170,10 @@ def run_v2_task_non_parallel(
     result, exception = runner.submit(
         functools.partial(
             run_single_task,
-            wftask=wftask,
             command=task.command_non_parallel,
-            root_dir_local=workflow_dir_local,
-            root_dir_remote=workflow_dir_remote,
+            workflow_task_order=wftask.order,
+            workflow_task_id=wftask.task_id,
+            task_name=wftask.task.name,
         ),
         parameters=function_kwargs,
         task_type=task_type,
@@ -229,19 +228,26 @@ def run_v2_task_parallel(
     list_function_kwargs = [
         {
             "zarr_url": image["zarr_url"],
-            _COMPONENT_KEY_: _index_to_component(ind),
             **(wftask.args_parallel or {}),
         }
-        for ind, image in enumerate(images)
+        for image in images
     ]
+    list_task_files = [
+        TaskFiles(
+            **task_files.model_dump(exclude={"component"}),
+            component=_index_to_component(ind),
+        )
+        for ind in range(len(images))
+    ]
+
     history_units = [
         HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,  # FIXME
+            logfile=list_task_files[ind].log_file_local,
             zarr_urls=[image["zarr_url"]],
         )
-        for image in images
+        for ind, image in enumerate(images)
     ]
 
     with next(get_sync_db()) as db:
@@ -269,14 +275,14 @@ def run_v2_task_parallel(
     results, exceptions = runner.multisubmit(
         functools.partial(
             run_single_task,
-            wftask=wftask,
             command=task.command_parallel,
-            root_dir_local=workflow_dir_local,
-            root_dir_remote=workflow_dir_remote,
+            workflow_task_order=wftask.order,
+            workflow_task_id=wftask.task_id,
+            task_name=wftask.task.name,
         ),
         list_parameters=list_function_kwargs,
         task_type="parallel",
-        task_files=task_files,
+        list_task_files=list_task_files,
         history_unit_ids=history_unit_ids,
         **executor_options,
     )
@@ -324,11 +330,12 @@ def run_v2_task_compound(
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
 
     # Get TaskFiles object
-    task_files = TaskFiles(
+    task_files_init = TaskFiles(
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
+        component=f"init_{_index_to_component(0)}",
     )
 
     executor_options_init = submit_setup_call(
@@ -343,7 +350,6 @@ def run_v2_task_compound(
     # 3/A: non-parallel init task
     function_kwargs = {
         "zarr_dir": zarr_dir,
-        _COMPONENT_KEY_: f"init_{_index_to_component(0)}",
         **(wftask.args_non_parallel or {}),
     }
     if task_type == "compound":
@@ -358,7 +364,8 @@ def run_v2_task_compound(
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,  # FIXME
+            # FIXME: What about compute-task logs?
+            logfile=task_files_init.log_file_local,
             zarr_urls=input_image_zarr_urls,
         )
         db.add(history_unit)
@@ -382,14 +389,14 @@ def run_v2_task_compound(
     result, exception = runner.submit(
         functools.partial(
             run_single_task,
-            wftask=wftask,
             command=task.command_non_parallel,
-            root_dir_local=workflow_dir_local,
-            root_dir_remote=workflow_dir_remote,
+            workflow_task_order=wftask.order,
+            workflow_task_id=wftask.task_id,
+            task_name=wftask.task.name,
         ),
         parameters=function_kwargs,
         task_type=task_type,
-        task_files=task_files,
+        task_files=task_files_init,
         history_unit_id=history_unit_id,
         **executor_options_init,
     )
@@ -421,27 +428,36 @@ def run_v2_task_compound(
             db.commit()
         return (TaskOutput(), 0, {})
 
+    list_task_files = [
+        TaskFiles(
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+            task_order=wftask.order,
+            task_name=wftask.task.name,
+            component=f"compute_{_index_to_component(ind)}",
+        )
+        for ind in range(len(parallelization_list))
+    ]
     list_function_kwargs = [
         {
             "zarr_url": parallelization_item.zarr_url,
             "init_args": parallelization_item.init_args,
-            _COMPONENT_KEY_: f"compute_{_index_to_component(ind)}",
             **(wftask.args_parallel or {}),
         }
-        for ind, parallelization_item in enumerate(parallelization_list)
+        for parallelization_item in parallelization_list
     ]
 
     results, exceptions = runner.multisubmit(
         functools.partial(
             run_single_task,
-            wftask=wftask,
             command=task.command_parallel,
-            root_dir_local=workflow_dir_local,
-            root_dir_remote=workflow_dir_remote,
+            workflow_task_order=wftask.order,
+            workflow_task_id=wftask.task_id,
+            task_name=wftask.task.name,
         ),
         list_parameters=list_function_kwargs,
         task_type=task_type,
-        task_files=task_files,
+        list_task_files=list_task_files,
         history_unit_ids=[history_unit_id],
         **executor_options_compute,
     )
