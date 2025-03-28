@@ -42,6 +42,6 @@ def maximum_intensity_projection(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=maximum_intensity_projection)

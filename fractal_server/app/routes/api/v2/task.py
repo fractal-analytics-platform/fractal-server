@@ -152,14 +152,7 @@ async def create_task(
         db=db,
     )
 
-    if task.command_non_parallel is None:
-        task_type = "parallel"
-    elif task.command_parallel is None:
-        task_type = "non_parallel"
-    else:
-        task_type = "compound"
-
-    if task_type == "parallel" and (
+    if task.type == "parallel" and (
         task.args_schema_non_parallel is not None
         or task.meta_non_parallel is not None
     ):
@@ -170,7 +163,7 @@ async def create_task(
                 "`TaskV2.args_schema_non_parallel` if TaskV2 is parallel"
             ),
         )
-    elif task_type == "non_parallel" and (
+    elif task.type == "non_parallel" and (
         task.args_schema_parallel is not None or task.meta_parallel is not None
     ):
         raise HTTPException(
@@ -183,7 +176,7 @@ async def create_task(
 
     # Add task
 
-    db_task = TaskV2(**task.model_dump(exclude_unset=True), type=task_type)
+    db_task = TaskV2(**task.model_dump(exclude_unset=True))
     pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
         db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version

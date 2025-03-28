@@ -1,43 +1,32 @@
 import os
+from typing import Annotated
 from typing import Any
 from typing import Optional
 
+from pydantic.types import StringConstraints
 
-def valstr(attribute: str, accept_none: bool = False):
-    """
-    Check that a string attribute is not an empty string, and remove the
-    leading and trailing whitespace characters.
 
-    If `accept_none`, the validator also accepts `None`.
-    """
+def cant_set_none(value: Any) -> Any:
+    if value is None:
+        raise ValueError("Field cannot be set to 'None'.")
+    return value
 
-    def val(cls, string: Optional[str]) -> Optional[str]:
-        if string is None:
-            if accept_none:
-                return string
-            else:
-                raise ValueError(
-                    f"String attribute '{attribute}' cannot be None"
-                )
-        s = string.strip()
-        if not s:
-            raise ValueError(f"String attribute '{attribute}' cannot be empty")
-        return s
 
-    return val
+NonEmptyString = Annotated[
+    str, StringConstraints(min_length=1, strip_whitespace=True)
+]
 
 
 def valdict_keys(attribute: str):
     def val(cls, d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
         """
-        Apply valstr to every key of the dictionary, and fail if there are
-        identical keys.
+        Strip every key of the dictionary, and fail if there are identical keys
         """
         if d is not None:
             old_keys = list(d.keys())
-            new_keys = [
-                valstr(f"{attribute}[{key}]")(cls, key) for key in old_keys
-            ]
+            new_keys = [key.strip() for key in old_keys]
+            if any(k == "" for k in new_keys):
+                raise ValueError(f"Empty string in {new_keys}.")
             if len(new_keys) != len(set(new_keys)):
                 raise ValueError(
                     f"Dictionary contains multiple identical keys: '{d}'."

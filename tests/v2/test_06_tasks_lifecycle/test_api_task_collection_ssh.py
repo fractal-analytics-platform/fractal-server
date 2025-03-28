@@ -23,6 +23,7 @@ def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 async def test_task_collection_ssh_from_pypi(
     db,
     app,
@@ -189,6 +190,7 @@ async def test_task_collection_ssh_from_pypi(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 async def test_task_collection_ssh_failure(
     db,
     app,

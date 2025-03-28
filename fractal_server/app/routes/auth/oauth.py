@@ -27,20 +27,22 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
         from httpx_oauth.clients.google import GoogleOAuth2
 
         client = GoogleOAuth2(
-            client_config.CLIENT_ID, client_config.CLIENT_SECRET
+            client_config.CLIENT_ID,
+            client_config.CLIENT_SECRET.get_secret_value(),
         )
     elif client_name == "github":
         from httpx_oauth.clients.github import GitHubOAuth2
 
         client = GitHubOAuth2(
-            client_config.CLIENT_ID, client_config.CLIENT_SECRET
+            client_config.CLIENT_ID,
+            client_config.CLIENT_SECRET.get_secret_value(),
         )
     else:
         from httpx_oauth.clients.openid import OpenID
 
         client = OpenID(
             client_config.CLIENT_ID,
-            client_config.CLIENT_SECRET,
+            client_config.CLIENT_SECRET.get_secret_value(),
             client_config.OIDC_CONFIGURATION_ENDPOINT,
         )
 

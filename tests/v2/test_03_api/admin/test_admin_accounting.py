@@ -59,7 +59,7 @@ async def test_accounting(
         assert res.json()["total_count"] == 3
         assert res.json()["page_size"] == 1
         assert res.json()["current_page"] == 1
-        assert res.json()["records"][0]["num_tasks"] == 1
+        assert res.json()["items"][0]["num_tasks"] == 1
         res = await client.post(
             "/admin/v2/accounting/?page_size=1&page=2", json={}
         )
@@ -67,7 +67,7 @@ async def test_accounting(
         assert res.json()["total_count"] == 3
         assert res.json()["page_size"] == 1
         assert res.json()["current_page"] == 2
-        assert res.json()["records"][0]["num_tasks"] == 2
+        assert res.json()["items"][0]["num_tasks"] == 2
         res = await client.post(
             "/admin/v2/accounting/?page_size=1&page=3", json={}
         )
@@ -75,7 +75,7 @@ async def test_accounting(
         assert res.json()["total_count"] == 3
         assert res.json()["page_size"] == 1
         assert res.json()["current_page"] == 3
-        assert res.json()["records"][0]["num_tasks"] == 3
+        assert res.json()["items"][0]["num_tasks"] == 3
 
 
 async def test_accounting_api_failure(

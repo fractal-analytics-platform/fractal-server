@@ -80,7 +80,7 @@ async def test_query_images(
     assert res.json()["total_count"] == N
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == 50
-    assert len(res.json()["images"]) == 50
+    assert len(res.json()["items"]) == 50
     assert_expected_attributes_and_flags(res, N)
 
     # use `page_size` too large
@@ -92,7 +92,7 @@ async def test_query_images(
     assert res.json()["total_count"] == N
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == N + 1
-    assert len(res.json()["images"]) == N
+    assert len(res.json()["items"]) == N
     assert_expected_attributes_and_flags(res, N)
 
     # use `page_size` and `page`
@@ -105,7 +105,7 @@ async def test_query_images(
     assert res.json()["total_count"] == N
     assert res.json()["current_page"] == last_page
     assert res.json()["page_size"] == page_size
-    assert len(res.json()["images"]) == N % page_size
+    assert len(res.json()["items"]) == N % page_size
     assert_expected_attributes_and_flags(res, N)
 
     # use `page` too large
@@ -117,7 +117,7 @@ async def test_query_images(
     assert res.json()["total_count"] == N
     assert res.json()["current_page"] == last_page
     assert res.json()["page_size"] == page_size
-    assert len(res.json()["images"]) == N % page_size
+    assert len(res.json()["items"]) == N % page_size
     assert_expected_attributes_and_flags(res, N)
 
     # use `query.zarr_url`
@@ -129,7 +129,7 @@ async def test_query_images(
     assert res.json()["total_count"] == 1
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == 1
-    assert len(res.json()["images"]) == 1
+    assert len(res.json()["items"]) == 1
     assert_expected_attributes_and_flags(res, N)
 
     # use `query.attributes`
@@ -149,7 +149,7 @@ async def test_query_images(
     )
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == res.json()["total_count"]
-    assert len(res.json()["images"]) == res.json()["total_count"]
+    assert len(res.json()["items"]) == res.json()["total_count"]
     assert_expected_attributes_and_flags(res, N)
 
     res = await client.post(
@@ -168,7 +168,7 @@ async def test_query_images(
         ]
     )
     assert res.json()["page_size"] == 1000
-    assert len(res.json()["images"]) == res.json()["total_count"]
+    assert len(res.json()["items"]) == res.json()["total_count"]
 
     # Filter with non-existing type
     res = await client.post(
@@ -180,7 +180,7 @@ async def test_query_images(
     assert res.json()["total_count"] == 0
     assert res.json()["page_size"] == 42
     assert res.json()["current_page"] == 1
-    assert res.json()["images"] == []
+    assert res.json()["items"] == []
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
         json=dict(type_filters={"foo": False}),

@@ -9,7 +9,7 @@ from devtools import debug
 from fabric.connection import Connection
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.ssh.executor import (
+from fractal_server.app.runner.executors.slurm_ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
 from fractal_server.logger import set_logger
@@ -17,9 +17,11 @@ from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import (
     get_default_slurm_config,
 )
-from tests.v2._aux_runner import (
-    get_default_task_files,
-)
+
+
+def get_default_task_files(*args, **kwargs):
+    raise NotImplementedError("This function was removed")
+
 
 logger = set_logger(__file__)
 
@@ -59,6 +61,7 @@ class MockFractalSlurmSSHExecutor(FractalSlurmSSHExecutor):
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_errors_failed_init_1(
     override_settings_factory,
     fractal_ssh,
@@ -88,6 +91,7 @@ def test_errors_failed_init_1(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_errors_failed_init_2(
     override_settings_factory,
     current_py_version,
@@ -119,6 +123,7 @@ def test_errors_failed_init_2(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_errors_failed_init_3(
     override_settings_factory,
     current_py_version,
@@ -207,6 +212,7 @@ def test_slurm_ssh_executor_handshake_fail(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_slurm_ssh_executor_submit(
     fractal_ssh,
     tmp_path: Path,
@@ -244,6 +250,7 @@ def test_slurm_ssh_executor_submit(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_slurm_ssh_executor_map(
     fractal_ssh: FractalSSH,
     tmp_path: Path,
@@ -277,6 +284,7 @@ def test_slurm_ssh_executor_map(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_slurm_ssh_executor_submit_with_pre_sbatch(
     fractal_ssh,
     tmp_path: Path,
@@ -319,6 +327,7 @@ def test_slurm_ssh_executor_submit_with_pre_sbatch(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_slurm_ssh_executor_shutdown_before_job_submission(
     fractal_ssh,
     tmp_path: Path,
@@ -399,6 +408,7 @@ def test_slurm_ssh_executor_shutdown_before_job_submission(
 
 
 @pytest.mark.container
+@pytest.mark.ssh
 def test_slurm_ssh_executor_error_in_calllback(
     fractal_ssh,
     tmp_path: Path,

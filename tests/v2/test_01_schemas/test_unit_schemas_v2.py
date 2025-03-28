@@ -103,7 +103,7 @@ def test_workflow_task_dump():
         task=TaskDumpV2(
             id=1,
             name="name",
-            type="type",
+            type="parallel",
             input_types={},
             output_types={},
         ),
