@@ -9,8 +9,6 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.string_tools import validate_cmd
 
-# FIXME: Avoid importing fractal_server.app.runner
-
 
 def _call_command_wrapper(cmd: str, log_path: str) -> None:
     """
