@@ -1,69 +1,96 @@
 import pytest
 
-# from fractal_server.app.history import ImageStatus
-# from fractal_server.app.models.v2.history import HistoryItemV2
-# from fractal_server.app.models.v2.history import ImageStatus
+from fractal_server.app.models.v2 import HistoryImageCache
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
 ZARR_URLS = ["a", "b", "c", "d"]
 
 
 @pytest.fixture
-async def mock_history_item(
+async def history_run_mock(
     db,
+    MockCurrentUser,
     project_factory_v2,
-    task_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
+    task_factory_v2,
     workflowtask_factory_v2,
-    MockCurrentUser,
-):
-    # ) -> HistoryItemV2:
+) -> HistoryRun:
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id)
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        run = HistoryRun(
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            num_available_images=4,
+            status=HistoryUnitStatus.SUBMITTED,
+        )
+        db.add(run)
+        await db.commit()
+        await db.refresh(run)
+    return run
 
-    # async with MockCurrentUser() as user:
-    #     project = await project_factory_v2(user=user)
-    #     task = await task_factory_v2(user_id=user.id)
-    # ds = await dataset_factory_v2(project_id=project.id)
-    # wf = await workflow_factory_v2(project_id=project.id)
-    # wft = await workflowtask_factory_v2(
-    #     workflow_id=wf.id,
-    #     project_id=project.id,
-    #     task_id=task.id,
-    # )
 
-    from pydantic import BaseModel
+@pytest.fixture
+async def history_mock_for_submit(db, history_run_mock) -> tuple[int, int]:
+    unit = HistoryUnit(
+        history_run_id=history_run_mock.id,
+        status=HistoryUnitStatus.SUBMITTED,
+        logfile="/log",
+        zarr_urls=ZARR_URLS,
+    )
+    db.add(unit)
+    await db.commit()
+    await db.refresh(unit)
 
-    class ObjectWithId(BaseModel):
-        id: int
+    for zarr_url in ZARR_URLS:
+        db.add(
+            HistoryImageCache(
+                zarr_url=zarr_url,
+                workflowtask_id=history_run_mock.workflowtask_id,
+                dataset_id=history_run_mock.dataset_id,
+                latest_history_unit_id=unit.id,
+            )
+        )
+    await db.commit()
 
-    return ObjectWithId(id=1)
+    return history_run_mock.id, unit.id
 
-    # parameters_hash = hash("something fake")
-    # item = HistoryItemV2(
-    #     dataset_id=ds.id,
-    #     workflowtask_id=wft.id,
-    #     workflowtask_dump={},
-    #     task_group_dump={},
-    #     parameters_hash=parameters_hash,
-    #     num_current_images=4,
-    #     num_available_images=4,
-    #     images={
-    #         zarr_url: UnitStatus.SUBMITTED
-    #         for zarr_url in ZARR_URLS
-    #     },
-    # )
-    # for zarr_url in ZARR_URLS:
-    #     db.add(
-    #         UnitStatus(
-    #             zarr_url=zarr_url,
-    #             workflowtask_id=wft.id,
-    #             dataset_id=ds.id,
-    #             parameters_hash=parameters_hash,
-    #             status=UnitStatus.SUBMITTED,
-    #             logfile="/invalid/placeholder",
-    #         )
-    #     )
-    # db.add(item)
-    # await db.commit()
-    # await db.refresh(item)
-    # return item
+
+@pytest.fixture
+async def history_mock_for_multisubmit(
+    db, history_run_mock
+) -> tuple[int, list[int]]:
+    unit_ids = []
+    for zarr_url in ZARR_URLS:
+        unit = HistoryUnit(
+            history_run_id=history_run_mock.id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile="/log/fake",
+            zarr_urls=[zarr_url],
+        )
+        db.add(unit)
+        await db.commit()
+        await db.refresh(unit)
+        unit_ids.append(unit.id)
+        db.add(
+            HistoryImageCache(
+                zarr_url=zarr_url,
+                workflowtask_id=history_run_mock.workflowtask_id,
+                dataset_id=history_run_mock.dataset_id,
+                latest_history_unit_id=unit.id,
+            )
+        )
+        await db.commit()
+
+    return history_run_mock.id, unit_ids
