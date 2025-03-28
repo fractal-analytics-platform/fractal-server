@@ -140,11 +140,29 @@ class SlurmJob(BaseModel):
 
     @property
     def slurm_stdout(self) -> str:
-        return (self.workdir_remote / f"slurm-{self.label}.out").as_posix()
+        if self.slurm_job_id:
+            return (
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.out"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.out"
+            ).as_posix()
 
     @property
     def slurm_stderr(self) -> str:
-        return (self.workdir_remote / f"slurm-{self.label}.err").as_posix()
+        if self.slurm_job_id:
+            return (
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.err"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.err"
+            ).as_posix()
 
     @property
     def log_files_local(self) -> list[str]:
