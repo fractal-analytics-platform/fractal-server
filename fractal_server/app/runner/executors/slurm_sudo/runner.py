@@ -553,10 +553,12 @@ class RunnerSlurmSudo(BaseRunner):
             slurm_config=config,
         )
         logger.debug("END SUBMISSION PHASE")
+        logger.debug(f"{self.jobs=}")
+        logger.debug(f"{self.job_ids=}")
 
         # FIXME
         jobs_that_started = set()
-        while len(jobs_that_started) == len(self.jobs):
+        while len(jobs_that_started) == len(self.job_ids):
             logger.debug("CALL SQUEUE")
             res = run_squeue(self.job_ids)
             new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
