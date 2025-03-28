@@ -324,9 +324,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
 
 
-def test_slurm_submit_setup(
-    tmp_path: Path, testdata_path: Path, override_settings_factory
-):
+def test_slurm_submit_setup(testdata_path: Path, override_settings_factory):
     override_settings_factory(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
     )
@@ -335,8 +333,6 @@ def test_slurm_submit_setup(
     wftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
-        root_dir_local=tmp_path,
-        root_dir_remote=tmp_path,
         which_type="non_parallel",
     )
     debug(slurm_config)
@@ -351,8 +347,6 @@ def test_slurm_submit_setup(
     with pytest.raises(SlurmConfigError) as e:
         _slurm_submit_setup(
             wftask=wftask,
-            root_dir_local=tmp_path,
-            root_dir_remote=tmp_path,
             which_type="non_parallel",
         )
     debug(e.value)
