@@ -13,8 +13,6 @@ from ....images.tools import find_image_by_zarr_url
 from ..exceptions import JobExecutionError
 from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
-from .runner_functions import run_v2_task_converter_compound
-from .runner_functions import run_v2_task_converter_non_parallel
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from .task_interface import TaskOutput
@@ -68,6 +66,7 @@ def execute_tasks_v2(
 
         # Filter images by types and attributes (in two steps)
         if wftask.task_type in ["compound", "parallel", "non_parallel"]:
+            # Non-converter task
             type_filters = copy(current_dataset_type_filters)
             type_filters_patch = merge_type_filters(
                 task_input_types=task.input_types,
@@ -86,6 +85,8 @@ def execute_tasks_v2(
                 attribute_filters=job_attribute_filters,
             )
         else:
+            # Converter task
+            filtered_images = []
             num_available_images = 0
 
         with next(get_sync_db()) as db:
@@ -113,7 +114,7 @@ def execute_tasks_v2(
             history_run_id = history_run.id
 
         # TASK EXECUTION (V2)
-        if task.type == "non_parallel":
+        if task.type in ["non_parallel", "converter_non_parallel"]:
             (
                 current_task_output,
                 num_tasks,
@@ -129,22 +130,7 @@ def execute_tasks_v2(
                 submit_setup_call=submit_setup_call,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
-            )
-        elif task.type == "converter_non_parallel":
-            (
-                current_task_output,
-                num_tasks,
-                exceptions,
-            ) = run_v2_task_converter_non_parallel(
-                zarr_dir=zarr_dir,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                runner=runner,
-                submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
+                task_type=task.type,
             )
         elif task.type == "parallel":
             current_task_output, num_tasks, exceptions = run_v2_task_parallel(
@@ -158,7 +144,7 @@ def execute_tasks_v2(
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
             )
-        elif task.type == "compound":
+        elif task.type in ["compound", "converter_compound"]:
             current_task_output, num_tasks, exceptions = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
@@ -170,23 +156,24 @@ def execute_tasks_v2(
                 submit_setup_call=submit_setup_call,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
+                task_type=task.type,
             )
-        elif task.type == "converter_compound":
-            (
-                current_task_output,
-                num_tasks,
-                exceptions,
-            ) = run_v2_task_converter_compound(
-                zarr_dir=zarr_dir,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                runner=runner,
-                submit_setup_call=submit_setup_call,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
-            )
+        # elif task.type == "converter_compound":
+        #     (
+        #         current_task_output,
+        #         num_tasks,
+        #         exceptions,
+        #     ) = run_v2_task_converter_compound(
+        #         zarr_dir=zarr_dir,
+        #         wftask=wftask,
+        #         task=task,
+        #         workflow_dir_local=workflow_dir_local,
+        #         workflow_dir_remote=workflow_dir_remote,
+        #         runner=runner,
+        #         submit_setup_call=submit_setup_call,
+        #         history_run_id=history_run_id,
+        #         dataset_id=dataset.id,
+        #     )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
 

@@ -2,6 +2,7 @@ from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from sqlmodel import update
@@ -14,7 +15,6 @@ from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.logger import set_logger
 
 
@@ -57,7 +57,12 @@ class LocalRunner(BaseRunner):
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
-        task_type: TaskTypeType,
+        task_type: Literal[
+            "non_parallel",
+            "converter_non_parallel",
+            "compound",
+            "converter_compound",
+        ],
         local_backend_config: Optional[LocalBackendConfig] = None,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
@@ -106,7 +111,7 @@ class LocalRunner(BaseRunner):
         list_parameters: list[dict],
         history_unit_ids: list[int],
         task_files: TaskFiles,
-        task_type: TaskTypeType,
+        task_type: Literal["parallel", "compound", "converter_compound"],
         local_backend_config: Optional[LocalBackendConfig] = None,
     ):
         """
@@ -136,7 +141,7 @@ class LocalRunner(BaseRunner):
         )
 
         workdir_local = task_files.wftask_subfolder_local
-        if task_type not in ["compound", "converter_compound"]:
+        if task_type == "parallel":
             workdir_local.mkdir()
 
         # Get local_backend_config
@@ -191,17 +196,15 @@ class LocalRunner(BaseRunner):
                         zarr_url = list_parameters[positional_index][
                             "zarr_url"
                         ]
-                        current_history_unit_id = history_unit_ids[
-                            positional_index
-                        ]
+                        if task_type == "parallel":
+                            current_history_unit_id = history_unit_ids[
+                                positional_index
+                            ]
 
                         try:
                             results[positional_index] = fut.result()
                             print(f"Mark {zarr_url=} as done, {kwargs}")
-                            if task_type not in [
-                                "compound",
-                                "compound_converter",
-                            ]:
+                            if task_type == "parallel":
                                 unit = db.get(
                                     HistoryUnit, current_history_unit_id
                                 )
@@ -214,10 +217,7 @@ class LocalRunner(BaseRunner):
                                 f"Mark {zarr_url=} as failed, {kwargs} - {e}"
                             )
                             exceptions[positional_index] = e
-                            if task_type not in [
-                                "compound",
-                                "compound_converter",
-                            ]:
+                            if task_type == "parallel":
                                 unit = db.get(
                                     HistoryUnit, current_history_unit_id
                                 )
