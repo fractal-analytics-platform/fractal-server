@@ -52,6 +52,10 @@ def execute_tasks_v2(
         )
         workflow_dir_local.mkdir()
 
+    # For local backend, remote and local folders are the same
+    if workflow_dir_remote is None:
+        workflow_dir_remote = workflow_dir_local
+
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
