@@ -14,12 +14,16 @@ from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
-def get_dummy_task_files(root_dir_local: Path) -> TaskFiles:
+def get_dummy_task_files(
+    root_dir_local: Path,
+    component: str,
+) -> TaskFiles:
     return TaskFiles(
         root_dir_local=root_dir_local,
         root_dir_remote=root_dir_local,
         task_name="name",
         task_order=0,
+        component=component,
     )
 
 
@@ -125,23 +129,25 @@ async def test_submit_success(
     tmp_path,
     task_type: str,
 ):
-    def do_nothing(parameters: dict) -> int:
+    def do_nothing(parameters: dict, remote_files: dict) -> int:
         return 42
 
     history_run_id, history_unit_id = history_mock_for_submit
 
-    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
-    if not task_type.startswith("converter_"):
-        parameters["zarr_urls"] = ZARR_URLS
+    if task_type.startswith("converter_"):
+        parameters = {}
+    else:
+        parameters = dict(zarr_urls=ZARR_URLS)
 
     with LocalRunner(tmp_path) as runner:
         result, exception = runner.submit(
             do_nothing,
             parameters=parameters,
-            task_files=get_dummy_task_files(tmp_path),
+            task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
             history_unit_id=history_unit_id,
         )
+
     assert result == 42
     assert exception is None
 
@@ -177,20 +183,21 @@ async def test_submit_fail(
 ):
     ERROR_MSG = "very nice error"
 
-    def raise_ValueError(parameters: dict):
+    def raise_ValueError(parameters: dict, remote_files: dict):
         raise ValueError(ERROR_MSG)
 
     history_run_id, history_unit_id = history_mock_for_submit
 
-    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
     if not task_type.startswith("converter_"):
-        parameters["zarr_urls"] = ZARR_URLS
+        parameters = dict(zarr_urls=ZARR_URLS)
+    else:
+        parameters = {}
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
             raise_ValueError,
             parameters=parameters,
-            task_files=get_dummy_task_files(tmp_path),
+            task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
             history_unit_id=history_unit_id,
         )
@@ -210,7 +217,7 @@ async def test_submit_fail(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
-def fun(parameters: int):
+def fun(parameters: int, remote_files: dict):
     zarr_url = parameters["zarr_url"]
     x = parameters["parameter"]
     if x != 3:
@@ -257,7 +264,10 @@ async def test_multisubmit(
                     "__FRACTAL_PARALLEL_COMPONENT__": "000003",
                 },
             ],
-            task_files=get_dummy_task_files(tmp_path),
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component=str(ind))
+                for ind in range(len(ZARR_URLS))
+            ],
             task_type="parallel",
             history_unit_ids=history_unit_ids,
         )
