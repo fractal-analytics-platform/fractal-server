@@ -425,7 +425,7 @@ class RunnerSlurmSudo(BaseRunner):
         """
         Note: this would differ for SSH
         """
-        logger.debug(f"[_copy_files_from_remote_to_local] {job.id=}")
+        logger.debug(f"[_copy_files_from_remote_to_local] {job.slurm_job_id=}")
         source_target_list = [
             (job.slurm_stdout_remote, job.slurm_stdout_local),
             (job.slurm_stderr_remote, job.slurm_stderr_local),
