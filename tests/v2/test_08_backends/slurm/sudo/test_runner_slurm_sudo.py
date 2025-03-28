@@ -54,7 +54,7 @@ async def test_submit_success(
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
             ),
-            slurm_config=get_default_slurm_config(),
+            config=get_default_slurm_config(),
             task_type=task_type,
         )
     debug(result, exception)
@@ -116,7 +116,7 @@ async def test_submit_fail(
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
             ),
-            slurm_config=get_default_slurm_config(),
+            config=get_default_slurm_config(),
             task_type=task_type,
         )
 
@@ -190,7 +190,7 @@ async def test_multisubmit(
                 )
                 for ind in range(len(ZARR_URLS))
             ],
-            slurm_config=get_default_slurm_config(),
+            config=get_default_slurm_config(),
             task_type="parallel",
         )
         debug(results)
