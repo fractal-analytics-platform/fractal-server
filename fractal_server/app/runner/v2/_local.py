@@ -3,7 +3,7 @@ from typing import Optional
 
 from ...models.v2 import DatasetV2
 from ...models.v2 import WorkflowV2
-from ..executors.local._local_config import get_local_backend_config
+from ..executors.local.get_local_config import get_local_backend_config
 from ..executors.local.runner import LocalRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2

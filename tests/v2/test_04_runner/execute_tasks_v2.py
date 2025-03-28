@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.executors.local._local_config import (
+from fractal_server.app.runner.executors.local.get_local_config import (
     get_local_backend_config,
 )
 from fractal_server.app.runner.v2.runner import execute_tasks_v2

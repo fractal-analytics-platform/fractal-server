@@ -6,7 +6,7 @@ from typing import Literal
 
 from sqlmodel import update
 
-from ._local_config import LocalBackendConfig
+from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.executors.base_runner import BaseRunner
