@@ -685,10 +685,7 @@ class RunnerSlurmSudo(BaseRunner):
 
                         if result is not None:
                             results[task.index] = result
-                            if task_type not in [
-                                "compound",
-                                "compound_converter",
-                            ]:
+                            if task_type == "parallel":
                                 unit = db.get(
                                     HistoryUnit, history_unit_ids[task.index]
                                 )
@@ -697,10 +694,7 @@ class RunnerSlurmSudo(BaseRunner):
                                 db.commit()
                         if exception is not None:
                             exceptions[task.index] = exception
-                            if task_type not in [
-                                "compound",
-                                "compound_converter",
-                            ]:
+                            if task_type == "parallel":
                                 unit = db.get(
                                     HistoryUnit, history_unit_ids[task.index]
                                 )
