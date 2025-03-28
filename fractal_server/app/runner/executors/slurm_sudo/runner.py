@@ -139,7 +139,7 @@ class SlurmJob(BaseModel):
         ).as_posix()
 
     @property
-    def slurm_stdout(self) -> str:
+    def slurm_stdout_remote(self) -> str:
         if self.slurm_job_id:
             return (
                 self.workdir_remote
@@ -152,7 +152,7 @@ class SlurmJob(BaseModel):
             ).as_posix()
 
     @property
-    def slurm_stderr(self) -> str:
+    def slurm_stderr_remote(self) -> str:
         if self.slurm_job_id:
             return (
                 self.workdir_remote
@@ -162,6 +162,32 @@ class SlurmJob(BaseModel):
         else:
             return (
                 self.workdir_remote / f"slurm-{self.label}-%j.err"
+            ).as_posix()
+
+    @property
+    def slurm_stdout_local(self) -> str:
+        if self.slurm_job_id:
+            return (
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.out"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.out"
+            ).as_posix()
+
+    @property
+    def slurm_stderr_local(self) -> str:
+        if self.slurm_job_id:
+            return (
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.err"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.err"
             ).as_posix()
 
     @property
@@ -364,8 +390,8 @@ class RunnerSlurmSudo(BaseRunner):
         # fix their order
         script_lines.extend(
             [
-                f"#SBATCH --err={slurm_job.slurm_stderr}",
-                f"#SBATCH --out={slurm_job.slurm_stdout}",
+                f"#SBATCH --out={slurm_job.slurm_stdout_remote}",
+                f"#SBATCH --err={slurm_job.slurm_stderr_remote}",
                 f"#SBATCH -D {slurm_job.workdir_remote}",
             ]
         )
