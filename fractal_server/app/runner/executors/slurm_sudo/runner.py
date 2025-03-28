@@ -514,7 +514,7 @@ class RunnerSlurmSudo(BaseRunner):
             tasks=[
                 SlurmTask(
                     index=0,
-                    component="0",
+                    component=task_files.component,
                     parameters=parameters,
                     workdir_remote=workdir_remote,
                     workdir_local=workdir_local,
