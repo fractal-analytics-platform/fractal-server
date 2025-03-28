@@ -523,8 +523,6 @@ class RunnerSlurmSudo(BaseRunner):
             slurm_config=config,
         )
 
-        # LOGFILE = task_files.log_file_local
-
         # Retrieval phase
         while len(self.jobs) > 0:
             if self.is_shutdown():

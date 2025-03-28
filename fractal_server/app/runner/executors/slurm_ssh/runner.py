@@ -30,11 +30,6 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
 
-# from fractal_server.app.history import ImageStatus
-# from fractal_server.app.history import update_all_images
-# from fractal_server.app.history import update_single_image
-# from fractal_server.app.history import update_single_image_logfile
-
 
 logger = set_logger(__name__)
 
@@ -546,8 +541,6 @@ class RunnerSlurmSSH(BaseRunner):
             slurm_job=slurm_job,
             slurm_config=slurm_config,
         )
-
-        # LOGFILE = task_files.log_file_local
 
         # Retrieval phase
         while len(self.jobs) > 0:
