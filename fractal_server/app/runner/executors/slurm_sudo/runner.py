@@ -289,7 +289,6 @@ class RunnerSlurmSudo(BaseRunner):
         func,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
-        remote_files: str,
     ) -> str:
         # Prepare input pickle(s)
         versions = dict(
@@ -300,7 +299,8 @@ class RunnerSlurmSudo(BaseRunner):
         for task in slurm_job.tasks:
             _args = []
             _kwargs = dict(
-                parameters=task.parameters, remote_files=remote_files
+                parameters=task.parameters,
+                remote_files=task.task_files.remote_files_dict,
             )
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
@@ -521,7 +521,6 @@ class RunnerSlurmSudo(BaseRunner):
             func,
             slurm_job=slurm_job,
             slurm_config=config,
-            remote_files=task_files.remote_files_dict,
         )
 
         # LOGFILE = task_files.log_file_local
