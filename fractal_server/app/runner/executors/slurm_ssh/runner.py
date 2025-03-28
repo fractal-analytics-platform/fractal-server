@@ -13,7 +13,6 @@ from pydantic import ConfigDict
 
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -500,7 +499,9 @@ class RunnerSlurmSSH(BaseRunner):
             **task_files.model_dump(
                 exclude={"component"},
             ),
-            component=parameters[_COMPONENT_KEY_],
+            # FIXME _COMPONENT_KEY_ is deprecated
+            component="FIXME_INVALID_FAKE_VALUE",
+            # component=parameters[_COMPONENT_KEY_],
         )
 
         if self.jobs != {}:
@@ -638,7 +639,9 @@ class RunnerSlurmSSH(BaseRunner):
             # TODO: replace with actual values
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
-                component = parameters[_COMPONENT_KEY_]
+                # FIXME: _COMPONENT_KEY_ is deprecated
+                # component = parameters[_COMPONENT_KEY_]
+                component = "INVALID_FAKE_VALUE_FIXME"
                 tasks.append(
                     SlurmTask(
                         index=(ind_batch * batch_size) + ind_chunk,

@@ -29,7 +29,6 @@ class BaseRunner(object):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_run_id: int,
         history_unit_id: int,
         task_files: TaskFiles,
         task_type: TaskTypeType,
@@ -55,9 +54,8 @@ class BaseRunner(object):
         self,
         func: callable,
         list_parameters: list[dict[str, Any]],
-        history_run_id: int,
         history_unit_ids: list[int],
-        task_files: TaskFiles,
+        list_task_files: list[TaskFiles],
         task_type: TaskTypeType,
         **kwargs,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
@@ -121,16 +119,11 @@ class BaseRunner(object):
         if task_type not in TASK_TYPES_MULTISUBMIT:
             raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
 
-        if (
-            len(
-                set(
-                    task_file.wftask_subfolder_local
-                    for task_file in list_task_files
-                )
-            )
-            != 1
-        ):
-            raise ValueError("FIXME")
+        subfolders = set(
+            task_file.wftask_subfolder_local for task_file in list_task_files
+        )
+        if len(subfolders) != 1:
+            raise ValueError(f"More than one subfolders: {subfolders}.")
 
         if not isinstance(list_parameters, list):
             raise ValueError("`parameters` must be a list.")
