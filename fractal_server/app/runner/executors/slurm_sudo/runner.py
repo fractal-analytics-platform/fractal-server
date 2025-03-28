@@ -471,13 +471,13 @@ class RunnerSlurmSudo(BaseRunner):
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
-        slurm_config: SlurmConfig,
         task_type: Literal[
             "non_parallel",
             "converter_non_parallel",
             "compound",
             "converter_compound",
         ],
+        config: SlurmConfig,
     ) -> tuple[Any, Exception]:
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
@@ -516,11 +516,11 @@ class RunnerSlurmSudo(BaseRunner):
             ],
         )  # TODO: replace with actual values (BASED ON TASKFILES)
 
-        slurm_config.parallel_tasks_per_job = 1
+        config.parallel_tasks_per_job = 1
         self._submit_single_sbatch(
             func,
             slurm_job=slurm_job,
-            slurm_config=slurm_config,
+            slurm_config=config,
             remote_files=task_files.remote_files_dict,
         )
 
@@ -562,8 +562,8 @@ class RunnerSlurmSudo(BaseRunner):
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        slurm_config: SlurmConfig,
         task_type: Literal["parallel", "compound", "converter_compound"],
+        config: SlurmConfig,
     ):
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
@@ -598,21 +598,21 @@ class RunnerSlurmSudo(BaseRunner):
             # Number of parallel components (always known)
             tot_tasks=tot_tasks,
             # Optional WorkflowTask attributes:
-            tasks_per_job=slurm_config.tasks_per_job,
-            parallel_tasks_per_job=slurm_config.parallel_tasks_per_job,  # noqa
+            tasks_per_job=config.tasks_per_job,
+            parallel_tasks_per_job=config.parallel_tasks_per_job,  # noqa
             # Task requirements (multiple possible sources):
-            cpus_per_task=slurm_config.cpus_per_task,
-            mem_per_task=slurm_config.mem_per_task_MB,
+            cpus_per_task=config.cpus_per_task,
+            mem_per_task=config.mem_per_task_MB,
             # Fractal configuration variables (soft/hard limits):
-            target_cpus_per_job=slurm_config.target_cpus_per_job,
-            target_mem_per_job=slurm_config.target_mem_per_job,
-            target_num_jobs=slurm_config.target_num_jobs,
-            max_cpus_per_job=slurm_config.max_cpus_per_job,
-            max_mem_per_job=slurm_config.max_mem_per_job,
-            max_num_jobs=slurm_config.max_num_jobs,
+            target_cpus_per_job=config.target_cpus_per_job,
+            target_mem_per_job=config.target_mem_per_job,
+            target_num_jobs=config.target_num_jobs,
+            max_cpus_per_job=config.max_cpus_per_job,
+            max_mem_per_job=config.max_mem_per_job,
+            max_num_jobs=config.max_num_jobs,
         )
-        slurm_config.parallel_tasks_per_job = parallel_tasks_per_job
-        slurm_config.tasks_per_job = tasks_per_job
+        config.parallel_tasks_per_job = parallel_tasks_per_job
+        config.tasks_per_job = tasks_per_job
 
         # Divide arguments in batches of `tasks_per_job` tasks each
         args_batches = []
@@ -651,7 +651,7 @@ class RunnerSlurmSudo(BaseRunner):
             self._submit_single_sbatch(
                 func,
                 slurm_job=slurm_job,
-                slurm_config=slurm_config,
+                slurm_config=config,
             )
         logger.info(f"END submission phase, {list(self.jobs.keys())=}")
 

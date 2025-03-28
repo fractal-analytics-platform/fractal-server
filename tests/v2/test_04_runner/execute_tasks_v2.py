@@ -24,6 +24,6 @@ def execute_tasks_v2_mod(
         job_attribute_filters={},
         job_type_filters=(job_type_filters or {}),
         user_id=user_id,
-        submit_setup_call=_local_submit_setup,
+        get_runner_config=_local_submit_setup,
         **kwargs,
     )

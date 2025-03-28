@@ -23,7 +23,7 @@ from ....ssh._fabric import FractalSSH
 from ...models.v2 import DatasetV2
 from ...models.v2 import WorkflowV2
 from ..exceptions import JobExecutionError
-from ..executors.slurm_common._submit_setup import _slurm_submit_setup
+from ..executors.slurm_common.get_slurm_config import get_slurm_config
 from ..executors.slurm_ssh.executor import FractalSlurmSSHExecutor
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
@@ -91,7 +91,7 @@ def process_workflow(
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
             logger_name=logger_name,
-            submit_setup_call=_slurm_submit_setup,
+            get_runner_config=get_slurm_config,
             job_attribute_filters=job_attribute_filters,
             job_type_filters=job_type_filters,
             user_id=user_id,
