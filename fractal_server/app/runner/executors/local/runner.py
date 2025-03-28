@@ -105,11 +105,7 @@ class LocalRunner(BaseRunner):
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: Literal[
-            "parallel",
-            "compound",
-            "converter_compound",
-        ],
+        task_type: Literal["parallel", "compound", "converter_compound"],
         config: LocalBackendConfig,
     ):
         """
@@ -123,6 +119,7 @@ class LocalRunner(BaseRunner):
         when we are in one of the "compound" cases
 
         """
+        # FIXME: De-duplicate this check
         if task_type in ["compound", "converter_compound"]:
             if len(history_unit_ids) != 1:
                 raise NotImplementedError(
@@ -130,6 +127,13 @@ class LocalRunner(BaseRunner):
                     "is associated to a single HistoryUnit. This is not "
                     "supported."
                 )
+        elif task_type == "parallel" and len(history_unit_ids) != len(
+            list_parameters
+        ):
+            raise ValueError(
+                f"{len(history_unit_ids)=} differs from "
+                f"{len(list_parameters)=}."
+            )
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
@@ -183,9 +187,6 @@ class LocalRunner(BaseRunner):
                 with next(get_sync_db()) as db:
                     for positional_index, fut in finished_futures:
                         active_futures.pop(positional_index)
-                        zarr_url = list_parameters[positional_index][
-                            "zarr_url"
-                        ]
                         if task_type == "parallel":
                             current_history_unit_id = history_unit_ids[
                                 positional_index
@@ -193,7 +194,6 @@ class LocalRunner(BaseRunner):
 
                         try:
                             results[positional_index] = fut.result()
-                            print(f"Mark {zarr_url=} as done, {kwargs}")
                             if task_type == "parallel":
                                 unit = db.get(
                                     HistoryUnit, current_history_unit_id
@@ -203,9 +203,6 @@ class LocalRunner(BaseRunner):
                                 db.commit()
 
                         except Exception as e:
-                            print(
-                                f"Mark {zarr_url=} as failed, {kwargs} - {e}"
-                            )
                             exceptions[positional_index] = e
                             if task_type == "parallel":
                                 unit = db.get(

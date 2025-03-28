@@ -564,6 +564,22 @@ class RunnerSlurmSudo(BaseRunner):
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
     ):
+
+        if task_type in ["compound", "converter_compound"]:
+            if len(history_unit_ids) != 1:
+                raise NotImplementedError(
+                    "We are breaking the assumption that compound/multisubmit "
+                    "is associated to a single HistoryUnit. This is not "
+                    "supported."
+                )
+        elif task_type == "parallel" and len(history_unit_ids) != len(
+            list_parameters
+        ):
+            raise ValueError(
+                f"{len(history_unit_ids)=} differs from "
+                f"{len(list_parameters)=}."
+            )
+
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
