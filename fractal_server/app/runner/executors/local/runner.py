@@ -3,11 +3,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from sqlmodel import update
 
-from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
@@ -62,7 +60,7 @@ class LocalRunner(BaseRunner):
             "compound",
             "converter_compound",
         ],
-        local_backend_config: Optional[LocalBackendConfig] = None,
+        config: LocalBackendConfig,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
@@ -107,8 +105,12 @@ class LocalRunner(BaseRunner):
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: Literal["parallel", "compound", "converter_compound"],
-        local_backend_config: Optional[LocalBackendConfig] = None,
+        task_type: Literal[
+            "parallel",
+            "compound",
+            "converter_compound",
+        ],
+        config: LocalBackendConfig,
     ):
         """
         Note:
@@ -141,13 +143,9 @@ class LocalRunner(BaseRunner):
         if task_type == "parallel":
             workdir_local.mkdir()
 
-        # Get local_backend_config
-        if local_backend_config is None:
-            local_backend_config = get_default_local_backend_config()
-
         # Set `n_elements` and `parallel_tasks_per_job`
         n_elements = len(list_parameters)
-        parallel_tasks_per_job = local_backend_config.parallel_tasks_per_job
+        parallel_tasks_per_job = config.parallel_tasks_per_job
         if parallel_tasks_per_job is None:
             parallel_tasks_per_job = n_elements
 

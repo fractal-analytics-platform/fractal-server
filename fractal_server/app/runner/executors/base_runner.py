@@ -32,7 +32,7 @@ class BaseRunner(object):
         history_unit_id: int,
         task_files: TaskFiles,
         task_type: TaskTypeType,
-        **kwargs,
+        config: Any,
     ) -> tuple[Any, BaseException]:
         """
         Run a single fractal task.
@@ -46,7 +46,7 @@ class BaseRunner(object):
             history_item_id:
                 Database ID of the corresponding `HistoryItemV2` entry.
             task_type: Task type.
-            kwargs: Runner-specific parameters.
+            config: Runner-specific parameters.
         """
         raise NotImplementedError()
 
@@ -57,7 +57,7 @@ class BaseRunner(object):
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
         task_type: TaskTypeType,
-        **kwargs,
+        config: Any,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Run a parallel fractal task.
@@ -72,7 +72,7 @@ class BaseRunner(object):
             history_item_id:
                 Database ID of the corresponding `HistoryItemV2` entry.
             task_type: Task type.
-            kwargs: Runner-specific parameters.
+            config: Runner-specific parameters.
         """
         raise NotImplementedError()
 

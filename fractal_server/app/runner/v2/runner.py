@@ -2,6 +2,9 @@ import logging
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
+from typing import Callable
+from typing import Literal
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
@@ -11,7 +14,6 @@ from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ..exceptions import JobExecutionError
-from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
@@ -39,7 +41,14 @@ def execute_tasks_v2(
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
-    submit_setup_call: callable = no_op_submit_setup_call,
+    get_runner_config: Callable[
+        [
+            WorkflowTaskV2,
+            Literal["non_parallel", "parallel"],
+            Optional[Path],
+        ],
+        Any,
+    ],
     job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFiltersType,
 ) -> None:
@@ -131,7 +140,7 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 runner=runner,
-                submit_setup_call=submit_setup_call,
+                get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
                 task_type=task.type,
@@ -144,7 +153,7 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 runner=runner,
-                submit_setup_call=submit_setup_call,
+                get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
             )
@@ -157,7 +166,7 @@ def execute_tasks_v2(
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 runner=runner,
-                submit_setup_call=submit_setup_call,
+                get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
                 task_type=task.type,

@@ -1,6 +1,7 @@
 import functools
 from pathlib import Path
 from typing import Any
+from typing import Callable
 from typing import Literal
 from typing import Optional
 
@@ -62,18 +63,6 @@ def _cast_and_validate_InitTaskOutput(
         )
 
 
-def no_op_submit_setup_call(
-    *,
-    wftask: WorkflowTaskV2,
-    root_dir_local: Path,
-    which_type: Literal["non_parallel", "parallel"],
-) -> dict[str, Any]:
-    """
-    Default (no-operation) interface of submit_setup_call in V2.
-    """
-    return {}
-
-
 def _check_parallelization_list_size(my_list):
     if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
         raise JobExecutionError(
@@ -92,7 +81,14 @@ def run_v2_task_non_parallel(
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
     runner: BaseRunner,
-    submit_setup_call: callable = no_op_submit_setup_call,
+    get_runner_config: Callable[
+        [
+            WorkflowTaskV2,
+            Literal["non_parallel", "parallel"],
+            Optional[Path],
+        ],
+        Any,
+    ],
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["non_parallel", "converter_non_parallel"],
@@ -115,10 +111,7 @@ def run_v2_task_non_parallel(
         component=_index_to_component(0),
     )
 
-    executor_options = submit_setup_call(
-        wftask=wftask,
-        which_type="non_parallel",
-    )
+    runner_config = get_runner_config(wftask=wftask, which_type="non_parallel")
 
     function_kwargs = {
         "zarr_dir": zarr_dir,
@@ -170,7 +163,7 @@ def run_v2_task_non_parallel(
         task_type=task_type,
         task_files=task_files,
         history_unit_id=history_unit_id,
-        **executor_options,
+        config=runner_config,
     )
 
     num_tasks = 1
@@ -193,7 +186,14 @@ def run_v2_task_parallel(
     runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
-    submit_setup_call: callable = no_op_submit_setup_call,
+    get_runner_config: Callable[
+        [
+            WorkflowTaskV2,
+            Literal["non_parallel", "parallel"],
+            Optional[Path],
+        ],
+        Any,
+    ],
     dataset_id: int,
     history_run_id: int,
 ) -> tuple[TaskOutput, int, dict[int, BaseException]]:
@@ -210,7 +210,7 @@ def run_v2_task_parallel(
         task_name=wftask.task.name,
     )
 
-    executor_options = submit_setup_call(
+    runner_config = get_runner_config(
         wftask=wftask,
         which_type="parallel",
     )
@@ -274,7 +274,7 @@ def run_v2_task_parallel(
         task_type="parallel",
         list_task_files=list_task_files,
         history_unit_ids=history_unit_ids,
-        **executor_options,
+        config=runner_config,
     )
 
     outputs = []
@@ -313,7 +313,14 @@ def run_v2_task_compound(
     runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
-    submit_setup_call: callable = no_op_submit_setup_call,
+    get_runner_config: Callable[
+        [
+            WorkflowTaskV2,
+            Literal["non_parallel", "parallel"],
+            Optional[Path],
+        ],
+        Any,
+    ],
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["compound", "converter_compound"],
@@ -328,11 +335,11 @@ def run_v2_task_compound(
         component=f"init_{_index_to_component(0)}",
     )
 
-    executor_options_init = submit_setup_call(
+    runner_config_init = get_runner_config(
         wftask=wftask,
         which_type="non_parallel",
     )
-    executor_options_compute = submit_setup_call(
+    runner_config_compute = get_runner_config(
         wftask=wftask,
         which_type="parallel",
     )
@@ -387,7 +394,7 @@ def run_v2_task_compound(
         task_type=task_type,
         task_files=task_files_init,
         history_unit_id=history_unit_id,
-        **executor_options_init,
+        config=runner_config_init,
     )
 
     num_tasks = 1
@@ -448,7 +455,7 @@ def run_v2_task_compound(
         task_type=task_type,
         list_task_files=list_task_files,
         history_unit_ids=[history_unit_id],
-        **executor_options_compute,
+        config=runner_config_compute,
     )
 
     outputs = []
