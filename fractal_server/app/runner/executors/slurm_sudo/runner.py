@@ -507,6 +507,10 @@ class RunnerSlurmSudo(BaseRunner):
         ],
         config: SlurmConfig,
     ) -> tuple[Any, Exception]:
+
+        if len(self.jobs) > 0:
+            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
+
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
         if self.jobs != {}:
@@ -592,6 +596,9 @@ class RunnerSlurmSudo(BaseRunner):
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
     ):
+
+        if len(self.jobs) > 0:
+            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
 
         if task_type in ["compound", "converter_compound"]:
             if len(history_unit_ids) != 1:
@@ -702,8 +709,10 @@ class RunnerSlurmSudo(BaseRunner):
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            logger.debug(f"{finished_job_ids=}")
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
+                    logger.debug(f"Now processing {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
