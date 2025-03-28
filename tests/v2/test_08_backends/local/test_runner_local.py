@@ -1,5 +1,4 @@
 import time
-from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -9,21 +8,8 @@ from ..aux_unit_runner import ZARR_URLS
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.executors.local.runner import LocalRunner
-from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-
-
-def get_dummy_task_files(
-    root_dir_local: Path,
-    component: str,
-) -> TaskFiles:
-    return TaskFiles(
-        root_dir_local=root_dir_local,
-        root_dir_remote=root_dir_local,
-        task_name="name",
-        task_order=0,
-        component=component,
-    )
+from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
 @pytest.mark.parametrize(

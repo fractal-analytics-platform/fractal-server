@@ -1,8 +1,11 @@
+from pathlib import Path
+
 import pytest
 
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
@@ -94,3 +97,16 @@ async def history_mock_for_multisubmit(
         await db.commit()
 
     return history_run_mock.id, unit_ids
+
+
+def get_dummy_task_files(
+    root_dir_local: Path,
+    component: str,
+) -> TaskFiles:
+    return TaskFiles(
+        root_dir_local=root_dir_local,
+        root_dir_remote=root_dir_local,
+        task_name="name",
+        task_order=0,
+        component=component,
+    )

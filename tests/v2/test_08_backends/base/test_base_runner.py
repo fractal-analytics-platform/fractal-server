@@ -1,6 +1,6 @@
 import pytest
 
-from fractal_server.app.runner.components import _COMPONENT_KEY_
+from ..aux_unit_runner import get_dummy_task_files
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 
 
@@ -12,15 +12,17 @@ def test_NotImplementedError_methods():
         runner.submit(
             func=None,
             parameters=None,
-            history_run_id=None,
+            history_unit_id=None,
             task_type=None,
+            task_files=None,
         )
     with pytest.raises(NotImplementedError):
         runner.multisubmit(
             func=None,
             list_parameters=None,
-            history_run_id=None,
+            history_unit_ids=None,
             task_type=None,
+            list_task_files=None,
         )
 
 
@@ -44,7 +46,6 @@ def test_validate_submit_parameters():
             parameters={
                 "zarr_urls": [],
                 "arg1": "value1",
-                _COMPONENT_KEY_: "xxx",
             },
             task_type="parallel",
         )
@@ -53,7 +54,6 @@ def test_validate_submit_parameters():
         {
             "zarr_urls": [],
             "arg1": "value1",
-            _COMPONENT_KEY_: "xxx",
         },
         task_type="non_parallel",
     )
@@ -61,14 +61,12 @@ def test_validate_submit_parameters():
         {
             "zarr_urls": [],
             "arg1": "value1",
-            _COMPONENT_KEY_: "xxx",
         },
         task_type="compound",
     )
     validate_submit_parameters(
         {
             "arg1": "value1",
-            _COMPONENT_KEY_: "xxx",
         },
         task_type="converter_non_parallel",
     )
@@ -77,7 +75,6 @@ def test_validate_submit_parameters():
         validate_submit_parameters(
             {
                 "arg1": "value1",
-                _COMPONENT_KEY_: "xxx",
             },
             task_type="non_parallel",
         )
@@ -85,7 +82,6 @@ def test_validate_submit_parameters():
         validate_submit_parameters(
             {
                 "arg1": "value1",
-                _COMPONENT_KEY_: "xxx",
             },
             task_type="compound",
         )
@@ -94,22 +90,12 @@ def test_validate_submit_parameters():
             {
                 "zarr_urls": [],
                 "arg1": "value1",
-                _COMPONENT_KEY_: "xxx",
             },
             task_type="converter_non_parallel",
         )
 
-    with pytest.raises(ValueError, match=f"No '{_COMPONENT_KEY_}'"):
-        validate_submit_parameters(
-            {
-                "zarr_urls": [],
-                "arg1": "value1",
-            },
-            task_type="non_parallel",
-        )
 
-
-def test_validate_multisubmit_parameters():
+def test_validate_multisubmit_parameters(tmp_path):
     runner = BaseRunner()
     validate_multisubmit_parameters = runner.validate_multisubmit_parameters
     with pytest.raises(
@@ -119,6 +105,7 @@ def test_validate_multisubmit_parameters():
         validate_multisubmit_parameters(
             list_parameters=None,
             task_type="parallel",
+            list_task_files=[get_dummy_task_files(tmp_path, component="0")],
         )
 
     with pytest.raises(
@@ -128,6 +115,7 @@ def test_validate_multisubmit_parameters():
         validate_multisubmit_parameters(
             list_parameters=[None],
             task_type="parallel",
+            list_task_files=[get_dummy_task_files(tmp_path, component="0")],
         )
 
     validate_multisubmit_parameters(
@@ -135,21 +123,17 @@ def test_validate_multisubmit_parameters():
             {
                 "zarr_url": "/some",
                 "arg1": "value1",
-                _COMPONENT_KEY_: "xxx",
             }
         ],
         task_type="parallel",
+        list_task_files=[get_dummy_task_files(tmp_path, component="0")],
     )
 
     with pytest.raises(ValueError, match="No 'zarr_url'"):
         validate_multisubmit_parameters(
-            list_parameters=[
-                {
-                    "arg1": "value1",
-                    _COMPONENT_KEY_: "xxx",
-                }
-            ],
+            list_parameters=[{"arg1": "value1"}],
             task_type="parallel",
+            list_task_files=[get_dummy_task_files(tmp_path, component="0")],
         )
 
     with pytest.raises(ValueError, match="Invalid task_type"):
@@ -158,10 +142,10 @@ def test_validate_multisubmit_parameters():
                 {
                     "zarr_url": "/something",
                     "arg1": "value1",
-                    _COMPONENT_KEY_: "xxx",
                 }
             ],
             task_type="non_parallel",
+            list_task_files=[get_dummy_task_files(tmp_path, component="0")],
         )
 
     validate_multisubmit_parameters(
@@ -169,16 +153,37 @@ def test_validate_multisubmit_parameters():
             {
                 "zarr_url": "/something",
                 "arg": "A",
-                _COMPONENT_KEY_: "xxx",
             },
             {
                 "zarr_url": "/something",
                 "arg": "B",
-                _COMPONENT_KEY_: "xxx",
             },
         ],
         task_type="compound",
+        list_task_files=[
+            get_dummy_task_files(tmp_path, component="A"),
+            get_dummy_task_files(tmp_path, component="B"),
+        ],
     )
+
+    with pytest.raises(ValueError, match="More than one subfolders"):
+        validate_multisubmit_parameters(
+            list_parameters=[
+                {
+                    "zarr_url": "/something",
+                    "arg": "A",
+                },
+                {
+                    "zarr_url": "/something",
+                    "arg": "B",
+                },
+            ],
+            task_type="compound",
+            list_task_files=[
+                get_dummy_task_files(tmp_path / "A", component="A"),
+                get_dummy_task_files(tmp_path / "B", component="B"),
+            ],
+        )
 
     with pytest.raises(ValueError, match="Non-unique zarr_urls"):
         validate_multisubmit_parameters(
@@ -186,13 +191,12 @@ def test_validate_multisubmit_parameters():
                 {
                     "zarr_url": "/something",
                     "arg": "A",
-                    _COMPONENT_KEY_: "xxx",
                 },
                 {
                     "zarr_url": "/something",
                     "arg": "B",
-                    _COMPONENT_KEY_: "xxx",
                 },
             ],
             task_type="parallel",
+            list_task_files=[get_dummy_task_files(tmp_path, component="0")],
         )
