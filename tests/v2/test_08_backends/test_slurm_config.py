@@ -13,9 +13,6 @@ from pydantic import model_validator
 from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfigError,
 )
-from fractal_server.app.runner.executors.slurm_common._submit_setup import (
-    _slurm_submit_setup,
-)
 from fractal_server.app.runner.executors.slurm_common.get_slurm_config import (
     get_slurm_config,
 )
@@ -322,35 +319,6 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
     # Check value of user_local_exports
     assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
-
-
-def test_slurm_submit_setup(testdata_path: Path, override_settings_factory):
-    override_settings_factory(
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
-    )
-
-    # No account in `wftask.meta` --> OK
-    wftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
-    slurm_config = _slurm_submit_setup(
-        wftask=wftask,
-        which_type="non_parallel",
-    )
-    debug(slurm_config)
-    assert slurm_config["slurm_config"].account is None
-
-    # Account in `wftask.meta_non_parallel` --> fail
-    wftask = WorkflowTaskV2Mock(
-        meta_non_parallel=dict(key="value", account="MyFakeAccount"),
-        task=TaskV2Mock(),
-        task_id=TaskV2Mock().id,
-    )
-    with pytest.raises(SlurmConfigError) as e:
-        _slurm_submit_setup(
-            wftask=wftask,
-            which_type="non_parallel",
-        )
-    debug(e.value)
-    assert "SLURM account" in str(e.value)
 
 
 def test_get_slurm_config_gpu_options(tmp_path: Path):
