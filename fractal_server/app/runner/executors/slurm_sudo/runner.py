@@ -425,6 +425,7 @@ class RunnerSlurmSudo(BaseRunner):
         """
         Note: this would differ for SSH
         """
+        logger.debug(f"[_copy_files_from_remote_to_local] {job.id=}")
         source_target_list = [
             (job.slurm_stdout_remote, job.slurm_stdout_local),
             (job.slurm_stderr_remote, job.slurm_stderr_local),
@@ -555,8 +556,10 @@ class RunnerSlurmSudo(BaseRunner):
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
+            logger.debug(f"{finished_job_ids=}")
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
+                    logger.debug(f"Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     self._copy_files_from_remote_to_local(slurm_job)
                     result, exception = self._postprocess_single_task(
