@@ -42,6 +42,7 @@ def execute_tasks_v2(
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: callable = no_op_submit_setup_call,
+    job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFiltersType,
 ) -> None:
     logger = logging.getLogger(logger_name)
@@ -56,7 +57,7 @@ def execute_tasks_v2(
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    current_dataset_type_filters = deepcopy(dataset.type_filters)
+    current_dataset_type_filters = copy(job_type_filters)
 
     for wftask in wf_task_list:
         task = wftask.task
@@ -124,7 +125,7 @@ def execute_tasks_v2(
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=runner,
+                runner=runner,
                 submit_setup_call=submit_setup_call,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
@@ -152,7 +153,7 @@ def execute_tasks_v2(
                 task=task,
                 workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
-                executor=runner,
+                runner=runner,
                 submit_setup_call=submit_setup_call,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
@@ -333,13 +334,10 @@ def execute_tasks_v2(
         current_dataset_type_filters.update(type_filters_from_task_manifest)
 
         with next(get_sync_db()) as db:
-            # Write current dataset attributes (history + filters) into the
-            # database.
+            # Write current dataset images into the database.
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.type_filters = current_dataset_type_filters
             db_dataset.images = tmp_images
-            for attribute_name in ["type_filters", "images"]:
-                flag_modified(db_dataset, attribute_name)
+            flag_modified(db_dataset, "images")
             db.merge(db_dataset)
             db.commit()
             db.close()  # FIXME: why is this needed?
