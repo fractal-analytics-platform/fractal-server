@@ -133,3 +133,108 @@ async def test_upsert_function(
             for zarr_url in (OLD_ZARR_URLS + NEW_ZARR_URLS)
         ]
         assert actual_caches == expected_chaches
+
+
+async def test_upsert_chunks(
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflowtask_factory_v2,
+    db_sync,
+    MockCurrentUser,
+):
+    """
+    Same code as `test_upsert_function`, but with a much larger NUM
+    """
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id)
+
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        run = HistoryRun(
+            workflowtask_id=wftask.id,
+            dataset_id=dataset.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            num_available_images=3,
+            status=HistoryUnitStatus.SUBMITTED,
+        )
+        db_sync.add(run)
+        db_sync.commit()
+        db_sync.refresh(run)
+
+        NUM = 70_000
+        OLD_ZARR_URLS = [f"/already-there/{i:05d}" for i in range(NUM)]
+        NEW_ZARR_URLS = [f"/not-there/{i:05d}" for i in range(NUM)]
+
+        # Create an `HistoryImageCache` that should be updated
+        unit1 = HistoryUnit(
+            history_run_id=run.id,
+            status=HistoryUnitStatus.SUBMITTED,
+            zarr_urls=OLD_ZARR_URLS,
+        )
+        db_sync.add(unit1)
+        db_sync.commit()
+        db_sync.refresh(unit1)
+        db_sync.add_all(
+            [
+                HistoryImageCache(
+                    zarr_url=zarr_url,
+                    dataset_id=dataset.id,
+                    workflowtask_id=wftask.id,
+                    latest_history_unit_id=unit1.id,
+                )
+                for zarr_url in OLD_ZARR_URLS
+            ]
+        )
+        db_sync.commit()
+
+        # Create `HistoryImageCache` rows that should be inserted
+        unit2 = HistoryUnit(
+            history_run_id=run.id,
+            status=HistoryUnitStatus.DONE,
+            zarr_urls=OLD_ZARR_URLS + NEW_ZARR_URLS,
+        )
+        db_sync.add(unit2)
+        db_sync.commit()
+        db_sync.refresh(unit2)
+
+        # Run upsert function
+        list_upsert_objects = [
+            {
+                "zarr_url": zarr_url,
+                "dataset_id": dataset.id,
+                "workflowtask_id": wftask.id,
+                "latest_history_unit_id": unit2.id,
+            }
+            for zarr_url in sorted(OLD_ZARR_URLS + NEW_ZARR_URLS)
+        ]
+        bulk_upsert_image_cache_fast(
+            db=db_sync,
+            list_upsert_objects=list_upsert_objects,
+        )
+
+        # Assert correctness
+        caches = (
+            db_sync.execute(
+                select(HistoryImageCache).order_by(HistoryImageCache.zarr_url)
+            )
+            .scalars()
+            .all()
+        )
+        actual_caches = [cache.model_dump() for cache in caches]
+        expected_chaches = [
+            {
+                "zarr_url": zarr_url,
+                "dataset_id": dataset.id,
+                "workflowtask_id": wftask.id,
+                "latest_history_unit_id": unit2.id,
+            }
+            for zarr_url in (OLD_ZARR_URLS + NEW_ZARR_URLS)
+        ]
+        assert actual_caches == expected_chaches
