@@ -10,6 +10,7 @@ def bulk_upsert_image_cache_fast(
     *,
     list_upsert_objects: list[dict[str, Any]],
     db: Session,
+    chunk_size: int = 10_000,
 ) -> None:
     """
     Insert or update many objects into `HistoryImageCache` and commit
@@ -35,14 +36,20 @@ def bulk_upsert_image_cache_fast(
     """
     if len(list_upsert_objects) == 0:
         return None
-    stmt = pg_insert(HistoryImageCache).values(list_upsert_objects)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=[
-            HistoryImageCache.zarr_url,
-            HistoryImageCache.dataset_id,
-            HistoryImageCache.workflowtask_id,
-        ],
-        set_=dict(latest_history_unit_id=stmt.excluded.latest_history_unit_id),
-    )
-    db.execute(stmt)
-    db.commit()
+
+    for i in range(0, len(list_upsert_objects), chunk_size):
+        stmt = pg_insert(HistoryImageCache).values(
+            list_upsert_objects[i : i + chunk_size]
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[
+                HistoryImageCache.zarr_url,
+                HistoryImageCache.dataset_id,
+                HistoryImageCache.workflowtask_id,
+            ],
+            set_=dict(
+                latest_history_unit_id=stmt.excluded.latest_history_unit_id
+            ),
+        )
+        db.execute(stmt)
+        db.commit()
