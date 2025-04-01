@@ -297,9 +297,12 @@ async def get_history_images(
     actual_filters.update(type_filters_patch)
     logger.debug(f"{prefix} {actual_filters=}")
     # (1D) Get all matching images from the dataset
-    filtered_dataset_images = filter_image_list(
+    type_filtered_dataset_images = filter_image_list(
         images=dataset.images,
         type_filters=inferred_dataset_type_filters,
+    )
+    filtered_dataset_images = filter_image_list(
+        type_filtered_dataset_images,
         attribute_filters=attributes_query.attribute_filters,
     )
     logger.debug(f"{prefix} {len(dataset.images)=}")
@@ -352,7 +355,7 @@ async def get_history_images(
     )
     logger.debug(f"{prefix} {len(full_list_url_status)=}")
 
-    attributes = aggregate_attributes(filtered_dataset_images)
+    attributes = aggregate_attributes(type_filtered_dataset_images)
     types = aggregate_types(filtered_dataset_images)
 
     sorted_list_url_status = sorted(
