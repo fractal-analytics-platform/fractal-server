@@ -15,7 +15,6 @@ from typing import Optional
 import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from sqlmodel import update
 
 from ..slurm_common._check_jobs_status import get_finished_jobs
 from ..slurm_common._check_jobs_status import run_squeue
@@ -23,7 +22,6 @@ from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -35,6 +33,7 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -584,17 +583,17 @@ class RunnerSlurmSudo(BaseRunner):
                     )
                     if result is not None:
                         if task_type not in ["compound", "converter_compound"]:
-                            unit = db.get(HistoryUnit, history_unit_id)
-                            unit.status = HistoryUnitStatus.DONE
-                            db.merge(unit)
-                            db.commit()
+                            update_status_of_history_unit(
+                                history_unit_id=history_unit_id,
+                                status=HistoryUnitStatus.DONE,
+                                db_sync=db,
+                            )
                     if exception is not None:
-                        db.execute(
-                            update(HistoryUnit)
-                            .where(HistoryUnit.id == history_unit_id)
-                            .values(status=HistoryUnitStatus.FAILED)
+                        update_status_of_history_unit(
+                            history_unit_id=history_unit_id,
+                            status=HistoryUnitStatus.FAILED,
+                            db_sync=db,
                         )
-                        db.commit()
 
             time.sleep(self.slurm_poll_interval)
 
@@ -745,21 +744,23 @@ class RunnerSlurmSudo(BaseRunner):
                         if result is not None:
                             results[task.index] = result
                             if task_type == "parallel":
-                                unit = db.get(
-                                    HistoryUnit, history_unit_ids[task.index]
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
+                                    status=HistoryUnitStatus.DONE,
+                                    db_sync=db,
                                 )
-                                unit.status = HistoryUnitStatus.DONE
-                                db.merge(unit)
-                                db.commit()
                         if exception is not None:
                             exceptions[task.index] = exception
                             if task_type == "parallel":
-                                unit = db.get(
-                                    HistoryUnit, history_unit_ids[task.index]
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
+                                    status=HistoryUnitStatus.FAILED,
+                                    db_sync=db,
                                 )
-                                unit.status = HistoryUnitStatus.FAILED
-                                db.merge(unit)
-                                db.commit()
 
             time.sleep(self.slurm_poll_interval)
         return results, exceptions

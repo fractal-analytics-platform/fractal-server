@@ -6,9 +6,9 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import ValidationError
-from sqlmodel import update
 
 from ..exceptions import JobExecutionError
+from .db_tools import update_status_of_history_unit
 from .deduplicate_list import deduplicate_list
 from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
@@ -21,7 +21,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
+from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
@@ -416,12 +416,11 @@ def run_v2_task_compound(
 
     if len(parallelization_list) == 0:
         with next(get_sync_db()) as db:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.DONE)
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.DONE,
+                db_sync=db,
             )
-            db.commit()
         return (TaskOutput(), 0, {})
 
     list_task_files = [
@@ -479,18 +478,17 @@ def run_v2_task_compound(
     # than at lower level.
     with next(get_sync_db()) as db:
         if failure:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.FAILED)
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db,
             )
         else:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.DONE)
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.DONE,
+                db_sync=db,
             )
-        db.commit()
 
     merged_output = merge_outputs(outputs)
     return (merged_output, num_tasks, exceptions)
