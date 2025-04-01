@@ -599,27 +599,19 @@ class RunnerSlurmSudo(BaseRunner):
     ):
 
         if len(self.jobs) > 0:
-            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
-
-        if task_type in ["compound", "converter_compound"]:
-            if len(history_unit_ids) != 1:
-                raise NotImplementedError(
-                    "We are breaking the assumption that compound/multisubmit "
-                    "is associated to a single HistoryUnit. This is not "
-                    "supported."
-                )
-        elif task_type == "parallel" and len(history_unit_ids) != len(
-            list_parameters
-        ):
-            raise ValueError(
-                f"{len(history_unit_ids)=} differs from "
-                f"{len(list_parameters)=}."
+            raise RuntimeError(
+                f"Cannot run .multisubmit when {len(self.jobs)=}"
             )
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
             list_task_files=list_task_files,
+        )
+        self.validate_multisubmit_history_unit_ids(
+            history_unit_ids=history_unit_ids,
+            task_type=task_type,
+            list_parameters=list_parameters,
         )
 
         workdir_local = list_task_files[0].wftask_subfolder_local
