@@ -76,7 +76,7 @@ class LocalRunner(BaseRunner):
         with next(get_sync_db()) as db:
             try:
                 result = future.result()
-                logger.debug(f"[submit] END {result=}")
+                logger.debug("[submit] END with result")
                 if task_type not in ["compound", "converter_compound"]:
                     update_status_of_history_unit(
                         history_unit_id=history_unit_id,
@@ -86,7 +86,7 @@ class LocalRunner(BaseRunner):
                 return result, None
             except Exception as e:
                 exception = e
-                logger.debug(f"[submit] END {exception=}")
+                logger.debug("[submit] END with exception")
                 update_status_of_history_unit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,

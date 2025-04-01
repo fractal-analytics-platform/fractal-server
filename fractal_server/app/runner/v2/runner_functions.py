@@ -10,6 +10,7 @@ from pydantic import ConfigDict
 from pydantic import ValidationError
 
 from ..exceptions import JobExecutionError
+from ..exceptions import TaskOutputValidationError
 from .db_tools import update_status_of_history_unit
 from .deduplicate_list import deduplicate_list
 from .runner_functions_low_level import run_single_task
@@ -42,6 +43,12 @@ class OutputException(BaseModel):
     exception: BaseException | None = None
 
 
+class InitOutputException(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    task_output: InitTaskOutput | None = None
+    exception: BaseException | None = None
+
+
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
 
 
@@ -52,7 +59,7 @@ def _cast_and_validate_TaskOutput(
         validated_task_output = TaskOutput(**task_output)
         return validated_task_output
     except ValidationError as e:
-        raise JobExecutionError(
+        raise TaskOutputValidationError(
             "Validation of task output failed.\n"
             f"Original error: {str(e)}\n"
             f"Original data: {task_output}."
@@ -66,11 +73,55 @@ def _cast_and_validate_InitTaskOutput(
         validated_init_task_output = InitTaskOutput(**init_task_output)
         return validated_init_task_output
     except ValidationError as e:
-        raise JobExecutionError(
+        raise TaskOutputValidationError(
             "Validation of init-task output failed.\n"
             f"Original error: {str(e)}\n"
             f"Original data: {init_task_output}."
         )
+
+
+def _process_task_output(
+    *,
+    result: dict[str, Any] | None = None,
+    exception: BaseException | None = None,
+) -> OutputException:
+    if exception is not None:
+        task_output = None
+    else:
+        if result is None:
+            task_output = TaskOutput()
+        else:
+            try:
+                task_output = _cast_and_validate_TaskOutput(result)
+            except TaskOutputValidationError as e:
+                task_output = None
+                exception = e
+    return OutputException(
+        task_output=task_output,
+        exception=exception,
+    )
+
+
+def _process_init_task_output(
+    *,
+    result: dict[str, Any] | None = None,
+    exception: BaseException | None = None,
+) -> OutputException:
+    if exception is not None:
+        task_output = None
+    else:
+        if result is None:
+            task_output = InitTaskOutput()
+        else:
+            try:
+                task_output = _cast_and_validate_InitTaskOutput(result)
+            except TaskOutputValidationError as e:
+                task_output = None
+                exception = e
+    return InitOutputException(
+        task_output=task_output,
+        exception=exception,
+    )
 
 
 def _check_parallelization_list_size(my_list):
@@ -179,17 +230,9 @@ def run_v2_task_non_parallel(
     positional_index = 0
     num_tasks = 1
 
-    if exception is None:
-        if result is None:
-            task_output = TaskOutput()
-        else:
-            task_output = _cast_and_validate_TaskOutput(result)
-    else:
-        task_output = None
-
     out_exc = {
-        positional_index: OutputException(
-            task_output=task_output,
+        positional_index: _process_task_output(
+            result=result,
             exception=exception,
         )
     }
@@ -297,16 +340,7 @@ def run_v2_task_parallel(
 
     out_exc = {}
     for ind in range(len(list_function_kwargs)):
-        if ind in results.keys():
-            exception = None
-            if results[ind] is None:
-                task_output = TaskOutput()
-            else:
-                task_output = _cast_and_validate_TaskOutput(results[ind])
-        elif ind in exceptions.keys():
-            task_output = None
-            exception = exceptions[ind]
-        else:
+        if ind not in results.keys() and ind not in exceptions.keys():
             # FIXME: Could we avoid this branch?
             error_msg = (
                 f"Invalid branch: {ind=} is not in `results.keys()` "
@@ -314,13 +348,12 @@ def run_v2_task_parallel(
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        out_exc[ind] = OutputException(
-            task_output=task_output,
-            exception=exception,
+        out_exc[ind] = _process_task_output(
+            result=results.get(ind, None),
+            exception=exceptions.get(ind, None),
         )
 
     num_tasks = len(images)
-
     return out_exc, num_tasks
 
 
@@ -425,23 +458,23 @@ def run_v2_task_compound(
         config=runner_config_init,
     )
 
+    init_out_exc = _process_init_task_output(
+        result=result,
+        exception=exception,
+    )
     num_tasks = 1
-    if exception is None:
-        if result is None:
-            init_task_output = InitTaskOutput()
-        else:
-            init_task_output = _cast_and_validate_InitTaskOutput(result)
-    else:
+    if init_out_exc.exception is not None:
         positional_index = 0
-        out_exc = {
-            positional_index: OutputException(
-                task_output=None,
-                exception=exception,
-            )
-        }
-        return out_exc, num_tasks
+        return (
+            {
+                positional_index: OutputException(
+                    exception=init_out_exc.exception
+                )
+            },
+            num_tasks,
+        )
 
-    parallelization_list = init_task_output.parallelization_list
+    parallelization_list = init_out_exc.task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
     num_tasks = 1 + len(parallelization_list)
@@ -457,13 +490,13 @@ def run_v2_task_compound(
                 db_sync=db,
             )
         positional_index = 0
-        out_exc = {
-            positional_index: OutputException(
-                task_output=TaskOutput(),
+        init_out_exc = {
+            positional_index: _process_task_output(
+                result=None,
                 exception=None,
             )
         }
-        return out_exc, num_tasks
+        return init_out_exc, num_tasks
 
     list_task_files = [
         TaskFiles(
@@ -499,21 +532,11 @@ def run_v2_task_compound(
         config=runner_config_compute,
     )
 
-    out_exc = {}
+    init_out_exc = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
-        if ind in results.keys():
-            exception = None
-            if results[ind] is None:
-                task_output = TaskOutput()
-            else:
-                task_output = _cast_and_validate_TaskOutput(results[ind])
 
-        elif ind in exceptions.keys():
-            task_output = None
-            exception = exceptions[ind]
-            failure = True
-        else:
+        if ind not in results.keys() and ind not in exceptions.keys():
             # FIXME: Could we avoid this branch?
             error_msg = (
                 f"Invalid branch: {ind=} is not in `results.keys()` "
@@ -521,10 +544,9 @@ def run_v2_task_compound(
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-
-        out_exc[ind] = OutputException(
-            task_output=task_output,
-            exception=exception,
+        init_out_exc[ind] = _process_task_output(
+            result=results.get(ind, None),
+            exception=exceptions.get(ind, None),
         )
 
     # FIXME: In this case, we are performing db updates from here, rather
@@ -543,4 +565,4 @@ def run_v2_task_compound(
                 db_sync=db,
             )
 
-    return out_exc, num_tasks
+    return init_out_exc, num_tasks

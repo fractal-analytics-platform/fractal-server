@@ -178,19 +178,20 @@ def execute_tasks_v2(
             for value in out_exc.values()
             if value.task_output is not None
         ]
-        current_task_output = merge_outputs(non_failed_task_outputs)
+        if len(non_failed_task_outputs) > 0:
+            current_task_output = merge_outputs(non_failed_task_outputs)
+        else:
+            current_task_output = None
 
         # If `current_task_output` includes no images (to be created, edited or
         # removed), then flag all the input images as modified. See
-        # fractal-server issue #1374.
+        # fractal-server issue #1374, and also #2409.
         if (
-            current_task_output.image_list_updates == []
+            current_task_output is not None
+            and current_task_output.image_list_updates == []
             and current_task_output.image_list_removals == []
         ):
             current_task_output = TaskOutput(
-                **current_task_output.model_dump(
-                    exclude={"image_list_updates"}
-                ),
                 image_list_updates=[
                     dict(zarr_url=img["zarr_url"]) for img in filtered_images
                 ],
