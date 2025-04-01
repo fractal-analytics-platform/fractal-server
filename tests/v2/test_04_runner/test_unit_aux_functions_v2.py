@@ -2,7 +2,6 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
-from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskOutputValidationError
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.app.runner.v2.merge_outputs import merge_outputs
@@ -79,7 +78,7 @@ def test_cast_and_validate_functions():
         dict(image_list_updates=[dict(zarr_url="/some/image")])
     )
 
-    with pytest.raises(JobExecutionError):
+    with pytest.raises(TaskOutputValidationError):
         _cast_and_validate_TaskOutput(dict(invalid=True))
 
     _cast_and_validate_InitTaskOutput(
@@ -89,7 +88,7 @@ def test_cast_and_validate_functions():
             ]
         )
     )
-    with pytest.raises(JobExecutionError):
+    with pytest.raises(TaskOutputValidationError):
         _cast_and_validate_InitTaskOutput(dict(invalid=True))
 
 
