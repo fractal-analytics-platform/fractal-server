@@ -24,7 +24,6 @@ from ..slurm_common.utils_executors import get_pickle_file_path
 from ..slurm_common.utils_executors import get_slurm_file_path
 from ..slurm_common.utils_executors import get_slurm_script_file_path
 from ._executor_wait_thread import FractalSlurmSSHWaitThread
-from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
@@ -526,10 +525,13 @@ class FractalSlurmSSHExecutor(Executor):
                 # `component = {"zarr_url": "/something", "param": 1}``). The
                 # try/except covers the case of e.g. `executor.map([1, 2])`,
                 # which is useful for testing.
-                try:
-                    actual_component = component.get(_COMPONENT_KEY_, None)
-                except AttributeError:
-                    actual_component = str(component)
+
+                # FIXME: the use of _COMPONENT_KEY_ is now deprecated
+                # try:
+                #     actual_component = component.get(_COMPONENT_KEY_, None)
+                # except AttributeError:
+                #     actual_component = str(component)
+                actual_component = "FAKE_INVALID_VALUE_FIXME"
 
                 _task_file_paths = TaskFiles(
                     root_dir_local=task_files.workflow_dir_local,
