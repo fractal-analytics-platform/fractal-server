@@ -1,22 +1,22 @@
 import json
 import math
+import shlex
+import subprocess  # nosec
 import sys
 import time
 from copy import copy
 from pathlib import Path
 from typing import Any
-from typing import Optional
 from typing import Literal
+from typing import Optional
 
 import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
-import subprocess
-import shlex
+
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
-
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -26,12 +26,10 @@ from fractal_server.app.runner.executors.slurm_common._batching import (
 from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfig,
 )
-from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
-
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -68,19 +66,27 @@ class SlurmTask(BaseModel):
 
     @property
     def input_pickle_file_local(self) -> str:
-        return (self.workdir_local / f"{self.component}-input.pickle").as_posix()
+        return (
+            self.workdir_local / f"{self.component}-input.pickle"
+        ).as_posix()
 
     @property
     def output_pickle_file_local(self) -> str:
-        return (self.workdir_local / f"{self.component}-output.pickle").as_posix()
+        return (
+            self.workdir_local / f"{self.component}-output.pickle"
+        ).as_posix()
 
     @property
     def input_pickle_file_remote(self) -> str:
-        return (self.workdir_remote / f"{self.component}-input.pickle").as_posix()
+        return (
+            self.workdir_remote / f"{self.component}-input.pickle"
+        ).as_posix()
 
     @property
     def output_pickle_file_remote(self) -> str:
-        return (self.workdir_remote / f"{self.component}-output.pickle").as_posix()
+        return (
+            self.workdir_remote / f"{self.component}-output.pickle"
+        ).as_posix()
 
 
 class SlurmJob(BaseModel):
@@ -94,67 +100,89 @@ class SlurmJob(BaseModel):
     def slurm_log_file_local(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_local / f"slurm-{self.label}-{self.slurm_job_id}.log"
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.log"
             ).as_posix()
         else:
-            return (self.workdir_local / f"slurm-{self.label}-%j.log").as_posix()
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.log"
+            ).as_posix()
 
     @property
     def slurm_log_file_remote(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_remote / f"slurm-{self.label}-{self.slurm_job_id}.log"
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.log"
             ).as_posix()
         else:
-            return (self.workdir_remote / f"slurm-{self.label}-%j.log").as_posix()
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.log"
+            ).as_posix()
 
     @property
     def slurm_submission_script_local(self) -> str:
-        return (self.workdir_local / f"slurm-{self.label}-submit.sh").as_posix()
+        return (
+            self.workdir_local / f"slurm-{self.label}-submit.sh"
+        ).as_posix()
 
     @property
     def slurm_submission_script_remote(self) -> str:
-        return (self.workdir_remote / f"slurm-{self.label}-submit.sh").as_posix()
+        return (
+            self.workdir_remote / f"slurm-{self.label}-submit.sh"
+        ).as_posix()
 
     @property
     def slurm_stdout_remote(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_remote / f"slurm-{self.label}-{self.slurm_job_id}.out"
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.out"
             ).as_posix()
 
         else:
-            return (self.workdir_remote / f"slurm-{self.label}-%j.out").as_posix()
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.out"
+            ).as_posix()
 
     @property
     def slurm_stderr_remote(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_remote / f"slurm-{self.label}-{self.slurm_job_id}.err"
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.err"
             ).as_posix()
 
         else:
-            return (self.workdir_remote / f"slurm-{self.label}-%j.err").as_posix()
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.err"
+            ).as_posix()
 
     @property
     def slurm_stdout_local(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_local / f"slurm-{self.label}-{self.slurm_job_id}.out"
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.out"
             ).as_posix()
 
         else:
-            return (self.workdir_local / f"slurm-{self.label}-%j.out").as_posix()
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.out"
+            ).as_posix()
 
     @property
     def slurm_stderr_local(self) -> str:
         if self.slurm_job_id:
             return (
-                self.workdir_local / f"slurm-{self.label}-{self.slurm_job_id}.err"
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.err"
             ).as_posix()
 
         else:
-            return (self.workdir_local / f"slurm-{self.label}-%j.err").as_posix()
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.err"
+            ).as_posix()
 
     @property
     def log_files_local(self) -> list[str]:
@@ -364,7 +392,9 @@ class RunnerSlurmSSH(BaseRunner):
         logger.debug(script_lines)
 
         # Always print output of `uname -n` and `pwd`
-        script_lines.append('"Hostname: `uname -n`; current directory: `pwd`"\n')
+        script_lines.append(
+            '"Hostname: `uname -n`; current directory: `pwd`"\n'
+        )
 
         # Complete script preamble
         script_lines.append("\n")
@@ -394,7 +424,9 @@ class RunnerSlurmSSH(BaseRunner):
         )
 
         # Run sbatch
-        submit_command = f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
+        submit_command = (
+            f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
+        )
         pre_submission_cmds = slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
             sbatch_stdout = self.fractal_ssh.run_command(cmd=submit_command)
@@ -456,7 +488,8 @@ class RunnerSlurmSSH(BaseRunner):
             self.fractal_ssh.run_command(cmd=tar_command)
         except (RuntimeError, FileNotFoundError) as e:
             logger.warning(
-                f"SKIP creating {remote_tar_file}. " f"Original error: {str(e)}"
+                f"SKIP creating {remote_tar_file}. "
+                f"Original error: {str(e)}"
             )
         logger.info(f"END creating the {remote_tar_file}")
 
@@ -464,7 +497,8 @@ class RunnerSlurmSSH(BaseRunner):
         logger.info(f"START coping the {remote_tar_file}")
         try:
             self.fractal_ssh.fetch_file(
-                local=local_tar_file.as_posix(), remote=remote_tar_file.as_posix()
+                local=local_tar_file.as_posix(),
+                remote=remote_tar_file.as_posix(),
             )
         except (RuntimeError, FileNotFoundError) as e:
             logger.warning(
@@ -478,10 +512,14 @@ class RunnerSlurmSSH(BaseRunner):
         try:
             _subprocess_run_or_raise(full_command=untar_command)
         except (RuntimeError, FileNotFoundError) as e:
-            logger.warning(f"SKIP untar {local_tar_file}. " f"Original error: {str(e)}")
+            logger.warning(
+                f"SKIP untar {local_tar_file}. " f"Original error: {str(e)}"
+            )
         logger.info(f"END untar the {local_tar_file}")
 
-    def _postprocess_single_task(self, *, task: SlurmTask) -> tuple[Any, Exception]:
+    def _postprocess_single_task(
+        self, *, task: SlurmTask
+    ) -> tuple[Any, Exception]:
         try:
             with open(task.output_pickle_file_local, "rb") as f:
                 outdata = f.read()
@@ -610,7 +648,9 @@ class RunnerSlurmSSH(BaseRunner):
         config: SlurmConfig,
     ):
         if len(self.jobs) > 0:
-            raise RuntimeError(f"Cannot run .multisubmit when {len(self.jobs)=}")
+            raise RuntimeError(
+                f"Cannot run .multisubmit when {len(self.jobs)=}"
+            )
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
@@ -725,7 +765,9 @@ class RunnerSlurmSSH(BaseRunner):
                     self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
                         logger.debug(f"Now processing {task.index=}")
-                        result, exception = self._postprocess_single_task(task=task)
+                        result, exception = self._postprocess_single_task(
+                            task=task
+                        )
                         if exception is not None:
                             logger.debug(
                                 f"Task {task.index} has an exception."
@@ -733,7 +775,9 @@ class RunnerSlurmSSH(BaseRunner):
                             exceptions[task.index] = exception
                             if task_type == "parallel":
                                 update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[task.index],
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
@@ -744,7 +788,9 @@ class RunnerSlurmSSH(BaseRunner):
                             results[task.index] = result
                             if task_type == "parallel":
                                 update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[task.index],
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
@@ -755,7 +801,8 @@ class RunnerSlurmSSH(BaseRunner):
     def check_remote_python_interpreter(self):
         settings = Inject(get_settings)
         cmd = (
-            f"{self.python_worker_interpreter} " "-m fractal_server.app.runner.versions"
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.versions"
         )
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]

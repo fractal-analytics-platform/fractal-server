@@ -1,5 +1,4 @@
 # import time
-
 import pytest
 from devtools import debug
 
@@ -53,7 +52,9 @@ async def test_submit_success(
             do_nothing,
             parameters=parameters,
             history_unit_id=history_unit_id,
-            task_files=get_dummy_task_files(tmp777_path, component="0", is_slurm=True),
+            task_files=get_dummy_task_files(
+                tmp777_path, component="0", is_slurm=True
+            ),
             slurm_config=get_default_slurm_config(),
             task_type=task_type,
         )
