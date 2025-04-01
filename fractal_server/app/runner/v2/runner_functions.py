@@ -7,7 +7,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import ValidationError
 
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskOutputValidationError
@@ -24,6 +23,12 @@ from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
+from fractal_server.app.runner.v2.task_interface import (
+    _cast_and_validate_InitTaskOutput,
+)
+from fractal_server.app.runner.v2.task_interface import (
+    _cast_and_validate_TaskOutput,
+)
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
 
@@ -50,34 +55,6 @@ class InitOutputException(BaseModel):
 
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
-
-
-def _cast_and_validate_TaskOutput(
-    task_output: dict[str, Any]
-) -> Optional[TaskOutput]:
-    try:
-        validated_task_output = TaskOutput(**task_output)
-        return validated_task_output
-    except ValidationError as e:
-        raise TaskOutputValidationError(
-            "Validation of task output failed.\n"
-            f"Original error: {str(e)}\n"
-            f"Original data: {task_output}."
-        )
-
-
-def _cast_and_validate_InitTaskOutput(
-    init_task_output: dict[str, Any],
-) -> Optional[InitTaskOutput]:
-    try:
-        validated_init_task_output = InitTaskOutput(**init_task_output)
-        return validated_init_task_output
-    except ValidationError as e:
-        raise TaskOutputValidationError(
-            "Validation of init-task output failed.\n"
-            f"Original error: {str(e)}\n"
-            f"Original data: {init_task_output}."
-        )
 
 
 def _process_task_output(
@@ -183,7 +160,6 @@ def run_v2_task_non_parallel(
 
     # Database History operations
     with next(get_sync_db()) as db:
-
         if task_type == "non_parallel":
             zarr_urls = function_kwargs["zarr_urls"]
         elif task_type == "converter_non_parallel":
@@ -386,7 +362,6 @@ def run_v2_task_compound(
     history_run_id: int,
     task_type: Literal["compound", "converter_compound"],
 ) -> tuple[dict[int, OutputException], int]:
-
     # Get TaskFiles object
     task_files_init = TaskFiles(
         root_dir_local=workflow_dir_local,
@@ -535,7 +510,6 @@ def run_v2_task_compound(
     init_out_exc = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
-
         if ind not in results.keys() and ind not in exceptions.keys():
             # FIXME: Could we avoid this branch?
             error_msg = (
