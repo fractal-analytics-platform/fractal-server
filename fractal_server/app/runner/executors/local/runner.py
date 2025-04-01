@@ -115,29 +115,20 @@ class LocalRunner(BaseRunner):
         when we are in one of the "compound" cases
 
         """
-        # FIXME: De-duplicate this check
-        if task_type in ["compound", "converter_compound"]:
-            if len(history_unit_ids) != 1:
-                raise NotImplementedError(
-                    "We are breaking the assumption that compound/multisubmit "
-                    "is associated to a single HistoryUnit. This is not "
-                    "supported."
-                )
-        elif task_type == "parallel" and len(history_unit_ids) != len(
-            list_parameters
-        ):
-            raise ValueError(
-                f"{len(history_unit_ids)=} differs from "
-                f"{len(list_parameters)=}."
-            )
-
-        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
             list_task_files=list_task_files,
         )
+
+        self.validate_multisubmit_history_unit_ids(
+            history_unit_ids=history_unit_ids,
+            task_type=task_type,
+            list_parameters=list_parameters,
+        )
+
+        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
         workdir_local = list_task_files[0].wftask_subfolder_local
         if task_type == "parallel":

@@ -570,19 +570,22 @@ class RunnerSlurmSudo(BaseRunner):
                     result, exception = self._postprocess_single_task(
                         task=slurm_job.tasks[0]
                     )
-                    if result is not None:
-                        if task_type not in ["compound", "converter_compound"]:
-                            update_status_of_history_unit(
-                                history_unit_id=history_unit_id,
-                                status=HistoryUnitStatus.DONE,
-                                db_sync=db,
-                            )
+                    # Note: the relevant done/failed check is based on
+                    # whether `exception is None`. The fact that
+                    # `result is None` is not relevant for this purpose.
                     if exception is not None:
                         update_status_of_history_unit(
                             history_unit_id=history_unit_id,
                             status=HistoryUnitStatus.FAILED,
                             db_sync=db,
                         )
+                    else:
+                        if task_type not in ["compound", "converter_compound"]:
+                            update_status_of_history_unit(
+                                history_unit_id=history_unit_id,
+                                status=HistoryUnitStatus.DONE,
+                                db_sync=db,
+                            )
 
             time.sleep(self.slurm_poll_interval)
 
@@ -599,21 +602,8 @@ class RunnerSlurmSudo(BaseRunner):
     ):
 
         if len(self.jobs) > 0:
-            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
-
-        if task_type in ["compound", "converter_compound"]:
-            if len(history_unit_ids) != 1:
-                raise NotImplementedError(
-                    "We are breaking the assumption that compound/multisubmit "
-                    "is associated to a single HistoryUnit. This is not "
-                    "supported."
-                )
-        elif task_type == "parallel" and len(history_unit_ids) != len(
-            list_parameters
-        ):
-            raise ValueError(
-                f"{len(history_unit_ids)=} differs from "
-                f"{len(list_parameters)=}."
+            raise RuntimeError(
+                f"Cannot run .multisubmit when {len(self.jobs)=}"
             )
 
         self.validate_multisubmit_parameters(
@@ -621,12 +611,19 @@ class RunnerSlurmSudo(BaseRunner):
             task_type=task_type,
             list_task_files=list_task_files,
         )
+        self.validate_multisubmit_history_unit_ids(
+            history_unit_ids=history_unit_ids,
+            task_type=task_type,
+            list_parameters=list_parameters,
+        )
+
+        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
         workdir_local = list_task_files[0].wftask_subfolder_local
         workdir_remote = list_task_files[0].wftask_subfolder_remote
 
         # Create local&remote task subfolders
-        if task_type not in ["converter_compound", "compound"]:
+        if task_type == "parallel":
             original_umask = os.umask(0)
             workdir_local.mkdir(parents=True, mode=0o755)
             os.umask(original_umask)
@@ -722,21 +719,18 @@ class RunnerSlurmSudo(BaseRunner):
                     slurm_job = self.jobs.pop(slurm_job_id)
                     self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
+                        logger.debug(f"Now processing {task.index=}")
                         result, exception = self._postprocess_single_task(
                             task=task
                         )
 
-                        if result is not None:
-                            results[task.index] = result
-                            if task_type == "parallel":
-                                update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
-                                    status=HistoryUnitStatus.DONE,
-                                    db_sync=db,
-                                )
+                        # Note: the relevant done/failed check is based on
+                        # whether `exception is None`. The fact that
+                        # `result is None` is not relevant for this purpose.
                         if exception is not None:
+                            logger.debug(
+                                f"Task {task.index} has an exception."
+                            )  # FIXME  # noqa
                             exceptions[task.index] = exception
                             if task_type == "parallel":
                                 update_status_of_history_unit(
@@ -744,6 +738,19 @@ class RunnerSlurmSudo(BaseRunner):
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.FAILED,
+                                    db_sync=db,
+                                )
+                        else:
+                            logger.debug(
+                                f"Task {task.index} has no exception."
+                            )  # FIXME  # noqa
+                            results[task.index] = result
+                            if task_type == "parallel":
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
+                                    status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
 

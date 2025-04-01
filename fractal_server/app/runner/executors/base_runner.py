@@ -139,3 +139,25 @@ class BaseRunner(object):
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
                 raise ValueError("Non-unique zarr_urls")
+
+    def validate_multisubmit_history_unit_ids(
+        self,
+        *,
+        history_unit_ids: list[int],
+        task_type: TaskTypeType,
+        list_parameters: list[dict[str, Any]],
+    ) -> None:
+        if task_type in ["compound", "converter_compound"]:
+            if len(history_unit_ids) != 1:
+                raise NotImplementedError(
+                    "We are breaking the assumption that compound/multisubmit "
+                    "is associated to a single HistoryUnit. This is not "
+                    "supported."
+                )
+            elif task_type == "parallel" and len(history_unit_ids) != len(
+                list_parameters
+            ):
+                raise ValueError(
+                    f"{len(history_unit_ids)=} differs from "
+                    f"{len(list_parameters)=}."
+                )
