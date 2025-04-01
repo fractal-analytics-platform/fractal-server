@@ -6,11 +6,13 @@ from sqlalchemy.orm import Session
 from fractal_server.app.models.v2 import HistoryImageCache
 
 
+_CHUNK_SIZE = 2_000
+
+
 def bulk_upsert_image_cache_fast(
     *,
     list_upsert_objects: list[dict[str, Any]],
     db: Session,
-    chunk_size: int = 10_000,
 ) -> None:
     """
     Insert or update many objects into `HistoryImageCache` and commit
@@ -37,9 +39,9 @@ def bulk_upsert_image_cache_fast(
     if len(list_upsert_objects) == 0:
         return None
 
-    for i in range(0, len(list_upsert_objects), chunk_size):
+    for ind in range(0, len(list_upsert_objects), _CHUNK_SIZE):
         stmt = pg_insert(HistoryImageCache).values(
-            list_upsert_objects[i : i + chunk_size]
+            list_upsert_objects[ind : ind + _CHUNK_SIZE]
         )
         stmt = stmt.on_conflict_do_update(
             index_elements=[

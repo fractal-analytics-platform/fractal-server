@@ -58,7 +58,7 @@ async def test_upsert_function(
         db_sync.commit()
         db_sync.refresh(run)
 
-        NUM = 200
+        NUM = 3_000
         OLD_ZARR_URLS = [f"/already-there/{i:05d}" for i in range(NUM)]
         NEW_ZARR_URLS = [f"/not-there/{i:05d}" for i in range(NUM)]
 
