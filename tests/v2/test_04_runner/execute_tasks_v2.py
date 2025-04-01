@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Optional
 
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.executors.local._submit_setup import (
-    _local_submit_setup,
+from fractal_server.app.runner.executors.local.get_local_config import (
+    get_local_backend_config,
 )
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 
@@ -24,6 +24,6 @@ def execute_tasks_v2_mod(
         job_attribute_filters={},
         job_type_filters=(job_type_filters or {}),
         user_id=user_id,
-        submit_setup_call=_local_submit_setup,
+        get_runner_config=get_local_backend_config,
         **kwargs,
     )

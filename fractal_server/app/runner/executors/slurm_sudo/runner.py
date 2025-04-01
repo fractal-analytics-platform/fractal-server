@@ -9,19 +9,19 @@ import time
 from copy import copy
 from pathlib import Path
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 import cloudpickle
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..slurm_common._check_jobs_status import (
-    get_finished_jobs,
-)
+from ..slurm_common._check_jobs_status import get_finished_jobs
+from ..slurm_common._check_jobs_status import run_squeue
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
-from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -33,7 +33,8 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.schemas.v2.task import TaskTypeType
+from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
@@ -100,30 +101,6 @@ class SlurmJob(BaseModel):
     tasks: list[SlurmTask]
 
     @property
-    def slurm_log_file_local(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_local
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
-            ).as_posix()
-        else:
-            return (
-                self.workdir_local / f"slurm-{self.label}-%j.log"
-            ).as_posix()
-
-    @property
-    def slurm_log_file_remote(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_remote
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
-            ).as_posix()
-        else:
-            return (
-                self.workdir_remote / f"slurm-{self.label}-%j.log"
-            ).as_posix()
-
-    @property
     def slurm_submission_script_local(self) -> str:
         return (
             self.workdir_local / f"slurm-{self.label}-submit.sh"
@@ -136,12 +113,56 @@ class SlurmJob(BaseModel):
         ).as_posix()
 
     @property
-    def slurm_stdout(self) -> str:
-        return (self.workdir_remote / f"slurm-{self.label}.out").as_posix()
+    def slurm_stdout_remote(self) -> str:
+        if self.slurm_job_id:
+            return (
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.out"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.out"
+            ).as_posix()
 
     @property
-    def slurm_stderr(self) -> str:
-        return (self.workdir_remote / f"slurm-{self.label}.err").as_posix()
+    def slurm_stderr_remote(self) -> str:
+        if self.slurm_job_id:
+            return (
+                self.workdir_remote
+                / f"slurm-{self.label}-{self.slurm_job_id}.err"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_remote / f"slurm-{self.label}-%j.err"
+            ).as_posix()
+
+    @property
+    def slurm_stdout_local(self) -> str:
+        if self.slurm_job_id:
+            return (
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.out"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.out"
+            ).as_posix()
+
+    @property
+    def slurm_stderr_local(self) -> str:
+        if self.slurm_job_id:
+            return (
+                self.workdir_local
+                / f"slurm-{self.label}-{self.slurm_job_id}.err"
+            ).as_posix()
+
+        else:
+            return (
+                self.workdir_local / f"slurm-{self.label}-%j.err"
+            ).as_posix()
 
     @property
     def log_files_local(self) -> list[str]:
@@ -287,6 +308,7 @@ class RunnerSlurmSudo(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
+        logger.debug("[_submit_single_sbatch] START")
         # Prepare input pickle(s)
         versions = dict(
             python=sys.version_info[:3],
@@ -295,10 +317,17 @@ class RunnerSlurmSudo(BaseRunner):
         )
         for task in slurm_job.tasks:
             _args = []
-            _kwargs = dict(parameters=task.parameters)
+            _kwargs = dict(
+                parameters=task.parameters,
+                remote_files=task.task_files.remote_files_dict,
+            )
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
+            logger.debug(
+                "[_submit_single_sbatch] Written "
+                f"{task.input_pickle_file_local=}"
+            )
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
         python_worker_interpreter = (
@@ -335,8 +364,8 @@ class RunnerSlurmSudo(BaseRunner):
         # fix their order
         script_lines.extend(
             [
-                f"#SBATCH --err={slurm_job.slurm_stderr}",
-                f"#SBATCH --out={slurm_job.slurm_stdout}",
+                f"#SBATCH --out={slurm_job.slurm_stdout_remote}",
+                f"#SBATCH --err={slurm_job.slurm_stderr_remote}",
                 f"#SBATCH -D {slurm_job.workdir_remote}",
             ]
         )
@@ -394,8 +423,10 @@ class RunnerSlurmSudo(BaseRunner):
         """
         Note: this would differ for SSH
         """
+        logger.debug(f"[_copy_files_from_remote_to_local] {job.slurm_job_id=}")
         source_target_list = [
-            (job.slurm_log_file_remote, job.slurm_log_file_local)
+            (job.slurm_stdout_remote, job.slurm_stdout_local),
+            (job.slurm_stderr_remote, job.slurm_stderr_local),
         ]
         for task in job.tasks:
             source_target_list.extend(
@@ -463,21 +494,22 @@ class RunnerSlurmSudo(BaseRunner):
         self,
         func: callable,
         parameters: dict[str, Any],
-        history_item_id: int,
+        history_unit_id: int,
         task_files: TaskFiles,
-        slurm_config: SlurmConfig,
-        task_type: TaskTypeType,
+        task_type: Literal[
+            "non_parallel",
+            "converter_non_parallel",
+            "compound",
+            "converter_compound",
+        ],
+        config: SlurmConfig,
     ) -> tuple[Any, Exception]:
+
+        if len(self.jobs) > 0:
+            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
+
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
-
-        task_files = TaskFiles(
-            **task_files.model_dump(
-                exclude={"component"},
-            ),
-            component=parameters[_COMPONENT_KEY_],
-        )
-
         if self.jobs != {}:
             raise JobExecutionError("Unexpected branch: jobs should be empty.")
 
@@ -485,7 +517,7 @@ class RunnerSlurmSudo(BaseRunner):
             raise JobExecutionError("Cannot continue after shutdown.")
 
         # Validation phase
-        self.validate_submit_parameters(parameters)
+        self.validate_submit_parameters(parameters, task_type=task_type)
 
         # Create task subfolder
         original_umask = os.umask(0)
@@ -504,7 +536,7 @@ class RunnerSlurmSudo(BaseRunner):
             tasks=[
                 SlurmTask(
                     index=0,
-                    component="0",
+                    component=task_files.component,
                     parameters=parameters,
                     workdir_remote=workdir_remote,
                     workdir_local=workdir_local,
@@ -513,26 +545,56 @@ class RunnerSlurmSudo(BaseRunner):
             ],
         )  # TODO: replace with actual values (BASED ON TASKFILES)
 
-        slurm_config.parallel_tasks_per_job = 1
+        config.parallel_tasks_per_job = 1
         self._submit_single_sbatch(
             func,
             slurm_job=slurm_job,
-            slurm_config=slurm_config,
+            slurm_config=config,
         )
+        logger.debug("END SUBMISSION PHASE")
+        logger.debug(f"{self.jobs=}")
+        logger.debug(f"{self.job_ids=}")
 
-        # LOGFILE = task_files.log_file_local
+        # FIXME
+        jobs_that_started = set()
+        while len(jobs_that_started) != len(self.job_ids):
+            logger.debug("CALL SQUEUE")
+            res = run_squeue(self.job_ids)
+            new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
+            jobs_that_started = jobs_that_started.union(new_jobs)
+            logger.debug(f"{new_jobs=}")
+            logger.debug(f"{len(jobs_that_started)=}")
+
+        logger.debug("START RETRIEVAL PHASE")
 
         # Retrieval phase
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
-            for slurm_job_id in finished_job_ids:
-                slurm_job = self.jobs.pop(slurm_job_id)
-                self._copy_files_from_remote_to_local(slurm_job)
-                result, exception = self._postprocess_single_task(
-                    task=slurm_job.tasks[0]
-                )
+            logger.debug(f"{finished_job_ids=}")
+            with next(get_sync_db()) as db:
+                for slurm_job_id in finished_job_ids:
+                    logger.debug(f"Now process {slurm_job_id=}")
+                    slurm_job = self.jobs.pop(slurm_job_id)
+                    self._copy_files_from_remote_to_local(slurm_job)
+                    result, exception = self._postprocess_single_task(
+                        task=slurm_job.tasks[0]
+                    )
+                    if result is not None:
+                        if task_type not in ["compound", "converter_compound"]:
+                            update_status_of_history_unit(
+                                history_unit_id=history_unit_id,
+                                status=HistoryUnitStatus.DONE,
+                                db_sync=db,
+                            )
+                    if exception is not None:
+                        update_status_of_history_unit(
+                            history_unit_id=history_unit_id,
+                            status=HistoryUnitStatus.FAILED,
+                            db_sync=db,
+                        )
+
             time.sleep(self.slurm_poll_interval)
 
         return result, exception
@@ -541,19 +603,38 @@ class RunnerSlurmSudo(BaseRunner):
         self,
         func: callable,
         list_parameters: list[dict],
-        history_item_id: int,
-        task_files: TaskFiles,
-        slurm_config: SlurmConfig,
-        task_type: TaskTypeType,
+        history_unit_ids: list[int],
+        list_task_files: list[TaskFiles],
+        task_type: Literal["parallel", "compound", "converter_compound"],
+        config: SlurmConfig,
     ):
-        # self.scancel_jobs()
+
+        if len(self.jobs) > 0:
+            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
+
+        if task_type in ["compound", "converter_compound"]:
+            if len(history_unit_ids) != 1:
+                raise NotImplementedError(
+                    "We are breaking the assumption that compound/multisubmit "
+                    "is associated to a single HistoryUnit. This is not "
+                    "supported."
+                )
+        elif task_type == "parallel" and len(history_unit_ids) != len(
+            list_parameters
+        ):
+            raise ValueError(
+                f"{len(history_unit_ids)=} differs from "
+                f"{len(list_parameters)=}."
+            )
 
         self.validate_multisubmit_parameters(
-            list_parameters=list_parameters, task_type=task_type
+            list_parameters=list_parameters,
+            task_type=task_type,
+            list_task_files=list_task_files,
         )
 
-        workdir_local = task_files.wftask_subfolder_local
-        workdir_remote = task_files.wftask_subfolder_remote
+        workdir_local = list_task_files[0].wftask_subfolder_local
+        workdir_remote = list_task_files[0].wftask_subfolder_remote
 
         # Create local&remote task subfolders
         if task_type not in ["converter_compound", "compound"]:
@@ -571,7 +652,7 @@ class RunnerSlurmSudo(BaseRunner):
         results: dict[int, Any] = {}
         exceptions: dict[int, BaseException] = {}
 
-        original_task_files = task_files
+        original_task_files = list_task_files
         tot_tasks = len(list_parameters)
 
         # Set/validate parameters for task batching
@@ -579,21 +660,21 @@ class RunnerSlurmSudo(BaseRunner):
             # Number of parallel components (always known)
             tot_tasks=tot_tasks,
             # Optional WorkflowTask attributes:
-            tasks_per_job=slurm_config.tasks_per_job,
-            parallel_tasks_per_job=slurm_config.parallel_tasks_per_job,  # noqa
+            tasks_per_job=config.tasks_per_job,
+            parallel_tasks_per_job=config.parallel_tasks_per_job,  # noqa
             # Task requirements (multiple possible sources):
-            cpus_per_task=slurm_config.cpus_per_task,
-            mem_per_task=slurm_config.mem_per_task_MB,
+            cpus_per_task=config.cpus_per_task,
+            mem_per_task=config.mem_per_task_MB,
             # Fractal configuration variables (soft/hard limits):
-            target_cpus_per_job=slurm_config.target_cpus_per_job,
-            target_mem_per_job=slurm_config.target_mem_per_job,
-            target_num_jobs=slurm_config.target_num_jobs,
-            max_cpus_per_job=slurm_config.max_cpus_per_job,
-            max_mem_per_job=slurm_config.max_mem_per_job,
-            max_num_jobs=slurm_config.max_num_jobs,
+            target_cpus_per_job=config.target_cpus_per_job,
+            target_mem_per_job=config.target_mem_per_job,
+            target_num_jobs=config.target_num_jobs,
+            max_cpus_per_job=config.max_cpus_per_job,
+            max_mem_per_job=config.max_mem_per_job,
+            max_num_jobs=config.max_num_jobs,
         )
-        slurm_config.parallel_tasks_per_job = parallel_tasks_per_job
-        slurm_config.tasks_per_job = tasks_per_job
+        config.parallel_tasks_per_job = parallel_tasks_per_job
+        config.tasks_per_job = tasks_per_job
 
         # Divide arguments in batches of `tasks_per_job` tasks each
         args_batches = []
@@ -607,24 +688,18 @@ class RunnerSlurmSudo(BaseRunner):
 
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
         for ind_batch, chunk in enumerate(args_batches):
-            # TODO: replace with actual values
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
-                component = parameters[_COMPONENT_KEY_]
+                index = (ind_batch * batch_size) + ind_chunk
                 tasks.append(
                     SlurmTask(
-                        index=(ind_batch * batch_size) + ind_chunk,
-                        component=component,
+                        index=index,
+                        component=original_task_files[index].component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=TaskFiles(
-                            **original_task_files.model_dump(
-                                exclude={"component"}
-                            ),
-                            component=component,
-                        ),
+                        task_files=original_task_files[index],
                     ),
                 )
 
@@ -637,26 +712,56 @@ class RunnerSlurmSudo(BaseRunner):
             self._submit_single_sbatch(
                 func,
                 slurm_job=slurm_job,
-                slurm_config=slurm_config,
+                slurm_config=config,
             )
         logger.info(f"END submission phase, {list(self.jobs.keys())=}")
+
+        # FIXME
+        jobs_that_started = set()
+        while len(jobs_that_started) != len(self.job_ids):
+            res = run_squeue(self.job_ids)
+            new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
+            jobs_that_started = jobs_that_started.union(new_jobs)
+            logger.debug(f"{new_jobs=}")
+            logger.debug(f"{len(jobs_that_started)=}")
 
         # Retrieval phase
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
-            for slurm_job_id in finished_job_ids:
-                slurm_job = self.jobs.pop(slurm_job_id)
-                self._copy_files_from_remote_to_local(slurm_job)
-                for task in slurm_job.tasks:
-                    result, exception = self._postprocess_single_task(
-                        task=task
-                    )
-                    if exception is None:
-                        results[task.index] = result
-                    else:
-                        exceptions[task.index] = exception
+            logger.debug(f"{finished_job_ids=}")
+            with next(get_sync_db()) as db:
+                for slurm_job_id in finished_job_ids:
+                    logger.debug(f"Now processing {slurm_job_id=}")
+                    slurm_job = self.jobs.pop(slurm_job_id)
+                    self._copy_files_from_remote_to_local(slurm_job)
+                    for task in slurm_job.tasks:
+                        result, exception = self._postprocess_single_task(
+                            task=task
+                        )
+
+                        if result is not None:
+                            results[task.index] = result
+                            if task_type == "parallel":
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
+                                    status=HistoryUnitStatus.DONE,
+                                    db_sync=db,
+                                )
+                        if exception is not None:
+                            exceptions[task.index] = exception
+                            if task_type == "parallel":
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
+                                    status=HistoryUnitStatus.FAILED,
+                                    db_sync=db,
+                                )
+
             time.sleep(self.slurm_poll_interval)
         return results, exceptions
 

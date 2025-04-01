@@ -48,13 +48,6 @@ class LocalBackendConfig(BaseModel):
     parallel_tasks_per_job: Optional[int] = None
 
 
-def get_default_local_backend_config():
-    """
-    Return a default `LocalBackendConfig` configuration object
-    """
-    return LocalBackendConfig(parallel_tasks_per_job=None)
-
-
 def get_local_backend_config(
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],

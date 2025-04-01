@@ -96,3 +96,11 @@ class TaskFiles(BaseModel):
         return (
             self.wftask_subfolder_remote / f"{self.component}-metadiff.json"
         ).as_posix()
+
+    @property
+    def remote_files_dict(self) -> dict[str, str]:
+        return dict(
+            args_file_remote=self.args_file_remote,
+            metadiff_file_remote=self.metadiff_file_remote,
+            log_file_remote=self.log_file_remote,
+        )

@@ -30,7 +30,7 @@ from fractal_server.app.routes.aux.validate_user_settings import (
 from fractal_server.app.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
-from fractal_server.app.runner.v2 import submit_workflow
+from fractal_server.app.runner.v2.submit_workflow import submit_workflow
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
