@@ -3,21 +3,26 @@ from devtools import debug
 from pydantic import ValidationError
 
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.exceptions import TaskOutputValidationError
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.app.runner.v2.merge_outputs import merge_outputs
 from fractal_server.app.runner.v2.runner_functions import (
+    _process_init_task_output,
+)
+from fractal_server.app.runner.v2.runner_functions import _process_task_output
+from fractal_server.app.runner.v2.task_interface import (
     _cast_and_validate_InitTaskOutput,
 )
-from fractal_server.app.runner.v2.runner_functions import (
+from fractal_server.app.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
+from fractal_server.app.runner.v2.task_interface import InitTaskOutput
 from fractal_server.app.runner.v2.task_interface import TaskOutput
 from fractal_server.images import SingleImageTaskOutput
 
 
 def test_deduplicate_list_of_dicts():
-    #
     old = [
         InitArgsModel(zarr_url="/asd", init_args=dict(a=1)),
         InitArgsModel(zarr_url="/asd", init_args=dict(a=2)),
@@ -118,3 +123,56 @@ def test_merge_outputs():
         SingleImageTaskOutput(zarr_url="/c"),
     ]
     assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])
+
+
+def test_process_task_output():
+
+    oe = _process_task_output(result=None, exception=None)
+    assert oe.task_output == TaskOutput()
+    assert oe.exception is None
+
+    REMOVALS = ["/a", "/b", "/c"]
+    oe = _process_task_output(
+        result={"image_list_removals": REMOVALS},
+        exception=None,
+    )
+    assert oe.task_output == TaskOutput(image_list_removals=REMOVALS)
+    assert oe.exception is None
+
+    oe = _process_task_output(result={"invalid": "dict"}, exception=None)
+    assert isinstance(oe.exception, TaskOutputValidationError)
+    assert oe.task_output is None
+
+    EXCEPTION = RuntimeError("error message")
+    oe = _process_task_output(result=None, exception=EXCEPTION)
+    assert oe.task_output is None
+    assert oe.exception == EXCEPTION
+
+
+def test_process_init_task_output():
+
+    oe = _process_init_task_output(result=None, exception=None)
+    assert oe.task_output == InitTaskOutput()
+    assert oe.exception is None
+
+    PARALLELIZATION_LIST = [
+        dict(zarr_url="/a1", init_args=dict(arg=1)),
+        dict(zarr_url="/a2", init_args=dict(arg=2)),
+    ]
+    oe = _process_init_task_output(
+        result={"parallelization_list": PARALLELIZATION_LIST},
+        exception=None,
+    )
+    assert oe.task_output == InitTaskOutput(
+        parallelization_list=PARALLELIZATION_LIST
+    )
+    assert oe.exception is None
+
+    oe = _process_init_task_output(result={"invalid": "dict"}, exception=None)
+    assert isinstance(oe.exception, TaskOutputValidationError)
+    assert oe.task_output is None
+
+    EXCEPTION = RuntimeError("error message")
+    oe = _process_init_task_output(result=None, exception=EXCEPTION)
+    assert oe.task_output is None
+    assert oe.exception == EXCEPTION
