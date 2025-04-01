@@ -5,12 +5,13 @@ from typing import Callable
 from typing import Literal
 from typing import Optional
 
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import ValidationError
 
 from ..exceptions import JobExecutionError
 from .db_tools import update_status_of_history_unit
 from .deduplicate_list import deduplicate_list
-from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
@@ -23,13 +24,22 @@ from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-
+from fractal_server.logger import set_logger
 
 __all__ = [
     "run_v2_task_parallel",
     "run_v2_task_non_parallel",
     "run_v2_task_compound",
 ]
+
+
+logger = set_logger(__name__)
+
+
+class OutputException(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    task_output: TaskOutput | None = None
+    exception: BaseException | None = None
 
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
@@ -92,7 +102,7 @@ def run_v2_task_non_parallel(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["non_parallel", "converter_non_parallel"],
-) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+) -> tuple[dict[int, OutputException], int]:
     """
     This runs server-side (see `executor` argument)
     """
@@ -166,16 +176,24 @@ def run_v2_task_non_parallel(
         config=runner_config,
     )
 
+    positional_index = 0
     num_tasks = 1
-    with next(get_sync_db()) as db:
-        if exception is None:
-            if result is None:
-                return (TaskOutput(), num_tasks, {})
-            else:
-                return (_cast_and_validate_TaskOutput(result), num_tasks, {})
-        else:
 
-            return (TaskOutput(), num_tasks, {0: exception})
+    if exception is None:
+        if result is None:
+            task_output = TaskOutput()
+        else:
+            task_output = _cast_and_validate_TaskOutput(result)
+    else:
+        task_output = None
+
+    out_exc = {
+        positional_index: OutputException(
+            task_output=task_output,
+            exception=exception,
+        )
+    }
+    return out_exc, num_tasks
 
 
 def run_v2_task_parallel(
@@ -196,7 +214,7 @@ def run_v2_task_parallel(
     ],
     dataset_id: int,
     history_run_id: int,
-) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+) -> tuple[dict[int, OutputException], int]:
     if len(images) == 0:
         return (TaskOutput(), 0, {})
 
@@ -277,23 +295,33 @@ def run_v2_task_parallel(
         config=runner_config,
     )
 
-    outputs = []
+    out_exc = {}
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
-            result = results[ind]
-            if result is None:
-                output = TaskOutput()
+            exception = None
+            if results[ind] is None:
+                task_output = TaskOutput()
             else:
-                output = _cast_and_validate_TaskOutput(result)
-            outputs.append(output)
+                task_output = _cast_and_validate_TaskOutput(results[ind])
         elif ind in exceptions.keys():
-            print(f"Bad: {exceptions[ind]}")
+            task_output = None
+            exception = exceptions[ind]
         else:
-            print("VERY BAD - should have not reached this point")
+            # FIXME: Could we avoid this branch?
+            error_msg = (
+                f"Invalid branch: {ind=} is not in `results.keys()` "
+                "nor in `exceptions.keys()`."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        out_exc[ind] = OutputException(
+            task_output=task_output,
+            exception=exception,
+        )
 
     num_tasks = len(images)
-    merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks, exceptions)
+
+    return out_exc, num_tasks
 
 
 # FIXME: THIS FOR CONVERTERS:
@@ -324,7 +352,7 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["compound", "converter_compound"],
-) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+) -> tuple[dict[int, OutputException], int]:
 
     # Get TaskFiles object
     task_files_init = TaskFiles(
@@ -404,7 +432,14 @@ def run_v2_task_compound(
         else:
             init_task_output = _cast_and_validate_InitTaskOutput(result)
     else:
-        return (TaskOutput(), num_tasks, {0: exception})
+        positional_index = 0
+        out_exc = {
+            positional_index: OutputException(
+                task_output=None,
+                exception=exception,
+            )
+        }
+        return out_exc, num_tasks
 
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
@@ -421,7 +456,14 @@ def run_v2_task_compound(
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
-        return (TaskOutput(), 0, {})
+        positional_index = 0
+        out_exc = {
+            positional_index: OutputException(
+                task_output=TaskOutput(),
+                exception=None,
+            )
+        }
+        return out_exc, num_tasks
 
     list_task_files = [
         TaskFiles(
@@ -457,22 +499,33 @@ def run_v2_task_compound(
         config=runner_config_compute,
     )
 
-    outputs = []
+    out_exc = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
         if ind in results.keys():
-            result = results[ind]
-            if result is None:
-                output = TaskOutput()
+            exception = None
+            if results[ind] is None:
+                task_output = TaskOutput()
             else:
-                output = _cast_and_validate_TaskOutput(result)
-            outputs.append(output)
+                task_output = _cast_and_validate_TaskOutput(results[ind])
 
         elif ind in exceptions.keys():
-            print(f"Bad: {exceptions[ind]}")
+            task_output = None
+            exception = exceptions[ind]
             failure = True
         else:
-            print("VERY BAD - should have not reached this point")
+            # FIXME: Could we avoid this branch?
+            error_msg = (
+                f"Invalid branch: {ind=} is not in `results.keys()` "
+                "nor in `exceptions.keys()`."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+
+        out_exc[ind] = OutputException(
+            task_output=task_output,
+            exception=exception,
+        )
 
     # FIXME: In this case, we are performing db updates from here, rather
     # than at lower level.
@@ -490,5 +543,4 @@ def run_v2_task_compound(
                 db_sync=db,
             )
 
-    merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks, exceptions)
+    return out_exc, num_tasks
