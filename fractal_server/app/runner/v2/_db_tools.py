@@ -54,4 +54,3 @@ def bulk_upsert_image_cache_fast(
             ),
         )
         db.execute(stmt)
-        db.commit()
