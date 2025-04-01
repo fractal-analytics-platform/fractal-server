@@ -1,5 +1,4 @@
 # import time
-from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -9,31 +8,39 @@ from ...aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.slurm_ssh.runner import (
     RunnerSlurmSSH,
 )
-from fractal_server.app.runner.task_files import TaskFiles
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
-
-
-def get_dummy_task_files(root_path: Path) -> TaskFiles:
-    return TaskFiles(
-        root_dir_local=root_path / "server",
-        root_dir_remote=root_path / "user",
-        task_name="name",
-        task_order=0,
-    )
+from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
 @pytest.mark.ssh
 @pytest.mark.container
+@pytest.mark.parametrize(
+    "task_type",
+    [
+        "non_parallel",
+        # "compound",
+        # "converter_non_parallel",
+        # "converter_compound",
+    ],
+)
 async def test_submit_success(
+    db,
     tmp777_path,
     fractal_ssh,
+    history_mock_for_submit,
     override_settings_factory,
+    task_type: str,
 ):
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
 
     def do_nothing(parameters: dict, **kwargs) -> int:
         return 42
+
+    history_run_id, history_unit_id = history_mock_for_submit
+    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
+    if not task_type.startswith("converter_"):
+        parameters["zarr_urls"] = ZARR_URLS
 
     with RunnerSlurmSSH(
         fractal_ssh=fractal_ssh,
@@ -44,14 +51,11 @@ async def test_submit_success(
     ) as runner:
         result, exception = runner.submit(
             do_nothing,
-            parameters={
-                "zarr_urls": ZARR_URLS,
-                "__FRACTAL_PARALLEL_COMPONENT__": "000000",
-            },
-            history_item_id=None,
-            task_files=get_dummy_task_files(tmp777_path),
+            parameters=parameters,
+            history_unit_id=history_unit_id,
+            task_files=get_dummy_task_files(tmp777_path, component="0", is_slurm=True),
             slurm_config=get_default_slurm_config(),
-            task_type="non_parallel",
+            task_type=task_type,
         )
     debug(result, exception)
     assert result == 42
