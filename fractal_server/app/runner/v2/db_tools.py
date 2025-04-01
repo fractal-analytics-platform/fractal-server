@@ -37,6 +37,9 @@ def update_status_of_history_unit(
     db_sync.commit()
 
 
+_CHUNK_SIZE = 2_000
+
+
 def bulk_upsert_image_cache_fast(
     *,
     list_upsert_objects: list[dict[str, Any]],
@@ -66,14 +69,19 @@ def bulk_upsert_image_cache_fast(
     """
     if len(list_upsert_objects) == 0:
         return None
-    stmt = pg_insert(HistoryImageCache).values(list_upsert_objects)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=[
-            HistoryImageCache.zarr_url,
-            HistoryImageCache.dataset_id,
-            HistoryImageCache.workflowtask_id,
-        ],
-        set_=dict(latest_history_unit_id=stmt.excluded.latest_history_unit_id),
-    )
-    db.execute(stmt)
-    db.commit()
+
+    for ind in range(0, len(list_upsert_objects), _CHUNK_SIZE):
+        stmt = pg_insert(HistoryImageCache).values(
+            list_upsert_objects[ind : ind + _CHUNK_SIZE]
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[
+                HistoryImageCache.zarr_url,
+                HistoryImageCache.dataset_id,
+                HistoryImageCache.workflowtask_id,
+            ],
+            set_=dict(
+                latest_history_unit_id=stmt.excluded.latest_history_unit_id
+            ),
+        )
+        db.execute(stmt)

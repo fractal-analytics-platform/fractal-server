@@ -24,8 +24,12 @@ def bulk_upsert_image_cache_slow(
 
 
 @pytest.mark.parametrize(
-    "bulk_upsert_image_cache_function",
-    [bulk_upsert_image_cache_fast, bulk_upsert_image_cache_slow],
+    "bulk_upsert_image_cache_function,num",
+    [
+        (bulk_upsert_image_cache_fast, 100),
+        (bulk_upsert_image_cache_slow, 100),
+        (bulk_upsert_image_cache_fast, 3_500),
+    ],
 )
 async def test_upsert_function(
     project_factory_v2,
@@ -34,8 +38,9 @@ async def test_upsert_function(
     dataset_factory_v2,
     workflowtask_factory_v2,
     db_sync,
-    bulk_upsert_image_cache_function,
     MockCurrentUser,
+    bulk_upsert_image_cache_function,
+    num,
 ):
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -58,9 +63,8 @@ async def test_upsert_function(
         db_sync.commit()
         db_sync.refresh(run)
 
-        NUM = 200
-        OLD_ZARR_URLS = [f"/already-there/{i:05d}" for i in range(NUM)]
-        NEW_ZARR_URLS = [f"/not-there/{i:05d}" for i in range(NUM)]
+        OLD_ZARR_URLS = [f"/already-there/{i:05d}" for i in range(num)]
+        NEW_ZARR_URLS = [f"/not-there/{i:05d}" for i in range(num)]
 
         # Create an `HistoryImageCache` that should be updated
         unit1 = HistoryUnit(
