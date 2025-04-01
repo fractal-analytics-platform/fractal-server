@@ -42,13 +42,13 @@ __all__ = [
 logger = set_logger(__name__)
 
 
-class OutputException(BaseModel):
+class SubmissionOutcome(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     task_output: TaskOutput | None = None
     exception: BaseException | None = None
 
 
-class InitOutputException(BaseModel):
+class InitSubmissionOutcome(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     task_output: InitTaskOutput | None = None
     exception: BaseException | None = None
@@ -61,7 +61,7 @@ def _process_task_output(
     *,
     result: dict[str, Any] | None = None,
     exception: BaseException | None = None,
-) -> OutputException:
+) -> SubmissionOutcome:
     if exception is not None:
         task_output = None
     else:
@@ -71,9 +71,11 @@ def _process_task_output(
             try:
                 task_output = _cast_and_validate_TaskOutput(result)
             except TaskOutputValidationError as e:
+                # FIXME: This should correspond to some status="failed",
+                # but it does not
                 task_output = None
                 exception = e
-    return OutputException(
+    return SubmissionOutcome(
         task_output=task_output,
         exception=exception,
     )
@@ -83,7 +85,7 @@ def _process_init_task_output(
     *,
     result: dict[str, Any] | None = None,
     exception: BaseException | None = None,
-) -> OutputException:
+) -> SubmissionOutcome:
     if exception is not None:
         task_output = None
     else:
@@ -93,9 +95,11 @@ def _process_init_task_output(
             try:
                 task_output = _cast_and_validate_InitTaskOutput(result)
             except TaskOutputValidationError as e:
+                # FIXME: This should correspond to some status="failed",
+                # but it does not
                 task_output = None
                 exception = e
-    return InitOutputException(
+    return InitSubmissionOutcome(
         task_output=task_output,
         exception=exception,
     )
@@ -130,7 +134,7 @@ def run_v2_task_non_parallel(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["non_parallel", "converter_non_parallel"],
-) -> tuple[dict[int, OutputException], int]:
+) -> tuple[dict[int, SubmissionOutcome], int]:
     """
     This runs server-side (see `executor` argument)
     """
@@ -206,13 +210,13 @@ def run_v2_task_non_parallel(
     positional_index = 0
     num_tasks = 1
 
-    out_exc = {
+    outcome = {
         positional_index: _process_task_output(
             result=result,
             exception=exception,
         )
     }
-    return out_exc, num_tasks
+    return outcome, num_tasks
 
 
 def run_v2_task_parallel(
@@ -233,7 +237,7 @@ def run_v2_task_parallel(
     ],
     dataset_id: int,
     history_run_id: int,
-) -> tuple[dict[int, OutputException], int]:
+) -> tuple[dict[int, SubmissionOutcome], int]:
     if len(images) == 0:
         return {}, 0
 
@@ -314,7 +318,7 @@ def run_v2_task_parallel(
         config=runner_config,
     )
 
-    out_exc = {}
+    outcome = {}
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
             # FIXME: Could we avoid this branch?
@@ -324,13 +328,13 @@ def run_v2_task_parallel(
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        out_exc[ind] = _process_task_output(
+        outcome[ind] = _process_task_output(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
 
     num_tasks = len(images)
-    return out_exc, num_tasks
+    return outcome, num_tasks
 
 
 # FIXME: THIS FOR CONVERTERS:
@@ -361,7 +365,7 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["compound", "converter_compound"],
-) -> tuple[dict[int, OutputException], int]:
+) -> tuple[dict[int, SubmissionOutcome], int]:
     # Get TaskFiles object
     task_files_init = TaskFiles(
         root_dir_local=workflow_dir_local,
@@ -433,23 +437,23 @@ def run_v2_task_compound(
         config=runner_config_init,
     )
 
-    init_out_exc = _process_init_task_output(
+    init_outcome = _process_init_task_output(
         result=result,
         exception=exception,
     )
     num_tasks = 1
-    if init_out_exc.exception is not None:
+    if init_outcome.exception is not None:
         positional_index = 0
         return (
             {
-                positional_index: OutputException(
-                    exception=init_out_exc.exception
+                positional_index: SubmissionOutcome(
+                    exception=init_outcome.exception
                 )
             },
             num_tasks,
         )
 
-    parallelization_list = init_out_exc.task_output.parallelization_list
+    parallelization_list = init_outcome.task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
     num_tasks = 1 + len(parallelization_list)
@@ -465,13 +469,13 @@ def run_v2_task_compound(
                 db_sync=db,
             )
         positional_index = 0
-        init_out_exc = {
+        init_outcome = {
             positional_index: _process_task_output(
                 result=None,
                 exception=None,
             )
         }
-        return init_out_exc, num_tasks
+        return init_outcome, num_tasks
 
     list_task_files = [
         TaskFiles(
@@ -507,7 +511,7 @@ def run_v2_task_compound(
         config=runner_config_compute,
     )
 
-    init_out_exc = {}
+    init_outcome = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
@@ -518,7 +522,7 @@ def run_v2_task_compound(
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        init_out_exc[ind] = _process_task_output(
+        init_outcome[ind] = _process_task_output(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
@@ -539,4 +543,4 @@ def run_v2_task_compound(
                 db_sync=db,
             )
 
-    return init_out_exc, num_tasks
+    return init_outcome, num_tasks
