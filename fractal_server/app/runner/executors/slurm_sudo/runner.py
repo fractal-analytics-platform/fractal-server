@@ -570,19 +570,22 @@ class RunnerSlurmSudo(BaseRunner):
                     result, exception = self._postprocess_single_task(
                         task=slurm_job.tasks[0]
                     )
-                    if result is not None:
-                        if task_type not in ["compound", "converter_compound"]:
-                            update_status_of_history_unit(
-                                history_unit_id=history_unit_id,
-                                status=HistoryUnitStatus.DONE,
-                                db_sync=db,
-                            )
+                    # Note: the relevant done/failed check is based on
+                    # whether `exception is None`. The fact that
+                    # `result is None` is not relevant for this purpose.
                     if exception is not None:
                         update_status_of_history_unit(
                             history_unit_id=history_unit_id,
                             status=HistoryUnitStatus.FAILED,
                             db_sync=db,
                         )
+                    else:
+                        if task_type not in ["compound", "converter_compound"]:
+                            update_status_of_history_unit(
+                                history_unit_id=history_unit_id,
+                                status=HistoryUnitStatus.DONE,
+                                db_sync=db,
+                            )
 
             time.sleep(self.slurm_poll_interval)
 
