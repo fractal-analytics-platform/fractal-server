@@ -17,7 +17,6 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 from ..slurm_common._check_jobs_status import get_finished_jobs
-from ..slurm_common._check_jobs_status import run_squeue
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
@@ -543,31 +542,21 @@ class RunnerSlurmSudo(BaseRunner):
                     task_files=task_files,
                 )
             ],
-        )  # TODO: replace with actual values (BASED ON TASKFILES)
-
+        )
         config.parallel_tasks_per_job = 1
         self._submit_single_sbatch(
             func,
             slurm_job=slurm_job,
             slurm_config=config,
         )
-        logger.debug("END SUBMISSION PHASE")
-        logger.debug(f"{self.jobs=}")
-        logger.debug(f"{self.job_ids=}")
+        logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME
-        jobs_that_started = set()
-        while len(jobs_that_started) != len(self.job_ids):
-            logger.debug("CALL SQUEUE")
-            res = run_squeue(self.job_ids)
-            new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
-            jobs_that_started = jobs_that_started.union(new_jobs)
-            logger.debug(f"{new_jobs=}")
-            logger.debug(f"{len(jobs_that_started)=}")
-
-        logger.debug("START RETRIEVAL PHASE")
+        # FIXME: Replace with more robust/efficient logic
+        logger.warning("Now sleep 4 (FIXME)")
+        time.sleep(4)
 
         # Retrieval phase
+        logger.info("START retrieval phase")
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
@@ -714,18 +703,14 @@ class RunnerSlurmSudo(BaseRunner):
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
-        logger.info(f"END submission phase, {list(self.jobs.keys())=}")
+        logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME
-        jobs_that_started = set()
-        while len(jobs_that_started) != len(self.job_ids):
-            res = run_squeue(self.job_ids)
-            new_jobs = set(out.split()[0] for out in res.stdout.splitlines())
-            jobs_that_started = jobs_that_started.union(new_jobs)
-            logger.debug(f"{new_jobs=}")
-            logger.debug(f"{len(jobs_that_started)=}")
+        # FIXME: Replace with more robust/efficient logic
+        logger.warning("Now sleep 4 (FIXME)")
+        time.sleep(4)
 
         # Retrieval phase
+        logger.info("START retrieval phase")
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
