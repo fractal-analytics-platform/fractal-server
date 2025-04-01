@@ -716,21 +716,18 @@ class RunnerSlurmSudo(BaseRunner):
                     slurm_job = self.jobs.pop(slurm_job_id)
                     self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
+                        logger.debug(f"Now processing {task.index=}")
                         result, exception = self._postprocess_single_task(
                             task=task
                         )
 
-                        if result is not None:
-                            results[task.index] = result
-                            if task_type == "parallel":
-                                update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
-                                    status=HistoryUnitStatus.DONE,
-                                    db_sync=db,
-                                )
+                        # Note: the relevant done/failed check is based on
+                        # whether `exception is None`. The fact that
+                        # `result is None` is not relevant for this purpose.
                         if exception is not None:
+                            logger.debug(
+                                f"Task {task.index} has an exception."
+                            )  # FIXME  # noqa
                             exceptions[task.index] = exception
                             if task_type == "parallel":
                                 update_status_of_history_unit(
@@ -738,6 +735,19 @@ class RunnerSlurmSudo(BaseRunner):
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.FAILED,
+                                    db_sync=db,
+                                )
+                        else:
+                            logger.debug(
+                                f"Task {task.index} has no exception."
+                            )  # FIXME  # noqa
+                            results[task.index] = result
+                            if task_type == "parallel":
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
+                                    status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
 
