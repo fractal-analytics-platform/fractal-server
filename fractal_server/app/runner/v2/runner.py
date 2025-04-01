@@ -129,7 +129,7 @@ def execute_tasks_v2(
 
         # TASK EXECUTION (V2)
         if task.type in ["non_parallel", "converter_non_parallel"]:
-            out_exc, num_tasks = run_v2_task_non_parallel(
+            outcomes_dict, num_tasks = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -143,7 +143,7 @@ def execute_tasks_v2(
                 task_type=task.type,
             )
         elif task.type == "parallel":
-            out_exc, num_tasks = run_v2_task_parallel(
+            outcomes_dict, num_tasks = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task=task,
@@ -155,7 +155,7 @@ def execute_tasks_v2(
                 dataset_id=dataset.id,
             )
         elif task.type in ["compound", "converter_compound"]:
-            out_exc, num_tasks = run_v2_task_compound(
+            outcomes_dict, num_tasks = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -175,7 +175,7 @@ def execute_tasks_v2(
 
         non_failed_task_outputs = [
             value.task_output
-            for value in out_exc.values()
+            for value in outcomes_dict.values()
             if value.task_output is not None
         ]
         if len(non_failed_task_outputs) > 0:
@@ -343,7 +343,7 @@ def execute_tasks_v2(
             try:
                 first_exception = next(
                     value.exception
-                    for value in out_exc.values()
+                    for value in outcomes_dict.values()
                     if value.exception is not None
                 )
                 # An exception was found
