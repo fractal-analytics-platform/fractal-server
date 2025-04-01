@@ -4,16 +4,13 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 
-from sqlmodel import update
-
 from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
-
 
 logger = set_logger(__name__)
 
@@ -79,23 +76,22 @@ class LocalRunner(BaseRunner):
         with next(get_sync_db()) as db:
             try:
                 result = future.result()
-                logger.debug(f"[submit] END {result=}")
+                logger.debug("[submit] END with result")
                 if task_type not in ["compound", "converter_compound"]:
-                    unit = db.get(HistoryUnit, history_unit_id)
-                    unit.status = HistoryUnitStatus.DONE
-                    db.merge(unit)
-                    db.commit()
+                    update_status_of_history_unit(
+                        history_unit_id=history_unit_id,
+                        status=HistoryUnitStatus.DONE,
+                        db_sync=db,
+                    )
                 return result, None
             except Exception as e:
                 exception = e
-                logger.debug(f"[submit] END {exception=}")
-
-                db.execute(
-                    update(HistoryUnit)
-                    .where(HistoryUnit.id == history_unit_id)
-                    .values(status=HistoryUnitStatus.FAILED)
+                logger.debug("[submit] END with exception")
+                update_status_of_history_unit(
+                    history_unit_id=history_unit_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
                 )
-                db.commit()
 
                 return None, exception
 
@@ -195,22 +191,20 @@ class LocalRunner(BaseRunner):
                         try:
                             results[positional_index] = fut.result()
                             if task_type == "parallel":
-                                unit = db.get(
-                                    HistoryUnit, current_history_unit_id
+                                update_status_of_history_unit(
+                                    history_unit_id=current_history_unit_id,
+                                    status=HistoryUnitStatus.DONE,
+                                    db_sync=db,
                                 )
-                                unit.status = HistoryUnitStatus.DONE
-                                db.merge(unit)
-                                db.commit()
 
                         except Exception as e:
                             exceptions[positional_index] = e
                             if task_type == "parallel":
-                                unit = db.get(
-                                    HistoryUnit, current_history_unit_id
+                                update_status_of_history_unit(
+                                    history_unit_id=current_history_unit_id,
+                                    status=HistoryUnitStatus.FAILED,
+                                    db_sync=db,
                                 )
-                                unit.status = HistoryUnitStatus.FAILED
-                                db.merge(unit)
-                                db.commit()
 
                             # FIXME: what should happen here? Option 1: stop
                             # all existing tasks and shutdown runner (for the

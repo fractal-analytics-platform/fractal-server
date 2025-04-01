@@ -8,12 +8,12 @@ from typing import Literal
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
-from sqlmodel import update
 
 from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ..exceptions import JobExecutionError
+from .merge_outputs import merge_outputs
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
@@ -25,6 +25,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
@@ -128,11 +129,7 @@ def execute_tasks_v2(
 
         # TASK EXECUTION (V2)
         if task.type in ["non_parallel", "converter_non_parallel"]:
-            (
-                current_task_output,
-                num_tasks,
-                exceptions,
-            ) = run_v2_task_non_parallel(
+            outcomes_dict, num_tasks = run_v2_task_non_parallel(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -146,7 +143,7 @@ def execute_tasks_v2(
                 task_type=task.type,
             )
         elif task.type == "parallel":
-            current_task_output, num_tasks, exceptions = run_v2_task_parallel(
+            outcomes_dict, num_tasks = run_v2_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task=task,
@@ -158,7 +155,7 @@ def execute_tasks_v2(
                 dataset_id=dataset.id,
             )
         elif task.type in ["compound", "converter_compound"]:
-            current_task_output, num_tasks, exceptions = run_v2_task_compound(
+            outcomes_dict, num_tasks = run_v2_task_compound(
                 images=filtered_images,
                 zarr_dir=zarr_dir,
                 wftask=wftask,
@@ -176,21 +173,28 @@ def execute_tasks_v2(
 
         # POST TASK EXECUTION
 
-        # If `current_task_output` includes no images (to be created, edited or
-        # removed), then flag all the input images as modified. See
-        # fractal-server issue #1374.
-        if (
-            current_task_output.image_list_updates == []
-            and current_task_output.image_list_removals == []
-        ):
-            current_task_output = TaskOutput(
-                **current_task_output.model_dump(
-                    exclude={"image_list_updates"}
-                ),
-                image_list_updates=[
-                    dict(zarr_url=img["zarr_url"]) for img in filtered_images
-                ],
-            )
+        non_failed_task_outputs = [
+            value.task_output
+            for value in outcomes_dict.values()
+            if value.task_output is not None
+        ]
+        if len(non_failed_task_outputs) > 0:
+            current_task_output = merge_outputs(non_failed_task_outputs)
+            # If `current_task_output` includes no images (to be created or
+            # removed), then flag all the input images as modified.
+            # See fractal-server issues #1374 and #2409.
+            if (
+                current_task_output.image_list_updates == []
+                and current_task_output.image_list_removals == []
+            ):
+                current_task_output = TaskOutput(
+                    image_list_updates=[
+                        dict(zarr_url=img["zarr_url"])
+                        for img in filtered_images
+                    ],
+                )
+        else:
+            current_task_output = TaskOutput()
 
         # Update image list
         num_new_images = 0
@@ -335,30 +339,38 @@ def execute_tasks_v2(
             db.add(record)
             db.commit()
 
-            # Update History tables, and raise an error if task failed
-            if exceptions == {}:
-                db.execute(
-                    update(HistoryRun)
-                    .where(HistoryRun.id == history_run_id)
-                    .values(status=HistoryUnitStatus.DONE)
+            # Update `HistoryRun` entry, and raise an error if task failed
+            try:
+                first_exception = next(
+                    value.exception
+                    for value in outcomes_dict.values()
+                    if value.exception is not None
                 )
-                db.commit()
-            else:
-                db.execute(
-                    update(HistoryRun)
-                    .where(HistoryRun.id == history_run_id)
-                    .values(status=HistoryUnitStatus.FAILED)
+                # An exception was found
+                update_status_of_history_run(
+                    history_run_id=history_run_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
                 )
-                db.commit()
                 logger.error(
                     f'END    {wftask.order}-th task (name="{task_name}") - '
                     "ERROR."
                 )
                 # Raise first error
-                for key, value in exceptions.items():
-                    raise JobExecutionError(
-                        info=(f"An error occurred.\nOriginal error:\n{value}")
+                raise JobExecutionError(
+                    info=(
+                        f"An error occurred.\n"
+                        f"Original error:\n{first_exception}"
                     )
+                )
+            except StopIteration:
+                # No exception was found
+                update_status_of_history_run(
+                    history_run_id=history_run_id,
+                    status=HistoryUnitStatus.DONE,
+                    db_sync=db,
+                )
+                db.commit()
                 logger.debug(
                     f'END    {wftask.order}-th task (name="{task_name}")'
                 )

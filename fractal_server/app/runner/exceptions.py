@@ -37,6 +37,10 @@ class TaskExecutionError(RuntimeError):
         self.task_name = task_name
 
 
+class TaskOutputValidationError(ValueError):
+    pass
+
+
 class JobExecutionError(RuntimeError):
     """
     Forwards errors in the execution of a task that are due to external factors

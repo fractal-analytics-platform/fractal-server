@@ -5,12 +5,13 @@ from typing import Callable
 from typing import Literal
 from typing import Optional
 
-from pydantic import ValidationError
-from sqlmodel import update
+from pydantic import BaseModel
+from pydantic import ConfigDict
 
 from ..exceptions import JobExecutionError
+from ..exceptions import TaskOutputValidationError
+from .db_tools import update_status_of_history_unit
 from .deduplicate_list import deduplicate_list
-from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
@@ -21,9 +22,15 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.runner.v2._db_tools import bulk_upsert_image_cache_fast
+from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
+from fractal_server.app.runner.v2.task_interface import (
+    _cast_and_validate_InitTaskOutput,
+)
+from fractal_server.app.runner.v2.task_interface import (
+    _cast_and_validate_TaskOutput,
+)
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-
+from fractal_server.logger import set_logger
 
 __all__ = [
     "run_v2_task_parallel",
@@ -32,35 +39,70 @@ __all__ = [
 ]
 
 
+logger = set_logger(__name__)
+
+
+class SubmissionOutcome(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    task_output: TaskOutput | None = None
+    exception: BaseException | None = None
+
+
+class InitSubmissionOutcome(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    task_output: InitTaskOutput | None = None
+    exception: BaseException | None = None
+
+
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
 
 
-def _cast_and_validate_TaskOutput(
-    task_output: dict[str, Any]
-) -> Optional[TaskOutput]:
-    try:
-        validated_task_output = TaskOutput(**task_output)
-        return validated_task_output
-    except ValidationError as e:
-        raise JobExecutionError(
-            "Validation of task output failed.\n"
-            f"Original error: {str(e)}\n"
-            f"Original data: {task_output}."
-        )
+def _process_task_output(
+    *,
+    result: dict[str, Any] | None = None,
+    exception: BaseException | None = None,
+) -> SubmissionOutcome:
+    if exception is not None:
+        task_output = None
+    else:
+        if result is None:
+            task_output = TaskOutput()
+        else:
+            try:
+                task_output = _cast_and_validate_TaskOutput(result)
+            except TaskOutputValidationError as e:
+                # FIXME: This should correspond to some status="failed",
+                # but it does not
+                task_output = None
+                exception = e
+    return SubmissionOutcome(
+        task_output=task_output,
+        exception=exception,
+    )
 
 
-def _cast_and_validate_InitTaskOutput(
-    init_task_output: dict[str, Any],
-) -> Optional[InitTaskOutput]:
-    try:
-        validated_init_task_output = InitTaskOutput(**init_task_output)
-        return validated_init_task_output
-    except ValidationError as e:
-        raise JobExecutionError(
-            "Validation of init-task output failed.\n"
-            f"Original error: {str(e)}\n"
-            f"Original data: {init_task_output}."
-        )
+def _process_init_task_output(
+    *,
+    result: dict[str, Any] | None = None,
+    exception: BaseException | None = None,
+) -> SubmissionOutcome:
+    if exception is not None:
+        task_output = None
+    else:
+        if result is None:
+            task_output = InitTaskOutput()
+        else:
+            try:
+                task_output = _cast_and_validate_InitTaskOutput(result)
+            except TaskOutputValidationError as e:
+                # FIXME: This should correspond to some status="failed",
+                # but it does not
+                task_output = None
+                exception = e
+    return InitSubmissionOutcome(
+        task_output=task_output,
+        exception=exception,
+    )
 
 
 def _check_parallelization_list_size(my_list):
@@ -92,7 +134,7 @@ def run_v2_task_non_parallel(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["non_parallel", "converter_non_parallel"],
-) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+) -> tuple[dict[int, SubmissionOutcome], int]:
     """
     This runs server-side (see `executor` argument)
     """
@@ -122,7 +164,6 @@ def run_v2_task_non_parallel(
 
     # Database History operations
     with next(get_sync_db()) as db:
-
         if task_type == "non_parallel":
             zarr_urls = function_kwargs["zarr_urls"]
         elif task_type == "converter_non_parallel":
@@ -166,16 +207,16 @@ def run_v2_task_non_parallel(
         config=runner_config,
     )
 
+    positional_index = 0
     num_tasks = 1
-    with next(get_sync_db()) as db:
-        if exception is None:
-            if result is None:
-                return (TaskOutput(), num_tasks, {})
-            else:
-                return (_cast_and_validate_TaskOutput(result), num_tasks, {})
-        else:
 
-            return (TaskOutput(), num_tasks, {0: exception})
+    outcome = {
+        positional_index: _process_task_output(
+            result=result,
+            exception=exception,
+        )
+    }
+    return outcome, num_tasks
 
 
 def run_v2_task_parallel(
@@ -196,9 +237,9 @@ def run_v2_task_parallel(
     ],
     dataset_id: int,
     history_run_id: int,
-) -> tuple[TaskOutput, int, dict[int, BaseException]]:
+) -> tuple[dict[int, SubmissionOutcome], int]:
     if len(images) == 0:
-        return (TaskOutput(), 0, {})
+        return {}, 0
 
     _check_parallelization_list_size(images)
 
@@ -277,23 +318,23 @@ def run_v2_task_parallel(
         config=runner_config,
     )
 
-    outputs = []
+    outcome = {}
     for ind in range(len(list_function_kwargs)):
-        if ind in results.keys():
-            result = results[ind]
-            if result is None:
-                output = TaskOutput()
-            else:
-                output = _cast_and_validate_TaskOutput(result)
-            outputs.append(output)
-        elif ind in exceptions.keys():
-            print(f"Bad: {exceptions[ind]}")
-        else:
-            print("VERY BAD - should have not reached this point")
+        if ind not in results.keys() and ind not in exceptions.keys():
+            # FIXME: Could we avoid this branch?
+            error_msg = (
+                f"Invalid branch: {ind=} is not in `results.keys()` "
+                "nor in `exceptions.keys()`."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        outcome[ind] = _process_task_output(
+            result=results.get(ind, None),
+            exception=exceptions.get(ind, None),
+        )
 
     num_tasks = len(images)
-    merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks, exceptions)
+    return outcome, num_tasks
 
 
 # FIXME: THIS FOR CONVERTERS:
@@ -324,8 +365,7 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["compound", "converter_compound"],
-) -> tuple[TaskOutput, int, dict[int, BaseException]]:
-
+) -> tuple[dict[int, SubmissionOutcome], int]:
     # Get TaskFiles object
     task_files_init = TaskFiles(
         root_dir_local=workflow_dir_local,
@@ -397,16 +437,23 @@ def run_v2_task_compound(
         config=runner_config_init,
     )
 
+    init_outcome = _process_init_task_output(
+        result=result,
+        exception=exception,
+    )
     num_tasks = 1
-    if exception is None:
-        if result is None:
-            init_task_output = InitTaskOutput()
-        else:
-            init_task_output = _cast_and_validate_InitTaskOutput(result)
-    else:
-        return (TaskOutput(), num_tasks, {0: exception})
+    if init_outcome.exception is not None:
+        positional_index = 0
+        return (
+            {
+                positional_index: SubmissionOutcome(
+                    exception=init_outcome.exception
+                )
+            },
+            num_tasks,
+        )
 
-    parallelization_list = init_task_output.parallelization_list
+    parallelization_list = init_outcome.task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
     num_tasks = 1 + len(parallelization_list)
@@ -416,13 +463,19 @@ def run_v2_task_compound(
 
     if len(parallelization_list) == 0:
         with next(get_sync_db()) as db:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.DONE)
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.DONE,
+                db_sync=db,
             )
-            db.commit()
-        return (TaskOutput(), 0, {})
+        positional_index = 0
+        init_outcome = {
+            positional_index: _process_task_output(
+                result=None,
+                exception=None,
+            )
+        }
+        return init_outcome, num_tasks
 
     list_task_files = [
         TaskFiles(
@@ -458,39 +511,36 @@ def run_v2_task_compound(
         config=runner_config_compute,
     )
 
-    outputs = []
+    init_outcome = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
-        if ind in results.keys():
-            result = results[ind]
-            if result is None:
-                output = TaskOutput()
-            else:
-                output = _cast_and_validate_TaskOutput(result)
-            outputs.append(output)
-
-        elif ind in exceptions.keys():
-            print(f"Bad: {exceptions[ind]}")
-            failure = True
-        else:
-            print("VERY BAD - should have not reached this point")
+        if ind not in results.keys() and ind not in exceptions.keys():
+            # FIXME: Could we avoid this branch?
+            error_msg = (
+                f"Invalid branch: {ind=} is not in `results.keys()` "
+                "nor in `exceptions.keys()`."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        init_outcome[ind] = _process_task_output(
+            result=results.get(ind, None),
+            exception=exceptions.get(ind, None),
+        )
 
     # FIXME: In this case, we are performing db updates from here, rather
     # than at lower level.
     with next(get_sync_db()) as db:
         if failure:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.FAILED)
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db,
             )
         else:
-            db.execute(
-                update(HistoryUnit)
-                .where(HistoryUnit.id == history_unit_id)
-                .values(status=HistoryUnitStatus.DONE)
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.DONE,
+                db_sync=db,
             )
-        db.commit()
 
-    merged_output = merge_outputs(outputs)
-    return (merged_output, num_tasks, exceptions)
+    return init_outcome, num_tasks
