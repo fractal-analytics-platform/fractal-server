@@ -614,11 +614,13 @@ class RunnerSlurmSudo(BaseRunner):
             list_parameters=list_parameters,
         )
 
+        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
+
         workdir_local = list_task_files[0].wftask_subfolder_local
         workdir_remote = list_task_files[0].wftask_subfolder_remote
 
         # Create local&remote task subfolders
-        if task_type not in ["converter_compound", "compound"]:
+        if task_type == "parallel":
             original_umask = os.umask(0)
             workdir_local.mkdir(parents=True, mode=0o755)
             os.umask(original_umask)
