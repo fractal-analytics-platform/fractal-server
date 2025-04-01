@@ -216,7 +216,7 @@ def run_v2_task_parallel(
     history_run_id: int,
 ) -> tuple[dict[int, OutputException], int]:
     if len(images) == 0:
-        return (TaskOutput(), 0, {})
+        return {}, 0
 
     _check_parallelization_list_size(images)
 
