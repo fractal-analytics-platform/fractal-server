@@ -33,7 +33,7 @@ class HistoryUnitRead(BaseModel):
 class HistoryRunRead(BaseModel):
     id: int
     dataset_id: int
-    workflowtask_id: int
+    workflowtask_id: Optional[int] = None
     workflowtask_dump: dict[str, Any]
     task_group_dump: dict[str, Any]
     timestamp_started: datetime
