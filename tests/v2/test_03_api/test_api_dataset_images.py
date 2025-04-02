@@ -290,6 +290,13 @@ async def test_delete_images(
         cache_count = res.scalar()
         assert cache_count == len(IMAGES) - 1 - i
 
+    res = await client.delete(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
+        "?zarr_url=foo",
+    )
+    assert res.status_code == 404
+    assert "No image with zarr_url" in res.json()["detail"]
+
 
 async def test_post_new_image(
     MockCurrentUser,
