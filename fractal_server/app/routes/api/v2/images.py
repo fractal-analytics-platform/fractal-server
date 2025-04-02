@@ -218,10 +218,8 @@ async def delete_dataset_images(
                 f"DatasetV2 {dataset_id}."
             ),
         )
-    else:
-        image_to_remove = image_to_remove["image"]
 
-    dataset.images.remove(image_to_remove)
+    dataset.images.remove(image_to_remove["image"])
     flag_modified(dataset, "images")
 
     await db.execute(
