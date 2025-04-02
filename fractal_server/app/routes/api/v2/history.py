@@ -25,6 +25,7 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -402,3 +403,32 @@ async def get_history_unit_log(
         dataset_id=dataset_id,
     )
     return JSONResponse(content=log)
+
+
+@router.get("/project/{project_id}/dataset/{dataset_id}/history/")
+async def get_dataset_history(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[HistoryRunRead]:
+    """
+    Returns a list of all HistoryRuns associated to a given dataset, sorted by
+    timestamp.
+    """
+    # Access control
+    await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    res = await db.execute(
+        select(HistoryRun)
+        .where(HistoryRun.dataset_id == dataset_id)
+        .order_by(HistoryRun.timestamp_started.desc())
+    )
+    history_run_list = res.scalars().all()
+
+    return history_run_list

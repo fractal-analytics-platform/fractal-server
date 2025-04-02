@@ -30,6 +30,17 @@ class HistoryUnitRead(BaseModel):
     zarr_urls: list[str]
 
 
+class HistoryRunRead(BaseModel):
+    id: int
+    dataset_id: int
+    workflowtask_id: int
+    workflowtask_dump: dict[str, Any]
+    task_group_dump: dict[str, Any]
+    timestamp_started: datetime
+    status: HistoryUnitStatus
+    num_available_images: int
+
+
 class HistoryRunReadAggregated(BaseModel):
     id: int
     timestamp_started: AwareDatetime
