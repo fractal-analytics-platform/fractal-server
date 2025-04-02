@@ -73,13 +73,13 @@ def process_workflow(
         root_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
         slurm_account=slurm_account,
-    ) as executor:
+    ) as runner:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)
             ],
             dataset=dataset,
-            runner=executor,
+            runner=runner,
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
             logger_name=logger_name,
