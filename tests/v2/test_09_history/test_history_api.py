@@ -651,6 +651,4 @@ async def test_get_history_run_dataset(
         assert res.status_code == 200
         history_run_list = res.json()
         # Assert HistoryRuns are returned in reverse order
-        assert [hr["id"] for hr in history_run_list] == [
-            N - i for i in range(N)
-        ]
+        assert [hr["id"] for hr in history_run_list] == list(range(1, N + 1))

@@ -36,9 +36,13 @@ class HistoryRunRead(BaseModel):
     workflowtask_id: Optional[int] = None
     workflowtask_dump: dict[str, Any]
     task_group_dump: dict[str, Any]
-    timestamp_started: datetime
+    timestamp_started: AwareDatetime
     status: HistoryUnitStatus
     num_available_images: int
+
+    @field_serializer("timestamp_started")
+    def serialize_datetime(v: datetime) -> str:
+        return v.isoformat()
 
 
 class HistoryRunReadAggregated(BaseModel):

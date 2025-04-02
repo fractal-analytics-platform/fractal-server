@@ -427,7 +427,7 @@ async def get_dataset_history(
     res = await db.execute(
         select(HistoryRun)
         .where(HistoryRun.dataset_id == dataset_id)
-        .order_by(HistoryRun.timestamp_started.desc())
+        .order_by(HistoryRun.timestamp_started)
     )
     history_run_list = res.scalars().all()
 
