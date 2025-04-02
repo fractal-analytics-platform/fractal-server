@@ -707,3 +707,37 @@ async def test_get_logs(
         )
         assert res.status_code == 200
         assert res.json() == LOGS
+
+
+async def test_get_history_run_dataset(
+    project_factory_v2,
+    dataset_factory_v2,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+
+        dataset = await dataset_factory_v2(project_id=project.id)
+
+        N = 5
+        for _ in range(5):
+            db.add(
+                HistoryRun(
+                    dataset_id=dataset.id,
+                    workflowtask_dump={},
+                    task_group_dump={},
+                    status=HistoryUnitStatus.DONE,
+                    num_available_images=0,
+                )
+            )
+        await db.commit()
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/dataset/{dataset.id}/history/"
+        )
+        assert res.status_code == 200
+        history_run_list = res.json()
+        # Assert HistoryRuns are returned in reverse order
+        assert [hr["id"] for hr in history_run_list] == list(range(1, N + 1))

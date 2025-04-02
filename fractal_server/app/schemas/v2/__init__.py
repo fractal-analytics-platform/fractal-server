@@ -10,6 +10,7 @@ from .dumps import TaskDumpV2  # noqa F401
 from .dumps import TaskGroupDumpV2  # noqa F401
 from .dumps import WorkflowDumpV2  # noqa F401
 from .dumps import WorkflowTaskDumpV2  # noqa F401
+from .history import HistoryRunRead  # noqa F401
 from .history import HistoryRunReadAggregated  # noqa F401
 from .history import HistoryUnitRead  # noqa F401
 from .history import HistoryUnitStatus  # noqa F401
