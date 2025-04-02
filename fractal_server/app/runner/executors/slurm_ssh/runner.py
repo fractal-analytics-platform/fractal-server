@@ -10,24 +10,14 @@ from typing import Optional
 
 import cloudpickle
 
-from ..slurm_common._handle_exception_proxy import (
-    _handle_exception_proxy,
-)
-from ..slurm_common._slurm_config import (
-    SlurmConfig,
-)
-from ..slurm_common.slurm_job_task_models import (
-    SlurmJob,
-)
-from ..slurm_common.slurm_job_task_models import (
-    SlurmTask,
-)
+from ..slurm_common._slurm_config import SlurmConfig
+from ..slurm_common.base_slurm_runner import BaseSlurmRunner
+from ..slurm_common.slurm_job_task_models import SlurmJob
+from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.compress_folder import compress_folder
-from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.executors.slurm_common._batching import (
     heuristics,
 )
@@ -45,17 +35,8 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 
-class RunnerSlurmSSH(BaseRunner):
+class RunnerSlurmSSH(BaseSlurmRunner):
     fractal_ssh: FractalSSH
-
-    shutdown_file: Path
-    common_script_lines: list[str]
-    user_cache_dir: str
-    root_dir_local: Path
-    root_dir_remote: Path
-    poll_interval: int
-    python_worker_interpreter: str
-    jobs: dict[str, SlurmJob]
 
     def __init__(
         self,
@@ -133,8 +114,11 @@ class RunnerSlurmSSH(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def is_shutdown(self) -> bool:
-        return self.shutdown_file.exists()
+    def _mkdir_remote_folder(self, folder: str):
+        self.fractal_ssh.mkdir(
+            folder=folder,
+            parents=True,
+        )
 
     def scancel_jobs(self) -> None:
         logger.debug("[scancel_jobs] START")
@@ -145,11 +129,6 @@ class RunnerSlurmSSH(BaseRunner):
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             try:
                 self.fractal_ssh.run_command(cmd=scancel_cmd)
-                # _run_command_as_user(
-                #     cmd=scancel_cmd,
-                #     user=self.slurm_user,
-                #     check=True,
-                # )
             except RuntimeError as e:
                 logger.warning(
                     "[scancel_jobs] `scancel` command failed. "
@@ -158,7 +137,24 @@ class RunnerSlurmSSH(BaseRunner):
 
         logger.debug("[scancel_jobs] END")
 
+    def get_finished_jobs(
+        self,
+        job_ids: list[str],
+    ) -> set[str]:
+        return get_finished_jobs_ssh(
+            job_ids=job_ids,
+            fractal_ssh=self.fractal_ssh,
+        )
+
+    def _copy_files_from_remote_to_local(self, slurm_job: SlurmJob) -> None:
+        self._get_subfolder_sftp(job=slurm_job)
+
     def _put_subfolder_sftp(self, job: SlurmJob) -> None:
+        # FIXME re-introduce use of this function, but only after splitting
+        # submission logic into
+        # 1. prepare all
+        # 2. send folder
+        # 3. submit all
         """
         Transfer the jobs subfolder to the remote host.
         """
@@ -220,6 +216,9 @@ class RunnerSlurmSSH(BaseRunner):
             logger.warning(f"{tarfile_path_remote} already exists!\n {str(e)}")
 
         # Create remote tarfile
+        # FIXME: introduce filtering by prefix, so that when the subfolder
+        # includes N SLURM jobs we don't always copy the cumulative folder
+        # but only the relevant part
         tar_command = (
             f"{self.python_worker_interpreter} "
             "-m fractal_server.app.runner.compress_folder "
@@ -393,133 +392,6 @@ class RunnerSlurmSSH(BaseRunner):
     @property
     def job_ids(self) -> list[str]:
         return list(self.jobs.keys())
-
-    def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
-        self._put_subfolder_sftp(job=job)
-
-        self._get_subfolder_sftp(job=job)
-
-    def _postprocess_single_task(
-        self, *, task: SlurmTask
-    ) -> tuple[Any, Exception]:
-        try:
-            with open(task.output_pickle_file_local, "rb") as f:
-                outdata = f.read()
-            success, output = cloudpickle.loads(outdata)
-            if success:
-                result = output
-                return result, None
-            else:
-                exception = _handle_exception_proxy(output)
-                return None, exception
-        except Exception as e:
-            exception = JobExecutionError(f"ERROR, {str(e)}")
-            return None, exception
-        finally:
-            Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            Path(task.output_pickle_file_local).unlink(missing_ok=True)
-
-    def submit(
-        self,
-        func: callable,
-        parameters: dict[str, Any],
-        history_unit_id: int,
-        task_files: TaskFiles,
-        config: SlurmConfig,
-        task_type: Literal[
-            "non_parallel",
-            "converter_non_parallel",
-            "compound",
-            "converter_compound",
-        ],
-    ) -> tuple[Any, Exception]:
-        workdir_local = task_files.wftask_subfolder_local
-        workdir_remote = task_files.wftask_subfolder_remote
-
-        if self.jobs != {}:
-            raise JobExecutionError("Unexpected branch: jobs should be empty.")
-
-        if self.is_shutdown():
-            raise JobExecutionError("Cannot continue after shutdown.")
-
-        # Validation phase
-        self.validate_submit_parameters(
-            parameters=parameters,
-            task_type=task_type,
-        )
-
-        # Create task subfolder
-        workdir_local.mkdir(parents=True)
-        self.fractal_ssh.mkdir(
-            folder=workdir_remote.as_posix(),
-            parents=True,
-        )
-
-        # Submission phase
-        slurm_job = SlurmJob(
-            label="0",
-            workdir_local=workdir_local,
-            workdir_remote=workdir_remote,
-            tasks=[
-                SlurmTask(
-                    index=0,
-                    component=task_files.component,
-                    parameters=parameters,
-                    workdir_remote=workdir_remote,
-                    workdir_local=workdir_local,
-                    task_files=task_files,
-                )
-            ],
-        )
-
-        config.parallel_tasks_per_job = 1
-        self._submit_single_sbatch(
-            func,
-            slurm_job=slurm_job,
-            slurm_config=config,
-        )
-        logger.info(f"END submission phase, {self.job_ids=}")
-
-        # TODO: check if this sleep is necessary
-        logger.warning("Now sleep 4 (FIXME)")
-        time.sleep(4)
-
-        # Retrieval phase
-        logger.info("START retrieval phase")
-        while len(self.jobs) > 0:
-            if self.is_shutdown():
-                self.scancel_jobs()
-            finished_job_ids = get_finished_jobs_ssh(
-                job_ids=self.job_ids,
-                fractal_ssh=self.fractal_ssh,
-            )
-            logger.debug(f"{finished_job_ids=}")
-            with next(get_sync_db()) as db:
-                for slurm_job_id in finished_job_ids:
-                    logger.debug(f"Now process {slurm_job_id=}")
-                    slurm_job = self.jobs.pop(slurm_job_id)
-                    self._get_subfolder_sftp(job=slurm_job)
-                    # self._copy_files_from_remote_to_local(slurm_job)
-                    result, exception = self._postprocess_single_task(
-                        task=slurm_job.tasks[0]
-                    )
-                    if exception is not None:
-                        update_status_of_history_unit(
-                            history_unit_id=history_unit_id,
-                            status=HistoryUnitStatus.FAILED,
-                            db_sync=db,
-                        )
-                    else:
-                        if task_type not in ["compound", "converter_compound"]:
-                            update_status_of_history_unit(
-                                history_unit_id=history_unit_id,
-                                status=HistoryUnitStatus.DONE,
-                                db_sync=db,
-                            )
-
-            time.sleep(self.slurm_poll_interval)
-
-        return result, exception
 
     def multisubmit(
         self,
