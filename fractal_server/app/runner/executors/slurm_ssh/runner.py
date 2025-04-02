@@ -796,8 +796,8 @@ class RunnerSlurmSSH(BaseRunner):
         logger.info(f"END submission phase, {list(self.jobs.keys())=}")
 
         # TODO useful?
-        # logger.warning("Now sleep 4 (FIXME)")
-        # time.sleep(4)
+        logger.warning("Now sleep 4 (FIXME)")
+        time.sleep(4)
 
         # Retrieval phase
         logger.info("START retrieval phase")
