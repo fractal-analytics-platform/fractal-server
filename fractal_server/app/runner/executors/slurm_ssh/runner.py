@@ -812,7 +812,8 @@ class RunnerSlurmSSH(BaseRunner):
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(slurm_job)
+                    self._get_subfolder_sftp(job=slurm_job)
+                    # self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
                         logger.debug(f"Now processing {task.index=}")
                         result, exception = self._postprocess_single_task(
