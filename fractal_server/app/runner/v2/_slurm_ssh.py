@@ -78,8 +78,8 @@ def process_workflow(
 
     with RunnerSlurmSSH(
         fractal_ssh=fractal_ssh,
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
     ) as runner:
         execute_tasks_v2(
