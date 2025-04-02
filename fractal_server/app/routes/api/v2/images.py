@@ -28,6 +28,8 @@ from fractal_server.app.schemas._validators import root_validate_dict_keys
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.models import AttributeFiltersType
+from fractal_server.images.tools import aggregate_attributes
+from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
@@ -133,16 +135,8 @@ async def query_dataset_images(
     dataset = output["dataset"]
     images = dataset.images
 
-    attributes = {}
-    for image in images:
-        for k, v in image["attributes"].items():
-            attributes.setdefault(k, []).append(v)
-        for k, v in attributes.items():
-            attributes[k] = list(set(v))
-
-    types = list(
-        set(type for image in images for type in image["types"].keys())
-    )
+    attributes = aggregate_attributes(images)
+    types = aggregate_types(images)
 
     if query is not None:
 
