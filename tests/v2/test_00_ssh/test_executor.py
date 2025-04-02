@@ -37,7 +37,7 @@
 #             workflow_dir_local=self.workflow_dir_local,
 #             workflow_dir_remote=self.workflow_dir_remote,
 #         )
-#         remote_subfolder = self.workflow_dir_remote / task_files.subfolder_name
+#         remote_subfolder = self.workflow_dir_remote / task_files.subfolder_name  # noqa
 #         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
 #         mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
 #         stdout = self.fractal_ssh.run_command(cmd=mkdir_command)
@@ -215,7 +215,7 @@
 #         debug(fut)
 #         debug(fut.result())
 #     # Assert that no .tar.gz is left in the job directory, see
-#     # https://github.com/fractal-analytics-platform/fractal-server/issues/1715
+#     # https://github.com/fractal-analytics-platform/fractal-server/issues/1715  # noqa
 #     assert len(list((tmp_path / "job_dir").glob("*"))) > 0
 #     assert len(list((tmp_path / "job_dir").glob("*.tar.gz"))) == 0
 # @pytest.mark.container
