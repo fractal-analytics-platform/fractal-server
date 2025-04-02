@@ -433,7 +433,10 @@ class RunnerSlurmSSH(BaseRunner):
         )
         for task in slurm_job.tasks:
             _args = []
-            _kwargs = dict(parameters=task.parameters)
+            _kwargs = dict(
+                parameters=task.parameters,
+                remote_files=task.task_files.remote_files_dict,
+            )
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
 
             with open(task.input_pickle_file_local, "wb") as f:
