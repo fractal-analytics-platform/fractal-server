@@ -263,10 +263,10 @@ class RunnerSlurmSSH(BaseRunner):
             pass
 
         # Check Python versions
-        settings = Inject(get_settings)
         self.fractal_ssh = fractal_ssh
         logger.warning(self.fractal_ssh)
 
+        settings = Inject(get_settings)
         # It is the new handshanke
         if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
             self.check_remote_python_interpreter()
@@ -345,8 +345,19 @@ class RunnerSlurmSSH(BaseRunner):
             _args = []
             _kwargs = dict(parameters=task.parameters)
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
+
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
+
+            logger.debug(
+                "[_submit_single_sbatch] Written "
+                f"{task.input_pickle_file_local=}"
+            )
+        # Send input pickle
+        self.fractal_ssh.send_file(
+            local=task.input_pickle_file_local,
+            remote=task.input_pickle_file_remote,
+        )
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
         python_worker_interpreter = (
@@ -354,7 +365,7 @@ class RunnerSlurmSSH(BaseRunner):
         )
         cmdlines = []
         for task in slurm_job.tasks:
-            input_pickle_file = task.input_pickle_file_local
+            input_pickle_file = task.input_pickle_file_remote
             output_pickle_file = task.output_pickle_file_remote
             cmdlines.append(
                 (
@@ -458,12 +469,8 @@ class RunnerSlurmSSH(BaseRunner):
         return list(self.jobs.keys())
 
     def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
-        # FIXME: This should only transfer archives, not single files
-        """
-        Note: this would differ for SSH
-        """
-        remote_tar_file = job.workdir_remote / f"{job.label}.tar"
-        local_tar_file = job.workdir_local / f"{job.label}.tar"
+        remote_tar_file = job.workdir_remote / f"{job.label}.tar.gz"
+        local_tar_file = job.workdir_local / f"{job.label}.tar.gz"
         source_files = [
             job.slurm_stdout_remote,
             job.slurm_stderr_remote,
@@ -479,7 +486,10 @@ class RunnerSlurmSSH(BaseRunner):
                 ]
             )
         source_files_str = " ".join(source_files)
-        tar_command = f"tar -czf {remote_tar_file} {source_files_str}"
+        tar_command = (
+            f"tar -czf {remote_tar_file} "
+            f"--ignore-failed-read {source_files_str}"
+        )
         untar_command = f"tar -xzf {local_tar_file} -C {job.workdir_local}"
 
         # Now create the tar file
@@ -543,7 +553,7 @@ class RunnerSlurmSSH(BaseRunner):
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
-        slurm_config: SlurmConfig,
+        config: SlurmConfig,
         task_type: Literal[
             "non_parallel",
             "converter_non_parallel",
@@ -590,11 +600,11 @@ class RunnerSlurmSSH(BaseRunner):
             ],
         )
 
-        slurm_config.parallel_tasks_per_job = 1
+        config.parallel_tasks_per_job = 1
         self._submit_single_sbatch(
             func,
             slurm_job=slurm_job,
-            slurm_config=slurm_config,
+            slurm_config=config,
         )
         logger.info(f"END submission phase, {self.job_ids=}")
 
@@ -801,7 +811,7 @@ class RunnerSlurmSSH(BaseRunner):
     def check_remote_python_interpreter(self):
         settings = Inject(get_settings)
         cmd = (
-            f"{self.python_worker_interpreter} "
+            f"{settings.FRACTAL_SLURM_WORKER_PYTHON} "
             "-m fractal_server.app.runner.versions"
         )
         stdout = self.fractal_ssh.run_command(cmd=cmd)

@@ -31,7 +31,9 @@ async def test_submit_success(
     override_settings_factory,
     task_type: str,
 ):
-    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON=None)
+    override_settings_factory(
+        FRACTAL_SLURM_WORKER_PYTHON="/.venv3.12/bin/python"
+    )
 
     def do_nothing(parameters: dict, **kwargs) -> int:
         return 42
@@ -55,7 +57,7 @@ async def test_submit_success(
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
             ),
-            slurm_config=get_default_slurm_config(),
+            config=get_default_slurm_config(),
             task_type=task_type,
         )
     debug(result, exception)
