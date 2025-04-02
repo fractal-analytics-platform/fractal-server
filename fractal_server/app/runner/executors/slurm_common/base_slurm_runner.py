@@ -31,7 +31,10 @@ class BaseSlurmRunner(BaseRunner):
     jobs: dict[str, SlurmJob]
     slurm_poll_interval: int
 
-    def get_finished_jobs(self, job_ids: list[str]) -> set[str]:
+    def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
+        raise NotImplementedError("Implement in child class.")
+
+    def _mkdir_local_folder(self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
 
     def _mkdir_remote_folder(self, folder: str) -> None:
@@ -109,7 +112,7 @@ class BaseSlurmRunner(BaseRunner):
         )
 
         # Create task subfolder
-        workdir_local.mkdir(parents=True)
+        self._mkdir_local_folder(folder=workdir_local.as_posix())
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
 
         # Submission phase
@@ -146,7 +149,7 @@ class BaseSlurmRunner(BaseRunner):
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
-            finished_job_ids = self.get_finished_jobs(job_ids=self.job_ids)
+            finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"{finished_job_ids=}")
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:

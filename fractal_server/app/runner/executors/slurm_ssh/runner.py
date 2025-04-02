@@ -114,6 +114,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
+    def _mkdir_local_folder(self, folder: str) -> None:
+        Path(folder).mkdir(parents=True)
+
     def _mkdir_remote_folder(self, folder: str):
         self.fractal_ssh.mkdir(
             folder=folder,
@@ -137,7 +140,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         logger.debug("[scancel_jobs] END")
 
-    def get_finished_jobs(
+    def _get_finished_jobs(
         self,
         job_ids: list[str],
     ) -> set[str]:

@@ -157,8 +157,13 @@ class SudoSlurmRunner(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def is_shutdown(self) -> bool:
-        return self.shutdown_file.exists()
+    def _mkdir_local_folder(self, folder: str) -> None:
+        original_umask = os.umask(0)
+        Path(folder).mkdir(parents=True, mode=0o755)
+        os.umask(original_umask)
+
+    def _mkdir_remote_folder(self, folder: str) -> None:
+        _mkdir_as_user(folder=folder, user=self.slurm_user)
 
     def scancel_jobs(self) -> None:
         logger.debug("[scancel_jobs] START")
@@ -180,6 +185,12 @@ class SudoSlurmRunner(BaseRunner):
                 )
 
         logger.debug("[scancel_jobs] END")
+
+    def _get_finished_jobs(
+        self,
+        job_ids: list[str],
+    ) -> set[str]:
+        return get_finished_jobs(job_ids=job_ids)
 
     def _submit_single_sbatch(
         self,
@@ -368,108 +379,6 @@ class SudoSlurmRunner(BaseRunner):
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
             Path(task.output_pickle_file_local).unlink(missing_ok=True)
-
-    def submit(
-        self,
-        func: callable,
-        parameters: dict[str, Any],
-        history_unit_id: int,
-        task_files: TaskFiles,
-        task_type: Literal[
-            "non_parallel",
-            "converter_non_parallel",
-            "compound",
-            "converter_compound",
-        ],
-        config: SlurmConfig,
-    ) -> tuple[Any, Exception]:
-
-        if len(self.jobs) > 0:
-            raise RuntimeError(f"Cannot run .submit when {len(self.jobs)=}")
-
-        workdir_local = task_files.wftask_subfolder_local
-        workdir_remote = task_files.wftask_subfolder_remote
-        if self.jobs != {}:
-            raise JobExecutionError("Unexpected branch: jobs should be empty.")
-
-        if self.is_shutdown():
-            raise JobExecutionError("Cannot continue after shutdown.")
-
-        # Validation phase
-        self.validate_submit_parameters(parameters, task_type=task_type)
-
-        # Create task subfolder
-        original_umask = os.umask(0)
-        workdir_local.mkdir(parents=True, mode=0o755)
-        os.umask(original_umask)
-        _mkdir_as_user(
-            folder=workdir_remote.as_posix(),
-            user=self.slurm_user,
-        )
-
-        # Submission phase
-        slurm_job = SlurmJob(
-            label="0",
-            workdir_local=workdir_local,
-            workdir_remote=workdir_remote,
-            tasks=[
-                SlurmTask(
-                    index=0,
-                    component=task_files.component,
-                    parameters=parameters,
-                    workdir_remote=workdir_remote,
-                    workdir_local=workdir_local,
-                    task_files=task_files,
-                )
-            ],
-        )
-        config.parallel_tasks_per_job = 1
-        self._submit_single_sbatch(
-            func,
-            slurm_job=slurm_job,
-            slurm_config=config,
-        )
-        logger.info(f"END submission phase, {self.job_ids=}")
-
-        # FIXME: Replace with more robust/efficient logic
-        logger.warning("Now sleep 4 (FIXME)")
-        time.sleep(4)
-
-        # Retrieval phase
-        logger.info("START retrieval phase")
-        while len(self.jobs) > 0:
-            if self.is_shutdown():
-                self.scancel_jobs()
-            finished_job_ids = get_finished_jobs(job_ids=self.job_ids)
-            logger.debug(f"{finished_job_ids=}")
-            with next(get_sync_db()) as db:
-                for slurm_job_id in finished_job_ids:
-                    logger.debug(f"Now process {slurm_job_id=}")
-                    slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(slurm_job)
-                    result, exception = self._postprocess_single_task(
-                        task=slurm_job.tasks[0]
-                    )
-                    # Note: the relevant done/failed check is based on
-                    # whether `exception is None`. The fact that
-                    # `result is None` is not relevant for this purpose.
-                    if exception is not None:
-                        update_status_of_history_unit(
-                            history_unit_id=history_unit_id,
-                            status=HistoryUnitStatus.FAILED,
-                            db_sync=db,
-                        )
-                    else:
-                        if task_type not in ["compound", "converter_compound"]:
-                            update_status_of_history_unit(
-                                history_unit_id=history_unit_id,
-                                status=HistoryUnitStatus.DONE,
-                                db_sync=db,
-                            )
-
-            time.sleep(self.slurm_poll_interval)
-
-        return result, exception
 
     def multisubmit(
         self,
