@@ -1,11 +1,8 @@
 import json
-import math
 import sys
 import time
 from copy import copy
 from pathlib import Path
-from typing import Any
-from typing import Literal
 from typing import Optional
 
 import cloudpickle
@@ -13,19 +10,11 @@ import cloudpickle
 from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
-from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.compress_folder import compress_folder
-from fractal_server.app.runner.executors.slurm_common._batching import (
-    heuristics,
-)
 from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
-from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
-from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -391,171 +380,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         # Add job to self.jobs
         self.jobs[slurm_job.slurm_job_id] = slurm_job
         logger.debug(f"Added {slurm_job.slurm_job_id} to self.jobs.")
-
-    @property
-    def job_ids(self) -> list[str]:
-        return list(self.jobs.keys())
-
-    def multisubmit(
-        self,
-        func: callable,
-        list_parameters: list[dict],
-        history_unit_ids: list[int],
-        list_task_files: list[TaskFiles],
-        task_type: Literal["parallel", "compound", "converter_compound"],
-        config: SlurmConfig,
-    ):
-        if len(self.jobs) > 0:
-            raise RuntimeError(
-                f"Cannot run .multisubmit when {len(self.jobs)=}"
-            )
-
-        self.validate_multisubmit_parameters(
-            list_parameters=list_parameters,
-            task_type=task_type,
-            list_task_files=list_task_files,
-        )
-
-        self.validate_multisubmit_history_unit_ids(
-            history_unit_ids=history_unit_ids,
-            task_type=task_type,
-            list_parameters=list_parameters,
-        )
-
-        workdir_local = list_task_files[0].wftask_subfolder_local
-        workdir_remote = list_task_files[0].wftask_subfolder_remote
-
-        # Create local&remote task subfolders
-        if task_type == "parallel":
-            workdir_local.mkdir(parents=True)
-            self.fractal_ssh.mkdir(
-                folder=workdir_remote.as_posix(),
-                parents=True,
-            )
-
-        # Execute tasks, in chunks of size `parallel_tasks_per_job`
-        # TODO Pick a data structure for results and exceptions, or review the
-        # interface
-        results: dict[int, Any] = {}
-        exceptions: dict[int, BaseException] = {}
-
-        original_task_files = list_task_files
-        tot_tasks = len(list_parameters)
-
-        # Set/validate parameters for task batching
-        tasks_per_job, parallel_tasks_per_job = heuristics(
-            # Number of parallel components (always known)
-            tot_tasks=tot_tasks,
-            # Optional WorkflowTask attributes:
-            tasks_per_job=config.tasks_per_job,
-            parallel_tasks_per_job=config.parallel_tasks_per_job,  # noqa
-            # Task requirements (multiple possible sources):
-            cpus_per_task=config.cpus_per_task,
-            mem_per_task=config.mem_per_task_MB,
-            # Fractal configuration variables (soft/hard limits):
-            target_cpus_per_job=config.target_cpus_per_job,
-            target_mem_per_job=config.target_mem_per_job,
-            target_num_jobs=config.target_num_jobs,
-            max_cpus_per_job=config.max_cpus_per_job,
-            max_mem_per_job=config.max_mem_per_job,
-            max_num_jobs=config.max_num_jobs,
-        )
-        config.parallel_tasks_per_job = parallel_tasks_per_job
-        config.tasks_per_job = tasks_per_job
-
-        # Divide arguments in batches of `tasks_per_job` tasks each
-        args_batches = []
-        batch_size = tasks_per_job
-        for ind_chunk in range(0, tot_tasks, batch_size):
-            args_batches.append(
-                list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
-            )
-        if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
-            raise RuntimeError("Something wrong here while batching tasks")
-
-        logger.info(f"START submission phase, {list(self.jobs.keys())=}")
-        for ind_batch, chunk in enumerate(args_batches):
-            tasks = []
-            for ind_chunk, parameters in enumerate(chunk):
-                index = (ind_batch * batch_size) + ind_chunk
-                tasks.append(
-                    SlurmTask(
-                        index=index,
-                        component=original_task_files[index].component,
-                        workdir_local=workdir_local,
-                        workdir_remote=workdir_remote,
-                        parameters=parameters,
-                        zarr_url=parameters["zarr_url"],
-                        task_files=original_task_files[index],
-                    ),
-                )
-
-            slurm_job = SlurmJob(
-                label=f"{ind_batch:06d}",
-                workdir_local=workdir_local,
-                workdir_remote=workdir_remote,
-                tasks=tasks,
-            )
-            self._submit_single_sbatch(
-                func,
-                slurm_job=slurm_job,
-                slurm_config=config,
-            )
-        logger.info(f"END submission phase, {list(self.jobs.keys())=}")
-
-        # TODO useful?
-        logger.warning("Now sleep 4 (FIXME)")
-        time.sleep(4)
-
-        # Retrieval phase
-        logger.info("START retrieval phase")
-        while len(self.jobs) > 0:
-            if self.is_shutdown():
-                self.scancel_jobs()
-            finished_job_ids = get_finished_jobs_ssh(
-                job_ids=self.job_ids,
-                fractal_ssh=self.fractal_ssh,
-            )
-            logger.debug(f"{finished_job_ids=}")
-            with next(get_sync_db()) as db:
-                for slurm_job_id in finished_job_ids:
-                    slurm_job = self.jobs.pop(slurm_job_id)
-                    self._get_subfolder_sftp(job=slurm_job)
-                    # self._copy_files_from_remote_to_local(slurm_job)
-                    for task in slurm_job.tasks:
-                        logger.debug(f"Now processing {task.index=}")
-                        result, exception = self._postprocess_single_task(
-                            task=task
-                        )
-                        if exception is not None:
-                            logger.debug(
-                                f"Task {task.index} has an exception."
-                            )  # FIXME  # noqa
-                            exceptions[task.index] = exception
-                            if task_type == "parallel":
-                                update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
-                                    status=HistoryUnitStatus.FAILED,
-                                    db_sync=db,
-                                )
-                        else:
-                            logger.debug(
-                                f"Task {task.index} has no exception."
-                            )  # FIXME  # noqa
-                            results[task.index] = result
-                            if task_type == "parallel":
-                                update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
-                                    status=HistoryUnitStatus.DONE,
-                                    db_sync=db,
-                                )
-
-            time.sleep(self.slurm_poll_interval)
-        return results, exceptions
 
     def check_remote_python_interpreter(self):
         settings = Inject(get_settings)
