@@ -208,7 +208,7 @@ async def delete_dataset_images(
 
     image_to_remove = find_image_by_zarr_url(
         images=dataset.images, zarr_url=zarr_url
-    )["image"]
+    )
 
     if image_to_remove is None:
         raise HTTPException(
@@ -218,6 +218,8 @@ async def delete_dataset_images(
                 f"DatasetV2 {dataset_id}."
             ),
         )
+    else:
+        image_to_remove = image_to_remove["image"]
 
     dataset.images.remove(image_to_remove)
     flag_modified(dataset, "images")
