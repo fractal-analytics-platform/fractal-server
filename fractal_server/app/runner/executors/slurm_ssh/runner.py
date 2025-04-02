@@ -17,6 +17,7 @@ from pydantic import ConfigDict
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -26,6 +27,7 @@ from fractal_server.app.runner.executors.slurm_common._batching import (
 from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfig,
 )
+from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
@@ -329,6 +331,100 @@ class RunnerSlurmSSH(BaseRunner):
 
         logger.debug("[scancel_jobs] END")
 
+    def _put_subfolder_sftp(self, job: SlurmJob) -> None:
+        """
+        Transfer the jobs subfolder to the remote host.
+        """
+
+        # Create compressed subfolder archive (locally)
+        tarfile_path_local = compress_folder(job.workdir_local)
+
+        tarfile_name = Path(tarfile_path_local).name
+        logger.info(f"Subfolder archive created at {tarfile_path_local}")
+        tarfile_path_remote = (
+            job.workdir_remote.parent / tarfile_name
+        ).as_posix()
+        # Transfer archive
+        t_0_put = time.perf_counter()
+        self.fractal_ssh.send_file(
+            local=tarfile_path_local,
+            remote=tarfile_path_remote,
+        )
+        t_1_put = time.perf_counter()
+        logger.info(
+            f"Subfolder archive transferred to {tarfile_path_remote}"
+            f" - elapsed: {t_1_put - t_0_put:.3f} s"
+        )
+        # Uncompress archive (remotely)
+        tar_command = (
+            f"{self.python_worker_interpreter} -m "
+            "fractal_server.app.runner.extract_archive "
+            f"{tarfile_path_remote}"
+        )
+        self.fractal_ssh.run_command(cmd=tar_command)
+
+        # Remove local version
+        t_0_rm = time.perf_counter()
+        Path(tarfile_path_local).unlink()
+        t_1_rm = time.perf_counter()
+        logger.info(
+            f"Local archive removed - elapsed: {t_1_rm - t_0_rm:.3f} s"
+        )
+
+    def _get_subfolder_sftp(self, job: SlurmJob) -> None:
+        """
+        Fetch a remote folder via tar+sftp+tar
+        """
+
+        t_0 = time.perf_counter()
+        logger.debug("[_get_subfolder_sftp] Start")
+        tarfile_path_local = (
+            job.workdir_local.parent / f"{job.workdir_local.name}.tar.gz"
+        ).as_posix()
+        tarfile_path_remote = (
+            job.workdir_remote.parent / f"{job.workdir_remote.name}.tar.gz"
+        ).as_posix()
+
+        # Remove remote tarfile
+        try:
+            rm_command = f"rm {tarfile_path_remote}"
+            self.fractal_ssh.run_command(cmd=rm_command)
+        except RuntimeError as e:
+            logger.warning(f"{tarfile_path_remote} already exists!\n {str(e)}")
+
+        # Create remote tarfile
+        tar_command = (
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.compress_folder "
+            f"{job.workdir_remote.as_posix()} "
+            "--remote-to-local"
+        )
+        stdout = self.fractal_ssh.run_command(cmd=tar_command)
+        print(stdout)
+
+        # Fetch tarfile
+        t_0_get = time.perf_counter()
+        self.fractal_ssh.fetch_file(
+            remote=tarfile_path_remote,
+            local=tarfile_path_local,
+        )
+        t_1_get = time.perf_counter()
+        logger.info(
+            f"Subfolder archive transferred back to {tarfile_path_local}"
+            f" - elapsed: {t_1_get - t_0_get:.3f} s"
+        )
+
+        # Extract tarfile locally
+        extract_archive(Path(tarfile_path_local))
+
+        # Remove local tarfile
+        if Path(tarfile_path_local).exists():
+            logger.warning(f"Remove existing file {tarfile_path_local}.")
+            Path(tarfile_path_local).unlink()
+
+        t_1 = time.perf_counter()
+        logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
+
     def _submit_single_sbatch(
         self,
         func,
@@ -469,63 +565,9 @@ class RunnerSlurmSSH(BaseRunner):
         return list(self.jobs.keys())
 
     def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
-        remote_tar_file = job.workdir_remote / f"{job.label}.tar.gz"
-        local_tar_file = job.workdir_local / f"{job.label}.tar.gz"
-        source_files = [
-            job.slurm_stdout_remote,
-            job.slurm_stderr_remote,
-        ]
+        self._put_subfolder_sftp(job=job)
 
-        for task in job.tasks:
-            source_files.extend(
-                [
-                    task.output_pickle_file_remote,
-                    task.task_files.log_file_remote,
-                    task.task_files.args_file_remote,
-                    task.task_files.metadiff_file_remote,
-                ]
-            )
-        source_files_str = " ".join(source_files)
-        tar_command = (
-            f"tar -czf {remote_tar_file} "
-            f"--ignore-failed-read {source_files_str}"
-        )
-        untar_command = f"tar -xzf {local_tar_file} -C {job.workdir_local}"
-
-        # Now create the tar file
-        logger.info(f"START creating the {remote_tar_file}")
-        try:
-            self.fractal_ssh.run_command(cmd=tar_command)
-        except (RuntimeError, FileNotFoundError) as e:
-            logger.warning(
-                f"SKIP creating {remote_tar_file}. "
-                f"Original error: {str(e)}"
-            )
-        logger.info(f"END creating the {remote_tar_file}")
-
-        # Now copy the tar file
-        logger.info(f"START coping the {remote_tar_file}")
-        try:
-            self.fractal_ssh.fetch_file(
-                local=local_tar_file.as_posix(),
-                remote=remote_tar_file.as_posix(),
-            )
-        except (RuntimeError, FileNotFoundError) as e:
-            logger.warning(
-                f"SKIP coping {remote_tar_file} into {local_tar_file}. "
-                f"Original error: {str(e)}"
-            )
-        logger.info(f"END coping the {remote_tar_file}")
-
-        # Now untar the tar file
-        logger.info(f"START untar the {local_tar_file}")
-        try:
-            _subprocess_run_or_raise(full_command=untar_command)
-        except (RuntimeError, FileNotFoundError) as e:
-            logger.warning(
-                f"SKIP untar {local_tar_file}. " f"Original error: {str(e)}"
-            )
-        logger.info(f"END untar the {local_tar_file}")
+        self._get_subfolder_sftp(job=job)
 
     def _postprocess_single_task(
         self, *, task: SlurmTask
@@ -626,7 +668,8 @@ class RunnerSlurmSSH(BaseRunner):
                 for slurm_job_id in finished_job_ids:
                     logger.debug(f"Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(slurm_job)
+                    self._get_subfolder_sftp(job=slurm_job)
+                    # self._copy_files_from_remote_to_local(slurm_job)
                     result, exception = self._postprocess_single_task(
                         task=slurm_job.tasks[0]
                     )
