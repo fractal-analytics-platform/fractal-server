@@ -446,11 +446,11 @@ class RunnerSlurmSSH(BaseRunner):
                 "[_submit_single_sbatch] Written "
                 f"{task.input_pickle_file_local=}"
             )
-        # Send input pickle
-        self.fractal_ssh.send_file(
-            local=task.input_pickle_file_local,
-            remote=task.input_pickle_file_remote,
-        )
+            # Send input pickle
+            self.fractal_ssh.send_file(
+                local=task.input_pickle_file_local,
+                remote=task.input_pickle_file_remote,
+            )
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
         python_worker_interpreter = (
