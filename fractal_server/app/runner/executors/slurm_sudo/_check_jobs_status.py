@@ -32,10 +32,6 @@ def run_squeue(job_ids: list[str]) -> subprocess.CompletedProcess:
     return res
 
 
-def are_all_jobs_on_squeue(job_ids: list[str]) -> bool:
-    pass
-
-
 def get_finished_jobs(job_ids: list[str]) -> set[str]:
     """
     Check which ones of the given Slurm jobs already finished

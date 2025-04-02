@@ -1,7 +1,5 @@
 import json
 import math
-import shlex
-import subprocess  # nosec
 import sys
 import time
 from copy import copy
@@ -11,21 +9,27 @@ from typing import Literal
 from typing import Optional
 
 import cloudpickle
-from pydantic import BaseModel
-from pydantic import ConfigDict
 
+from ..slurm_common._handle_exception_proxy import (
+    _handle_exception_proxy,
+)
+from ..slurm_common._slurm_config import (
+    SlurmConfig,
+)
+from ..slurm_common.slurm_job_task_models import (
+    SlurmJob,
+)
+from ..slurm_common.slurm_job_task_models import (
+    SlurmTask,
+)
 from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.executors.slurm_common._batching import (
     heuristics,
-)
-from fractal_server.app.runner.executors.slurm_common._slurm_config import (
-    SlurmConfig,
 )
 from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
@@ -39,177 +43,6 @@ from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
-
-
-def _handle_exception_proxy(proxy):  # FIXME
-    if proxy.exc_type_name == "JobExecutionError":
-        return JobExecutionError(str(proxy))
-    else:
-        kwargs = {}
-        for key in [
-            "workflow_task_id",
-            "workflow_task_order",
-            "task_name",
-        ]:
-            if key in proxy.kwargs.keys():
-                kwargs[key] = proxy.kwargs[key]
-        return TaskExecutionError(proxy.tb, **kwargs)
-
-
-class SlurmTask(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    component: str
-    workdir_local: Path
-    workdir_remote: Path
-    parameters: dict[str, Any]
-    zarr_url: Optional[str] = None
-    task_files: TaskFiles
-    index: int
-
-    @property
-    def input_pickle_file_local(self) -> str:
-        return (
-            self.workdir_local / f"{self.component}-input.pickle"
-        ).as_posix()
-
-    @property
-    def output_pickle_file_local(self) -> str:
-        return (
-            self.workdir_local / f"{self.component}-output.pickle"
-        ).as_posix()
-
-    @property
-    def input_pickle_file_remote(self) -> str:
-        return (
-            self.workdir_remote / f"{self.component}-input.pickle"
-        ).as_posix()
-
-    @property
-    def output_pickle_file_remote(self) -> str:
-        return (
-            self.workdir_remote / f"{self.component}-output.pickle"
-        ).as_posix()
-
-
-class SlurmJob(BaseModel):
-    slurm_job_id: Optional[str] = None
-    label: str
-    workdir_local: Path
-    workdir_remote: Path
-    tasks: list[SlurmTask]
-
-    @property
-    def slurm_log_file_local(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_local
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
-            ).as_posix()
-        else:
-            return (
-                self.workdir_local / f"slurm-{self.label}-%j.log"
-            ).as_posix()
-
-    @property
-    def slurm_log_file_remote(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_remote
-                / f"slurm-{self.label}-{self.slurm_job_id}.log"
-            ).as_posix()
-        else:
-            return (
-                self.workdir_remote / f"slurm-{self.label}-%j.log"
-            ).as_posix()
-
-    @property
-    def slurm_submission_script_local(self) -> str:
-        return (
-            self.workdir_local / f"slurm-{self.label}-submit.sh"
-        ).as_posix()
-
-    @property
-    def slurm_submission_script_remote(self) -> str:
-        return (
-            self.workdir_remote / f"slurm-{self.label}-submit.sh"
-        ).as_posix()
-
-    @property
-    def slurm_stdout_remote(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_remote
-                / f"slurm-{self.label}-{self.slurm_job_id}.out"
-            ).as_posix()
-
-        else:
-            return (
-                self.workdir_remote / f"slurm-{self.label}-%j.out"
-            ).as_posix()
-
-    @property
-    def slurm_stderr_remote(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_remote
-                / f"slurm-{self.label}-{self.slurm_job_id}.err"
-            ).as_posix()
-
-        else:
-            return (
-                self.workdir_remote / f"slurm-{self.label}-%j.err"
-            ).as_posix()
-
-    @property
-    def slurm_stdout_local(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_local
-                / f"slurm-{self.label}-{self.slurm_job_id}.out"
-            ).as_posix()
-
-        else:
-            return (
-                self.workdir_local / f"slurm-{self.label}-%j.out"
-            ).as_posix()
-
-    @property
-    def slurm_stderr_local(self) -> str:
-        if self.slurm_job_id:
-            return (
-                self.workdir_local
-                / f"slurm-{self.label}-{self.slurm_job_id}.err"
-            ).as_posix()
-
-        else:
-            return (
-                self.workdir_local / f"slurm-{self.label}-%j.err"
-            ).as_posix()
-
-    @property
-    def log_files_local(self) -> list[str]:
-        return [task.task_files.log_file_local for task in self.tasks]
-
-
-def _subprocess_run_or_raise(
-    full_command: str,
-) -> Optional[subprocess.CompletedProcess]:
-    try:
-        output = subprocess.run(  # nosec
-            shlex.split(full_command),
-            capture_output=True,
-            check=True,
-            encoding="utf-8",
-        )
-        return output
-    except subprocess.CalledProcessError as e:
-        error_msg = (
-            f"Submit command `{full_command}` failed. "
-            f"Original error:\n{str(e)}\n"
-            f"Original stdout:\n{e.stdout}\n"
-            f"Original stderr:\n{e.stderr}\n"
-        )
-        raise JobExecutionError(info=error_msg)
 
 
 class RunnerSlurmSSH(BaseRunner):
