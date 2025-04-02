@@ -1,6 +1,4 @@
-import pytest
 from devtools import debug
-from sqlalchemy.exc import IntegrityError
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -65,16 +63,6 @@ async def test_task_group_v2(db):
     # Delete user_group
 
     await db.delete(user_group)
-    with pytest.raises(IntegrityError):
-        # Fail because `task_group.user_group_id` is not None
-        await db.commit()
-    await db.rollback()
-
-    await db.delete(user_group)
-    task_group.user_group_id = None
-    db.add(task_group)
-    await db.commit()
-
     await db.refresh(task_group)
     assert task_group.user_group_id is None
 
@@ -131,6 +119,5 @@ async def test_collection_state(db):
 
     await db.delete(task_group)
 
-    with pytest.raises(IntegrityError):
-        await db.commit()
-    await db.rollback()
+    await db.refresh(task_group_activity)
+    assert task_group_activity.taskgroupv2_id is None

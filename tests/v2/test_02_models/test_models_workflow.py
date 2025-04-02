@@ -65,6 +65,6 @@ async def test_project_and_workflows(db):
     db_project = project_query.scalars().one()
     await db.delete(db_project)
 
-    with pytest.raises(IntegrityError):
-        # WorkflowV2.project_id violates fk-contraint in Postgres
-        await db.commit()
+    workflow_query = await db.execute(select(WorkflowV2))
+    db_workflow = workflow_query.scalars().one_or_none()
+    assert db_workflow is None
