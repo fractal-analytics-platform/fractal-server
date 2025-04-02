@@ -213,13 +213,11 @@ def _subprocess_run_or_raise(
 class RunnerSlurmSSH(BaseRunner):
     fractal_ssh: FractalSSH
 
-    slurm_user: str
     shutdown_file: Path
     common_script_lines: list[str]
     user_cache_dir: str
     root_dir_local: Path
     root_dir_remote: Path
-    slurm_account: Optional[str] = None
     poll_interval: int
     python_worker_interpreter: str
     jobs: dict[str, SlurmJob]
@@ -228,10 +226,8 @@ class RunnerSlurmSSH(BaseRunner):
         self,
         *,
         fractal_ssh: FractalSSH,
-        slurm_user: str,
         root_dir_local: Path,
         root_dir_remote: Path,
-        slurm_account: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
         slurm_poll_interval: Optional[int] = None,
@@ -241,8 +237,6 @@ class RunnerSlurmSSH(BaseRunner):
         different SLURM jobs/tasks.
         """
 
-        self.slurm_user = slurm_user
-        self.slurm_account = slurm_account
         self.common_script_lines = common_script_lines or []
 
         # Check that SLURM account is not set here
