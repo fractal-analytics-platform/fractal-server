@@ -3,7 +3,6 @@ from typing import Optional
 from typing import TypeVar
 
 from sqlalchemy.orm import Session as DBSyncSession
-from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -44,24 +43,6 @@ def fail_and_cleanup(
     task_group_activity.log = get_current_log(log_file_path)
     task_group_activity = add_commit_refresh(obj=task_group_activity, db=db)
     if task_group_activity.action == TaskGroupActivityActionV2.COLLECT:
-        logger.info(f"Now delete TaskGroupV2 with {task_group.id=}")
-
-        logger.info("Start of TaskGroupActivityV2 cascade operations.")
-        stm = select(TaskGroupActivityV2).where(
-            TaskGroupActivityV2.taskgroupv2_id == task_group.id
-        )
-        res = db.execute(stm)
-        task_group_activity_list = res.scalars().all()
-        for task_group_activity in task_group_activity_list:
-            logger.info(
-                f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
-                ".taskgroupv2_id to None."
-            )
-            task_group_activity.taskgroupv2_id = None
-            db.add(task_group_activity)
-        logger.info("End of TaskGroupActivityV2 cascade operations.")
-        logger.info(f"TaskGroupV2 with {task_group.id=} deleted")
-
         db.delete(task_group)
     db.commit()
     reset_logger_handlers(logger)

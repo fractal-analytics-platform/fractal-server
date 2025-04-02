@@ -181,23 +181,6 @@ async def delete_task_group(
             detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
         )
 
-    # Cascade operations: set foreign-keys to null for TaskGroupActivityV2
-    # which are in relationship with the current TaskGroupV2
-    logger.debug("Start of cascade operations on TaskGroupActivityV2.")
-    stm = select(TaskGroupActivityV2).where(
-        TaskGroupActivityV2.taskgroupv2_id == task_group_id
-    )
-    res = await db.execute(stm)
-    task_group_activity_list = res.scalars().all()
-    for task_group_activity in task_group_activity_list:
-        logger.debug(
-            f"Setting TaskGroupActivityV2[{task_group_activity.id}]"
-            ".taskgroupv2_id to None."
-        )
-        task_group_activity.taskgroupv2_id = None
-        db.add(task_group_activity)
-    logger.debug("End of cascade operations on TaskGroupActivityV2.")
-
     await db.delete(task_group)
     await db.commit()
 
