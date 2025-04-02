@@ -70,7 +70,7 @@ def _subprocess_run_or_raise(
         raise JobExecutionError(info=error_msg)
 
 
-class RunnerSlurmSudo(BaseRunner):
+class SudoSlurmRunner(BaseRunner):
     slurm_user: str
     slurm_user: str
     shutdown_file: Path

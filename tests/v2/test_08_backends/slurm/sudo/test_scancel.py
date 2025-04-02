@@ -10,7 +10,7 @@ from devtools import debug
 
 from ...aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
-    RunnerSlurmSudo,
+    SudoSlurmRunner,
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
@@ -96,7 +96,7 @@ async def test_shutdown_during_submit(
     (tmp777_path / "server").mkdir()
 
     def main_thread():
-        with RunnerSlurmSudo(
+        with SudoSlurmRunner(
             slurm_user=SLURM_USER,
             root_dir_local=tmp777_path / "server",
             root_dir_remote=tmp777_path / "user",
@@ -145,7 +145,7 @@ async def test_shutdown_during_multisubmit(
         time.sleep(parameters["sleep_time"])
 
     def main_thread():
-        with RunnerSlurmSudo(
+        with SudoSlurmRunner(
             slurm_user=SLURM_USER,
             root_dir_local=tmp777_path / "server",
             root_dir_remote=tmp777_path / "user",

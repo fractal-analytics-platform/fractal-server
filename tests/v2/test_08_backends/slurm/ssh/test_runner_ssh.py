@@ -5,7 +5,7 @@ from devtools import debug
 from ...aux_unit_runner import *  # noqa
 from ...aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.slurm_ssh.runner import (
-    RunnerSlurmSSH,
+    SlurmSSHRunner,
 )
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
@@ -43,7 +43,7 @@ async def test_submit_success(
     if not task_type.startswith("converter_"):
         parameters["zarr_urls"] = ZARR_URLS
 
-    with RunnerSlurmSSH(
+    with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",

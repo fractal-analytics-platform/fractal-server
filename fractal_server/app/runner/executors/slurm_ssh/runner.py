@@ -35,7 +35,7 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 
-class RunnerSlurmSSH(BaseSlurmRunner):
+class SlurmSSHRunner(BaseSlurmRunner):
     fractal_ssh: FractalSSH
 
     def __init__(

@@ -24,7 +24,7 @@ from ...models.v2 import DatasetV2
 from ...models.v2 import WorkflowV2
 from ..exceptions import JobExecutionError
 from ..executors.slurm_common.get_slurm_config import get_slurm_config
-from ..executors.slurm_ssh.runner import RunnerSlurmSSH
+from ..executors.slurm_ssh.runner import SlurmSSHRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.images.models import AttributeFiltersType
@@ -76,7 +76,7 @@ def process_workflow(
         logger.error(error_msg)
         raise JobExecutionError(info=error_msg)
 
-    with RunnerSlurmSSH(
+    with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,

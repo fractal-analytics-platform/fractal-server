@@ -9,7 +9,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
-    RunnerSlurmSudo,
+    SudoSlurmRunner,
 )
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from tests.fixtures_slurm import SLURM_USER
@@ -41,7 +41,7 @@ async def test_submit_success(
     parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
     if not task_type.startswith("converter_"):
         parameters["zarr_urls"] = ZARR_URLS
-    with RunnerSlurmSudo(
+    with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
@@ -103,7 +103,7 @@ async def test_submit_fail(
     if not task_type.startswith("converter_"):
         parameters["zarr_urls"] = ZARR_URLS
 
-    with RunnerSlurmSudo(
+    with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
@@ -153,7 +153,7 @@ async def test_multisubmit(
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
-    with RunnerSlurmSudo(
+    with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
