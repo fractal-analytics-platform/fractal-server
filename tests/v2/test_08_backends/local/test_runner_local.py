@@ -240,24 +240,3 @@ async def test_multisubmit(
 #         )
 #         results = list(result_generator)
 #         assert results == [fun_xy(x, y) for x, y in zip(inputs_x, inputs_y)]
-
-
-# @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 2, 4, 8, 16])
-# def test_executor_map_with_exception(parallel_tasks_per_job):
-#     def _raise(n: int):
-#         if n == 5:
-#             raise ValueError
-#         else:
-#             return n
-
-#     local_backend_config = LocalBackendConfig(
-#         parallel_tasks_per_job=parallel_tasks_per_job
-#     )
-
-#     with pytest.raises(ValueError):
-#         with LocalRunner() as executor:
-#             _ = executor.map(
-#                 _raise,
-#                 range(10),
-#                 local_backend_config=local_backend_config,
-#             )
