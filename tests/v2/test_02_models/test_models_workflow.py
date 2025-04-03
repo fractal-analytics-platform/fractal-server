@@ -65,6 +65,9 @@ async def test_project_and_workflows(db):
     db_project = project_query.scalars().one()
     await db.delete(db_project)
 
+    await db.commit()
+    db.expunge_all()
+
     workflow_query = await db.execute(select(WorkflowV2))
     db_workflow = workflow_query.scalars().one_or_none()
     assert db_workflow is None

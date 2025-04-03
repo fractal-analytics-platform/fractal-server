@@ -63,21 +63,27 @@ async def test_task_group_v2(db):
     # Delete user_group
 
     await db.delete(user_group)
-    await db.refresh(task_group)
+    await db.commit()
+    db.expunge_all()
+
+    task_group = await db.get(TaskGroupV2, task_group.id)
     assert task_group.user_group_id is None
 
     # Consistency check
 
+    task2 = await db.get(TaskV2, task2.id)
     await db.delete(task2)
     await db.commit()
-    await db.refresh(task_group)
+    db.expunge_all()
 
+    task_group = await db.get(TaskGroupV2, task_group.id)
     assert len(task_group.task_list) == 2
 
     # Test cascade on delete
 
     await db.delete(task_group)
     await db.commit()
+    db.expunge_all()
 
     task_group = await db.get(TaskGroupV2, task_group.id)
     task1 = await db.get(TaskV2, task1.id)
@@ -118,6 +124,10 @@ async def test_collection_state(db):
     assert task_group_activity.taskgroupv2_id == task_group.id
 
     await db.delete(task_group)
+    await db.commit()
+    db.expunge_all()
 
-    await db.refresh(task_group_activity)
+    task_group_activity = await db.get(
+        TaskGroupActivityV2, task_group_activity.id
+    )
     assert task_group_activity.taskgroupv2_id is None
