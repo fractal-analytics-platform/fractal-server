@@ -34,13 +34,16 @@ async def test_submit_success(
     monkey_slurm,
     task_type: str,
 ):
-    def do_nothing(parameters: dict, **kwargs) -> int:
+    def do_nothing(parameters: dict, remote_files: dict):
         return 42
 
     history_run_id, history_unit_id = history_mock_for_submit
-    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
-    if not task_type.startswith("converter_"):
-        parameters["zarr_urls"] = ZARR_URLS
+
+    if task_type.startswith("converter_"):
+        parameters = {}
+    else:
+        parameters = dict(zarr_urls=ZARR_URLS)
+
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
@@ -50,12 +53,12 @@ async def test_submit_success(
         result, exception = runner.submit(
             do_nothing,
             parameters=parameters,
-            history_unit_id=history_unit_id,
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
             ),
-            config=get_default_slurm_config(),
             task_type=task_type,
+            history_unit_id=history_unit_id,
+            config=get_default_slurm_config(),
         )
     debug(result, exception)
     assert result == 42
@@ -95,13 +98,15 @@ async def test_submit_fail(
 ):
     ERROR_MSG = "very nice error"
 
-    def raise_ValueError(parameters: dict, **kwargs):
+    def raise_ValueError(parameters: dict, remote_files: dict):
         raise ValueError(ERROR_MSG)
 
     history_run_id, history_unit_id = history_mock_for_submit
-    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
+
     if not task_type.startswith("converter_"):
-        parameters["zarr_urls"] = ZARR_URLS
+        parameters = dict(zarr_urls=ZARR_URLS)
+    else:
+        parameters = {}
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -119,10 +124,11 @@ async def test_submit_fail(
             config=get_default_slurm_config(),
             task_type=task_type,
         )
-
+    debug(result, exception)
     assert result is None
     assert isinstance(exception, TaskExecutionError)
     assert ERROR_MSG in str(exception)
+
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
     run = await db.get(HistoryRun, history_run_id)
@@ -139,7 +145,7 @@ async def test_submit_fail(
 async def test_multisubmit(
     db, tmp777_path, monkey_slurm, history_mock_for_multisubmit
 ):
-    def fun(parameters: dict, **kwargs):
+    def fun(parameters: dict, remote_files: dict):
         zarr_url = parameters["zarr_url"]
         x = parameters["parameter"]
         if x != 3:
@@ -183,15 +189,15 @@ async def test_multisubmit(
                     "__FRACTAL_PARALLEL_COMPONENT__": "000003",
                 },
             ],
-            history_unit_ids=history_unit_ids,
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path, component=str(ind), is_slurm=True
                 )
                 for ind in range(len(ZARR_URLS))
             ],
-            config=get_default_slurm_config(),
             task_type="parallel",
+            config=get_default_slurm_config(),
+            history_unit_ids=history_unit_ids,
         )
         debug(results)
         debug(exceptions)
