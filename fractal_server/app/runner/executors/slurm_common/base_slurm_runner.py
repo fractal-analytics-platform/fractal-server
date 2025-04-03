@@ -233,7 +233,6 @@ class BaseSlurmRunner(BaseRunner):
         script = "\n".join(script_lines)
 
         # Write submission script
-        # submission_script_contents = "\n".join(preamble_lines + cmdlines)
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
 
@@ -242,11 +241,16 @@ class BaseSlurmRunner(BaseRunner):
                 local=slurm_job.slurm_submission_script_local,
                 remote=slurm_job.slurm_submission_script_remote,
             )
-
+            submit_command = (
+                "sbatch --parsable "
+                f"{slurm_job.slurm_submission_script_remote}"
+            )
+        else:
+            submit_command = (
+                "sbatch --parsable "
+                f"{slurm_job.slurm_submission_script_local}"
+            )
         # Run sbatch
-        submit_command = (
-            f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
-        )
         pre_submission_cmds = slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
             sbatch_stdout = self._run_single_cmd(submit_command)
@@ -561,9 +565,6 @@ class BaseSlurmRunner(BaseRunner):
                         # whether `exception is None`. The fact that
                         # `result is None` is not relevant for this purpose.
                         if exception is not None:
-                            logger.debug(
-                                f"Task {task.index} has an exception."
-                            )  # FIXME  # noqa
                             exceptions[task.index] = exception
                             if task_type == "parallel":
                                 update_status_of_history_unit(
@@ -574,9 +575,6 @@ class BaseSlurmRunner(BaseRunner):
                                     db_sync=db,
                                 )
                         else:
-                            logger.debug(
-                                f"Task {task.index} has no exception."
-                            )  # FIXME  # noqa
                             results[task.index] = result
                             if task_type == "parallel":
                                 update_status_of_history_unit(
