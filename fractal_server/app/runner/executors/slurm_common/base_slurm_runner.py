@@ -346,6 +346,7 @@ class BaseSlurmRunner(BaseRunner):
             return None, exception
         finally:
             pass
+            # FIXME: Re-include unlinks of pickle files
             # Path(task.input_pickle_file_local).unlink(missing_ok=True)
             # Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
