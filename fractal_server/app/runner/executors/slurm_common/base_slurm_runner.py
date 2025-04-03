@@ -29,6 +29,10 @@ from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
+SUBMIT_PREFIX = "non_par"
+MULTISUBMIT_PREFIX = "par"
+
+
 # FIXME: Transform several logger.info into logger.debug.
 
 
@@ -396,15 +400,19 @@ class BaseSlurmRunner(BaseRunner):
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
         logger.info("[submit] Create local/remote folders - END")
 
+        # Define prefix
+
+        # Add prefix to task_files object
+        task_files.prefix = SUBMIT_PREFIX
+
         # Submission phase
-        prefix = "non_par"
         slurm_job = SlurmJob(
-            prefix=prefix,
+            prefix=SUBMIT_PREFIX,
             workdir_local=workdir_local,
             workdir_remote=workdir_remote,
             tasks=[
                 SlurmTask(
-                    prefix=prefix,
+                    prefix=SUBMIT_PREFIX,
                     index=0,
                     component=task_files.component,
                     parameters=parameters,
@@ -504,7 +512,6 @@ class BaseSlurmRunner(BaseRunner):
         results: dict[int, Any] = {}
         exceptions: dict[int, BaseException] = {}
 
-        original_task_files = list_task_files
         tot_tasks = len(list_parameters)
 
         # Set/validate parameters for task batching
@@ -540,20 +547,22 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
         for ind_batch, chunk in enumerate(args_batches):
-            prefix = f"par_batch_{ind_batch:06d}"
+            prefix = f"{MULTISUBMIT_PREFIX}_{ind_batch:06d}"
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
+                current_task_files = list_task_files[index]
+                current_task_files.prefix = prefix
                 tasks.append(
                     SlurmTask(
                         prefix=prefix,
                         index=index,
-                        component=original_task_files[index].component,
+                        component=current_task_files.component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=original_task_files[index],
+                        task_files=current_task_files,
                     ),
                 )
 

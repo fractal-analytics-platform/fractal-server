@@ -34,6 +34,7 @@ class TaskFiles(BaseModel):
 
     # Per-single-component
     component: Optional[str] = None
+    prefix: Optional[str] = None
 
     def _check_component(self):
         if self.component is None:
@@ -56,45 +57,54 @@ class TaskFiles(BaseModel):
         return self.root_dir_local / self.subfolder_name
 
     @property
+    def prefix_component(self):
+        if self.prefix is None:
+            return self.component
+        else:
+            return f"{self.prefix}-{self.component}"
+
+    @property
     def log_file_local(self) -> str:
         self._check_component()
         return (
-            self.wftask_subfolder_local / f"{self.component}-log.txt"
+            self.wftask_subfolder_local / f"{self.prefix_component}-log.txt"
         ).as_posix()
 
     @property
     def log_file_remote(self) -> str:
         self._check_component()
         return (
-            self.wftask_subfolder_remote / f"{self.component}-log.txt"
+            self.wftask_subfolder_remote / f"{self.prefix_component}-log.txt"
         ).as_posix()
 
     @property
     def args_file_local(self) -> str:
         self._check_component()
         return (
-            self.wftask_subfolder_local / f"{self.component}-args.json"
+            self.wftask_subfolder_local / f"{self.prefix_component}-args.json"
         ).as_posix()
 
     @property
     def args_file_remote(self) -> str:
         self._check_component()
         return (
-            self.wftask_subfolder_remote / f"{self.component}-args.json"
+            self.wftask_subfolder_remote / f"{self.prefix_component}-args.json"
         ).as_posix()
 
     @property
     def metadiff_file_local(self) -> str:
         self._check_component()
         return (
-            self.wftask_subfolder_local / f"{self.component}-metadiff.json"
+            self.wftask_subfolder_local
+            / f"{self.prefix_component}-metadiff.json"
         ).as_posix()
 
     @property
     def metadiff_file_remote(self) -> str:
         self._check_component()
         return (
-            self.wftask_subfolder_remote / f"{self.component}-metadiff.json"
+            self.wftask_subfolder_remote
+            / f"{self.prefix_component}-metadiff.json"
         ).as_posix()
 
     @property
