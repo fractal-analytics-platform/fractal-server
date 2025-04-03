@@ -82,32 +82,37 @@ class BaseSlurmRunner(BaseRunner):
     def _run_single_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, job_ids: list[str]) -> str:
+    def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
+        # FIXME: review different cases (exception vs no job found)
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
             f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
             " --states=all"
         )
-        stdout = self._run_single_cmd(cmd)
-        return stdout
+        try:
+            stdout = self._run_single_cmd(cmd)
+            return True, stdout
+        except Exception as e:
+            logger.info(f"{cmd=} failed with {str(e)}")
+            return False, ""
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
         #  If there is no Slurm job to check, return right away
+
         if not job_ids:
             return set()
         id_to_state = dict()
 
-        res = self.run_squeue(job_ids)
-        if res.returncode == 0:
+        success, stdout = self.run_squeue(job_ids)
+        if success:
             id_to_state = {
-                out.split()[0]: out.split()[1]
-                for out in res.stdout.splitlines()
+                out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
         else:
             id_to_state = dict()
             for j in job_ids:
-                res = self.run_squeue([j])
-                if res.returncode != 0:
+                success, res = self.run_squeue([j])
+                if not success:
                     logger.info(f"Job {j} not found. Marked it as completed")
                     id_to_state.update({str(j): "COMPLETED"})
                 else:
