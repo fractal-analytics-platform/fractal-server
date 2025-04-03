@@ -29,9 +29,7 @@ class BaseSlurmRunner(BaseRunner):
     root_dir_local: Path
     root_dir_remote: Path
     poll_interval: int
-    python_worker_interpreter: str
     jobs: dict[str, SlurmJob]
-    slurm_poll_interval: int
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
         raise NotImplementedError("Implement in child class.")
@@ -180,7 +178,7 @@ class BaseSlurmRunner(BaseRunner):
                                 db_sync=db,
                             )
 
-            time.sleep(self.slurm_poll_interval)
+            time.sleep(self.poll_interval)
 
         return result, exception
 
@@ -342,5 +340,5 @@ class BaseSlurmRunner(BaseRunner):
                                     db_sync=db,
                                 )
 
-            time.sleep(self.slurm_poll_interval)
+            time.sleep(self.poll_interval)
         return results, exceptions

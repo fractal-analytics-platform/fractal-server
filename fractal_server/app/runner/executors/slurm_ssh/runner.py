@@ -35,7 +35,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         root_dir_remote: Path,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
-        slurm_poll_interval: Optional[int] = None,
+        poll_interval: Optional[int] = None,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
@@ -85,8 +85,8 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         self.user_cache_dir = user_cache_dir
 
-        self.slurm_poll_interval = (
-            slurm_poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
+        self.poll_interval = (
+            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
         )
 
         self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME

@@ -6,29 +6,18 @@ import subprocess  # nosec
 import sys
 from copy import copy
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 import cloudpickle
 
-from ..slurm_common._handle_exception_proxy import (
-    _handle_exception_proxy,
-)
-from ..slurm_common._slurm_config import (
-    SlurmConfig,
-)
-from ..slurm_common.slurm_job_task_models import (
-    SlurmJob,
-)
-from ..slurm_common.slurm_job_task_models import (
-    SlurmTask,
-)
+from ..slurm_common._slurm_config import SlurmConfig
+from ..slurm_common.base_slurm_runner import BaseSlurmRunner
+from ..slurm_common.slurm_job_task_models import SlurmJob
 from ._check_jobs_status import get_finished_jobs
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -60,18 +49,10 @@ def _subprocess_run_or_raise(
         raise JobExecutionError(info=error_msg)
 
 
-class SudoSlurmRunner(BaseRunner):
+class SudoSlurmRunner(BaseSlurmRunner):
     slurm_user: str
-    slurm_user: str
-    shutdown_file: Path
-    common_script_lines: list[str]
-    user_cache_dir: str
-    root_dir_local: Path
-    root_dir_remote: Path
     slurm_account: Optional[str] = None
-    poll_interval: int
     python_worker_interpreter: str
-    jobs: dict[str, SlurmJob]
 
     def __init__(
         self,
@@ -82,7 +63,7 @@ class SudoSlurmRunner(BaseRunner):
         slurm_account: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
-        slurm_poll_interval: Optional[int] = None,
+        poll_interval: Optional[int] = None,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
@@ -129,8 +110,8 @@ class SudoSlurmRunner(BaseRunner):
 
         self.user_cache_dir = user_cache_dir
 
-        self.slurm_poll_interval = (
-            slurm_poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
+        self.poll_interval = (
+            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
         )
 
         self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
@@ -345,26 +326,6 @@ class SudoSlurmRunner(BaseRunner):
                     f"SKIP copy {source} into {target}. "
                     f"Original error: {str(e)}"
                 )
-
-    def _postprocess_single_task(
-        self, *, task: SlurmTask
-    ) -> tuple[Any, Exception]:
-        try:
-            with open(task.output_pickle_file_local, "rb") as f:
-                outdata = f.read()
-            success, output = cloudpickle.loads(outdata)
-            if success:
-                result = output
-                return result, None
-            else:
-                exception = _handle_exception_proxy(output)
-                return None, exception
-        except Exception as e:
-            exception = JobExecutionError(f"ERROR, {str(e)}")
-            return None, exception
-        finally:
-            Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def check_remote_python_interpreter(self):
         """

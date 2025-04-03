@@ -45,7 +45,7 @@ async def test_submit_success(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        slurm_poll_interval=0,
+        poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
             do_nothing,
@@ -107,7 +107,7 @@ async def test_submit_fail(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        slurm_poll_interval=0,
+        poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
             raise_ValueError,
@@ -157,7 +157,7 @@ async def test_multisubmit(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        slurm_poll_interval=0,
+        poll_interval=0,
     ) as runner:
         results, exceptions = runner.multisubmit(
             fun,
