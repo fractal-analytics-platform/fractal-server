@@ -30,54 +30,9 @@ def is_responsive(container_name):
 
 
 @pytest.fixture
-def patched_run_squeue(monkeypatch):
-    """
-    This fixture is a workaround to add quotes around the --format argument of
-    squeue, see discussion in
-    https://github.com/sampsyo/clusterfutures/pull/19.
-
-    The code of run_squeue, below, is a copy of the function in
-    fractal_server.app.runner.executors.slurm._check_jobs_status, with changes
-    marked via # CHANGED comments.
-    """
-
-    import fractal_server.app.runner.executors.slurm_common._check_jobs_status  # noqa: E501
-    from subprocess import run
-
-    def patched_run_squeue(job_ids):
-        logging.info(f"patched_run_squeue({job_ids})")
-        res = run(  # nosec
-            [
-                "squeue",
-                "--noheader",
-                '--format="%i %T"',  # CHANGED
-                "--jobs",
-                ",".join([str(j) for j in job_ids]),
-                "--states=all",
-            ],
-            capture_output=True,
-            encoding="utf-8",
-            check=False,
-        )
-        if res.returncode != 0:
-            logging.warning(
-                f"squeue command with {job_ids}"
-                f" failed with:\n{res.stderr=}\n{res.stdout=}"
-            )
-        return res
-
-    monkeypatch.setattr(
-        fractal_server.app.runner.executors.slurm_common._check_jobs_status,
-        "run_squeue",
-        patched_run_squeue,
-    )
-
-
-@pytest.fixture
 def monkey_slurm(
     monkeypatch,
     slurmlogin_container,
-    patched_run_squeue,
 ):
     """
     Monkeypatch Popen to execute overridden command in container
@@ -105,7 +60,6 @@ def monkey_slurm(
         def __init__(self, *args, **kwargs):
             cmd = args[0]
             assert isinstance(cmd, list)
-            container_cmd = [" ".join(str(c) for c in cmd)]
             cmd = [
                 "docker",
                 "exec",
@@ -114,7 +68,7 @@ def monkey_slurm(
                 slurmlogin_container,
                 "bash",
                 "-c",
-            ] + container_cmd
+            ] + [shlex.join(cmd)]
             super().__init__(cmd, *args[1:], **kwargs)
             logging.warning(shlex.join(self.args))
             PopenLog.add_call(self)

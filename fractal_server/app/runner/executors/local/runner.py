@@ -6,6 +6,7 @@ from typing import Literal
 
 from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
@@ -85,15 +86,13 @@ class LocalRunner(BaseRunner):
                     )
                 return result, None
             except Exception as e:
-                exception = e
                 logger.debug("[submit] END with exception")
                 update_status_of_history_unit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-
-                return None, exception
+                return None, TaskExecutionError(str(e))
 
     def multisubmit(
         self,
@@ -189,7 +188,9 @@ class LocalRunner(BaseRunner):
                                 )
 
                         except Exception as e:
-                            exceptions[positional_index] = e
+                            exceptions[positional_index] = TaskExecutionError(
+                                str(e)
+                            )
                             if task_type == "parallel":
                                 update_status_of_history_unit(
                                     history_unit_id=current_history_unit_id,

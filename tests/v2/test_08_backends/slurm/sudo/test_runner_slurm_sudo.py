@@ -9,7 +9,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
-    RunnerSlurmSudo,
+    SudoSlurmRunner,
 )
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from tests.fixtures_slurm import SLURM_USER
@@ -34,28 +34,31 @@ async def test_submit_success(
     monkey_slurm,
     task_type: str,
 ):
-    def do_nothing(parameters: dict, **kwargs) -> int:
+    def do_nothing(parameters: dict, remote_files: dict):
         return 42
 
     history_run_id, history_unit_id = history_mock_for_submit
-    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
-    if not task_type.startswith("converter_"):
-        parameters["zarr_urls"] = ZARR_URLS
-    with RunnerSlurmSudo(
+
+    if task_type.startswith("converter_"):
+        parameters = {}
+    else:
+        parameters = dict(zarr_urls=ZARR_URLS)
+
+    with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        slurm_poll_interval=0,
+        poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
             do_nothing,
             parameters=parameters,
-            history_unit_id=history_unit_id,
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
             ),
-            config=get_default_slurm_config(),
             task_type=task_type,
+            history_unit_id=history_unit_id,
+            config=get_default_slurm_config(),
         )
     debug(result, exception)
     assert result == 42
@@ -95,19 +98,21 @@ async def test_submit_fail(
 ):
     ERROR_MSG = "very nice error"
 
-    def raise_ValueError(parameters: dict, **kwargs):
+    def raise_ValueError(parameters: dict, remote_files: dict):
         raise ValueError(ERROR_MSG)
 
     history_run_id, history_unit_id = history_mock_for_submit
-    parameters = {"__FRACTAL_PARALLEL_COMPONENT__": "000000"}
-    if not task_type.startswith("converter_"):
-        parameters["zarr_urls"] = ZARR_URLS
 
-    with RunnerSlurmSudo(
+    if not task_type.startswith("converter_"):
+        parameters = dict(zarr_urls=ZARR_URLS)
+    else:
+        parameters = {}
+
+    with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        slurm_poll_interval=0,
+        poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
             raise_ValueError,
@@ -119,10 +124,11 @@ async def test_submit_fail(
             config=get_default_slurm_config(),
             task_type=task_type,
         )
-
+    debug(result, exception)
     assert result is None
     assert isinstance(exception, TaskExecutionError)
     assert ERROR_MSG in str(exception)
+
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
     run = await db.get(HistoryRun, history_run_id)
@@ -139,7 +145,7 @@ async def test_submit_fail(
 async def test_multisubmit(
     db, tmp777_path, monkey_slurm, history_mock_for_multisubmit
 ):
-    def fun(parameters: dict, **kwargs):
+    def fun(parameters: dict, remote_files: dict):
         zarr_url = parameters["zarr_url"]
         x = parameters["parameter"]
         if x != 3:
@@ -153,11 +159,11 @@ async def test_multisubmit(
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
-    with RunnerSlurmSudo(
+    with SudoSlurmRunner(
         slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        slurm_poll_interval=0,
+        poll_interval=0,
     ) as runner:
         results, exceptions = runner.multisubmit(
             fun,
@@ -183,15 +189,15 @@ async def test_multisubmit(
                     "__FRACTAL_PARALLEL_COMPONENT__": "000003",
                 },
             ],
-            history_unit_ids=history_unit_ids,
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path, component=str(ind), is_slurm=True
                 )
                 for ind in range(len(ZARR_URLS))
             ],
-            config=get_default_slurm_config(),
             task_type="parallel",
+            config=get_default_slurm_config(),
+            history_unit_ids=history_unit_ids,
         )
         debug(results)
         debug(exceptions)
