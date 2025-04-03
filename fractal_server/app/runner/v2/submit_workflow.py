@@ -27,7 +27,6 @@ from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from ..executors.slurm_sudo._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
@@ -170,35 +169,27 @@ def submit_workflow(
             return
 
         try:
-            # Create WORKFLOW_DIR_LOCAL
-            if FRACTAL_RUNNER_BACKEND == "slurm":
+            # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
+            if FRACTAL_RUNNER_BACKEND == "local":
+                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "slurm":
                 original_umask = os.umask(0)
                 WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
                 os.umask(original_umask)
-            else:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-
-            # Define and create WORKFLOW_DIR_REMOTE
-            if FRACTAL_RUNNER_BACKEND == "local":
-                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-            elif FRACTAL_RUNNER_BACKEND == "slurm":
                 WORKFLOW_DIR_REMOTE = (
                     Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
                 )
-                _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
-                )
             elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-                # Folder creation is deferred to _process_workflow
+                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
                 WORKFLOW_DIR_REMOTE = (
                     Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
                 )
             else:
-                logger.error(
+                raise ValueError(
                     "Invalid FRACTAL_RUNNER_BACKEND="
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
-
         except Exception as e:
             error_type = type(e).__name__
             fail_job(

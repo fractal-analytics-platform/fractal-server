@@ -60,8 +60,10 @@ class BaseSlurmRunner(BaseRunner):
         )
         self.check_fractal_server_versions()
 
-        # Create folders
-        self._mkdir_local_folder(self.root_dir_local.as_posix())
+        # Create job folders. Note that the local one may or may not exist
+        # depending on whether it is a test or an actual run
+        if not self.root_dir_local.is_dir():
+            self._mkdir_local_folder(self.root_dir_local.as_posix())
         self._mkdir_remote_folder(self.root_dir_remote.as_posix())
 
         self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
