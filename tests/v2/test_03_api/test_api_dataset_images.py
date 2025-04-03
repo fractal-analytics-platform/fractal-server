@@ -1,3 +1,9 @@
+from sqlmodel import func
+from sqlmodel import select
+
+from fractal_server.app.models import HistoryImageCache
+from fractal_server.app.models import HistoryRun
+from fractal_server.app.models import HistoryUnit
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
@@ -210,6 +216,10 @@ async def test_delete_images(
     client,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    workflowtask_factory_v2,
+    db,
 ):
     IMAGES = n_images(10)
     async with MockCurrentUser() as user:
@@ -223,16 +233,69 @@ async def test_delete_images(
     )
     assert res.json()["total_count"] == len(IMAGES)
 
+    workflow = await workflow_factory_v2(project_id=project.id)
+    task = await task_factory_v2(user_id=user.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id, task_id=task.id
+    )
+
+    run = HistoryRun(
+        workflowtask_id=wftask.id,
+        dataset_id=dataset.id,
+        workflowtask_dump={},
+        task_group_dump={},
+        num_available_images=1,
+        status="submitted",
+    )
+    db.add(run)
+    await db.commit()
+    await db.refresh(run)
+
+    unit = HistoryUnit(
+        history_run_id=run.id,
+        status="submitted",
+        logfile="/log.file",
+        zarr_urls=[img["zarr_url"] for img in IMAGES],
+    )
+    db.add(unit)
+    await db.commit()
+    await db.refresh(unit)
+
+    db.add_all(
+        [
+            HistoryImageCache(
+                zarr_url=image["zarr_url"],
+                dataset_id=dataset.id,
+                workflowtask_id=wftask.id,
+                latest_history_unit_id=unit.id,
+            )
+            for image in IMAGES
+        ]
+    )
+    await db.commit()
+
     for i, image in enumerate(IMAGES):
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
             f"?zarr_url={image['zarr_url']}",
         )
         assert res.status_code == 204
+
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         )
-        assert res.json()["total_count"] == len(IMAGES) - i - 1
+        assert res.json()["total_count"] == len(IMAGES) - 1 - i
+
+        res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
+        cache_count = res.scalar()
+        assert cache_count == len(IMAGES) - 1 - i
+
+    res = await client.delete(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
+        "?zarr_url=foo",
+    )
+    assert res.status_code == 404
+    assert "No image with zarr_url" in res.json()["detail"]
 
 
 async def test_post_new_image(

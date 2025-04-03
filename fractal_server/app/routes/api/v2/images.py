@@ -11,10 +11,12 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import delete
 
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -204,10 +206,10 @@ async def delete_dataset_images(
     )
     dataset = output["dataset"]
 
-    image_to_remove = next(
-        (image for image in dataset.images if image["zarr_url"] == zarr_url),
-        None,
+    image_to_remove = find_image_by_zarr_url(
+        images=dataset.images, zarr_url=zarr_url
     )
+
     if image_to_remove is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -217,8 +219,14 @@ async def delete_dataset_images(
             ),
         )
 
-    dataset.images.remove(image_to_remove)
+    dataset.images.remove(image_to_remove["image"])
     flag_modified(dataset, "images")
+
+    await db.execute(
+        delete(HistoryImageCache)
+        .where(HistoryImageCache.dataset_id == dataset_id)
+        .where(HistoryImageCache.zarr_url == zarr_url)
+    )
 
     await db.commit()
 
