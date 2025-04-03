@@ -13,6 +13,7 @@ from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
+# FIXME: Transform several logger.info into logger.debug.
 
 
 class SlurmSSHRunner(BaseSlurmRunner):
@@ -163,6 +164,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         t_1 = time.perf_counter()
         logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
 
-    def _run_single_cmd(self, cmd: str) -> str:
+    def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         return stdout

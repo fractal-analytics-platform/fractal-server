@@ -29,6 +29,8 @@ from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
+# FIXME: Transform several logger.info into logger.debug.
+
 
 class BaseSlurmRunner(BaseRunner):
     shutdown_file: Path
@@ -79,7 +81,10 @@ class BaseSlurmRunner(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def _run_single_cmd(self, cmd: str) -> str:
+    def _run_local_cmd(self, cmd: str) -> str:
+        raise NotImplementedError("Implement in child class.")
+
+    def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
@@ -89,8 +94,12 @@ class BaseSlurmRunner(BaseRunner):
             f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
             " --states=all"
         )
+
         try:
-            stdout = self._run_single_cmd(cmd)
+            if self.slurm_runner_type == "sudo":
+                stdout = self._run_local_cmd(cmd)
+            else:
+                stdout = self._run_remote_cmd(cmd)
             return True, stdout
         except Exception as e:
             logger.info(f"{cmd=} failed with {str(e)}")
@@ -140,7 +149,7 @@ class BaseSlurmRunner(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-
+        logger.info("[_submit_single_sbatch] START")
         # Prepare input pickle(s)
         versions = dict(
             python=sys.version_info[:3],
@@ -148,17 +157,16 @@ class BaseSlurmRunner(BaseRunner):
             fractal_server=__VERSION__,
         )
         for task in slurm_job.tasks:
+            # Wrinte input pickle
             _args = []
             _kwargs = dict(
                 parameters=task.parameters,
                 remote_files=task.task_files.remote_files_dict,
             )
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
-
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
-
-            logger.debug(
+            logger.info(
                 "[_submit_single_sbatch] Written "
                 f"{task.input_pickle_file_local=}"
             )
@@ -168,6 +176,10 @@ class BaseSlurmRunner(BaseRunner):
                 self.fractal_ssh.send_file(
                     local=task.input_pickle_file_local,
                     remote=task.input_pickle_file_remote,
+                )
+                logger.info(
+                    "[_submit_single_sbatch] Transferred "
+                    f"{task.input_pickle_file_local=}"
                 )
 
         # Prepare commands to be included in SLURM submission script
@@ -188,11 +200,8 @@ class BaseSlurmRunner(BaseRunner):
                 )
             )
 
-        # ...
-        num_tasks_max_running = slurm_config.parallel_tasks_per_job
-        mem_per_task_MB = slurm_config.mem_per_task_MB
-
         # Set ntasks
+        num_tasks_max_running = slurm_config.parallel_tasks_per_job
         ntasks = min(len(cmdlines), num_tasks_max_running)
         slurm_config.parallel_tasks_per_job = ntasks
 
@@ -211,7 +220,7 @@ class BaseSlurmRunner(BaseRunner):
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
-        logger.debug(script_lines)
+        logger.info(script_lines)
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append(
@@ -222,6 +231,7 @@ class BaseSlurmRunner(BaseRunner):
         script_lines.append("\n")
 
         # Include command lines
+        mem_per_task_MB = slurm_config.mem_per_task_MB
         for cmd in cmdlines:
             script_lines.append(
                 "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
@@ -229,12 +239,15 @@ class BaseSlurmRunner(BaseRunner):
                 f"{cmd} &"
             )
         script_lines.append("wait\n")
-
         script = "\n".join(script_lines)
 
         # Write submission script
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
+        logger.info(
+            "[_submit_single_sbatch] Written "
+            f"{slurm_job.slurm_submission_script_local=}"
+        )
 
         if self.slurm_runner_type == "ssh":
             self.fractal_ssh.send_file(
@@ -253,35 +266,42 @@ class BaseSlurmRunner(BaseRunner):
         # Run sbatch
         pre_submission_cmds = slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
-            sbatch_stdout = self._run_single_cmd(submit_command)
+            logger.info(f"Now run {submit_command=}")
+            sbatch_stdout = self._run_remote_cmd(submit_command)
         else:
-            logger.debug(f"Now using {pre_submission_cmds=}")
+            logger.info(f"Now using {pre_submission_cmds=}")
             script_lines = pre_submission_cmds + [submit_command]
             wrapper_script_contents = "\n".join(script_lines)
             wrapper_script_contents = f"{wrapper_script_contents}\n"
             if self.slurm_runner_type == "ssh":
                 wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_remote}" "_wrapper.sh"
+                    f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
                 )
                 self.fractal_ssh.write_remote_file(
                     path=wrapper_script, content=wrapper_script_contents
                 )
             else:
                 wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_local}" "_wrapper.sh"
+                    f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
                 )
                 with open(wrapper_script, "w") as f:
                     f.write(wrapper_script_contents)
-            sbatch_stdout = self._run_single_cmd(f"bash {wrapper_script}")
+            logger.info(f"Now run {wrapper_script=}")
+            sbatch_stdout = self._run_remote_cmd(f"bash {wrapper_script}")
 
         # Submit SLURM job and retrieve job ID
+        logger.info(f"[_submit_single_sbatc] {sbatch_stdout=}")
         stdout = sbatch_stdout.strip("\n")
         submitted_job_id = int(stdout)
         slurm_job.slurm_job_id = str(submitted_job_id)
 
         # Add job to self.jobs
         self.jobs[slurm_job.slurm_job_id] = slurm_job
-        logger.debug(f"Added {slurm_job.slurm_job_id} to self.jobs.")
+        logger.info(
+            "[_submit_single_sbatch] Added "
+            f"{slurm_job.slurm_job_id} to self.jobs."
+        )
+        logger.info("[_submit_single_sbatch] END")
 
     def _copy_files_from_remote_to_local(
         self,
@@ -325,8 +345,9 @@ class BaseSlurmRunner(BaseRunner):
             exception = JobExecutionError(f"ERROR, {str(e)}")
             return None, exception
         finally:
-            Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            pass
+            # Path(task.input_pickle_file_local).unlink(missing_ok=True)
+            # Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def is_shutdown(self) -> bool:
         # FIXME: shutdown is not implemented
@@ -351,6 +372,8 @@ class BaseSlurmRunner(BaseRunner):
         ],
     ) -> tuple[Any, Exception]:
 
+        logger.info("[submit] START")
+
         workdir_local = task_files.wftask_subfolder_local
         workdir_remote = task_files.wftask_subfolder_remote
 
@@ -367,8 +390,10 @@ class BaseSlurmRunner(BaseRunner):
         )
 
         # Create task subfolder
+        logger.info("[submit] Create local/remote folders - START")
         self._mkdir_local_folder(folder=workdir_local.as_posix())
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
+        logger.info("[submit] Create local/remote folders - END")
 
         # Submission phase
         slurm_job = SlurmJob(
@@ -393,22 +418,22 @@ class BaseSlurmRunner(BaseRunner):
             slurm_job=slurm_job,
             slurm_config=config,
         )
-        logger.info(f"END submission phase, {self.job_ids=}")
+        logger.info(f"[submit] END submission phase, {self.job_ids=}")
 
         # TODO: check if this sleep is necessary
-        logger.warning("Now sleep 4 (FIXME)")
+        logger.warning("[submit] Now sleep 4 (FIXME)")
         time.sleep(4)
 
         # Retrieval phase
-        logger.info("START retrieval phase")
+        logger.info("[submit] START retrieval phase")
         while len(self.jobs) > 0:
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.debug(f"{finished_job_ids=}")
+            logger.info(f"{finished_job_ids=}")
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.debug(f"Now process {slurm_job_id=}")
+                    logger.info(f"Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
 
                     self._copy_files_from_remote_to_local(slurm_job)
@@ -431,6 +456,7 @@ class BaseSlurmRunner(BaseRunner):
 
             time.sleep(self.poll_interval)
 
+        logger.info("[submit] END")
         return result, exception
 
     def multisubmit(
@@ -459,7 +485,7 @@ class BaseSlurmRunner(BaseRunner):
             list_parameters=list_parameters,
         )
 
-        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
+        logger.info(f"[multisubmit] START, {len(list_parameters)=}")
 
         workdir_local = list_task_files[0].wftask_subfolder_local
         workdir_remote = list_task_files[0].wftask_subfolder_remote
@@ -549,14 +575,14 @@ class BaseSlurmRunner(BaseRunner):
             if self.is_shutdown():
                 self.scancel_jobs()
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.debug(f"{finished_job_ids=}")
+            logger.info(f"{finished_job_ids=}")
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.debug(f"Now processing {slurm_job_id=}")
+                    logger.info(f"Now processing {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
-                        logger.debug(f"Now processing {task.index=}")
+                        logger.info(f"Now processing {task.index=}")
                         result, exception = self._postprocess_single_task(
                             task=task
                         )
@@ -603,7 +629,7 @@ class BaseSlurmRunner(BaseRunner):
             f"{self.python_worker_interpreter} "
             "-m fractal_server.app.runner.versions"
         )
-        stdout = self._run_single_cmd(cmd)
+        stdout = self._run_remote_cmd(cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
 
         # Verify local/remote version match
@@ -619,18 +645,18 @@ class BaseSlurmRunner(BaseRunner):
             raise RuntimeError(error_msg)
 
     def scancel_jobs(self) -> None:
-        logger.debug("[scancel_jobs] START")
+        logger.info("[scancel_jobs] START")
 
         if self.jobs:
             scancel_string = " ".join(self.job_ids)
             scancel_cmd = f"scancel {scancel_string}"
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             try:
-                self._run_single_cmd(scancel_cmd)
+                self._run_remote_cmd(scancel_cmd)
             except Exception as e:
                 logger.warning(
                     "[scancel_jobs] `scancel` command failed. "
                     f"Original error:\n{str(e)}"
                 )
 
-        logger.debug("[scancel_jobs] END")
+        logger.info("[scancel_jobs] END")

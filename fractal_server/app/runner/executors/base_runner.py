@@ -2,6 +2,7 @@ from typing import Any
 
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
+from fractal_server.logger import set_logger
 
 
 TASK_TYPES_SUBMIT: list[TaskTypeType] = [
@@ -15,6 +16,8 @@ TASK_TYPES_MULTISUBMIT: list[TaskTypeType] = [
     "converter_compound",
     "parallel",
 ]
+
+logger = set_logger(__name__)
 
 
 class BaseRunner(object):
@@ -88,6 +91,7 @@ class BaseRunner(object):
             parameters: Parameters dictionary.
             task_type: Task type.s
         """
+        logger.info("[validate_submit_parameters] START")
         if task_type not in TASK_TYPES_SUBMIT:
             raise ValueError(f"Invalid {task_type=} for `submit`.")
         if not isinstance(parameters, dict):
@@ -102,6 +106,7 @@ class BaseRunner(object):
                 raise ValueError(
                     f"Forbidden 'zarr_urls' key in {list(parameters.keys())}"
                 )
+        logger.info("[validate_submit_parameters] END")
 
     def validate_multisubmit_parameters(
         self,
