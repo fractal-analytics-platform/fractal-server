@@ -60,7 +60,6 @@ def monkey_slurm(
         def __init__(self, *args, **kwargs):
             cmd = args[0]
             assert isinstance(cmd, list)
-            container_cmd = [" ".join(str(c) for c in cmd)]
             cmd = [
                 "docker",
                 "exec",
@@ -69,7 +68,7 @@ def monkey_slurm(
                 slurmlogin_container,
                 "bash",
                 "-c",
-            ] + container_cmd
+            ] + [shlex.join(cmd)]
             super().__init__(cmd, *args[1:], **kwargs)
             logging.warning(shlex.join(self.args))
             PopenLog.add_call(self)
