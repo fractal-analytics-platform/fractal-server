@@ -372,7 +372,7 @@ def run_v2_task_compound(
         root_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
-        component=f"non_par_{_index_to_component(0)}",
+        component=_index_to_component(0),
     )
 
     runner_config_init = get_runner_config(
@@ -483,7 +483,7 @@ def run_v2_task_compound(
             root_dir_remote=workflow_dir_remote,
             task_order=wftask.order,
             task_name=wftask.task.name,
-            component=f"par_{_index_to_component(ind)}",
+            component=_index_to_component(ind),
         )
         for ind in range(len(parallelization_list))
     ]
