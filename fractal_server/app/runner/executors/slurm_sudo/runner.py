@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import shlex
@@ -18,7 +17,6 @@ from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
@@ -52,18 +50,19 @@ def _subprocess_run_or_raise(
 class SudoSlurmRunner(BaseSlurmRunner):
     slurm_user: str
     slurm_account: Optional[str] = None
-    python_worker_interpreter: str
 
     def __init__(
         self,
         *,
-        slurm_user: str,
+        # Common
         root_dir_local: Path,
         root_dir_remote: Path,
-        slurm_account: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
         poll_interval: Optional[int] = None,
+        # Specific
+        slurm_account: Optional[str] = None,
+        slurm_user: str,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
@@ -72,61 +71,19 @@ class SudoSlurmRunner(BaseSlurmRunner):
 
         self.slurm_user = slurm_user
         self.slurm_account = slurm_account
-        self.common_script_lines = common_script_lines or []
-
-        # Check that SLURM account is not set here
-        # FIXME: move to little method
-        try:
-            invalid_line = next(
-                line
-                for line in self.common_script_lines
-                if line.startswith("#SBATCH --account=")
-            )
-            raise RuntimeError(
-                "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
-                f"'{invalid_line}'.\n"
-                "SLURM account must be set via the request body of the "
-                "apply-workflow endpoint, or by modifying the user properties."
-            )
-        except StopIteration:
-            pass
-
-        # Check Python versions
         settings = Inject(get_settings)
-        if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
-            self.check_remote_python_interpreter()
-
-        self.root_dir_local = root_dir_local
-        self.root_dir_remote = root_dir_remote
-
-        # Create folders
-        original_umask = os.umask(0)
-        self.root_dir_local.mkdir(parents=True, exist_ok=True, mode=0o755)
-        os.umask(original_umask)
-        _mkdir_as_user(
-            folder=self.root_dir_remote.as_posix(),
-            user=self.slurm_user,
-        )
-
-        self.user_cache_dir = user_cache_dir
-
-        self.poll_interval = (
-            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
-        )
-
-        self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
 
         self.python_worker_interpreter = (
             settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
 
-        self.jobs = {}
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
+        super().__init__(
+            root_dir_local=root_dir_local,
+            root_dir_remote=root_dir_remote,
+            common_script_lines=common_script_lines,
+            user_cache_dir=user_cache_dir,
+            poll_interval=poll_interval,
+        )
 
     def _mkdir_local_folder(self, folder: str) -> None:
         original_umask = os.umask(0)
@@ -135,27 +92,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
 
     def _mkdir_remote_folder(self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
-
-    def scancel_jobs(self) -> None:
-        logger.debug("[scancel_jobs] START")
-
-        if self.jobs:
-            scancel_string = " ".join(self.job_ids)
-            scancel_cmd = f"scancel {scancel_string}"
-            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
-            try:
-                _run_command_as_user(
-                    cmd=scancel_cmd,
-                    user=self.slurm_user,
-                    check=True,
-                )
-            except RuntimeError as e:
-                logger.warning(
-                    "[scancel_jobs] `scancel` command failed. "
-                    f"Original error:\n{str(e)}"
-                )
-
-        logger.debug("[scancel_jobs] END")
 
     def _get_finished_jobs(
         self,
@@ -190,17 +126,13 @@ class SudoSlurmRunner(BaseSlurmRunner):
                 f"{task.input_pickle_file_local=}"
             )
         # Prepare commands to be included in SLURM submission script
-        settings = Inject(get_settings)
-        python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
         cmdlines = []
         for task in slurm_job.tasks:
             input_pickle_file = task.input_pickle_file_local
             output_pickle_file = task.output_pickle_file_remote
             cmdlines.append(
                 (
-                    f"{python_worker_interpreter}"
+                    f"{self.python_worker_interpreter}"
                     " -m fractal_server.app.runner."
                     "executors.slurm_common.remote "
                     f"--input-file {input_pickle_file} "
@@ -327,27 +259,11 @@ class SudoSlurmRunner(BaseSlurmRunner):
                     f"Original error: {str(e)}"
                 )
 
-    def check_remote_python_interpreter(self):
-        """
-        Check fractal-server version on the _remote_ Python interpreter.
-        """
-        settings = Inject(get_settings)
-        output = _subprocess_run_or_raise(
+    def _run_single_cmd(self, cmd: str):
+        res = _subprocess_run_or_raise(
             (
-                f"{settings.FRACTAL_SLURM_WORKER_PYTHON} "
+                f"{self.python_worker_interpreter} "
                 "-m fractal_server.app.runner.versions"
             )
         )
-        runner_version = json.loads(output.stdout.strip("\n"))[
-            "fractal_server"
-        ]
-        if runner_version != __VERSION__:
-            error_msg = (
-                "Fractal-server version mismatch.\n"
-                "Local interpreter: "
-                f"({sys.executable}): {__VERSION__}.\n"
-                "Remote interpreter: "
-                f"({settings.FRACTAL_SLURM_WORKER_PYTHON}): {runner_version}."
-            )
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
+        return res.stdout

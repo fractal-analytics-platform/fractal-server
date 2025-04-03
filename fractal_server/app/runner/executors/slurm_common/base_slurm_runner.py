@@ -1,8 +1,11 @@
+import json
 import math
+import sys
 import time
 from pathlib import Path
 from typing import Any
 from typing import Literal
+from typing import Optional
 
 import cloudpickle
 
@@ -11,13 +14,17 @@ from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._batching import heuristics
 from ._handle_exception_proxy import _handle_exception_proxy
+from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
@@ -30,6 +37,44 @@ class BaseSlurmRunner(BaseRunner):
     root_dir_remote: Path
     poll_interval: int
     jobs: dict[str, SlurmJob]
+    python_worker_interpreter: str
+
+    def __init__(
+        self,
+        root_dir_local: Path,
+        root_dir_remote: Path,
+        common_script_lines: Optional[list[str]] = None,
+        user_cache_dir: Optional[str] = None,
+        poll_interval: Optional[int] = None,
+    ):
+        self.root_dir_local = root_dir_local
+        self.root_dir_remote = root_dir_remote
+        self.common_script_lines = common_script_lines or []
+        self._check_slurm_account()
+        self.user_cache_dir = user_cache_dir
+
+        settings = Inject(get_settings)
+
+        self.poll_interval = (
+            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
+        )
+        self.check_fractal_server_versions()
+
+        # Create folders
+        self._mkdir_local_folder(self.root_dir_local.as_posix())
+        self._mkdir_remote_folder(self.root_dir_remote.as_posix())
+
+        self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
+        self.jobs = {}
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+    def _run_single_cmd(self, cmd: str) -> str:
+        raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
         raise NotImplementedError("Implement in child class.")
@@ -54,6 +99,25 @@ class BaseSlurmRunner(BaseRunner):
     ) -> None:
         raise NotImplementedError("Implement in child class.")
 
+    def _check_slurm_account(self) -> None:
+        """
+        Check that SLURM account is not set here in `common_script_lines`.
+        """
+        try:
+            invalid_line = next(
+                line
+                for line in self.common_script_lines
+                if line.startswith("#SBATCH --account=")
+            )
+            raise RuntimeError(
+                "Invalid line in `common_script_lines`: "
+                f"'{invalid_line}'.\n"
+                "SLURM account must be set via the request body of the "
+                "apply-workflow endpoint, or by modifying the user properties."
+            )
+        except StopIteration:
+            pass
+
     def _postprocess_single_task(
         self, *, task: SlurmTask
     ) -> tuple[Any, Exception]:
@@ -73,9 +137,6 @@ class BaseSlurmRunner(BaseRunner):
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
             Path(task.output_pickle_file_local).unlink(missing_ok=True)
-
-    def scancel_jobs(self) -> None:
-        raise NotImplementedError("Implement in child class.")
 
     def is_shutdown(self) -> bool:
         # FIXME: shutdown is not implemented
@@ -342,3 +403,50 @@ class BaseSlurmRunner(BaseRunner):
 
             time.sleep(self.poll_interval)
         return results, exceptions
+
+    def check_fractal_server_versions(self):
+        """
+        Compare fractal-server versions of local/remote Python interpreters.
+        """
+
+        # Skip check when the local and remote interpreters are the same
+        # (notably for some sudo-slurm deployments)
+        if self.python_worker_interpreter == sys.executable:
+            return
+
+        # Fetch remote fractal-server version
+        cmd = (
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.versions"
+        )
+        stdout = self._run_single_cmd(cmd)
+        remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
+
+        # Verify local/remote version match
+        if remote_version != __VERSION__:
+            error_msg = (
+                "Fractal-server version mismatch.\n"
+                "Local interpreter: "
+                f"({sys.executable}): {__VERSION__}.\n"
+                "Remote interpreter: "
+                f"({self.python_worker_interpreter}): {remote_version}."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+
+    def scancel_jobs(self) -> None:
+        logger.debug("[scancel_jobs] START")
+
+        if self.jobs:
+            scancel_string = " ".join(self.job_ids)
+            scancel_cmd = f"scancel {scancel_string}"
+            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
+            try:
+                self._run_single_cmd(scancel_cmd)
+            except Exception as e:
+                logger.warning(
+                    "[scancel_jobs] `scancel` command failed. "
+                    f"Original error:\n{str(e)}"
+                )
+
+        logger.debug("[scancel_jobs] END")

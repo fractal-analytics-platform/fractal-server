@@ -1,4 +1,3 @@
-import json
 import sys
 import time
 from copy import copy
@@ -14,7 +13,6 @@ from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.extract_archive import extract_archive
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -30,78 +28,32 @@ class SlurmSSHRunner(BaseSlurmRunner):
     def __init__(
         self,
         *,
-        fractal_ssh: FractalSSH,
+        # Common
         root_dir_local: Path,
         root_dir_remote: Path,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
         poll_interval: Optional[int] = None,
+        # Specific
+        fractal_ssh: FractalSSH,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
         different SLURM jobs/tasks.
         """
-
-        self.common_script_lines = common_script_lines or []
-
-        # Check that SLURM account is not set here
-        # FIXME: move to little method
-        try:
-            invalid_line = next(
-                line
-                for line in self.common_script_lines
-                if line.startswith("#SBATCH --account=")
-            )
-            raise RuntimeError(
-                "Invalid line in `RunnerSlurmSSH.common_script_lines`: "
-                f"'{invalid_line}'.\n"
-                "SLURM account must be set via the request body of the "
-                "apply-workflow endpoint, or by modifying the user properties."
-            )
-        except StopIteration:
-            pass
-
-        # Check Python versions
         self.fractal_ssh = fractal_ssh
         logger.warning(self.fractal_ssh)
 
         settings = Inject(get_settings)
-        # It is the new handshanke
-        if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
-            self.check_remote_python_interpreter()
+        self.python_worker_interpreter = settings.FRACTAL_SLURM_WORKER_PYTHON
 
-        # Initialize connection and perform handshake
-        self.root_dir_local = root_dir_local
-        self.root_dir_remote = root_dir_remote
-
-        # # Create folders
-        # original_umask = os.umask(0)
-        # self.root_dir_local.mkdir(parents=True, exist_ok=True, mode=0o755)
-        # os.umask(original_umask)
-        # _mkdir_as_user(
-        #     folder=self.root_dir_remote.as_posix(),
-        #     user=self.slurm_user,
-        # )
-
-        self.user_cache_dir = user_cache_dir
-
-        self.poll_interval = (
-            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
+        super().__init__(
+            root_dir_local=root_dir_local,
+            root_dir_remote=root_dir_remote,
+            common_script_lines=common_script_lines,
+            user_cache_dir=user_cache_dir,
+            poll_interval=poll_interval,
         )
-
-        self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
-
-        self.python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
-
-        self.jobs = {}
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
 
     def _mkdir_local_folder(self, folder: str) -> None:
         Path(folder).mkdir(parents=True)
@@ -111,23 +63,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
             folder=folder,
             parents=True,
         )
-
-    def scancel_jobs(self) -> None:
-        logger.debug("[scancel_jobs] START")
-
-        if self.jobs:
-            scancel_string = " ".join(self.job_ids)
-            scancel_cmd = f"scancel {scancel_string}"
-            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
-            try:
-                self.fractal_ssh.run_command(cmd=scancel_cmd)
-            except RuntimeError as e:
-                logger.warning(
-                    "[scancel_jobs] `scancel` command failed. "
-                    f"Original error:\n{str(e)}"
-                )
-
-        logger.debug("[scancel_jobs] END")
 
     def _get_finished_jobs(
         self,
@@ -276,17 +211,13 @@ class SlurmSSHRunner(BaseSlurmRunner):
                 remote=task.input_pickle_file_remote,
             )
         # Prepare commands to be included in SLURM submission script
-        settings = Inject(get_settings)
-        python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
         cmdlines = []
         for task in slurm_job.tasks:
             input_pickle_file = task.input_pickle_file_remote
             output_pickle_file = task.output_pickle_file_remote
             cmdlines.append(
                 (
-                    f"{python_worker_interpreter}"
+                    f"{self.python_worker_interpreter}"
                     " -m fractal_server.app.runner."
                     "executors.slurm_common.remote "
                     f"--input-file {input_pickle_file} "
@@ -381,21 +312,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         self.jobs[slurm_job.slurm_job_id] = slurm_job
         logger.debug(f"Added {slurm_job.slurm_job_id} to self.jobs.")
 
-    def check_remote_python_interpreter(self):
-        settings = Inject(get_settings)
-        cmd = (
-            f"{settings.FRACTAL_SLURM_WORKER_PYTHON} "
-            "-m fractal_server.app.runner.versions"
-        )
+    def _run_single_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
-        remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
-        if remote_version != __VERSION__:
-            error_msg = (
-                "Fractal-server version mismatch.\n"
-                "Local interpreter: "
-                f"({sys.executable}): {__VERSION__}.\n"
-                "Remote interpreter: "
-                f"({settings.FRACTAL_SLURM_WORKER_PYTHON}): {remote_version}."
-            )
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
+        return stdout
