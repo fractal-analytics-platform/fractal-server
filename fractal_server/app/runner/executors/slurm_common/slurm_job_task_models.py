@@ -26,17 +26,17 @@ class SlurmTask(BaseModel):
         ).as_posix()
 
     @property
-    def output_pickle_file_local(self) -> str:
-        return (
-            self.workdir_local
-            / f"{self.prefix}-{self.component}-output.pickle"
-        ).as_posix()
-
-    @property
     def input_pickle_file_remote(self) -> str:
         return (
             self.workdir_remote
             / f"{self.prefix}-{self.component}-input.pickle"
+        ).as_posix()
+
+    @property
+    def output_pickle_file_local(self) -> str:
+        return (
+            self.workdir_local
+            / f"{self.prefix}-{self.component}-output.pickle"
         ).as_posix()
 
     @property
