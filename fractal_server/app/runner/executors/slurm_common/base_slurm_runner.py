@@ -397,12 +397,14 @@ class BaseSlurmRunner(BaseRunner):
         logger.info("[submit] Create local/remote folders - END")
 
         # Submission phase
+        prefix = "non_par"
         slurm_job = SlurmJob(
-            label="non_par",
+            prefix=prefix,
             workdir_local=workdir_local,
             workdir_remote=workdir_remote,
             tasks=[
                 SlurmTask(
+                    prefix=prefix,
                     index=0,
                     component=task_files.component,
                     parameters=parameters,
@@ -538,11 +540,13 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
         for ind_batch, chunk in enumerate(args_batches):
+            prefix = f"par_batch_{ind_batch:06d}"
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
                 tasks.append(
                     SlurmTask(
+                        prefix=prefix,
                         index=index,
                         component=original_task_files[index].component,
                         workdir_local=workdir_local,
@@ -554,7 +558,7 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             slurm_job = SlurmJob(
-                label=f"par_batch_{ind_batch:06d}",
+                prefix=prefix,
                 workdir_local=workdir_local,
                 workdir_remote=workdir_remote,
                 tasks=tasks,
