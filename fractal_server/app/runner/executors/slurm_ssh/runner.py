@@ -9,7 +9,6 @@ import cloudpickle
 from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from ._check_job_status_ssh import get_finished_jobs_ssh
 from fractal_server import __VERSION__
 from fractal_server.app.runner.compress_folder import compress_folder
 from fractal_server.app.runner.extract_archive import extract_archive
@@ -62,15 +61,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         self.fractal_ssh.mkdir(
             folder=folder,
             parents=True,
-        )
-
-    def _get_finished_jobs(
-        self,
-        job_ids: list[str],
-    ) -> set[str]:
-        return get_finished_jobs_ssh(
-            job_ids=job_ids,
-            fractal_ssh=self.fractal_ssh,
         )
 
     def _copy_files_from_remote_to_local(self, slurm_job: SlurmJob) -> None:

@@ -14,6 +14,7 @@ from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._batching import heuristics
 from ._handle_exception_proxy import _handle_exception_proxy
+from ._job_states import STATES_FINISHED
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -78,8 +79,46 @@ class BaseSlurmRunner(BaseRunner):
     def _run_single_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
+    def run_squeue(self, job_ids: list[str]) -> str:
+        job_id_single_str = ",".join([str(j) for j in job_ids])
+        cmd = (
+            f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
+            " --states=all"
+        )
+        stdout = self._run_single_cmd(cmd)
+        return stdout
+
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
-        raise NotImplementedError("Implement in child class.")
+        #  If there is no Slurm job to check, return right away
+        if not job_ids:
+            return set()
+        id_to_state = dict()
+
+        res = self.run_squeue(job_ids)
+        if res.returncode == 0:
+            id_to_state = {
+                out.split()[0]: out.split()[1]
+                for out in res.stdout.splitlines()
+            }
+        else:
+            id_to_state = dict()
+            for j in job_ids:
+                res = self.run_squeue([j])
+                if res.returncode != 0:
+                    logger.info(f"Job {j} not found. Marked it as completed")
+                    id_to_state.update({str(j): "COMPLETED"})
+                else:
+                    id_to_state.update(
+                        {res.stdout.split()[0]: res.stdout.split()[1]}
+                    )
+
+        # Finished jobs only stay in squeue for a few mins (configurable). If
+        # a job ID isn't there, we'll assume it's finished.
+        return {
+            j
+            for j in job_ids
+            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        }
 
     def _mkdir_local_folder(self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")

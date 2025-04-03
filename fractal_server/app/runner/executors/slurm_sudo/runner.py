@@ -12,7 +12,6 @@ import cloudpickle
 from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from ._check_jobs_status import get_finished_jobs
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
@@ -92,12 +91,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
 
     def _mkdir_remote_folder(self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
-
-    def _get_finished_jobs(
-        self,
-        job_ids: list[str],
-    ) -> set[str]:
-        return get_finished_jobs(job_ids=job_ids)
 
     def _submit_single_sbatch(
         self,
