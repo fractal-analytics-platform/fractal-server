@@ -398,7 +398,7 @@ class BaseSlurmRunner(BaseRunner):
 
         # Submission phase
         slurm_job = SlurmJob(
-            label="0",
+            label="non_par",
             workdir_local=workdir_local,
             workdir_remote=workdir_remote,
             tasks=[
@@ -554,7 +554,7 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             slurm_job = SlurmJob(
-                label=f"{ind_batch:06d}",
+                label=f"par_batch_{ind_batch:06d}",
                 workdir_local=workdir_local,
                 workdir_remote=workdir_remote,
                 tasks=tasks,
