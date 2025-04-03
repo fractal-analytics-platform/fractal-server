@@ -39,15 +39,18 @@ class BaseSlurmRunner(BaseRunner):
     poll_interval: int
     jobs: dict[str, SlurmJob]
     python_worker_interpreter: str
+    slurm_runner_type: Literal["ssh", "sudo"]
 
     def __init__(
         self,
         root_dir_local: Path,
         root_dir_remote: Path,
+        slurm_runner_type: Literal["ssh", "sudo"],
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
         poll_interval: Optional[int] = None,
     ):
+        self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
         self.root_dir_remote = root_dir_remote
         self.common_script_lines = common_script_lines or []
@@ -132,7 +135,144 @@ class BaseSlurmRunner(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        raise NotImplementedError("Implement in child class.")
+
+        # Prepare input pickle(s)
+        versions = dict(
+            python=sys.version_info[:3],
+            cloudpickle=cloudpickle.__version__,
+            fractal_server=__VERSION__,
+        )
+        for task in slurm_job.tasks:
+            _args = []
+            _kwargs = dict(
+                parameters=task.parameters,
+                remote_files=task.task_files.remote_files_dict,
+            )
+            funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
+
+            with open(task.input_pickle_file_local, "wb") as f:
+                f.write(funcser)
+
+            logger.debug(
+                "[_submit_single_sbatch] Written "
+                f"{task.input_pickle_file_local=}"
+            )
+
+            if self.slurm_runner_type == "ssh":
+                # Send input pickle (only relevant for SSH)
+                self.fractal_ssh.send_file(
+                    local=task.input_pickle_file_local,
+                    remote=task.input_pickle_file_remote,
+                )
+
+        # Prepare commands to be included in SLURM submission script
+        cmdlines = []
+        for task in slurm_job.tasks:
+            if self.slurm_runner_type == "ssh":
+                input_pickle_file = task.input_pickle_file_remote
+            else:
+                input_pickle_file = task.input_pickle_file_local
+            output_pickle_file = task.output_pickle_file_remote
+            cmdlines.append(
+                (
+                    f"{self.python_worker_interpreter}"
+                    " -m fractal_server.app.runner."
+                    "executors.slurm_common.remote "
+                    f"--input-file {input_pickle_file} "
+                    f"--output-file {output_pickle_file}"
+                )
+            )
+
+        # ...
+        num_tasks_max_running = slurm_config.parallel_tasks_per_job
+        mem_per_task_MB = slurm_config.mem_per_task_MB
+
+        # Set ntasks
+        ntasks = min(len(cmdlines), num_tasks_max_running)
+        slurm_config.parallel_tasks_per_job = ntasks
+
+        # Prepare SLURM preamble based on SlurmConfig object
+        script_lines = slurm_config.to_sbatch_preamble(
+            remote_export_dir=self.user_cache_dir
+        )
+
+        # Extend SLURM preamble with variable which are not in SlurmConfig, and
+        # fix their order
+        script_lines.extend(
+            [
+                f"#SBATCH --err={slurm_job.slurm_stderr_remote}",
+                f"#SBATCH --out={slurm_job.slurm_stdout_remote}",
+                f"#SBATCH -D {slurm_job.workdir_remote}",
+            ]
+        )
+        script_lines = slurm_config.sort_script_lines(script_lines)
+        logger.debug(script_lines)
+
+        # Always print output of `uname -n` and `pwd`
+        script_lines.append(
+            '"Hostname: `uname -n`; current directory: `pwd`"\n'
+        )
+
+        # Complete script preamble
+        script_lines.append("\n")
+
+        # Include command lines
+        for cmd in cmdlines:
+            script_lines.append(
+                "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
+                f"--mem={mem_per_task_MB}MB "
+                f"{cmd} &"
+            )
+        script_lines.append("wait\n")
+
+        script = "\n".join(script_lines)
+
+        # Write submission script
+        # submission_script_contents = "\n".join(preamble_lines + cmdlines)
+        with open(slurm_job.slurm_submission_script_local, "w") as f:
+            f.write(script)
+
+        if self.slurm_runner_type == "ssh":
+            self.fractal_ssh.send_file(
+                local=slurm_job.slurm_submission_script_local,
+                remote=slurm_job.slurm_submission_script_remote,
+            )
+
+        # Run sbatch
+        submit_command = (
+            f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
+        )
+        pre_submission_cmds = slurm_config.pre_submission_commands
+        if len(pre_submission_cmds) == 0:
+            sbatch_stdout = self._run_single_cmd(submit_command)
+        else:
+            logger.debug(f"Now using {pre_submission_cmds=}")
+            script_lines = pre_submission_cmds + [submit_command]
+            wrapper_script_contents = "\n".join(script_lines)
+            wrapper_script_contents = f"{wrapper_script_contents}\n"
+            if self.slurm_runner_type == "ssh":
+                wrapper_script = (
+                    f"{slurm_job.slurm_submission_script_remote}" "_wrapper.sh"
+                )
+                self.fractal_ssh.write_remote_file(
+                    path=wrapper_script, content=wrapper_script_contents
+                )
+            else:
+                wrapper_script = (
+                    f"{slurm_job.slurm_submission_script_local}" "_wrapper.sh"
+                )
+                with open(wrapper_script, "w") as f:
+                    f.write(wrapper_script_contents)
+            sbatch_stdout = self._run_single_cmd(f"bash {wrapper_script}")
+
+        # Submit SLURM job and retrieve job ID
+        stdout = sbatch_stdout.strip("\n")
+        submitted_job_id = int(stdout)
+        slurm_job.slurm_job_id = str(submitted_job_id)
+
+        # Add job to self.jobs
+        self.jobs[slurm_job.slurm_job_id] = slurm_job
+        logger.debug(f"Added {slurm_job.slurm_job_id} to self.jobs.")
 
     def _copy_files_from_remote_to_local(
         self,
