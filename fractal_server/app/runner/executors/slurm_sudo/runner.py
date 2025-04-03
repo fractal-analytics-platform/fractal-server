@@ -140,10 +140,5 @@ class SudoSlurmRunner(BaseSlurmRunner):
                 )
 
     def _run_single_cmd(self, cmd: str):
-        res = _subprocess_run_or_raise(
-            (
-                f"{self.python_worker_interpreter} "
-                "-m fractal_server.app.runner.versions"
-            )
-        )
+        res = _subprocess_run_or_raise(cmd)
         return res.stdout
