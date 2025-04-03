@@ -182,7 +182,7 @@ async def test_multisubmit(
         0: 2,
         1: 4,
     }
-    assert isinstance(exceptions[2], ValueError)
+    assert isinstance(exceptions[2], TaskExecutionError)
     assert "very very bad" in str(exceptions[2])
 
     # `HistoryRun.status` is updated at a higher level, not from
