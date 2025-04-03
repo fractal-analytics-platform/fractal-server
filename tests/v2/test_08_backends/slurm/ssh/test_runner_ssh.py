@@ -7,7 +7,6 @@ from ...aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.slurm_ssh.runner import (
     SlurmSSHRunner,
 )
-from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -45,7 +44,6 @@ async def test_submit_success(
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
