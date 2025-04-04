@@ -242,6 +242,7 @@ async def full_workflow(
             first_history_unit = res.json()["items"][0]
             history_unit_id = first_history_unit["id"]
             assert Path(first_history_unit["logfile"]).exists()
+            debug(first_history_unit["logfile"])
 
             # Get history-unit log
             url = (
