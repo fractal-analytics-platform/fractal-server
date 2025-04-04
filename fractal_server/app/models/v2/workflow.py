@@ -16,7 +16,7 @@ class WorkflowV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    project_id: int = Field(foreign_key="projectv2.id")
+    project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")
     project: "ProjectV2" = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(lazy="selectin"),
     )

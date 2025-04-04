@@ -13,8 +13,12 @@ class LinkUserGroup(SQLModel, table=True):
     Crossing table between User and UserGroup
     """
 
-    group_id: int = Field(foreign_key="usergroup.id", primary_key=True)
-    user_id: int = Field(foreign_key="user_oauth.id", primary_key=True)
+    group_id: int = Field(
+        foreign_key="usergroup.id", primary_key=True, ondelete="CASCADE"
+    )
+    user_id: int = Field(
+        foreign_key="user_oauth.id", primary_key=True, ondelete="CASCADE"
+    )
 
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,

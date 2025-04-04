@@ -11,11 +11,9 @@ from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
 from ....models.v2 import LinkUserProjectV2
 from ....models.v2 import ProjectV2
-from ....models.v2 import WorkflowV2
 from ....schemas.v2 import ProjectCreateV2
 from ....schemas.v2 import ProjectReadV2
 from ....schemas.v2 import ProjectUpdateV2
@@ -144,56 +142,6 @@ async def delete_project(
                 f"is linked to active job(s) {string_ids}."
             ),
         )
-
-    # Cascade operations
-
-    # Workflows
-    stm = select(WorkflowV2).where(WorkflowV2.project_id == project_id)
-    res = await db.execute(stm)
-    workflows = res.scalars().all()
-    logger.info("Start of cascade operations on Workflows.")
-    for wf in workflows:
-        # Cascade operations: set foreign-keys to null for jobs which are in
-        # relationship with the current workflow
-        stm = select(JobV2).where(JobV2.workflow_id == wf.id)
-        res = await db.execute(stm)
-        jobs = res.scalars().all()
-        for job in jobs:
-            logger.info(f"Setting Job[{job.id}].workflow_id to None.")
-            job.workflow_id = None
-        # Delete workflow
-        logger.info(f"Adding Workflow[{wf.id}] to deletion.")
-        await db.delete(wf)
-    logger.info("End of cascade operations on Workflows.")
-
-    # Dataset
-    stm = select(DatasetV2).where(DatasetV2.project_id == project_id)
-    res = await db.execute(stm)
-    datasets = res.scalars().all()
-    logger.info("Start of cascade operations on Datasets.")
-    for ds in datasets:
-        # Cascade operations: set foreign-keys to null for jobs which are in
-        # relationship with the current dataset
-        stm = select(JobV2).where(JobV2.dataset_id == ds.id)
-        res = await db.execute(stm)
-        jobs = res.scalars().all()
-        for job in jobs:
-            logger.info(f"Setting Job[{job.id}].dataset_id to None.")
-            job.dataset_id = None
-        # Delete dataset
-        logger.info(f"Adding Dataset[{ds.id}] to deletion.")
-        await db.delete(ds)
-    logger.info("End of cascade operations on Datasets.")
-
-    # Job
-    logger.info("Start of cascade operations on Jobs.")
-    stm = select(JobV2).where(JobV2.project_id == project_id)
-    res = await db.execute(stm)
-    jobs = res.scalars().all()
-    for job in jobs:
-        logger.info(f"Setting Job[{job.id}].project_id to None.")
-        job.project_id = None
-    logger.info("End of cascade operations on Jobs.")
 
     logger.info(f"Adding Project[{project.id}] to deletion.")
     await db.delete(project)
