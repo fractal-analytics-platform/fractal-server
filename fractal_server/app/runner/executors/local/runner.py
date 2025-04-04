@@ -157,7 +157,7 @@ class LocalRunner(BaseRunner):
                 positional_index = ind_chunk + ind_within_chunk
                 current_task_files = list_task_files[positional_index]
                 current_task_files.prefix = (
-                    f"{MULTISUBMIT_PREFIX}_{positional_index:06d}"
+                    f"{MULTISUBMIT_PREFIX}-{positional_index:06d}"
                 )
                 future = self.executor.submit(
                     func,
