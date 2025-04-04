@@ -228,9 +228,9 @@ class BaseSlurmRunner(BaseRunner):
         logger.info(script_lines)
 
         # Always print output of `uname -n` and `pwd`
-        script_lines.append("Hostname: $(uname -n)\n")
-        script_lines.append("Current directory : $(pwd)\n")
-        script_lines.append('Start time: $(date + "%Y-%m-%dT%H:%M:%S%z")\n')
+        script_lines.append("\nHostname: $(uname -n)")
+        script_lines.append("Current directory : $(pwd)")
+        script_lines.append('Start time: $(date + "%Y-%m-%dT%H:%M:%S%z")')
 
         # Complete script preamble
         script_lines.append("\n")
