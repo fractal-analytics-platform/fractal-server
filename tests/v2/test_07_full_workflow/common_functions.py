@@ -178,30 +178,32 @@ async def full_workflow(
             assert WORKFLOW_LOG_FILENAME in actual_files
 
         # Check files in task-0 folder
-        expected_files = [
-            "init_0000000-log.txt",
-            "init_0000000-metadiff.json",
-            "compute_0000000-log.txt",
-            "compute_0000000-metadiff.json",
-        ]
-        assert set(expected_files) < set(
+        expected_files = {
+            "non_par-0000000-log.txt",
+            "non_par-0000000-metadiff.json",
+            "par-000000-0000000-log.txt",
+            "par-000000-0000000-metadiff.json",
+        }
+        task_actual_files = set(
             file.split("/")[-1]
             for file in actual_files
             if "0_create_ome_zarr_compound" in file
         )
+        assert expected_files < task_actual_files
 
         # Check files in task-1 folder
-        expected_files = [
-            "init_0000000-log.txt",
-            "init_0000000-metadiff.json",
-            "compute_0000000-log.txt",
-            "compute_0000000-metadiff.json",
-        ]
-        assert set(expected_files) < set(
+        expected_files = {
+            "non_par-0000000-log.txt",
+            "non_par-0000000-metadiff.json",
+            "par-000000-0000000-log.txt",
+            "par-000000-0000000-metadiff.json",
+        }
+        task_actual_files = set(
             file.split("/")[-1]
             for file in actual_files
             if "1_mip_compound" in file
         )
+        assert expected_files < task_actual_files
 
         # FIXME: first test of history
         query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
