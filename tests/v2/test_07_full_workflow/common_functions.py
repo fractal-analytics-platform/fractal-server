@@ -174,8 +174,8 @@ async def full_workflow(
         # Check files in zipped root job folder
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            actual_files = zip_ref.namelist()
-            assert WORKFLOW_LOG_FILENAME in actual_files
+            all_actual_files = zip_ref.namelist()
+            assert WORKFLOW_LOG_FILENAME in all_actual_files
 
         # Check files in task-0 folder
         expected_files = {
@@ -186,10 +186,15 @@ async def full_workflow(
         }
         task_actual_files = set(
             file.split("/")[-1]
-            for file in actual_files
+            for file in all_actual_files
             if "0_create_ome_zarr_compound" in file
         )
-        assert expected_files < task_actual_files
+        with informative_assertion_block(
+            expected_files,
+            all_actual_files,
+            task_actual_files,
+        ):
+            assert expected_files < task_actual_files
 
         # Check files in task-1 folder
         expected_files = {
@@ -200,10 +205,15 @@ async def full_workflow(
         }
         task_actual_files = set(
             file.split("/")[-1]
-            for file in actual_files
+            for file in all_actual_files
             if "1_mip_compound" in file
         )
-        assert expected_files < task_actual_files
+        with informative_assertion_block(
+            expected_files,
+            all_actual_files,
+            task_actual_files,
+        ):
+            assert expected_files < task_actual_files
 
         # FIXME: first test of history
         query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
