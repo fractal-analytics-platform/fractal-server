@@ -114,3 +114,7 @@ class TaskFiles(BaseModel):
             metadiff_file_remote=self.metadiff_file_remote,
             log_file_remote=self.log_file_remote,
         )
+
+
+SUBMIT_PREFIX = "non_par"
+MULTISUBMIT_PREFIX = "par"

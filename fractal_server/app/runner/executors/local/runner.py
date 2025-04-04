@@ -8,10 +8,13 @@ from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
+from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
+
 
 logger = set_logger(__name__)
 
@@ -65,6 +68,8 @@ class LocalRunner(BaseRunner):
         self.validate_submit_parameters(parameters, task_type=task_type)
         workdir_local = task_files.wftask_subfolder_local
         workdir_local.mkdir()
+
+        task_files.prefix = SUBMIT_PREFIX
 
         # SUBMISSION PHASE
         future = self.executor.submit(
@@ -150,12 +155,14 @@ class LocalRunner(BaseRunner):
             active_futures: dict[int, Future] = {}
             for ind_within_chunk, kwargs in enumerate(list_parameters_chunk):
                 positional_index = ind_chunk + ind_within_chunk
+                current_task_files = list_task_files[positional_index]
+                current_task_files.prefix = (
+                    f"{MULTISUBMIT_PREFIX}_{positional_index:06d}"
+                )
                 future = self.executor.submit(
                     func,
                     parameters=kwargs,
-                    remote_files=list_task_files[
-                        positional_index
-                    ].remote_files_dict,
+                    remote_files=current_task_files.remote_files_dict,
                 )
                 active_futures[positional_index] = future
 

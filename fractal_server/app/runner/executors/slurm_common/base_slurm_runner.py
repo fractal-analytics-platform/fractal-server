@@ -20,6 +20,8 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
+from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -28,10 +30,6 @@ from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
-
-SUBMIT_PREFIX = "non_par"
-MULTISUBMIT_PREFIX = "par"
-
 
 # FIXME: Transform several logger.info into logger.debug.
 
@@ -399,8 +397,6 @@ class BaseSlurmRunner(BaseRunner):
         self._mkdir_local_folder(folder=workdir_local.as_posix())
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
         logger.info("[submit] Create local/remote folders - END")
-
-        # Define prefix
 
         # Add prefix to task_files object
         task_files.prefix = SUBMIT_PREFIX
