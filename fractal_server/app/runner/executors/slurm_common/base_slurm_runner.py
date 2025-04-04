@@ -543,7 +543,7 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
         for ind_batch, chunk in enumerate(args_batches):
-            prefix = f"{MULTISUBMIT_PREFIX}_{ind_batch:06d}"
+            prefix = f"{MULTISUBMIT_PREFIX}-{ind_batch:06d}"
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
