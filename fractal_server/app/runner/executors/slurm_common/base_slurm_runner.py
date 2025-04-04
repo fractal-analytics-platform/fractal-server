@@ -23,6 +23,9 @@ from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import (
+    update_logfile_of_history_unit,
+)
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.config import get_settings
@@ -401,6 +404,10 @@ class BaseSlurmRunner(BaseRunner):
 
         # Add prefix to task_files object
         task_files.prefix = SUBMIT_PREFIX
+        update_logfile_of_history_unit(
+            history_unit_id=history_unit_id,
+            logfile=task_files.log_file_local,
+        )
 
         # Submission phase
         slurm_job = SlurmJob(
@@ -550,18 +557,17 @@ class BaseSlurmRunner(BaseRunner):
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
-                current_task_files = list_task_files[index]
-                current_task_files.prefix = prefix
+                list_task_files[index].prefix = prefix
                 tasks.append(
                     SlurmTask(
                         prefix=prefix,
                         index=index,
-                        component=current_task_files.component,
+                        component=list_task_files[index].component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=current_task_files,
+                        task_files=list_task_files[index],
                     ),
                 )
 
@@ -576,6 +582,21 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
+        if task_type == "parallel":
+            # FIXME: replace loop with a `bulk_update_history_unit` function
+            for ind, task_files in enumerate(list_task_files):
+                update_logfile_of_history_unit(
+                    history_unit_id=history_unit_ids[ind],
+                    logfile=task_files.log_file_local,
+                )
+        else:
+            logger.debug(
+                f"Unclear what logfile to associate to {task_type=} "
+                "within multisubmit (see issue #2382)."
+            )
+            # FIXME: Improve definition for compound tasks
+            pass
+
         logger.info(f"END submission phase, {self.job_ids=}")
 
         # FIXME: replace this sleep a more precise check
