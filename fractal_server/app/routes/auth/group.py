@@ -19,7 +19,6 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
@@ -155,21 +154,6 @@ async def delete_single_group(
                 f"'{FRACTAL_DEFAULT_GROUP_NAME}'."
             ),
         )
-
-    # Cascade operations
-
-    res = await db.execute(
-        select(LinkUserGroup).where(LinkUserGroup.group_id == group_id)
-    )
-    for link in res.scalars().all():
-        await db.delete(link)
-
-    res = await db.execute(
-        select(TaskGroupV2).where(TaskGroupV2.user_group_id == group_id)
-    )
-    for task_group in res.scalars().all():
-        task_group.user_group_id = None
-        db.add(task_group)
 
     # Delete
 

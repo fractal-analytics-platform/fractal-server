@@ -221,14 +221,6 @@ async def delete_workflow(
             ),
         )
 
-    # Cascade operation: set foreign-keys to null for jobs which are in
-    # relationship with the current workflow.
-    stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
-    res = await db.execute(stm)
-    jobs = res.scalars().all()
-    for job in jobs:
-        job.workflow_id = None
-
     # Delete workflow
     await db.delete(workflow)
     await db.commit()
