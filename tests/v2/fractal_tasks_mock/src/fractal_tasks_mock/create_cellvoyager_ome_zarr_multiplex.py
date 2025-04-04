@@ -1,10 +1,10 @@
 import logging
 from pathlib import Path
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def create_cellvoyager_ome_zarr_multiplex(
     *,
     zarr_dir: str,

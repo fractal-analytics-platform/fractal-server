@@ -3,10 +3,10 @@ from pathlib import Path
 
 from fractal_tasks_mock.input_models import InitArgsCellVoyager
 from fractal_tasks_mock.utils import _check_zarr_url_is_absolute
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def fill_cellvoyager_ome_zarr(
     *,
     zarr_url: str,

@@ -1,6 +1,6 @@
 from fractal_tasks_mock.utils import _extract_common_root
 from fractal_tasks_mock.utils import _group_zarr_urls_by_well
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
 def _read_acquisition_index_from_ngff_metadata(path: str) -> int:
@@ -11,7 +11,7 @@ def _read_acquisition_index_from_ngff_metadata(path: str) -> int:
     return int(path.split("/")[-1][0])
 
 
-@validate_arguments
+@validate_call
 def calculate_registration_init(
     *,
     zarr_urls: list[str],

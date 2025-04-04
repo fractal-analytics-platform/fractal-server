@@ -2,10 +2,10 @@ import logging
 from pathlib import Path
 
 import fractal_tasks_mock  # noqa
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def create_cellvoyager_ome_zarr(
     *,
     zarr_dir: str,
