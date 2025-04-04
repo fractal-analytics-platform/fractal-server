@@ -2,10 +2,10 @@ import logging
 from pathlib import Path
 
 from fractal_tasks_mock.utils import _group_zarr_urls_by_well
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def find_registration_consensus(
     *,
     zarr_urls: list[str],

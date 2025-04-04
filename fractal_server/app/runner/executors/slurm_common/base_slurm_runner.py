@@ -20,6 +20,8 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
+from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -396,13 +398,17 @@ class BaseSlurmRunner(BaseRunner):
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
         logger.info("[submit] Create local/remote folders - END")
 
+        # Add prefix to task_files object
+        task_files.prefix = SUBMIT_PREFIX
+
         # Submission phase
         slurm_job = SlurmJob(
-            label="0",
+            prefix=SUBMIT_PREFIX,
             workdir_local=workdir_local,
             workdir_remote=workdir_remote,
             tasks=[
                 SlurmTask(
+                    prefix=SUBMIT_PREFIX,
                     index=0,
                     component=task_files.component,
                     parameters=parameters,
@@ -421,9 +427,11 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info(f"[submit] END submission phase, {self.job_ids=}")
 
-        # TODO: check if this sleep is necessary
-        logger.warning("[submit] Now sleep 4 (FIXME)")
-        time.sleep(4)
+        # FIXME: replace this sleep a more precise check
+        settings = Inject(get_settings)
+        sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
+        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        time.sleep(sleep_time)
 
         # Retrieval phase
         logger.info("[submit] START retrieval phase")
@@ -502,7 +510,6 @@ class BaseSlurmRunner(BaseRunner):
         results: dict[int, Any] = {}
         exceptions: dict[int, BaseException] = {}
 
-        original_task_files = list_task_files
         tot_tasks = len(list_parameters)
 
         # Set/validate parameters for task batching
@@ -538,23 +545,27 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.info(f"START submission phase, {list(self.jobs.keys())=}")
         for ind_batch, chunk in enumerate(args_batches):
+            prefix = f"{MULTISUBMIT_PREFIX}-{ind_batch:06d}"
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
+                current_task_files = list_task_files[index]
+                current_task_files.prefix = prefix
                 tasks.append(
                     SlurmTask(
+                        prefix=prefix,
                         index=index,
-                        component=original_task_files[index].component,
+                        component=current_task_files.component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=original_task_files[index],
+                        task_files=current_task_files,
                     ),
                 )
 
             slurm_job = SlurmJob(
-                label=f"{ind_batch:06d}",
+                prefix=prefix,
                 workdir_local=workdir_local,
                 workdir_remote=workdir_remote,
                 tasks=tasks,
@@ -566,9 +577,11 @@ class BaseSlurmRunner(BaseRunner):
             )
         logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME: Replace with more robust/efficient logic
-        logger.warning("Now sleep 4 (FIXME)")
-        time.sleep(4)
+        # FIXME: replace this sleep a more precise check
+        settings = Inject(get_settings)
+        sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
+        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        time.sleep(sleep_time)
 
         # Retrieval phase
         logger.info("START retrieval phase")

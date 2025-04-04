@@ -2,10 +2,10 @@ from pathlib import Path
 from typing import Optional
 
 from fractal_tasks_mock.input_models import InitArgsIllumination
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def illumination_correction_compute(
     *,
     zarr_url: str,

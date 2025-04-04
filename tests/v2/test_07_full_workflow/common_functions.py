@@ -174,34 +174,46 @@ async def full_workflow(
         # Check files in zipped root job folder
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            actual_files = zip_ref.namelist()
-            assert WORKFLOW_LOG_FILENAME in actual_files
+            all_actual_files = zip_ref.namelist()
+            assert WORKFLOW_LOG_FILENAME in all_actual_files
 
         # Check files in task-0 folder
-        expected_files = [
-            "init_0000000-log.txt",
-            "init_0000000-metadiff.json",
-            "compute_0000000-log.txt",
-            "compute_0000000-metadiff.json",
-        ]
-        assert set(expected_files) < set(
+        expected_files = {
+            "non_par-0000000-log.txt",
+            "non_par-0000000-metadiff.json",
+            "par-000000-0000000-log.txt",
+            "par-000000-0000000-metadiff.json",
+        }
+        task_actual_files = set(
             file.split("/")[-1]
-            for file in actual_files
+            for file in all_actual_files
             if "0_create_ome_zarr_compound" in file
         )
+        with informative_assertion_block(
+            expected_files,
+            all_actual_files,
+            task_actual_files,
+        ):
+            assert expected_files < task_actual_files
 
         # Check files in task-1 folder
-        expected_files = [
-            "init_0000000-log.txt",
-            "init_0000000-metadiff.json",
-            "compute_0000000-log.txt",
-            "compute_0000000-metadiff.json",
-        ]
-        assert set(expected_files) < set(
+        expected_files = {
+            "non_par-0000000-log.txt",
+            "non_par-0000000-metadiff.json",
+            "par-000000-0000000-log.txt",
+            "par-000000-0000000-metadiff.json",
+        }
+        task_actual_files = set(
             file.split("/")[-1]
-            for file in actual_files
+            for file in all_actual_files
             if "1_mip_compound" in file
         )
+        with informative_assertion_block(
+            expected_files,
+            all_actual_files,
+            task_actual_files,
+        ):
+            assert expected_files < task_actual_files
 
         # FIXME: first test of history
         query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
@@ -593,13 +605,16 @@ async def workflow_with_non_python_task(
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
             actual_files = zip_ref.namelist()
-        assert WORKFLOW_LOG_FILENAME in actual_files
-        assert "0_non_python/0000000-args.json" in actual_files
-        assert "0_non_python/0000000-log.txt" in actual_files
+        with informative_assertion_block(actual_files):
+            assert WORKFLOW_LOG_FILENAME in actual_files
+            assert "0_non_python/non_par-0000000-args.json" in actual_files
+            assert "0_non_python/non_par-0000000-log.txt" in actual_files
 
         # Check that stderr and stdout are as expected
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            with zip_ref.open("0_non_python/0000000-log.txt", "r") as file:
+            with zip_ref.open(
+                "0_non_python/non_par-0000000-log.txt", "r"
+            ) as file:
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
