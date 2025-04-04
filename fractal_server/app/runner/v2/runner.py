@@ -8,7 +8,7 @@ from typing import Literal
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
-from sqlmodel import select
+from sqlmodel import delete
 
 from ....images import SingleImage
 from ....images.tools import filter_image_list
@@ -334,14 +334,12 @@ def execute_tasks_v2(
             flag_modified(db_dataset, "images")
             db.merge(db_dataset)
 
-            res = db.execute(
-                select(HistoryImageCache)
+            db.execute(
+                delete(HistoryImageCache)
                 .where(HistoryImageCache.dataset_id == dataset.id)
                 .where(HistoryImageCache.workflowtask_id == wftask.id)
                 .where(HistoryImageCache.zarr_url == img_zarr_url)
             )
-            history_image_cache = res.scalar_one()
-            db.delete(history_image_cache)
 
             db.commit()
             db.close()  # FIXME: why is this needed?
