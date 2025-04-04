@@ -338,7 +338,11 @@ def execute_tasks_v2(
                 delete(HistoryImageCache)
                 .where(HistoryImageCache.dataset_id == dataset.id)
                 .where(HistoryImageCache.workflowtask_id == wftask.id)
-                .where(HistoryImageCache.zarr_url == img_zarr_url)
+                .where(
+                    HistoryImageCache.zarr_url.in_(
+                        current_task_output.image_list_removals
+                    )
+                )
             )
 
             db.commit()
