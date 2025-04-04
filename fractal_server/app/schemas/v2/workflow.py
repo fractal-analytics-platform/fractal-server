@@ -7,7 +7,8 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validators import valstr
+from .._validators import cant_set_none
+from .._validators import NonEmptyString
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
@@ -19,10 +20,7 @@ class WorkflowCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-
-    # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
+    name: NonEmptyString
 
 
 class WorkflowReadV2(BaseModel):
@@ -47,11 +45,15 @@ class WorkflowUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[str] = None
+    name: Optional[NonEmptyString] = None
     reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
+
+    @field_validator("name")
+    @classmethod
+    def _cant_set_none(cls, v):
+        return cant_set_none(v)
 
     @field_validator("reordered_workflowtask_ids")
     @classmethod
@@ -72,11 +74,8 @@ class WorkflowImportV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    name: str
+    name: NonEmptyString
     task_list: list[WorkflowTaskImportV2]
-
-    # Validators
-    _name = field_validator("name")(classmethod(valstr("name")))
 
 
 class WorkflowExportV2(BaseModel):

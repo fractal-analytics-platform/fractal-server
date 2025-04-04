@@ -60,3 +60,6 @@ class JobV2(SQLModel, table=True):
     attribute_filters: AttributeFiltersType = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
+    type_filters: dict[str, bool] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )

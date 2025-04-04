@@ -11,12 +11,17 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import delete
 
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas._filter_validators import (
     validate_attribute_filters,
 )
@@ -25,26 +30,21 @@ from fractal_server.app.schemas._validators import root_validate_dict_keys
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.models import AttributeFiltersType
+from fractal_server.images.tools import aggregate_attributes
+from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
 router = APIRouter()
 
 
-class ImagePage(BaseModel):
-
-    total_count: int
-    page_size: int
-    current_page: int
+class ImagePage(PaginationResponse[SingleImage]):
 
     attributes: dict[str, list[Any]]
     types: list[str]
 
-    images: list[SingleImage]
-
 
 class ImageQuery(BaseModel):
-    zarr_url: Optional[str] = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
@@ -57,6 +57,10 @@ class ImageQuery(BaseModel):
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
+
+
+class ImageQueryWithZarrUrl(ImageQuery):
+    zarr_url: Optional[str] = None
 
 
 @router.post(
@@ -118,18 +122,14 @@ async def post_new_image(
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
-    page: int = 1,  # query param
-    page_size: Optional[int] = None,  # query param
-    query: Optional[ImageQuery] = None,  # body
+    query: Optional[ImageQueryWithZarrUrl] = None,
+    pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:
 
-    if page < 1:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid pagination parameter: page={page} < 1",
-        )
+    page = pagination.page
+    page_size = pagination.page_size
 
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
@@ -137,16 +137,8 @@ async def query_dataset_images(
     dataset = output["dataset"]
     images = dataset.images
 
-    attributes = {}
-    for image in images:
-        for k, v in image["attributes"].items():
-            attributes.setdefault(k, []).append(v)
-        for k, v in attributes.items():
-            attributes[k] = list(set(v))
-
-    types = list(
-        set(type for image in images for type in image["types"].keys())
-    )
+    attributes = aggregate_attributes(images)
+    types = aggregate_types(images)
 
     if query is not None:
 
@@ -177,20 +169,10 @@ async def query_dataset_images(
 
     total_count = len(images)
 
-    if page_size is not None:
-        if page_size <= 0:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Invalid pagination parameter: page_size={page_size} <= 0"
-                ),
-            )
-    else:
+    if page_size is None:
         page_size = total_count
 
-    if total_count == 0:
-        page = 1
-    else:
+    if total_count > 0:
         last_page = (total_count // page_size) + (total_count % page_size > 0)
         if page > last_page:
             page = last_page
@@ -201,9 +183,9 @@ async def query_dataset_images(
         total_count=total_count,
         current_page=page,
         page_size=page_size,
+        items=images,
         attributes=attributes,
         types=types,
-        images=images,
     )
 
 
@@ -224,10 +206,10 @@ async def delete_dataset_images(
     )
     dataset = output["dataset"]
 
-    image_to_remove = next(
-        (image for image in dataset.images if image["zarr_url"] == zarr_url),
-        None,
+    image_to_remove = find_image_by_zarr_url(
+        images=dataset.images, zarr_url=zarr_url
     )
+
     if image_to_remove is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -237,8 +219,14 @@ async def delete_dataset_images(
             ),
         )
 
-    dataset.images.remove(image_to_remove)
+    dataset.images.remove(image_to_remove["image"])
     flag_modified(dataset, "images")
+
+    await db.execute(
+        delete(HistoryImageCache)
+        .where(HistoryImageCache.dataset_id == dataset_id)
+        .where(HistoryImageCache.zarr_url == zarr_url)
+    )
 
     await db.commit()
 

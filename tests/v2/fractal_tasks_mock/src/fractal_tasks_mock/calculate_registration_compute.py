@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from fractal_tasks_mock.input_models import InitArgsRegistration
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def calculate_registration_compute(
     *,
     zarr_url: str,
@@ -38,6 +38,6 @@ def calculate_registration_compute(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=calculate_registration_compute)

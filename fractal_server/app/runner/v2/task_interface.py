@@ -1,11 +1,14 @@
 from typing import Any
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import ValidationError
 
 from ....images import SingleImageTaskOutput
+from fractal_server.app.runner.exceptions import TaskOutputValidationError
 from fractal_server.urls import normalize_url
 
 
@@ -61,3 +64,31 @@ class InitTaskOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     parallelization_list: list[InitArgsModel] = Field(default_factory=list)
+
+
+def _cast_and_validate_TaskOutput(
+    task_output: dict[str, Any]
+) -> Optional[TaskOutput]:
+    try:
+        validated_task_output = TaskOutput(**task_output)
+        return validated_task_output
+    except ValidationError as e:
+        raise TaskOutputValidationError(
+            "Validation of task output failed.\n"
+            f"Original error: {str(e)}\n"
+            f"Original data: {task_output}."
+        )
+
+
+def _cast_and_validate_InitTaskOutput(
+    init_task_output: dict[str, Any],
+) -> Optional[InitTaskOutput]:
+    try:
+        validated_init_task_output = InitTaskOutput(**init_task_output)
+        return validated_init_task_output
+    except ValidationError as e:
+        raise TaskOutputValidationError(
+            "Validation of init-task output failed.\n"
+            f"Original error: {str(e)}\n"
+            f"Original data: {init_task_output}."
+        )

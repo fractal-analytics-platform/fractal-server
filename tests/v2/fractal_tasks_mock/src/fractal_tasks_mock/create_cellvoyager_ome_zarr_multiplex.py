@@ -1,13 +1,12 @@
 import logging
 from pathlib import Path
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def create_cellvoyager_ome_zarr_multiplex(
     *,
-    zarr_urls: list[str],
     zarr_dir: str,
     image_dir: str,
 ) -> dict:
@@ -16,16 +15,9 @@ def create_cellvoyager_ome_zarr_multiplex(
 
 
     Arguments:
-        zarr_urls: description
         zarr_dir: description
         image_dir: Image where the raw images are
     """
-
-    if len(zarr_urls) > 0:
-        raise ValueError(
-            "Error in create_cellvoyager_ome_zarr_multiplex, "
-            f"`zarr_urls` argument must be empty, but {zarr_urls=}."
-        )
 
     # Based on images in image_folder, create plate OME-Zarr
     zarr_dir = zarr_dir.rstrip("/")
@@ -73,6 +65,6 @@ def create_cellvoyager_ome_zarr_multiplex(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=create_cellvoyager_ome_zarr_multiplex)

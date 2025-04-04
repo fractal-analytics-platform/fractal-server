@@ -2,10 +2,10 @@ import logging
 from pathlib import Path
 
 from fractal_tasks_mock.utils import _check_zarr_url_is_absolute
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def cellpose_segmentation(
     *,
     zarr_url: str,
@@ -29,6 +29,6 @@ def cellpose_segmentation(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=cellpose_segmentation)
