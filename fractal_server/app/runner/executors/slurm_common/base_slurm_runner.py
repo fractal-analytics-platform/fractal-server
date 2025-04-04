@@ -230,7 +230,7 @@ class BaseSlurmRunner(BaseRunner):
         # Always print output of `uname -n` and `pwd`
         script_lines.append("\nHostname: $(uname -n)")
         script_lines.append("Current directory : $(pwd)")
-        script_lines.append('Start time: $(date + "%Y-%m-%dT%H:%M:%S%z")')
+        script_lines.append('Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")')
 
         # Complete script preamble
         script_lines.append("\n")
@@ -245,7 +245,7 @@ class BaseSlurmRunner(BaseRunner):
             )
         script_lines.append("wait\n")
         script = "\n".join(script_lines)
-        script_lines.append('End time:   $(date + "%Y-%m-%dT%H:%M:%S%z")\n')
+        script_lines.append('End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")\n')
 
         # Write submission script
         with open(slurm_job.slurm_submission_script_local, "w") as f:
