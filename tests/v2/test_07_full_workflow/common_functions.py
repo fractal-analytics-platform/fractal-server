@@ -215,34 +215,44 @@ async def full_workflow(
         ):
             assert expected_files < task_actual_files
 
-        # FIXME: first test of history
-        query_wf = f"dataset_id={dataset_id}&workflow_id={workflow.id}"
-        query_wft0 = f"dataset_id={dataset_id}&workflowtask_id={wftask0_id}"
-        query_wft1 = f"dataset_id={dataset_id}&workflowtask_id={wftask1_id}"
-        query_wft2 = f"dataset_id={dataset_id}&workflowtask_id={wftask2_id}"
-        this_prefix = f"api/v2/project/{project_id}"
-        for url in [
-            f"{this_prefix}/status/?{query_wf}",
-            f"{this_prefix}/status/run/?{query_wft0}",
-            f"{this_prefix}/status/run/?{query_wft1}",
-            f"{this_prefix}/status/run/?{query_wft2}",
-            # f"{this_prefix}/dataset/{dataset_id}/history/",
-            # f"{this_prefix}/status/subsets/?{query_wft0}",
-            # f"{this_prefix}/status/images/?status=done&{query_wft0}",
-            # f"{this_prefix}/status/images/?status=failed&{query_wft0}",
-            # f"{this_prefix}/status/images/?status=submitted&{query_wft0}",
-            # f"{this_prefix}/status/subsets/?{query_wft1}",
-            # f"{this_prefix}/status/images/?status=done&{query_wft1}",
-            # f"{this_prefix}/status/images/?status=failed&{query_wft1}",
-            # f"{this_prefix}/status/images/?status=submitted&{query_wft1}",
-            # f"{this_prefix}/status/subsets/?{query_wft2}",
-            # f"{this_prefix}/status/images/?status=done&{query_wft2}",
-            # f"{this_prefix}/status/images/?status=failed&{query_wft2}",
-            # f"{this_prefix}/status/images/?status=submitted&{query_wft2}",
-        ]:
+        # GET dataset history
+        url = f"api/v2/project/{project_id}/dataset/{dataset_id}/history/"
+        res = await client.get(url)
+        assert res.status_code == 200
+        debug(res.json())  # FIXME add assertion
+
+        for wftask_id in [wftask0_id, wftask1_id, wftask2_id]:
+            # GET history runs
+            query_wft = f"dataset_id={dataset_id}&workflowtask_id={wftask_id}"
+            this_prefix = f"api/v2/project/{project_id}/status"
+            url = f"{this_prefix}/run/?{query_wft}"
             res = await client.get(url)
-            debug(url, res.status_code, res.json())
             assert res.status_code == 200
+            assert len(res.json()) == 1
+            history_run_id = res.json()[0]["id"]
+
+            # Get history units
+            url = f"{this_prefix}/run/{history_run_id}/units/?{query_wft}"
+            res = await client.get(url)
+            assert res.status_code == 200
+            if wftask_id == wftask2_id:
+                assert res.json()["total_count"] == NUM_IMAGES
+            else:
+                assert res.json()["total_count"] == 1
+            first_history_unit = res.json()["items"][0]
+            history_unit_id = first_history_unit["id"]
+            assert Path(first_history_unit["logfile"]).exists()
+
+            # Get history-unit log
+            url = (
+                f"{this_prefix}/unit-log/?"
+                f"history_run_id={history_run_id}&"
+                f"history_unit_id={history_unit_id}&"
+                f"workflowtask_id={wftask0_id}&dataset_id={dataset_id}"
+            )
+            res = await client.get(url)
+            assert res.status_code == 200
+            assert "not available" not in res.json()  # FIXME
 
 
 async def full_workflow_TaskExecutionError(
