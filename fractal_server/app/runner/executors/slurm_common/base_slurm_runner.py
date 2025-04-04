@@ -427,9 +427,11 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info(f"[submit] END submission phase, {self.job_ids=}")
 
-        # TODO: check if this sleep is necessary
-        logger.warning("[submit] Now sleep 4 (FIXME)")
-        time.sleep(4)
+        # FIXME: replace this sleep a more precise check
+        settings = Inject(get_settings)
+        sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
+        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        time.sleep(sleep_time)
 
         # Retrieval phase
         logger.info("[submit] START retrieval phase")
@@ -575,9 +577,11 @@ class BaseSlurmRunner(BaseRunner):
             )
         logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME: Replace with more robust/efficient logic
-        logger.warning("Now sleep 4 (FIXME)")
-        time.sleep(4)
+        # FIXME: replace this sleep a more precise check
+        settings = Inject(get_settings)
+        sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
+        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        time.sleep(sleep_time)
 
         # Retrieval phase
         logger.info("START retrieval phase")

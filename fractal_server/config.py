@@ -489,8 +489,12 @@ class Settings(BaseSettings):
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
-    still running on SLURM (see `SlurmWaitThread` in
-    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
+    still running on SLURM.
+    """
+
+    FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL: int = 2
+    """
+    FIXME: this is a workaround, we are still investigating.
     """
 
     FRACTAL_SLURM_SBATCH_SLEEP: float = 0
