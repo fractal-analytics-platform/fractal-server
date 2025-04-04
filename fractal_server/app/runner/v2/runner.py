@@ -8,6 +8,7 @@ from typing import Literal
 from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import select
 
 from ....images import SingleImage
 from ....images.tools import filter_image_list
@@ -21,6 +22,7 @@ from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -331,6 +333,16 @@ def execute_tasks_v2(
             db_dataset.images = tmp_images
             flag_modified(db_dataset, "images")
             db.merge(db_dataset)
+
+            res = db.execute(
+                select(HistoryImageCache)
+                .where(HistoryImageCache.dataset_id == dataset.id)
+                .where(HistoryImageCache.workflowtask_id == wftask.id)
+                .where(HistoryImageCache.zarr_url == img_zarr_url)
+            )
+            history_image_cache = res.scalar_one()
+            db.delete(history_image_cache)
+
             db.commit()
             db.close()  # FIXME: why is this needed?
 
