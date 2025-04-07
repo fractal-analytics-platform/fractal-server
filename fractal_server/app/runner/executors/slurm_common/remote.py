@@ -118,10 +118,11 @@ def worker(
 
         result = (True, fun(*args, **kwargs))
         out = cloudpickle.dumps(result)
-    except Exception:
+    except Exception as e:
         # Exception objects are not serialisable. Here we save the relevant
-        # exception contents in a serializable dictionary. On the receiving
-        # end, it can be used to reconstruct a `TaskExecutionError`.
+        # exception contents in a serializable dictionary. Note that whenever
+        # the task failed "properly", the exception is a `TaskExecutionError`
+        # and it has additional kwargs.
 
         import traceback
 
@@ -136,6 +137,9 @@ def worker(
         exc_proxy = dict(
             exc_type_name=exc_type.__name__,
             traceback_string=traceback_string,
+            workflow_task_order=e.get("workflow_task_order"),
+            workflow_task_id=e.get("workflow_task_id"),
+            task_name=e.get("task_name"),
         )
         result = (False, exc_proxy)
         out = cloudpickle.dumps(result)

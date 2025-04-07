@@ -361,15 +361,26 @@ class BaseSlurmRunner(BaseRunner):
                 result = output
                 return (result, None)
             else:
-                # Task failed in a controlled way, and produced an
-                # `output` object which is a dictionary with keys
-                # `exc_type_name` and `traceback_string`.
+                # Task failed in a controlled way, and produced an `output`
+                # object which is a dictionary with required keys
+                # `exc_type_name` and `traceback_string` and with optional
+                # keys `workflow_task_order`, `workflow_task_id` and
+                # `task_name`.
                 exc_type_name = output.get("exc_type_name")
                 logger.debug(
                     f"Output pickle contains a '{exc_type_name}' exception."
                 )
                 traceback_string = output.get("traceback_string")
-                exception = TaskExecutionError(traceback_string)
+                kwargs = {
+                    key: output[key]
+                    for key in [
+                        "workflow_task_order",
+                        "workflow_task_id",
+                        "task_name",
+                    ]
+                    if key in output.keys()
+                }
+                exception = TaskExecutionError(traceback_string, **kwargs)
                 return (None, exception)
 
         except Exception as e:
