@@ -12,9 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
-from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -31,7 +29,7 @@ from fractal_server.tasks.v2.utils_background import (
     _prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.utils_database import (
-    create_db_tasks_and_update_task_group,
+    create_db_tasks_and_update_task_group_async,
 )
 
 router = APIRouter()
@@ -47,11 +45,9 @@ async def collect_task_custom(
     private: bool = False,
     user_group_id: Optional[int] = None,
     user: UserOAuth = Depends(current_active_verified_user),
-    db: AsyncSession = Depends(get_async_db),  # FIXME: using both sync/async
-    db_sync: DBSyncSession = Depends(
-        get_sync_db
-    ),  # FIXME: using both sync/async
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
+    """ """
 
     settings = Inject(get_settings)
 
@@ -168,10 +164,10 @@ async def collect_task_custom(
     await db.refresh(task_group)
     db.expunge(task_group)
 
-    task_group = create_db_tasks_and_update_task_group(
+    task_group = create_db_tasks_and_update_task_group_async(
         task_list=task_list,
         task_group_id=task_group.id,
-        db=db_sync,
+        db=db,
     )
 
     logger.debug(
