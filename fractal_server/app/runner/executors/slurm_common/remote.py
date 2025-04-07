@@ -19,36 +19,11 @@ import os
 import sys
 from typing import Literal
 from typing import Optional
-from typing import Type
 from typing import Union
 
 import cloudpickle
 
 from fractal_server import __VERSION__
-
-
-class ExceptionProxy:
-    """
-    Proxy class to serialise exceptions
-
-    In general exceptions are not serialisable. This proxy class saves the
-    serialisable content of an exception. On the receiving end, it can be used
-    to reconstruct a TaskExecutionError.
-
-    Attributes:
-        exc_type_name: Name of the exception type
-        tb: TBD
-        args: TBD
-        kwargs: TBD
-    """
-
-    def __init__(
-        self, exc_type: Type[BaseException], tb: str, *args, **kwargs
-    ):
-        self.exc_type_name: str = exc_type.__name__
-        self.tb: str = tb
-        self.args = args
-        self.kwargs: dict = kwargs
 
 
 class FractalVersionMismatch(RuntimeError):
@@ -141,21 +116,32 @@ def worker(
         server_versions, fun, args, kwargs = cloudpickle.loads(indata)
         _check_versions_mismatch(server_versions)
 
-        result = True, fun(*args, **kwargs)
+        result = (True, fun(*args, **kwargs))
         out = cloudpickle.dumps(result)
     except Exception as e:
+        # Exception objects are not serialisable. Here we save the relevant
+        # exception contents in a serializable dictionary. Note that whenever
+        # the task failed "properly", the exception is a `TaskExecutionError`
+        # and it has additional attributes.
+
         import traceback
 
-        typ, value, tb = sys.exc_info()
-        tb = tb.tb_next
-        exc_proxy = ExceptionProxy(
-            typ,
-            "".join(traceback.format_exception(typ, value, tb)),
-            *e.args,
-            **e.__dict__,
+        exc_type, exc_value, traceback_obj = sys.exc_info()
+        traceback_obj = traceback_obj.tb_next
+        traceback_list = traceback.format_exception(
+            exc_type,
+            exc_value,
+            traceback_obj,
         )
-
-        result = False, exc_proxy
+        traceback_string = "".join(traceback_list)
+        exc_proxy = dict(
+            exc_type_name=exc_type.__name__,
+            traceback_string=traceback_string,
+            workflow_task_order=getattr(e, "workflow_task_order", None),
+            workflow_task_id=getattr(e, "workflow_task_id", None),
+            task_name=getattr(e, "task_name", None),
+        )
+        result = (False, exc_proxy)
         out = cloudpickle.dumps(result)
 
     # Write the output pickle file

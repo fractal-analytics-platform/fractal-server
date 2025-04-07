@@ -40,16 +40,12 @@ class LocalRunner(BaseRunner):
         logger.debug("Enter LocalRunner")
         return self
 
-    def shutdown(self):
-        logger.debug("Now shut LocalRunner.executor down")
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        logger.debug("Exit LocalRunner")
         self.executor.shutdown(
             wait=False,
             cancel_futures=True,
         )
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        logger.debug("Exit LocalRunner")
-        self.shutdown()
         return self.executor.__exit__(exc_type, exc_val, exc_tb)
 
     def submit(
@@ -193,8 +189,6 @@ class LocalRunner(BaseRunner):
                     pass
 
             while active_futures:
-                # FIXME: add shutdown detection
-                # if file exists: cancel all futures, and raise
                 finished_futures = [
                     index_and_future
                     for index_and_future in active_futures.items()

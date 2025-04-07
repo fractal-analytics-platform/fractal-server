@@ -1,5 +1,3 @@
-import time
-
 import pytest
 from devtools import debug
 
@@ -125,11 +123,9 @@ def fun(parameters: dict, remote_files: dict):
     x = parameters["parameter"]
     if x != 3:
         print(f"Running with {zarr_url=} and {x=}, returning {2*x=}.")
-        time.sleep(1)
         return 2 * x
     else:
         print(f"Running with {zarr_url=} and {x=}, raising error.")
-        time.sleep(1)
         raise ValueError("parameter=3 is very very bad")
 
 
@@ -140,7 +136,6 @@ async def test_multisubmit(
 ):
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
-
     with LocalRunner(root_dir_local=tmp_path) as runner:
 
         results, exceptions = runner.multisubmit(
@@ -197,42 +192,68 @@ async def test_multisubmit(
             assert unit.status == HistoryUnitStatus.FAILED
 
 
-# @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 2, 3, 4, 8, 16])
-# def test_executor_map(parallel_tasks_per_job: int):
-#     local_backend_config = LocalBackendConfig(
-#         parallel_tasks_per_job=parallel_tasks_per_job
-#     )
+@pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 1000])
+async def test_multisubmit_in_chunks(
+    tmp_path,
+    db,
+    history_mock_for_multisubmit,
+    parallel_tasks_per_job,
+):
 
-#     NUM = 7
+    config = get_default_local_backend_config()
+    config.parallel_tasks_per_job = parallel_tasks_per_job
 
-#     # Test function of a single variable
-#     with LocalRunner() as executor:
+    history_run_id, history_unit_ids = history_mock_for_multisubmit
 
-#         def fun_x(x):
-#             return 3 * x + 1
+    with LocalRunner(root_dir_local=tmp_path) as runner:
 
-#         inputs = list(range(NUM))
-#         result_generator = executor.map(
-#             fun_x,
-#             inputs,
-#             local_backend_config=local_backend_config,
-#         )
-#         results = list(result_generator)
-#         assert results == [fun_x(x) for x in inputs]
+        results, exceptions = runner.multisubmit(
+            fun,
+            [
+                {
+                    "zarr_url": "a",
+                    "parameter": 1,
+                },
+                {
+                    "zarr_url": "b",
+                    "parameter": 2,
+                },
+                {
+                    "zarr_url": "c",
+                    "parameter": 3,
+                },
+                {
+                    "zarr_url": "d",
+                    "parameter": 4,
+                },
+            ],
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component=str(ind))
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="parallel",
+            history_unit_ids=history_unit_ids,
+            config=config,
+        )
+    debug(results)
+    debug(exceptions)
+    assert results == {
+        3: 8,
+        0: 2,
+        1: 4,
+    }
+    assert isinstance(exceptions[2], TaskExecutionError)
+    assert "very very bad" in str(exceptions[2])
 
-#     # Test function of two variables
-#     with LocalRunner() as executor:
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    assert run.status == HistoryUnitStatus.SUBMITTED
 
-#         def fun_xy(x, y):
-#             return 2 * x + y
-
-#         inputs_x = list(range(3, 3 + NUM))
-#         inputs_y = list(range(NUM))
-#         result_generator = executor.map(
-#             fun_xy,
-#             inputs_x,
-#             inputs_y,
-#             local_backend_config=local_backend_config,
-#         )
-#         results = list(result_generator)
-#         assert results == [fun_xy(x, y) for x, y in zip(inputs_x, inputs_y)]
+    # `HistoryUnit.status` is updated from within `runner.submit`
+    for ind, _unit_id in enumerate(history_unit_ids):
+        unit = await db.get(HistoryUnit, _unit_id)
+        if ind != 2:
+            assert unit.status == HistoryUnitStatus.DONE
+        else:
+            assert unit.status == HistoryUnitStatus.FAILED

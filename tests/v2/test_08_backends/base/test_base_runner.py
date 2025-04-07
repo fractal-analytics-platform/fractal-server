@@ -7,8 +7,6 @@ from fractal_server.app.runner.executors.base_runner import BaseRunner
 def test_NotImplementedError_methods():
     runner = BaseRunner()
     with pytest.raises(NotImplementedError):
-        runner.shutdown()
-    with pytest.raises(NotImplementedError):
         runner.submit(
             func=None,
             parameters=None,

@@ -25,30 +25,25 @@ class BaseRunner(object):
     Base class for Fractal runners.
     """
 
-    def shutdown(self, *args, **kwargs):
-        raise NotImplementedError()
-
     def submit(
         self,
         func: callable,
         parameters: dict[str, Any],
         history_unit_id: int,
-        task_files: TaskFiles,
         task_type: TaskTypeType,
+        task_files: TaskFiles,
         config: Any,
     ) -> tuple[Any, BaseException]:
         """
         Run a single fractal task.
 
-        # FIXME: Describe more in detail
-
         Args:
             func: Function to be executed.
-            parameters:
-                Dictionary of parameters. Must include `zarr_urls` key.
-            history_item_id:
-                Database ID of the corresponding `HistoryItemV2` entry.
+            parameters: Dictionary of parameters.
+            history_unit_id:
+                Database ID of the corresponding `HistoryUnit` entry.
             task_type: Task type.
+            task_files: `TaskFiles` object.
             config: Runner-specific parameters.
         """
         raise NotImplementedError()
@@ -65,16 +60,14 @@ class BaseRunner(object):
         """
         Run a parallel fractal task.
 
-        # FIXME: Describe more in detail
-
         Args:
             func: Function to be executed.
-            list_parameters:
-                List of dictionaries of parameters. Each one must include a
-                `zarr_url` key.
-            history_item_id:
-                Database ID of the corresponding `HistoryItemV2` entry.
+            parameters:
+                Dictionary of parameters. Must include `zarr_urls` key.
+            history_unit_ids:
+                Database IDs of the corresponding `HistoryUnit` entries.
             task_type: Task type.
+            task_files: `TaskFiles` object.
             config: Runner-specific parameters.
         """
         raise NotImplementedError()
@@ -115,7 +108,7 @@ class BaseRunner(object):
         list_task_files: list[TaskFiles],
     ) -> None:
         """
-        Validate parameters for `multi_submit` method
+        Validate parameters for `multisubmit` method
 
         Args:
             list_parameters: List of parameters dictionaries.
@@ -152,6 +145,14 @@ class BaseRunner(object):
         task_type: TaskTypeType,
         list_parameters: list[dict[str, Any]],
     ) -> None:
+        """
+        Run preliminary check for multisubmit inputs.
+
+        Args:
+            history_unit_ids:
+            task_type:
+            list_parameters:
+        """
         if task_type in ["compound", "converter_compound"]:
             if len(history_unit_ids) != 1:
                 raise NotImplementedError(
