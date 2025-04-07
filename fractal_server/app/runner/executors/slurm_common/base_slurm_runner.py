@@ -381,7 +381,7 @@ class BaseSlurmRunner(BaseRunner):
             return (None, exception)
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            # Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def is_shutdown(self) -> bool:
         return self.shutdown_file.exists()
