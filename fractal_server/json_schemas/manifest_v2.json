@@ -46,16 +46,19 @@
                     "type": "object"
                 },
                 "meta_non_parallel": {
+                    "additionalProperties": true,
                     "title": "Meta Non Parallel",
                     "type": "object"
                 },
                 "meta_parallel": {
+                    "additionalProperties": true,
                     "title": "Meta Parallel",
                     "type": "object"
                 },
                 "args_schema_non_parallel": {
                     "anyOf": [
                         {
+                            "additionalProperties": true,
                             "type": "object"
                         },
                         {
@@ -68,6 +71,7 @@
                 "args_schema_parallel": {
                     "anyOf": [
                         {
+                            "additionalProperties": true,
                             "type": "object"
                         },
                         {
