@@ -143,7 +143,10 @@ async def test_submit_fail(
 
 @pytest.mark.container
 async def test_multisubmit(
-    db, tmp777_path, monkey_slurm, history_mock_for_multisubmit
+    db,
+    tmp777_path,
+    monkey_slurm,
+    history_mock_for_multisubmit,
 ):
     def fun(parameters: dict, remote_files: dict):
         zarr_url = parameters["zarr_url"]
@@ -171,22 +174,18 @@ async def test_multisubmit(
                 {
                     "zarr_url": "a",
                     "parameter": 1,
-                    "__FRACTAL_PARALLEL_COMPONENT__": "000000",
                 },
                 {
                     "zarr_url": "b",
                     "parameter": 2,
-                    "__FRACTAL_PARALLEL_COMPONENT__": "000001",
                 },
                 {
                     "zarr_url": "c",
                     "parameter": 3,
-                    "__FRACTAL_PARALLEL_COMPONENT__": "000002",
                 },
                 {
                     "zarr_url": "d",
                     "parameter": 4,
-                    "__FRACTAL_PARALLEL_COMPONENT__": "000003",
                 },
             ],
             list_task_files=[

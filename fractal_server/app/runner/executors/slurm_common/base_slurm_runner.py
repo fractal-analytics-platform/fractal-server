@@ -32,6 +32,9 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
+SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
+SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
+
 logger = set_logger(__name__)
 
 # FIXME: Transform several logger.info into logger.debug.
@@ -94,6 +97,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
         # FIXME: review different cases (exception vs no job found)
+        # FIXME: Fail for empty list
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
             f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
@@ -339,7 +343,10 @@ class BaseSlurmRunner(BaseRunner):
             pass
 
     def _postprocess_single_task(
-        self, *, task: SlurmTask
+        self,
+        *,
+        task: SlurmTask,
+        was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
             with open(task.output_pickle_file_local, "rb") as f:
@@ -351,17 +358,24 @@ class BaseSlurmRunner(BaseRunner):
             else:
                 exception = _handle_exception_proxy(output)
                 return None, exception
+
         except Exception as e:
             exception = JobExecutionError(f"ERROR, {str(e)}")
+            # If job was scancelled and task failed, replace
+            # exception with a shutdown-related one.
+            if was_job_scancelled:
+                logger.debug(
+                    "Replacing exception with a shutdown-related one, "
+                    f"for {task.index=}."
+                )
+                exception = SHUTDOWN_EXCEPTION
+
             return None, exception
         finally:
-            pass
-            # FIXME: Re-include unlinks of pickle files
-            # Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            # Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            Path(task.input_pickle_file_local).unlink(missing_ok=True)
+            Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def is_shutdown(self) -> bool:
-        # FIXME: shutdown is not implemented
         return self.shutdown_file.exists()
 
     @property
@@ -392,7 +406,14 @@ class BaseSlurmRunner(BaseRunner):
             raise JobExecutionError("Unexpected branch: jobs should be empty.")
 
         if self.is_shutdown():
-            raise JobExecutionError("Cannot continue after shutdown.")
+            with next(get_sync_db()) as db:
+                update_status_of_history_unit(
+                    history_unit_id=history_unit_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
+                )
+
+            return None, SHUTDOWN_EXCEPTION
 
         # Validation phase
         self.validate_submit_parameters(
@@ -448,19 +469,29 @@ class BaseSlurmRunner(BaseRunner):
         # Retrieval phase
         logger.info("[submit] START retrieval phase")
         while len(self.jobs) > 0:
+
+            # Handle shutdown
+            scancelled_job_ids = []
             if self.is_shutdown():
-                self.scancel_jobs()
+                logger.info("[submit] Shutdown file detected")
+                scancelled_job_ids = self.scancel_jobs()
+                logger.info(f"[submit] {scancelled_job_ids=}")
+
+            # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.info(f"{finished_job_ids=}")
+            logger.debug(f"[submit] {finished_job_ids=}")
+
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.info(f"Now process {slurm_job_id=}")
+                    logger.debug(f"[submit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-
                     self._copy_files_from_remote_to_local(slurm_job)
+                    was_job_scancelled = slurm_job_id in scancelled_job_ids
                     result, exception = self._postprocess_single_task(
-                        task=slurm_job.tasks[0]
+                        task=slurm_job.tasks[0],
+                        was_job_scancelled=was_job_scancelled,
                     )
+
                     if exception is not None:
                         update_status_of_history_unit(
                             history_unit_id=history_unit_id,
@@ -488,12 +519,28 @@ class BaseSlurmRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
-    ):
+    ) -> tuple[dict[int, Any], dict[int, BaseException]]:
 
         if len(self.jobs) > 0:
             raise RuntimeError(
-                f"Cannot run .multisubmit when {len(self.jobs)=}"
+                f"Cannot run `multisubmit` when {len(self.jobs)=}"
             )
+
+        if self.is_shutdown():
+            if task_type == "parallel":
+                with next(get_sync_db()) as db:
+                    # FIXME: Replace with bulk function
+                    for history_unit_id in history_unit_ids:
+                        update_status_of_history_unit(
+                            history_unit_id=history_unit_id,
+                            status=HistoryUnitStatus.FAILED,
+                            db_sync=db,
+                        )
+            results = {}
+            exceptions = {
+                ind: SHUTDOWN_EXCEPTION for ind in range(len(list_parameters))
+            }
+            return results, exceptions
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
@@ -609,22 +656,34 @@ class BaseSlurmRunner(BaseRunner):
         logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
         time.sleep(sleep_time)
 
+        # FIXME: Could we merge the submit/multisubmit retrieval phases?
+
         # Retrieval phase
-        logger.info("START retrieval phase")
+        logger.info("[multisubmit] START retrieval phase")
         while len(self.jobs) > 0:
+
+            # Handle shutdown
+            scancelled_job_ids = []
             if self.is_shutdown():
-                self.scancel_jobs()
+                logger.info("[multisubmit] Shutdown file detected")
+                scancelled_job_ids = self.scancel_jobs()
+                logger.info(f"[multisubmit] {scancelled_job_ids=}")
+
+            # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.info(f"{finished_job_ids=}")
+            logger.debug(f"[multisubmit] {finished_job_ids=}")
+
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.info(f"Now processing {slurm_job_id=}")
+                    logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     self._copy_files_from_remote_to_local(slurm_job)
                     for task in slurm_job.tasks:
-                        logger.info(f"Now processing {task.index=}")
+                        logger.info(f"[multisubmit] Now process {task.index=}")
+                        was_job_scancelled = slurm_job_id in scancelled_job_ids
                         result, exception = self._postprocess_single_task(
-                            task=task
+                            task=task,
+                            was_job_scancelled=was_job_scancelled,
                         )
 
                         # Note: the relevant done/failed check is based on
@@ -684,11 +743,12 @@ class BaseSlurmRunner(BaseRunner):
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-    def scancel_jobs(self) -> None:
+    def scancel_jobs(self) -> list[str]:
         logger.info("[scancel_jobs] START")
 
         if self.jobs:
-            scancel_string = " ".join(self.job_ids)
+            scancelled_job_ids = self.job_ids
+            scancel_string = " ".join(scancelled_job_ids)
             scancel_cmd = f"scancel {scancel_string}"
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             try:
@@ -698,5 +758,5 @@ class BaseSlurmRunner(BaseRunner):
                     "[scancel_jobs] `scancel` command failed. "
                     f"Original error:\n{str(e)}"
                 )
-
         logger.info("[scancel_jobs] END")
+        return scancelled_job_ids
