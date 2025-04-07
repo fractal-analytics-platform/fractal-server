@@ -26,27 +26,6 @@ import cloudpickle
 from fractal_server import __VERSION__
 
 
-class ExceptionProxy:
-    """
-    Proxy class to serialise exceptions
-
-    Exception objects are not serialisable. This proxy class saves the
-    serialisable content of an exception. On the receiving end, it can be used
-    to reconstruct a `TaskExecutionError`.
-
-    Attributes:
-        exc_type_name: Name of the exception type (possibly not necessary)
-        traceback_string: Full-traceback string
-    """
-
-    exc_type_name: str
-    traceback_string: str
-
-    def __init__(self, exc_type_name: str, traceback_string: str):
-        self.exc_type_name = exc_type_name
-        self.traceback_string = traceback_string
-
-
 class FractalVersionMismatch(RuntimeError):
     """
     Custom exception for version mismatch
@@ -140,6 +119,10 @@ def worker(
         result = (True, fun(*args, **kwargs))
         out = cloudpickle.dumps(result)
     except Exception:
+        # Exception objects are not serialisable. Here we save the relevant
+        # exception contents in a serializable dictionary. On the receiving
+        # end, it can be used to reconstruct a `TaskExecutionError`.
+
         import traceback
 
         exc_type, exc_value, traceback_obj = sys.exc_info()
@@ -150,7 +133,7 @@ def worker(
             traceback_obj,
         )
         traceback_string = "".join(traceback_list)
-        exc_proxy = ExceptionProxy(
+        exc_proxy = dict(
             exc_type_name=exc_type.__name__,
             traceback_string=traceback_string,
         )

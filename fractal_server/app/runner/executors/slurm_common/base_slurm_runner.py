@@ -14,7 +14,6 @@ from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._batching import heuristics
 from ._job_states import STATES_FINISHED
-from .remote import ExceptionProxy
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -359,13 +358,14 @@ class BaseSlurmRunner(BaseRunner):
                 return (result, None)
             else:
                 # Task failed in a controlled way, and produced an
-                # `output: ExceptionProxy` (serializable) object.
-                exc_proxy: ExceptionProxy = output
+                # `output` object which is a dictionary with keys
+                # `exc_type_name` and `traceback_string`.
+                exc_type_name = output.get("exc_type_name")
                 logger.debug(
-                    f"Output pickle contains '{exc_proxy.exc_type_name}' "
-                    "exception proxy."
+                    f"Output pickle contains a '{exc_type_name}' exception."
                 )
-                exception = TaskExecutionError(exc_proxy.traceback_string)
+                traceback_string = output.get("traceback_string")
+                exception = TaskExecutionError(traceback_string)
                 return (None, exception)
 
         except Exception as e:
@@ -381,7 +381,7 @@ class BaseSlurmRunner(BaseRunner):
             return (None, exception)
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            # Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def is_shutdown(self) -> bool:
         return self.shutdown_file.exists()
@@ -468,10 +468,10 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info(f"[submit] END submission phase, {self.job_ids=}")
 
-        # FIXME: replace this sleep a more precise check
+        # FIXME: replace this sleep with a more precise check
         settings = Inject(get_settings)
         sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
         time.sleep(sleep_time)
 
         # Retrieval phase
@@ -658,10 +658,10 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME: replace this sleep a more precise check
+        # FIXME: replace this sleep with a more precise check
         settings = Inject(get_settings)
         sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
         time.sleep(sleep_time)
 
         # FIXME: Could we merge the submit/multisubmit retrieval phases?
