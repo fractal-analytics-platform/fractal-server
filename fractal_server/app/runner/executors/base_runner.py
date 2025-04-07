@@ -25,9 +25,6 @@ class BaseRunner(object):
     Base class for Fractal runners.
     """
 
-    def shutdown(self, *args, **kwargs):
-        raise NotImplementedError()
-
     def submit(
         self,
         func: callable,
