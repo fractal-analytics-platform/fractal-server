@@ -164,7 +164,7 @@ async def collect_task_custom(
     await db.refresh(task_group)
     db.expunge(task_group)
 
-    task_group = create_db_tasks_and_update_task_group_async(
+    task_group = await create_db_tasks_and_update_task_group_async(
         task_list=task_list,
         task_group_id=task_group.id,
         db=db,
