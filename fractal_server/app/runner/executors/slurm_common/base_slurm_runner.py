@@ -13,11 +13,12 @@ from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._batching import heuristics
-from ._handle_exception_proxy import _handle_exception_proxy
 from ._job_states import STATES_FINISHED
+from .remote import ExceptionProxy
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
@@ -353,11 +354,19 @@ class BaseSlurmRunner(BaseRunner):
                 outdata = f.read()
             success, output = cloudpickle.loads(outdata)
             if success:
+                # Task succeeded
                 result = output
-                return result, None
+                return (result, None)
             else:
-                exception = _handle_exception_proxy(output)
-                return None, exception
+                # Task failed in a controlled way, and produced an
+                # `output: ExceptionProxy` (serializable) object.
+                exc_proxy: ExceptionProxy = output
+                logger.debug(
+                    f"Output pickle contains '{exc_proxy.exc_type_name}' "
+                    "exception proxy."
+                )
+                exception = TaskExecutionError(exc_proxy.traceback_string)
+                return (None, exception)
 
         except Exception as e:
             exception = JobExecutionError(f"ERROR, {str(e)}")
@@ -369,8 +378,7 @@ class BaseSlurmRunner(BaseRunner):
                     f"for {task.index=}."
                 )
                 exception = SHUTDOWN_EXCEPTION
-
-            return None, exception
+            return (None, exception)
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
             Path(task.output_pickle_file_local).unlink(missing_ok=True)
