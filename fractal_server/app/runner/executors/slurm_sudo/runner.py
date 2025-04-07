@@ -17,7 +17,6 @@ from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
-# FIXME: Transform several logger.info into logger.debug.
 
 
 def _subprocess_run_or_raise(
@@ -93,7 +92,9 @@ class SudoSlurmRunner(BaseSlurmRunner):
         """
         Note: this would differ for SSH
         """
-        logger.info(f"[_copy_files_from_remote_to_local] {job.slurm_job_id=}")
+        logger.debug(
+            f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} START"
+        )
         source_target_list = [
             (job.slurm_stdout_remote, job.slurm_stdout_local),
             (job.slurm_stderr_remote, job.slurm_stderr_local),
@@ -139,6 +140,9 @@ class SudoSlurmRunner(BaseSlurmRunner):
                     f"SKIP copy {source} into {target}. "
                     f"Original error: {str(e)}"
                 )
+        logger.debug(
+            f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} END"
+        )
 
     def _run_remote_cmd(self, cmd: str) -> str:
         res = _run_command_as_user(

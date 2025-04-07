@@ -96,8 +96,12 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
+
         # FIXME: review different cases (exception vs no job found)
-        # FIXME: Fail for empty list
+
+        if len(job_ids) == 0:
+            return (False, "")
+
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
             f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
@@ -109,10 +113,10 @@ class BaseSlurmRunner(BaseRunner):
                 stdout = self._run_local_cmd(cmd)
             else:
                 stdout = self._run_remote_cmd(cmd)
-            return True, stdout
+            return (True, stdout)
         except Exception as e:
             logger.info(f"{cmd=} failed with {str(e)}")
-            return False, ""
+            return (False, "")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
         #  If there is no Slurm job to check, return right away
@@ -493,7 +497,9 @@ class BaseSlurmRunner(BaseRunner):
                 for slurm_job_id in finished_job_ids:
                     logger.debug(f"[submit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(slurm_job)
+                    self._copy_files_from_remote_to_local(
+                        slurm_job
+                    )  # FIXME: add prefix  # noqa
                     was_job_scancelled = slurm_job_id in scancelled_job_ids
                     result, exception = self._postprocess_single_task(
                         task=slurm_job.tasks[0],
@@ -685,7 +691,9 @@ class BaseSlurmRunner(BaseRunner):
                 for slurm_job_id in finished_job_ids:
                     logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(slurm_job)
+                    self._copy_files_from_remote_to_local(
+                        slurm_job
+                    )  # FIXME: add prefix  # noqa
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
