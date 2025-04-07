@@ -1,5 +1,3 @@
-import time
-
 import pytest
 from devtools import debug
 
@@ -174,11 +172,9 @@ async def test_multisubmit(
         x = parameters["parameter"]
         if x != 3:
             print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-            time.sleep(1)
             return 2 * x
         else:
             print(f"Running with {zarr_url=} and {x=}, raising error.")
-            time.sleep(1)
             raise ValueError("parameter=3 is very very bad")
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
