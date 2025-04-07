@@ -729,7 +729,7 @@ class BaseSlurmRunner(BaseRunner):
             time.sleep(self.poll_interval)
         return results, exceptions
 
-    def check_fractal_server_versions(self):
+    def check_fractal_server_versions(self) -> None:
         """
         Compare fractal-server versions of local/remote Python interpreters.
         """
