@@ -140,7 +140,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
                     f"Original error: {str(e)}"
                 )
 
-    def _run_remote_cmd(self, cmd: str):
+    def _run_remote_cmd(self, cmd: str) -> str:
         res = _run_command_as_user(
             cmd=cmd,
             user=self.slurm_user,
@@ -149,6 +149,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
         )
         return res.stdout
 
-    def _run_local_cmd(self, cmd: str):
+    def _run_local_cmd(self, cmd: str) -> str:
         res = _subprocess_run_or_raise(cmd)
         return res.stdout
