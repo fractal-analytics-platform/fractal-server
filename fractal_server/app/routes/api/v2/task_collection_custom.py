@@ -47,7 +47,6 @@ async def collect_task_custom(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
-    """ """
 
     settings = Inject(get_settings)
 
