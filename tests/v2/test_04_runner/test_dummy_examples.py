@@ -246,6 +246,9 @@ async def test_dummy_remove_images(
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 1
 
+    await db.refresh(dataset_pre)
+    assert dataset_pre.images == []
+
     # Fail when removing images that do not exist
     dataset_pre_fail = await dataset_factory_v2(
         project_id=project.id,
