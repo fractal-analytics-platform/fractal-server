@@ -3,10 +3,13 @@ from typing import Any
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+
+_CHUNK_SIZE = 2_000
 
 
 def update_status_of_history_run(
@@ -37,7 +40,18 @@ def update_status_of_history_unit(
     db_sync.commit()
 
 
-_CHUNK_SIZE = 2_000
+def update_logfile_of_history_unit(
+    *,
+    history_unit_id: int,
+    logfile: str,
+) -> None:
+    with next(get_sync_db()) as db_sync:
+        unit = db_sync.get(HistoryUnit, history_unit_id)
+        if unit is None:
+            raise ValueError(f"HistoryUnit {history_unit_id} not found.")
+        unit.logfile = logfile
+        db_sync.merge(unit)
+        db_sync.commit()
 
 
 def bulk_upsert_image_cache_fast(

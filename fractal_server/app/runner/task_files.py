@@ -6,8 +6,14 @@ from pydantic import BaseModel
 
 from fractal_server.string_tools import sanitize_string
 
+SUBMIT_PREFIX = "non_par"
+MULTISUBMIT_PREFIX = "par"
 
-def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
+
+def task_subfolder_name(
+    order: Union[int, str],
+    task_name: str,
+) -> str:
     """
     Get name of task-specific subfolder.
 
@@ -21,7 +27,15 @@ def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
 
 class TaskFiles(BaseModel):
     """
-    Group all file paths pertaining to a task     FIXME
+    Files related to a task.
+
+    Attributes:
+        root_dir_local:
+        root_dir_remote:
+        task_name:
+        task_order:
+        component:
+        prefix:
     """
 
     # Parent directory
@@ -114,7 +128,3 @@ class TaskFiles(BaseModel):
             metadiff_file_remote=self.metadiff_file_remote,
             log_file_remote=self.log_file_remote,
         )
-
-
-SUBMIT_PREFIX = "non_par"
-MULTISUBMIT_PREFIX = "par"

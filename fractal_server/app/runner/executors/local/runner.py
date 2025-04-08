@@ -11,6 +11,9 @@ from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import (
+    update_logfile_of_history_unit,
+)
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
@@ -37,16 +40,12 @@ class LocalRunner(BaseRunner):
         logger.debug("Enter LocalRunner")
         return self
 
-    def shutdown(self):
-        logger.debug("Now shut LocalRunner.executor down")
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        logger.debug("Exit LocalRunner")
         self.executor.shutdown(
             wait=False,
             cancel_futures=True,
         )
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        logger.debug("Exit LocalRunner")
-        self.shutdown()
         return self.executor.__exit__(exc_type, exc_val, exc_tb)
 
     def submit(
@@ -69,7 +68,12 @@ class LocalRunner(BaseRunner):
         workdir_local = task_files.wftask_subfolder_local
         workdir_local.mkdir()
 
+        # Add prefix to task_files object
         task_files.prefix = SUBMIT_PREFIX
+        update_logfile_of_history_unit(
+            history_unit_id=history_unit_id,
+            logfile=task_files.log_file_local,
+        )
 
         # SUBMISSION PHASE
         future = self.executor.submit(
@@ -155,20 +159,36 @@ class LocalRunner(BaseRunner):
             active_futures: dict[int, Future] = {}
             for ind_within_chunk, kwargs in enumerate(list_parameters_chunk):
                 positional_index = ind_chunk + ind_within_chunk
-                current_task_files = list_task_files[positional_index]
-                current_task_files.prefix = (
-                    f"{MULTISUBMIT_PREFIX}-{positional_index:06d}"
-                )
+                list_task_files[
+                    positional_index
+                ].prefix = f"{MULTISUBMIT_PREFIX}-{positional_index:06d}"
                 future = self.executor.submit(
                     func,
                     parameters=kwargs,
-                    remote_files=current_task_files.remote_files_dict,
+                    remote_files=list_task_files[
+                        positional_index
+                    ].remote_files_dict,
                 )
                 active_futures[positional_index] = future
 
+                if task_type == "parallel":
+                    # FIXME: replace loop with a `bulk_update_history_unit`
+                    # function
+                    update_logfile_of_history_unit(
+                        history_unit_id=history_unit_ids[positional_index],
+                        logfile=list_task_files[
+                            positional_index
+                        ].log_file_local,
+                    )
+                else:
+                    logger.debug(
+                        f"Unclear what logfile to associate to {task_type=} "
+                        "within multisubmit (see issue #2382)."
+                    )
+                    # FIXME: Improve definition for compound tasks
+                    pass
+
             while active_futures:
-                # FIXME: add shutdown detection
-                # if file exists: cancel all futures, and raise
                 finished_futures = [
                     index_and_future
                     for index_and_future in active_futures.items()
