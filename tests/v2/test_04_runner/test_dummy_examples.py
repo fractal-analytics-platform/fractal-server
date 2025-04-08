@@ -2,14 +2,56 @@ from pathlib import Path
 
 import pytest
 from devtools import debug  # noqa: F401
+from sqlmodel import func
+from sqlmodel import select
 
 from .aux_get_dataset_attrs import _get_dataset_attrs
 from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import HistoryImageCache
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 
 # from fractal_server.urls import normalize_url
+
+
+async def add_history_image_cache(
+    db,
+    dataset_id: int,
+    wftask_id: int,
+    zarr_urls: list[str],
+    status: str = "submitted",
+):
+
+    hr = HistoryRun(
+        dataset_id=dataset_id,
+        workflowtask_id=wftask_id,
+        workflowtask_dump={},
+        task_group_dump={},
+        status=status,
+        num_available_images=len(zarr_urls),
+    )
+    db.add(hr)
+    await db.commit()
+    await db.refresh(hr)
+
+    hu = HistoryUnit(status=status, zarr_url=zarr_urls, history_run_id=hr.id)
+    db.add(hu)
+    await db.commit()
+    await db.refresh(hu)
+
+    for zarr_url in zarr_urls:
+        db.add(
+            HistoryImageCache(
+                dataset_id=dataset_id,
+                workflowtask_id=wftask_id,
+                zarr_url=zarr_url,
+                latest_history_unit_id=hu.id,
+            )
+        )
+    await db.commit()
 
 
 @pytest.fixture()
@@ -179,6 +221,20 @@ async def test_dummy_remove_images(
             for index in [0, 1, 2]
         ],
     )
+
+    res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
+    assert res.scalar() == 0
+
+    await add_history_image_cache(
+        db=db,
+        dataset_id=dataset_pre.id,
+        wftask_id=wftask.id,
+        zarr_urls=[img["zarr_url"] for img in dataset_pre.images] + ["/foo"],
+    )
+
+    res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
+    assert res.scalar() == 4
+
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset_pre,
@@ -186,6 +242,9 @@ async def test_dummy_remove_images(
         user_id=user_id,
         runner=local_runner,
     )
+
+    res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
+    assert res.scalar() == 1
 
     # Fail when removing images that do not exist
     dataset_pre_fail = await dataset_factory_v2(
