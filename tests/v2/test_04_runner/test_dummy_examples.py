@@ -233,7 +233,7 @@ async def test_dummy_remove_images(
     )
 
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
-    assert res.scalar() == 4
+    assert res.scalar() == len(dataset_pre.images) + 1
 
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
