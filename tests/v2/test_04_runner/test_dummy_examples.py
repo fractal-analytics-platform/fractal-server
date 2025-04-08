@@ -221,6 +221,7 @@ async def test_dummy_remove_images(
             for index in [0, 1, 2]
         ],
     )
+    assert len(dataset_pre.images) == 3
 
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 0
@@ -243,11 +244,11 @@ async def test_dummy_remove_images(
         runner=local_runner,
     )
 
+    await db.refresh(dataset_pre)
+    assert len(dataset_pre.images) == 0
+
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 1
-
-    await db.refresh(dataset_pre)
-    assert dataset_pre.images == []
 
     # Fail when removing images that do not exist
     dataset_pre_fail = await dataset_factory_v2(
