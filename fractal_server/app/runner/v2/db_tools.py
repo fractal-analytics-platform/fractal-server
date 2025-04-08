@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
+from sqlmodel import update
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -37,6 +38,20 @@ def update_status_of_history_unit(
         raise ValueError(f"HistoryUnit {history_unit_id} not found.")
     unit.status = status
     db_sync.merge(unit)
+    db_sync.commit()
+
+
+def bulk_update_status_of_history_unit(
+    *,
+    history_unit_ids: list[int],
+    status: HistoryUnitStatus,
+    db_sync: Session,
+) -> None:
+    db_sync.execute(
+        update(HistoryUnit)
+        .where(HistoryUnit.id.in_(history_unit_ids))
+        .values(status=status)
+    )
     db_sync.commit()
 
 
