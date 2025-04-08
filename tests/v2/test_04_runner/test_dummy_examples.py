@@ -213,16 +213,17 @@ async def test_dummy_remove_images(
     # Run successfully on a dataset which includes the images to be
     # removed
     project = await project_factory_v2(user)
+    N = 3
     dataset_pre = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=[
             dict(zarr_url=Path(zarr_dir, str(index)).as_posix())
-            for index in [0, 1, 2]
+            for index in range(N)
         ],
     )
-    assert len(dataset_pre.images) == 3
 
+    assert len(dataset_pre.images) == N
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 0
 
@@ -233,8 +234,10 @@ async def test_dummy_remove_images(
         zarr_urls=[img["zarr_url"] for img in dataset_pre.images] + ["/foo"],
     )
 
+    await db.refresh(dataset_pre)
+    assert len(dataset_pre.images) == N
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
-    assert res.scalar() == len(dataset_pre.images) + 1
+    assert res.scalar() == N + 1
 
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
@@ -246,7 +249,6 @@ async def test_dummy_remove_images(
 
     await db.refresh(dataset_pre)
     assert len(dataset_pre.images) == 0
-
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 1
 
