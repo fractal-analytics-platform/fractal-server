@@ -531,7 +531,8 @@ class BaseSlurmRunner(BaseRunner):
                                 db_sync=db,
                             )
 
-            time.sleep(self.poll_interval)
+            if len(self.jobs) > 0:
+                time.sleep(self.poll_interval)
 
         logger.info("[submit] END")
         return result, exception
