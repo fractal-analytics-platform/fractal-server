@@ -214,7 +214,7 @@ async def test_dummy_remove_images(
     # removed
     project = await project_factory_v2(user)
     N = 3
-    dataset_pre = await dataset_factory_v2(
+    dataset = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=[
@@ -223,32 +223,32 @@ async def test_dummy_remove_images(
         ],
     )
 
-    assert len(dataset_pre.images) == N
+    assert len(dataset.images) == N
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 0
 
     await add_history_image_cache(
         db=db,
-        dataset_id=dataset_pre.id,
+        dataset_id=dataset.id,
         wftask_id=wftask.id,
-        zarr_urls=[img["zarr_url"] for img in dataset_pre.images] + ["/foo"],
+        zarr_urls=[img["zarr_url"] for img in dataset.images] + ["/foo"],
     )
 
-    await db.refresh(dataset_pre)
-    assert len(dataset_pre.images) == N
+    await db.refresh(dataset)
+    assert len(dataset.images) == N
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == N + 1
 
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
-        dataset=dataset_pre,
+        dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         runner=local_runner,
     )
 
-    await db.refresh(dataset_pre)
-    assert len(dataset_pre.images) == 0
+    await db.refresh(dataset)
+    assert len(dataset.images) == 0
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 1
 
