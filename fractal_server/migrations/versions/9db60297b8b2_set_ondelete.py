@@ -1,16 +1,16 @@
-"""on cascade
+"""Set ondelete
 
-Revision ID: 5b6007027595
-Revises: af1ef1c83c9b
-Create Date: 2025-04-02 17:03:59.542921
+Revision ID: 9db60297b8b2
+Revises: e81103413827
+Create Date: 2025-04-07 13:13:14.596394
 
 """
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "5b6007027595"
-down_revision = "af1ef1c83c9b"
+revision = "9db60297b8b2"
+down_revision = "e81103413827"
 branch_labels = None
 depends_on = None
 
@@ -34,15 +34,15 @@ def upgrade() -> None:
             "fk_jobv2_dataset_id_datasetv2", type_="foreignkey"
         )
         batch_op.drop_constraint(
-            "fk_jobv2_workflow_id_workflowv2", type_="foreignkey"
-        )
-        batch_op.drop_constraint(
             "fk_jobv2_project_id_projectv2", type_="foreignkey"
         )
+        batch_op.drop_constraint(
+            "fk_jobv2_workflow_id_workflowv2", type_="foreignkey"
+        )
         batch_op.create_foreign_key(
-            batch_op.f("fk_jobv2_project_id_projectv2"),
-            "projectv2",
-            ["project_id"],
+            batch_op.f("fk_jobv2_workflow_id_workflowv2"),
+            "workflowv2",
+            ["workflow_id"],
             ["id"],
             ondelete="SET NULL",
         )
@@ -54,19 +54,19 @@ def upgrade() -> None:
             ondelete="SET NULL",
         )
         batch_op.create_foreign_key(
-            batch_op.f("fk_jobv2_workflow_id_workflowv2"),
-            "workflowv2",
-            ["workflow_id"],
+            batch_op.f("fk_jobv2_project_id_projectv2"),
+            "projectv2",
+            ["project_id"],
             ["id"],
             ondelete="SET NULL",
         )
 
     with op.batch_alter_table("linkusergroup", schema=None) as batch_op:
         batch_op.drop_constraint(
-            "fk_linkusergroup_group_id_usergroup", type_="foreignkey"
+            "fk_linkusergroup_user_id_user_oauth", type_="foreignkey"
         )
         batch_op.drop_constraint(
-            "fk_linkusergroup_user_id_user_oauth", type_="foreignkey"
+            "fk_linkusergroup_group_id_usergroup", type_="foreignkey"
         )
         batch_op.create_foreign_key(
             batch_op.f("fk_linkusergroup_group_id_usergroup"),
@@ -195,38 +195,38 @@ def downgrade() -> None:
             type_="foreignkey",
         )
         batch_op.create_foreign_key(
-            "fk_linkusergroup_user_id_user_oauth",
-            "user_oauth",
-            ["user_id"],
-            ["id"],
-        )
-        batch_op.create_foreign_key(
             "fk_linkusergroup_group_id_usergroup",
             "usergroup",
             ["group_id"],
             ["id"],
         )
+        batch_op.create_foreign_key(
+            "fk_linkusergroup_user_id_user_oauth",
+            "user_oauth",
+            ["user_id"],
+            ["id"],
+        )
 
     with op.batch_alter_table("jobv2", schema=None) as batch_op:
         batch_op.drop_constraint(
-            batch_op.f("fk_jobv2_workflow_id_workflowv2"), type_="foreignkey"
+            batch_op.f("fk_jobv2_project_id_projectv2"), type_="foreignkey"
         )
         batch_op.drop_constraint(
             batch_op.f("fk_jobv2_dataset_id_datasetv2"), type_="foreignkey"
         )
         batch_op.drop_constraint(
-            batch_op.f("fk_jobv2_project_id_projectv2"), type_="foreignkey"
-        )
-        batch_op.create_foreign_key(
-            "fk_jobv2_project_id_projectv2",
-            "projectv2",
-            ["project_id"],
-            ["id"],
+            batch_op.f("fk_jobv2_workflow_id_workflowv2"), type_="foreignkey"
         )
         batch_op.create_foreign_key(
             "fk_jobv2_workflow_id_workflowv2",
             "workflowv2",
             ["workflow_id"],
+            ["id"],
+        )
+        batch_op.create_foreign_key(
+            "fk_jobv2_project_id_projectv2",
+            "projectv2",
+            ["project_id"],
             ["id"],
         )
         batch_op.create_foreign_key(

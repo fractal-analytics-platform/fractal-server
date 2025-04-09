@@ -13,21 +13,27 @@ from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._batching import heuristics
-from ._handle_exception_proxy import _handle_exception_proxy
 from ._job_states import STATES_FINISHED
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import (
+    update_logfile_of_history_unit,
+)
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+
+SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
+SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 
 logger = set_logger(__name__)
 
@@ -90,7 +96,12 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
+
         # FIXME: review different cases (exception vs no job found)
+
+        if len(job_ids) == 0:
+            return (False, "")
+
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
             f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
@@ -102,10 +113,10 @@ class BaseSlurmRunner(BaseRunner):
                 stdout = self._run_local_cmd(cmd)
             else:
                 stdout = self._run_remote_cmd(cmd)
-            return True, stdout
+            return (True, stdout)
         except Exception as e:
             logger.info(f"{cmd=} failed with {str(e)}")
-            return False, ""
+            return (False, "")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
         #  If there is no Slurm job to check, return right away
@@ -225,8 +236,10 @@ class BaseSlurmRunner(BaseRunner):
         logger.info(script_lines)
 
         # Always print output of `uname -n` and `pwd`
+        script_lines.append('\necho "Hostname: $(uname -n)"')
+        script_lines.append('echo "Current directory : $(pwd)"')
         script_lines.append(
-            '"Hostname: `uname -n`; current directory: `pwd`"\n'
+            'echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"'
         )
 
         # Complete script preamble
@@ -242,6 +255,9 @@ class BaseSlurmRunner(BaseRunner):
             )
         script_lines.append("wait\n")
         script = "\n".join(script_lines)
+        script_lines.append(
+            'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
+        )
 
         # Write submission script
         with open(slurm_job.slurm_submission_script_local, "w") as f:
@@ -331,29 +347,58 @@ class BaseSlurmRunner(BaseRunner):
             pass
 
     def _postprocess_single_task(
-        self, *, task: SlurmTask
+        self,
+        *,
+        task: SlurmTask,
+        was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
             with open(task.output_pickle_file_local, "rb") as f:
                 outdata = f.read()
             success, output = cloudpickle.loads(outdata)
             if success:
+                # Task succeeded
                 result = output
-                return result, None
+                return (result, None)
             else:
-                exception = _handle_exception_proxy(output)
-                return None, exception
+                # Task failed in a controlled way, and produced an `output`
+                # object which is a dictionary with required keys
+                # `exc_type_name` and `traceback_string` and with optional
+                # keys `workflow_task_order`, `workflow_task_id` and
+                # `task_name`.
+                exc_type_name = output.get("exc_type_name")
+                logger.debug(
+                    f"Output pickle contains a '{exc_type_name}' exception."
+                )
+                traceback_string = output.get("traceback_string")
+                kwargs = {
+                    key: output[key]
+                    for key in [
+                        "workflow_task_order",
+                        "workflow_task_id",
+                        "task_name",
+                    ]
+                    if key in output.keys()
+                }
+                exception = TaskExecutionError(traceback_string, **kwargs)
+                return (None, exception)
+
         except Exception as e:
             exception = JobExecutionError(f"ERROR, {str(e)}")
-            return None, exception
+            # If job was scancelled and task failed, replace
+            # exception with a shutdown-related one.
+            if was_job_scancelled:
+                logger.debug(
+                    "Replacing exception with a shutdown-related one, "
+                    f"for {task.index=}."
+                )
+                exception = SHUTDOWN_EXCEPTION
+            return (None, exception)
         finally:
-            pass
-            # FIXME: Re-include unlinks of pickle files
-            # Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            # Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            Path(task.input_pickle_file_local).unlink(missing_ok=True)
+            Path(task.output_pickle_file_local).unlink(missing_ok=True)
 
     def is_shutdown(self) -> bool:
-        # FIXME: shutdown is not implemented
         return self.shutdown_file.exists()
 
     @property
@@ -384,7 +429,14 @@ class BaseSlurmRunner(BaseRunner):
             raise JobExecutionError("Unexpected branch: jobs should be empty.")
 
         if self.is_shutdown():
-            raise JobExecutionError("Cannot continue after shutdown.")
+            with next(get_sync_db()) as db:
+                update_status_of_history_unit(
+                    history_unit_id=history_unit_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
+                )
+
+            return None, SHUTDOWN_EXCEPTION
 
         # Validation phase
         self.validate_submit_parameters(
@@ -400,6 +452,10 @@ class BaseSlurmRunner(BaseRunner):
 
         # Add prefix to task_files object
         task_files.prefix = SUBMIT_PREFIX
+        update_logfile_of_history_unit(
+            history_unit_id=history_unit_id,
+            logfile=task_files.log_file_local,
+        )
 
         # Submission phase
         slurm_job = SlurmJob(
@@ -427,28 +483,40 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info(f"[submit] END submission phase, {self.job_ids=}")
 
-        # FIXME: replace this sleep a more precise check
+        # FIXME: replace this sleep with a more precise check
         settings = Inject(get_settings)
         sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
         time.sleep(sleep_time)
 
         # Retrieval phase
         logger.info("[submit] START retrieval phase")
         while len(self.jobs) > 0:
+
+            # Handle shutdown
+            scancelled_job_ids = []
             if self.is_shutdown():
-                self.scancel_jobs()
+                logger.info("[submit] Shutdown file detected")
+                scancelled_job_ids = self.scancel_jobs()
+                logger.info(f"[submit] {scancelled_job_ids=}")
+
+            # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.info(f"{finished_job_ids=}")
+            logger.debug(f"[submit] {finished_job_ids=}")
+
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.info(f"Now process {slurm_job_id=}")
+                    logger.debug(f"[submit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-
-                    self._copy_files_from_remote_to_local(slurm_job)
+                    self._copy_files_from_remote_to_local(
+                        slurm_job
+                    )  # FIXME: add prefix  # noqa
+                    was_job_scancelled = slurm_job_id in scancelled_job_ids
                     result, exception = self._postprocess_single_task(
-                        task=slurm_job.tasks[0]
+                        task=slurm_job.tasks[0],
+                        was_job_scancelled=was_job_scancelled,
                     )
+
                     if exception is not None:
                         update_status_of_history_unit(
                             history_unit_id=history_unit_id,
@@ -463,7 +531,8 @@ class BaseSlurmRunner(BaseRunner):
                                 db_sync=db,
                             )
 
-            time.sleep(self.poll_interval)
+            if len(self.jobs) > 0:
+                time.sleep(self.poll_interval)
 
         logger.info("[submit] END")
         return result, exception
@@ -476,12 +545,28 @@ class BaseSlurmRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
-    ):
+    ) -> tuple[dict[int, Any], dict[int, BaseException]]:
 
         if len(self.jobs) > 0:
             raise RuntimeError(
-                f"Cannot run .multisubmit when {len(self.jobs)=}"
+                f"Cannot run `multisubmit` when {len(self.jobs)=}"
             )
+
+        if self.is_shutdown():
+            if task_type == "parallel":
+                with next(get_sync_db()) as db:
+                    # FIXME: Replace with bulk function
+                    for history_unit_id in history_unit_ids:
+                        update_status_of_history_unit(
+                            history_unit_id=history_unit_id,
+                            status=HistoryUnitStatus.FAILED,
+                            db_sync=db,
+                        )
+            results = {}
+            exceptions = {
+                ind: SHUTDOWN_EXCEPTION for ind in range(len(list_parameters))
+            }
+            return results, exceptions
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
@@ -549,18 +634,17 @@ class BaseSlurmRunner(BaseRunner):
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
-                current_task_files = list_task_files[index]
-                current_task_files.prefix = prefix
+                list_task_files[index].prefix = prefix
                 tasks.append(
                     SlurmTask(
                         prefix=prefix,
                         index=index,
-                        component=current_task_files.component,
+                        component=list_task_files[index].component,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         parameters=parameters,
                         zarr_url=parameters["zarr_url"],
-                        task_files=current_task_files,
+                        task_files=list_task_files[index],
                     ),
                 )
 
@@ -575,30 +659,59 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
+        if task_type == "parallel":
+            # FIXME: replace loop with a `bulk_update_history_unit` function
+            for ind, task_files in enumerate(list_task_files):
+                update_logfile_of_history_unit(
+                    history_unit_id=history_unit_ids[ind],
+                    logfile=task_files.log_file_local,
+                )
+        else:
+            logger.debug(
+                f"Unclear what logfile to associate to {task_type=} "
+                "within multisubmit (see issue #2382)."
+            )
+            # FIXME: Improve definition for compound tasks
+            pass
+
         logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME: replace this sleep a more precise check
+        # FIXME: replace this sleep with a more precise check
         settings = Inject(get_settings)
         sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-        logger.warning(f"[submit] Now sleep {sleep_time} (FIXME)")
+        logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
         time.sleep(sleep_time)
 
+        # FIXME: Could we merge the submit/multisubmit retrieval phases?
+
         # Retrieval phase
-        logger.info("START retrieval phase")
+        logger.info("[multisubmit] START retrieval phase")
         while len(self.jobs) > 0:
+
+            # Handle shutdown
+            scancelled_job_ids = []
             if self.is_shutdown():
-                self.scancel_jobs()
+                logger.info("[multisubmit] Shutdown file detected")
+                scancelled_job_ids = self.scancel_jobs()
+                logger.info(f"[multisubmit] {scancelled_job_ids=}")
+
+            # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.info(f"{finished_job_ids=}")
+            logger.debug(f"[multisubmit] {finished_job_ids=}")
+
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.info(f"Now processing {slurm_job_id=}")
+                    logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(slurm_job)
+                    self._copy_files_from_remote_to_local(
+                        slurm_job
+                    )  # FIXME: add prefix  # noqa
                     for task in slurm_job.tasks:
-                        logger.info(f"Now processing {task.index=}")
+                        logger.info(f"[multisubmit] Now process {task.index=}")
+                        was_job_scancelled = slurm_job_id in scancelled_job_ids
                         result, exception = self._postprocess_single_task(
-                            task=task
+                            task=task,
+                            was_job_scancelled=was_job_scancelled,
                         )
 
                         # Note: the relevant done/failed check is based on
@@ -628,7 +741,7 @@ class BaseSlurmRunner(BaseRunner):
             time.sleep(self.poll_interval)
         return results, exceptions
 
-    def check_fractal_server_versions(self):
+    def check_fractal_server_versions(self) -> None:
         """
         Compare fractal-server versions of local/remote Python interpreters.
         """
@@ -658,11 +771,12 @@ class BaseSlurmRunner(BaseRunner):
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-    def scancel_jobs(self) -> None:
+    def scancel_jobs(self) -> list[str]:
         logger.info("[scancel_jobs] START")
 
         if self.jobs:
-            scancel_string = " ".join(self.job_ids)
+            scancelled_job_ids = self.job_ids
+            scancel_string = " ".join(scancelled_job_ids)
             scancel_cmd = f"scancel {scancel_string}"
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             try:
@@ -672,5 +786,5 @@ class BaseSlurmRunner(BaseRunner):
                     "[scancel_jobs] `scancel` command failed. "
                     f"Original error:\n{str(e)}"
                 )
-
         logger.info("[scancel_jobs] END")
+        return scancelled_job_ids

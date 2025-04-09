@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-from ..utils_database import create_db_tasks_and_update_task_group
+from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -233,7 +233,7 @@ def collect_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 logger.info("create_db_tasks_and_update_task_group - " "start")
-                create_db_tasks_and_update_task_group(
+                create_db_tasks_and_update_task_group_sync(
                     task_list=task_list,
                     task_group_id=task_group.id,
                     db=db,

@@ -84,11 +84,10 @@ async def get_workflow_tasks_statuses(
             .limit(1)
         )
         latest_history_run = res.scalar_one_or_none()
-        logger.debug(  # FIXME: remove
-            f"Given {dataset_id=} and {wftask.id}, "
-            f"found {latest_history_run=}."
-        )
         if latest_history_run is None:
+            logger.debug(
+                f"No HistoryRun found for {dataset_id=} and {wftask.id=}."
+            )
             response[wftask.id] = None
             continue
         response[wftask.id] = dict(

@@ -172,7 +172,7 @@ def run_v2_task_non_parallel(
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=task_files.log_file_local,
+            logfile=None,
             zarr_urls=zarr_urls,
         )
         db.add(history_unit)
@@ -275,7 +275,7 @@ def run_v2_task_parallel(
         HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=list_task_files[ind].log_file_local,
+            logfile=None,
             zarr_urls=[image["zarr_url"]],
         )
         for ind, image in enumerate(images)
@@ -401,8 +401,7 @@ def run_v2_task_compound(
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            # FIXME: What about compute-task logs?
-            logfile=task_files_init.log_file_local,
+            logfile=None,
             zarr_urls=input_image_zarr_urls,
         )
         db.add(history_unit)

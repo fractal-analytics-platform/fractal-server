@@ -1,7 +1,7 @@
 """new history items
 
 Revision ID: fbce16ff4e47
-Revises: 5b6007027595
+Revises: af1ef1c83c9b
 Create Date: 2025-03-14 15:25:01.083619
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "fbce16ff4e47"
-down_revision = "5b6007027595"
+down_revision = "af1ef1c83c9b"
 branch_labels = None
 depends_on = None
 

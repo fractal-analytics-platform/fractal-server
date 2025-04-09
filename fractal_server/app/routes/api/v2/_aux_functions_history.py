@@ -20,6 +20,10 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
+from fractal_server.logger import set_logger
+
+
+logger = set_logger(__name__)
 
 
 async def get_history_unit_or_404(
@@ -67,6 +71,10 @@ def read_log_file(
     dataset_id: int,
 ):
     if logfile is None or not Path(logfile).exists():
+        logger.debug(
+            f"Logs for task '{wftask.task.name}' in dataset "
+            f"{dataset_id} are not available ({logfile=})."
+        )
         return (
             f"Logs for task '{wftask.task.name}' in dataset "
             f"{dataset_id} are not available."
