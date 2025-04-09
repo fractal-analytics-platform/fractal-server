@@ -41,6 +41,24 @@ from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 
 
+def check_historyrun_related_to_dataset_and_wftask(
+    history_run: HistoryRun,
+    dataset_id: int,
+    workflowtask_id: int,
+):
+    if (
+        history_run.dataset_id != dataset_id
+        or history_run.workflowtask_id != workflowtask_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Invalid query parameters: HistoryRun[{history_run.id}] is "
+                f"not related to {dataset_id=} and {workflowtask_id=}."
+            ),
+        )
+
+
 class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
 
     attributes: dict[str, list[Any]]
@@ -202,17 +220,11 @@ async def get_history_run_units(
     history_run = await get_history_run_or_404(
         history_run_id=history_run_id, db=db
     )
-    if (
-        history_run.dataset_id != dataset_id
-        or history_run.workflowtask_id != workflowtask_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Invalid query parameter: HistoryRun[{history_run_id}] is "
-                f"not related to {dataset_id=} and {workflowtask_id=}."
-            ),
-        )
+    check_historyrun_related_to_dataset_and_wftask(
+        history_run=history_run,
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+    )
 
     # Count `HistoryUnit`s
     stmt = select(func.count(HistoryUnit.id)).where(
@@ -467,24 +479,18 @@ async def get_history_unit_log(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Invalid query parameter: HistoryUnit[{history_unit_id}] "
+                f"Invalid query parameters: HistoryUnit[{history_unit_id}] "
                 f"is not related to HistoryRun[{history_run_id}]"
             ),
         )
     history_run = await get_history_run_or_404(
         history_run_id=history_run_id, db=db
     )
-    if (
-        history_run.dataset_id != dataset_id
-        or history_run.workflowtask_id != workflowtask_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Invalid query parameters: HistoryRun[{history_run_id}] is "
-                f"not related to {dataset_id=} and {workflowtask_id=}."
-            ),
-        )
+    check_historyrun_related_to_dataset_and_wftask(
+        history_run=history_run,
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+    )
 
     # Get log or placeholder text
     log = read_log_file(

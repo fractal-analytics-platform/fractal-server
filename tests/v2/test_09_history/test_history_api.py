@@ -731,7 +731,7 @@ async def test_get_logs(
             f"&history_run_id=1000&{history_unit_id=}"
         )
         assert res.status_code == 422
-        assert "Invalid query parameter: HistoryUnit" in res.json()["detail"]
+        assert "Invalid query parameters: HistoryUnit" in res.json()["detail"]
         ds2 = await dataset_factory_v2(project_id=proj.id)
         wftask2 = await workflowtask_factory_v2(
             workflow_id=wf.id, task_id=task.id
