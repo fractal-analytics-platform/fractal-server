@@ -1,4 +1,4 @@
-from devtools import debug
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -37,10 +37,11 @@ async def test_status_legacy(
             project_id=project.id,
             name="ds1",
         )
-        await client.get(
+        res = await client.get(
             f"/api/v2/project/{project.id}/status-legacy/"
             f"?dataset_id={dataset1.id}&workflow_id={workflow.id}"
         )
+        assert res.status_code == 200
 
         dataset2 = await dataset_factory_v2(
             project_id=project.id,
@@ -51,7 +52,7 @@ async def test_status_legacy(
                         **wftask1.model_dump(),
                         "task": task1.model_dump(),
                     },
-                    "status": "submitted",
+                    "status": "failed",
                     "parallelization": {},
                 }
             ],
@@ -72,8 +73,6 @@ async def test_status_legacy(
             }
         )
 
-        from sqlalchemy.orm.attributes import flag_modified
-
         flag_modified(dataset2, "history")
         await db.commit()
 
@@ -89,7 +88,7 @@ async def test_status_legacy(
             f"/api/v2/project/{project.id}/status-legacy/"
             f"?dataset_id={dataset2.id}&workflow_id={workflow.id}"
         )
-        debug(res.status_code, res.json())
+        assert res.status_code == 200
 
         await job_factory_v2(
             project_id=project.id,
