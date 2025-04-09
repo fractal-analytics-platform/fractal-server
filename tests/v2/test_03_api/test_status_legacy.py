@@ -42,6 +42,7 @@ async def test_status_legacy(
             f"?dataset_id={dataset1.id}&workflow_id={workflow.id}"
         )
         assert res.status_code == 200
+        assert res.json() == {"status": {}}
 
         dataset2 = await dataset_factory_v2(
             project_id=project.id,
@@ -62,6 +63,7 @@ async def test_status_legacy(
             f"?dataset_id={dataset2.id}&workflow_id={workflow.id}"
         )
         assert res.status_code == 200
+        assert res.json() == {"status": {str(wftask1.id): "failed"}}
 
         dataset2.history.append(
             {
@@ -90,6 +92,12 @@ async def test_status_legacy(
             f"?dataset_id={dataset2.id}&workflow_id={workflow.id}"
         )
         assert res.status_code == 200
+        assert res.json() == {
+            "status": {
+                str(wftask1.id): "submitted",
+                str(wftask2.id): "submitted",
+            }
+        }
 
         await job_factory_v2(
             project_id=project.id,
