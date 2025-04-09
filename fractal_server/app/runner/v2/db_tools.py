@@ -47,12 +47,16 @@ def bulk_update_status_of_history_unit(
     status: HistoryUnitStatus,
     db_sync: Session,
 ) -> None:
-    db_sync.execute(
-        update(HistoryUnit)
-        .where(HistoryUnit.id.in_(history_unit_ids))
-        .values(status=status)
-    )
-    db_sync.commit()
+    for ind in range(0, len(history_unit_ids), _CHUNK_SIZE):
+        db_sync.execute(
+            update(HistoryUnit)
+            .where(
+                HistoryUnit.id.in_(history_unit_ids[ind : ind + _CHUNK_SIZE])
+            )
+            .values(status=status)
+        )
+        # NOTE: keeping commit within the for loop is much more efficient
+        db_sync.commit()
 
 
 def update_logfile_of_history_unit(

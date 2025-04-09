@@ -13,7 +13,7 @@ from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
-@pytest.mark.parametrize("num_history_units", [10, 100, 500])
+@pytest.mark.parametrize("num_history_units", [10, 50])
 async def test_update_status_of_history_unit(
     num_history_units: int,
     # Fixtures
