@@ -77,7 +77,7 @@ async def test_status_legacy(
         flag_modified(dataset2, "history")
         await db.commit()
 
-        job = await job_factory_v2(
+        await job_factory_v2(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset2.id,
