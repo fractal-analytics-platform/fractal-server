@@ -57,10 +57,11 @@ async def test_status_legacy(
                 }
             ],
         )
-        await client.get(
+        res = await client.get(
             f"/api/v2/project/{project.id}/status-legacy/"
             f"?dataset_id={dataset2.id}&workflow_id={workflow.id}"
         )
+        assert res.status_code == 200
 
         dataset2.history.append(
             {
