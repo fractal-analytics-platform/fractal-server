@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
+from sqlmodel import update
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -38,6 +39,24 @@ def update_status_of_history_unit(
     unit.status = status
     db_sync.merge(unit)
     db_sync.commit()
+
+
+def bulk_update_status_of_history_unit(
+    *,
+    history_unit_ids: list[int],
+    status: HistoryUnitStatus,
+    db_sync: Session,
+) -> None:
+    for ind in range(0, len(history_unit_ids), _CHUNK_SIZE):
+        db_sync.execute(
+            update(HistoryUnit)
+            .where(
+                HistoryUnit.id.in_(history_unit_ids[ind : ind + _CHUNK_SIZE])
+            )
+            .values(status=status)
+        )
+        # NOTE: keeping commit within the for loop is much more efficient
+        db_sync.commit()
 
 
 def update_logfile_of_history_unit(

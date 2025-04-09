@@ -24,6 +24,9 @@ from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
+    bulk_update_status_of_history_unit,
+)
+from fractal_server.app.runner.v2.db_tools import (
     update_logfile_of_history_unit,
 )
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
@@ -555,13 +558,11 @@ class BaseSlurmRunner(BaseRunner):
         if self.is_shutdown():
             if task_type == "parallel":
                 with next(get_sync_db()) as db:
-                    # FIXME: Replace with bulk function
-                    for history_unit_id in history_unit_ids:
-                        update_status_of_history_unit(
-                            history_unit_id=history_unit_id,
-                            status=HistoryUnitStatus.FAILED,
-                            db_sync=db,
-                        )
+                    bulk_update_status_of_history_unit(
+                        history_unit_ids=history_unit_ids,
+                        status=HistoryUnitStatus.FAILED,
+                        db_sync=db,
+                    )
             results = {}
             exceptions = {
                 ind: SHUTDOWN_EXCEPTION for ind in range(len(list_parameters))
