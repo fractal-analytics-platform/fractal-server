@@ -389,6 +389,22 @@ async def test_get_history_run_units(
         )
         assert res.status_code == 404
 
+        # 422
+        wftask2 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
+            f"?workflowtask_id={wftask2.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 422
+        dataset2 = await dataset_factory_v2(project_id=project.id)
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset2.id}"
+        )
+        assert res.status_code == 422
+
         # Default pagination
         res = await client.get(
             f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
@@ -707,6 +723,33 @@ async def test_get_logs(
         )
         assert res.status_code == 200
         assert res.json() == LOGS
+
+        # Assert 422 for unit-log
+        res = await client.get(
+            f"/api/v2/project/{proj.id}/status/unit-log/"
+            f"?workflowtask_id={wftask.id}&dataset_id={ds.id}"
+            f"&history_run_id=1000&{history_unit_id=}"
+        )
+        assert res.status_code == 422
+        assert "Invalid query parameter: HistoryUnit" in res.json()["detail"]
+        ds2 = await dataset_factory_v2(project_id=proj.id)
+        wftask2 = await workflowtask_factory_v2(
+            workflow_id=wf.id, task_id=task.id
+        )
+        res = await client.get(
+            f"/api/v2/project/{proj.id}/status/unit-log/"
+            f"?workflowtask_id={wftask2.id}&dataset_id={ds.id}"
+            f"&history_run_id={history_run_id}&{history_unit_id=}"
+        )
+        assert res.status_code == 422
+        assert "Invalid query parameters: HistoryRun" in res.json()["detail"]
+        res = await client.get(
+            f"/api/v2/project/{proj.id}/status/unit-log/"
+            f"?workflowtask_id={wftask.id}&dataset_id={ds2.id}"
+            f"&history_run_id={history_run_id}&{history_unit_id=}"
+        )
+        assert res.status_code == 422
+        assert "Invalid query parameters: HistoryRun" in res.json()["detail"]
 
 
 async def test_get_history_run_dataset(
