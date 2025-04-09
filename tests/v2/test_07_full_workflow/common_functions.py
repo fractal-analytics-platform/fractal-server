@@ -249,7 +249,7 @@ async def full_workflow(
                 f"{this_prefix}/unit-log/?"
                 f"history_run_id={history_run_id}&"
                 f"history_unit_id={history_unit_id}&"
-                f"workflowtask_id={wftask0_id}&dataset_id={dataset_id}"
+                f"workflowtask_id={wftask_id}&dataset_id={dataset_id}"
             )
             res = await client.get(url)
             assert res.status_code == 200
