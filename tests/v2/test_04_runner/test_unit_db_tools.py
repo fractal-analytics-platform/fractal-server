@@ -97,7 +97,7 @@ async def test_update_status_of_history_unit(
         # Benchmark
 
         debug(
-            f"History Units:\t{num_history_units}\n"
-            f"Non bulk time:\t{non_bulk_time}\n"
-            f"Bulk time\t: {bulk_time}"
+            f"History Units:    {num_history_units}\n"
+            f"Non bulk time:    {non_bulk_time}\n"
+            f"Bulk time:        {bulk_time}\n"
         )
