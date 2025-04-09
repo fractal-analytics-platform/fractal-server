@@ -50,6 +50,7 @@ class BaseSlurmRunner(BaseRunner):
     root_dir_local: Path
     root_dir_remote: Path
     poll_interval: int
+    poll_interval_internal: float
     jobs: dict[str, SlurmJob]
     python_worker_interpreter: str
     slurm_runner_type: Literal["ssh", "sudo"]
@@ -75,6 +76,8 @@ class BaseSlurmRunner(BaseRunner):
         self.poll_interval = (
             poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
         )
+        self.poll_interval_internal = self.poll_interval / 10.0
+
         self.check_fractal_server_versions()
 
         # Create job folders. Note that the local one may or may not exist
@@ -408,6 +411,33 @@ class BaseSlurmRunner(BaseRunner):
     def job_ids(self) -> list[str]:
         return list(self.jobs.keys())
 
+    def wait_and_check_shutdown(self) -> list[str]:
+        """
+        Wait at most `self.poll_interval`, while also checking for shutdown.
+        """
+        # Sleep for `self.poll_interval`, but keep checking for shutdowns
+        start_time = time.perf_counter()
+        max_time = start_time + self.poll_interval
+        can_return = False
+        logger.debug(
+            "[wait_and_check_shutdown] "
+            f"I will wait at most {self.poll_interval} s, "
+            f"in blocks of {self.poll_interval_internal} s."
+        )
+
+        while (time.perf_counter() < max_time) or (can_return is False):
+            # Handle shutdown
+            if self.is_shutdown():
+                logger.info("[wait_and_check_shutdown] Shutdown file detected")
+                scancelled_job_ids = self.scancel_jobs()
+                logger.info(f"[wait_and_check_shutdown] {scancelled_job_ids=}")
+                return scancelled_job_ids
+            can_return = True
+            time.sleep(self.poll_interval_internal)
+
+        logger.debug("[wait_and_check_shutdown] No shutdown file detected")
+        return []
+
     def submit(
         self,
         func: callable,
@@ -494,14 +524,8 @@ class BaseSlurmRunner(BaseRunner):
 
         # Retrieval phase
         logger.info("[submit] START retrieval phase")
+        scancelled_job_ids = []
         while len(self.jobs) > 0:
-
-            # Handle shutdown
-            scancelled_job_ids = []
-            if self.is_shutdown():
-                logger.info("[submit] Shutdown file detected")
-                scancelled_job_ids = self.scancel_jobs()
-                logger.info(f"[submit] {scancelled_job_ids=}")
 
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
@@ -535,7 +559,7 @@ class BaseSlurmRunner(BaseRunner):
                             )
 
             if len(self.jobs) > 0:
-                time.sleep(self.poll_interval)
+                scancelled_job_ids = self.wait_and_check_shutdown()
 
         logger.info("[submit] END")
         return result, exception
@@ -689,17 +713,11 @@ class BaseSlurmRunner(BaseRunner):
         logger.info("[multisubmit] START retrieval phase")
         while len(self.jobs) > 0:
 
-            # Handle shutdown
-            scancelled_job_ids = []
-            if self.is_shutdown():
-                logger.info("[multisubmit] Shutdown file detected")
-                scancelled_job_ids = self.scancel_jobs()
-                logger.info(f"[multisubmit] {scancelled_job_ids=}")
-
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[multisubmit] {finished_job_ids=}")
 
+            scancelled_job_ids = []
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     logger.info(f"[multisubmit] Now process {slurm_job_id=}")
@@ -739,7 +757,10 @@ class BaseSlurmRunner(BaseRunner):
                                     db_sync=db,
                                 )
 
-            time.sleep(self.poll_interval)
+            if len(self.jobs) > 0:
+                scancelled_job_ids = self.wait_and_check_shutdown()
+
+        logger.info("[multisubmit] END")
         return results, exceptions
 
     def check_fractal_server_versions(self) -> None:
