@@ -450,6 +450,29 @@ async def get_history_unit_log(
         db=db,
     )
 
+    if history_unit.history_run_id != history_run_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Invalid query parameter: HistoryUnit[{history_unit_id}] "
+                f"is not related to HistoryRun[{history_run_id}]"
+            ),
+        )
+    history_run = await get_history_run_or_404(
+        history_run_id=history_run_id, db=db
+    )
+    if (
+        history_run.dataset_id != dataset_id
+        or history_run.workflowtask_id != workflowtask_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Invalid query parameters: HistoryRun[{history_run_id}] is "
+                f"not related to {dataset_id=} and {workflowtask_id=}."
+            ),
+        )
+
     # Get log or placeholder text
     log = read_log_file(
         logfile=history_unit.logfile,
