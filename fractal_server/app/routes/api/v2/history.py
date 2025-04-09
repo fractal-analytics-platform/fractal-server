@@ -199,7 +199,20 @@ async def get_history_run_units(
     )
 
     # Check that `HistoryRun` exists
-    await get_history_run_or_404(history_run_id=history_run_id, db=db)
+    history_run = await get_history_run_or_404(
+        history_run_id=history_run_id, db=db
+    )
+    if (
+        history_run.dataset_id != dataset_id
+        or history_run.workflowtask_id != workflowtask_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Invalid query parameter: HistoryRun[{history_run_id}] is "
+                f"not related to {dataset_id=} and {workflowtask_id=}."
+            ),
+        )
 
     # Count `HistoryUnit`s
     stmt = select(func.count(HistoryUnit.id)).where(
