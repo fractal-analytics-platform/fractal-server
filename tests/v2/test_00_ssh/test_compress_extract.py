@@ -17,7 +17,7 @@ def create_test_files(path: Path):
     (path / "file_in_name.pickle").write_text("Exclude this pickle")
 
 
-def test_compress_folder_without_filelist(tmp_path):
+def test_compress_and_extract_without_filelist(tmp_path):
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
 
@@ -58,7 +58,7 @@ def test_compress_folder_without_filelist(tmp_path):
     assert (extracted_path / "subfolder/file_in_name.pickle").exists()
 
 
-def test_compress_folder_with_filelist(tmp_path):
+def test_compress_and_extract_with_filelist(tmp_path):
 
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
@@ -108,7 +108,7 @@ def test_compress_folder_with_filelist(tmp_path):
     assert not (extracted_path / "subfolder/file_in_name.pickle").exists()
 
 
-def test_compress_folder_tar_failure(tmp_path):
+def test_compress_folder_failure(tmp_path):
 
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
@@ -123,6 +123,11 @@ def test_compress_folder_tar_failure(tmp_path):
     assert not tarfile_path.exists()
 
 
+def test_extract_archive_failure(tmp_path: Path):
+    with pytest.raises(SystemExit, match="Missing file"):
+        extract_archive(tmp_path / "missing.tar.gz")
+
+
 def test_main_compress_success(tmp_path):
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
@@ -130,7 +135,16 @@ def test_main_compress_success(tmp_path):
     main_compress(test_argv)
 
 
-def test_main_invalid_arguments():
+def test_main_extract_success(tmp_path):
+    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
+    subfolder_path = tmp_path / "subfolder"
+    create_test_files(subfolder_path)
+    compress_folder(subfolder_path, filelist_path=None)
+    test_argv = ["extract_archive", str(tarfile_path)]
+    main_extract(test_argv)
+
+
+def test_main_compress_invalid_arguments():
 
     with pytest.raises(SystemExit):
         main_compress([])
@@ -148,16 +162,7 @@ def test_main_invalid_arguments():
         main_compress(["compress_folder", "arg1", "arg2", "arg3"])
 
 
-def test_main_extract_success(tmp_path):
-    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
-    subfolder_path = tmp_path / "subfolder"
-    create_test_files(subfolder_path)
-    compress_folder(subfolder_path, filelist_path=None)
-    test_argv = ["extract_archive", str(tarfile_path)]
-    main_extract(test_argv)
-
-
-def test_main_failures():
+def test_main_extract_invalid_arguments():
     """
     Test failures in `extract_archive.main` function.
     """
@@ -170,8 +175,3 @@ def test_main_failures():
     # Argument does not end with ".tar.gz"
     with pytest.raises(SystemExit, match="Invalid argument"):
         main_extract(["dummy", "/tmp"])
-
-
-def test_extract_archive_failure(tmp_path: Path):
-    with pytest.raises(SystemExit, match="Missing file"):
-        extract_archive(tmp_path / "missing.tar.gz")
