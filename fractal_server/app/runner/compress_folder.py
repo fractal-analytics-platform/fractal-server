@@ -12,6 +12,7 @@ when handling files which were just created within a SLURM job, and in the
 context of a CephFS filesystem.
 """
 import sys
+import time
 from pathlib import Path
 
 from fractal_server.app.runner.run_subprocess import run_subprocess
@@ -20,10 +21,13 @@ from fractal_server.logger import set_logger
 
 
 def _copy_subfolder(src: Path, dest: Path, logger_name: str):
+    t_start = time.perf_counter()
     cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
     logger = get_logger(logger_name=logger_name)
     logger.debug(f"{cmd_cp=}")
     res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
+    elapsed = time.perf_counter() - t_start
+    logger.debug(f"[_copy_subfolder] {elapsed=} s ({dest=})")
     return res
 
 
@@ -34,6 +38,8 @@ def _create_tar_archive(
     remote_to_local: bool,
 ):
     logger = get_logger(logger_name)
+    logger.debug(f"[_create_tar_archive] START ({tarfile_path.as_posix()})")
+    t_start = time.perf_counter()
 
     if remote_to_local:
         exclude_options = "--exclude *sbatch --exclude *_in_*.pickle "
@@ -48,16 +54,25 @@ def _create_tar_archive(
     )
     logger.debug(f"cmd tar:\n{cmd_tar}")
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
+    elapsed = time.perf_counter() - t_start
+    logger.debug(
+        f"[_create_tar_archive] END {elapsed=} s ({tarfile_path.as_posix()})"
+    )
 
 
 def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     logger = get_logger(logger_name)
+    t_start = time.perf_counter()
     try:
         cmd_rm = f"rm -r {subfolder_path_tmp_copy}"
         logger.debug(f"cmd rm:\n{cmd_rm}")
         run_subprocess(cmd=cmd_rm, logger_name=logger_name, allow_char="*")
     except Exception as e:
         logger.debug(f"ERROR during {cmd_rm}: {e}")
+    elapsed = time.perf_counter() - t_start
+    logger.debug(
+        f"[_copy_subfolder] {elapsed=} s ({subfolder_path_tmp_copy=})"
+    )
 
 
 def compress_folder(
