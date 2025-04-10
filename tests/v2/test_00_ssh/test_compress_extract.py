@@ -17,15 +17,16 @@ def create_test_files(path: Path):
     (path / "file_in_name.pickle").write_text("Exclude this pickle")
 
 
-def test_compress_and_extract_without_filelist(tmp_path):
+def test_compress_and_extract_without_filelist(tmp_path: Path):
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
-
-    compress_folder(subfolder_path, filelist_path=None)
-    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
     extracted_path = Path(f"{tmp_path}/extracted")
     (extracted_path / "subfolder").mkdir(parents=True)
+    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
     new_tarfile_path = extracted_path / "subfolder.tar.gz"
+
+    # First run (without overwrite)
+    compress_folder(subfolder_path, filelist_path=None)
     shutil.copy(tarfile_path, new_tarfile_path)
     extract_archive(new_tarfile_path)
 
@@ -37,14 +38,11 @@ def test_compress_and_extract_without_filelist(tmp_path):
     assert (extracted_path / "subfolder/job.sbatch").exists()
     assert (extracted_path / "subfolder/file_in_name.pickle").exists()
 
-    # Overwrite
-
+    # Create new file
     (subfolder_path / "file3.txt").write_text("File 2")
 
+    # Second run (with overwrite)
     compress_folder(subfolder_path, filelist_path=None)
-    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
-    extracted_path = Path(f"{tmp_path}/extracted")
-    new_tarfile_path = extracted_path / "subfolder.tar.gz"
     shutil.copy(tarfile_path, new_tarfile_path)
     extract_archive(new_tarfile_path)
 
@@ -58,10 +56,14 @@ def test_compress_and_extract_without_filelist(tmp_path):
     assert (extracted_path / "subfolder/file_in_name.pickle").exists()
 
 
-def test_compress_and_extract_with_filelist(tmp_path):
+def test_compress_and_extract_with_filelist(tmp_path: Path):
 
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
+    extracted_path = Path(f"{tmp_path}/extracted")
+    new_tarfile_path = extracted_path / "subfolder.tar.gz"
+    (extracted_path / "subfolder").mkdir(parents=True)
+    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
 
     filelist_path = (subfolder_path / "filelist.txt").as_posix()
     with open(filelist_path, "w") as f:
@@ -69,11 +71,8 @@ def test_compress_and_extract_with_filelist(tmp_path):
         f.write("file2.txt\n")
         f.write("missing.txt\n")
 
+    # First run (without overwrite)
     compress_folder(subfolder_path, filelist_path=filelist_path)
-    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
-    extracted_path = Path(f"{tmp_path}/extracted")
-    new_tarfile_path = extracted_path / "subfolder.tar.gz"
-    (extracted_path / "subfolder").mkdir(parents=True)
     shutil.copy(tarfile_path, new_tarfile_path)
     extract_archive(new_tarfile_path)
 
@@ -85,16 +84,13 @@ def test_compress_and_extract_with_filelist(tmp_path):
     assert not (extracted_path / "subfolder/job.sbatch").exists()
     assert not (extracted_path / "subfolder/file_in_name.pickle").exists()
 
-    # Overwrite
-
+    # Create new file and update filelist
     (subfolder_path / "file3.txt").write_text("File 2")
     with open(filelist_path, "a") as f:
         f.write("file3.txt\n")
 
+    # Second run (with overwrite)
     compress_folder(subfolder_path, filelist_path=filelist_path)
-    tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
-    extracted_path = Path(f"{tmp_path}/extracted")
-    new_tarfile_path = extracted_path / "subfolder.tar.gz"
     shutil.copy(tarfile_path, new_tarfile_path)
     extract_archive(new_tarfile_path)
 
@@ -108,18 +104,13 @@ def test_compress_and_extract_with_filelist(tmp_path):
     assert not (extracted_path / "subfolder/file_in_name.pickle").exists()
 
 
-def test_compress_folder_failure(tmp_path):
+def test_compress_folder_failure(tmp_path: Path):
 
-    subfolder_path = tmp_path / "subfolder"
-    create_test_files(subfolder_path)
-
-    invalid_subfolder_path = Path(f"{tmp_path} / non_existent_subfolder")
+    invalid_subfolder_path = tmp_path / "non_existent_subfolder"
+    tarfile_path = tmp_path / "non_existent_subfolder.tar.gz"
 
     with pytest.raises(SystemExit):
         compress_folder(invalid_subfolder_path, filelist_path=None)
-    tarfile_path = Path(
-        f"{invalid_subfolder_path} / non_existent_subfolder.tar.gz"
-    )
     assert not tarfile_path.exists()
 
 
@@ -128,19 +119,19 @@ def test_extract_archive_failure(tmp_path: Path):
         extract_archive(tmp_path / "missing.tar.gz")
 
 
-def test_main_compress_success(tmp_path):
+def test_main_compress_success(tmp_path: Path):
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
-    test_argv = ["compress_folder", str(subfolder_path)]
+    test_argv = ["compress_folder", subfolder_path.as_posix()]
     main_compress(test_argv)
 
 
-def test_main_extract_success(tmp_path):
+def test_main_extract_success(tmp_path: Path):
     tarfile_path = Path(f"{tmp_path}/subfolder.tar.gz")
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
     compress_folder(subfolder_path, filelist_path=None)
-    test_argv = ["extract_archive", str(tarfile_path)]
+    test_argv = ["extract_archive", tarfile_path.as_posix()]
     main_extract(test_argv)
 
 
@@ -150,28 +141,21 @@ def test_main_compress_invalid_arguments():
         main_compress([])
 
     with pytest.raises(SystemExit):
-        main_compress(["missing_command"])
-
-    with pytest.raises(SystemExit):
         main_compress(["compress_folder"])
 
     with pytest.raises(SystemExit):
-        main_compress(["compress_folder", "arg1", "arg2"])
+        main_compress(["compress_folder", "/path", "arg2"])
 
     with pytest.raises(SystemExit):
-        main_compress(["compress_folder", "arg1", "arg2", "arg3"])
+        main_compress(["compress_folder", "/path", "arg2", "arg3"])
 
 
 def test_main_extract_invalid_arguments():
-    """
-    Test failures in `extract_archive.main` function.
-    """
-    # Too many arguments
+    with pytest.raises(SystemExit):
+        main_extract([])
     with pytest.raises(SystemExit, match="Invalid argument"):
-        main_extract(["dummy", "/arg1.tar.gz", "/arg2.tar.gz"])
-    # Too few arguments
+        main_extract(["extract_archive"])
     with pytest.raises(SystemExit, match="Invalid argument"):
-        main_extract(["dummy"])
-    # Argument does not end with ".tar.gz"
+        main_extract(["extract_archive", "/arg1.tar.gz", "/arg2.tar.gz"])
     with pytest.raises(SystemExit, match="Invalid argument"):
-        main_extract(["dummy", "/tmp"])
+        main_extract(["extract_archive", "/tmp.txt"])
