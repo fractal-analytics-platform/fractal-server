@@ -41,6 +41,7 @@ def _create_tar_archive(
     logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
     t_start = time.perf_counter()
 
+    # FIXME: what happens if we skip this check?
     if Path(tarfile_path).exists():
         logger.debug(f"Removing {tarfile_path}")
         Path(tarfile_path).unlink()

@@ -59,8 +59,90 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
 
     def _copy_files_from_remote_to_local(self, slurm_job: SlurmJob) -> None:
+        t_0 = time.perf_counter()
+        logger.debug("[_get_subfolder_sftp] Start")
 
-        self._get_subfolder_sftp(slurm_job=slurm_job)
+        # FIXME: Clean up and review comments
+
+        # Create file list
+        sources = [
+            slurm_job.slurm_stdout_remote,
+            slurm_job.slurm_stderr_remote,
+        ]
+        for task in slurm_job.tasks:
+            sources.extend(
+                [
+                    task.output_pickle_file_remote,
+                    task.task_files.log_file_remote,
+                    task.task_files.args_file_remote,
+                    task.task_files.metadiff_file_remote,
+                ]
+            )
+        sources_string = "\n".join(sources) + "\n"
+        label = f"{hash(sources_string)}_{time.time()}"
+
+        tmp_filelist_path = (
+            slurm_job.workdir_remote / f"tmp_{label}_filelist.txt"
+        ).as_posix()
+        self.fractal_ssh.write_remote_file(
+            path=tmp_filelist_path,
+            content=sources_string,
+        )
+        logger.debug(
+            "[_get_subfolder_sftp] "
+            f"File list of {len(sources)} files written "
+            f"to {tmp_filelist_path}."
+        )
+
+        # FIXME: Make this customizable (currently it is hard-coded in
+        # the compress-folder module)
+        tarfile_path_local = (
+            slurm_job.workdir_local.parent
+            / f"{slurm_job.workdir_local.name}.tar.gz"
+        ).as_posix()
+        tarfile_path_remote = (
+            slurm_job.workdir_remote.parent
+            / f"{slurm_job.workdir_remote.name}.tar.gz"
+        ).as_posix()
+
+        # Create remote tarfile
+        t_0_tar = time.perf_counter()
+        tar_command = (
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.compress_folder "
+            f"{slurm_job.workdir_remote.as_posix()} "
+            f"--filelist {tmp_filelist_path}"
+        )
+        self.fractal_ssh.run_command(cmd=tar_command)
+        t_1_tar = time.perf_counter()
+        logger.info(
+            f"Remote archive {tarfile_path_remote} created"
+            f" - elapsed: {t_1_tar - t_0_tar:.3f} s"
+        )
+
+        # Fetch tarfile
+        t_0_get = time.perf_counter()
+        self.fractal_ssh.fetch_file(
+            remote=tarfile_path_remote,
+            local=tarfile_path_local,
+        )
+        t_1_get = time.perf_counter()
+        logger.info(
+            f"Subfolder archive transferred back to {tarfile_path_local}"
+            f" - elapsed: {t_1_get - t_0_get:.3f} s"
+        )
+
+        # Extract tarfile locally
+        extract_archive(Path(tarfile_path_local))
+
+        # Remove local tarfile
+        Path(tarfile_path_local).unlink(missing_ok=True)
+
+        # FIXME: Remove remote tarfile
+        # FIXME: Remove remote filelist?
+
+        t_1 = time.perf_counter()
+        logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
 
     def _put_subfolder_sftp(self, job: SlurmJob) -> None:
         # FIXME re-introduce use of this function, but only after splitting
@@ -103,94 +185,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
             f"{tarfile_path_remote}"
         )
         self.fractal_ssh.run_command(cmd=tar_command)
-
-    def _get_subfolder_sftp(self, slurm_job: SlurmJob) -> None:
-        """
-        Fetch a remote folder via tar+sftp+tar
-        """
-
-        t_0 = time.perf_counter()
-        logger.debug("[_get_subfolder_sftp] Start")
-
-        # Create file list
-        sources = [
-            slurm_job.slurm_stdout_remote,
-            slurm_job.slurm_stderr_remote,
-        ]
-        for task in slurm_job.tasks:
-            sources.extend(
-                [
-                    task.output_pickle_file_remote,
-                    task.task_files.log_file_remote,
-                    task.task_files.args_file_remote,
-                    task.task_files.metadiff_file_remote,
-                ]
-            )
-        sources_string = "\n".join(sources) + "\n"
-        label = f"{hash(sources_string)}_{time.time()}"
-        logger.debug(
-            "[_get_subfolder_sftp] "
-            f"Created file list of {len(sources)} source files."
-        )
-
-        tmp_filelist_path = (
-            slurm_job.workdir_remote / f"tmp_{label}_filelist.txt"
-        ).as_posix()
-        self.fractal_ssh.write_remote_file(
-            path=tmp_filelist_path,
-            content=sources_string,
-        )
-
-        # FIXME: Make this customizable (currently it is hard-coded in
-        # the compress-folder module)
-        tarfile_path_local = (
-            slurm_job.workdir_local.parent / f"{slurm_job.workdir_local.name}"
-            ".tar.gz"
-        ).as_posix()
-        tarfile_path_remote = (
-            slurm_job.workdir_remote.parent
-            / f"{slurm_job.workdir_remote.name}"
-            ".tar.gz"
-        ).as_posix()
-
-        # Create remote tarfile
-        t_0_tar = time.perf_counter()
-        tar_command = (
-            f"{self.python_worker_interpreter} "
-            "-m fractal_server.app.runner.compress_folder "
-            f"{slurm_job.workdir_remote.as_posix()} "
-            f"--filelist {tmp_filelist_path}"
-        )
-        self.fractal_ssh.run_command(cmd=tar_command)
-        t_1_tar = time.perf_counter()
-        logger.info(
-            f"Remote archive {tarfile_path_remote} created"
-            f" - elapsed: {t_1_tar - t_0_tar:.3f} s"
-        )
-
-        # Fetch tarfile
-        t_0_get = time.perf_counter()
-        self.fractal_ssh.fetch_file(
-            remote=tarfile_path_remote,
-            local=tarfile_path_local,
-        )
-        t_1_get = time.perf_counter()
-        logger.info(
-            f"Subfolder archive transferred back to {tarfile_path_local}"
-            f" - elapsed: {t_1_get - t_0_get:.3f} s"
-        )
-
-        # Extract tarfile locally
-        extract_archive(Path(tarfile_path_local))
-
-        # Remove local tarfile
-        Path(tarfile_path_local).unlink(missing_ok=True)
-
-        # FIXME: Remove remote tarfile
-        # FIXME: Remove remote filelist?
-
-        t_1 = time.perf_counter()
-        logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
 
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
