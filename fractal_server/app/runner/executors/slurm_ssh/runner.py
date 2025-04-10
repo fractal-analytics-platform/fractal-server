@@ -78,7 +78,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
                     task.task_files.metadiff_file_remote,
                 ]
             )
-        sources_string = "\n".join(sources) + "\n"
+        sources_string = (
+            "\n".join([Path(source).name for source in sources]) + "\n"
+        )
         label = f"{time.time()}_{hash(sources_string)}"
 
         tmp_filelist_path = (
@@ -155,7 +157,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
         """
 
         # Create local archive
-        tarfile_path_local = compress_folder(job.workdir_local)
+        tarfile_path_local = compress_folder(
+            job.workdir_local,
+            filelist_path=None,
+        )
         tarfile_name = Path(tarfile_path_local).name
         logger.info(f"Subfolder archive created at {tarfile_path_local}")
 

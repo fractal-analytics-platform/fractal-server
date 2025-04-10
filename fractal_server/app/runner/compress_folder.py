@@ -41,23 +41,19 @@ def _create_tar_archive(
     logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
     t_start = time.perf_counter()
 
-    # FIXME: what happens if we skip this check?
-    # FIXME: use test_compress_folder_success_with_overwrite
-    if Path(tarfile_path).exists():
-        logger.debug(f"Removing {tarfile_path}")
-        Path(tarfile_path).unlink()
-
-    if filelist_path is not None:
-        exclude_options = f"--files-from {filelist_path} --ignore-failed-read"
+    if filelist_path is None:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            "."
+        )
     else:
-        exclude_options = ""
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            f"--files-from={filelist_path} --ignore-failed-read"
+        )
 
-    cmd_tar = (
-        f"tar czf {tarfile_path} "
-        f"{exclude_options} "
-        f"--directory={subfolder_path_tmp_copy.as_posix()} "
-        "."
-    )
     logger.critical(f"cmd tar:\n{cmd_tar}")
 
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
