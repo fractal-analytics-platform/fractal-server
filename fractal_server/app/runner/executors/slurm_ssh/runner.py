@@ -126,19 +126,30 @@ class SlurmSSHRunner(BaseSlurmRunner):
                     task.task_files.metadiff_file_remote,
                 ]
             )
-        _hash = hash((tuple(sources), time.perf_counter()))
-        logger.critical(  # FIXME
-            f"[_get_subfolder_sftp] Created file list of {len(sources)} source files."
+        sources_string = "\n".join(sources) + "\n"
+        label = f"{hash(sources_string)}_{time.time()}"
+        logger.debug(
+            "[_get_subfolder_sftp] "
+            f"Created file list of {len(sources)} source files."
         )
 
+        tmp_filelist_path = (
+            slurm_job.workdir_remote / f"tmp_{label}_filelist.txt"
+        ).as_posix()
+        self.fractal_ssh.write_remote_file(
+            path=tmp_filelist_path,
+            content=sources_string,
+        )
+
+        # FIXME: Make this customizable (currently it is hard-coded in
+        # the compress-folder module)
         tarfile_path_local = (
-            slurm_job.workdir_local.parent
-            / f"{slurm_job.workdir_local.name}_{_hash}"
+            slurm_job.workdir_local.parent / f"{slurm_job.workdir_local.name}"
             ".tar.gz"
         ).as_posix()
         tarfile_path_remote = (
             slurm_job.workdir_remote.parent
-            / f"{slurm_job.workdir_remote.name}_{_hash}"
+            / f"{slurm_job.workdir_remote.name}"
             ".tar.gz"
         ).as_posix()
 
@@ -148,7 +159,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             f"{self.python_worker_interpreter} "
             "-m fractal_server.app.runner.compress_folder "
             f"{slurm_job.workdir_remote.as_posix()} "
-            "--remote-to-local"
+            f"--filelist {tmp_filelist_path}"
         )
         self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
@@ -174,6 +185,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Remove local tarfile
         Path(tarfile_path_local).unlink(missing_ok=True)
+
+        # FIXME: Remove remote tarfile
+        # FIXME: Remove remote filelist?
 
         t_1 = time.perf_counter()
         logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
