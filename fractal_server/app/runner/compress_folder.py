@@ -11,7 +11,6 @@ built-in `tarfile` library has to do with performance issues we observed
 when handling files which were just created within a SLURM job, and in the
 context of a CephFS filesystem.
 """
-import shutil
 import sys
 from pathlib import Path
 
@@ -54,10 +53,11 @@ def create_tar_archive(
 def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     logger = get_logger(logger_name)
     try:
-        logger.debug(f"Now remove {subfolder_path_tmp_copy}")
-        shutil.rmtree(subfolder_path_tmp_copy)
+        cmd_rm = f"rm -r {subfolder_path_tmp_copy}"
+        logger.debug(f"cmd rm:\n{cmd_rm}")
+        run_subprocess(cmd=cmd_rm, logger_name=logger_name, allow_char="*")
     except Exception as e:
-        logger.debug(f"ERROR during shutil.rmtree: {e}")
+        logger.debug(f"ERROR during {cmd_rm}: {e}")
 
 
 def compress_folder(
