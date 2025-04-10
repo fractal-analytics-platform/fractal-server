@@ -37,7 +37,7 @@ def test_compress_folder_success_local_to_remote(tmp_path):
 
 
 @pytest.mark.xfail
-def test_compress_folder_success_remote_to_local(tmp_path):
+def test_compress_folder_success_with_filelist(tmp_path):  # FIXME missing
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
 

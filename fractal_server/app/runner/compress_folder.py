@@ -42,6 +42,7 @@ def _create_tar_archive(
     t_start = time.perf_counter()
 
     # FIXME: what happens if we skip this check?
+    # FIXME: use test_compress_folder_success_with_overwrite
     if Path(tarfile_path).exists():
         logger.debug(f"Removing {tarfile_path}")
         Path(tarfile_path).unlink()
