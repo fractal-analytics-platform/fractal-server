@@ -64,7 +64,7 @@ def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     logger = get_logger(logger_name)
     t_start = time.perf_counter()
     try:
-        cmd_rm = f"rm -r {subfolder_path_tmp_copy}"
+        cmd_rm = f"rm -rf {subfolder_path_tmp_copy}"
         logger.debug(f"cmd rm:\n{cmd_rm}")
         run_subprocess(cmd=cmd_rm, logger_name=logger_name, allow_char="*")
     except Exception as e:
