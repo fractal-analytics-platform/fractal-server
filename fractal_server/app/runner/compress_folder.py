@@ -27,18 +27,18 @@ def _copy_subfolder(src: Path, dest: Path, logger_name: str):
     logger.debug(f"{cmd_cp=}")
     res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
     elapsed = time.perf_counter() - t_start
-    logger.debug(f"[_copy_subfolder] {elapsed=} s ({dest=})")
+    logger.debug(f"[_copy_subfolder] END {elapsed=} s ({dest.as_posix()})")
     return res
 
 
 def _create_tar_archive(
-    tarfile_path: Path,
+    tarfile_path: str,
     subfolder_path_tmp_copy: Path,
     logger_name: str,
     remote_to_local: bool,
 ):
     logger = get_logger(logger_name)
-    logger.debug(f"[_create_tar_archive] START ({tarfile_path.as_posix()})")
+    logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
     t_start = time.perf_counter()
 
     if remote_to_local:
@@ -55,9 +55,7 @@ def _create_tar_archive(
     logger.debug(f"cmd tar:\n{cmd_tar}")
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
     elapsed = time.perf_counter() - t_start
-    logger.debug(
-        f"[_create_tar_archive] END {elapsed=} s ({tarfile_path.as_posix()})"
-    )
+    logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
 
 
 def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
@@ -71,7 +69,8 @@ def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
         logger.debug(f"ERROR during {cmd_rm}: {e}")
     elapsed = time.perf_counter() - t_start
     logger.debug(
-        f"[_copy_subfolder] {elapsed=} s ({subfolder_path_tmp_copy=})"
+        f"[_remove_temp_subfolder] END {elapsed=} s "
+        f"({subfolder_path_tmp_copy=})"
     )
 
 
@@ -107,7 +106,9 @@ def compress_folder(
     )
     try:
         _copy_subfolder(
-            subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
+            subfolder_path,
+            subfolder_path_tmp_copy,
+            logger_name=logger_name,
         )
         _create_tar_archive(
             tarfile_path,
