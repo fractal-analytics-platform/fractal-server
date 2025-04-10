@@ -79,10 +79,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
                 ]
             )
         sources_string = "\n".join(sources) + "\n"
-        label = f"{hash(sources_string)}_{time.time()}"
+        label = f"{time.time()}_{hash(sources_string)}"
 
         tmp_filelist_path = (
-            slurm_job.workdir_remote / f"tmp_{label}_filelist.txt"
+            slurm_job.workdir_remote / f"filelist_{label}.txt"
         ).as_posix()
         self.fractal_ssh.write_remote_file(
             path=tmp_filelist_path,
