@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any
 from typing import Optional
 
@@ -92,7 +93,7 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
-    response = {}
+    response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
         res = await db.execute(
             select(HistoryRun)
@@ -130,7 +131,18 @@ async def get_workflow_tasks_statuses(
                 f"num_{target_status.value}_images"
             ] = num_images
 
-    return JSONResponse(content=response, status_code=200)
+    new_response = deepcopy(response)
+    for key, value in response.items():
+        if value is not None:
+            num_total_images = sum(
+                value[f"num_{target_status.value}_images"]
+                for target_status in HistoryUnitStatus
+            )
+            if num_total_images > value["num_available_images"]:
+                value["num_available_images"] = None
+        new_response[key] = value
+
+    return JSONResponse(content=new_response, status_code=200)
 
 
 @router.get("/project/{project_id}/status/run/")

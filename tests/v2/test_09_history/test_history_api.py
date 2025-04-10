@@ -117,6 +117,27 @@ async def test_status_api(
             str(wftask2.id): None,
         }
 
+        # Invalid `num_available_images`
+        run1.num_available_images = 2
+        db.add(run1)
+        await db.commit()
+        db.expunge_all()
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        assert res.json() == {
+            "1": {
+                "status": "submitted",
+                "num_available_images": None,
+                "num_submitted_images": 1,
+                "num_done_images": 1,
+                "num_failed_images": 1,
+            },
+            "2": None,
+        }
+
 
 @pytest.mark.parametrize(
     "object_to_delete",
