@@ -19,7 +19,7 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 
 
-def copy_subfolder(src: Path, dest: Path, logger_name: str):
+def _copy_subfolder(src: Path, dest: Path, logger_name: str):
     cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
     logger = get_logger(logger_name=logger_name)
     logger.debug(f"{cmd_cp=}")
@@ -27,7 +27,7 @@ def copy_subfolder(src: Path, dest: Path, logger_name: str):
     return res
 
 
-def create_tar_archive(
+def _create_tar_archive(
     tarfile_path: Path,
     subfolder_path_tmp_copy: Path,
     logger_name: str,
@@ -50,7 +50,7 @@ def create_tar_archive(
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
 
 
-def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
+def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     logger = get_logger(logger_name)
     try:
         cmd_rm = f"rm -r {subfolder_path_tmp_copy}"
@@ -91,10 +91,10 @@ def compress_folder(
         subfolder_path.parent / f"{subfolder_path.name}_copy"
     )
     try:
-        copy_subfolder(
+        _copy_subfolder(
             subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
         )
-        create_tar_archive(
+        _create_tar_archive(
             tarfile_path,
             subfolder_path_tmp_copy,
             logger_name=logger_name,
@@ -107,7 +107,9 @@ def compress_folder(
         sys.exit(1)
 
     finally:
-        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger_name)
+        _remove_temp_subfolder(
+            subfolder_path_tmp_copy, logger_name=logger_name
+        )
 
 
 def main(sys_argv: list[str]):
