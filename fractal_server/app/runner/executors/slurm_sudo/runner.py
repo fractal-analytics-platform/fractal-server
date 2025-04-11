@@ -67,10 +67,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
         self.slurm_account = slurm_account
         settings = Inject(get_settings)
 
-        self.python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
-
         super().__init__(
             slurm_runner_type="sudo",
             root_dir_local=root_dir_local,
@@ -78,6 +74,9 @@ class SudoSlurmRunner(BaseSlurmRunner):
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
+            python_worker_interpreter=(
+                settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
+            ),
         )
 
     def _mkdir_local_folder(self, folder: str) -> None:

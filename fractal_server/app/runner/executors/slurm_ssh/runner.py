@@ -38,7 +38,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         logger.warning(self.fractal_ssh)
 
         settings = Inject(get_settings)
-        self.python_worker_interpreter = settings.FRACTAL_SLURM_WORKER_PYTHON
 
         super().__init__(
             slurm_runner_type="ssh",
@@ -47,6 +46,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
+            python_worker_interpreter=settings.FRACTAL_SLURM_WORKER_PYTHON,
         )
 
     def _mkdir_local_folder(self, folder: str) -> None:
@@ -77,18 +77,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
 
         # Extract `workdir_remote` and `workdir_local`
-        set_workdir_local = set(
-            _job.workdir_local for _job in finished_slurm_jobs
-        )
-        set_workdir_remote = set(
-            _job.workdir_remote for _job in finished_slurm_jobs
-        )
-        if max(len(set_workdir_local), len(set_workdir_remote)) > 1:
-            raise
-            #     # Raise consistency error
-            #     logger.error("FIXME")
-        workdir_remote = set_workdir_remote.pop()
-        workdir_local = set_workdir_local.pop()
+        self.validate_slurm_jobs_workdirs(finished_slurm_jobs)
+        workdir_local = finished_slurm_jobs[0].workdir_local
+        workdir_remote = finished_slurm_jobs[0].workdir_remote
 
         # Define local/remote tarfile paths
         tarfile_path_local = (

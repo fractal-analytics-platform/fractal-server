@@ -60,6 +60,7 @@ class BaseSlurmRunner(BaseRunner):
         root_dir_local: Path,
         root_dir_remote: Path,
         slurm_runner_type: Literal["ssh", "sudo"],
+        python_worker_interpreter: str,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
         poll_interval: Optional[int] = None,
@@ -70,6 +71,7 @@ class BaseSlurmRunner(BaseRunner):
         self.common_script_lines = common_script_lines or []
         self._check_slurm_account()
         self.user_cache_dir = user_cache_dir
+        self.python_worker_interpreter = python_worker_interpreter
 
         settings = Inject(get_settings)
 
@@ -822,3 +824,19 @@ class BaseSlurmRunner(BaseRunner):
                 )
         logger.info("[scancel_jobs] END")
         return scancelled_job_ids
+
+    def validate_slurm_jobs_workdirs(
+        self,
+        slurm_jobs: list[SlurmJob],
+    ) -> None:
+        """
+        Check that a list of `SlurmJob`s have homogeneous working folders.
+        """
+        # Extract `workdir_remote` and `workdir_local`
+        set_workdir_local = set(_job.workdir_local for _job in slurm_jobs)
+        set_workdir_remote = set(_job.workdir_remote for _job in slurm_jobs)
+
+        if len(set_workdir_local) > 1:
+            raise ValueError(f"Non-unique values in {set_workdir_local=}.")
+        if len(set_workdir_remote) > 1:
+            raise ValueError(f"Non-unique values in {set_workdir_remote=}.")
