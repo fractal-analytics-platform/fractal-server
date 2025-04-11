@@ -171,50 +171,51 @@ class SlurmSSHRunner(BaseSlurmRunner):
         t_1 = time.perf_counter()
         logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
 
-    def _put_subfolder_sftp(self, job: SlurmJob) -> None:
-        # FIXME re-introduce use of this function, but only after splitting
-        # submission logic into
+    def _send_inputs(self, jobs: list[SlurmJob]) -> None:
+        # FIXME re-introduce this function
+        # Note that submission logic must be split into
         # 1. prepare all
         # 2. send folder
-        # 3. submit all
+        # 3. submit all (with sleeps?)
         """
         Transfer the jobs subfolder to the remote host.
         """
+        for job in jobs:
 
-        # Create local archive
-        tarfile_path_local = compress_folder(
-            job.workdir_local,
-            filelist_path=None,
-        )
-        tarfile_name = Path(tarfile_path_local).name
-        logger.info(f"Subfolder archive created at {tarfile_path_local}")
+            # Create local archive
+            tarfile_path_local = compress_folder(
+                job.workdir_local,
+                filelist_path=None,
+            )
+            tarfile_name = Path(tarfile_path_local).name
+            logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
-        # Transfer archive
-        tarfile_path_remote = (
-            job.workdir_remote.parent / tarfile_name
-        ).as_posix()
-        t_0_put = time.perf_counter()
-        self.fractal_ssh.send_file(
-            local=tarfile_path_local,
-            remote=tarfile_path_remote,
-        )
-        t_1_put = time.perf_counter()
-        logger.info(
-            f"Subfolder archive transferred to {tarfile_path_remote}"
-            f" - elapsed: {t_1_put - t_0_put:.3f} s"
-        )
+            # Transfer archive
+            tarfile_path_remote = (
+                job.workdir_remote.parent / tarfile_name
+            ).as_posix()
+            t_0_put = time.perf_counter()
+            self.fractal_ssh.send_file(
+                local=tarfile_path_local,
+                remote=tarfile_path_remote,
+            )
+            t_1_put = time.perf_counter()
+            logger.info(
+                f"Subfolder archive transferred to {tarfile_path_remote}"
+                f" - elapsed: {t_1_put - t_0_put:.3f} s"
+            )
 
-        # Remove local archive
-        Path(tarfile_path_local).unlink()
-        logger.debug(f"Local archive {tarfile_path_local} removed")
+            # Remove local archive
+            Path(tarfile_path_local).unlink()
+            logger.debug(f"Local archive {tarfile_path_local} removed")
 
-        # Uncompress remote archive
-        tar_command = (
-            f"{self.python_worker_interpreter} -m "
-            "fractal_server.app.runner.extract_archive "
-            f"{tarfile_path_remote}"
-        )
-        self.fractal_ssh.run_command(cmd=tar_command)
+            # Uncompress remote archive
+            tar_command = (
+                f"{self.python_worker_interpreter} -m "
+                "fractal_server.app.runner.extract_archive "
+                f"{tarfile_path_remote}"
+            )
+            self.fractal_ssh.run_command(cmd=tar_command)
 
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
