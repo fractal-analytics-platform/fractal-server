@@ -653,7 +653,9 @@ class BaseSlurmRunner(BaseRunner):
         if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
-        logger.info(f"START submission phase, {list(self.jobs.keys())=}")
+        # Part 1/3: Iterate over chunks, prepare SlurmJob objects
+        logger.info("[multisubmit] Prepare `SlurmJob`s.")
+        jobs_to_submit = []
         for ind_batch, chunk in enumerate(args_batches):
             prefix = f"{MULTISUBMIT_PREFIX}-{ind_batch:06d}"
             tasks = []
@@ -673,17 +675,26 @@ class BaseSlurmRunner(BaseRunner):
                     ),
                 )
 
-            slurm_job = SlurmJob(
-                prefix=prefix,
-                workdir_local=workdir_local,
-                workdir_remote=workdir_remote,
-                tasks=tasks,
+            jobs_to_submit.append(
+                SlurmJob(
+                    prefix=prefix,
+                    workdir_local=workdir_local,
+                    workdir_remote=workdir_remote,
+                    tasks=tasks,
+                )
             )
+
+        # FIXME: split parts 2 and 3
+        # Part 2/3. Transfer all relevant input files (for SSH)
+        # Part 3/3. Run all `sbatch`es and update `self.jobs`
+        logger.info("[multisubmit] Transfer files and submit jobs.")
+        for slurm_job in jobs_to_submit:
             self._submit_single_sbatch(
                 func,
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
+
         if task_type == "parallel":
             # FIXME: replace loop with a `bulk_update_history_unit` function
             for ind, task_files in enumerate(list_task_files):

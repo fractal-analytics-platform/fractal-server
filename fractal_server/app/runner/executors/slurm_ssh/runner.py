@@ -172,11 +172,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
 
     def _send_inputs(self, jobs: list[SlurmJob]) -> None:
-        # FIXME re-introduce this function
-        # Note that submission logic must be split into
-        # 1. prepare all
-        # 2. send folder
-        # 3. submit all (with sleeps?)
         """
         Transfer the jobs subfolder to the remote host.
         """
