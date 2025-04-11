@@ -88,12 +88,12 @@ class SudoSlurmRunner(BaseSlurmRunner):
     def _mkdir_remote_folder(self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
 
-    def _copy_files_from_remote_to_local_single_job(
-        self, job: SlurmJob
-    ) -> None:
-
+    def _fetch_artifacts_single_job(self, job: SlurmJob) -> None:
+        """
+        Fetch artifacts for a single SLURM jobs.
+        """
         logger.debug(
-            f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} START"
+            f"[_fetch_artifacts_single_job] {job.slurm_job_id=} START"
         )
         source_target_list = [
             (job.slurm_stdout_remote, job.slurm_stdout_local),
@@ -140,16 +140,30 @@ class SudoSlurmRunner(BaseSlurmRunner):
                     f"SKIP copy {source} into {target}. "
                     f"Original error: {str(e)}"
                 )
-        logger.debug(
-            f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} END"
-        )
+        logger.debug(f"[_fetch_artifacts_single_job] {job.slurm_job_id=} END")
 
-    def _copy_files_from_remote_to_local(self, jobs: list[SlurmJob]) -> None:
-        with ThreadPoolExecutor() as executor:
+    def _fetch_artifacts(
+        self,
+        finished_slurm_jobs: list[SlurmJob],
+    ) -> None:
+        """
+        Fetch artifacts for a list of SLURM jobs.
+        """
+        MAX_NUM_THREADS = 4
+        THREAD_NAME_PREFIX = "fetch_artifacts"
+        logger.debug(
+            "[_fetch_artifacts] START "
+            f"({MAX_NUM_THREADS=}, {len(finished_slurm_jobs)=})."
+        )
+        with ThreadPoolExecutor(
+            max_workers=MAX_NUM_THREADS,
+            thread_name_prefix=THREAD_NAME_PREFIX,
+        ) as executor:
             executor.map(
-                self._copy_files_from_remote_to_local_single_job,
-                jobs,
+                self._fetch_artifacts_single_job,
+                finished_slurm_jobs,
             )
+        logger.debug("[_fetch_artifacts] END.")
 
     def _run_remote_cmd(self, cmd: str) -> str:
         res = _run_command_as_user(

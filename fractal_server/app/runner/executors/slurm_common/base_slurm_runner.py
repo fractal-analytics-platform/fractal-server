@@ -327,9 +327,9 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info("[_submit_single_sbatch] END")
 
-    def _copy_files_from_remote_to_local(
+    def _fetch_artifacts(
         self,
-        slurm_jobs: list[SlurmJob],
+        finished_slurm_jobs: list[SlurmJob],
     ) -> None:
         raise NotImplementedError("Implement in child class.")
 
@@ -533,7 +533,7 @@ class BaseSlurmRunner(BaseRunner):
             finished_jobs = [
                 self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
             ]
-            self._copy_files_from_remote_to_local(finished_jobs)
+            self._fetch_artifacts(finished_jobs)
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     logger.debug(f"[submit] Now process {slurm_job_id=}")
@@ -722,7 +722,7 @@ class BaseSlurmRunner(BaseRunner):
                 for slurm_job_id in finished_job_ids:
                     logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local([slurm_job])
+                    self._fetch_artifacts([slurm_job])
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
