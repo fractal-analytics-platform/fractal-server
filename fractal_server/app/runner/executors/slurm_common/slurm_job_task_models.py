@@ -129,5 +129,6 @@ class SlurmJob(BaseModel):
             / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.err"
         )
 
+    @property
     def slurm_stderr_local(self) -> str:
         return self.slurm_stderr_local_path.as_posix()
