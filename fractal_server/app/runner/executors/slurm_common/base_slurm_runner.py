@@ -711,18 +711,21 @@ class BaseSlurmRunner(BaseRunner):
 
         # Retrieval phase
         logger.info("[multisubmit] START retrieval phase")
+        scancelled_job_ids = []
         while len(self.jobs) > 0:
 
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[multisubmit] {finished_job_ids=}")
+            finished_jobs = [
+                self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
+            ]
+            self._fetch_artifacts(finished_jobs)
 
-            scancelled_job_ids = []
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._fetch_artifacts([slurm_job])
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
