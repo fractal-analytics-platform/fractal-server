@@ -99,23 +99,24 @@ class SlurmSSHRunner(BaseSlurmRunner):
         ).as_posix()
 
         # Create file list
+        # # FIXME can we make this more efficient with iterations?
         filelist = []
         for _slurm_job in finished_slurm_jobs:
             _single_job_filelist = [
-                _slurm_job.slurm_stdout_remote,
-                _slurm_job.slurm_stderr_remote,
-                *[
-                    (
-                        task.output_pickle_file_remote,
-                        task.task_files.log_file_remote,
-                        task.task_files.args_file_remote,
-                        task.task_files.metadiff_file_remote,
-                    )
-                    for task in _slurm_job.tasks
-                ],
+                _slurm_job.slurm_stdout_remote_path.name,
+                _slurm_job.slurm_stderr_remote_path.name,
             ]
+            for task in _slurm_job.tasks:
+                _single_job_filelist.extend(
+                    [
+                        task.output_pickle_file_remote_path.name,
+                        task.task_files.log_file_remote_path.name,
+                        task.task_files.args_file_remote_path.name,
+                        task.task_files.metadiff_file_remote_path.name,
+                    ]
+                )
             filelist.extend(_single_job_filelist)
-        filelist_string = "\n".join([Path(source).name for source in filelist])
+        filelist_string = "\n".join(filelist)
         elapsed = time.perf_counter() - t_0
         logger.debug(
             "[_fetch_artifacts] Created filelist "

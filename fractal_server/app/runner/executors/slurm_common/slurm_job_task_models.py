@@ -20,31 +20,47 @@ class SlurmTask(BaseModel):
     index: int
 
     @property
-    def input_pickle_file_local(self) -> str:
+    def input_pickle_file_local_path(self) -> Path:
         return (
             self.workdir_local / f"{self.prefix}-{self.component}-input.pickle"
-        ).as_posix()
+        )
 
     @property
-    def input_pickle_file_remote(self) -> str:
+    def input_pickle_file_remote_path(self) -> Path:
         return (
             self.workdir_remote
             / f"{self.prefix}-{self.component}-input.pickle"
-        ).as_posix()
+        )
 
     @property
-    def output_pickle_file_local(self) -> str:
+    def output_pickle_file_local_path(self) -> Path:
         return (
             self.workdir_local
             / f"{self.prefix}-{self.component}-output.pickle"
-        ).as_posix()
+        )
 
     @property
-    def output_pickle_file_remote(self) -> str:
+    def output_pickle_file_remote_path(self) -> Path:
         return (
             self.workdir_remote
             / f"{self.prefix}-{self.component}-output.pickle"
-        ).as_posix()
+        )
+
+    @property
+    def input_pickle_file_local(self) -> str:
+        return self.input_pickle_file_local_path.as_posix()
+
+    @property
+    def input_pickle_file_remote(self) -> str:
+        return self.input_pickle_file_remote_path.as_posix()
+
+    @property
+    def output_pickle_file_local(self) -> str:
+        return self.output_pickle_file_local_path.as_posix()
+
+    @property
+    def output_pickle_file_remote(self) -> str:
+        return self.output_pickle_file_remote_path.as_posix()
 
 
 class SlurmJob(BaseModel):
@@ -74,29 +90,44 @@ class SlurmJob(BaseModel):
             return "%j"
 
     @property
-    def slurm_stdout_remote(self) -> str:
+    def slurm_stdout_remote_path(self) -> Path:
         return (
             self.workdir_remote
             / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.out"
-        ).as_posix()
+        )
+
+    @property
+    def slurm_stdout_remote(self) -> str:
+        return self.slurm_stdout_remote_path.as_posix()
+
+    @property
+    def slurm_stderr_remote_path(self) -> Path:
+        return (
+            self.workdir_remote
+            / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.err"
+        )
 
     @property
     def slurm_stderr_remote(self) -> str:
-        return (
-            self.workdir_remote
-            / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.err"
-        ).as_posix()
+        return self.slurm_stderr_remote_path.as_posix()
 
     @property
-    def slurm_stdout_local(self) -> str:
+    def slurm_stdout_local_path(self) -> str:
         return (
             self.workdir_local
             / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.out"
-        ).as_posix()
+        )
 
     @property
-    def slurm_stderr_local(self) -> str:
+    def slurm_stdout_local(self) -> str:
+        return self.slurm_stdout_local_path.as_posix()
+
+    @property
+    def slurm_stderr_local_path(self) -> Path:
         return (
             self.workdir_local
             / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.err"
-        ).as_posix()
+        )
+
+    def slurm_stderr_local(self) -> str:
+        return self.slurm_stderr_local_path.as_posix()
