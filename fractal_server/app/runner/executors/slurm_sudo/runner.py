@@ -3,6 +3,7 @@ import os
 import shlex
 import subprocess  # nosec
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
@@ -14,7 +15,6 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
-
 
 logger = set_logger(__name__)
 
@@ -88,10 +88,10 @@ class SudoSlurmRunner(BaseSlurmRunner):
     def _mkdir_remote_folder(self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
 
-    def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
-        """
-        Note: this would differ for SSH
-        """
+    def _copy_files_from_remote_to_local_single_job(
+        self, job: SlurmJob
+    ) -> None:
+
         logger.debug(
             f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} START"
         )
@@ -143,6 +143,13 @@ class SudoSlurmRunner(BaseSlurmRunner):
         logger.debug(
             f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} END"
         )
+
+    def _copy_files_from_remote_to_local(self, jobs: list[SlurmJob]) -> None:
+        with ThreadPoolExecutor() as executor:
+            executor.map(
+                self._copy_files_from_remote_to_local_single_job,
+                jobs,
+            )
 
     def _run_remote_cmd(self, cmd: str) -> str:
         res = _run_command_as_user(

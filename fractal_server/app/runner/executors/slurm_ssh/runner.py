@@ -58,33 +58,49 @@ class SlurmSSHRunner(BaseSlurmRunner):
             parents=True,
         )
 
-    def _copy_files_from_remote_to_local(self, slurm_job: SlurmJob) -> None:
+    def _copy_files_from_remote_to_local(
+        self, slurm_jobs: list[SlurmJob]
+    ) -> None:
+        if len(slurm_jobs) == 0:
+            return
         t_0 = time.perf_counter()
         logger.debug("[_get_subfolder_sftp] Start")
 
         # FIXME: Clean up and review comments
-
         # Create file list
-        sources = [
-            slurm_job.slurm_stdout_remote,
-            slurm_job.slurm_stderr_remote,
-        ]
-        for task in slurm_job.tasks:
+        sources = []
+        workdir_remote = slurm_jobs[0].workdir_remote
+        workdir_local = slurm_jobs[0].workdir_local
+        for _slurm_job in slurm_jobs:
             sources.extend(
                 [
-                    task.output_pickle_file_remote,
-                    task.task_files.log_file_remote,
-                    task.task_files.args_file_remote,
-                    task.task_files.metadiff_file_remote,
+                    _slurm_job.slurm_stdout_remote,
+                    _slurm_job.slurm_stderr_remote,
                 ]
             )
+            for task in _slurm_job.tasks:
+                sources.extend(
+                    [
+                        task.output_pickle_file_remote,
+                        task.task_files.log_file_remote,
+                        task.task_files.args_file_remote,
+                        task.task_files.metadiff_file_remote,
+                    ]
+                )
+            if (
+                workdir_remote != slurm_jobs[0].workdir_remote
+                or workdir_local != slurm_jobs[0].workdir_local
+            ):
+                # Raise consistency error
+                logger.error("FIXME")
+
         sources_string = (
             "\n".join([Path(source).name for source in sources]) + "\n"
         )
         label = f"{time.time()}_{hash(sources_string)}"
 
         tmp_filelist_path = (
-            slurm_job.workdir_remote / f"filelist_{label}.txt"
+            workdir_remote / f"filelist_{label}.txt"
         ).as_posix()
         self.fractal_ssh.write_remote_file(
             path=tmp_filelist_path,
@@ -99,12 +115,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
         # FIXME: Make this customizable (currently it is hard-coded in
         # the compress-folder module)
         tarfile_path_local = (
-            slurm_job.workdir_local.parent
-            / f"{slurm_job.workdir_local.name}.tar.gz"
+            workdir_local.parent / f"{workdir_local.name}.tar.gz"
         ).as_posix()
         tarfile_path_remote = (
-            slurm_job.workdir_remote.parent
-            / f"{slurm_job.workdir_remote.name}.tar.gz"
+            workdir_remote.parent / f"{workdir_remote.name}.tar.gz"
         ).as_posix()
 
         # Create remote tarfile
@@ -112,7 +126,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         tar_command = (
             f"{self.python_worker_interpreter} "
             "-m fractal_server.app.runner.compress_folder "
-            f"{slurm_job.workdir_remote.as_posix()} "
+            f"{workdir_remote.as_posix()} "
             f"--filelist {tmp_filelist_path}"
         )
         self.fractal_ssh.run_command(cmd=tar_command)

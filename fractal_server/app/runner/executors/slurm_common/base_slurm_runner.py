@@ -329,7 +329,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def _copy_files_from_remote_to_local(
         self,
-        slurm_job: SlurmJob,
+        slurm_jobs: list[SlurmJob],
     ) -> None:
         raise NotImplementedError("Implement in child class.")
 
@@ -530,14 +530,14 @@ class BaseSlurmRunner(BaseRunner):
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[submit] {finished_job_ids=}")
-
+            finished_jobs = [
+                self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
+            ]
+            self._copy_files_from_remote_to_local(finished_jobs)
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     logger.debug(f"[submit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(
-                        slurm_job
-                    )  # FIXME: add prefix  # noqa
                     was_job_scancelled = slurm_job_id in scancelled_job_ids
                     result, exception = self._postprocess_single_task(
                         task=slurm_job.tasks[0],
@@ -722,9 +722,7 @@ class BaseSlurmRunner(BaseRunner):
                 for slurm_job_id in finished_job_ids:
                     logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(
-                        slurm_job
-                    )  # FIXME: add prefix  # noqa
+                    self._copy_files_from_remote_to_local([slurm_job])
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
