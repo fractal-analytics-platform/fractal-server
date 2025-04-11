@@ -54,7 +54,7 @@ def _create_tar_archive(
             f"--files-from={filelist_path} --ignore-failed-read"
         )
 
-    logger.critical(f"cmd tar:\n{cmd_tar}")
+    logger.debug(f"cmd tar:\n{cmd_tar}")
 
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
     elapsed = time.perf_counter() - t_start
