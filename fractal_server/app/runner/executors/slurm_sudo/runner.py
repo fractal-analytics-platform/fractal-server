@@ -3,6 +3,7 @@ import os
 import shlex
 import subprocess  # nosec
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
@@ -14,7 +15,6 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
-
 
 logger = set_logger(__name__)
 
@@ -67,10 +67,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
         self.slurm_account = slurm_account
         settings = Inject(get_settings)
 
-        self.python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
-
         super().__init__(
             slurm_runner_type="sudo",
             root_dir_local=root_dir_local,
@@ -78,6 +74,9 @@ class SudoSlurmRunner(BaseSlurmRunner):
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
+            python_worker_interpreter=(
+                settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
+            ),
         )
 
     def _mkdir_local_folder(self, folder: str) -> None:
@@ -88,12 +87,12 @@ class SudoSlurmRunner(BaseSlurmRunner):
     def _mkdir_remote_folder(self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
 
-    def _copy_files_from_remote_to_local(self, job: SlurmJob) -> None:
+    def _fetch_artifacts_single_job(self, job: SlurmJob) -> None:
         """
-        Note: this would differ for SSH
+        Fetch artifacts for a single SLURM jobs.
         """
         logger.debug(
-            f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} START"
+            f"[_fetch_artifacts_single_job] {job.slurm_job_id=} START"
         )
         source_target_list = [
             (job.slurm_stdout_remote, job.slurm_stdout_local),
@@ -140,9 +139,30 @@ class SudoSlurmRunner(BaseSlurmRunner):
                     f"SKIP copy {source} into {target}. "
                     f"Original error: {str(e)}"
                 )
+        logger.debug(f"[_fetch_artifacts_single_job] {job.slurm_job_id=} END")
+
+    def _fetch_artifacts(
+        self,
+        finished_slurm_jobs: list[SlurmJob],
+    ) -> None:
+        """
+        Fetch artifacts for a list of SLURM jobs.
+        """
+        MAX_NUM_THREADS = 4
+        THREAD_NAME_PREFIX = "fetch_artifacts"
         logger.debug(
-            f"[_copy_files_from_remote_to_local] {job.slurm_job_id=} END"
+            "[_fetch_artifacts] START "
+            f"({MAX_NUM_THREADS=}, {len(finished_slurm_jobs)=})."
         )
+        with ThreadPoolExecutor(
+            max_workers=MAX_NUM_THREADS,
+            thread_name_prefix=THREAD_NAME_PREFIX,
+        ) as executor:
+            executor.map(
+                self._fetch_artifacts_single_job,
+                finished_slurm_jobs,
+            )
+        logger.debug("[_fetch_artifacts] END.")
 
     def _run_remote_cmd(self, cmd: str) -> str:
         res = _run_command_as_user(

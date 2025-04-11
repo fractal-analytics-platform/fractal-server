@@ -85,11 +85,15 @@ class TaskFiles(BaseModel):
         ).as_posix()
 
     @property
-    def log_file_remote(self) -> str:
+    def log_file_remote_path(self) -> Path:
         self._check_component()
         return (
             self.wftask_subfolder_remote / f"{self.prefix_component}-log.txt"
-        ).as_posix()
+        )
+
+    @property
+    def log_file_remote(self) -> str:
+        return self.log_file_remote_path.as_posix()
 
     @property
     def args_file_local(self) -> str:
@@ -99,11 +103,15 @@ class TaskFiles(BaseModel):
         ).as_posix()
 
     @property
-    def args_file_remote(self) -> str:
+    def args_file_remote_path(self) -> Path:
         self._check_component()
         return (
             self.wftask_subfolder_remote / f"{self.prefix_component}-args.json"
-        ).as_posix()
+        )
+
+    @property
+    def args_file_remote(self) -> str:
+        return self.args_file_remote_path.as_posix()
 
     @property
     def metadiff_file_local(self) -> str:
@@ -114,12 +122,16 @@ class TaskFiles(BaseModel):
         ).as_posix()
 
     @property
-    def metadiff_file_remote(self) -> str:
+    def metadiff_file_remote_path(self) -> Path:
         self._check_component()
         return (
             self.wftask_subfolder_remote
             / f"{self.prefix_component}-metadiff.json"
-        ).as_posix()
+        )
+
+    @property
+    def metadiff_file_remote(self) -> str:
+        return self.metadiff_file_remote_path.as_posix()
 
     @property
     def remote_files_dict(self) -> dict[str, str]:

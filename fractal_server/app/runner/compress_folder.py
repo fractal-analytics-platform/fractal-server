@@ -35,24 +35,27 @@ def _create_tar_archive(
     tarfile_path: str,
     subfolder_path_tmp_copy: Path,
     logger_name: str,
-    remote_to_local: bool,
+    filelist_path: str | None,
 ):
     logger = get_logger(logger_name)
     logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
     t_start = time.perf_counter()
 
-    if remote_to_local:
-        exclude_options = "--exclude *sbatch --exclude *_in_*.pickle "
+    if filelist_path is None:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            "."
+        )
     else:
-        exclude_options = ""
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            f"--files-from={filelist_path} --ignore-failed-read"
+        )
 
-    cmd_tar = (
-        f"tar czf {tarfile_path} "
-        f"{exclude_options} "
-        f"--directory={subfolder_path_tmp_copy.as_posix()} "
-        "."
-    )
     logger.debug(f"cmd tar:\n{cmd_tar}")
+
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
     elapsed = time.perf_counter() - t_start
     logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
@@ -75,7 +78,8 @@ def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
 
 
 def compress_folder(
-    subfolder_path: Path, remote_to_local: bool = False
+    subfolder_path: Path,
+    filelist_path: str | None,
 ) -> str:
     """
     Compress e.g. `/path/archive` into `/path/archive.tar.gz`
@@ -114,7 +118,7 @@ def compress_folder(
             tarfile_path,
             subfolder_path_tmp_copy,
             logger_name=logger_name,
-            remote_to_local=remote_to_local,
+            filelist_path=filelist_path,
         )
         return tarfile_path
 
@@ -133,15 +137,21 @@ def main(sys_argv: list[str]):
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.compress_folder "
-        "path/to/folder [--remote-to-local]\n"
+        "path/to/folder [--filelist /path/to/filelist]\n"
     )
     num_args = len(sys_argv[1:])
     if num_args == 0:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
     elif num_args == 1:
-        compress_folder(subfolder_path=Path(sys_argv[1]))
-    elif num_args == 2 and sys_argv[2] == "--remote-to-local":
-        compress_folder(subfolder_path=Path(sys_argv[1]), remote_to_local=True)
+        compress_folder(
+            subfolder_path=Path(sys_argv[1]),
+            filelist_path=None,
+        )
+    elif num_args == 3 and sys_argv[2] == "--filelist":
+        compress_folder(
+            subfolder_path=Path(sys_argv[1]),
+            filelist_path=sys_argv[3],
+        )
     else:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
 

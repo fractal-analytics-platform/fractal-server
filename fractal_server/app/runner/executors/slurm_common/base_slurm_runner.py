@@ -60,6 +60,7 @@ class BaseSlurmRunner(BaseRunner):
         root_dir_local: Path,
         root_dir_remote: Path,
         slurm_runner_type: Literal["ssh", "sudo"],
+        python_worker_interpreter: str,
         common_script_lines: Optional[list[str]] = None,
         user_cache_dir: Optional[str] = None,
         poll_interval: Optional[int] = None,
@@ -70,6 +71,7 @@ class BaseSlurmRunner(BaseRunner):
         self.common_script_lines = common_script_lines or []
         self._check_slurm_account()
         self.user_cache_dir = user_cache_dir
+        self.python_worker_interpreter = python_worker_interpreter
 
         settings = Inject(get_settings)
 
@@ -327,9 +329,9 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info("[_submit_single_sbatch] END")
 
-    def _copy_files_from_remote_to_local(
+    def _fetch_artifacts(
         self,
-        slurm_job: SlurmJob,
+        finished_slurm_jobs: list[SlurmJob],
     ) -> None:
         raise NotImplementedError("Implement in child class.")
 
@@ -530,14 +532,14 @@ class BaseSlurmRunner(BaseRunner):
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[submit] {finished_job_ids=}")
-
+            finished_jobs = [
+                self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
+            ]
+            self._fetch_artifacts(finished_jobs)
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     logger.debug(f"[submit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(
-                        slurm_job
-                    )  # FIXME: add prefix  # noqa
                     was_job_scancelled = slurm_job_id in scancelled_job_ids
                     result, exception = self._postprocess_single_task(
                         task=slurm_job.tasks[0],
@@ -653,7 +655,9 @@ class BaseSlurmRunner(BaseRunner):
         if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
-        logger.info(f"START submission phase, {list(self.jobs.keys())=}")
+        # Part 1/3: Iterate over chunks, prepare SlurmJob objects
+        logger.info("[multisubmit] Prepare `SlurmJob`s.")
+        jobs_to_submit = []
         for ind_batch, chunk in enumerate(args_batches):
             prefix = f"{MULTISUBMIT_PREFIX}-{ind_batch:06d}"
             tasks = []
@@ -673,17 +677,26 @@ class BaseSlurmRunner(BaseRunner):
                     ),
                 )
 
-            slurm_job = SlurmJob(
-                prefix=prefix,
-                workdir_local=workdir_local,
-                workdir_remote=workdir_remote,
-                tasks=tasks,
+            jobs_to_submit.append(
+                SlurmJob(
+                    prefix=prefix,
+                    workdir_local=workdir_local,
+                    workdir_remote=workdir_remote,
+                    tasks=tasks,
+                )
             )
+
+        # FIXME: split parts 2 and 3
+        # Part 2/3. Transfer all relevant input files (for SSH)
+        # Part 3/3. Run all `sbatch`es and update `self.jobs`
+        logger.info("[multisubmit] Transfer files and submit jobs.")
+        for slurm_job in jobs_to_submit:
             self._submit_single_sbatch(
                 func,
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
+
         if task_type == "parallel":
             # FIXME: replace loop with a `bulk_update_history_unit` function
             for ind, task_files in enumerate(list_task_files):
@@ -711,20 +724,21 @@ class BaseSlurmRunner(BaseRunner):
 
         # Retrieval phase
         logger.info("[multisubmit] START retrieval phase")
+        scancelled_job_ids = []
         while len(self.jobs) > 0:
 
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[multisubmit] {finished_job_ids=}")
+            finished_jobs = [
+                self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
+            ]
+            self._fetch_artifacts(finished_jobs)
 
-            scancelled_job_ids = []
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
                     logger.info(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
-                    self._copy_files_from_remote_to_local(
-                        slurm_job
-                    )  # FIXME: add prefix  # noqa
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
@@ -810,3 +824,17 @@ class BaseSlurmRunner(BaseRunner):
                 )
         logger.info("[scancel_jobs] END")
         return scancelled_job_ids
+
+    def validate_slurm_jobs_workdirs(
+        self,
+        slurm_jobs: list[SlurmJob],
+    ) -> None:
+        """
+        Check that a list of `SlurmJob`s have homogeneous working folders.
+        """
+        set_workdir_local = set(_job.workdir_local for _job in slurm_jobs)
+        set_workdir_remote = set(_job.workdir_remote for _job in slurm_jobs)
+        if len(set_workdir_local) > 1:
+            raise ValueError(f"Non-unique values in {set_workdir_local=}.")
+        if len(set_workdir_remote) > 1:
+            raise ValueError(f"Non-unique values in {set_workdir_remote=}.")

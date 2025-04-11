@@ -38,7 +38,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         logger.warning(self.fractal_ssh)
 
         settings = Inject(get_settings)
-        self.python_worker_interpreter = settings.FRACTAL_SLURM_WORKER_PYTHON
 
         super().__init__(
             slurm_runner_type="ssh",
@@ -47,6 +46,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
+            python_worker_interpreter=settings.FRACTAL_SLURM_WORKER_PYTHON,
         )
 
     def _mkdir_local_folder(self, folder: str) -> None:
@@ -58,86 +58,81 @@ class SlurmSSHRunner(BaseSlurmRunner):
             parents=True,
         )
 
-    def _copy_files_from_remote_to_local(self, slurm_job: SlurmJob) -> None:
-        self._get_subfolder_sftp(job=slurm_job)
-
-    def _put_subfolder_sftp(self, job: SlurmJob) -> None:
-        # FIXME re-introduce use of this function, but only after splitting
-        # submission logic into
-        # 1. prepare all
-        # 2. send folder
-        # 3. submit all
+    def _fetch_artifacts(
+        self,
+        finished_slurm_jobs: list[SlurmJob],
+    ) -> None:
         """
-        Transfer the jobs subfolder to the remote host.
+        Fetch artifacts for a list of SLURM jobs.
         """
 
-        # Create local archive
-        tarfile_path_local = compress_folder(job.workdir_local)
-        tarfile_name = Path(tarfile_path_local).name
-        logger.info(f"Subfolder archive created at {tarfile_path_local}")
-
-        # Transfer archive
-        tarfile_path_remote = (
-            job.workdir_remote.parent / tarfile_name
-        ).as_posix()
-        t_0_put = time.perf_counter()
-        self.fractal_ssh.send_file(
-            local=tarfile_path_local,
-            remote=tarfile_path_remote,
-        )
-        t_1_put = time.perf_counter()
-        logger.info(
-            f"Subfolder archive transferred to {tarfile_path_remote}"
-            f" - elapsed: {t_1_put - t_0_put:.3f} s"
-        )
-
-        # Remove local archive
-        Path(tarfile_path_local).unlink()
-        logger.debug(f"Local archive {tarfile_path_local} removed")
-
-        # Uncompress remote archive
-        tar_command = (
-            f"{self.python_worker_interpreter} -m "
-            "fractal_server.app.runner.extract_archive "
-            f"{tarfile_path_remote}"
-        )
-        self.fractal_ssh.run_command(cmd=tar_command)
-
-    def _get_subfolder_sftp(self, job: SlurmJob) -> None:
-        """
-        Fetch a remote folder via tar+sftp+tar
-        """
+        # Check length
+        if len(finished_slurm_jobs) == 0:
+            logger.debug(f"[_fetch_artifacts] EXIT ({finished_slurm_jobs=}).")
+            return None
 
         t_0 = time.perf_counter()
-        logger.debug("[_get_subfolder_sftp] Start")
+        logger.debug(
+            f"[_fetch_artifacts] START ({len(finished_slurm_jobs)=})."
+        )
+
+        # Extract `workdir_remote` and `workdir_local`
+        self.validate_slurm_jobs_workdirs(finished_slurm_jobs)
+        workdir_local = finished_slurm_jobs[0].workdir_local
+        workdir_remote = finished_slurm_jobs[0].workdir_remote
+
+        # Define local/remote tarfile paths
         tarfile_path_local = (
-            job.workdir_local.parent / f"{job.workdir_local.name}.tar.gz"
+            workdir_local.parent / f"{workdir_local.name}.tar.gz"
         ).as_posix()
         tarfile_path_remote = (
-            job.workdir_remote.parent / f"{job.workdir_remote.name}.tar.gz"
+            workdir_remote.parent / f"{workdir_remote.name}.tar.gz"
         ).as_posix()
 
-        # Remove remote tarfile
-        try:
-            rm_command = f"rm {tarfile_path_remote}"
-            self.fractal_ssh.run_command(cmd=rm_command)
-            logger.info(f"Removed {tarfile_path_remote=}")
-        except RuntimeError as e:
-            logger.info(
-                f"Could not remove {tarfile_path_remote=}.\n"
-                f"Original error: {str(e)}"
-            )
+        # Create file list
+        # # FIXME can we make this more efficient with iterators?
+        filelist = []
+        for _slurm_job in finished_slurm_jobs:
+            _single_job_filelist = [
+                _slurm_job.slurm_stdout_remote_path.name,
+                _slurm_job.slurm_stderr_remote_path.name,
+            ]
+            for task in _slurm_job.tasks:
+                _single_job_filelist.extend(
+                    [
+                        task.output_pickle_file_remote_path.name,
+                        task.task_files.log_file_remote_path.name,
+                        task.task_files.args_file_remote_path.name,
+                        task.task_files.metadiff_file_remote_path.name,
+                    ]
+                )
+            filelist.extend(_single_job_filelist)
+        filelist_string = "\n".join(filelist)
+        elapsed = time.perf_counter() - t_0
+        logger.debug(
+            "[_fetch_artifacts] Created filelist "
+            f"({len(filelist)=}, from start: {elapsed:.3f} s)."
+        )
+
+        # Write filelist to file remotely
+        tmp_filelist_path = workdir_remote / f"filelist_{time.time()}.txt"
+        self.fractal_ssh.write_remote_file(
+            path=tmp_filelist_path.as_posix(),
+            content=f"{filelist_string}\n",
+        )
+        elapsed = time.perf_counter() - t_0
+        logger.debug(
+            f"[_fetch_artifacts] File list written to {tmp_filelist_path} "
+            f"(from start: {elapsed:.3f} s)."
+        )
 
         # Create remote tarfile
-        # FIXME: introduce filtering by prefix, so that when the subfolder
-        # includes N SLURM jobs we don't always copy the cumulative folder
-        # but only the relevant part
         t_0_tar = time.perf_counter()
         tar_command = (
             f"{self.python_worker_interpreter} "
             "-m fractal_server.app.runner.compress_folder "
-            f"{job.workdir_remote.as_posix()} "
-            "--remote-to-local"
+            f"{workdir_remote.as_posix()} "
+            f"--filelist {tmp_filelist_path}"
         )
         self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
@@ -166,6 +161,47 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         t_1 = time.perf_counter()
         logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
+
+    def _send_inputs(self, jobs: list[SlurmJob]) -> None:
+        """
+        Transfer the jobs subfolder to the remote host.
+        """
+        for job in jobs:
+
+            # Create local archive
+            tarfile_path_local = compress_folder(
+                job.workdir_local,
+                filelist_path=None,
+            )
+            tarfile_name = Path(tarfile_path_local).name
+            logger.info(f"Subfolder archive created at {tarfile_path_local}")
+
+            # Transfer archive
+            tarfile_path_remote = (
+                job.workdir_remote.parent / tarfile_name
+            ).as_posix()
+            t_0_put = time.perf_counter()
+            self.fractal_ssh.send_file(
+                local=tarfile_path_local,
+                remote=tarfile_path_remote,
+            )
+            t_1_put = time.perf_counter()
+            logger.info(
+                f"Subfolder archive transferred to {tarfile_path_remote}"
+                f" - elapsed: {t_1_put - t_0_put:.3f} s"
+            )
+
+            # Remove local archive
+            Path(tarfile_path_local).unlink()
+            logger.debug(f"Local archive {tarfile_path_local} removed")
+
+            # Uncompress remote archive
+            tar_command = (
+                f"{self.python_worker_interpreter} -m "
+                "fractal_server.app.runner.extract_archive "
+                f"{tarfile_path_remote}"
+            )
+            self.fractal_ssh.run_command(cmd=tar_command)
 
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
