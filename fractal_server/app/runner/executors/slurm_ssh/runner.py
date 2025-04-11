@@ -90,7 +90,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         ).as_posix()
 
         # Create file list
-        # # FIXME can we make this more efficient with iterations?
+        # # FIXME can we make this more efficient with iterators?
         filelist = []
         for _slurm_job in finished_slurm_jobs:
             _single_job_filelist = [
