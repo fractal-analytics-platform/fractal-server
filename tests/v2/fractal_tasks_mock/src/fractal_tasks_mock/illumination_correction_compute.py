@@ -2,10 +2,10 @@ from pathlib import Path
 from typing import Optional
 
 from fractal_tasks_mock.input_models import InitArgsIllumination
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def illumination_correction_compute(
     *,
     zarr_url: str,
@@ -48,6 +48,6 @@ def illumination_correction_compute(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=illumination_correction_compute)

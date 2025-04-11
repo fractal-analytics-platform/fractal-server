@@ -2,10 +2,10 @@ import logging
 from pathlib import Path
 
 from fractal_tasks_mock.utils import _extract_common_root
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def new_ome_zarr(
     *,
     zarr_urls: list[str],
@@ -54,6 +54,6 @@ def new_ome_zarr(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=new_ome_zarr)

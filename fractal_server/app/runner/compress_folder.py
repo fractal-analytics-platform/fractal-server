@@ -11,8 +11,8 @@ built-in `tarfile` library has to do with performance issues we observed
 when handling files which were just created within a SLURM job, and in the
 context of a CephFS filesystem.
 """
-import shutil
 import sys
+import time
 from pathlib import Path
 
 from fractal_server.app.runner.run_subprocess import run_subprocess
@@ -20,48 +20,66 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 
 
-def copy_subfolder(src: Path, dest: Path, logger_name: str):
+def _copy_subfolder(src: Path, dest: Path, logger_name: str):
+    t_start = time.perf_counter()
     cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
     logger = get_logger(logger_name=logger_name)
     logger.debug(f"{cmd_cp=}")
     res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
+    elapsed = time.perf_counter() - t_start
+    logger.debug(f"[_copy_subfolder] END {elapsed=} s ({dest.as_posix()})")
     return res
 
 
-def create_tar_archive(
-    tarfile_path: Path,
+def _create_tar_archive(
+    tarfile_path: str,
     subfolder_path_tmp_copy: Path,
     logger_name: str,
-    remote_to_local: bool,
+    filelist_path: str | None,
 ):
     logger = get_logger(logger_name)
+    logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
+    t_start = time.perf_counter()
 
-    if remote_to_local:
-        exclude_options = "--exclude *sbatch --exclude *_in_*.pickle "
+    if filelist_path is None:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            "."
+        )
     else:
-        exclude_options = ""
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            f"--files-from={filelist_path} --ignore-failed-read"
+        )
 
-    cmd_tar = (
-        f"tar czf {tarfile_path} "
-        f"{exclude_options} "
-        f"--directory={subfolder_path_tmp_copy.as_posix()} "
-        "."
-    )
     logger.debug(f"cmd tar:\n{cmd_tar}")
+
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
+    elapsed = time.perf_counter() - t_start
+    logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
 
 
-def remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
+def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
     logger = get_logger(logger_name)
+    t_start = time.perf_counter()
     try:
-        logger.debug(f"Now remove {subfolder_path_tmp_copy}")
-        shutil.rmtree(subfolder_path_tmp_copy)
+        cmd_rm = f"rm -rf {subfolder_path_tmp_copy}"
+        logger.debug(f"cmd rm:\n{cmd_rm}")
+        run_subprocess(cmd=cmd_rm, logger_name=logger_name, allow_char="*")
     except Exception as e:
-        logger.debug(f"ERROR during shutil.rmtree: {e}")
+        logger.debug(f"ERROR during {cmd_rm}: {e}")
+    elapsed = time.perf_counter() - t_start
+    logger.debug(
+        f"[_remove_temp_subfolder] END {elapsed=} s "
+        f"({subfolder_path_tmp_copy=})"
+    )
 
 
 def compress_folder(
-    subfolder_path: Path, remote_to_local: bool = False
+    subfolder_path: Path,
+    filelist_path: str | None,
 ) -> str:
     """
     Compress e.g. `/path/archive` into `/path/archive.tar.gz`
@@ -91,14 +109,16 @@ def compress_folder(
         subfolder_path.parent / f"{subfolder_path.name}_copy"
     )
     try:
-        copy_subfolder(
-            subfolder_path, subfolder_path_tmp_copy, logger_name=logger_name
+        _copy_subfolder(
+            subfolder_path,
+            subfolder_path_tmp_copy,
+            logger_name=logger_name,
         )
-        create_tar_archive(
+        _create_tar_archive(
             tarfile_path,
             subfolder_path_tmp_copy,
             logger_name=logger_name,
-            remote_to_local=remote_to_local,
+            filelist_path=filelist_path,
         )
         return tarfile_path
 
@@ -107,7 +127,9 @@ def compress_folder(
         sys.exit(1)
 
     finally:
-        remove_temp_subfolder(subfolder_path_tmp_copy, logger_name=logger_name)
+        _remove_temp_subfolder(
+            subfolder_path_tmp_copy, logger_name=logger_name
+        )
 
 
 def main(sys_argv: list[str]):
@@ -115,15 +137,21 @@ def main(sys_argv: list[str]):
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.compress_folder "
-        "path/to/folder [--remote-to-local]\n"
+        "path/to/folder [--filelist /path/to/filelist]\n"
     )
     num_args = len(sys_argv[1:])
     if num_args == 0:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
     elif num_args == 1:
-        compress_folder(subfolder_path=Path(sys_argv[1]))
-    elif num_args == 2 and sys_argv[2] == "--remote-to-local":
-        compress_folder(subfolder_path=Path(sys_argv[1]), remote_to_local=True)
+        compress_folder(
+            subfolder_path=Path(sys_argv[1]),
+            filelist_path=None,
+        )
+    elif num_args == 3 and sys_argv[2] == "--filelist":
+        compress_folder(
+            subfolder_path=Path(sys_argv[1]),
+            filelist_path=sys_argv[3],
+        )
     else:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
 

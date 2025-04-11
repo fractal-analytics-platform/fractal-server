@@ -501,7 +501,8 @@ class FractalSSH(object):
             content: Contents to be written to file.
             lock_timeout: Timeout for lock acquisition (overrides default).
         """
-        self.logger.info(f"START writing to remote file {path}.")
+        t_start = time.perf_counter()
+        self.logger.info(f"[write_remote_file] START ({path}).")
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
@@ -518,7 +519,8 @@ class FractalSSH(object):
                     e=e, message=f"Error in `write_remote_file`, for {path=}."
                 )
 
-        self.logger.info(f"END writing to remote file {path}.")
+        elapsed = time.perf_counter() - t_start
+        self.logger.info(f"[write_remote_file] END, {elapsed=} s ({path}).")
 
     def remote_exists(self, path: str) -> bool:
         """

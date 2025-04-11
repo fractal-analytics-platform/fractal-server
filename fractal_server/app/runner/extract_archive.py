@@ -57,9 +57,7 @@ def extract_archive(archive_path: Path):
 
     # Run tar command
     cmd_tar = (
-        f"tar -xzvf {archive_path} "
-        f"--directory={subfolder_path.as_posix()} "
-        "."
+        f"tar -xzvf {archive_path} --directory={subfolder_path.as_posix()}"
     )
     logger.debug(f"{cmd_tar=}")
     run_subprocess(cmd=cmd_tar, logger_name=logger_name)
