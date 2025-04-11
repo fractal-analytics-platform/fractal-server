@@ -119,10 +119,27 @@ def test_extract_archive_failure(tmp_path: Path):
         extract_archive(tmp_path / "missing.tar.gz")
 
 
-def test_main_compress_success(tmp_path: Path):
+def test_main_compress_success_without_filelist(tmp_path: Path):
     subfolder_path = tmp_path / "subfolder"
     create_test_files(subfolder_path)
     test_argv = ["compress_folder", subfolder_path.as_posix()]
+    main_compress(test_argv)
+
+
+def test_main_compress_success_with_filelist(tmp_path: Path):
+    subfolder_path = tmp_path / "subfolder"
+    create_test_files(subfolder_path)
+    filelist_path = (subfolder_path / "filelist.txt").as_posix()
+    with open(filelist_path, "w") as f:
+        f.write("file1.txt\n")
+        f.write("file2.txt\n")
+        f.write("missing.txt\n")
+    test_argv = [
+        "compress_folder",
+        subfolder_path.as_posix(),
+        "--filelist",
+        filelist_path,
+    ]
     main_compress(test_argv)
 
 
