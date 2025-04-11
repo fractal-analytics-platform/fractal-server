@@ -42,11 +42,15 @@ def shutdown_thread(
     debug("[shutdown_thread] START")
     time.sleep(initial_grace_time)
     squeue_output = _run_squeue()
-    while "RUNNING" not in squeue_output:
+    while True:
         squeue_output = _run_squeue()
-        debug("[shutdown_thread] Wait longer", squeue_output)
-        time.sleep(0.2)
-    debug("[shutdown_thread] Found job RUNNING")
+        debug(squeue_output)
+        if "RUNNING" in squeue_output:
+            debug("[shutdown_thread] Found job RUNNING, break.")
+            break
+        else:
+            debug("[shutdown_thread] Wait longer.")
+            time.sleep(0.1)
     debug(f"[shutdown_thread] Now create {shutdown_file}")
     shutdown_file.touch()
     debug("[shutdown_thread] END")
