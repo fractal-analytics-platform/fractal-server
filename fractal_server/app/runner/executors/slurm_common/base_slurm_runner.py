@@ -388,12 +388,6 @@ class BaseSlurmRunner(BaseRunner):
                     ]
                     if key in output.keys()
                 }
-                with next(get_sync_db()) as db:
-                    update_status_of_history_unit(
-                        history_unit_id=history_unit_id,
-                        status=HistoryUnitStatus.FAILED,
-                        db_sync=db,
-                    )
                 exception = TaskExecutionError(traceback_string, **kwargs)
                 return (None, exception)
 
@@ -407,12 +401,6 @@ class BaseSlurmRunner(BaseRunner):
                     f"for {task.index=}."
                 )
                 exception = SHUTDOWN_EXCEPTION
-                with next(get_sync_db()) as db:
-                    update_status_of_history_unit(
-                        history_unit_id=history_unit_id,
-                        status=HistoryUnitStatus.FAILED,
-                        db_sync=db,
-                    )
             return (None, exception)
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
