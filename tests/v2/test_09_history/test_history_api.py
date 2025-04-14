@@ -312,7 +312,13 @@ async def test_get_history_run_list(
 
         def add_units(hr_id: int, quantity: int, status: HistoryUnitStatus):
             for _ in range(quantity):
-                db.add(HistoryUnit(history_run_id=hr_id, status=status))
+                db.add(
+                    HistoryUnit(
+                        history_run_id=hr_id,
+                        status=status,
+                        logfile="/fake/log",
+                    )
+                )
 
         add_units(hr1.id, 10, HistoryUnitStatus.DONE)
         add_units(hr1.id, 11, HistoryUnitStatus.SUBMITTED)
