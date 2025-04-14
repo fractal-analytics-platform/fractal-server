@@ -1,9 +1,9 @@
 from typing import Any
+from typing import Literal
 
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.logger import set_logger
-
 
 TASK_TYPES_SUBMIT: list[TaskTypeType] = [
     "compound",
@@ -56,6 +56,7 @@ class BaseRunner(object):
         list_task_files: list[TaskFiles],
         task_type: TaskTypeType,
         config: Any,
+        map_history_unit_id_to_index: dict[int, int],
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Run a parallel fractal task.
@@ -117,14 +118,20 @@ class BaseRunner(object):
         if task_type not in TASK_TYPES_MULTISUBMIT:
             raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
 
+        if not isinstance(list_parameters, list):
+            raise ValueError("`parameters` must be a list.")
+
+        if len(list_parameters) != len(list_task_files):
+            raise ValueError(
+                f"{len(list_task_files)=} differs from "
+                f"{len(list_parameters)=}."
+            )
+
         subfolders = set(
             task_file.wftask_subfolder_local for task_file in list_task_files
         )
         if len(subfolders) != 1:
             raise ValueError(f"More than one subfolders: {subfolders}.")
-
-        if not isinstance(list_parameters, list):
-            raise ValueError("`parameters` must be a list.")
 
         for single_kwargs in list_parameters:
             if not isinstance(single_kwargs, dict):
@@ -142,8 +149,9 @@ class BaseRunner(object):
         self,
         *,
         history_unit_ids: list[int],
-        task_type: TaskTypeType,
+        task_type: Literal["parallel", "compound", "converter_compound"],
         list_parameters: list[dict[str, Any]],
+        map_history_unit_id_to_index: dict[int, int],
     ) -> None:
         """
         Run preliminary check for multisubmit inputs.
@@ -152,18 +160,24 @@ class BaseRunner(object):
             history_unit_ids:
             task_type:
             list_parameters:
+            map_history_unit_id_to_index:
         """
-        if task_type in ["compound", "converter_compound"]:
-            if len(history_unit_ids) != 1:
-                raise NotImplementedError(
-                    "We are breaking the assumption that compound/multisubmit "
-                    "is associated to a single HistoryUnit. This is not "
-                    "supported."
-                )
-            elif task_type == "parallel" and len(history_unit_ids) != len(
-                list_parameters
-            ):
+        if task_type == "parallel":
+            if len(history_unit_ids) != len(list_parameters):
                 raise ValueError(
                     f"{len(history_unit_ids)=} differs from "
                     f"{len(list_parameters)=}."
+                )
+            if len(map_history_unit_id_to_index) > 0:
+                raise ValueError(
+                    f"Invalid {len(map_history_unit_id_to_index)=}, for "
+                    f" {task_type=}."
+                )
+        else:
+            if len(map_history_unit_id_to_index.keys()) != len(
+                history_unit_ids
+            ):
+                raise ValueError(
+                    f"{len(history_unit_ids)=} differs from "
+                    f"{len(map_history_unit_id_to_index)=}."
                 )

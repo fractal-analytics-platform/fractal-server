@@ -111,17 +111,21 @@ class LocalRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: LocalBackendConfig,
-    ):
+        map_history_unit_id_to_index: dict[int, int],
+    ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Note:
 
-        1. The number of sruns and futures is equal to `len(list_parameters)`.
-        2. The number of `HistoryUnit`s is equal to `len(history_unit_ids)`.
-        3. For compound tasks, these two numbers are not the same.
+        1. The number of futures is equal to `len(list_parameters)`.
+        2. The number of `task_files` is equal to `len(list_parameters)`.
+        3. The number of `HistoryUnit`s is equal to `len(history_unit_ids)`.
+        4. For compound tasks, these two numbers are not always the same.
 
-        For this reason, we defer database updates to the caller function,
-        when we are in one of the "compound" cases
-
+        For this reason, when handling a compound task:
+        * We defer database updates to the caller function
+        * We do not require `len(list_parameters) == len(history_unit_ids)`.
+        * We require a `map_history_unit_id_to_index` object of the same
+          length as `history_unit_ids`.
         """
 
         self.validate_multisubmit_parameters(
@@ -134,6 +138,7 @@ class LocalRunner(BaseRunner):
             history_unit_ids=history_unit_ids,
             task_type=task_type,
             list_parameters=list_parameters,
+            map_history_unit_id_to_index=map_history_unit_id_to_index,
         )
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
@@ -181,12 +186,18 @@ class LocalRunner(BaseRunner):
                         ].log_file_local,
                     )
                 else:
-                    logger.debug(
-                        f"Unclear what logfile to associate to {task_type=} "
-                        "within multisubmit (see issue #2382)."
-                    )
-                    # FIXME: Improve definition for compound tasks
-                    pass
+                    # FIXME: replace loop with a `bulk_update_history_unit`
+                    # function
+                    for (
+                        history_unit_id,
+                        task_files_index,
+                    ) in map_history_unit_id_to_index.items():
+                        update_logfile_of_history_unit(
+                            history_unit_id=history_unit_id,
+                            logfile=list_task_files[
+                                task_files_index
+                            ].log_file_local,
+                        )
 
             while active_futures:
                 finished_futures = [

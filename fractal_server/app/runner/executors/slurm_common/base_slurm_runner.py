@@ -574,7 +574,22 @@ class BaseSlurmRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
+        map_history_unit_id_to_index: dict[int, int],
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
+        """
+        Note:
+
+        1. The number of `srun`s is equal to `len(list_parameters)`.
+        2. The number of `task_files` is equal to `len(list_parameters)`.
+        3. The number of `HistoryUnit`s is equal to `len(history_unit_ids)`.
+        4. For compound tasks, these two numbers are not always the same.
+
+        For this reason, when handling a compound task:
+        * We defer database updates to the caller function
+        * We do not require `len(list_parameters) == len(history_unit_ids)`.
+        * We require a `map_history_unit_id_to_index` object of the same
+          length as `history_unit_ids`.
+        """
 
         if len(self.jobs) > 0:
             raise RuntimeError(
@@ -602,8 +617,9 @@ class BaseSlurmRunner(BaseRunner):
         )
         self.validate_multisubmit_history_unit_ids(
             history_unit_ids=history_unit_ids,
-            task_type=task_type,
             list_parameters=list_parameters,
+            task_type=task_type,
+            map_history_unit_id_to_index=map_history_unit_id_to_index,
         )
 
         logger.info(f"[multisubmit] START, {len(list_parameters)=}")
@@ -705,12 +721,16 @@ class BaseSlurmRunner(BaseRunner):
                     logfile=task_files.log_file_local,
                 )
         else:
-            logger.debug(
-                f"Unclear what logfile to associate to {task_type=} "
-                "within multisubmit (see issue #2382)."
-            )
-            # FIXME: Improve definition for compound tasks
-            pass
+            # FIXME: replace loop with a `bulk_update_history_unit`
+            # function
+            for (
+                history_unit_id,
+                task_files_index,
+            ) in map_history_unit_id_to_index.items():
+                update_logfile_of_history_unit(
+                    history_unit_id=history_unit_id,
+                    logfile=list_task_files[task_files_index].log_file_local,
+                )
 
         logger.info(f"END submission phase, {self.job_ids=}")
 
