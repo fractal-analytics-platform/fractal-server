@@ -179,8 +179,8 @@ async def full_workflow(
 
         # Check files in task-0 folder
         expected_files = {
-            "non_par-0000000-log.txt",
-            "non_par-0000000-metadiff.json",
+            "non_par--log.txt",
+            "non_par--metadiff.json",
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
@@ -198,8 +198,8 @@ async def full_workflow(
 
         # Check files in task-1 folder
         expected_files = {
-            "non_par-0000000-log.txt",
-            "non_par-0000000-metadiff.json",
+            "non_par--log.txt",
+            "non_par--metadiff.json",
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
@@ -235,10 +235,16 @@ async def full_workflow(
             url = f"{this_prefix}/run/{history_run_id}/units/?{query_wft}"
             res = await client.get(url)
             assert res.status_code == 200
-            if wftask_id == wftask2_id:
+            if wftask_id == wftask0_id:
+                # Converter compound task
+                assert res.json()["total_count"] == NUM_IMAGES + 1
+            elif wftask_id == wftask1_id:
+                # MIP compound task
+                assert res.json()["total_count"] == NUM_IMAGES + 1
+            elif wftask_id == wftask2_id:
+                # Generic parallel task
                 assert res.json()["total_count"] == NUM_IMAGES
-            else:
-                assert res.json()["total_count"] == 1
+
             first_history_unit = res.json()["items"][0]
             history_unit_id = first_history_unit["id"]
             assert Path(first_history_unit["logfile"]).exists()

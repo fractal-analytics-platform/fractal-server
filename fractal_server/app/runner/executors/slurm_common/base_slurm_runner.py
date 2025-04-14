@@ -12,7 +12,6 @@ import cloudpickle
 from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
-from ._batching import heuristics
 from ._job_states import STATES_FINISHED
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
@@ -20,14 +19,9 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
-from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
-from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
-)
-from fractal_server.app.runner.v2.db_tools import (
-    update_logfile_of_history_unit,
 )
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -483,21 +477,14 @@ class BaseSlurmRunner(BaseRunner):
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
         logger.info("[submit] Create local/remote folders - END")
 
-        # Add prefix to task_files object
-        task_files.prefix = SUBMIT_PREFIX
-        update_logfile_of_history_unit(
-            history_unit_id=history_unit_id,
-            logfile=task_files.log_file_local,
-        )
-
         # Submission phase
         slurm_job = SlurmJob(
-            prefix=SUBMIT_PREFIX,
+            prefix=task_files.prefix,
             workdir_local=workdir_local,
             workdir_remote=workdir_remote,
             tasks=[
                 SlurmTask(
-                    prefix=SUBMIT_PREFIX,
+                    prefix=task_files.prefix,
                     index=0,
                     component=task_files.component,
                     parameters=parameters,
@@ -572,6 +559,12 @@ class BaseSlurmRunner(BaseRunner):
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
+        """
+        Note: `list_parameters`, `list_task_files` and `history_unit_ids`
+        have the same size. For parallel tasks, this is also the number of
+        input images, while for compound tasks these can differ.
+        """
+
         if len(self.jobs) > 0:
             raise RuntimeError(
                 f"Cannot run `multisubmit` when {len(self.jobs)=}"
@@ -595,11 +588,7 @@ class BaseSlurmRunner(BaseRunner):
             list_parameters=list_parameters,
             task_type=task_type,
             list_task_files=list_task_files,
-        )
-        self.validate_multisubmit_history_unit_ids(
             history_unit_ids=history_unit_ids,
-            task_type=task_type,
-            list_parameters=list_parameters,
         )
 
         logger.info(f"[multisubmit] START, {len(list_parameters)=}")
@@ -620,46 +609,28 @@ class BaseSlurmRunner(BaseRunner):
 
         tot_tasks = len(list_parameters)
 
-        # Set/validate parameters for task batching
-        tasks_per_job, parallel_tasks_per_job = heuristics(
-            # Number of parallel components (always known)
-            tot_tasks=tot_tasks,
-            # Optional WorkflowTask attributes:
-            tasks_per_job=config.tasks_per_job,
-            parallel_tasks_per_job=config.parallel_tasks_per_job,  # noqa
-            # Task requirements (multiple possible sources):
-            cpus_per_task=config.cpus_per_task,
-            mem_per_task=config.mem_per_task_MB,
-            # Fractal configuration variables (soft/hard limits):
-            target_cpus_per_job=config.target_cpus_per_job,
-            target_mem_per_job=config.target_mem_per_job,
-            target_num_jobs=config.target_num_jobs,
-            max_cpus_per_job=config.max_cpus_per_job,
-            max_mem_per_job=config.max_mem_per_job,
-            max_num_jobs=config.max_num_jobs,
-        )
-        config.parallel_tasks_per_job = parallel_tasks_per_job
-        config.tasks_per_job = tasks_per_job
+        # NOTE: chunking has already taken place in `get_slurm_config`,
+        # so that `config.tasks_per_job` is now set.
 
         # Divide arguments in batches of `tasks_per_job` tasks each
         args_batches = []
-        batch_size = tasks_per_job
+        batch_size = config.tasks_per_job
         for ind_chunk in range(0, tot_tasks, batch_size):
             args_batches.append(
                 list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
             )
-        if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
+        if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
         # Part 1/3: Iterate over chunks, prepare SlurmJob objects
         logger.info("[multisubmit] Prepare `SlurmJob`s.")
         jobs_to_submit = []
         for ind_batch, chunk in enumerate(args_batches):
-            prefix = f"{MULTISUBMIT_PREFIX}-{ind_batch:06d}"
+            # Read prefix based on the first task of this batch
+            prefix = list_task_files[ind_batch * batch_size].prefix
             tasks = []
             for ind_chunk, parameters in enumerate(chunk):
                 index = (ind_batch * batch_size) + ind_chunk
-                list_task_files[index].prefix = prefix
                 tasks.append(
                     SlurmTask(
                         prefix=prefix,
@@ -672,7 +643,6 @@ class BaseSlurmRunner(BaseRunner):
                         task_files=list_task_files[index],
                     ),
                 )
-
             jobs_to_submit.append(
                 SlurmJob(
                     prefix=prefix,
@@ -692,21 +662,6 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
-
-        if task_type == "parallel":
-            # FIXME: replace loop with a `bulk_update_history_unit` function
-            for ind, task_files in enumerate(list_task_files):
-                update_logfile_of_history_unit(
-                    history_unit_id=history_unit_ids[ind],
-                    logfile=task_files.log_file_local,
-                )
-        else:
-            logger.debug(
-                f"Unclear what logfile to associate to {task_type=} "
-                "within multisubmit (see issue #2382)."
-            )
-            # FIXME: Improve definition for compound tasks
-            pass
 
         logger.info(f"END submission phase, {self.job_ids=}")
 

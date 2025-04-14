@@ -4,6 +4,7 @@ from typing import Union
 
 from pydantic import BaseModel
 
+from fractal_server.app.runner.components import _index_to_component
 from fractal_server.string_tools import sanitize_string
 
 SUBMIT_PREFIX = "non_par"
@@ -140,3 +141,27 @@ class TaskFiles(BaseModel):
             metadiff_file_remote=self.metadiff_file_remote,
             log_file_remote=self.log_file_remote,
         )
+
+
+def enrich_task_files_multisubmit(
+    *,
+    tot_tasks: int,
+    batch_size: int,
+    base_task_files: TaskFiles,
+) -> list[TaskFiles]:
+    new_list_task_files: list[TaskFiles] = []
+    for absolute_index in range(tot_tasks):
+        ind_batch = absolute_index // batch_size
+        new_list_task_files.append(
+            TaskFiles(
+                **base_task_files.model_dump(
+                    exclude={
+                        "component",
+                        "prefix",
+                    }
+                ),
+                prefix=f"{MULTISUBMIT_PREFIX}-{ind_batch:06d}",
+                component=_index_to_component(absolute_index),
+            )
+        )
+    return new_list_task_files

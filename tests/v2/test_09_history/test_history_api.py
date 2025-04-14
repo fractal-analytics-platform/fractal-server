@@ -312,7 +312,13 @@ async def test_get_history_run_list(
 
         def add_units(hr_id: int, quantity: int, status: HistoryUnitStatus):
             for _ in range(quantity):
-                db.add(HistoryUnit(history_run_id=hr_id, status=status))
+                db.add(
+                    HistoryUnit(
+                        history_run_id=hr_id,
+                        status=status,
+                        logfile="/fake/log",
+                    )
+                )
 
         add_units(hr1.id, 10, HistoryUnitStatus.DONE)
         add_units(hr1.id, 11, HistoryUnitStatus.SUBMITTED)
@@ -392,13 +398,17 @@ async def test_get_history_run_units(
         for _ in range(6):
             db.add(
                 HistoryUnit(
-                    history_run_id=hr.id, status=HistoryUnitStatus.DONE
+                    history_run_id=hr.id,
+                    status=HistoryUnitStatus.DONE,
+                    logfile="/fake/log",
                 )
             )
         for _ in range(7):
             db.add(
                 HistoryUnit(
-                    history_run_id=hr.id, status=HistoryUnitStatus.FAILED
+                    history_run_id=hr.id,
+                    status=HistoryUnitStatus.FAILED,
+                    logfile="/fake/log",
                 )
             )
         await db.commit()
@@ -523,7 +533,7 @@ async def test_get_history_images(
 
         hu = HistoryUnit(
             history_run_id=hr.id,
-            logfile=None,
+            logfile="/fake/log",
             status=HistoryUnitStatus.DONE,
             zarr_urls=["/a1", "/b1"],
         )

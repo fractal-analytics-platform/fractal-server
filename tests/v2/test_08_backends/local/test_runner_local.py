@@ -4,6 +4,7 @@ from devtools import debug
 from ..aux_unit_runner import *  # noqa
 from ..aux_unit_runner import get_default_local_backend_config
 from ..aux_unit_runner import ZARR_URLS
+from ..aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import TaskExecutionError
@@ -59,6 +60,7 @@ async def test_submit_success(
     # `HistoryUnit.status` is updated from within `runner.submit`
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
+    assert unit.logfile is not None
     if task_type in ["non_parallel", "converter_non_parallel"]:
         assert unit.status == HistoryUnitStatus.DONE
     else:
@@ -115,6 +117,7 @@ async def test_submit_fail(
     # `HistoryUnit.status` is updated from within `runner.submit`
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
+    assert unit.logfile is not None
     assert unit.status == HistoryUnitStatus.FAILED
 
 
@@ -129,7 +132,7 @@ def fun(parameters: dict, remote_files: dict):
         raise ValueError("parameter=3 is very very bad")
 
 
-async def test_multisubmit(
+async def test_multisubmit_parallel(
     tmp_path,
     db,
     history_mock_for_multisubmit,
@@ -140,24 +143,7 @@ async def test_multisubmit(
 
         results, exceptions = runner.multisubmit(
             fun,
-            [
-                {
-                    "zarr_url": "a",
-                    "parameter": 1,
-                },
-                {
-                    "zarr_url": "b",
-                    "parameter": 2,
-                },
-                {
-                    "zarr_url": "c",
-                    "parameter": 3,
-                },
-                {
-                    "zarr_url": "d",
-                    "parameter": 4,
-                },
-            ],
+            ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))
@@ -169,9 +155,9 @@ async def test_multisubmit(
     debug(results)
     debug(exceptions)
     assert results == {
-        3: 8,
         0: 2,
         1: 4,
+        3: 8,
     }
     assert isinstance(exceptions[2], TaskExecutionError)
     assert "very very bad" in str(exceptions[2])
@@ -182,7 +168,7 @@ async def test_multisubmit(
     debug(run)
     assert run.status == HistoryUnitStatus.SUBMITTED
 
-    # `HistoryUnit.status` is updated from within `runner.submit`
+    # `HistoryUnit.status` is updated from within `runner.multisubmit`
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
@@ -190,6 +176,50 @@ async def test_multisubmit(
             assert unit.status == HistoryUnitStatus.DONE
         else:
             assert unit.status == HistoryUnitStatus.FAILED
+
+
+async def test_multisubmit_compound(
+    tmp_path,
+    db,
+    history_mock_for_multisubmit,
+):
+
+    history_run_id, history_unit_ids = history_mock_for_multisubmit
+
+    with LocalRunner(root_dir_local=tmp_path) as runner:
+        results, exceptions = runner.multisubmit(
+            fun,
+            ZARR_URLS_AND_PARAMETER,
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component=str(ind))
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="compound",
+            history_unit_ids=history_unit_ids,
+            config=get_default_local_backend_config(),
+        )
+    debug(results)
+    debug(exceptions)
+    assert results == {
+        0: 2,
+        1: 4,
+        3: 8,
+    }
+    assert isinstance(exceptions[2], TaskExecutionError)
+    assert "very very bad" in str(exceptions[2])
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    debug(run)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    for _unit_id in history_unit_ids:
+        unit = await db.get(HistoryUnit, _unit_id)
+        debug(unit)
+        # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
+        # for compound tasks
+        assert unit.status == HistoryUnitStatus.SUBMITTED
 
 
 @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 1000])
@@ -209,24 +239,7 @@ async def test_multisubmit_in_chunks(
 
         results, exceptions = runner.multisubmit(
             fun,
-            [
-                {
-                    "zarr_url": "a",
-                    "parameter": 1,
-                },
-                {
-                    "zarr_url": "b",
-                    "parameter": 2,
-                },
-                {
-                    "zarr_url": "c",
-                    "parameter": 3,
-                },
-                {
-                    "zarr_url": "d",
-                    "parameter": 4,
-                },
-            ],
+            ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))

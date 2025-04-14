@@ -51,7 +51,9 @@ async def test_update_status_of_history_unit(
         db_sync.add_all(
             [
                 HistoryUnit(
-                    history_run_id=hr.id, status=HistoryUnitStatus.SUBMITTED
+                    history_run_id=hr.id,
+                    status=HistoryUnitStatus.SUBMITTED,
+                    logfile="/fake/log",
                 )
                 for _ in range(num_history_units)
             ]

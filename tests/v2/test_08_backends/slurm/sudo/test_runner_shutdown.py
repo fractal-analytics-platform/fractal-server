@@ -82,7 +82,7 @@ async def test_submit_shutdown(
                 sleep_long,
                 parameters=dict(zarr_urls=ZARR_URLS),
                 task_files=get_dummy_task_files(
-                    tmp777_path, component="0", is_slurm=True
+                    tmp777_path, component="", is_slurm=True
                 ),
                 task_type="non_parallel",
                 history_unit_id=history_unit_id,
