@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Literal
 
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
@@ -103,16 +102,20 @@ class BaseRunner(object):
 
     def validate_multisubmit_parameters(
         self,
-        list_parameters: list[dict[str, Any]],
+        *,
         task_type: TaskTypeType,
+        list_parameters: list[dict[str, Any]],
         list_task_files: list[TaskFiles],
+        history_unit_ids: list[int],
     ) -> None:
         """
         Validate parameters for `multisubmit` method
 
         Args:
-            list_parameters: List of parameters dictionaries.
             task_type: Task type.
+            list_parameters: List of parameters dictionaries.
+            list_task_files:
+            history_unit_ids:
         """
         if task_type not in TASK_TYPES_MULTISUBMIT:
             raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
@@ -123,6 +126,11 @@ class BaseRunner(object):
         if len(list_parameters) != len(list_task_files):
             raise ValueError(
                 f"{len(list_task_files)=} differs from "
+                f"{len(list_parameters)=}."
+            )
+        if len(history_unit_ids) != len(list_parameters):
+            raise ValueError(
+                f"{len(history_unit_ids)=} differs from "
                 f"{len(list_parameters)=}."
             )
 
@@ -143,24 +151,3 @@ class BaseRunner(object):
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
                 raise ValueError("Non-unique zarr_urls")
-
-    def validate_multisubmit_history_unit_ids(
-        self,
-        *,
-        history_unit_ids: list[int],
-        task_type: Literal["parallel", "compound", "converter_compound"],
-        list_parameters: list[dict[str, Any]],
-    ) -> None:
-        """
-        Run preliminary check for multisubmit inputs.
-
-        Args:
-            history_unit_ids:
-            task_type:
-            list_parameters:
-        """
-        if len(history_unit_ids) != len(list_parameters):
-            raise ValueError(
-                f"{len(history_unit_ids)=} differs from "
-                f"{len(list_parameters)=}."
-            )

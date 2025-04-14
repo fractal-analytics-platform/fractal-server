@@ -101,28 +101,16 @@ class LocalRunner(BaseRunner):
         config: LocalBackendConfig,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
-        Note:
-
-        1. The number of futures is equal to `len(list_parameters)`.
-        2. The number of `task_files` is equal to `len(list_parameters)`.
-        3. The number of `HistoryUnit`s is equal to `len(history_unit_ids)`.
-        4. For compound tasks, these two numbers are not always the same.
-
-        For this reason, when handling a compound task:
-        * We defer database updates to the caller function
-        * We do not require `len(list_parameters) == len(history_unit_ids)`.
+        Note: `list_parameters`, `list_task_files` and `history_unit_ids`
+        have the same size. For parallel tasks, this is also the number of
+        input images, while for compound tasks these can differ.
         """
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
             list_task_files=list_task_files,
-        )
-
-        self.validate_multisubmit_history_unit_ids(
             history_unit_ids=history_unit_ids,
-            task_type=task_type,
-            list_parameters=list_parameters,
         )
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
