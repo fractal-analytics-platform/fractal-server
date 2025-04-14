@@ -22,6 +22,9 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import (
+    bulk_update_status_of_history_unit,
+)
 from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.app.runner.v2.task_interface import (
     _cast_and_validate_InitTaskOutput,
@@ -316,6 +319,7 @@ def run_v2_task_parallel(
         list_task_files=list_task_files,
         history_unit_ids=history_unit_ids,
         config=runner_config,
+        map_history_unit_id_to_index={},
     )
 
     outcome = {}
@@ -487,6 +491,47 @@ def run_v2_task_compound(
         for parallelization_item in parallelization_list
     ]
 
+    # FIXME: Should we delete the init-task `HistoryUnit`?
+
+    # Create one `HistoryUnit` per parallelization item
+    history_units = [
+        HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=None,
+            zarr_urls=[parallelization_item.zarr_url],
+        )
+        for parallelization_item in parallelization_list
+    ]
+    with next(get_sync_db()) as db:
+        db.add_all(history_units)
+        db.commit()
+        for history_unit in history_units:
+            db.refresh(history_unit)
+        history_unit_ids = [history_unit.id for history_unit in history_units]
+    # Create one `HistoryImageCache` per `zarr_url`
+    with next(get_sync_db()) as db:
+        map_history_unit_id_to_index = {}
+        history_image_caches = []
+        for ind, history_unit in enumerate(history_units):
+            _zarr_url = history_unit.zarr_urls[0]
+            if _zarr_url in map_history_unit_id_to_index.keys():
+                pass
+            else:
+                map_history_unit_id_to_index[history_unit.id] = ind
+                history_image_caches.append(
+                    dict(
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset_id,
+                        zarr_url=history_unit.zarr_urls[0],
+                        latest_history_unit_id=history_unit.id,
+                    )
+                )
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=history_image_caches,
+        )
+
     results, exceptions = runner.multisubmit(
         functools.partial(
             run_single_task,
@@ -498,8 +543,9 @@ def run_v2_task_compound(
         list_parameters=list_function_kwargs,
         task_type=task_type,
         list_task_files=list_task_files,
-        history_unit_ids=[history_unit_id],
+        history_unit_ids=history_unit_ids,
         config=runner_config_compute,
+        map_history_unit_id_to_index=map_history_unit_id_to_index,
     )
 
     init_outcome = {}
@@ -518,18 +564,20 @@ def run_v2_task_compound(
             exception=exceptions.get(ind, None),
         )
 
-    # FIXME: In this case, we are performing db updates from here, rather
-    # than at lower level.
+    # NOTE: For compound tasks, we update `HistoryUnit.status` from here,
+    # rather than within the submit/multisubmit runner methods. This is
+    # to enforce the fact that either all units succeed or they all fail -
+    # at a difference with the parallel-task case.
     with next(get_sync_db()) as db:
         if failure:
-            update_status_of_history_unit(
-                history_unit_id=history_unit_id,
+            bulk_update_status_of_history_unit(
+                history_unit_ids=history_unit_ids,
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
             )
         else:
-            update_status_of_history_unit(
-                history_unit_id=history_unit_id,
+            bulk_update_status_of_history_unit(
+                history_unit_ids=history_unit_ids,
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
