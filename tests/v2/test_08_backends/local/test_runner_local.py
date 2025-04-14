@@ -61,7 +61,6 @@ async def test_submit_success(
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
     assert unit.logfile is not None
-    assert unit.logfile.endswith("non_par-0-log.txt")
     if task_type in ["non_parallel", "converter_non_parallel"]:
         assert unit.status == HistoryUnitStatus.DONE
     else:
@@ -119,7 +118,6 @@ async def test_submit_fail(
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
     assert unit.logfile is not None
-    assert unit.logfile.endswith("non_par-0-log.txt")
     assert unit.status == HistoryUnitStatus.FAILED
 
 
@@ -153,7 +151,6 @@ async def test_multisubmit_parallel(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_local_backend_config(),
-            map_history_unit_id_to_index={},
         )
     debug(results)
     debug(exceptions)
@@ -175,8 +172,6 @@ async def test_multisubmit_parallel(
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        assert unit.logfile is not None
-        assert unit.logfile.endswith(f"-{ind}-log.txt")
         if ind != 2:
             assert unit.status == HistoryUnitStatus.DONE
         else:
@@ -191,12 +186,6 @@ async def test_multisubmit_compound(
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
-    # Introduce a non-trivial mapping of `history_unit_ids` to indices
-    permutation = [(0, 2), (1, 1), (2, 0), (3, 3)]
-    map_history_unit_id_to_index = {
-        history_unit_ids[ind0]: ind1 for ind0, ind1 in permutation
-    }
-
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
             fun,
@@ -208,7 +197,6 @@ async def test_multisubmit_compound(
             task_type="compound",
             history_unit_ids=history_unit_ids,
             config=get_default_local_backend_config(),
-            map_history_unit_id_to_index=map_history_unit_id_to_index,
         )
     debug(results)
     debug(exceptions)
@@ -232,10 +220,6 @@ async def test_multisubmit_compound(
         # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
-        # Logfile is not None, and associated to the expected index/task_file
-        assert unit.logfile is not None
-        ind = map_history_unit_id_to_index[_unit_id]
-        assert unit.logfile.endswith(f"-{ind}-log.txt")
 
 
 @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 1000])
@@ -263,7 +247,6 @@ async def test_multisubmit_in_chunks(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=config,
-            map_history_unit_id_to_index={},
         )
     debug(results)
     debug(exceptions)

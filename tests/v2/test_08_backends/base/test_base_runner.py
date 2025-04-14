@@ -23,7 +23,6 @@ def test_NotImplementedError_methods():
             task_type=None,
             list_task_files=None,
             config=None,
-            map_history_unit_id_to_index=None,
         )
 
 

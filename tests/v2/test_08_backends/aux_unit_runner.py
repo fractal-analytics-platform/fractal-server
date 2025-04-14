@@ -57,7 +57,7 @@ async def history_mock_for_submit(db, history_run_mock) -> tuple[int, int]:
     unit = HistoryUnit(
         history_run_id=history_run_mock.id,
         status=HistoryUnitStatus.SUBMITTED,
-        logfile=None,
+        logfile="/abcd",
         zarr_urls=ZARR_URLS,
     )
     db.add(unit)
@@ -87,7 +87,7 @@ async def history_mock_for_multisubmit(
         unit = HistoryUnit(
             history_run_id=history_run_mock.id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,
+            logfile=f"{zarr_url}.log",
             zarr_urls=[zarr_url],
         )
         db.add(unit)

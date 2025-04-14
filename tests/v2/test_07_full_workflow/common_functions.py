@@ -179,8 +179,8 @@ async def full_workflow(
 
         # Check files in task-0 folder
         expected_files = {
-            "non_par-0000000-log.txt",
-            "non_par-0000000-metadiff.json",
+            "non_par--log.txt",
+            "non_par--metadiff.json",
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
@@ -198,8 +198,8 @@ async def full_workflow(
 
         # Check files in task-1 folder
         expected_files = {
-            "non_par-0000000-log.txt",
-            "non_par-0000000-metadiff.json",
+            "non_par--log.txt",
+            "non_par--metadiff.json",
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
