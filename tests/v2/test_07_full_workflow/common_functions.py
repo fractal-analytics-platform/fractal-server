@@ -624,14 +624,12 @@ async def workflow_with_non_python_task(
             actual_files = zip_ref.namelist()
         with informative_assertion_block(actual_files):
             assert WORKFLOW_LOG_FILENAME in actual_files
-            assert "0_non_python/non_par-0000000-args.json" in actual_files
-            assert "0_non_python/non_par-0000000-log.txt" in actual_files
+            assert "0_non_python/non_par--args.json" in actual_files
+            assert "0_non_python/non_par--log.txt" in actual_files
 
         # Check that stderr and stdout are as expected
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            with zip_ref.open(
-                "0_non_python/non_par-0000000-log.txt", "r"
-            ) as file:
+            with zip_ref.open("0_non_python/non_par--log.txt", "r") as file:
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
