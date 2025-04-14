@@ -8,6 +8,7 @@ from devtools import debug
 
 from ...aux_unit_runner import *  # noqa
 from ...aux_unit_runner import ZARR_URLS
+from ...aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -147,27 +148,12 @@ async def test_multisubmit_shutdown(
             debug("[main_thread] START")
             results, exceptions = runner.multisubmit(
                 fun,
-                [
-                    {
-                        "zarr_url": "a",
-                        "parameter": 1,
-                    },
-                    {
-                        "zarr_url": "b",
-                        "parameter": 2,
-                    },
-                    {
-                        "zarr_url": "c",
-                        "parameter": 3,
-                    },
-                    {
-                        "zarr_url": "d",
-                        "parameter": 4,
-                    },
-                ],
+                ZARR_URLS_AND_PARAMETER,
                 list_task_files=[
                     get_dummy_task_files(
-                        tmp777_path, component=str(ind), is_slurm=True
+                        tmp777_path,
+                        component=str(ind),
+                        is_slurm=True,
                     )
                     for ind in range(len(ZARR_URLS))
                 ],
