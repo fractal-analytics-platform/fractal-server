@@ -172,7 +172,7 @@ class BaseSlurmRunner(BaseRunner):
             fractal_server=__VERSION__,
         )
         for task in slurm_job.tasks:
-            # Wrinte input pickle
+            # Write input pickle
             _args = []
             _kwargs = dict(
                 parameters=task.parameters,
