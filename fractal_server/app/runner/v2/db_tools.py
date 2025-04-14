@@ -84,7 +84,7 @@ def bulk_update_logfile_of_history_unit_slow(
         )
 
 
-def bulk_update_logfile_of_history_unit_fast(
+def bulk_update_logfile_of_history_unit(
     *, list_task_files: list[TaskFiles], history_unit_ids: list[int]
 ):
     from sqlmodel import update
