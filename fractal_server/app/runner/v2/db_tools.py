@@ -4,7 +4,6 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 from sqlmodel import update
 
-from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
@@ -56,20 +55,6 @@ def bulk_update_status_of_history_unit(
             .values(status=status)
         )
         # NOTE: keeping commit within the for loop is much more efficient
-        db_sync.commit()
-
-
-def update_logfile_of_history_unit(
-    *,
-    history_unit_id: int,
-    logfile: str,
-) -> None:
-    with next(get_sync_db()) as db_sync:
-        unit = db_sync.get(HistoryUnit, history_unit_id)
-        if unit is None:
-            raise ValueError(f"HistoryUnit {history_unit_id} not found.")
-        unit.logfile = logfile
-        db_sync.merge(unit)
         db_sync.commit()
 
 

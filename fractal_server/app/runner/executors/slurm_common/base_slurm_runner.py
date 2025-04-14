@@ -23,9 +23,6 @@ from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
 )
-from fractal_server.app.runner.v2.db_tools import (
-    update_logfile_of_history_unit,
-)
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.config import get_settings
@@ -481,12 +478,6 @@ class BaseSlurmRunner(BaseRunner):
         self._mkdir_local_folder(folder=workdir_local.as_posix())
         self._mkdir_remote_folder(folder=workdir_remote.as_posix())
         logger.info("[submit] Create local/remote folders - END")
-
-        # Add prefix to task_files object
-        update_logfile_of_history_unit(
-            history_unit_id=history_unit_id,
-            logfile=task_files.log_file_local,
-        )
 
         # Submission phase
         slurm_job = SlurmJob(
