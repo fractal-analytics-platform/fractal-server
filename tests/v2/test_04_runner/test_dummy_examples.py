@@ -14,8 +14,6 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 
-# from fractal_server.urls import normalize_url
-
 
 async def add_history_image_cache(
     db,
@@ -37,7 +35,12 @@ async def add_history_image_cache(
     await db.commit()
     await db.refresh(hr)
 
-    hu = HistoryUnit(status=status, zarr_url=zarr_urls, history_run_id=hr.id)
+    hu = HistoryUnit(
+        status=status,
+        zarr_url=zarr_urls,
+        history_run_id=hr.id,
+        logfile="/fake/logs",
+    )
     db.add(hu)
     await db.commit()
     await db.refresh(hu)
