@@ -168,15 +168,15 @@ async def test_multisubmit_shutdown(
             fut2 = executor.submit(
                 shutdown_thread,
                 runner.shutdown_file,
-                initial_grace_time=0.2,
+                initial_grace_time=0.5,
             )
             fut2.result()
             results, exceptions = fut1.result()
         debug(results, exceptions)
         assert results == {
-            3: 8,
             0: 2,
             1: 4,
+            3: 8,
         }
         assert isinstance(exceptions[2], JobExecutionError)
         assert "shutdown" in str(exceptions[2])
