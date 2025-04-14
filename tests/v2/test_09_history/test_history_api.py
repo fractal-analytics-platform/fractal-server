@@ -392,13 +392,17 @@ async def test_get_history_run_units(
         for _ in range(6):
             db.add(
                 HistoryUnit(
-                    history_run_id=hr.id, status=HistoryUnitStatus.DONE
+                    history_run_id=hr.id,
+                    status=HistoryUnitStatus.DONE,
+                    logfile="/fake/log",
                 )
             )
         for _ in range(7):
             db.add(
                 HistoryUnit(
-                    history_run_id=hr.id, status=HistoryUnitStatus.FAILED
+                    history_run_id=hr.id,
+                    status=HistoryUnitStatus.FAILED,
+                    logfile="/fake/log",
                 )
             )
         await db.commit()
@@ -523,7 +527,7 @@ async def test_get_history_images(
 
         hu = HistoryUnit(
             history_run_id=hr.id,
-            logfile=None,
+            logfile="/fake/log",
             status=HistoryUnitStatus.DONE,
             zarr_urls=["/a1", "/b1"],
         )
