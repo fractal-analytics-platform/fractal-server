@@ -67,6 +67,7 @@ def _process_task_output(
     result: dict[str, Any] | None = None,
     exception: BaseException | None = None,
 ) -> SubmissionOutcome:
+    invalid_output = False
     if exception is not None:
         task_output = None
     else:
