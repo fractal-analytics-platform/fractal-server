@@ -23,6 +23,7 @@ def test_NotImplementedError_methods():
             task_type=None,
             list_task_files=None,
             config=None,
+            map_history_unit_id_to_index=None,
         )
 
 
@@ -198,5 +199,26 @@ def test_validate_multisubmit_parameters(tmp_path):
                 },
             ],
             task_type="parallel",
-            list_task_files=[get_dummy_task_files(tmp_path, component="0")],
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component="A"),
+                get_dummy_task_files(tmp_path, component="B"),
+            ],
+        )
+
+    with pytest.raises(ValueError, match="differs from"):
+        validate_multisubmit_parameters(
+            list_parameters=[
+                {
+                    "zarr_url": "/A",
+                    "arg": "A",
+                },
+                {
+                    "zarr_url": "/B",
+                    "arg": "B",
+                },
+            ],
+            task_type="parallel",
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component="A"),
+            ],
         )
