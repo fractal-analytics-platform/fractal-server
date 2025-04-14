@@ -46,6 +46,7 @@ class SubmissionOutcome(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     task_output: TaskOutput | None = None
     exception: BaseException | None = None
+    invalid_output: bool = False
 
 
 class InitSubmissionOutcome(BaseModel):
@@ -75,9 +76,11 @@ def _process_task_output(
                 # but it does not
                 task_output = None
                 exception = e
+                invalid_output = True
     return SubmissionOutcome(
         task_output=task_output,
         exception=exception,
+        invalid_output=invalid_output,
     )
 
 
