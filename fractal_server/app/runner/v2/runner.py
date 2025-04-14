@@ -41,6 +41,7 @@ def execute_tasks_v2(
     dataset: DatasetV2,
     runner: BaseRunner,
     user_id: int,
+    job_id: int,
     workflow_dir_local: Path,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
@@ -119,6 +120,7 @@ def execute_tasks_v2(
             history_run = HistoryRun(
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
+                job_id=job_id,
                 workflowtask_dump=workflowtask_dump,
                 task_group_dump=task_group_dump,
                 num_available_images=num_available_images,
