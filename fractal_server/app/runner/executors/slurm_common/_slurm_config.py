@@ -407,6 +407,10 @@ class SlurmConfig(BaseModel):
 
         return lines
 
+    @property
+    def batch_size(self) -> int:
+        return self.tasks_per_job
+
 
 def _parse_mem_value(raw_mem: Union[str, int]) -> int:
     """

@@ -111,7 +111,6 @@ class LocalRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: LocalBackendConfig,
-        map_history_unit_id_to_index: dict[int, int],
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Note:
@@ -124,8 +123,6 @@ class LocalRunner(BaseRunner):
         For this reason, when handling a compound task:
         * We defer database updates to the caller function
         * We do not require `len(list_parameters) == len(history_unit_ids)`.
-        * We require a `map_history_unit_id_to_index` object of the same
-          length as `history_unit_ids`.
         """
 
         self.validate_multisubmit_parameters(
@@ -138,7 +135,6 @@ class LocalRunner(BaseRunner):
             history_unit_ids=history_unit_ids,
             task_type=task_type,
             list_parameters=list_parameters,
-            map_history_unit_id_to_index=map_history_unit_id_to_index,
         )
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
@@ -175,29 +171,6 @@ class LocalRunner(BaseRunner):
                     ].remote_files_dict,
                 )
                 active_futures[positional_index] = future
-
-                if task_type == "parallel":
-                    # FIXME: replace loop with a `bulk_update_history_unit`
-                    # function
-                    update_logfile_of_history_unit(
-                        history_unit_id=history_unit_ids[positional_index],
-                        logfile=list_task_files[
-                            positional_index
-                        ].log_file_local,
-                    )
-                else:
-                    # FIXME: replace loop with a `bulk_update_history_unit`
-                    # function
-                    for (
-                        history_unit_id,
-                        task_files_index,
-                    ) in map_history_unit_id_to_index.items():
-                        update_logfile_of_history_unit(
-                            history_unit_id=history_unit_id,
-                            logfile=list_task_files[
-                                task_files_index
-                            ].log_file_local,
-                        )
 
             while active_futures:
                 finished_futures = [

@@ -56,7 +56,6 @@ class BaseRunner(object):
         list_task_files: list[TaskFiles],
         task_type: TaskTypeType,
         config: Any,
-        map_history_unit_id_to_index: dict[int, int],
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Run a parallel fractal task.
@@ -151,7 +150,6 @@ class BaseRunner(object):
         history_unit_ids: list[int],
         task_type: Literal["parallel", "compound", "converter_compound"],
         list_parameters: list[dict[str, Any]],
-        map_history_unit_id_to_index: dict[int, int],
     ) -> None:
         """
         Run preliminary check for multisubmit inputs.
@@ -160,16 +158,10 @@ class BaseRunner(object):
             history_unit_ids:
             task_type:
             list_parameters:
-            map_history_unit_id_to_index:
         """
         if task_type == "parallel":
             if len(history_unit_ids) != len(list_parameters):
                 raise ValueError(
                     f"{len(history_unit_ids)=} differs from "
                     f"{len(list_parameters)=}."
-                )
-            if len(map_history_unit_id_to_index) > 0:
-                raise ValueError(
-                    f"Invalid {len(map_history_unit_id_to_index)=}, for "
-                    f" {task_type=}."
                 )
