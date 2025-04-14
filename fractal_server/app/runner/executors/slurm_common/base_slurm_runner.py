@@ -24,7 +24,7 @@ from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
-    bulk_update_logfile_of_history_unit_slow,
+    bulk_update_logfile_of_history_unit,
 )
 from fractal_server.app.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
@@ -701,8 +701,7 @@ class BaseSlurmRunner(BaseRunner):
             )
 
         if task_type == "parallel":
-            # FIXME: replace loop with a `bulk_update_history_unit` function
-            bulk_update_logfile_of_history_unit_slow(
+            bulk_update_logfile_of_history_unit(
                 list_task_files=list_task_files,
                 history_unit_ids=history_unit_ids,
             )
