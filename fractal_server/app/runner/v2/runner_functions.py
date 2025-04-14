@@ -228,6 +228,13 @@ def run_v2_task_non_parallel(
             exception=exception,
         )
     }
+    if outcome[0].invalid_output:
+        with next(get_sync_db()) as db:
+            update_status_of_history_unit(
+                history_unit_id=history_unit_id,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db,
+            )
     return outcome, num_tasks
 
 
@@ -333,6 +340,7 @@ def run_v2_task_parallel(
 
     outcome = {}
     for ind in range(len(list_function_kwargs)):
+        # FIXME: change index name
         if ind not in results.keys() and ind not in exceptions.keys():
             # FIXME: Could we avoid this branch?
             error_msg = (
@@ -345,7 +353,13 @@ def run_v2_task_parallel(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
-
+        if outcome[ind].invalid_output:
+            with next(get_sync_db()) as db:
+                update_status_of_history_unit(
+                    history_unit_id=history_unit_ids[ind],
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
+                )
     num_tasks = len(images)
     return outcome, num_tasks
 
@@ -583,6 +597,8 @@ def run_v2_task_compound(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
+        if init_outcome[ind].invalid_output:
+            failure = True
 
     # NOTE: For compound tasks, we update `HistoryUnit.status` from here,
     # rather than within the submit/multisubmit runner methods. This is
