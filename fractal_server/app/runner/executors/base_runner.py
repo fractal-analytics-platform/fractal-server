@@ -159,9 +159,8 @@ class BaseRunner(object):
             task_type:
             list_parameters:
         """
-        if task_type == "parallel":
-            if len(history_unit_ids) != len(list_parameters):
-                raise ValueError(
-                    f"{len(history_unit_ids)=} differs from "
-                    f"{len(list_parameters)=}."
-                )
+        if len(history_unit_ids) != len(list_parameters):
+            raise ValueError(
+                f"{len(history_unit_ids)=} differs from "
+                f"{len(list_parameters)=}."
+            )
