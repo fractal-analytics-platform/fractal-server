@@ -337,14 +337,6 @@ def run_v2_task_parallel(
     return outcome, num_tasks
 
 
-# FIXME: THIS FOR CONVERTERS:
-# if task_type in ["converter_non_parallel"]:
-#     run = db.get(HistoryRun, history_run_id)
-#     run.status = HistoryUnitStatus.DONE
-#     db.merge(run)
-#     db.commit()
-
-
 def run_v2_task_compound(
     *,
     images: list[dict[str, Any]],
