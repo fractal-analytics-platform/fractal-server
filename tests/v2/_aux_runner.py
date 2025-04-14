@@ -17,4 +17,6 @@ def get_default_slurm_config():
         max_mem_per_job=500,
         target_num_jobs=2,
         max_num_jobs=4,
+        tasks_per_job=1,
+        parallel_tasks_per_job=1,
     )
