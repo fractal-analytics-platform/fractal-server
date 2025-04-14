@@ -77,10 +77,10 @@ def update_logfile_of_history_unit(
 def bulk_update_logfile_of_history_unit_slow(
     *, list_task_files: list[TaskFiles], history_unit_ids: list[int]
 ):
-    for ind, task_files in enumerate(list_task_files):
+    for history_unit_id, task_file in zip(history_unit_ids, list_task_files):
         update_logfile_of_history_unit(
-            history_unit_id=history_unit_ids[ind],
-            logfile=task_files.log_file_local,
+            history_unit_id=history_unit_id,
+            logfile=task_file.log_file_local,
         )
 
 
