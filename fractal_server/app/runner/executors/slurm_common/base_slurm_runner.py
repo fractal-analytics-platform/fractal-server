@@ -104,7 +104,6 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
-
         # FIXME: review different cases (exception vs no job found)
 
         if len(job_ids) == 0:
@@ -358,6 +357,7 @@ class BaseSlurmRunner(BaseRunner):
         self,
         *,
         task: SlurmTask,
+        history_unit_id: int,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
@@ -388,6 +388,12 @@ class BaseSlurmRunner(BaseRunner):
                     ]
                     if key in output.keys()
                 }
+                with next(get_sync_db()) as db:
+                    update_status_of_history_unit(
+                        history_unit_id=history_unit_id,
+                        status=HistoryUnitStatus.FAILED,
+                        db_sync=db,
+                    )
                 exception = TaskExecutionError(traceback_string, **kwargs)
                 return (None, exception)
 
@@ -401,6 +407,12 @@ class BaseSlurmRunner(BaseRunner):
                     f"for {task.index=}."
                 )
                 exception = SHUTDOWN_EXCEPTION
+                with next(get_sync_db()) as db:
+                    update_status_of_history_unit(
+                        history_unit_id=history_unit_id,
+                        status=HistoryUnitStatus.FAILED,
+                        db_sync=db,
+                    )
             return (None, exception)
         finally:
             Path(task.input_pickle_file_local).unlink(missing_ok=True)
@@ -454,7 +466,6 @@ class BaseSlurmRunner(BaseRunner):
             "converter_compound",
         ],
     ) -> tuple[Any, Exception]:
-
         logger.info("[submit] START")
 
         workdir_local = task_files.wftask_subfolder_local
@@ -528,7 +539,6 @@ class BaseSlurmRunner(BaseRunner):
         logger.info("[submit] START retrieval phase")
         scancelled_job_ids = []
         while len(self.jobs) > 0:
-
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[submit] {finished_job_ids=}")
@@ -575,7 +585,6 @@ class BaseSlurmRunner(BaseRunner):
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
-
         if len(self.jobs) > 0:
             raise RuntimeError(
                 f"Cannot run `multisubmit` when {len(self.jobs)=}"
@@ -726,7 +735,6 @@ class BaseSlurmRunner(BaseRunner):
         logger.info("[multisubmit] START retrieval phase")
         scancelled_job_ids = []
         while len(self.jobs) > 0:
-
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[multisubmit] {finished_job_ids=}")
