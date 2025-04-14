@@ -84,6 +84,25 @@ def bulk_update_logfile_of_history_unit_slow(
         )
 
 
+def bulk_update_logfile_of_history_unit_fast(
+    *, list_task_files: list[TaskFiles], history_unit_ids: list[int]
+):
+    from sqlmodel import update
+
+    with next(get_sync_db()) as db_sync:
+        db_sync.execute(
+            update(HistoryUnit),
+            [
+                {
+                    "id": _id,
+                    "logfile": task_file.log_file_local,
+                }
+                for _id, task_file in zip(history_unit_ids, list_task_files)
+            ],
+        )
+        db_sync.commit()
+
+
 def bulk_upsert_image_cache_fast(
     *,
     list_upsert_objects: list[dict[str, Any]],
