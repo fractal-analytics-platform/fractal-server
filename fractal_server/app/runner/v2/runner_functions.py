@@ -453,6 +453,14 @@ def run_v2_task_compound(
 
     num_tasks = 1 + len(parallelization_list)
 
+    # Mark the init-task `HistoryUnit` as "done"
+    with next(get_sync_db()) as db:
+        update_status_of_history_unit(
+            history_unit_id=history_unit_id,
+            status=HistoryUnitStatus.DONE,
+            db_sync=db,
+        )
+
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
 
@@ -490,8 +498,6 @@ def run_v2_task_compound(
         }
         for parallelization_item in parallelization_list
     ]
-
-    # FIXME: Should we delete the init-task `HistoryUnit`?
 
     # Create one `HistoryUnit` per parallelization item
     history_units = [
