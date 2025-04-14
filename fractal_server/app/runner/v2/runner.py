@@ -41,8 +41,8 @@ def execute_tasks_v2(
     dataset: DatasetV2,
     runner: BaseRunner,
     user_id: int,
-    job_id: int,
     workflow_dir_local: Path,
+    job_id: Optional[int] = None,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     get_runner_config: Callable[
