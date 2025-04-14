@@ -357,7 +357,6 @@ class BaseSlurmRunner(BaseRunner):
         self,
         *,
         task: SlurmTask,
-        history_unit_id: int,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
