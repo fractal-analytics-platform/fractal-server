@@ -8,6 +8,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 _CHUNK_SIZE = 2_000
@@ -71,6 +72,16 @@ def update_logfile_of_history_unit(
         unit.logfile = logfile
         db_sync.merge(unit)
         db_sync.commit()
+
+
+def bulk_update_logfile_of_history_unit_slow(
+    *, list_task_files: list[TaskFiles], history_unit_ids: list[int]
+):
+    for ind, task_files in enumerate(list_task_files):
+        update_logfile_of_history_unit(
+            history_unit_id=history_unit_ids[ind],
+            logfile=task_files.log_file_local,
+        )
 
 
 def bulk_upsert_image_cache_fast(
