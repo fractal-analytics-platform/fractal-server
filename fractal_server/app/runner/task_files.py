@@ -149,6 +149,10 @@ def enrich_task_files_multisubmit(
     batch_size: int,
     base_task_files: TaskFiles,
 ) -> list[TaskFiles]:
+    """
+    Expand `TaskFiles` objects with `component` and `prefix`.
+    """
+
     new_list_task_files: list[TaskFiles] = []
     for absolute_index in range(tot_tasks):
         ind_batch = absolute_index // batch_size
