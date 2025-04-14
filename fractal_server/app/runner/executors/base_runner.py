@@ -173,11 +173,3 @@ class BaseRunner(object):
                     f"Invalid {len(map_history_unit_id_to_index)=}, for "
                     f" {task_type=}."
                 )
-        else:
-            if len(map_history_unit_id_to_index.keys()) != len(
-                history_unit_ids
-            ):
-                raise ValueError(
-                    f"{len(history_unit_ids)=} differs from "
-                    f"{len(map_history_unit_id_to_index)=}."
-                )
