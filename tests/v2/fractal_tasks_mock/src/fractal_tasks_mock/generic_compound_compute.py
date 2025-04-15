@@ -9,7 +9,6 @@ def generic_compound_compute(
     *,
     zarr_url: str,
     init_args: InitArgsGeneric,
-    another_argument: str,
     raise_error: bool = False,
     raise_error_if_ind_is_even: bool = False,
 ) -> Optional[dict]:
@@ -28,7 +27,6 @@ def generic_compound_compute(
     print("[generic_compound_compute] START")
     print(f"[generic_compound_compute] {zarr_url=}")
     print(f"[generic_compound_compute] {argument=}")
-    print(f"[generic_compound_compute] {another_argument=}")
     print(f"[generic_compound_compute] {raise_error=}")
     print(f"[generic_compound_compute] {raise_error_if_ind_is_even=}")
     if raise_error:

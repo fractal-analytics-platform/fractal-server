@@ -856,11 +856,6 @@
             "title": "Init Args",
             "description": "description"
           },
-          "another_argument": {
-            "title": "Another Argument",
-            "type": "string",
-            "description": "description"
-          },
           "raise_error": {
             "default": false,
             "title": "Raise Error",
@@ -876,8 +871,7 @@
         },
         "required": [
           "zarr_url",
-          "init_args",
-          "another_argument"
+          "init_args"
         ],
         "type": "object",
         "title": "GenericCompoundCompute"
