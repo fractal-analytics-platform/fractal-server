@@ -826,7 +826,7 @@ class FractalSlurmSudoExecutor(Executor):
                     new_slurm_stderr_file,
                 )
 
-            in_paths = job.input_pickle_files
+            # in_paths = job.input_pickle_files
             out_paths = tuple(
                 (self.workflow_dir_local / job.wftask_subfolder_name / f.name)
                 for f in job.output_pickle_files
@@ -834,7 +834,7 @@ class FractalSlurmSudoExecutor(Executor):
 
             outputs = []
             for ind_out_path, out_path in enumerate(out_paths):
-                in_path = in_paths[ind_out_path]
+                # in_path = in_paths[ind_out_path]
 
                 # The output pickle file may be missing because of some slow
                 # filesystem operation; wait some time before considering it as
@@ -872,7 +872,7 @@ class FractalSlurmSudoExecutor(Executor):
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
                         )
-                        in_path.unlink()
+                        # in_path.unlink()
                         self._cleanup(jobid)
                         return
 
@@ -914,20 +914,20 @@ class FractalSlurmSudoExecutor(Executor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    out_path.unlink()
+                    # out_path.unlink()
                 except InvalidStateError:
                     logger.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
                     )
-                    out_path.unlink()
-                    in_path.unlink()
+                    # out_path.unlink()
+                    # in_path.unlink()
                     self._cleanup(jobid)
                     return
 
                 # Clean up input pickle file
-                in_path.unlink()
+                # in_path.unlink()
             self._cleanup(jobid)
             if job.single_task_submission:
                 fut.set_result(outputs[0])
