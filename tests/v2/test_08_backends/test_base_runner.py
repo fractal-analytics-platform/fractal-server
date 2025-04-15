@@ -1,6 +1,6 @@
 import pytest
 
-from ..aux_unit_runner import get_dummy_task_files
+from .aux_unit_runner import get_dummy_task_files
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 
 
