@@ -105,6 +105,11 @@ TASK_LIST = [
         input_types=dict(my_type=False),
         output_types=dict(my_type=True),
     ),
+    CompoundTask(
+        name="generic_compound_task",
+        executable_init="generic_compound_init.py",
+        executable="generic_compound_compute.py",
+    ),
 ]
 
 

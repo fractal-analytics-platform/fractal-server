@@ -29,6 +29,17 @@ class InitArgsCellVoyager(BaseModel):
     acquisition: Optional[int] = None
 
 
+class InitArgsGeneric(BaseModel):
+    """
+    Dummy model description.
+
+    Attributes:
+        argument: dummy attribute description.
+    """
+
+    argument: int
+
+
 class InitArgsIllumination(BaseModel):
     """
     Dummy model description.

@@ -786,6 +786,92 @@
         "title": "GenericTaskParallel"
       },
       "docs_info": "## generic_task_parallel\nDummy task description.\n"
+    },
+    {
+      "name": "generic_compound_task",
+      "type": "compound",
+      "executable_non_parallel": "generic_compound_init.py",
+      "executable_parallel": "generic_compound_compute.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "argument": {
+            "default": 1,
+            "title": "Argument",
+            "type": "integer",
+            "description": "description"
+          }
+        },
+        "required": [
+          "zarr_urls",
+          "zarr_dir"
+        ],
+        "type": "object",
+        "title": "GenericCompoundInit"
+      },
+      "args_schema_parallel": {
+        "$defs": {
+          "InitArgsGeneric": {
+            "description": "Dummy model description.",
+            "properties": {
+              "argument": {
+                "title": "Argument",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "argument"
+            ],
+            "title": "InitArgsGeneric",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "description"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsGeneric",
+            "title": "Init Args",
+            "description": "description"
+          },
+          "another_argument": {
+            "title": "Another Argument",
+            "type": "string",
+            "description": "description"
+          },
+          "raise_error": {
+            "default": false,
+            "title": "Raise Error",
+            "type": "boolean",
+            "description": "description"
+          }
+        },
+        "required": [
+          "zarr_url",
+          "init_args",
+          "another_argument"
+        ],
+        "type": "object",
+        "title": "GenericCompoundCompute"
+      },
+      "docs_info": "## generic_compound_init\nDummy task description.\n## generic_compound_compute\nDummy task description.\n"
     }
   ],
   "has_args_schemas": true,
