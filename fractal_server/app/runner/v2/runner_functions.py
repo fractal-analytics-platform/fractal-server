@@ -19,9 +19,13 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.components import _index_to_component
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.task_files import enrich_task_files_multisubmit
+from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.app.runner.v2.db_tools import (
+    bulk_update_status_of_history_unit,
+)
 from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.app.runner.v2.task_interface import (
     _cast_and_validate_InitTaskOutput,
@@ -128,6 +132,7 @@ def run_v2_task_non_parallel(
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
             Optional[Path],
+            int,
         ],
         Any,
     ],
@@ -150,10 +155,14 @@ def run_v2_task_non_parallel(
         root_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
-        component=_index_to_component(0),
+        component="",
+        prefix=SUBMIT_PREFIX,
     )
 
-    runner_config = get_runner_config(wftask=wftask, which_type="non_parallel")
+    runner_config = get_runner_config(
+        wftask=wftask,
+        which_type="non_parallel",
+    )
 
     function_kwargs = {
         "zarr_dir": zarr_dir,
@@ -172,7 +181,7 @@ def run_v2_task_non_parallel(
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,
+            logfile=task_files.log_file_local,
             zarr_urls=zarr_urls,
         )
         db.add(history_unit)
@@ -232,6 +241,7 @@ def run_v2_task_parallel(
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
             Optional[Path],
+            int,
         ],
         Any,
     ],
@@ -254,6 +264,7 @@ def run_v2_task_parallel(
     runner_config = get_runner_config(
         wftask=wftask,
         which_type="parallel",
+        tot_tasks=len(images),
     )
 
     list_function_kwargs = [
@@ -263,19 +274,18 @@ def run_v2_task_parallel(
         }
         for image in images
     ]
-    list_task_files = [
-        TaskFiles(
-            **task_files.model_dump(exclude={"component"}),
-            component=_index_to_component(ind),
-        )
-        for ind in range(len(images))
-    ]
+
+    list_task_files = enrich_task_files_multisubmit(
+        base_task_files=task_files,
+        tot_tasks=len(images),
+        batch_size=runner_config.batch_size,
+    )
 
     history_units = [
         HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,
+            logfile=list_task_files[ind].log_file_local,
             zarr_urls=[image["zarr_url"]],
         )
         for ind, image in enumerate(images)
@@ -337,14 +347,6 @@ def run_v2_task_parallel(
     return outcome, num_tasks
 
 
-# FIXME: THIS FOR CONVERTERS:
-# if task_type in ["converter_non_parallel"]:
-#     run = db.get(HistoryRun, history_run_id)
-#     run.status = HistoryUnitStatus.DONE
-#     db.merge(run)
-#     db.commit()
-
-
 def run_v2_task_compound(
     *,
     images: list[dict[str, Any]],
@@ -359,6 +361,7 @@ def run_v2_task_compound(
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
             Optional[Path],
+            int,
         ],
         Any,
     ],
@@ -372,18 +375,14 @@ def run_v2_task_compound(
         root_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
-        component=_index_to_component(0),
+        component="",
+        prefix=SUBMIT_PREFIX,
     )
 
     runner_config_init = get_runner_config(
         wftask=wftask,
         which_type="non_parallel",
     )
-    runner_config_compute = get_runner_config(
-        wftask=wftask,
-        which_type="parallel",
-    )
-
     # 3/A: non-parallel init task
     function_kwargs = {
         "zarr_dir": zarr_dir,
@@ -401,7 +400,7 @@ def run_v2_task_compound(
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile=None,
+            logfile=task_files_init.log_file_local,
             zarr_urls=input_image_zarr_urls,
         )
         db.add(history_unit)
@@ -457,6 +456,14 @@ def run_v2_task_compound(
 
     num_tasks = 1 + len(parallelization_list)
 
+    # Mark the init-task `HistoryUnit` as "done"
+    with next(get_sync_db()) as db:
+        update_status_of_history_unit(
+            history_unit_id=history_unit_id,
+            status=HistoryUnitStatus.DONE,
+            db_sync=db,
+        )
+
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
 
@@ -476,16 +483,23 @@ def run_v2_task_compound(
         }
         return init_outcome, num_tasks
 
-    list_task_files = [
-        TaskFiles(
+    runner_config_compute = get_runner_config(
+        wftask=wftask,
+        which_type="parallel",
+        tot_tasks=len(parallelization_list),
+    )
+
+    list_task_files = enrich_task_files_multisubmit(
+        base_task_files=TaskFiles(
             root_dir_local=workflow_dir_local,
             root_dir_remote=workflow_dir_remote,
             task_order=wftask.order,
             task_name=wftask.task.name,
-            component=_index_to_component(ind),
-        )
-        for ind in range(len(parallelization_list))
-    ]
+        ),
+        tot_tasks=len(parallelization_list),
+        batch_size=runner_config_compute.batch_size,
+    )
+
     list_function_kwargs = [
         {
             "zarr_url": parallelization_item.zarr_url,
@@ -494,6 +508,47 @@ def run_v2_task_compound(
         }
         for parallelization_item in parallelization_list
     ]
+
+    # Create one `HistoryUnit` per parallelization item
+    history_units = [
+        HistoryUnit(
+            history_run_id=history_run_id,
+            status=HistoryUnitStatus.SUBMITTED,
+            logfile=list_task_files[ind].log_file_local,
+            zarr_urls=[parallelization_item.zarr_url],
+        )
+        for ind, parallelization_item in enumerate(parallelization_list)
+    ]
+    with next(get_sync_db()) as db:
+        db.add_all(history_units)
+        db.commit()
+        for history_unit in history_units:
+            db.refresh(history_unit)
+        history_unit_ids = [history_unit.id for history_unit in history_units]
+    # Create one `HistoryImageCache` per `zarr_url`.
+    with next(get_sync_db()) as db:
+        visited_zarr_urls = set()
+        history_image_caches = []
+        for ind, history_unit in enumerate(history_units):
+            _zarr_url = history_unit.zarr_urls[0]
+            if _zarr_url in visited_zarr_urls:
+                # Note: This `HistoryUnit` won't be associated to any
+                # `HistoryImageCache`.
+                pass
+            else:
+                visited_zarr_urls.add(_zarr_url)
+                history_image_caches.append(
+                    dict(
+                        workflowtask_id=wftask.id,
+                        dataset_id=dataset_id,
+                        zarr_url=_zarr_url,
+                        latest_history_unit_id=history_unit.id,
+                    )
+                )
+        bulk_upsert_image_cache_fast(
+            db=db,
+            list_upsert_objects=history_image_caches,
+        )
 
     results, exceptions = runner.multisubmit(
         functools.partial(
@@ -506,7 +561,7 @@ def run_v2_task_compound(
         list_parameters=list_function_kwargs,
         task_type=task_type,
         list_task_files=list_task_files,
-        history_unit_ids=[history_unit_id],
+        history_unit_ids=history_unit_ids,
         config=runner_config_compute,
     )
 
@@ -526,18 +581,20 @@ def run_v2_task_compound(
             exception=exceptions.get(ind, None),
         )
 
-    # FIXME: In this case, we are performing db updates from here, rather
-    # than at lower level.
+    # NOTE: For compound tasks, we update `HistoryUnit.status` from here,
+    # rather than within the submit/multisubmit runner methods. This is
+    # to enforce the fact that either all units succeed or they all fail -
+    # at a difference with the parallel-task case.
     with next(get_sync_db()) as db:
         if failure:
-            update_status_of_history_unit(
-                history_unit_id=history_unit_id,
+            bulk_update_status_of_history_unit(
+                history_unit_ids=history_unit_ids,
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
             )
         else:
-            update_status_of_history_unit(
-                history_unit_id=history_unit_id,
+            bulk_update_status_of_history_unit(
+                history_unit_ids=history_unit_ids,
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )

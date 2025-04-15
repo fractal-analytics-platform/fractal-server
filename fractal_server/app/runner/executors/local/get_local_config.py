@@ -47,11 +47,16 @@ class LocalBackendConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     parallel_tasks_per_job: Optional[int] = None
 
+    @property
+    def batch_size(self) -> int:
+        return self.parallel_tasks_per_job or 1
+
 
 def get_local_backend_config(
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
     config_path: Optional[Path] = None,
+    tot_tasks: int = 1,
 ) -> LocalBackendConfig:
     """
     Prepare a `LocalBackendConfig` configuration object

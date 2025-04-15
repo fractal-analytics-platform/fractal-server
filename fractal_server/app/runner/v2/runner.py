@@ -128,10 +128,6 @@ def execute_tasks_v2(
             db.commit()
             db.refresh(history_run)
             history_run_id = history_run.id
-            logger.debug(
-                f"Created {history_run_id=}, for "
-                f"{wftask.id=} and {dataset.id=}"
-            )
 
         # TASK EXECUTION (V2)
         if task.type in ["non_parallel", "converter_non_parallel"]:
@@ -205,9 +201,9 @@ def execute_tasks_v2(
         # Update image list
         num_new_images = 0
         current_task_output.check_zarr_urls_are_unique()
-        # FIXME: Introduce for loop over task outputs, and processe them
-        # sequentially
-        # each failure should lead to an update of the specific image status
+        # NOTE: In principle we could make the task-output processing more
+        # granular, and also associate output-processing failures to history
+        # status.
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.model_dump()
             # Edit existing image
@@ -346,7 +342,7 @@ def execute_tasks_v2(
             )
 
             db.commit()
-            db.close()  # FIXME: why is this needed?
+            db.close()  # NOTE: this is needed, but the reason is unclear
 
             # Create accounting record
             record = AccountingRecord(

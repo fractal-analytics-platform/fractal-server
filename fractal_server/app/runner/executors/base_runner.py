@@ -4,7 +4,6 @@ from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskTypeType
 from fractal_server.logger import set_logger
 
-
 TASK_TYPES_SUBMIT: list[TaskTypeType] = [
     "compound",
     "converter_compound",
@@ -103,28 +102,43 @@ class BaseRunner(object):
 
     def validate_multisubmit_parameters(
         self,
-        list_parameters: list[dict[str, Any]],
+        *,
         task_type: TaskTypeType,
+        list_parameters: list[dict[str, Any]],
         list_task_files: list[TaskFiles],
+        history_unit_ids: list[int],
     ) -> None:
         """
         Validate parameters for `multisubmit` method
 
         Args:
-            list_parameters: List of parameters dictionaries.
             task_type: Task type.
+            list_parameters: List of parameters dictionaries.
+            list_task_files:
+            history_unit_ids:
         """
         if task_type not in TASK_TYPES_MULTISUBMIT:
             raise ValueError(f"Invalid {task_type=} for `multisubmit`.")
+
+        if not isinstance(list_parameters, list):
+            raise ValueError("`parameters` must be a list.")
+
+        if len(list_parameters) != len(list_task_files):
+            raise ValueError(
+                f"{len(list_task_files)=} differs from "
+                f"{len(list_parameters)=}."
+            )
+        if len(history_unit_ids) != len(list_parameters):
+            raise ValueError(
+                f"{len(history_unit_ids)=} differs from "
+                f"{len(list_parameters)=}."
+            )
 
         subfolders = set(
             task_file.wftask_subfolder_local for task_file in list_task_files
         )
         if len(subfolders) != 1:
             raise ValueError(f"More than one subfolders: {subfolders}.")
-
-        if not isinstance(list_parameters, list):
-            raise ValueError("`parameters` must be a list.")
 
         for single_kwargs in list_parameters:
             if not isinstance(single_kwargs, dict):
@@ -137,33 +151,3 @@ class BaseRunner(object):
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
                 raise ValueError("Non-unique zarr_urls")
-
-    def validate_multisubmit_history_unit_ids(
-        self,
-        *,
-        history_unit_ids: list[int],
-        task_type: TaskTypeType,
-        list_parameters: list[dict[str, Any]],
-    ) -> None:
-        """
-        Run preliminary check for multisubmit inputs.
-
-        Args:
-            history_unit_ids:
-            task_type:
-            list_parameters:
-        """
-        if task_type in ["compound", "converter_compound"]:
-            if len(history_unit_ids) != 1:
-                raise NotImplementedError(
-                    "We are breaking the assumption that compound/multisubmit "
-                    "is associated to a single HistoryUnit. This is not "
-                    "supported."
-                )
-            elif task_type == "parallel" and len(history_unit_ids) != len(
-                list_parameters
-            ):
-                raise ValueError(
-                    f"{len(history_unit_ids)=} differs from "
-                    f"{len(list_parameters)=}."
-                )

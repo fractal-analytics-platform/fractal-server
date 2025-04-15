@@ -11,7 +11,13 @@ from fractal_server.app.runner.executors.local.get_local_config import (
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
-ZARR_URLS = ["a", "b", "c", "d"]
+ZARR_URLS = ["/a", "/b", "/c", "/d"]
+ZARR_URLS_AND_PARAMETER = [
+    {"zarr_url": "/a", "parameter": 1},
+    {"zarr_url": "/b", "parameter": 2},
+    {"zarr_url": "/c", "parameter": 3},
+    {"zarr_url": "/d", "parameter": 4},
+]
 
 
 @pytest.fixture
@@ -51,7 +57,7 @@ async def history_mock_for_submit(db, history_run_mock) -> tuple[int, int]:
     unit = HistoryUnit(
         history_run_id=history_run_mock.id,
         status=HistoryUnitStatus.SUBMITTED,
-        logfile="/log",
+        logfile="/abcd",
         zarr_urls=ZARR_URLS,
     )
     db.add(unit)
@@ -81,7 +87,7 @@ async def history_mock_for_multisubmit(
         unit = HistoryUnit(
             history_run_id=history_run_mock.id,
             status=HistoryUnitStatus.SUBMITTED,
-            logfile="/log/fake",
+            logfile=f"{zarr_url}.log",
             zarr_urls=[zarr_url],
         )
         db.add(unit)
@@ -102,24 +108,26 @@ async def history_mock_for_multisubmit(
 
 
 def get_dummy_task_files(
-    root_dir_local: Path,
+    base_dir: Path,
     component: str,
+    prefix: str | None = None,
     is_slurm: bool = False,
 ) -> TaskFiles:
+
     if is_slurm:
-        return TaskFiles(
-            root_dir_local=root_dir_local / "server",
-            root_dir_remote=root_dir_local / "user",
-            task_name="name",
-            task_order=0,
-            component=component,
-        )
+        root_dir_local = base_dir / "server"
+        root_dir_remote = base_dir / "user"
+    else:
+        root_dir_local = base_dir
+        root_dir_remote = base_dir
+
     return TaskFiles(
         root_dir_local=root_dir_local,
-        root_dir_remote=root_dir_local,
+        root_dir_remote=root_dir_remote,
         task_name="name",
         task_order=0,
         component=component,
+        prefix=(prefix or "some-prefix"),
     )
 
 
