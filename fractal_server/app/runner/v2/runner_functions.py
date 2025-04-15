@@ -525,30 +525,6 @@ def run_v2_task_compound(
         for history_unit in history_units:
             db.refresh(history_unit)
         history_unit_ids = [history_unit.id for history_unit in history_units]
-    # Create one `HistoryImageCache` per `zarr_url`.
-    with next(get_sync_db()) as db:
-        visited_zarr_urls = set()
-        history_image_caches = []
-        for ind, history_unit in enumerate(history_units):
-            _zarr_url = history_unit.zarr_urls[0]
-            if _zarr_url in visited_zarr_urls:
-                # Note: This `HistoryUnit` won't be associated to any
-                # `HistoryImageCache`.
-                pass
-            else:
-                visited_zarr_urls.add(_zarr_url)
-                history_image_caches.append(
-                    dict(
-                        workflowtask_id=wftask.id,
-                        dataset_id=dataset_id,
-                        zarr_url=_zarr_url,
-                        latest_history_unit_id=history_unit.id,
-                    )
-                )
-        bulk_upsert_image_cache_fast(
-            db=db,
-            list_upsert_objects=history_image_caches,
-        )
 
     results, exceptions = runner.multisubmit(
         functools.partial(
