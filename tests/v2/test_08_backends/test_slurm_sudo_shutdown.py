@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from ...aux_unit_runner import *  # noqa
-from ...aux_unit_runner import ZARR_URLS
-from ...aux_unit_runner import ZARR_URLS_AND_PARAMETER
+from .aux_unit_runner import *  # noqa
+from .aux_unit_runner import ZARR_URLS
+from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
