@@ -72,8 +72,6 @@ async def test_submit_success(
     # `HistoryUnit.status` is updated from within `runner.submit`
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
-    assert unit.logfile is not None
-    assert unit.logfile.endswith("non_par-0-log.txt")
     if task_type in ["non_parallel", "converter_non_parallel"]:
         assert unit.status == HistoryUnitStatus.DONE
     else:
@@ -139,8 +137,6 @@ async def test_submit_fail(
     # `HistoryUnit.status` is updated from within `runner.submit`
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
-    assert unit.logfile is not None
-    assert unit.logfile.endswith("non_par-0-log.txt")
     assert unit.status == HistoryUnitStatus.FAILED
 
 
@@ -181,7 +177,6 @@ async def test_multisubmit_parallel(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
-            map_history_unit_id_to_index={},
         )
     debug(results)
     debug(exceptions)
@@ -203,8 +198,6 @@ async def test_multisubmit_parallel(
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        assert unit.logfile is not None
-        assert unit.logfile.endswith(f"-{ind}-log.txt")
         if ind != 2:
             assert unit.status == HistoryUnitStatus.DONE
         else:
@@ -229,11 +222,6 @@ async def test_multisubmit_compound(
             raise ValueError("parameter=3 is very very bad")
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
-    # Introduce a non-trivial mapping of `history_unit_ids` to indices
-    permutation = [(0, 2), (1, 1), (2, 0), (3, 3)]
-    map_history_unit_id_to_index = {
-        history_unit_ids[ind0]: ind1 for ind0, ind1 in permutation
-    }
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -241,6 +229,7 @@ async def test_multisubmit_compound(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
+
         results, exceptions = runner.multisubmit(
             fun,
             ZARR_URLS_AND_PARAMETER,
@@ -253,7 +242,6 @@ async def test_multisubmit_compound(
             task_type="compound",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
-            map_history_unit_id_to_index=map_history_unit_id_to_index,
         )
     debug(results)
     debug(exceptions)
@@ -277,7 +265,3 @@ async def test_multisubmit_compound(
         # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
-        # Logfile is not None, and associated to the expected index/task_file
-        assert unit.logfile is not None
-        ind = map_history_unit_id_to_index[_unit_id]
-        assert unit.logfile.endswith(f"-{ind}-log.txt")

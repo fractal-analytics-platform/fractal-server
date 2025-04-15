@@ -60,7 +60,6 @@ async def test_submit_success(
     # `HistoryUnit.status` is updated from within `runner.submit`
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
-    assert unit.logfile is not None
     if task_type in ["non_parallel", "converter_non_parallel"]:
         assert unit.status == HistoryUnitStatus.DONE
     else:
@@ -117,7 +116,6 @@ async def test_submit_fail(
     # `HistoryUnit.status` is updated from within `runner.submit`
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
-    assert unit.logfile is not None
     assert unit.status == HistoryUnitStatus.FAILED
 
 
