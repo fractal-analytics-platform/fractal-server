@@ -196,3 +196,17 @@ def test_validate_multisubmit_parameters(tmp_path):
                 get_dummy_task_files(tmp_path, component="A"),
             ],
         )
+
+    with pytest.raises(ValueError, match="differs from"):
+        validate_multisubmit_parameters(
+            task_type="parallel",
+            list_parameters=[
+                {"zarr_url": "/A", "arg": "A"},
+                {"zarr_url": "/B", "arg": "B"},
+            ],
+            history_unit_ids=[None],
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component="A"),
+                get_dummy_task_files(tmp_path, component="A"),
+            ],
+        )
