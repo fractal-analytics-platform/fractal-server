@@ -541,7 +541,7 @@ def run_v2_task_compound(
         config=runner_config_compute,
     )
 
-    init_outcome = {}
+    compute_outcomes: dict[int, SubmissionOutcome] = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
@@ -552,10 +552,12 @@ def run_v2_task_compound(
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        init_outcome[ind] = _process_task_output(
+        compute_outcomes[ind] = _process_task_output(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
+        if compute_outcomes[ind].exception is not None:
+            failure = True
 
     # NOTE: For compound tasks, we update `HistoryUnit.status` from here,
     # rather than within the submit/multisubmit runner methods. This is
@@ -575,4 +577,4 @@ def run_v2_task_compound(
                 db_sync=db,
             )
 
-    return init_outcome, num_tasks
+    return compute_outcomes, num_tasks
