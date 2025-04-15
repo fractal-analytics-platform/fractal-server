@@ -706,6 +706,7 @@ class FractalSlurmSudoExecutor(Executor):
             funcser = cloudpickle.dumps((versions, fun, _args, _kwargs))
             with open(job.input_pickle_files[0], "wb") as f:
                 f.write(funcser)
+            logger.debug(f"[_submit_job] Written {job.input_pickle_files[0]}.")
         else:
             for ind_component, component in enumerate(components):
                 _args = [component]
@@ -713,6 +714,9 @@ class FractalSlurmSudoExecutor(Executor):
                 funcser = cloudpickle.dumps((versions, fun, _args, _kwargs))
                 with open(job.input_pickle_files[ind_component], "wb") as f:
                     f.write(funcser)
+                logger.debug(
+                    f"[_submit_job] Written {job.input_pickle_files[ind_component]}."
+                )
 
         # Submit job to SLURM, and get jobid
         jobid, job = self._start(job)
@@ -872,7 +876,6 @@ class FractalSlurmSudoExecutor(Executor):
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
                         )
-                        # in_path.unlink()
                         self._cleanup(jobid)
                         return
 
@@ -914,20 +917,15 @@ class FractalSlurmSudoExecutor(Executor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    # out_path.unlink()
                 except InvalidStateError:
                     logger.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
                     )
-                    # out_path.unlink()
-                    # in_path.unlink()
                     self._cleanup(jobid)
                     return
 
-                # Clean up input pickle file
-                # in_path.unlink()
             self._cleanup(jobid)
             if job.single_task_submission:
                 fut.set_result(outputs[0])
