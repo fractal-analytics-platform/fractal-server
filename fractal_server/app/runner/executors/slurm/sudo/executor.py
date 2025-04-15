@@ -706,7 +706,7 @@ class FractalSlurmSudoExecutor(Executor):
             funcser = cloudpickle.dumps((versions, fun, _args, _kwargs))
             with open(job.input_pickle_files[0], "wb") as f:
                 f.write(funcser)
-            logger.debug(f"[_submit_job] Written {job.input_pickle_files[0]}.")
+            logger.info(f"[_submit_job] Written {job.input_pickle_files[0]}.")
         else:
             for ind_component, component in enumerate(components):
                 _args = [component]
@@ -714,7 +714,7 @@ class FractalSlurmSudoExecutor(Executor):
                 funcser = cloudpickle.dumps((versions, fun, _args, _kwargs))
                 with open(job.input_pickle_files[ind_component], "wb") as f:
                     f.write(funcser)
-                logger.debug(
+                logger.info(
                     f"[_submit_job] Written {job.input_pickle_files[ind_component]}."
                 )
 
@@ -1163,7 +1163,7 @@ class FractalSlurmSudoExecutor(Executor):
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append(
-            '"Hostname: `uname -n`; current directory: `pwd`"\n'
+            'echo "Hostname: `uname -n`; current directory: `pwd`"\n'
         )
 
         # Complete script preamble
