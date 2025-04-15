@@ -247,7 +247,7 @@ class BaseSlurmRunner(BaseRunner):
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
-        script_lines.append('echo "Current directory : $(pwd)"')
+        script_lines.append('echo "Current directory: $(pwd)"')
         script_lines.append(
             'echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"'
         )
