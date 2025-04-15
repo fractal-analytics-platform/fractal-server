@@ -13,6 +13,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
+from fractal_server.urls import normalize_url
 
 
 async def add_history_image_cache(
@@ -363,147 +364,143 @@ async def test_dummy_unset_attribute(
     }
 
 
-# async def test_dummy_insert_single_image_none_attribute(  # FIXME re-include
-#     db,
-#     MockCurrentUser,
-#     project_factory_v2,
-#     dataset_factory_v2,
-#     tmp_path: Path,
-#     local_runner: Executor,
-#     fractal_tasks_mock_no_db,
-# ):
-#     # Preliminary setup
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-#     async with MockCurrentUser() as user:
-#         execute_tasks_v2_args = dict(
-#             executor=local_runner,
-#             workflow_dir_local=tmp_path / "job_dir",
-#             workflow_dir_remote=tmp_path / "job_dir",
-#             user_id=user.id,
-#         )
-#         project = await project_factory_v2(user)
-#         dataset = await dataset_factory_v2(
-#             project_id=project.id, zarr_dir=zarr_dir
-#         )
-#         # Run successfully on an empty dataset
-#         execute_tasks_v2_mod(
-#             wf_task_list=[
-#                 WorkflowTaskV2Mock(
-#                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
-#                     task_id=fractal_tasks_mock_no_db[
-#                         "dummy_insert_single_image"
-#                     ].id,
-#                     args_non_parallel=dict(
-#                         attributes={"attribute-name": None}
-#                     ),
-#                     id=0,
-#                     order=0,
-#                 )
-#             ],
-#             dataset=dataset,
-#             **execute_tasks_v2_args,
-#         )
-#         dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-#         debug(dataset_attrs["images"])
-#         assert (
-#             "attribute-name"
-#             not in dataset_attrs["images"][0]["attributes"].keys()
-#         )
+async def test_dummy_insert_single_image_with_attribute_none(
+    db,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    # Preliminary setup
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory_v2(user)
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel=dict(attributes={"attribute-name": None}),
+    )
+
+    # Run successfully on an empty dataset
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        user_id=user_id,
+        runner=local_runner,
+    )
+    # Assert that attribute was not set
+    await db.refresh(dataset)
+    assert "attribute-name" not in dataset.images[0]["attributes"].keys()
 
 
-# async def test_dummy_insert_single_image_normalization(  # FIXME re-include
-#     db,
-#     MockCurrentUser,
-#     project_factory_v2,
-#     dataset_factory_v2,
-#     tmp_path: Path,
-#     local_runner: Executor,
-#     fractal_tasks_mock_no_db,
-# ):
-#     # Preliminary setup
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-#     async with MockCurrentUser() as user:
-#         execute_tasks_v2_args = dict(
-#             executor=local_runner,
-#             workflow_dir_local=tmp_path / "job_dir",
-#             workflow_dir_remote=tmp_path / "job_dir",
-#             user_id=user.id,
-#         )
-#         project = await project_factory_v2(user)
-#         dataset = await dataset_factory_v2(
-#             project_id=project.id, zarr_dir=zarr_dir
-#         )
-#         # Run successfully with trailing slashes
-#         execute_tasks_v2_mod(
-#             wf_task_list=[
-#                 WorkflowTaskV2Mock(
-#                     task=fractal_tasks_mock_no_db["dummy_insert_single_image"],
-#                     task_id=fractal_tasks_mock_no_db[
-#                         "dummy_insert_single_image"
-#                     ].id,
-#                     id=0,
-#                     order=0,
-#                     args_non_parallel={"trailing_slash": True},
-#                 )
-#             ],
-#             dataset=dataset,
-#             **execute_tasks_v2_args,
-#         )
-#         dataset_attrs = await _get_dataset_attrs(db, dataset.id)
-#         debug(dataset_attrs["images"])
-#         for image in dataset_attrs["images"]:
-#             assert normalize_url(image["zarr_url"]) == image["zarr_url"]
+async def test_dummy_insert_single_image_normalization(
+    db,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    # Preliminary setup
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory_v2(user)
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel={"trailing_slash": True},
+    )
+    # Run successfully on an empty dataset
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        user_id=user_id,
+        runner=local_runner,
+    )
+    # Assert that URLs are normalized
+    await db.refresh(dataset)
+    debug(dataset.images)
+    for image in dataset.images:
+        assert normalize_url(image["zarr_url"]) == image["zarr_url"]
 
 
-# async def test_default_inclusion_of_images(  # FIXME re-include
-#     db,
-#     MockCurrentUser,
-#     project_factory_v2,
-#     dataset_factory_v2,
-#     tmp_path: Path,
-#     local_runner: Executor,
-#     fractal_tasks_mock_no_db,
-# ):
-#     """
-#     Ref
-#     https://github.com/fractal-analytics-platform/fractal-server/issues/1374
-#     """
-#     # Prepare dataset
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-#     images = [
-#         dict(
-#             zarr_url=Path(zarr_dir, "my_image").as_posix(),
-#             attributes={},
-#             types={},
-#         )
-#     ]
-#     async with MockCurrentUser() as user:
-#         project = await project_factory_v2(user)
-#         dataset_pre = await dataset_factory_v2(
-#             project_id=project.id, zarr_dir=zarr_dir, images=images
-#         )
+async def test_default_inclusion_of_images(
+    db,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    """
+    Ref
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1374
+    """
+    # Preliminary setup
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["generic_task_parallel"].id
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory_v2(user)
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel={"trailing_slash": True},
+    )
 
-#         # Run
-#         execute_tasks_v2_mod(
-#             wf_task_list=[
-#                 WorkflowTaskV2Mock(
-#                     task=fractal_tasks_mock_no_db["generic_task_parallel"],
-#                     task_id=fractal_tasks_mock_no_db[
-#                         "generic_task_parallel"
-#                     ].id,
-#                     rder=0,
-#                     id=0,
-#                     order=0,
-#                 )
-#             ],
-#             dataset=dataset_pre,
-#             executor=local_runner,
-#             workflow_dir_local=tmp_path / "job_dir",
-#             workflow_dir_remote=tmp_path / "job_dir",
-#             user_id=user.id,
-#         )
-#         dataset_attrs = await _get_dataset_attrs(db, dataset_pre.id)
-#         image = dataset_attrs["images"][0]
-#         debug(dataset_attrs)
-#         debug(image)
-#         assert image["types"] == dict(my_type=True)
+    images = [
+        dict(
+            zarr_url=Path(zarr_dir, "my_image").as_posix(),
+            attributes={},
+            types={},
+        )
+    ]
+
+    # Run successfully on an empty dataset
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=images,
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        user_id=user_id,
+        runner=local_runner,
+    )
+
+    # Assert that images were included by default
+    await db.refresh(dataset)
+    debug(dataset)
+    # assert dataset.images[0]["types"] == dict(my_type=True)
