@@ -360,6 +360,8 @@ class FractalSlurmSudoExecutor(Executor):
         slurm_config.tasks_per_job = 1
         slurm_config.parallel_tasks_per_job = 1
 
+        logger.info("[submit] PRE `_submit_job`")
+        logger.info(f"[submit] {vars(task_files)=}")
         fut = self._submit_job(
             fun,
             slurm_config=slurm_config,
@@ -369,6 +371,7 @@ class FractalSlurmSudoExecutor(Executor):
             args=fun_args,
             kwargs=fun_kwargs,
         )
+        logger.info("[submit] POST `_submit_job`")
         return fut
 
     def map(
