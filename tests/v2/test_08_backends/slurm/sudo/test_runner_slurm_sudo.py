@@ -229,6 +229,7 @@ async def test_multisubmit_compound(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
+
         list_task_files = [
             get_dummy_task_files(
                 tmp777_path,
@@ -237,12 +238,14 @@ async def test_multisubmit_compound(
             )
             for ind in range(len(ZARR_URLS))
         ]
+
         # Create task subfolder (in standard usage, this was done during the
         # init phase)
         workdir_local = list_task_files[0].wftask_subfolder_local
         workdir_remote = list_task_files[0].wftask_subfolder_remote
         runner._mkdir_local_folder(workdir_local.as_posix())
         runner._mkdir_remote_folder(folder=workdir_remote.as_posix())
+
         results, exceptions = runner.multisubmit(
             fun,
             ZARR_URLS_AND_PARAMETER,
