@@ -186,6 +186,6 @@ class LocalRunner(BaseRunner):
                             # all existing tasks and shutdown runner (for the
                             # compound-task case)
 
-        logger.debug(f"[multisubmit] END, {results=}, {exceptions=}")
+        logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 
         return results, exceptions
