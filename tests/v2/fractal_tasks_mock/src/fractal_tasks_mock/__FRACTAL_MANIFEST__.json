@@ -788,7 +788,7 @@
       "docs_info": "## generic_task_parallel\nDummy task description.\n"
     },
     {
-      "name": "generic_compound_task",
+      "name": "generic_task_compound",
       "type": "compound",
       "executable_non_parallel": "generic_compound_init.py",
       "executable_parallel": "generic_compound_compute.py",
@@ -830,10 +830,15 @@
               "argument": {
                 "title": "Argument",
                 "type": "integer"
+              },
+              "ind": {
+                "title": "Ind",
+                "type": "integer"
               }
             },
             "required": [
-              "argument"
+              "argument",
+              "ind"
             ],
             "title": "InitArgsGeneric",
             "type": "object"
@@ -859,6 +864,12 @@
           "raise_error": {
             "default": false,
             "title": "Raise Error",
+            "type": "boolean",
+            "description": "description"
+          },
+          "raise_error_if_ind_is_even": {
+            "default": false,
+            "title": "Raise Error If Ind Is Even",
             "type": "boolean",
             "description": "description"
           }

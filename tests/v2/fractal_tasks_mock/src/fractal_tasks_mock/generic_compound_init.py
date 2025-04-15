@@ -26,9 +26,9 @@ def generic_compound_init(
     parallelization_list = [
         dict(
             zarr_url=zarr_url,
-            init_args=dict(argument=argument),
+            init_args=dict(ind=ind, argument=argument),
         )
-        for zarr_url in zarr_urls
+        for ind, zarr_url in enumerate(zarr_urls)
     ]
     print(f"{prefix} END")
     return dict(parallelization_list=parallelization_list)

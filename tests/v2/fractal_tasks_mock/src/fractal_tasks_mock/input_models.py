@@ -35,9 +35,11 @@ class InitArgsGeneric(BaseModel):
 
     Attributes:
         argument: dummy attribute description.
+        ind: dummy attribute description
     """
 
     argument: int
+    ind: int
 
 
 class InitArgsIllumination(BaseModel):

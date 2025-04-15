@@ -11,6 +11,7 @@ def generic_compound_compute(
     init_args: InitArgsGeneric,
     another_argument: str,
     raise_error: bool = False,
+    raise_error_if_ind_is_even: bool = False,
 ) -> Optional[dict]:
     """
     Dummy task description.
@@ -20,6 +21,7 @@ def generic_compound_compute(
         init_args: description
         another_argument: description
         raise_error: description
+        raise_error_if_ind_is_even: description
     """
 
     argument = init_args.argument
@@ -27,8 +29,14 @@ def generic_compound_compute(
     print(f"[generic_compound_compute] {zarr_url=}")
     print(f"[generic_compound_compute] {argument=}")
     print(f"[generic_compound_compute] {another_argument=}")
+    print(f"[generic_compound_compute] {raise_error=}")
+    print(f"[generic_compound_compute] {raise_error_if_ind_is_even=}")
     if raise_error:
         raise RuntimeError(f"{raise_error=}")
+    if raise_error_if_ind_is_even and (init_args.ind % 2 == 0):
+        raise RuntimeError(
+            f"{init_args.ind=} and {raise_error_if_ind_is_even=}"
+        )
 
     print("[generic_compound_compute] END")
     return None
