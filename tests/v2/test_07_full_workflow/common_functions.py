@@ -219,7 +219,10 @@ async def full_workflow(
         url = f"api/v2/project/{project_id}/dataset/{dataset_id}/history/"
         res = await client.get(url)
         assert res.status_code == 200
-        debug(res.json())  # FIXME add assertion
+        assert len(res.json()) == 3
+        for item in res.json():
+            assert "workflowtask_dump" in item.keys()
+            assert "task_group_dump" in item.keys()
 
         for wftask_id in [wftask0_id, wftask1_id, wftask2_id]:
             # GET history runs
@@ -259,7 +262,7 @@ async def full_workflow(
             )
             res = await client.get(url)
             assert res.status_code == 200
-            assert "not available" not in res.json()  # FIXME
+            assert "not available" not in res.json()
 
 
 async def full_workflow_TaskExecutionError(
