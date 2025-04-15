@@ -478,6 +478,7 @@ async def test_default_inclusion_of_images(
         args_non_parallel={"trailing_slash": True},
     )
 
+    # Run successfully
     images = [
         dict(
             zarr_url=Path(zarr_dir, "my_image").as_posix(),
@@ -485,8 +486,6 @@ async def test_default_inclusion_of_images(
             types={},
         )
     ]
-
-    # Run successfully on an empty dataset
     dataset = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
@@ -503,4 +502,56 @@ async def test_default_inclusion_of_images(
     # Assert that images were included by default
     await db.refresh(dataset)
     debug(dataset)
-    # assert dataset.images[0]["types"] == dict(my_type=True)
+    assert dataset.images[0]["types"] == dict(my_type=True)
+
+
+async def test_compound_task_with_compute_failure(
+    db,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    # Preliminary setup
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["generic_task_compound"].id
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory_v2(user)
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel={"argument": 3},
+        args_parallel={"raise_error": True},  # make it fail
+    )
+
+    images = [
+        dict(
+            zarr_url=Path(zarr_dir, "my_image").as_posix(),
+            attributes={},
+            types={},
+        )
+    ]
+
+    # Run and fail
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=images,
+    )
+    with pytest.raises(JobExecutionError) as exc_info:
+        execute_tasks_v2_mod(
+            wf_task_list=[wftask],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / "job0",
+            user_id=user_id,
+            runner=local_runner,
+        )
+    debug(exc_info.value.assemble_error())
+    assert "raise_error=True" in exc_info.value.assemble_error()
