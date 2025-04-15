@@ -563,7 +563,7 @@ class FractalSlurmSudoExecutor(Executor):
         Returns:
             Future representing the execution of the current SLURM job.
         """
-
+        logger.debug("[_submit_job] START")
         # Prevent calling sbatch if auxiliary thread was shut down
         if self.wait_thread.shutdown:
             error_msg = (
@@ -665,6 +665,7 @@ class FractalSlurmSudoExecutor(Executor):
             )
             for ind in range(job.num_tasks_tot)
         )
+        logger.info(f"[_submit_job] {job.input_pickle_files}")
         job.output_pickle_files = tuple(
             get_pickle_file_path(
                 arg=job.workerids[ind],
@@ -732,6 +733,7 @@ class FractalSlurmSudoExecutor(Executor):
             )
 
         # Thread will wait for it to finish.
+        logger.debug("[_submit_job] Now wait...")
         self.wait_thread.wait(
             filenames=job.get_clean_output_pickle_files(),
             jobid=jobid,
@@ -739,6 +741,9 @@ class FractalSlurmSudoExecutor(Executor):
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
+
+        logger.debug("[_submit_job] END")
+
         return fut
 
     def _prepare_JobExecutionError(
