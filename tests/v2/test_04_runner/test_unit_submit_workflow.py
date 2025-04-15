@@ -95,55 +95,55 @@ async def test_fail_submit_workflows_wrong_backend(
         assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log
 
 
-# FIXME: Re-introduce test
-# async def test_mkdir_error(
-#     project_factory_v2,
-#     dataset_factory_v2,
-#     workflow_factory_v2,
-#     task_factory_v2,
-#     job_factory_v2,
-#     db,
-#     tmp_path,
-#     MockCurrentUser,
-#     override_settings_factory,
-# ):
-#     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
-#     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+async def test_mkdir_error(
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    job_factory_v2,
+    db,
+    tmp_path,
+    MockCurrentUser,
+    override_settings_factory,
+):
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_SLURM_WORKER_PYTHON=None,
+    )
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
 
-#         project = await project_factory_v2(user)
-#         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
-#         workflow = await workflow_factory_v2(project_id=project.id, name="wf")  # noqa
-#         task = await task_factory_v2(user_id=user.id)
-#         await _workflow_insert_task(
-#             workflow_id=workflow.id, task_id=task.id, db=db
-#         )
-#         job = await job_factory_v2(
-#             project_id=project.id,
-#             dataset_id=dataset.id,
-#             workflow_id=workflow.id,
-#             working_dir=(tmp_path / "abc").as_posix(),
-#             status="submitted",
-#         )
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id, name="ds")
+        workflow = await workflow_factory_v2(
+            project_id=project.id, name="wf"
+        )  # noqa
+        task = await task_factory_v2(user_id=user.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=(tmp_path / "abc").as_posix(),
+            status="submitted",
+        )
 
-#         submit_workflow(
-#             workflow_id=workflow.id,
-#             dataset_id=dataset.id,
-#             job_id=job.id,
-#             user_id=user.id,
-#             user_cache_dir=(tmp_path / "xxx").as_posix(),
-#             user_settings=UserSettings(),
-#             slurm_user="fake",
-#         )
+        submit_workflow(
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            job_id=job.id,
+            user_id=user.id,
+            user_cache_dir=(tmp_path / "xxx").as_posix(),
+            user_settings=UserSettings(),
+            slurm_user="fake",
+        )
 
-#         await db.close()
-#         job = await db.get(JobV2, job.id)
+        await db.close()
+        job = await db.get(JobV2, job.id)
 
-#         assert job.status == "failed"
-#         assert job.log == (
-#             "RuntimeError error occurred while creating job folder and "
-#             "subfolders.\n"
-#             "Original error: user=None not allowed in _mkdir_as_user"
-#         )
+        assert job.status == "failed"
+        assert "Could not mkdir" in job.log
 
 
 async def test_submit_workflow_failure(
