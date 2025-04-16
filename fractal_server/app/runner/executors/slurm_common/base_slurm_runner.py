@@ -457,104 +457,121 @@ class BaseSlurmRunner(BaseRunner):
         ],
     ) -> tuple[Any, Exception]:
         logger.info("[submit] START")
+        try:
+            workdir_local = task_files.wftask_subfolder_local
+            workdir_remote = task_files.wftask_subfolder_remote
 
-        workdir_local = task_files.wftask_subfolder_local
-        workdir_remote = task_files.wftask_subfolder_remote
+            if self.jobs != {}:
+                raise JobExecutionError(
+                    "Unexpected branch: jobs should be empty."
+                )
 
-        if self.jobs != {}:
-            raise JobExecutionError("Unexpected branch: jobs should be empty.")
+            if self.is_shutdown():
+                with next(get_sync_db()) as db:
+                    update_status_of_history_unit(
+                        history_unit_id=history_unit_id,
+                        status=HistoryUnitStatus.FAILED,
+                        db_sync=db,
+                    )
 
-        if self.is_shutdown():
+                return None, SHUTDOWN_EXCEPTION
+
+            # Validation phase
+            self.validate_submit_parameters(
+                parameters=parameters,
+                task_type=task_type,
+            )
+
+            # Create task subfolder
+            logger.info("[submit] Create local/remote folders - START")
+            self._mkdir_local_folder(folder=workdir_local.as_posix())
+            self._mkdir_remote_folder(folder=workdir_remote.as_posix())
+            logger.info("[submit] Create local/remote folders - END")
+
+            # Submission phase
+            slurm_job = SlurmJob(
+                prefix=task_files.prefix,
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+                tasks=[
+                    SlurmTask(
+                        prefix=task_files.prefix,
+                        index=0,
+                        component=task_files.component,
+                        parameters=parameters,
+                        workdir_remote=workdir_remote,
+                        workdir_local=workdir_local,
+                        task_files=task_files,
+                    )
+                ],
+            )
+
+            config.parallel_tasks_per_job = 1
+            self._submit_single_sbatch(
+                func,
+                slurm_job=slurm_job,
+                slurm_config=config,
+            )
+            logger.info(f"[submit] END submission phase, {self.job_ids=}")
+
+            # NOTE: see issue 2444
+            settings = Inject(get_settings)
+            sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
+            logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
+            time.sleep(sleep_time)
+
+            # Retrieval phase
+            logger.info("[submit] START retrieval phase")
+            scancelled_job_ids = []
+            while len(self.jobs) > 0:
+                # Look for finished jobs
+                finished_job_ids = self._get_finished_jobs(
+                    job_ids=self.job_ids
+                )
+                logger.debug(f"[submit] {finished_job_ids=}")
+                finished_jobs = [
+                    self.jobs[_slurm_job_id]
+                    for _slurm_job_id in finished_job_ids
+                ]
+                self._fetch_artifacts(finished_jobs)
+                with next(get_sync_db()) as db:
+                    for slurm_job_id in finished_job_ids:
+                        logger.debug(f"[submit] Now process {slurm_job_id=}")
+                        slurm_job = self.jobs.pop(slurm_job_id)
+                        was_job_scancelled = slurm_job_id in scancelled_job_ids
+                        result, exception = self._postprocess_single_task(
+                            task=slurm_job.tasks[0],
+                            was_job_scancelled=was_job_scancelled,
+                        )
+
+                        if exception is not None:
+                            update_status_of_history_unit(
+                                history_unit_id=history_unit_id,
+                                status=HistoryUnitStatus.FAILED,
+                                db_sync=db,
+                            )
+                        else:
+                            if task_type not in [
+                                "compound",
+                                "converter_compound",
+                            ]:
+                                update_status_of_history_unit(
+                                    history_unit_id=history_unit_id,
+                                    status=HistoryUnitStatus.DONE,
+                                    db_sync=db,
+                                )
+
+                if len(self.jobs) > 0:
+                    scancelled_job_ids = self.wait_and_check_shutdown()
+        except Exception as e:
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-
-            return None, SHUTDOWN_EXCEPTION
-
-        # Validation phase
-        self.validate_submit_parameters(
-            parameters=parameters,
-            task_type=task_type,
-        )
-
-        # Create task subfolder
-        logger.info("[submit] Create local/remote folders - START")
-        self._mkdir_local_folder(folder=workdir_local.as_posix())
-        self._mkdir_remote_folder(folder=workdir_remote.as_posix())
-        logger.info("[submit] Create local/remote folders - END")
-
-        # Submission phase
-        slurm_job = SlurmJob(
-            prefix=task_files.prefix,
-            workdir_local=workdir_local,
-            workdir_remote=workdir_remote,
-            tasks=[
-                SlurmTask(
-                    prefix=task_files.prefix,
-                    index=0,
-                    component=task_files.component,
-                    parameters=parameters,
-                    workdir_remote=workdir_remote,
-                    workdir_local=workdir_local,
-                    task_files=task_files,
-                )
-            ],
-        )
-
-        config.parallel_tasks_per_job = 1
-        self._submit_single_sbatch(
-            func,
-            slurm_job=slurm_job,
-            slurm_config=config,
-        )
-        logger.info(f"[submit] END submission phase, {self.job_ids=}")
-
-        # NOTE: see issue 2444
-        settings = Inject(get_settings)
-        sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-        logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
-        time.sleep(sleep_time)
-
-        # Retrieval phase
-        logger.info("[submit] START retrieval phase")
-        scancelled_job_ids = []
-        while len(self.jobs) > 0:
-            # Look for finished jobs
-            finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
-            logger.debug(f"[submit] {finished_job_ids=}")
-            finished_jobs = [
-                self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
-            ]
-            self._fetch_artifacts(finished_jobs)
-            with next(get_sync_db()) as db:
-                for slurm_job_id in finished_job_ids:
-                    logger.debug(f"[submit] Now process {slurm_job_id=}")
-                    slurm_job = self.jobs.pop(slurm_job_id)
-                    was_job_scancelled = slurm_job_id in scancelled_job_ids
-                    result, exception = self._postprocess_single_task(
-                        task=slurm_job.tasks[0],
-                        was_job_scancelled=was_job_scancelled,
-                    )
-
-                    if exception is not None:
-                        update_status_of_history_unit(
-                            history_unit_id=history_unit_id,
-                            status=HistoryUnitStatus.FAILED,
-                            db_sync=db,
-                        )
-                    else:
-                        if task_type not in ["compound", "converter_compound"]:
-                            update_status_of_history_unit(
-                                history_unit_id=history_unit_id,
-                                status=HistoryUnitStatus.DONE,
-                                db_sync=db,
-                            )
-
-            if len(self.jobs) > 0:
-                scancelled_job_ids = self.wait_and_check_shutdown()
+            result = None
+            exception = e
 
         logger.info("[submit] END")
         return result, exception
@@ -574,12 +591,114 @@ class BaseSlurmRunner(BaseRunner):
         input images, while for compound tasks these can differ.
         """
 
-        if len(self.jobs) > 0:
-            raise RuntimeError(
-                f"Cannot run `multisubmit` when {len(self.jobs)=}"
+        try:
+            if len(self.jobs) > 0:
+                raise RuntimeError(
+                    f"Cannot run `multisubmit` when {len(self.jobs)=}"
+                )
+
+            if self.is_shutdown():
+                if task_type == "parallel":
+                    with next(get_sync_db()) as db:
+                        bulk_update_status_of_history_unit(
+                            history_unit_ids=history_unit_ids,
+                            status=HistoryUnitStatus.FAILED,
+                            db_sync=db,
+                        )
+                results = {}
+                exceptions = {
+                    ind: SHUTDOWN_EXCEPTION
+                    for ind in range(len(list_parameters))
+                }
+                return results, exceptions
+
+            self.validate_multisubmit_parameters(
+                list_parameters=list_parameters,
+                task_type=task_type,
+                list_task_files=list_task_files,
+                history_unit_ids=history_unit_ids,
             )
 
-        if self.is_shutdown():
+            logger.info(f"[multisubmit] START, {len(list_parameters)=}")
+
+            workdir_local = list_task_files[0].wftask_subfolder_local
+            workdir_remote = list_task_files[0].wftask_subfolder_remote
+
+            # Create local&remote task subfolders
+            if task_type == "parallel":
+                self._mkdir_local_folder(workdir_local.as_posix())
+                self._mkdir_remote_folder(folder=workdir_remote.as_posix())
+
+            # Execute tasks, in chunks of size `parallel_tasks_per_job`
+            # TODO Pick a data structure for results and exceptions
+            # or review the interface
+            results: dict[int, Any] = {}
+            exceptions: dict[int, BaseException] = {}
+
+            tot_tasks = len(list_parameters)
+
+            # NOTE: chunking has already taken place in `get_slurm_config`,
+            # so that `config.tasks_per_job` is now set.
+
+            # Divide arguments in batches of `tasks_per_job` tasks each
+            args_batches = []
+            batch_size = config.tasks_per_job
+            for ind_chunk in range(0, tot_tasks, batch_size):
+                args_batches.append(
+                    list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
+                )
+            if len(args_batches) != math.ceil(
+                tot_tasks / config.tasks_per_job
+            ):
+                raise RuntimeError("Something wrong here while batching tasks")
+
+            # Part 1/3: Iterate over chunks, prepare SlurmJob objects
+            logger.info("[multisubmit] Prepare `SlurmJob`s.")
+            jobs_to_submit = []
+            for ind_batch, chunk in enumerate(args_batches):
+                # Read prefix based on the first task of this batch
+                prefix = list_task_files[ind_batch * batch_size].prefix
+                tasks = []
+                for ind_chunk, parameters in enumerate(chunk):
+                    index = (ind_batch * batch_size) + ind_chunk
+                    tasks.append(
+                        SlurmTask(
+                            prefix=prefix,
+                            index=index,
+                            component=list_task_files[index].component,
+                            workdir_local=workdir_local,
+                            workdir_remote=workdir_remote,
+                            parameters=parameters,
+                            zarr_url=parameters["zarr_url"],
+                            task_files=list_task_files[index],
+                        ),
+                    )
+                jobs_to_submit.append(
+                    SlurmJob(
+                        prefix=prefix,
+                        workdir_local=workdir_local,
+                        workdir_remote=workdir_remote,
+                        tasks=tasks,
+                    )
+                )
+
+            # NOTE: see issue 2431
+            logger.info("[multisubmit] Transfer files and submit jobs.")
+            for slurm_job in jobs_to_submit:
+                self._submit_single_sbatch(
+                    func,
+                    slurm_job=slurm_job,
+                    slurm_config=config,
+                )
+
+            logger.info(f"END submission phase, {self.job_ids=}")
+
+            settings = Inject(get_settings)
+            sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
+            logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
+            time.sleep(sleep_time)
+        except Exception as e:
+            self.scancel_jobs()
             if task_type == "parallel":
                 with next(get_sync_db()) as db:
                     bulk_update_status_of_history_unit(
@@ -588,94 +707,8 @@ class BaseSlurmRunner(BaseRunner):
                         db_sync=db,
                     )
             results = {}
-            exceptions = {
-                ind: SHUTDOWN_EXCEPTION for ind in range(len(list_parameters))
-            }
+            exceptions = {ind: e for ind in range(len(list_parameters))}
             return results, exceptions
-
-        self.validate_multisubmit_parameters(
-            list_parameters=list_parameters,
-            task_type=task_type,
-            list_task_files=list_task_files,
-            history_unit_ids=history_unit_ids,
-        )
-
-        logger.info(f"[multisubmit] START, {len(list_parameters)=}")
-
-        workdir_local = list_task_files[0].wftask_subfolder_local
-        workdir_remote = list_task_files[0].wftask_subfolder_remote
-
-        # Create local&remote task subfolders
-        if task_type == "parallel":
-            self._mkdir_local_folder(workdir_local.as_posix())
-            self._mkdir_remote_folder(folder=workdir_remote.as_posix())
-
-        # Execute tasks, in chunks of size `parallel_tasks_per_job`
-        # TODO Pick a data structure for results and exceptions, or review the
-        # interface
-        results: dict[int, Any] = {}
-        exceptions: dict[int, BaseException] = {}
-
-        tot_tasks = len(list_parameters)
-
-        # NOTE: chunking has already taken place in `get_slurm_config`,
-        # so that `config.tasks_per_job` is now set.
-
-        # Divide arguments in batches of `tasks_per_job` tasks each
-        args_batches = []
-        batch_size = config.tasks_per_job
-        for ind_chunk in range(0, tot_tasks, batch_size):
-            args_batches.append(
-                list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
-            )
-        if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
-            raise RuntimeError("Something wrong here while batching tasks")
-
-        # Part 1/3: Iterate over chunks, prepare SlurmJob objects
-        logger.info("[multisubmit] Prepare `SlurmJob`s.")
-        jobs_to_submit = []
-        for ind_batch, chunk in enumerate(args_batches):
-            # Read prefix based on the first task of this batch
-            prefix = list_task_files[ind_batch * batch_size].prefix
-            tasks = []
-            for ind_chunk, parameters in enumerate(chunk):
-                index = (ind_batch * batch_size) + ind_chunk
-                tasks.append(
-                    SlurmTask(
-                        prefix=prefix,
-                        index=index,
-                        component=list_task_files[index].component,
-                        workdir_local=workdir_local,
-                        workdir_remote=workdir_remote,
-                        parameters=parameters,
-                        zarr_url=parameters["zarr_url"],
-                        task_files=list_task_files[index],
-                    ),
-                )
-            jobs_to_submit.append(
-                SlurmJob(
-                    prefix=prefix,
-                    workdir_local=workdir_local,
-                    workdir_remote=workdir_remote,
-                    tasks=tasks,
-                )
-            )
-
-        # NOTE: see issue 2431
-        logger.info("[multisubmit] Transfer files and submit jobs.")
-        for slurm_job in jobs_to_submit:
-            self._submit_single_sbatch(
-                func,
-                slurm_job=slurm_job,
-                slurm_config=config,
-            )
-
-        logger.info(f"END submission phase, {self.job_ids=}")
-
-        settings = Inject(get_settings)
-        sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-        logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
-        time.sleep(sleep_time)
 
         # Retrieval phase
         logger.info("[multisubmit] START retrieval phase")
@@ -687,7 +720,11 @@ class BaseSlurmRunner(BaseRunner):
             finished_jobs = [
                 self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
             ]
-            self._fetch_artifacts(finished_jobs)
+            exp_fetch = None
+            try:
+                self._fetch_artifacts(finished_jobs)
+            except Exception as e:
+                exp_fetch = e
 
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
@@ -696,11 +733,21 @@ class BaseSlurmRunner(BaseRunner):
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
-                        result, exception = self._postprocess_single_task(
-                            task=task,
-                            was_job_scancelled=was_job_scancelled,
-                        )
-
+                        if exp_fetch is not None:
+                            result = None
+                            exception = exp_fetch
+                        else:
+                            try:
+                                (
+                                    result,
+                                    exception,
+                                ) = self._postprocess_single_task(
+                                    task=task,
+                                    was_job_scancelled=was_job_scancelled,
+                                )
+                            except Exception as e:
+                                result = None
+                                exception = e
                         # Note: the relevant done/failed check is based on
                         # whether `exception is None`. The fact that
                         # `result is None` is not relevant for this purpose.
@@ -744,6 +791,7 @@ class BaseSlurmRunner(BaseRunner):
         # Fetch remote fractal-server version
         cmd = (
             f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.versions"
             "-m fractal_server.app.runner.versions"
         )
         stdout = self._run_remote_cmd(cmd)
