@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_143b6a8c920e74cd_deactivate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-04 07:42 +0000
+            created at 2025-04-16 13:25 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -90,7 +90,7 @@
     <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">tempfile</span> <span class="key">import</span> <span class="nam">TemporaryDirectory</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils_database</span> <span class="key">import</span> <span class="nam">create_db_tasks_and_update_task_group</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">utils_database</span> <span class="key">import</span> <span class="nam">create_db_tasks_and_update_task_group_sync</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_utils</span> <span class="key">import</span> <span class="nam">_customize_and_run_template</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">db</span> <span class="key">import</span> <span class="nam">get_sync_db</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskGroupActivityV2</span>&nbsp;</span><span class="r"></span></p>
@@ -317,7 +317,7 @@
     <p class="run"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">                <span class="nam">activity</span> <span class="op">=</span> <span class="nam">add_commit_refresh</span><span class="op">(</span><span class="nam">obj</span><span class="op">=</span><span class="nam">activity</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"create_db_tasks_and_update_task_group - "</span> <span class="str">"start"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">                <span class="nam">create_db_tasks_and_update_task_group</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">                <span class="nam">create_db_tasks_and_update_task_group_sync</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t">                    <span class="nam">task_list</span><span class="op">=</span><span class="nam">task_list</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t">                    <span class="nam">task_group_id</span><span class="op">=</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t239" href="#t239">239</a></span><span class="t">                    <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -378,7 +378,7 @@
             <a class="nav" href="z_143b6a8c920e74cd_deactivate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-04 07:42 +0000
+            created at 2025-04-16 13:25 +0000
         </p>
     </div>
 </footer>

@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_eaea8eb9b5b5e735_user_settings_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-04 07:42 +0000
+            created at 2025-04-16 13:25 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -120,8 +120,8 @@
     <p class="mis show_mis"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">            <span class="nam">server</span><span class="op">.</span><span class="nam">ehlo</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="key">if</span> <span class="nam">email_settings</span><span class="op">.</span><span class="nam">use_login</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">            <span class="nam">password</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">                <span class="nam">Fernet</span><span class="op">(</span><span class="nam">email_settings</span><span class="op">.</span><span class="nam">encryption_key</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">                <span class="op">.</span><span class="nam">decrypt</span><span class="op">(</span><span class="nam">email_settings</span><span class="op">.</span><span class="nam">encrypted_password</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">                <span class="nam">Fernet</span><span class="op">(</span><span class="nam">email_settings</span><span class="op">.</span><span class="nam">encryption_key</span><span class="op">.</span><span class="nam">get_secret_value</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">                <span class="op">.</span><span class="nam">decrypt</span><span class="op">(</span><span class="nam">email_settings</span><span class="op">.</span><span class="nam">encrypted_password</span><span class="op">.</span><span class="nam">get_secret_value</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">                <span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="str">"utf-8"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">            <span class="nam">server</span><span class="op">.</span><span class="nam">login</span><span class="op">(</span><span class="nam">user</span><span class="op">=</span><span class="nam">email_settings</span><span class="op">.</span><span class="nam">sender</span><span class="op">,</span> <span class="nam">password</span><span class="op">=</span><span class="nam">password</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -139,7 +139,7 @@
             <a class="nav" href="z_eaea8eb9b5b5e735_user_settings_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-04-04 07:42 +0000
+            created at 2025-04-16 13:25 +0000
         </p>
     </div>
 </footer>
