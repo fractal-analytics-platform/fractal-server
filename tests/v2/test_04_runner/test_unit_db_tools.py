@@ -6,6 +6,9 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
 )
@@ -18,11 +21,13 @@ async def test_update_status_of_history_unit(
     num_history_units: int,
     # Fixtures
     db_sync,
+    db,
     dataset_factory_v2,
     project_factory_v2,
     task_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     MockCurrentUser,
 ):
 
@@ -35,6 +40,16 @@ async def test_update_status_of_history_unit(
             workflow_id=workflow.id,
             task_id=task.id,
         )
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
 
         hr = HistoryRun(
             dataset_id=dataset.id,
@@ -43,6 +58,7 @@ async def test_update_status_of_history_unit(
             workflowtask_dump={},
             status=HistoryUnitStatus.SUBMITTED,
             num_available_images=0,
+            job_id=job.id,
         )
         db_sync.add(hr)
         db_sync.commit()

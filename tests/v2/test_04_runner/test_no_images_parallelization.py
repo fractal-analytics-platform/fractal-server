@@ -4,6 +4,9 @@ from pathlib import Path
 import pytest
 
 from .execute_tasks_v2 import execute_tasks_v2_mod
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 
 
@@ -22,6 +25,7 @@ async def test_parallelize_on_no_images(
     workflow_factory_v2,
     task_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: Executor,
 ):
@@ -48,12 +52,23 @@ async def test_parallelize_on_no_images(
             task_id=task.id,
             order=0,
         )
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
         execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             runner=local_runner,
             user_id=user.id,
+            job_id=job.id,
         )
 
         task = await task_factory_v2(
@@ -74,4 +89,5 @@ async def test_parallelize_on_no_images(
             workflow_dir_local=tmp_path / "job1",
             runner=local_runner,
             user_id=user.id,
+            job_id=job.id,
         )
