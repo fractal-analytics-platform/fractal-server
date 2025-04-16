@@ -51,7 +51,7 @@ class HistoryUnit(SQLModel, table=True):
         ondelete="CASCADE",
     )
 
-    logfile: Optional[str]
+    logfile: str
     status: str
     zarr_urls: list[str] = Field(
         sa_column=Column(ARRAY(String)),

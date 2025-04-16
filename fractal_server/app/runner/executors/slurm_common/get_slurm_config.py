@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Literal
 from typing import Optional
 
+from ._batching import heuristics
 from ._slurm_config import _parse_mem_value
 from ._slurm_config import load_slurm_config_file
 from ._slurm_config import logger
@@ -10,7 +11,7 @@ from ._slurm_config import SlurmConfigError
 from fractal_server.app.models.v2 import WorkflowTaskV2
 
 
-def get_slurm_config(
+def get_slurm_config_internal(
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
     config_path: Optional[Path] = None,
@@ -162,3 +163,39 @@ def get_slurm_config(
     slurm_config = SlurmConfig(**slurm_dict)
 
     return slurm_config
+
+
+def get_slurm_config(
+    wftask: WorkflowTaskV2,
+    which_type: Literal["non_parallel", "parallel"],
+    config_path: Optional[Path] = None,
+    tot_tasks: int = 1,
+) -> SlurmConfig:
+    config = get_slurm_config_internal(
+        wftask,
+        which_type,
+        config_path,
+    )
+
+    # Set/validate parameters for task batching
+    tasks_per_job, parallel_tasks_per_job = heuristics(
+        # Number of parallel components (always known)
+        tot_tasks=tot_tasks,
+        # Optional WorkflowTask attributes:
+        tasks_per_job=config.tasks_per_job,
+        parallel_tasks_per_job=config.parallel_tasks_per_job,  # noqa
+        # Task requirements (multiple possible sources):
+        cpus_per_task=config.cpus_per_task,
+        mem_per_task=config.mem_per_task_MB,
+        # Fractal configuration variables (soft/hard limits):
+        target_cpus_per_job=config.target_cpus_per_job,
+        target_mem_per_job=config.target_mem_per_job,
+        target_num_jobs=config.target_num_jobs,
+        max_cpus_per_job=config.max_cpus_per_job,
+        max_mem_per_job=config.max_mem_per_job,
+        max_num_jobs=config.max_num_jobs,
+    )
+    config.parallel_tasks_per_job = parallel_tasks_per_job
+    config.tasks_per_job = tasks_per_job
+
+    return config

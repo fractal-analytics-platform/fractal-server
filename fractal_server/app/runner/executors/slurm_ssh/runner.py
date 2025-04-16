@@ -137,7 +137,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
         logger.info(
-            f"Remote archive {tarfile_path_remote} created"
+            f"[_fetch_artifacts] Remote archive {tarfile_path_remote} created"
             f" - elapsed: {t_1_tar - t_0_tar:.3f} s"
         )
 
@@ -149,7 +149,8 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
         t_1_get = time.perf_counter()
         logger.info(
-            f"Subfolder archive transferred back to {tarfile_path_local}"
+            "[_fetch_artifacts] Subfolder archive transferred back "
+            f"to {tarfile_path_local}"
             f" - elapsed: {t_1_get - t_0_get:.3f} s"
         )
 
@@ -160,7 +161,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         Path(tarfile_path_local).unlink(missing_ok=True)
 
         t_1 = time.perf_counter()
-        logger.info(f"[_get_subfolder_sftp] End - elapsed: {t_1 - t_0:.3f} s")
+        logger.info(f"[_fetch_artifacts] End - elapsed: {t_1 - t_0:.3f} s")
 
     def _send_inputs(self, jobs: list[SlurmJob]) -> None:
         """

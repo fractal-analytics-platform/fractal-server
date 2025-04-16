@@ -71,6 +71,7 @@ async def test_upsert_function(
             history_run_id=run.id,
             status=HistoryUnitStatus.SUBMITTED,
             zarr_urls=OLD_ZARR_URLS,
+            logfile="/fake/log",
         )
         db_sync.add(unit1)
         db_sync.commit()
@@ -92,6 +93,7 @@ async def test_upsert_function(
         unit2 = HistoryUnit(
             history_run_id=run.id,
             status=HistoryUnitStatus.DONE,
+            logfile="/fake/log",
             zarr_urls=OLD_ZARR_URLS + NEW_ZARR_URLS,
         )
         db_sync.add(unit2)

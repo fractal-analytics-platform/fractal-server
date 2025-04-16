@@ -8,12 +8,7 @@ from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
-from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
-from fractal_server.app.runner.task_files import SUBMIT_PREFIX
 from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.runner.v2.db_tools import (
-    update_logfile_of_history_unit,
-)
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
@@ -68,13 +63,6 @@ class LocalRunner(BaseRunner):
         workdir_local = task_files.wftask_subfolder_local
         workdir_local.mkdir()
 
-        # Add prefix to task_files object
-        task_files.prefix = SUBMIT_PREFIX
-        update_logfile_of_history_unit(
-            history_unit_id=history_unit_id,
-            logfile=task_files.log_file_local,
-        )
-
         # SUBMISSION PHASE
         future = self.executor.submit(
             func,
@@ -111,29 +99,18 @@ class LocalRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: LocalBackendConfig,
-    ):
+    ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
-        Note:
-
-        1. The number of sruns and futures is equal to `len(list_parameters)`.
-        2. The number of `HistoryUnit`s is equal to `len(history_unit_ids)`.
-        3. For compound tasks, these two numbers are not the same.
-
-        For this reason, we defer database updates to the caller function,
-        when we are in one of the "compound" cases
-
+        Note: `list_parameters`, `list_task_files` and `history_unit_ids`
+        have the same size. For parallel tasks, this is also the number of
+        input images, while for compound tasks these can differ.
         """
 
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
             list_task_files=list_task_files,
-        )
-
-        self.validate_multisubmit_history_unit_ids(
             history_unit_ids=history_unit_ids,
-            task_type=task_type,
-            list_parameters=list_parameters,
         )
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
@@ -159,9 +136,6 @@ class LocalRunner(BaseRunner):
             active_futures: dict[int, Future] = {}
             for ind_within_chunk, kwargs in enumerate(list_parameters_chunk):
                 positional_index = ind_chunk + ind_within_chunk
-                list_task_files[
-                    positional_index
-                ].prefix = f"{MULTISUBMIT_PREFIX}-{positional_index:06d}"
                 future = self.executor.submit(
                     func,
                     parameters=kwargs,
@@ -170,23 +144,6 @@ class LocalRunner(BaseRunner):
                     ].remote_files_dict,
                 )
                 active_futures[positional_index] = future
-
-                if task_type == "parallel":
-                    # FIXME: replace loop with a `bulk_update_history_unit`
-                    # function
-                    update_logfile_of_history_unit(
-                        history_unit_id=history_unit_ids[positional_index],
-                        logfile=list_task_files[
-                            positional_index
-                        ].log_file_local,
-                    )
-                else:
-                    logger.debug(
-                        f"Unclear what logfile to associate to {task_type=} "
-                        "within multisubmit (see issue #2382)."
-                    )
-                    # FIXME: Improve definition for compound tasks
-                    pass
 
             while active_futures:
                 finished_futures = [
@@ -229,6 +186,6 @@ class LocalRunner(BaseRunner):
                             # all existing tasks and shutdown runner (for the
                             # compound-task case)
 
-        logger.debug(f"[multisubmit] END, {results=}, {exceptions=}")
+        logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 
         return results, exceptions

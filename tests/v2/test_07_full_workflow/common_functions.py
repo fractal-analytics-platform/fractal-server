@@ -179,8 +179,8 @@ async def full_workflow(
 
         # Check files in task-0 folder
         expected_files = {
-            "non_par-0000000-log.txt",
-            "non_par-0000000-metadiff.json",
+            "non_par--log.txt",
+            "non_par--metadiff.json",
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
@@ -198,8 +198,8 @@ async def full_workflow(
 
         # Check files in task-1 folder
         expected_files = {
-            "non_par-0000000-log.txt",
-            "non_par-0000000-metadiff.json",
+            "non_par--log.txt",
+            "non_par--metadiff.json",
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
@@ -219,9 +219,47 @@ async def full_workflow(
         url = f"api/v2/project/{project_id}/dataset/{dataset_id}/history/"
         res = await client.get(url)
         assert res.status_code == 200
-        debug(res.json())  # FIXME add assertion
+        assert len(res.json()) == 3
+        for item in res.json():
+            assert "workflowtask_dump" in item.keys()
+            assert "task_group_dump" in item.keys()
+
+        # GET workflow status
+        url = (
+            f"api/v2/project/{project_id}/status/"
+            f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
+        )
+        res = await client.get(url)
+        assert res.status_code == 200
+        assert res.json() == {
+            # Converter compound task
+            "1": {
+                "status": "done",
+                "num_available_images": 0,
+                "num_submitted_images": 0,
+                "num_done_images": 0,
+                "num_failed_images": 0,
+            },
+            # MIP compound task
+            "2": {
+                "status": "done",
+                "num_available_images": 4,
+                "num_submitted_images": 0,
+                "num_done_images": 4,
+                "num_failed_images": 0,
+            },
+            # Generic parallel task
+            "3": {
+                "status": "done",
+                "num_available_images": 4,
+                "num_submitted_images": 0,
+                "num_done_images": 4,
+                "num_failed_images": 0,
+            },
+        }
 
         for wftask_id in [wftask0_id, wftask1_id, wftask2_id]:
+
             # GET history runs
             query_wft = f"dataset_id={dataset_id}&workflowtask_id={wftask_id}"
             this_prefix = f"api/v2/project/{project_id}/status"
@@ -230,15 +268,23 @@ async def full_workflow(
             assert res.status_code == 200
             assert len(res.json()) == 1
             history_run_id = res.json()[0]["id"]
+            debug(res.json())
 
             # Get history units
             url = f"{this_prefix}/run/{history_run_id}/units/?{query_wft}"
             res = await client.get(url)
             assert res.status_code == 200
-            if wftask_id == wftask2_id:
+            debug(res.json())
+            if wftask_id == wftask0_id:
+                # Converter compound task
+                assert res.json()["total_count"] == NUM_IMAGES + 1
+            elif wftask_id == wftask1_id:
+                # MIP compound task
+                assert res.json()["total_count"] == NUM_IMAGES + 1
+            elif wftask_id == wftask2_id:
+                # Generic parallel task
                 assert res.json()["total_count"] == NUM_IMAGES
-            else:
-                assert res.json()["total_count"] == 1
+
             first_history_unit = res.json()["items"][0]
             history_unit_id = first_history_unit["id"]
             assert Path(first_history_unit["logfile"]).exists()
@@ -253,7 +299,7 @@ async def full_workflow(
             )
             res = await client.get(url)
             assert res.status_code == 200
-            assert "not available" not in res.json()  # FIXME
+            assert "not available" not in res.json()
 
 
 async def full_workflow_TaskExecutionError(
@@ -618,14 +664,12 @@ async def workflow_with_non_python_task(
             actual_files = zip_ref.namelist()
         with informative_assertion_block(actual_files):
             assert WORKFLOW_LOG_FILENAME in actual_files
-            assert "0_non_python/non_par-0000000-args.json" in actual_files
-            assert "0_non_python/non_par-0000000-log.txt" in actual_files
+            assert "0_non_python/non_par--args.json" in actual_files
+            assert "0_non_python/non_par--log.txt" in actual_files
 
         # Check that stderr and stdout are as expected
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            with zip_ref.open(
-                "0_non_python/non_par-0000000-log.txt", "r"
-            ) as file:
+            with zip_ref.open("0_non_python/non_par--log.txt", "r") as file:
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log

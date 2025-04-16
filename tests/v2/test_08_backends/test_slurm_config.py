@@ -14,7 +14,7 @@ from fractal_server.app.runner.executors.slurm_common._slurm_config import (
     SlurmConfigError,
 )
 from fractal_server.app.runner.executors.slurm_common.get_slurm_config import (
-    get_slurm_config,
+    get_slurm_config_internal,
 )
 
 
@@ -66,7 +66,7 @@ class WorkflowTaskV2Mock(BaseModel):
         return values
 
 
-def test_get_slurm_config(tmp_path: Path):
+def test_get_slurm_config_internal(tmp_path: Path):
     """
     Testing that:
     1. WorkflowTask.meta overrides WorkflowTask.Task.meta
@@ -148,8 +148,8 @@ def test_get_slurm_config(tmp_path: Path):
         meta_non_parallel=meta_non_parallel,
     )
 
-    # Call get_slurm_config
-    slurm_config = get_slurm_config(
+    # Call get_slurm_config_internal
+    slurm_config = get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
@@ -178,7 +178,7 @@ def test_get_slurm_config(tmp_path: Path):
     assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
 
 
-def test_get_slurm_config_fail(tmp_path):
+def test_get_slurm_config_internal_fail(tmp_path):
     slurm_config = {
         "default_slurm_config": {
             "partition": "main",
@@ -202,7 +202,7 @@ def test_get_slurm_config_fail(tmp_path):
     config_path_valid = tmp_path / "slurm_config_valid.json"
     with config_path_valid.open("w") as f:
         json.dump(slurm_config, f)
-    get_slurm_config(
+    get_slurm_config_internal(
         wftask=WorkflowTaskV2Mock(
             task=TaskV2Mock(),
             task_id=TaskV2Mock().id,
@@ -220,7 +220,7 @@ def test_get_slurm_config_fail(tmp_path):
     with pytest.raises(
         SlurmConfigError, match="Extra inputs are not permitted"
     ) as e:
-        get_slurm_config(
+        get_slurm_config_internal(
             wftask=WorkflowTaskV2Mock(
                 task=TaskV2Mock(),
                 task_id=TaskV2Mock().id,
@@ -232,9 +232,9 @@ def test_get_slurm_config_fail(tmp_path):
     debug(e.value)
 
 
-def test_get_slurm_config_wftask_meta_none(tmp_path):
+def test_get_slurm_config_internal_internal_wftask_meta_none(tmp_path):
     """
-    Similar to test_get_slurm_config, but wftask has meta=None.
+    Similar to test_get_slurm_config_internal, but wftask has meta=None.
     """
 
     # Write gloabl variables into JSON config file
@@ -293,8 +293,8 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     )
     debug(mywftask)
 
-    # Call get_slurm_config
-    slurm_config = get_slurm_config(
+    # Call get_slurm_config_internal
+    slurm_config = get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
@@ -321,7 +321,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
 
 
-def test_get_slurm_config_gpu_options(tmp_path: Path):
+def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
     """
     Test that GPU-related options are only read when `needs_gpu=True`.
     """
@@ -359,7 +359,7 @@ def test_get_slurm_config_gpu_options(tmp_path: Path):
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
     mywftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
-    slurm_config = get_slurm_config(
+    slurm_config = get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
@@ -374,7 +374,7 @@ def test_get_slurm_config_gpu_options(tmp_path: Path):
         task=TaskV2Mock(),
         task_id=TaskV2Mock().id,
     )
-    slurm_config = get_slurm_config(
+    slurm_config = get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",

@@ -249,8 +249,10 @@ async def get_history_run_units(
     page_size = pagination.page_size or total_count
 
     # Query `HistoryUnit`s
-    stmt = select(HistoryUnit).where(
-        HistoryUnit.history_run_id == history_run_id
+    stmt = (
+        select(HistoryUnit)
+        .where(HistoryUnit.history_run_id == history_run_id)
+        .order_by(HistoryUnit.id)
     )
     if unit_status:
         stmt = stmt.where(HistoryUnit.status == unit_status)
