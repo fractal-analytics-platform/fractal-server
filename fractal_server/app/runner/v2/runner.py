@@ -42,7 +42,7 @@ def execute_tasks_v2(
     runner: BaseRunner,
     user_id: int,
     workflow_dir_local: Path,
-    job_id: Optional[int] = None,
+    job_id: int,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     get_runner_config: Callable[

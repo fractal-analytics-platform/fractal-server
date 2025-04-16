@@ -38,7 +38,7 @@ def process_workflow(
     workflow: WorkflowV2,
     dataset: DatasetV2,
     workflow_dir_local: Path,
-    job_id: Optional[int] = None,
+    job_id: int,
     workflow_dir_remote: Optional[Path] = None,
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,

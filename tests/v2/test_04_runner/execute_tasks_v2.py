@@ -12,7 +12,7 @@ def execute_tasks_v2_mod(
     wf_task_list: list[WorkflowTaskV2],
     workflow_dir_local: Path,
     user_id: int,
-    job_id: Optional[int] = None,
+    job_id: int,
     job_type_filters: Optional[dict[str, bool]] = None,
     **kwargs,
 ) -> None:
