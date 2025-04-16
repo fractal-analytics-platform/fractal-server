@@ -5,9 +5,6 @@ import pytest
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
 from fractal_server.app.runner.executors.local.get_local_config import (
     LocalBackendConfig,
 )
@@ -30,6 +27,7 @@ async def history_run_mock(
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
+    workflowtask_factory_v2,
     task_factory_v2,
     job_factory_v2,
     tmp_path,
@@ -39,8 +37,8 @@ async def history_run_mock(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
         )
         job = await job_factory_v2(
             project_id=project.id,

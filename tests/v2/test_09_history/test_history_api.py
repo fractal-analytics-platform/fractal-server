@@ -8,9 +8,6 @@ from sqlmodel import select
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.images import SingleImage
 
@@ -33,8 +30,8 @@ async def test_status_api(
         task = await task_factory_v2(user_id=user.id)
 
         # WorkflowTask 1 (one run, four units, different statuses)
-        wftask1 = await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+        wftask1 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
         )
         job = await job_factory_v2(
             project_id=project.id,
@@ -165,6 +162,7 @@ async def test_cascade_delete(
     workflow_factory_v2,
     task_factory_v2,
     dataset_factory_v2,
+    workflowtask_factory_v2,
     job_factory_v2,
     db,
     client,
@@ -181,8 +179,8 @@ async def test_cascade_delete(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
         )
         job = await job_factory_v2(
             project_id=project.id,
@@ -278,6 +276,7 @@ async def test_get_history_run_list(
     workflow_factory_v2,
     task_factory_v2,
     dataset_factory_v2,
+    workflowtask_factory_v2,
     job_factory_v2,
     db,
     client,
@@ -291,8 +290,8 @@ async def test_get_history_run_list(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
         )
         job = await job_factory_v2(
             project_id=project.id,
@@ -411,8 +410,8 @@ async def test_get_history_run_units(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task.id
         )
         job = await job_factory_v2(
             project_id=project.id,
@@ -558,9 +557,6 @@ async def test_get_history_images(
             workflow_id=workflow.id,
             task_id=task.id,
             type_filters={"x": True},
-        )
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
         )
         job = await job_factory_v2(
             project_id=project.id,
@@ -749,8 +745,8 @@ async def test_get_logs(
         )
         wf = await workflow_factory_v2(project_id=proj.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await _workflow_insert_task(
-            workflow_id=wf.id, task_id=task.id, db=db
+        wftask = await workflowtask_factory_v2(
+            workflow_id=wf.id, task_id=task.id
         )
         job = await job_factory_v2(
             project_id=proj.id,
@@ -847,6 +843,7 @@ async def test_get_history_run_dataset(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    workflowtask_factory_v2,
     job_factory_v2,
     db,
     client,
@@ -858,7 +855,7 @@ async def test_get_history_run_dataset(
         dataset = await dataset_factory_v2(project_id=project.id)
         wf = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        await _workflow_insert_task(workflow_id=wf.id, task_id=task.id, db=db)
+        await workflowtask_factory_v2(workflow_id=wf.id, task_id=task.id)
         job = await job_factory_v2(
             project_id=project.id,
             dataset_id=dataset.id,

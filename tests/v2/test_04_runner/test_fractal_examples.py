@@ -7,9 +7,6 @@ from devtools import debug
 from .aux_get_dataset_attrs import _get_dataset_attrs
 from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -93,11 +90,6 @@ async def test_fractal_demos_01(
         task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
         args_parallel={},
         order=3,
-    )
-    await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
-        db=db,
     )
     job = await job_factory_v2(
         project_id=project.id,
@@ -258,11 +250,6 @@ async def test_fractal_demos_01_no_overwrite(
         task_id=fractal_tasks_mock_db["cellpose_segmentation"].id,
         args_parallel={},
         order=3,
-    )
-    await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=fractal_tasks_mock_db["illumination_correction"].id,
-        db=db,
     )
     job = await job_factory_v2(
         project_id=project.id,
@@ -469,11 +456,6 @@ async def test_registration_no_overwrite(
         args_parallel={"overwrite_input": False},
         order=3,
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=fractal_tasks_mock_db["calculate_registration_compound"].id,
-        db=db,
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -600,11 +582,6 @@ async def test_registration_overwrite(
         args_parallel={"overwrite_input": True},
         order=3,
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=fractal_tasks_mock_db["create_ome_zarr_multiplex_compound"].id,
-        db=db,
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -722,11 +699,6 @@ async def test_channel_parallelization_with_overwrite(
         args_non_parallel=dict(overwrite_input=True),
         args_parallel=dict(another_argument="something"),
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=fractal_tasks_mock_db["create_ome_zarr_compound"].id,
-        db=db,
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -797,11 +769,6 @@ async def test_channel_parallelization_no_overwrite(
         order=1,
         args_non_parallel=dict(overwrite_input=False),
         args_parallel=dict(another_argument="something"),
-    )
-    await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=fractal_tasks_mock_db["create_ome_zarr_compound"].id,
-        db=db,
     )
     job = await job_factory_v2(
         project_id=project.id,

@@ -11,9 +11,6 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -100,9 +97,6 @@ async def test_dummy_insert_single_image(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
-    )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
     )
     job = await job_factory_v2(
         project_id=project.id,
@@ -253,9 +247,6 @@ async def test_dummy_remove_images(
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 0
 
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -356,9 +347,6 @@ async def test_dummy_unset_attribute(
         order=0,
         args_non_parallel=dict(attribute="key2"),
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset1.id,
@@ -443,9 +431,6 @@ async def test_dummy_insert_single_image_with_attribute_none(
         project_id=project.id,
         zarr_dir=zarr_dir,
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -495,9 +480,6 @@ async def test_dummy_insert_single_image_normalization(
     dataset = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
-    )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
     )
     job = await job_factory_v2(
         project_id=project.id,
@@ -564,9 +546,6 @@ async def test_default_inclusion_of_images(
         zarr_dir=zarr_dir,
         images=images,
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -630,9 +609,6 @@ async def test_compound_task_with_compute_failure(
         zarr_dir=zarr_dir,
         images=images,
     )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -693,9 +669,6 @@ async def test_dummy_invalid_output_non_parallel(
         order=0,
     )
 
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
-    )
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -771,9 +744,6 @@ async def test_dummy_invalid_output_parallel(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
-    )
-    await _workflow_insert_task(
-        workflow_id=workflow.id, task_id=task_id, db=db
     )
     job = await job_factory_v2(
         project_id=project.id,

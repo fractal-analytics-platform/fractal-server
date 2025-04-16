@@ -4,9 +4,6 @@ from pathlib import Path
 import pytest
 
 from .execute_tasks_v2 import execute_tasks_v2_mod
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 
 
@@ -51,9 +48,6 @@ async def test_parallelize_on_no_images(
             workflow_id=workflow.id,
             task_id=task.id,
             order=0,
-        )
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
         )
         job = await job_factory_v2(
             project_id=project.id,

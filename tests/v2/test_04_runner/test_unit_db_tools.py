@@ -6,9 +6,6 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task,
-)
 from fractal_server.app.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
 )
@@ -39,9 +36,6 @@ async def test_update_status_of_history_unit(
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task.id,
-        )
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
         )
         job = await job_factory_v2(
             project_id=project.id,
