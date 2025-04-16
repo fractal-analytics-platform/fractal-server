@@ -107,7 +107,6 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
-
         # FIXME: review different cases (exception vs no job found)
 
         if len(job_ids) == 0:
@@ -457,7 +456,6 @@ class BaseSlurmRunner(BaseRunner):
             "converter_compound",
         ],
     ) -> tuple[Any, Exception]:
-
         logger.info("[submit] START")
 
         workdir_local = task_files.wftask_subfolder_local
@@ -524,7 +522,6 @@ class BaseSlurmRunner(BaseRunner):
         logger.info("[submit] START retrieval phase")
         scancelled_job_ids = []
         while len(self.jobs) > 0:
-
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[submit] {finished_job_ids=}")
@@ -689,7 +686,6 @@ class BaseSlurmRunner(BaseRunner):
         logger.info("[multisubmit] START retrieval phase")
         scancelled_job_ids = []
         while len(self.jobs) > 0:
-
             # Look for finished jobs
             finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
             logger.debug(f"[multisubmit] {finished_job_ids=}")
