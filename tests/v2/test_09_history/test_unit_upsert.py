@@ -9,6 +9,9 @@ from sqlmodel import select
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner.v2.db_tools import (
     bulk_upsert_image_cache_fast,
 )
@@ -36,8 +39,9 @@ async def test_upsert_function(
     workflow_factory_v2,
     task_factory_v2,
     dataset_factory_v2,
-    workflowtask_factory_v2,
+    job_factory_v2,
     db_sync,
+    db,
     MockCurrentUser,
     bulk_upsert_image_cache_function,
     num,
@@ -48,8 +52,15 @@ async def test_upsert_function(
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
 
-        wftask = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id
+        wftask = await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
         )
         run = HistoryRun(
             workflowtask_id=wftask.id,
@@ -58,6 +69,7 @@ async def test_upsert_function(
             task_group_dump={},
             num_available_images=3,
             status=HistoryUnitStatus.SUBMITTED,
+            job_id=job.id,
         )
         db_sync.add(run)
         db_sync.commit()

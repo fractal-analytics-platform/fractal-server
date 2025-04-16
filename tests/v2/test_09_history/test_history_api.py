@@ -8,6 +8,9 @@ from sqlmodel import select
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.images import SingleImage
 
@@ -18,6 +21,7 @@ async def test_status_api(
     task_factory_v2,
     dataset_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db,
     client,
     MockCurrentUser,
@@ -29,8 +33,15 @@ async def test_status_api(
         task = await task_factory_v2(user_id=user.id)
 
         # WorkflowTask 1 (one run, four units, different statuses)
-        wftask1 = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id
+        wftask1 = await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
         )
         run1 = HistoryRun(
             workflowtask_id=wftask1.id,
@@ -39,6 +50,7 @@ async def test_status_api(
             task_group_dump={},
             num_available_images=3,
             status=HistoryUnitStatus.SUBMITTED,
+            job_id=job.id,
         )
         db.add(run1)
         await db.commit()
@@ -153,7 +165,7 @@ async def test_cascade_delete(
     workflow_factory_v2,
     task_factory_v2,
     dataset_factory_v2,
-    workflowtask_factory_v2,
+    job_factory_v2,
     db,
     client,
     MockCurrentUser,
@@ -169,8 +181,15 @@ async def test_cascade_delete(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id
+        wftask = await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
         )
         run = HistoryRun(
             workflowtask_id=wftask.id,
@@ -179,6 +198,7 @@ async def test_cascade_delete(
             task_group_dump={},
             num_available_images=3,
             status=HistoryUnitStatus.SUBMITTED,
+            job_id=job.id,
         )
         db.add(run)
         await db.commit()
@@ -258,7 +278,7 @@ async def test_get_history_run_list(
     workflow_factory_v2,
     task_factory_v2,
     dataset_factory_v2,
-    workflowtask_factory_v2,
+    job_factory_v2,
     db,
     client,
     MockCurrentUser,
@@ -271,8 +291,15 @@ async def test_get_history_run_list(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id
+        wftask = await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
         )
 
         hr1 = HistoryRun(
@@ -283,6 +310,7 @@ async def test_get_history_run_list(
             status=HistoryUnitStatus.DONE,
             num_available_images=1000,
             timestamp_started=timestamp,
+            job_id=job.id,
         )
         hr2 = HistoryRun(
             dataset_id=dataset.id,
@@ -292,6 +320,7 @@ async def test_get_history_run_list(
             status=HistoryUnitStatus.SUBMITTED,
             num_available_images=2000,
             timestamp_started=timestamp,
+            job_id=job.id,
         )
         hr3 = HistoryRun(
             dataset_id=dataset.id,
@@ -301,6 +330,7 @@ async def test_get_history_run_list(
             status=HistoryUnitStatus.FAILED,
             num_available_images=2000,
             timestamp_started=timestamp,
+            job_id=job.id,
         )
         db.add(hr1)
         db.add(hr2)
@@ -371,6 +401,7 @@ async def test_get_history_run_units(
     task_factory_v2,
     dataset_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db,
     client,
     MockCurrentUser,
@@ -380,12 +411,20 @@ async def test_get_history_run_units(
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id
+        wftask = await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
         )
         hr = HistoryRun(
             dataset_id=dataset.id,
             workflowtask_id=wftask.id,
+            job_id=job.id,
             workflowtask_dump={},
             task_group_dump={},
             status=HistoryUnitStatus.DONE,
@@ -482,6 +521,7 @@ async def test_get_history_images(
     task_factory_v2,
     dataset_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db,
     client,
     MockCurrentUser,
@@ -519,6 +559,16 @@ async def test_get_history_images(
             task_id=task.id,
             type_filters={"x": True},
         )
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
 
         hr = HistoryRun(
             dataset_id=dataset.id,
@@ -527,6 +577,7 @@ async def test_get_history_images(
             task_group_dump={},
             status=HistoryUnitStatus.DONE,
             num_available_images=9999,
+            job_id=job.id,
         )
         db.add(hr)
         await db.commit()
@@ -678,6 +729,7 @@ async def test_get_logs(
     task_factory_v2,
     dataset_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db,
     tmp_path,
     client,
@@ -697,9 +749,15 @@ async def test_get_logs(
         )
         wf = await workflow_factory_v2(project_id=proj.id)
         task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
+        wftask = await _workflow_insert_task(
+            workflow_id=wf.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=proj.id,
+            dataset_id=ds.id,
             workflow_id=wf.id,
-            task_id=task.id,
+            working_dir="/foo",
+            status="done",
         )
 
         run = HistoryRun(
@@ -709,6 +767,7 @@ async def test_get_logs(
             task_group_dump={},
             status=HistoryUnitStatus.DONE,
             num_available_images=1,
+            job_id=job.id,
         )
         db.add(run)
         await db.commit()
@@ -786,6 +845,9 @@ async def test_get_logs(
 async def test_get_history_run_dataset(
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    job_factory_v2,
     db,
     client,
     MockCurrentUser,
@@ -794,6 +856,16 @@ async def test_get_history_run_dataset(
         project = await project_factory_v2(user)
 
         dataset = await dataset_factory_v2(project_id=project.id)
+        wf = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=task.id, db=db)
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=wf.id,
+            working_dir="/foo",
+            status="done",
+        )
 
         N = 5
         for _ in range(5):
@@ -804,6 +876,7 @@ async def test_get_history_run_dataset(
                     task_group_dump={},
                     status=HistoryUnitStatus.DONE,
                     num_available_images=0,
+                    job_id=job.id,
                 )
             )
         await db.commit()
