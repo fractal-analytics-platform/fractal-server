@@ -34,7 +34,7 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 
 logger = set_logger(__name__)
 
-# FIXME: Transform several logger.info into logger.debug.
+# NOTE: see issue 2481.
 
 
 class BaseSlurmRunner(BaseRunner):
@@ -107,7 +107,7 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
-        # FIXME: review different cases (exception vs no job found)
+        # NOTE: see issue 2482
 
         if len(job_ids) == 0:
             return (False, "")
@@ -512,7 +512,7 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.info(f"[submit] END submission phase, {self.job_ids=}")
 
-        # FIXME: replace this sleep with a more precise check
+        # NOTE: see issue 2444
         settings = Inject(get_settings)
         sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
         logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
@@ -661,9 +661,7 @@ class BaseSlurmRunner(BaseRunner):
                 )
             )
 
-        # FIXME: split parts 2 and 3
-        # Part 2/3. Transfer all relevant input files (for SSH)
-        # Part 3/3. Run all `sbatch`es and update `self.jobs`
+        # NOTE: see issue 2431
         logger.info("[multisubmit] Transfer files and submit jobs.")
         for slurm_job in jobs_to_submit:
             self._submit_single_sbatch(
@@ -674,13 +672,10 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.info(f"END submission phase, {self.job_ids=}")
 
-        # FIXME: replace this sleep with a more precise check
         settings = Inject(get_settings)
         sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
         logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
         time.sleep(sleep_time)
-
-        # FIXME: Could we merge the submit/multisubmit retrieval phases?
 
         # Retrieval phase
         logger.info("[multisubmit] START retrieval phase")

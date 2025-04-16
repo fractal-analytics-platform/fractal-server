@@ -494,7 +494,7 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL: int = 2
     """
-    FIXME: this is a workaround, we are still investigating.
+    NOTE: see issue 2444
     """
 
     FRACTAL_SLURM_SBATCH_SLEEP: float = 0

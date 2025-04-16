@@ -77,8 +77,6 @@ def _process_task_output(
             try:
                 task_output = _cast_and_validate_TaskOutput(result)
             except TaskOutputValidationError as e:
-                # FIXME: This should correspond to some status="failed",
-                # but it does not
                 task_output = None
                 exception = e
                 invalid_output = True
@@ -103,8 +101,6 @@ def _process_init_task_output(
             try:
                 task_output = _cast_and_validate_InitTaskOutput(result)
             except TaskOutputValidationError as e:
-                # FIXME: This should correspond to some status="failed",
-                # but it does not
                 task_output = None
                 exception = e
     return InitSubmissionOutcome(
@@ -341,9 +337,7 @@ def run_v2_task_parallel(
 
     outcome = {}
     for ind in range(len(list_function_kwargs)):
-        # FIXME: change index name
         if ind not in results.keys() and ind not in exceptions.keys():
-            # FIXME: Could we avoid this branch?
             error_msg = (
                 f"Invalid branch: {ind=} is not in `results.keys()` "
                 "nor in `exceptions.keys()`."
@@ -563,7 +557,7 @@ def run_v2_task_compound(
     failure = False
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
-            # FIXME: Could we avoid this branch?
+            # NOTE: see issue 2484
             error_msg = (
                 f"Invalid branch: {ind=} is not in `results.keys()` "
                 "nor in `exceptions.keys()`."

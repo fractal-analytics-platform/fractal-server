@@ -42,7 +42,7 @@ async def verify_unique_types(
             type_filters=query.type_filters,
         )
 
-    # Get all available types (#FIXME use aux function)
+    # NOTE: see issue 2486
     available_types = set(
         _type for _img in filtered_images for _type in _img["types"].keys()
     )

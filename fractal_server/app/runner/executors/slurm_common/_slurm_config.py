@@ -368,9 +368,7 @@ class SlurmConfig(BaseModel):
             if value is not None:
                 # Handle the `time` parameter
                 if key == "time" and self.parallel_tasks_per_job > 1:
-                    # FIXME SSH: time setting must be handled better. Right now
-                    # we simply propagate `time`, but this is not enough when
-                    # several `srun` are combined in a single script.
+                    # NOTE: see issue #1632
                     logger.warning(
                         f"`time` SLURM parameter is set to {self.time}, "
                         "but this does not take into account the number of "

@@ -90,7 +90,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         ).as_posix()
 
         # Create file list
-        # # FIXME can we make this more efficient with iterators?
+        # NOTE: see issue 2483
         filelist = []
         for _slurm_job in finished_slurm_jobs:
             _single_job_filelist = [
@@ -168,7 +168,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         Transfer the jobs subfolder to the remote host.
         """
         for job in jobs:
-
             # Create local archive
             tarfile_path_local = compress_folder(
                 job.workdir_local,
