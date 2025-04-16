@@ -10,6 +10,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 
 router = APIRouter()
@@ -43,9 +44,7 @@ async def verify_unique_types(
         )
 
     # NOTE: see issue 2486
-    available_types = set(
-        _type for _img in filtered_images for _type in _img["types"].keys()
-    )
+    available_types = aggregate_types(filtered_images)
 
     # Get actual values for each available type
     values_per_type: dict[str, set] = {
