@@ -77,7 +77,7 @@ def bulk_upsert_image_cache_fast(
     See docs at
     https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert
 
-    FIXME: we tried to replace `index_elements` with
+    NOTE: we tried to replace `index_elements` with
     `constraint="pk_historyimagecache"`, but it did not work as expected.
 
     Arguments:

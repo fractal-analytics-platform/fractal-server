@@ -25,7 +25,6 @@ class LocalRunner(BaseRunner):
         self,
         root_dir_local: Path,
     ):
-
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
@@ -181,10 +180,6 @@ class LocalRunner(BaseRunner):
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
-
-                            # FIXME: what should happen here? Option 1: stop
-                            # all existing tasks and shutdown runner (for the
-                            # compound-task case)
 
         logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 

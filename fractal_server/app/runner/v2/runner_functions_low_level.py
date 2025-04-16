@@ -84,13 +84,12 @@ def run_single_task(
     logger.debug(f"Now start running {command=}")
 
     # Write arguments to args.json file
-    # FIXME: this could be done backend-side, with an additional
-    # file transfer if needed (e.g. on SSH)
+    # NOTE: see issue 2346
     with open(args_file_remote, "w") as f:
         json.dump(parameters, f, indent=2)
 
     # Assemble full command
-    # FIXME: this could be assembled backend-side
+    # NOTE: this could be assembled backend-side
     full_command = (
         f"{command} "
         f"--args-json {args_file_remote} "
