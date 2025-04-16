@@ -792,7 +792,6 @@ class BaseSlurmRunner(BaseRunner):
         cmd = (
             f"{self.python_worker_interpreter} "
             "-m fractal_server.app.runner.versions"
-            "-m fractal_server.app.runner.versions"
         )
         stdout = self._run_remote_cmd(cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
