@@ -219,9 +219,47 @@ async def full_workflow(
         url = f"api/v2/project/{project_id}/dataset/{dataset_id}/history/"
         res = await client.get(url)
         assert res.status_code == 200
-        debug(res.json())  # FIXME add assertion
+        assert len(res.json()) == 3
+        for item in res.json():
+            assert "workflowtask_dump" in item.keys()
+            assert "task_group_dump" in item.keys()
+
+        # GET workflow status
+        url = (
+            f"api/v2/project/{project_id}/status/"
+            f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
+        )
+        res = await client.get(url)
+        assert res.status_code == 200
+        assert res.json() == {
+            # Converter compound task
+            "1": {
+                "status": "done",
+                "num_available_images": 0,
+                "num_submitted_images": 0,
+                "num_done_images": 0,
+                "num_failed_images": 0,
+            },
+            # MIP compound task
+            "2": {
+                "status": "done",
+                "num_available_images": 4,
+                "num_submitted_images": 0,
+                "num_done_images": 4,
+                "num_failed_images": 0,
+            },
+            # Generic parallel task
+            "3": {
+                "status": "done",
+                "num_available_images": 4,
+                "num_submitted_images": 0,
+                "num_done_images": 4,
+                "num_failed_images": 0,
+            },
+        }
 
         for wftask_id in [wftask0_id, wftask1_id, wftask2_id]:
+
             # GET history runs
             query_wft = f"dataset_id={dataset_id}&workflowtask_id={wftask_id}"
             this_prefix = f"api/v2/project/{project_id}/status"
@@ -230,11 +268,13 @@ async def full_workflow(
             assert res.status_code == 200
             assert len(res.json()) == 1
             history_run_id = res.json()[0]["id"]
+            debug(res.json())
 
             # Get history units
             url = f"{this_prefix}/run/{history_run_id}/units/?{query_wft}"
             res = await client.get(url)
             assert res.status_code == 200
+            debug(res.json())
             if wftask_id == wftask0_id:
                 # Converter compound task
                 assert res.json()["total_count"] == NUM_IMAGES + 1
@@ -259,7 +299,7 @@ async def full_workflow(
             )
             res = await client.get(url)
             assert res.status_code == 200
-            assert "not available" not in res.json()  # FIXME
+            assert "not available" not in res.json()
 
 
 async def full_workflow_TaskExecutionError(

@@ -78,9 +78,18 @@ class BaseSlurmRunner(BaseRunner):
 
         # Create job folders. Note that the local one may or may not exist
         # depending on whether it is a test or an actual run
-        if not self.root_dir_local.is_dir():
-            self._mkdir_local_folder(self.root_dir_local.as_posix())
-        self._mkdir_remote_folder(self.root_dir_remote.as_posix())
+        try:
+            if not self.root_dir_local.is_dir():
+                self._mkdir_local_folder(self.root_dir_local.as_posix())
+            self._mkdir_remote_folder(self.root_dir_remote.as_posix())
+        except Exception as e:
+            error_msg = (
+                f"Could not mkdir {self.root_dir_local.as_posix()} or "
+                f"{self.root_dir_remote.as_posix()}. "
+                f"Original error: {str(e)}."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
 
         self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
         self.jobs = {}
@@ -238,7 +247,7 @@ class BaseSlurmRunner(BaseRunner):
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
-        script_lines.append('echo "Current directory : $(pwd)"')
+        script_lines.append('echo "Current directory: $(pwd)"')
         script_lines.append(
             'echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"'
         )

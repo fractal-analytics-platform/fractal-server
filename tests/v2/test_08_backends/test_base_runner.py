@@ -1,6 +1,6 @@
 import pytest
 
-from ..aux_unit_runner import get_dummy_task_files
+from .aux_unit_runner import get_dummy_task_files
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 
 
@@ -193,6 +193,20 @@ def test_validate_multisubmit_parameters(tmp_path):
             ],
             history_unit_ids=[None, None],
             list_task_files=[
+                get_dummy_task_files(tmp_path, component="A"),
+            ],
+        )
+
+    with pytest.raises(ValueError, match="differs from"):
+        validate_multisubmit_parameters(
+            task_type="parallel",
+            list_parameters=[
+                {"zarr_url": "/A", "arg": "A"},
+                {"zarr_url": "/B", "arg": "B"},
+            ],
+            history_unit_ids=[None],
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component="A"),
                 get_dummy_task_files(tmp_path, component="A"),
             ],
         )

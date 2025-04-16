@@ -424,7 +424,7 @@ def run_v2_task_compound(
         db.add(history_unit)
         db.commit()
         db.refresh(history_unit)
-        history_unit_id = history_unit.id
+        init_history_unit_id = history_unit.id
         # Create one `HistoryImageCache` for each input image
         bulk_upsert_image_cache_fast(
             db=db,
@@ -433,7 +433,7 @@ def run_v2_task_compound(
                     workflowtask_id=wftask.id,
                     dataset_id=dataset_id,
                     zarr_url=zarr_url,
-                    latest_history_unit_id=history_unit_id,
+                    latest_history_unit_id=init_history_unit_id,
                 )
                 for zarr_url in input_image_zarr_urls
             ],
@@ -449,7 +449,7 @@ def run_v2_task_compound(
         parameters=function_kwargs,
         task_type=task_type,
         task_files=task_files_init,
-        history_unit_id=history_unit_id,
+        history_unit_id=init_history_unit_id,
         config=runner_config_init,
     )
 
@@ -477,7 +477,7 @@ def run_v2_task_compound(
     # Mark the init-task `HistoryUnit` as "done"
     with next(get_sync_db()) as db:
         update_status_of_history_unit(
-            history_unit_id=history_unit_id,
+            history_unit_id=init_history_unit_id,
             status=HistoryUnitStatus.DONE,
             db_sync=db,
         )
@@ -488,7 +488,7 @@ def run_v2_task_compound(
     if len(parallelization_list) == 0:
         with next(get_sync_db()) as db:
             update_status_of_history_unit(
-                history_unit_id=history_unit_id,
+                history_unit_id=init_history_unit_id,
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
@@ -543,30 +543,6 @@ def run_v2_task_compound(
         for history_unit in history_units:
             db.refresh(history_unit)
         history_unit_ids = [history_unit.id for history_unit in history_units]
-    # Create one `HistoryImageCache` per `zarr_url`.
-    with next(get_sync_db()) as db:
-        visited_zarr_urls = set()
-        history_image_caches = []
-        for ind, history_unit in enumerate(history_units):
-            _zarr_url = history_unit.zarr_urls[0]
-            if _zarr_url in visited_zarr_urls:
-                # Note: This `HistoryUnit` won't be associated to any
-                # `HistoryImageCache`.
-                pass
-            else:
-                visited_zarr_urls.add(_zarr_url)
-                history_image_caches.append(
-                    dict(
-                        workflowtask_id=wftask.id,
-                        dataset_id=dataset_id,
-                        zarr_url=_zarr_url,
-                        latest_history_unit_id=history_unit.id,
-                    )
-                )
-        bulk_upsert_image_cache_fast(
-            db=db,
-            list_upsert_objects=history_image_caches,
-        )
 
     results, exceptions = runner.multisubmit(
         functools.partial(
@@ -583,7 +559,7 @@ def run_v2_task_compound(
         config=runner_config_compute,
     )
 
-    init_outcome = {}
+    compute_outcomes: dict[int, SubmissionOutcome] = {}
     failure = False
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
@@ -594,11 +570,11 @@ def run_v2_task_compound(
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        init_outcome[ind] = _process_task_output(
+        compute_outcomes[ind] = _process_task_output(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
-        if init_outcome[ind].invalid_output:
+        if compute_outcomes[ind].invalid_output:
             failure = True
 
     # NOTE: For compound tasks, we update `HistoryUnit.status` from here,
@@ -608,7 +584,7 @@ def run_v2_task_compound(
     with next(get_sync_db()) as db:
         if failure:
             bulk_update_status_of_history_unit(
-                history_unit_ids=history_unit_ids,
+                history_unit_ids=history_unit_ids + [init_history_unit_id],
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
             )
@@ -619,4 +595,4 @@ def run_v2_task_compound(
                 db_sync=db,
             )
 
-    return init_outcome, num_tasks
+    return compute_outcomes, num_tasks
