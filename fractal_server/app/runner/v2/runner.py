@@ -128,6 +128,10 @@ def execute_tasks_v2(
             db.commit()
             db.refresh(history_run)
             history_run_id = history_run.id
+            logger.debug(
+                "[execute_tasks_v2] Created `HistoryRun` with "
+                f"{history_run_id=}."
+            )
 
         # TASK EXECUTION (V2)
         if task.type in ["non_parallel", "converter_non_parallel"]:
