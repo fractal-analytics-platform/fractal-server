@@ -46,6 +46,7 @@ async def test_fractal_demos_01(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -90,13 +91,20 @@ async def test_fractal_demos_01(
         args_parallel={},
         order=3,
     )
-
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
     execute_tasks_v2_mod(
         wf_task_list=[wftask0],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         runner=local_runner,
         user_id=user_id,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
     _assert_image_data_exist(dataset_attrs["images"])
@@ -111,6 +119,7 @@ async def test_fractal_demos_01(
         workflow_dir_local=tmp_path / "job1",
         runner=local_runner,
         user_id=user_id,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
@@ -148,6 +157,7 @@ async def test_fractal_demos_01(
         job_type_filters={
             "illumination_correction": True,
         },
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
@@ -182,6 +192,7 @@ async def test_fractal_demos_01(
             "illumination_correction": True,
             "3D": False,
         },
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
@@ -194,6 +205,7 @@ async def test_fractal_demos_01_no_overwrite(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -239,6 +251,13 @@ async def test_fractal_demos_01_no_overwrite(
         args_parallel={},
         order=3,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     execute_tasks_v2_mod(
         wf_task_list=[wftask0],
@@ -246,6 +265,7 @@ async def test_fractal_demos_01_no_overwrite(
         workflow_dir_local=tmp_path / "job0",
         runner=local_runner,
         user_id=user_id,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
     assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
@@ -265,6 +285,7 @@ async def test_fractal_demos_01_no_overwrite(
         workflow_dir_local=tmp_path / "job1",
         runner=local_runner,
         user_id=user_id,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -333,6 +354,7 @@ async def test_fractal_demos_01_no_overwrite(
         job_type_filters={
             "illumination_correction": True,
         },
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -383,6 +405,7 @@ async def test_fractal_demos_01_no_overwrite(
             "3D": False,
             "illumination_correction": True,
         },
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -394,6 +417,7 @@ async def test_registration_no_overwrite(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -432,6 +456,13 @@ async def test_registration_no_overwrite(
         args_parallel={"overwrite_input": False},
         order=3,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     execute_tasks_v2_mod(
         wf_task_list=[wftask0],
@@ -439,6 +470,7 @@ async def test_registration_no_overwrite(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -452,6 +484,7 @@ async def test_registration_no_overwrite(
         workflow_dir_local=tmp_path / "job1",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -474,6 +507,7 @@ async def test_registration_no_overwrite(
         workflow_dir_local=tmp_path / "job2",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -494,6 +528,7 @@ async def test_registration_no_overwrite(
         workflow_dir_local=tmp_path / "job3",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -508,6 +543,7 @@ async def test_registration_overwrite(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -546,6 +582,13 @@ async def test_registration_overwrite(
         args_parallel={"overwrite_input": True},
         order=3,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     execute_tasks_v2_mod(
         wf_task_list=[wftask0],
@@ -553,6 +596,7 @@ async def test_registration_overwrite(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -566,6 +610,7 @@ async def test_registration_overwrite(
         workflow_dir_local=tmp_path / "job1",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -588,6 +633,7 @@ async def test_registration_overwrite(
         workflow_dir_local=tmp_path / "job2",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -608,6 +654,7 @@ async def test_registration_overwrite(
         workflow_dir_local=tmp_path / "job3",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -624,6 +671,7 @@ async def test_channel_parallelization_with_overwrite(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -651,6 +699,14 @@ async def test_channel_parallelization_with_overwrite(
         args_non_parallel=dict(overwrite_input=True),
         args_parallel=dict(another_argument="something"),
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
     # Run create_ome_zarr+yokogawa_to_zarr
     execute_tasks_v2_mod(
         wf_task_list=[wftask0],
@@ -658,6 +714,7 @@ async def test_channel_parallelization_with_overwrite(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -670,6 +727,7 @@ async def test_channel_parallelization_with_overwrite(
         workflow_dir_local=tmp_path / "job1",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -684,6 +742,7 @@ async def test_channel_parallelization_no_overwrite(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -711,6 +770,13 @@ async def test_channel_parallelization_no_overwrite(
         args_non_parallel=dict(overwrite_input=False),
         args_parallel=dict(another_argument="something"),
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     # Run create_ome_zarr+yokogawa_to_zarr
     execute_tasks_v2_mod(
@@ -719,6 +785,7 @@ async def test_channel_parallelization_no_overwrite(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -732,6 +799,7 @@ async def test_channel_parallelization_no_overwrite(
         workflow_dir_local=tmp_path / "job1",
         user_id=user_id,
         runner=local_runner,
+        job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 

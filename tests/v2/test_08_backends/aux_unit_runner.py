@@ -27,8 +27,10 @@ async def history_run_mock(
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
-    task_factory_v2,
     workflowtask_factory_v2,
+    task_factory_v2,
+    job_factory_v2,
+    tmp_path,
 ) -> HistoryRun:
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -38,9 +40,17 @@ async def history_run_mock(
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="done",
+        )
         run = HistoryRun(
             workflowtask_id=wftask.id,
             dataset_id=dataset.id,
+            job_id=job.id,
             workflowtask_dump={},
             task_group_dump={},
             num_available_images=4,

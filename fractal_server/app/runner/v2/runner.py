@@ -42,6 +42,7 @@ def execute_tasks_v2(
     runner: BaseRunner,
     user_id: int,
     workflow_dir_local: Path,
+    job_id: int,
     workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     get_runner_config: Callable[
@@ -119,6 +120,7 @@ def execute_tasks_v2(
             history_run = HistoryRun(
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
+                job_id=job_id,
                 workflowtask_dump=workflowtask_dump,
                 task_group_dump=task_group_dump,
                 num_available_images=num_available_images,

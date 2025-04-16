@@ -18,11 +18,13 @@ async def test_update_status_of_history_unit(
     num_history_units: int,
     # Fixtures
     db_sync,
+    db,
     dataset_factory_v2,
     project_factory_v2,
     task_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     MockCurrentUser,
 ):
 
@@ -35,6 +37,13 @@ async def test_update_status_of_history_unit(
             workflow_id=workflow.id,
             task_id=task.id,
         )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
 
         hr = HistoryRun(
             dataset_id=dataset.id,
@@ -43,6 +52,7 @@ async def test_update_status_of_history_unit(
             workflowtask_dump={},
             status=HistoryUnitStatus.SUBMITTED,
             num_available_images=0,
+            job_id=job.id,
         )
         db_sync.add(hr)
         db_sync.commit()

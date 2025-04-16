@@ -282,6 +282,7 @@ def submit_workflow(
         process_workflow(
             workflow=workflow,
             dataset=dataset,
+            job_id=job_id,
             user_id=user_id,
             workflow_dir_local=WORKFLOW_DIR_LOCAL,
             workflow_dir_remote=WORKFLOW_DIR_REMOTE,

@@ -37,7 +37,9 @@ async def test_upsert_function(
     task_factory_v2,
     dataset_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db_sync,
+    db,
     MockCurrentUser,
     bulk_upsert_image_cache_function,
     num,
@@ -51,6 +53,13 @@ async def test_upsert_function(
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
         run = HistoryRun(
             workflowtask_id=wftask.id,
             dataset_id=dataset.id,
@@ -58,6 +67,7 @@ async def test_upsert_function(
             task_group_dump={},
             num_available_images=3,
             status=HistoryUnitStatus.SUBMITTED,
+            job_id=job.id,
         )
         db_sync.add(run)
         db_sync.commit()
