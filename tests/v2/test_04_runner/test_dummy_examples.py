@@ -13,6 +13,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 
 
 async def add_history_image_cache(
@@ -22,7 +23,6 @@ async def add_history_image_cache(
     zarr_urls: list[str],
     status: str = "submitted",
 ):
-
     hr = HistoryRun(
         dataset_id=dataset_id,
         workflowtask_id=wftask_id,
@@ -55,6 +55,7 @@ async def add_history_image_cache(
             )
         )
     await db.commit()
+    return hu.id
 
 
 @pytest.fixture()
@@ -66,6 +67,7 @@ def local_runner(tmp_path):
 
 async def test_dummy_insert_single_image(
     db,
+    monkeypatch,
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
@@ -95,14 +97,12 @@ async def test_dummy_insert_single_image(
         order=0,
     )
 
-    # Run successfully on an empty dataset
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         **execute_tasks_v2_args,
     )
-
     # Run successfully even if the image already exists
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
@@ -361,6 +361,69 @@ async def test_dummy_unset_attribute(
         "key1": "value1",
         "key2": "value2",
     }
+
+
+async def test_dummy_invalid_output(
+    db,
+    monkeypatch,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
+
+    async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            runner=local_runner,
+            user_id=user.id,
+        )
+        project = await project_factory_v2(user)
+
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir
+    )
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+    )
+
+    import fractal_server.app.runner.v2.runner_functions
+    from fractal_server.app.runner.exceptions import TaskOutputValidationError
+
+    def patched_cast(*args, **kwargs):
+        raise TaskOutputValidationError()
+
+    monkeypatch.setattr(
+        fractal_server.app.runner.v2.runner_functions,
+        "_cast_and_validate_TaskOutput",
+        patched_cast,
+    )
+    # Run successfully on an empty dataset
+    with pytest.raises(JobExecutionError):
+        execute_tasks_v2_mod(
+            wf_task_list=[wftask],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / "job0",
+            **execute_tasks_v2_args,
+        )
+    res = await db.execute(
+        select(HistoryRun).where(HistoryRun.dataset_id == dataset.id)
+    )
+    hi = res.scalar_one_or_none()
+    res = await db.execute(
+        select(HistoryUnit).where(HistoryUnit.history_run_id == hi.id)
+    )
+    hu = res.scalar_one_or_none()
+    assert hu.status == HistoryUnitStatus.FAILED
+    return
 
 
 # async def test_dummy_insert_single_image_none_attribute(  # FIXME re-include
