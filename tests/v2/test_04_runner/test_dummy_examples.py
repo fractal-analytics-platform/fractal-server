@@ -557,7 +557,7 @@ async def test_compound_task_with_compute_failure(
     assert "raise_error=True" in exc_info.value.assemble_error()
 
 
-async def test_dummy_invalid_output(
+async def test_dummy_invalid_output_non_parallel(
     db,
     MockCurrentUser,
     monkeypatch,
@@ -570,17 +570,24 @@ async def test_dummy_invalid_output(
     fractal_tasks_mock_db,
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
 
+    # case non-parallel
+    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
     async with MockCurrentUser() as user:
         execute_tasks_v2_args = dict(
             runner=local_runner,
             user_id=user.id,
         )
         project = await project_factory_v2(user)
-
+    IMAGES = [
+        dict(
+            zarr_url=Path(zarr_dir, "my-image").as_posix(),
+            types={},
+            attributes={},
+        )
+    ]
     dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
+        project_id=project.id, zarr_dir=zarr_dir, images=IMAGES
     )
     workflow = await workflow_factory_v2(project_id=project.id)
     wftask = await workflowtask_factory_v2(
@@ -600,7 +607,77 @@ async def test_dummy_invalid_output(
         "_cast_and_validate_TaskOutput",
         patched_cast,
     )
-    # Run successfully on an empty dataset
+    with pytest.raises(JobExecutionError):
+        execute_tasks_v2_mod(
+            wf_task_list=[wftask],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / "job0",
+            **execute_tasks_v2_args,
+        )
+    res = await db.execute(
+        select(HistoryRun).where(HistoryRun.dataset_id == dataset.id)
+    )
+    hi = res.scalar_one_or_none()
+    res = await db.execute(
+        select(HistoryUnit).where(HistoryUnit.history_run_id == hi.id)
+    )
+    hu = res.scalar_one_or_none()
+    assert hu.status == HistoryUnitStatus.FAILED
+
+
+async def test_dummy_invalid_output_parallel(
+    db,
+    MockCurrentUser,
+    monkeypatch,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["generic_task_parallel"].id
+    async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            runner=local_runner,
+            user_id=user.id,
+        )
+        project = await project_factory_v2(user)
+    IMAGES = [
+        dict(
+            zarr_url=Path(zarr_dir, "my-image").as_posix(),
+            types={},
+            attributes={},
+        )
+    ]
+
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=zarr_dir, images=IMAGES
+    )
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+    )
+
+    import fractal_server.app.runner.v2.runner_functions
+    from fractal_server.app.runner.exceptions import TaskOutputValidationError
+    from fractal_server.app.runner.v2.runner_functions import SubmissionOutcome
+
+    def patched_task_output(*args, **kwargs):
+        debug("XXX")
+        return SubmissionOutcome(
+            exception=TaskOutputValidationError(), invalid_output=True
+        )
+
+    monkeypatch.setattr(
+        fractal_server.app.runner.v2.runner_functions,
+        "_process_task_output",
+        patched_task_output,
+    )
     with pytest.raises(JobExecutionError):
         execute_tasks_v2_mod(
             wf_task_list=[wftask],
