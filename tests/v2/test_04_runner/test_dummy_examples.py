@@ -661,6 +661,7 @@ async def test_dummy_invalid_output_non_parallel(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -692,6 +693,17 @@ async def test_dummy_invalid_output_non_parallel(
         order=0,
     )
 
+    await _workflow_insert_task(
+        workflow_id=workflow.id, task_id=task_id, db=db
+    )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
     import fractal_server.app.runner.v2.runner_functions
     from fractal_server.app.runner.exceptions import TaskOutputValidationError
 
@@ -708,6 +720,7 @@ async def test_dummy_invalid_output_non_parallel(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     res = await db.execute(
@@ -729,6 +742,7 @@ async def test_dummy_invalid_output_parallel(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -758,6 +772,16 @@ async def test_dummy_invalid_output_parallel(
         task_id=task_id,
         order=0,
     )
+    await _workflow_insert_task(
+        workflow_id=workflow.id, task_id=task_id, db=db
+    )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     import fractal_server.app.runner.v2.runner_functions
     from fractal_server.app.runner.exceptions import TaskOutputValidationError
@@ -779,6 +803,7 @@ async def test_dummy_invalid_output_parallel(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     res = await db.execute(
