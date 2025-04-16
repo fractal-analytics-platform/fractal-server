@@ -27,11 +27,7 @@ class HistoryRun(SQLModel, table=True):
         default=None,
         ondelete="SET NULL",
     )
-    job_id: Optional[int] = Field(
-        foreign_key="jobv2.id",
-        default=None,
-        ondelete="SET NULL",
-    )
+    job_id: int = Field(foreign_key="jobv2.id")
 
     workflowtask_dump: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False),
