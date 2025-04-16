@@ -21,7 +21,7 @@ from fractal_server.tasks.v2.utils_background import (
     _prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.utils_database import (
-    create_db_tasks_and_update_task_group,
+    create_db_tasks_and_update_task_group_sync,
 )
 
 
@@ -104,7 +104,7 @@ def fractal_tasks_mock_db(
     db_sync.refresh(task_group)
     db_sync.expunge(task_group)
 
-    task_group = create_db_tasks_and_update_task_group(
+    task_group = create_db_tasks_and_update_task_group_sync(
         task_group_id=task_group.id,
         task_list=fractal_tasks_mock_collection["task_list"],
         db=db_sync,

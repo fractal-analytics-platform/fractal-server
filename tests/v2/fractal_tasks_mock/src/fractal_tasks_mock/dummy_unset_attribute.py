@@ -1,9 +1,9 @@
 import logging
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
-@validate_arguments
+@validate_call
 def dummy_unset_attribute(
     *,
     zarr_urls: list[str],
@@ -33,6 +33,6 @@ def dummy_unset_attribute(
 
 
 if __name__ == "__main__":
-    from utils import run_fractal_task
+    from fractal_task_tools.task_wrapper import run_fractal_task
 
     run_fractal_task(task_function=dummy_unset_attribute)

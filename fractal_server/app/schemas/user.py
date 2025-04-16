@@ -7,8 +7,8 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import ValidationInfo
 
+from ._validators import NonEmptyString
 from ._validators import val_unique_list
-from ._validators import valstr
 
 __all__ = (
     "UserRead",
@@ -57,12 +57,12 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     model_config = ConfigDict(extra="forbid")
 
-    username: Optional[str] = None
+    username: Optional[NonEmptyString] = None
 
     # Validators
-    _username = field_validator("username")(classmethod(valstr("username")))
 
     @field_validator(
+        "username",
         "is_active",
         "is_verified",
         "is_superuser",
@@ -94,11 +94,14 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[str] = None
+    username: Optional[NonEmptyString] = None
 
-    # Validators
-
-    _username = field_validator("username")(classmethod(valstr("username")))
+    @field_validator("username")
+    @classmethod
+    def cant_set_none(cls, v, info: ValidationInfo):
+        if v is None:
+            raise ValueError(f"Cannot set {info.field_name}=None")
+        return v
 
 
 class UserUpdateGroups(BaseModel):

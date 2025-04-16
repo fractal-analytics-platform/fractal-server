@@ -13,8 +13,6 @@ class DatasetV2Mock(BaseModel):
     name: str
     zarr_dir: str
     images: list[dict[str, Any]] = Field(default_factory=list)
-    type_filters: dict[str, bool] = Field(default_factory=dict)
-    attribute_filters: dict[str, list[Any]] = Field(default_factory=dict)
     history: list = Field(default_factory=list)
 
     @property

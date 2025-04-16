@@ -14,16 +14,12 @@ from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import WorkflowV2
-from ....runner.set_start_and_last_task_index import (
-    set_start_and_last_task_index,
-)
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowReadV2
 from ....schemas.v2 import WorkflowReadV2WithWarnings
 from ....schemas.v2 import WorkflowUpdateV2
 from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
@@ -236,7 +232,7 @@ async def delete_workflow(
     "/project/{project_id}/workflow/{workflow_id}/export/",
     response_model=WorkflowExportV2,
 )
-async def export_worfklow(
+async def export_workflow(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
@@ -285,27 +281,22 @@ async def get_user_workflows(
     return workflow_list
 
 
-class TypeFiltersFlow(BaseModel):
-    dataset_filters: list[dict[str, bool]]
-    input_filters: list[dict[str, bool]]
-    output_filters: list[dict[str, bool]]
+class WorkflowTaskTypeFiltersInfo(BaseModel):
+    workflowtask_id: int
+    current_type_filters: dict[str, bool]
+    input_type_filters: dict[str, bool]
+    output_type_filters: dict[str, bool]
 
 
-@router.get(
-    "/project/{project_id}/workflow/{workflow_id}/type-filters-flow/",
-    response_model=TypeFiltersFlow,
-)
+@router.get("/project/{project_id}/workflow/{workflow_id}/type-filters-flow/")
 async def get_workflow_type_filters(
     project_id: int,
     workflow_id: int,
-    dataset_id: Optional[int] = None,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2WithWarnings]:
+) -> list[WorkflowTaskTypeFiltersInfo]:
     """
-    Get info on an existing workflow
+    Get info on type/type-filters flow for a workflow.
     """
 
     workflow = await _get_workflow_check_owner(
@@ -315,59 +306,35 @@ async def get_workflow_type_filters(
         db=db,
     )
 
-    if len(workflow.task_list) == 0:
+    num_tasks = len(workflow.task_list)
+    if num_tasks == 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Workflow has no tasks.",
         )
 
-    if dataset_id is None:
-        dataset_type_filters = {}
-    else:
-        res = await _get_dataset_check_owner(
-            project_id=project_id,
-            dataset_id=dataset_id,
-            user_id=user.id,
-            db=db,
-        )
-        dataset = res["dataset"]
-        dataset_type_filters = dataset.type_filters
+    current_type_filters = {}
 
-    num_tasks = len(workflow.task_list)
-    try:
-        first_task_index, last_task_index = set_start_and_last_task_index(
-            num_tasks,
-            first_task_index=first_task_index,
-            last_task_index=last_task_index,
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid first/last task index.\nOriginal error: {str(e)}",
-        )
+    response_items = []
+    for wftask in workflow.task_list:
 
-    list_dataset_filters = [copy(dataset_type_filters)]
-    list_filters_in = []
-    list_filters_out = []
-    for wftask in workflow.task_list[first_task_index : last_task_index + 1]:
-
-        input_type_filters = copy(dataset_type_filters)
-        patch = merge_type_filters(
+        # Compute input_type_filters, based on wftask and task manifest
+        input_type_filters = merge_type_filters(
             wftask_type_filters=wftask.type_filters,
             task_input_types=wftask.task.input_types,
         )
-        input_type_filters.update(patch)
-        list_filters_in.append(copy(input_type_filters))
 
-        output_type_filters = wftask.task.output_types
-        list_filters_out.append(output_type_filters)
+        # Append current item to response list
+        response_items.append(
+            dict(
+                workflowtask_id=wftask.id,
+                current_type_filters=copy(current_type_filters),
+                input_type_filters=copy(input_type_filters),
+                output_type_filters=copy(wftask.task.output_types),
+            )
+        )
 
-        dataset_type_filters.update(wftask.task.output_types)
-        list_dataset_filters.append(copy(dataset_type_filters))
+        # Update `current_type_filters`
+        current_type_filters.update(wftask.task.output_types)
 
-    response_body = dict(
-        dataset_filters=list_dataset_filters,
-        input_filters=list_filters_in,
-        output_filters=list_filters_out,
-    )
-    return response_body
+    return response_items

@@ -47,7 +47,6 @@ async def create_dataset(
     )
 
     if dataset.zarr_dir is None:
-
         if user.settings.project_dir is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -91,7 +90,6 @@ async def create_dataset(
 )
 async def read_dataset_list(
     project_id: int,
-    history: bool = True,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetReadV2]]:
@@ -110,9 +108,6 @@ async def read_dataset_list(
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     await db.close()
-    if not history:
-        for ds in dataset_list:
-            setattr(ds, "history", [])
     return dataset_list
 
 
@@ -226,7 +221,6 @@ async def delete_dataset(
 
 @router.get("/dataset/", response_model=list[DatasetReadV2])
 async def get_user_datasets(
-    history: bool = True,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetReadV2]:
@@ -241,9 +235,6 @@ async def get_user_datasets(
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     await db.close()
-    if not history:
-        for ds in dataset_list:
-            setattr(ds, "history", [])
     return dataset_list
 
 

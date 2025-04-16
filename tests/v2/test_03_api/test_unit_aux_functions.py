@@ -7,6 +7,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_dataset_check_owner,
 )
+from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_job_check_owner,
 )
@@ -20,11 +21,26 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_owner,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_workflow_or_404,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_task_check_owner,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_workflowtask_or_404,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+
+
+async def test_404_functions(db):
+    with pytest.raises(HTTPException, match="404"):
+        await _get_workflowtask_or_404(workflowtask_id=9999, db=db)
+    with pytest.raises(HTTPException, match="404"):
+        await _get_workflow_or_404(workflow_id=9999, db=db)
+    with pytest.raises(HTTPException, match="404"):
+        await _get_dataset_or_404(dataset_id=9999, db=db)
 
 
 async def test_get_project_check_owner(

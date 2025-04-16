@@ -6,7 +6,7 @@ from typing import Optional
 
 from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
-from ..utils_database import create_db_tasks_and_update_task_group
+from ..utils_database import create_db_tasks_and_update_task_group_sync
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -265,7 +265,7 @@ def collect_ssh(
                 logger.info("_prepare_tasks_metadata - end")
 
                 logger.info("create_db_tasks_and_update_task_group - " "start")
-                create_db_tasks_and_update_task_group(
+                create_db_tasks_and_update_task_group_sync(
                     task_list=task_list,
                     task_group_id=task_group.id,
                     db=db,

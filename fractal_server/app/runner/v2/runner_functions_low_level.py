@@ -2,20 +2,15 @@ import json
 import logging
 import shutil
 import subprocess  # nosec
-from pathlib import Path
-from shlex import split as shlex_split
+from shlex import split
 from typing import Any
-from typing import Optional
 
-from ..components import _COMPONENT_KEY_
-from ..exceptions import JobExecutionError
-from ..exceptions import TaskExecutionError
-from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.task_files import get_task_file_paths
+from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.string_tools import validate_cmd
 
 
-def _call_command_wrapper(cmd: str, log_path: Path) -> None:
+def _call_command_wrapper(cmd: str, log_path: str) -> None:
     """
     Call a command and write its stdout and stderr to files
 
@@ -32,9 +27,9 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
         raise TaskExecutionError(f"Invalid command. Original error: {str(e)}")
 
     # Verify that task command is executable
-    if shutil.which(shlex_split(cmd)[0]) is None:
+    if shutil.which(split(cmd)[0]) is None:
         msg = (
-            f'Command "{shlex_split(cmd)[0]}" is not valid. '
+            f'Command "{split(cmd)[0]}" is not valid. '
             "Hint: make sure that it is executable."
         )
         raise TaskExecutionError(msg)
@@ -42,7 +37,7 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
     with open(log_path, "w") as fp_log:
         try:
             result = subprocess.run(  # nosec
-                shlex_split(cmd),
+                split(cmd),
                 stderr=fp_log,
                 stdout=fp_log,
             )
@@ -50,7 +45,7 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
             raise e
 
     if result.returncode > 0:
-        with log_path.open("r") as fp_stderr:
+        with open(log_path, "r") as fp_stderr:
             err = fp_stderr.read()
         raise TaskExecutionError(err)
     elif result.returncode < 0:
@@ -60,58 +55,60 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
 
 
 def run_single_task(
-    args: dict[str, Any],
+    # COMMON to all parallel tasks
     command: str,
-    wftask: WorkflowTaskV2,
-    workflow_dir_local: Path,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_task_order: int,
+    workflow_task_id: int,
+    task_name: str,
+    # SPECIAL for each parallel task
+    parameters: dict[str, Any],
+    remote_files: dict[str, str],
 ) -> dict[str, Any]:
     """
-    Runs within an executor.
+    Runs within an executor (AKA on the SLURM cluster).
     """
 
-    logger = logging.getLogger(logger_name)
+    try:
+        args_file_remote = remote_files["args_file_remote"]
+        metadiff_file_remote = remote_files["metadiff_file_remote"]
+        log_file_remote = remote_files["log_file_remote"]
+    except KeyError:
+        raise TaskExecutionError(
+            f"Invalid {remote_files=}",
+            workflow_task_order=workflow_task_order,
+            workflow_task_id=workflow_task_id,
+            task_name=task_name,
+        )
+
+    logger = logging.getLogger(None)
     logger.debug(f"Now start running {command=}")
 
-    if not workflow_dir_remote:
-        workflow_dir_remote = workflow_dir_local
-
-    task_name = wftask.task.name
-
-    component = args.pop(_COMPONENT_KEY_, None)
-    task_files = get_task_file_paths(
-        workflow_dir_local=workflow_dir_local,
-        workflow_dir_remote=workflow_dir_remote,
-        task_order=wftask.order,
-        task_name=task_name,
-        component=component,
-    )
-
     # Write arguments to args.json file
-    with task_files.args.open("w") as f:
-        json.dump(args, f, indent=2)
+    # NOTE: see issue 2346
+    with open(args_file_remote, "w") as f:
+        json.dump(parameters, f, indent=2)
 
     # Assemble full command
+    # NOTE: this could be assembled backend-side
     full_command = (
         f"{command} "
-        f"--args-json {task_files.args.as_posix()} "
-        f"--out-json {task_files.metadiff.as_posix()}"
+        f"--args-json {args_file_remote} "
+        f"--out-json {metadiff_file_remote}"
     )
 
     try:
         _call_command_wrapper(
             full_command,
-            log_path=task_files.log,
+            log_path=log_file_remote,
         )
     except TaskExecutionError as e:
-        e.workflow_task_order = wftask.order
-        e.workflow_task_id = wftask.id
-        e.task_name = wftask.task.name
+        e.workflow_task_order = workflow_task_order
+        e.workflow_task_id = workflow_task_id
+        e.task_name = task_name
         raise e
 
     try:
-        with task_files.metadiff.open("r") as f:
+        with open(metadiff_file_remote, "r") as f:
             out_meta = json.load(f)
     except FileNotFoundError as e:
         logger.debug(

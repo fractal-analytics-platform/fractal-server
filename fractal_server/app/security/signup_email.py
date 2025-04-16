@@ -36,8 +36,8 @@ def mail_new_oauth_signup(msg: str, email_settings: MailSettings):
             server.ehlo()
         if email_settings.use_login:
             password = (
-                Fernet(email_settings.encryption_key)
-                .decrypt(email_settings.encrypted_password)
+                Fernet(email_settings.encryption_key.get_secret_value())
+                .decrypt(email_settings.encrypted_password.get_secret_value())
                 .decode("utf-8")
             )
             server.login(user=email_settings.sender, password=password)

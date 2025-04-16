@@ -1,6 +1,7 @@
 import os
 import shutil
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +9,18 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+
+
+@contextmanager
+def informative_assertion_block(*args):
+    try:
+        yield
+    except AssertionError as e:
+        debug("SOME ASSERTION FAILED")
+        for arg in args:
+            debug(arg)
+        raise e
+
 
 PREFIX = "/api/v2"
 NUM_IMAGES = 4
@@ -66,6 +79,9 @@ async def full_workflow(
             ),
         )
         assert res.status_code == 201
+        wftask0_id = res.json()["id"]
+        debug(wftask0_id)
+
         # Add "MIP_compound" task
         task_id_B = tasks["MIP_compound"].id
         res = await client.post(
@@ -74,6 +90,19 @@ async def full_workflow(
             json={},
         )
         assert res.status_code == 201
+        wftask1_id = res.json()["id"]
+        debug(wftask1_id)
+
+        # Add "generic_task_parallel" task
+        task_id_C = tasks["generic_task_parallel"].id
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_C}",
+            json={},
+        )
+        assert res.status_code == 201
+        wftask2_id = res.json()["id"]
+        debug(wftask2_id)
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -105,7 +134,8 @@ async def full_workflow(
         debug(job_status_data)
         assert job_status_data["log"]
         debug(job_status_data["working_dir"])
-        assert job_status_data["status"] == "done"
+        with informative_assertion_block(job_status_data):
+            assert job_status_data["status"] == "done"
         assert "START workflow" in job_status_data["log"]
         assert "END workflow" in job_status_data["log"]
 
@@ -121,20 +151,12 @@ async def full_workflow(
         debug(non_accessible_files)
         assert len(non_accessible_files) == 0
 
-        # Check output dataset and image
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
-        )
-        assert res.status_code == 200
-        dataset = res.json()
-        assert len(dataset["history"]) == 2
-        for item in dataset["history"]:
-            _task = item["workflowtask"]["task"]
-            assert _task is not None
-        assert dataset["type_filters"] == {"3D": False}
+        # Check output images
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
-            "images/query/",
+            (
+                f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+                "images/query/"
+            ),
             json={},
         )
         assert res.status_code == 200
@@ -142,51 +164,142 @@ async def full_workflow(
         debug(image_page)
         # There should be NUM_IMAGES 3D images and NUM_IMAGES 2D images
         assert image_page["total_count"] == 2 * NUM_IMAGES
-        images = image_page["images"]
+        images = image_page["items"]
         debug(images)
         images_3D = filter(lambda img: img["types"]["3D"], images)
         images_2D = filter(lambda img: not img["types"]["3D"], images)
         assert len(list(images_2D)) == NUM_IMAGES
         assert len(list(images_3D)) == NUM_IMAGES
 
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-
-        debug(res.status_code)
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert set(statuses.values()) == {"done"}
-
         # Check files in zipped root job folder
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            actual_files = zip_ref.namelist()
-        expected_files = [
-            WORKFLOW_LOG_FILENAME,
-        ]
-        assert set(expected_files) < set(actual_files)
+            all_actual_files = zip_ref.namelist()
+            assert WORKFLOW_LOG_FILENAME in all_actual_files
 
         # Check files in task-0 folder
-        expected_files = ["0_par_0000000.log", "0_par_0000001.log"]
-        assert set(expected_files) < set(
+        expected_files = {
+            "non_par--log.txt",
+            "non_par--metadiff.json",
+            "par-000000-0000000-log.txt",
+            "par-000000-0000000-metadiff.json",
+        }
+        task_actual_files = set(
             file.split("/")[-1]
-            for file in actual_files
+            for file in all_actual_files
             if "0_create_ome_zarr_compound" in file
         )
+        with informative_assertion_block(
+            expected_files,
+            all_actual_files,
+            task_actual_files,
+        ):
+            assert expected_files < task_actual_files
 
         # Check files in task-1 folder
-        expected_files = ["1_par_0000000.log", "1_par_0000001.log"]
-        assert set(expected_files) < set(
+        expected_files = {
+            "non_par--log.txt",
+            "non_par--metadiff.json",
+            "par-000000-0000000-log.txt",
+            "par-000000-0000000-metadiff.json",
+        }
+        task_actual_files = set(
             file.split("/")[-1]
-            for file in actual_files
+            for file in all_actual_files
             if "1_mip_compound" in file
         )
+        with informative_assertion_block(
+            expected_files,
+            all_actual_files,
+            task_actual_files,
+        ):
+            assert expected_files < task_actual_files
+
+        # GET dataset history
+        url = f"api/v2/project/{project_id}/dataset/{dataset_id}/history/"
+        res = await client.get(url)
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+        for item in res.json():
+            assert "workflowtask_dump" in item.keys()
+            assert "task_group_dump" in item.keys()
+
+        # GET workflow status
+        url = (
+            f"api/v2/project/{project_id}/status/"
+            f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
+        )
+        res = await client.get(url)
+        assert res.status_code == 200
+        assert res.json() == {
+            # Converter compound task
+            "1": {
+                "status": "done",
+                "num_available_images": 0,
+                "num_submitted_images": 0,
+                "num_done_images": 0,
+                "num_failed_images": 0,
+            },
+            # MIP compound task
+            "2": {
+                "status": "done",
+                "num_available_images": 4,
+                "num_submitted_images": 0,
+                "num_done_images": 4,
+                "num_failed_images": 0,
+            },
+            # Generic parallel task
+            "3": {
+                "status": "done",
+                "num_available_images": 4,
+                "num_submitted_images": 0,
+                "num_done_images": 4,
+                "num_failed_images": 0,
+            },
+        }
+
+        for wftask_id in [wftask0_id, wftask1_id, wftask2_id]:
+
+            # GET history runs
+            query_wft = f"dataset_id={dataset_id}&workflowtask_id={wftask_id}"
+            this_prefix = f"api/v2/project/{project_id}/status"
+            url = f"{this_prefix}/run/?{query_wft}"
+            res = await client.get(url)
+            assert res.status_code == 200
+            assert len(res.json()) == 1
+            history_run_id = res.json()[0]["id"]
+            debug(res.json())
+
+            # Get history units
+            url = f"{this_prefix}/run/{history_run_id}/units/?{query_wft}"
+            res = await client.get(url)
+            assert res.status_code == 200
+            debug(res.json())
+            if wftask_id == wftask0_id:
+                # Converter compound task
+                assert res.json()["total_count"] == NUM_IMAGES + 1
+            elif wftask_id == wftask1_id:
+                # MIP compound task
+                assert res.json()["total_count"] == NUM_IMAGES + 1
+            elif wftask_id == wftask2_id:
+                # Generic parallel task
+                assert res.json()["total_count"] == NUM_IMAGES
+
+            first_history_unit = res.json()["items"][0]
+            history_unit_id = first_history_unit["id"]
+            assert Path(first_history_unit["logfile"]).exists()
+            debug(first_history_unit["logfile"])
+
+            # Get history-unit log
+            url = (
+                f"{this_prefix}/unit-log/?"
+                f"history_run_id={history_run_id}&"
+                f"history_unit_id={history_unit_id}&"
+                f"workflowtask_id={wftask_id}&dataset_id={dataset_id}"
+            )
+            res = await client.get(url)
+            assert res.status_code == 200
+            assert "not available" not in res.json()
 
 
 async def full_workflow_TaskExecutionError(
@@ -272,47 +385,25 @@ async def full_workflow_TaskExecutionError(
         job_status_data = res.json()
         debug(job_status_data)
         debug(job_status_data["working_dir"])
-        assert job_status_data["log"]
-        assert job_status_data["status"] == "failed"
-        assert "ValueError" in job_status_data["log"]
+        with informative_assertion_block(job_status_data):
+            assert job_status_data["log"]
+            assert job_status_data["status"] == "failed"
+            assert "ValueError" in job_status_data["log"]
 
         # The temporary output of the successful tasks must have been written
-        # into the dataset filters&images attributes, and the history must
-        # include both successful and failed tasks
+        # into the dataset images
         res = await client.get(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
         )
         assert res.status_code == 200
         dataset = res.json()
-        EXPECTED_TYPE_FILTERS = {"3D": False}
-        EXPECTED_ATTRIBUTE_FILTERS = {}
-        assert dataset["type_filters"] == EXPECTED_TYPE_FILTERS
-        assert dataset["attribute_filters"] == EXPECTED_ATTRIBUTE_FILTERS
-        assert len(dataset["history"]) == 3
-        assert [item["status"] for item in dataset["history"]] == [
-            "done",
-            "done",
-            "failed",
-        ]
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
         )
         assert res.status_code == 200
-        image_list = res.json()["images"]
+        image_list = res.json()["items"]
         debug(image_list)
         assert len(image_list) == 2 * NUM_IMAGES
-
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == EXPECTED_STATUSES
 
 
 async def non_executable_task_command(
@@ -472,18 +563,6 @@ async def failing_workflow_UnknownError(
         assert "UNKNOWN ERROR" in job_status_data["log"]
         assert ERROR_MSG in job_status_data["log"]
 
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == EXPECTED_STATUSES
-
 
 async def workflow_with_non_python_task(
     *,
@@ -582,21 +661,15 @@ async def workflow_with_non_python_task(
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            glob_list = [name.split("/")[-1] for name in zip_ref.namelist()]
-
-        must_exist = [
-            "0.log",
-            "0.args.json",
-            WORKFLOW_LOG_FILENAME,
-        ]
-
-        for f in must_exist:
-            if f not in glob_list:
-                raise ValueError(f"{f} must exist, but {glob_list=}")
+            actual_files = zip_ref.namelist()
+        with informative_assertion_block(actual_files):
+            assert WORKFLOW_LOG_FILENAME in actual_files
+            assert "0_non_python/non_par--args.json" in actual_files
+            assert "0_non_python/non_par--log.txt" in actual_files
 
         # Check that stderr and stdout are as expected
         with zipfile.ZipFile(f"{working_dir}.zip", "r") as zip_ref:
-            with zip_ref.open("0_non_python/0.log", "r") as file:
+            with zip_ref.open("0_non_python/non_par--log.txt", "r") as file:
                 log = file.read().decode("utf-8")
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log

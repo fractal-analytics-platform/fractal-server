@@ -1,5 +1,30 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.0a3
+
+* App:
+    * Obfuscate sensitive information from settings using `SecretStr` (\#2333).
+* API:
+    * Remove `valstr` validator and introduce `NonEmptyString` in schemas (\#2352).
+
+
+# 2.14.0a0, 2.14.0a1, 2.14.0a2
+
+All this is from \#2287
+
+* Database
+    * New `HistoryItemV2` and `ImageStatus` tables.
+* API
+    * New history endpoints.
+    * Introduce shared tools for pagination.
+* Runner
+    * Introduce new runner interface.
+    * Update to `HistoryItemV2` and `ImageStatus` from within runner.
+    * Stop filling `Dataset.history` from within runner.
+* App:
+    * Drop obsolete `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` configuration variable.
+
+
 # 2.13.2 (Unreleased)
 
 * API:
@@ -950,7 +975,7 @@ dataset (300 wells with 25 cycles each).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
-    * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+    * Make `WorkflowTask.workflow_id` and `WorkflowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
     * Start a new `current.py` fix-db script (\#1152, \#1195).
     * Add to `migrations.yml` a new script (`validate_db_data_with_read_schemas.py`) that validates test-DB data with Read schemas (\#1187).

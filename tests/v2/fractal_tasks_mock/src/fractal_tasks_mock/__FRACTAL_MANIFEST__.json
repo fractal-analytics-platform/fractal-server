@@ -9,6 +9,7 @@
         "Yokogawa",
         "Cellvoyager"
       ],
+      "type": "converter_compound",
       "executable_non_parallel": "create_cellvoyager_ome_zarr.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
       "meta_non_parallel": {
@@ -20,14 +21,6 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "zarr_urls": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Zarr Urls",
-            "type": "array",
-            "description": "description"
-          },
           "zarr_dir": {
             "title": "Zarr Dir",
             "type": "string",
@@ -46,7 +39,6 @@
           }
         },
         "required": [
-          "zarr_urls",
           "zarr_dir",
           "image_dir"
         ],
@@ -106,19 +98,12 @@
         "Yokogawa",
         "Cellvoyager"
       ],
+      "type": "converter_compound",
       "executable_non_parallel": "create_cellvoyager_ome_zarr_multiplex.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "zarr_urls": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Zarr Urls",
-            "type": "array",
-            "description": "description"
-          },
           "zarr_dir": {
             "title": "Zarr Dir",
             "type": "string",
@@ -131,7 +116,6 @@
           }
         },
         "required": [
-          "zarr_urls",
           "zarr_dir",
           "image_dir"
         ],
@@ -196,6 +180,7 @@
       "tags": [
         "Preprocessing"
       ],
+      "type": "compound",
       "executable_non_parallel": "new_ome_zarr.py",
       "executable_parallel": "maximum_intensity_projection.py",
       "args_schema_non_parallel": {
@@ -286,6 +271,7 @@
       "tags": [
         "Preprocessing"
       ],
+      "type": "parallel",
       "executable_parallel": "illumination_correction.py",
       "args_schema_parallel": {
         "additionalProperties": false,
@@ -322,6 +308,7 @@
       "tags": [
         "Preprocessing"
       ],
+      "type": "compound",
       "executable_non_parallel": "illumination_correction_init.py",
       "executable_parallel": "illumination_correction_compute.py",
       "args_schema_non_parallel": {
@@ -416,6 +403,7 @@
         "Convolutional Neural Network",
         "Instance Segmentation"
       ],
+      "type": "parallel",
       "executable_parallel": "cellpose_segmentation.py",
       "args_schema_parallel": {
         "additionalProperties": false,
@@ -441,6 +429,7 @@
       "tags": [
         "Multiplexing"
       ],
+      "type": "compound",
       "executable_non_parallel": "calculate_registration_init.py",
       "executable_parallel": "calculate_registration_compute.py",
       "args_schema_non_parallel": {
@@ -520,6 +509,7 @@
       "tags": [
         "Multiplexing"
       ],
+      "type": "non_parallel",
       "executable_non_parallel": "find_registration_consensus.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
@@ -560,6 +550,7 @@
       "tags": [
         "Multiplexing"
       ],
+      "type": "parallel",
       "executable_parallel": "apply_registration_to_image.py",
       "args_schema_parallel": {
         "additionalProperties": false,
@@ -586,6 +577,7 @@
     },
     {
       "name": "generic_task",
+      "type": "non_parallel",
       "executable_non_parallel": "generic_task.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
@@ -627,6 +619,7 @@
     },
     {
       "name": "dummy_remove_images",
+      "type": "non_parallel",
       "executable_non_parallel": "dummy_remove_images.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
@@ -664,6 +657,7 @@
     },
     {
       "name": "dummy_insert_single_image",
+      "type": "non_parallel",
       "executable_non_parallel": "dummy_insert_single_image.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
@@ -726,6 +720,7 @@
     },
     {
       "name": "dummy_unset_attribute",
+      "type": "non_parallel",
       "executable_non_parallel": "dummy_unset_attribute.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
@@ -767,6 +762,7 @@
       "output_types": {
         "my_type": true
       },
+      "type": "parallel",
       "executable_parallel": "generic_task_parallel.py",
       "args_schema_parallel": {
         "additionalProperties": false,
@@ -790,6 +786,97 @@
         "title": "GenericTaskParallel"
       },
       "docs_info": "## generic_task_parallel\nDummy task description.\n"
+    },
+    {
+      "name": "generic_task_compound",
+      "type": "compound",
+      "executable_non_parallel": "generic_compound_init.py",
+      "executable_parallel": "generic_compound_compute.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array",
+            "description": "description"
+          },
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "argument": {
+            "default": 1,
+            "title": "Argument",
+            "type": "integer",
+            "description": "description"
+          }
+        },
+        "required": [
+          "zarr_urls",
+          "zarr_dir"
+        ],
+        "type": "object",
+        "title": "GenericCompoundInit"
+      },
+      "args_schema_parallel": {
+        "$defs": {
+          "InitArgsGeneric": {
+            "description": "Dummy model description.",
+            "properties": {
+              "argument": {
+                "title": "Argument",
+                "type": "integer"
+              },
+              "ind": {
+                "title": "Ind",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "argument",
+              "ind"
+            ],
+            "title": "InitArgsGeneric",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "description"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsGeneric",
+            "title": "Init Args",
+            "description": "description"
+          },
+          "raise_error": {
+            "default": false,
+            "title": "Raise Error",
+            "type": "boolean",
+            "description": "description"
+          },
+          "raise_error_if_ind_is_even": {
+            "default": false,
+            "title": "Raise Error If Ind Is Even",
+            "type": "boolean",
+            "description": "description"
+          }
+        },
+        "required": [
+          "zarr_url",
+          "init_args"
+        ],
+        "type": "object",
+        "title": "GenericCompoundCompute"
+      },
+      "docs_info": "## generic_compound_init\nDummy task description.\n## generic_compound_compute\nDummy task description.\n"
     }
   ],
   "has_args_schemas": true,
