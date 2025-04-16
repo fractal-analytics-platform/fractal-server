@@ -4,6 +4,9 @@ from sqlmodel import select
 from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import HistoryRun
 from fractal_server.app.models import HistoryUnit
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
@@ -219,6 +222,7 @@ async def test_delete_images(
     workflow_factory_v2,
     task_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db,
 ):
     IMAGES = n_images(10)
@@ -239,9 +243,21 @@ async def test_delete_images(
         workflow_id=workflow.id, task_id=task.id
     )
 
+    await _workflow_insert_task(
+        workflow_id=workflow.id, task_id=task.id, db=db
+    )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
     run = HistoryRun(
         workflowtask_id=wftask.id,
         dataset_id=dataset.id,
+        job_id=job.id,
         workflowtask_dump={},
         task_group_dump={},
         num_available_images=1,
