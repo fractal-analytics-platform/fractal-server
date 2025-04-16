@@ -15,7 +15,7 @@
 | fractal\_server/app/models/v2/\_\_init\_\_.py                                   |       15 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/accounting.py                                     |       20 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/dataset.py                                        |       24 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/v2/history.py                                        |       33 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/v2/history.py                                        |       34 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/job.py                                            |       34 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/project.py                                        |       15 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/task.py                                           |       28 |        0 |        0 |        0 |    100% |           |
@@ -97,16 +97,16 @@
 | fractal\_server/app/runner/shutdown.py                                          |       34 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/runner/task\_files.py                                       |       78 |        2 |        6 |        2 |     95% |    56, 77 |
 | fractal\_server/app/runner/v2/\_\_init\_\_.py                                   |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/\_local.py                                        |       16 |        1 |        2 |        1 |     89% |        59 |
-| fractal\_server/app/runner/v2/\_slurm\_ssh.py                                   |       27 |        1 |        2 |        1 |     93% |        65 |
-| fractal\_server/app/runner/v2/\_slurm\_sudo.py                                  |       18 |        2 |        4 |        2 |     82% |    62, 67 |
+| fractal\_server/app/runner/v2/\_local.py                                        |       16 |        1 |        2 |        1 |     89% |        60 |
+| fractal\_server/app/runner/v2/\_slurm\_ssh.py                                   |       27 |        1 |        2 |        1 |     93% |        66 |
+| fractal\_server/app/runner/v2/\_slurm\_sudo.py                                  |       18 |        2 |        4 |        2 |     82% |    63, 68 |
 | fractal\_server/app/runner/v2/db\_tools.py                                      |       41 |        2 |       10 |        2 |     92% |    27, 41 |
 | fractal\_server/app/runner/v2/deduplicate\_list.py                              |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/merge\_outputs.py                                 |       14 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/runner.py                                         |      148 |        2 |       38 |        3 |     97% |178, 231, 289->294 |
+| fractal\_server/app/runner/v2/runner.py                                         |      148 |        2 |       38 |        3 |     97% |180, 233, 291->296 |
 | fractal\_server/app/runner/v2/runner\_functions.py                              |      189 |       12 |       48 |        9 |     90% |114, 148, 171->175, 178-179, 349-354, 414->418, 577-582, 588, 596 |
 | fractal\_server/app/runner/v2/runner\_functions\_low\_level.py                  |       56 |        8 |        8 |        2 |     84% |26-27, 44-45, 52, 75-76, 121 |
-| fractal\_server/app/runner/v2/submit\_workflow.py                               |      160 |       15 |       30 |        4 |     90% |117-122, 130->132, 132->136, 189-205, 265, 313-323 |
+| fractal\_server/app/runner/v2/submit\_workflow.py                               |      160 |       15 |       30 |        4 |     90% |117-122, 130->132, 132->136, 189-205, 265, 314-324 |
 | fractal\_server/app/runner/v2/task\_interface.py                                |       50 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                                     |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_filter\_validators.py                             |       21 |        2 |       12 |        2 |     88% |    11, 22 |
@@ -118,7 +118,7 @@
 | fractal\_server/app/schemas/v2/accounting.py                                    |       13 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/dataset.py                                       |       65 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/dumps.py                                         |       51 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/v2/history.py                                       |       50 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/schemas/v2/history.py                                       |       51 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/job.py                                           |       89 |        1 |       10 |        0 |     99% |        63 |
 | fractal\_server/app/schemas/v2/manifest.py                                      |       84 |        0 |       32 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/project.py                                       |       26 |        0 |        0 |        0 |    100% |           |
@@ -162,7 +162,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8707** |  **311** | **1738** |  **116** | **95%** |           |
+|                                                                       **TOTAL** | **8709** |  **311** | **1738** |  **116** | **95%** |           |
 
 
 ## Setup coverage badge
