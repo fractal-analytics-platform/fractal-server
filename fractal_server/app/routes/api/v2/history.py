@@ -142,11 +142,6 @@ async def get_workflow_tasks_statuses(
                 value["num_available_images"] = None
         new_response[key] = value
 
-    for wftask in workflow.task_list:
-        logger.debug(
-            f"({dataset_id=}, {wftask.id=}): {new_response[wftask.id]}"
-        )
-
     return JSONResponse(content=new_response, status_code=200)
 
 
