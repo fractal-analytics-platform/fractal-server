@@ -104,7 +104,6 @@ class LocalRunner(BaseRunner):
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
         """
-
         self.validate_multisubmit_parameters(
             list_parameters=list_parameters,
             task_type=task_type,
@@ -135,15 +134,29 @@ class LocalRunner(BaseRunner):
             active_futures: dict[int, Future] = {}
             for ind_within_chunk, kwargs in enumerate(list_parameters_chunk):
                 positional_index = ind_chunk + ind_within_chunk
-                future = self.executor.submit(
-                    func,
-                    parameters=kwargs,
-                    remote_files=list_task_files[
+                try:
+                    future = self.executor.submit(
+                        func,
+                        parameters=kwargs,
+                        remote_files=list_task_files[
+                            positional_index
+                        ].remote_files_dict,
+                    )
+                    active_futures[positional_index] = future
+                except Exception as e:
+                    logger.error(
+                        "Multisubmit failed in submission phase "
+                        f"with the following error {str(e)}"
+                    )
+                    current_history_unit_id = history_unit_ids[
                         positional_index
-                    ].remote_files_dict,
-                )
-                active_futures[positional_index] = future
-
+                    ]
+                    with next(get_sync_db()) as db:
+                        update_status_of_history_unit(
+                            history_unit_id=current_history_unit_id,
+                            status=HistoryUnitStatus.FAILED,
+                            db_sync=db,
+                        )
             while active_futures:
                 finished_futures = [
                     index_and_future
@@ -171,6 +184,11 @@ class LocalRunner(BaseRunner):
                                 )
 
                         except Exception as e:
+                            logger.debug(
+                                "Multisubmit failed in retrieval "
+                                "phase with the following error "
+                                f"{str(e)}"
+                            )
                             exceptions[positional_index] = TaskExecutionError(
                                 str(e)
                             )
