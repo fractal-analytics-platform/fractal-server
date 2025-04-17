@@ -43,10 +43,8 @@ async def verify_unique_types(
             type_filters=query.type_filters,
         )
 
-    # NOTE: see issue 2486
-    available_types = aggregate_types(filtered_images)
-
     # Get actual values for each available type
+    available_types = aggregate_types(filtered_images)
     values_per_type: dict[str, set] = {
         _type: set() for _type in available_types
     }
