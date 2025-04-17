@@ -57,17 +57,28 @@ class LocalRunner(BaseRunner):
         config: LocalBackendConfig,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
+        try:
+            self.validate_submit_parameters(parameters, task_type=task_type)
+            workdir_local = task_files.wftask_subfolder_local
+            workdir_local.mkdir()
 
-        self.validate_submit_parameters(parameters, task_type=task_type)
-        workdir_local = task_files.wftask_subfolder_local
-        workdir_local.mkdir()
-
-        # SUBMISSION PHASE
-        future = self.executor.submit(
-            func,
-            parameters=parameters,
-            remote_files=task_files.remote_files_dict,
-        )
+            # SUBMISSION PHASE
+            future = self.executor.submit(
+                func,
+                parameters=parameters,
+                remote_files=task_files.remote_files_dict,
+            )
+        except Exception as e:
+            logger.error(
+                "Submission retrieval phase failed with the following "
+                f"error {str(e)}"
+            )
+            with next(get_sync_db()) as db:
+                update_status_of_history_unit(
+                    history_unit_id=history_unit_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
+                )
 
         # RETRIEVAL PHASE
         with next(get_sync_db()) as db:
@@ -104,47 +115,61 @@ class LocalRunner(BaseRunner):
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
         """
+        try:
+            self.validate_multisubmit_parameters(
+                list_parameters=list_parameters,
+                task_type=task_type,
+                list_task_files=list_task_files,
+                history_unit_ids=history_unit_ids,
+            )
 
-        self.validate_multisubmit_parameters(
-            list_parameters=list_parameters,
-            task_type=task_type,
-            list_task_files=list_task_files,
-            history_unit_ids=history_unit_ids,
-        )
+            logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
 
-        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
+            workdir_local = list_task_files[0].wftask_subfolder_local
+            if task_type == "parallel":
+                workdir_local.mkdir()
 
-        workdir_local = list_task_files[0].wftask_subfolder_local
-        if task_type == "parallel":
-            workdir_local.mkdir()
+            # Set `n_elements` and `parallel_tasks_per_job`
+            n_elements = len(list_parameters)
+            parallel_tasks_per_job = config.parallel_tasks_per_job
+            if parallel_tasks_per_job is None:
+                parallel_tasks_per_job = n_elements
 
-        # Set `n_elements` and `parallel_tasks_per_job`
-        n_elements = len(list_parameters)
-        parallel_tasks_per_job = config.parallel_tasks_per_job
-        if parallel_tasks_per_job is None:
-            parallel_tasks_per_job = n_elements
+            # Execute tasks, in chunks of size `parallel_tasks_per_job`
+            results: dict[int, Any] = {}
+            exceptions: dict[int, BaseException] = {}
+            for ind_chunk in range(0, n_elements, parallel_tasks_per_job):
+                list_parameters_chunk = list_parameters[
+                    ind_chunk : ind_chunk + parallel_tasks_per_job
+                ]
 
-        # Execute tasks, in chunks of size `parallel_tasks_per_job`
-        results: dict[int, Any] = {}
-        exceptions: dict[int, BaseException] = {}
-        for ind_chunk in range(0, n_elements, parallel_tasks_per_job):
-            list_parameters_chunk = list_parameters[
-                ind_chunk : ind_chunk + parallel_tasks_per_job
-            ]
-
-            active_futures: dict[int, Future] = {}
-            for ind_within_chunk, kwargs in enumerate(list_parameters_chunk):
-                positional_index = ind_chunk + ind_within_chunk
-                future = self.executor.submit(
-                    func,
-                    parameters=kwargs,
-                    remote_files=list_task_files[
-                        positional_index
-                    ].remote_files_dict,
+                active_futures: dict[int, Future] = {}
+                for ind_within_chunk, kwargs in enumerate(
+                    list_parameters_chunk
+                ):
+                    positional_index = ind_chunk + ind_within_chunk
+                    future = self.executor.submit(
+                        func,
+                        parameters=kwargs,
+                        remote_files=list_task_files[
+                            positional_index
+                        ].remote_files_dict,
+                    )
+                    active_futures[positional_index] = future
+        except Exception as e:
+            logger.error(
+                "Multisubmission failed in submission phase with the "
+                f"following error {str(e)}"
+            )
+            current_history_unit_id = history_unit_ids[positional_index]
+            with next(get_sync_db()) as db:
+                update_status_of_history_unit(
+                    history_unit_id=current_history_unit_id,
+                    status=HistoryUnitStatus.DONE,
+                    db_sync=db,
                 )
-                active_futures[positional_index] = future
-
-            while active_futures:
+        while active_futures:
+            try:
                 finished_futures = [
                     index_and_future
                     for index_and_future in active_futures.items()
@@ -180,7 +205,17 @@ class LocalRunner(BaseRunner):
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
-
+            except Exception as e:
+                logger.error(
+                    "Multisubmission retrieval phase failed with the "
+                    f"following error {str(e)}"
+                )
+                with next(get_sync_db()) as db:
+                    update_status_of_history_unit(
+                        history_unit_id=current_history_unit_id,
+                        status=HistoryUnitStatus.FAILED,
+                        db_sync=db,
+                    )
         logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 
         return results, exceptions
