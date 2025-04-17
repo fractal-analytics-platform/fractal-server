@@ -576,7 +576,10 @@ def run_v2_task_compound(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
-        if compute_outcomes[ind].invalid_output:
+        if (
+            compute_outcomes[ind].exception is not None
+            or compute_outcomes[ind].invalid_output
+        ):
             failure = True
 
     # NOTE: For compound tasks, we update `HistoryUnit.status` from here,
