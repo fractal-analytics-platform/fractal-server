@@ -564,6 +564,10 @@ class BaseSlurmRunner(BaseRunner):
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
         except Exception as e:
+            logger.error(
+                "Single submission is failed with "
+                f"the following error: {str(e)}"
+            )
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
                     history_unit_id=history_unit_id,
