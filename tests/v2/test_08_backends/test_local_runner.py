@@ -123,7 +123,7 @@ def fun(parameters: dict, remote_files: dict):
     zarr_url = parameters["zarr_url"]
     x = parameters["parameter"]
     if x != 3:
-        print(f"Running with {zarr_url=} and {x=}, returning {2*x=}.")
+        print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
         return 2 * x
     else:
         print(f"Running with {zarr_url=} and {x=}, raising error.")
@@ -135,10 +135,8 @@ async def test_multisubmit_parallel(
     db,
     history_mock_for_multisubmit,
 ):
-
     history_run_id, history_unit_ids = history_mock_for_multisubmit
     with LocalRunner(root_dir_local=tmp_path) as runner:
-
         results, exceptions = runner.multisubmit(
             fun,
             ZARR_URLS_AND_PARAMETER,
@@ -181,7 +179,6 @@ async def test_multisubmit_compound(
     db,
     history_mock_for_multisubmit,
 ):
-
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
@@ -227,14 +224,12 @@ async def test_multisubmit_in_chunks(
     history_mock_for_multisubmit,
     parallel_tasks_per_job,
 ):
-
     config = get_default_local_backend_config()
     config.parallel_tasks_per_job = parallel_tasks_per_job
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
-
         results, exceptions = runner.multisubmit(
             fun,
             ZARR_URLS_AND_PARAMETER,
