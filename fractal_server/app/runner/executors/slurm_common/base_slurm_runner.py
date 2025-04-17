@@ -702,6 +702,10 @@ class BaseSlurmRunner(BaseRunner):
             logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
             time.sleep(sleep_time)
         except Exception as e:
+            logger.error(
+                "Multi submission failed in submission phase "
+                f"with the following error {str(e)}"
+            )
             self.scancel_jobs()
             if task_type == "parallel":
                 with next(get_sync_db()) as db:
@@ -728,7 +732,11 @@ class BaseSlurmRunner(BaseRunner):
             try:
                 self._fetch_artifacts(finished_jobs)
             except Exception as e:
-                exp_fetch = e
+                logger.error(
+                    "Fetch artifacts failed in multisubmisssion with "
+                    f"the following error {str(e)}"
+                )
+                fetch_artifacts_exception = e
 
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
@@ -739,7 +747,7 @@ class BaseSlurmRunner(BaseRunner):
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
                         if exp_fetch is not None:
                             result = None
-                            exception = exp_fetch
+                            exception = fetch_artifacts_exception
                         else:
                             try:
                                 (
@@ -750,6 +758,10 @@ class BaseSlurmRunner(BaseRunner):
                                     was_job_scancelled=was_job_scancelled,
                                 )
                             except Exception as e:
+                                logger.error(
+                                    "Retrieval phase failed with the "
+                                    f"following error {str(e)}"
+                                )
                                 result = None
                                 exception = e
                         # Note: the relevant done/failed check is based on
