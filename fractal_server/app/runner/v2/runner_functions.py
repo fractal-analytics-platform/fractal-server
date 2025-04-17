@@ -187,6 +187,10 @@ def run_v2_task_non_parallel(
         db.add(history_unit)
         db.commit()
         db.refresh(history_unit)
+        logger.debug(
+            "[run_v2_task_non_parallel] Created `HistoryUnit` with "
+            f"{history_run_id=}."
+        )
         history_unit_id = history_unit.id
         bulk_upsert_image_cache_fast(
             db=db,
@@ -301,6 +305,10 @@ def run_v2_task_parallel(
     with next(get_sync_db()) as db:
         db.add_all(history_units)
         db.commit()
+        logger.debug(
+            f"[run_v2_task_non_parallel] Created {len(history_units)} "
+            "`HistoryUnit`s."
+        )
 
         for history_unit in history_units:
             db.refresh(history_unit)
@@ -419,6 +427,10 @@ def run_v2_task_compound(
         db.commit()
         db.refresh(history_unit)
         init_history_unit_id = history_unit.id
+        logger.debug(
+            "[run_v2_task_compound] Created `HistoryUnit` with "
+            f"{init_history_unit_id=}."
+        )
         # Create one `HistoryImageCache` for each input image
         bulk_upsert_image_cache_fast(
             db=db,
@@ -467,14 +479,6 @@ def run_v2_task_compound(
     parallelization_list = deduplicate_list(parallelization_list)
 
     num_tasks = 1 + len(parallelization_list)
-
-    # Mark the init-task `HistoryUnit` as "done"
-    with next(get_sync_db()) as db:
-        update_status_of_history_unit(
-            history_unit_id=init_history_unit_id,
-            status=HistoryUnitStatus.DONE,
-            db_sync=db,
-        )
 
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
@@ -536,6 +540,10 @@ def run_v2_task_compound(
         db.commit()
         for history_unit in history_units:
             db.refresh(history_unit)
+        logger.debug(
+            f"[run_v2_task_compound] Created {len(history_units)} "
+            "`HistoryUnit`s."
+        )
         history_unit_ids = [history_unit.id for history_unit in history_units]
 
     results, exceptions = runner.multisubmit(
@@ -584,7 +592,7 @@ def run_v2_task_compound(
             )
         else:
             bulk_update_status_of_history_unit(
-                history_unit_ids=history_unit_ids,
+                history_unit_ids=history_unit_ids + [init_history_unit_id],
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )

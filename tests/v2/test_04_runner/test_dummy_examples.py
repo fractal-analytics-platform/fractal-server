@@ -21,12 +21,14 @@ async def add_history_image_cache(
     db,
     dataset_id: int,
     wftask_id: int,
+    job_id: int,
     zarr_urls: list[str],
     status: str = "submitted",
 ):
     hr = HistoryRun(
         dataset_id=dataset_id,
         workflowtask_id=wftask_id,
+        job_id=job_id,
         workflowtask_dump={},
         task_group_dump={},
         status=status,
@@ -72,6 +74,7 @@ async def test_dummy_insert_single_image(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -95,12 +98,20 @@ async def test_dummy_insert_single_image(
         task_id=task_id,
         order=0,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     # Run successfully on an empty dataset
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
+        job_id=job.id,
         **execute_tasks_v2_args,
     )
 
@@ -111,6 +122,7 @@ async def test_dummy_insert_single_image(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job1",
+        job_id=job.id,
         **execute_tasks_v2_args,
     )
 
@@ -132,6 +144,7 @@ async def test_dummy_insert_single_image(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job3",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     error_msg = str(e.value)
@@ -152,6 +165,7 @@ async def test_dummy_insert_single_image(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job4",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     error_msg = str(e.value)
@@ -180,6 +194,7 @@ async def test_dummy_insert_single_image(
             wf_task_list=[wftask],
             dataset=dataset_with_images,
             workflow_dir_local=tmp_path / "job2",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     error_msg = str(e.value)
@@ -196,6 +211,7 @@ async def test_dummy_remove_images(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -231,10 +247,19 @@ async def test_dummy_remove_images(
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 0
 
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
     await add_history_image_cache(
         db=db,
         dataset_id=dataset.id,
         wftask_id=wftask.id,
+        job_id=job.id,
         zarr_urls=[img["zarr_url"] for img in dataset.images] + ["/foo"],
     )
 
@@ -248,6 +273,7 @@ async def test_dummy_remove_images(
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
+        job_id=job.id,
         runner=local_runner,
     )
 
@@ -275,6 +301,7 @@ async def test_dummy_remove_images(
             dataset=dataset_pre_fail,
             workflow_dir_local=tmp_path / "job1",
             user_id=user_id,
+            job_id=job.id,
             runner=local_runner,
         )
     error_msg = str(e.value)
@@ -288,6 +315,7 @@ async def test_dummy_unset_attribute(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -319,11 +347,19 @@ async def test_dummy_unset_attribute(
         order=0,
         args_non_parallel=dict(attribute="key2"),
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset1.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset1,
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
+        job_id=job.id,
         runner=local_runner,
     )
     db.expunge_all()
@@ -354,6 +390,7 @@ async def test_dummy_unset_attribute(
         dataset=dataset2,
         workflow_dir_local=tmp_path / "job1",
         user_id=user_id,
+        job_id=job.id,
         runner=local_runner,
     )
     db.expunge_all()
@@ -371,6 +408,7 @@ async def test_dummy_insert_single_image_with_attribute_none(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -388,17 +426,24 @@ async def test_dummy_insert_single_image_with_attribute_none(
         order=0,
         args_non_parallel=dict(attributes={"attribute-name": None}),
     )
-
     # Run successfully on an empty dataset
     dataset = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
+    )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
     )
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
+        job_id=job.id,
         runner=local_runner,
     )
     # Assert that attribute was not set
@@ -413,6 +458,7 @@ async def test_dummy_insert_single_image_normalization(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -435,11 +481,19 @@ async def test_dummy_insert_single_image_normalization(
         project_id=project.id,
         zarr_dir=zarr_dir,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
+        job_id=job.id,
         runner=local_runner,
     )
     # Assert that URLs are normalized
@@ -456,6 +510,7 @@ async def test_default_inclusion_of_images(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -491,11 +546,19 @@ async def test_default_inclusion_of_images(
         zarr_dir=zarr_dir,
         images=images,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
+        job_id=job.id,
         runner=local_runner,
     )
 
@@ -512,6 +575,7 @@ async def test_compound_task_with_compute_failure(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -545,12 +609,20 @@ async def test_compound_task_with_compute_failure(
         zarr_dir=zarr_dir,
         images=images,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
     with pytest.raises(JobExecutionError) as exc_info:
         execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             user_id=user_id,
+            job_id=job.id,
             runner=local_runner,
         )
     debug(exc_info.value.assemble_error())
@@ -565,6 +637,7 @@ async def test_dummy_invalid_output_non_parallel(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -596,6 +669,14 @@ async def test_dummy_invalid_output_non_parallel(
         order=0,
     )
 
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
     import fractal_server.app.runner.v2.runner_functions
     from fractal_server.app.runner.exceptions import TaskOutputValidationError
 
@@ -612,6 +693,7 @@ async def test_dummy_invalid_output_non_parallel(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     res = await db.execute(
@@ -633,6 +715,7 @@ async def test_dummy_invalid_output_parallel(
     dataset_factory_v2,
     workflow_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -662,6 +745,13 @@ async def test_dummy_invalid_output_parallel(
         task_id=task_id,
         order=0,
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     import fractal_server.app.runner.v2.runner_functions
     from fractal_server.app.runner.exceptions import TaskOutputValidationError
@@ -683,6 +773,7 @@ async def test_dummy_invalid_output_parallel(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
+            job_id=job.id,
             **execute_tasks_v2_args,
         )
     res = await db.execute(

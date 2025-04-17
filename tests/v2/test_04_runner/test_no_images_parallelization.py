@@ -22,6 +22,7 @@ async def test_parallelize_on_no_images(
     workflow_factory_v2,
     task_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     tmp_path: Path,
     local_runner: Executor,
 ):
@@ -48,12 +49,20 @@ async def test_parallelize_on_no_images(
             task_id=task.id,
             order=0,
         )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
         execute_tasks_v2_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             runner=local_runner,
             user_id=user.id,
+            job_id=job.id,
         )
 
         task = await task_factory_v2(
@@ -74,4 +83,5 @@ async def test_parallelize_on_no_images(
             workflow_dir_local=tmp_path / "job1",
             runner=local_runner,
             user_id=user.id,
+            job_id=job.id,
         )

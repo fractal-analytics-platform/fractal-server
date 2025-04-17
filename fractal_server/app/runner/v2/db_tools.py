@@ -8,8 +8,12 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.logger import set_logger
+
 
 _CHUNK_SIZE = 2_000
+
+logger = set_logger(__name__)
 
 
 def update_status_of_history_run(
@@ -46,7 +50,12 @@ def bulk_update_status_of_history_unit(
     status: HistoryUnitStatus,
     db_sync: Session,
 ) -> None:
-    for ind in range(0, len(history_unit_ids), _CHUNK_SIZE):
+
+    len_history_unit_ids = len(history_unit_ids)
+    logger.debug(
+        f"[bulk_update_status_of_history_unit] {len_history_unit_ids=}."
+    )
+    for ind in range(0, len_history_unit_ids, _CHUNK_SIZE):
         db_sync.execute(
             update(HistoryUnit)
             .where(
@@ -85,10 +94,14 @@ def bulk_upsert_image_cache_fast(
             List of dictionaries for objects to be upsert-ed.
         db: A sync database session
     """
-    if len(list_upsert_objects) == 0:
+    len_list_upsert_objects = len(list_upsert_objects)
+
+    logger.debug(f"[bulk_upsert_image_cache_fast] {len_list_upsert_objects=}.")
+
+    if len_list_upsert_objects == 0:
         return None
 
-    for ind in range(0, len(list_upsert_objects), _CHUNK_SIZE):
+    for ind in range(0, len_list_upsert_objects, _CHUNK_SIZE):
         stmt = pg_insert(HistoryImageCache).values(
             list_upsert_objects[ind : ind + _CHUNK_SIZE]
         )
