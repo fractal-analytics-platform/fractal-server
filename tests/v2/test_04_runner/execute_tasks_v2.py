@@ -12,6 +12,7 @@ def execute_tasks_v2_mod(
     wf_task_list: list[WorkflowTaskV2],
     workflow_dir_local: Path,
     user_id: int,
+    job_id: int,
     job_type_filters: Optional[dict[str, bool]] = None,
     **kwargs,
 ) -> None:
@@ -23,6 +24,7 @@ def execute_tasks_v2_mod(
         workflow_dir_local=workflow_dir_local,
         job_attribute_filters={},
         job_type_filters=(job_type_filters or {}),
+        job_id=job_id,
         user_id=user_id,
         get_runner_config=get_local_backend_config,
         **kwargs,

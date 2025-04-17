@@ -219,6 +219,7 @@ async def test_delete_images(
     workflow_factory_v2,
     task_factory_v2,
     workflowtask_factory_v2,
+    job_factory_v2,
     db,
 ):
     IMAGES = n_images(10)
@@ -238,10 +239,18 @@ async def test_delete_images(
     wftask = await workflowtask_factory_v2(
         workflow_id=workflow.id, task_id=task.id
     )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
 
     run = HistoryRun(
         workflowtask_id=wftask.id,
         dataset_id=dataset.id,
+        job_id=job.id,
         workflowtask_dump={},
         task_group_dump={},
         num_available_images=1,

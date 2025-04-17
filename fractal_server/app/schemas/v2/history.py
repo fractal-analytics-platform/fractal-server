@@ -45,6 +45,7 @@ class HistoryRunRead(BaseModel):
     id: int
     dataset_id: int
     workflowtask_id: Optional[int] = None
+    job_id: int
     workflowtask_dump: dict[str, Any]
     task_group_dump: dict[str, Any]
     timestamp_started: AwareDatetime

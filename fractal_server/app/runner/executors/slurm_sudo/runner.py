@@ -133,7 +133,10 @@ class SudoSlurmRunner(BaseSlurmRunner):
                 # Write local file
                 with open(target, "wb") as f:
                     f.write(res.stdout)
-                logger.critical(f"Copied {source} into {target}")
+                logger.debug(
+                    f"[_fetch_artifacts_single_job] Copied {source} into "
+                    f"{target}"
+                )
             except RuntimeError as e:
                 logger.warning(
                     f"SKIP copy {source} into {target}. "

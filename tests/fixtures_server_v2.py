@@ -4,6 +4,7 @@ from typing import Optional
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
@@ -267,6 +268,10 @@ async def workflowtask_factory_v2(db: AsyncSession):
         task = await db.get(TaskV2, task_id)
         if task is None:
             raise Exception(f"TaskV2[{task_id}] not found.")
+        workflow = await db.get(WorkflowV2, workflow_id)
+        if workflow is None:
+            raise Exception(f"WorkflowV2[{workflow_id}] not found.")
+
         defaults = dict(
             workflow_id=workflow_id,
             task_id=task_id,
@@ -275,7 +280,14 @@ async def workflowtask_factory_v2(db: AsyncSession):
         args = dict(**defaults)
         args.update(kwargs)
         wft = WorkflowTaskV2(**args)
-        db.add(wft)
+
+        if wft.order is not None:
+            order = wft.order
+        else:
+            order = len(workflow.task_list)
+
+        workflow.task_list.insert(order, wft)
+        flag_modified(workflow, "task_list")
         await db.commit()
         await db.refresh(wft)
         return wft
