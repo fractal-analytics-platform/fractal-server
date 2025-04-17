@@ -592,8 +592,8 @@ def run_v2_task_compound(
             )
         else:
             bulk_update_status_of_history_unit(
-                history_unit_ids=history_unit_ids,
-                status=HistoryUnitStatus.DONE + [init_history_unit_id],
+                history_unit_ids=history_unit_ids + [init_history_unit_id],
+                status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
 
