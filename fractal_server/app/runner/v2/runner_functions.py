@@ -229,6 +229,9 @@ def run_v2_task_non_parallel(
             exception=exception,
         )
     }
+    # NOTE: Here we don't have to handle the
+    # `outcome[0].exception is not None` branch, since for non_parallel
+    # tasks it was already handled within submit
     if outcome[0].invalid_output:
         with next(get_sync_db()) as db:
             update_status_of_history_unit(
@@ -356,6 +359,9 @@ def run_v2_task_parallel(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
+        # NOTE: Here we don't have to handle the
+        # `outcome[ind].exception is not None` branch, since for parallel
+        # tasks it was already handled within multisubmit
         if outcome[ind].invalid_output:
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
@@ -576,6 +582,8 @@ def run_v2_task_compound(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
         )
+        # NOTE: For compound task, `multisubmit` did not handle the
+        # `exception is not None` branch, therefore we have to include it here.
         if (
             compute_outcomes[ind].exception is not None
             or compute_outcomes[ind].invalid_output
