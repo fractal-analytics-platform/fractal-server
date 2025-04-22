@@ -151,6 +151,7 @@ class LocalRunner(BaseRunner):
                     current_history_unit_id = history_unit_ids[
                         positional_index
                     ]
+                    exceptions[positional_index] = TaskExecutionError(str(e))
                     with next(get_sync_db()) as db:
                         update_status_of_history_unit(
                             history_unit_id=current_history_unit_id,
