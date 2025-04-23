@@ -119,6 +119,60 @@ async def test_submit_fail(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
+async def test_submit_inner_failure(
+    db,
+    history_mock_for_submit,
+    tmp_path,
+    monkeypatch,
+    # task_type: str,
+):
+    ERROR_MSG = "very nice error"
+
+    def do_nothing(parameters: dict, remote_files: dict) -> int:
+        return 42
+
+    def mock_validate_params(*args, **kwargs):
+        raise ValueError(ERROR_MSG)
+
+    from fractal_server.app.runner.executors.local.runner import BaseRunner
+
+    monkeypatch.setattr(
+        BaseRunner, "validate_submit_parameters", mock_validate_params
+    )
+
+    history_run_id, history_unit_id = history_mock_for_submit
+
+    # if not task_type.startswith("converter_"):
+    #     parameters = dict(zarr_urls=ZARR_URLS)
+    # else:
+    #     parameters = {}
+
+    with LocalRunner(root_dir_local=tmp_path) as runner:
+        result, exception = runner.submit(
+            do_nothing,
+            parameters=dict(zarr_urls=ZARR_URLS),
+            task_files=get_dummy_task_files(tmp_path, component="0"),
+            task_type="parallel",
+            history_unit_id=history_unit_id,
+            config=get_default_local_backend_config(),
+        )
+    debug(result, exception)
+    assert result is None
+    assert isinstance(exception, TaskExecutionError)
+    assert ERROR_MSG in str(exception)
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    debug(run)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.submit`
+    unit = await db.get(HistoryUnit, history_unit_id)
+    debug(unit)
+    assert unit.status == HistoryUnitStatus.FAILED
+
+
 def fun(parameters: dict, remote_files: dict):
     zarr_url = parameters["zarr_url"]
     x = parameters["parameter"]
