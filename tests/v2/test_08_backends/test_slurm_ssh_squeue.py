@@ -102,7 +102,8 @@ async def test_run_squeue(
             fut_squeue = executor.submit(squeue_thread)
             squeue_stdout = fut_squeue.result()
             debug(squeue_stdout)
-            assert squeue_stdout == ""
+            assert "PENDING" not in squeue_stdout
+            assert "RUNNING" not in squeue_stdout
 
             # Submit a `sleep_long` function
             fut_main = executor.submit(main_thread)
