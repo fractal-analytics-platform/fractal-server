@@ -5,7 +5,7 @@ from fractal_server.images.models import AttributeFiltersType
 
 
 def validate_type_filters(
-    cls, type_filters: Optional[dict[str, bool]]
+    type_filters: Optional[dict[str, bool]]
 ) -> dict[str, bool]:
     if type_filters is None:
         raise ValueError("'type_filters' cannot be 'None'.")

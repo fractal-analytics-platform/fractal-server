@@ -68,9 +68,7 @@ class JobCreateV2(BaseModel):
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
+    _type_filters = field_validator("type_filters")(validate_type_filters)
 
     @field_validator("first_task_index")
     @classmethod

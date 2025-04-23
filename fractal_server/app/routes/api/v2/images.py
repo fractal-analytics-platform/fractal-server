@@ -51,9 +51,7 @@ class ImageQuery(BaseModel):
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
     )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
+    _type_filters = field_validator("type_filters")(validate_type_filters)
     _attribute_filters = field_validator("attribute_filters")(
         classmethod(validate_attribute_filters)
     )

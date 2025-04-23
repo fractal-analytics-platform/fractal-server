@@ -33,9 +33,7 @@ class WorkflowTaskCreateV2(BaseModel):
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
     )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
+    _type_filters = field_validator("type_filters")(validate_type_filters)
     _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
     _meta_parallel = field_validator("meta_parallel")(valdict_keys)
 
@@ -112,9 +110,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     _dict_keys = model_validator(mode="before")(
         classmethod(root_validate_dict_keys)
     )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
+    _type_filters = field_validator("type_filters")(validate_type_filters)
     _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
     _meta_parallel = field_validator("meta_parallel")(valdict_keys)
 
@@ -190,9 +186,7 @@ class WorkflowTaskImportV2(BaseModel):
 
         return values
 
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
+    _type_filters = field_validator("type_filters")(validate_type_filters)
     _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
     _meta_parallel = field_validator("meta_parallel")(valdict_keys)
     _args_non_parallel = field_validator("args_non_parallel")(valdict_keys)
