@@ -15,6 +15,7 @@ from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
+@pytest.mark.container
 async def test_submit_exception(
     db,
     tmp777_path,
