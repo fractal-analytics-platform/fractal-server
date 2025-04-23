@@ -53,7 +53,7 @@ class ImageQuery(BaseModel):
     )
     _type_filters = field_validator("type_filters")(validate_type_filters)
     _attribute_filters = field_validator("attribute_filters")(
-        classmethod(validate_attribute_filters)
+        validate_attribute_filters
     )
 
 

@@ -15,7 +15,6 @@ def validate_type_filters(
 
 
 def validate_attribute_filters(
-    cls,
     attribute_filters: Optional[AttributeFiltersType],
 ) -> AttributeFiltersType:
     if attribute_filters is None:

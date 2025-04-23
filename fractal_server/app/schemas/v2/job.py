@@ -66,7 +66,7 @@ class JobCreateV2(BaseModel):
         classmethod(root_validate_dict_keys)
     )
     _attribute_filters = field_validator("attribute_filters")(
-        classmethod(validate_attribute_filters)
+        validate_attribute_filters
     )
     _type_filters = field_validator("type_filters")(validate_type_filters)
 

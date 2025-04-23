@@ -41,7 +41,7 @@ class MyModel(BaseModel):
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
     _attribute_filters = field_validator("attribute_filters")(
-        classmethod(validate_attribute_filters)
+        validate_attribute_filters
     )
 
 
