@@ -445,7 +445,7 @@ class BaseSlurmRunner(BaseRunner):
     def _check_no_active_jobs(self):
         if self.jobs != {}:
             raise JobExecutionError(
-                "Unexpected branch: jobs should be empty before new "
+                "Unexpected branch: jobs must be empty before new "
                 "submissions."
             )
 
@@ -823,9 +823,8 @@ class BaseSlurmRunner(BaseRunner):
 
     def scancel_jobs(self) -> list[str]:
         logger.info("[scancel_jobs] START")
-
+        scancelled_job_ids = self.job_ids
         if self.jobs:
-            scancelled_job_ids = self.job_ids
             scancel_string = " ".join(scancelled_job_ids)
             scancel_cmd = f"scancel {scancel_string}"
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
