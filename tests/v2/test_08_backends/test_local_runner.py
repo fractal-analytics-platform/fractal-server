@@ -119,11 +119,59 @@ async def test_submit_fail(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
+async def test_submit_inner_failure(
+    db,
+    history_mock_for_submit,
+    tmp_path,
+    monkeypatch,
+):
+    ERROR_MSG = "very nice error"
+
+    def do_nothing(parameters: dict, remote_files: dict) -> int:
+        return 42
+
+    def mock_validate_params(*args, **kwargs):
+        raise ValueError(ERROR_MSG)
+
+    from fractal_server.app.runner.executors.local.runner import BaseRunner
+
+    monkeypatch.setattr(
+        BaseRunner, "validate_submit_parameters", mock_validate_params
+    )
+
+    history_run_id, history_unit_id = history_mock_for_submit
+
+    with LocalRunner(root_dir_local=tmp_path) as runner:
+        result, exception = runner.submit(
+            do_nothing,
+            parameters=dict(zarr_urls=ZARR_URLS),
+            task_files=get_dummy_task_files(tmp_path, component="0"),
+            task_type="parallel",
+            history_unit_id=history_unit_id,
+            config=get_default_local_backend_config(),
+        )
+    debug(result, exception)
+    assert result is None
+    assert isinstance(exception, TaskExecutionError)
+    assert ERROR_MSG in str(exception)
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    debug(run)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.submit`
+    unit = await db.get(HistoryUnit, history_unit_id)
+    debug(unit)
+    assert unit.status == HistoryUnitStatus.FAILED
+
+
 def fun(parameters: dict, remote_files: dict):
     zarr_url = parameters["zarr_url"]
     x = parameters["parameter"]
     if x != 3:
-        print(f"Running with {zarr_url=} and {x=}, returning {2*x=}.")
+        print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
         return 2 * x
     else:
         print(f"Running with {zarr_url=} and {x=}, raising error.")
@@ -135,10 +183,8 @@ async def test_multisubmit_parallel(
     db,
     history_mock_for_multisubmit,
 ):
-
     history_run_id, history_unit_ids = history_mock_for_multisubmit
     with LocalRunner(root_dir_local=tmp_path) as runner:
-
         results, exceptions = runner.multisubmit(
             fun,
             ZARR_URLS_AND_PARAMETER,
@@ -181,7 +227,6 @@ async def test_multisubmit_compound(
     db,
     history_mock_for_multisubmit,
 ):
-
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
@@ -227,14 +272,12 @@ async def test_multisubmit_in_chunks(
     history_mock_for_multisubmit,
     parallel_tasks_per_job,
 ):
-
     config = get_default_local_backend_config()
     config.parallel_tasks_per_job = parallel_tasks_per_job
 
     history_run_id, history_unit_ids = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
-
         results, exceptions = runner.multisubmit(
             fun,
             ZARR_URLS_AND_PARAMETER,
@@ -268,3 +311,95 @@ async def test_multisubmit_in_chunks(
             assert unit.status == HistoryUnitStatus.DONE
         else:
             assert unit.status == HistoryUnitStatus.FAILED
+
+
+async def test_multisubmit_parallel_fail(
+    tmp_path,
+    db,
+    history_mock_for_multisubmit,
+    monkeypatch,
+):
+    history_run_id, history_unit_ids = history_mock_for_multisubmit
+
+    def _fake_submit(*args, **kwargs):
+        raise ValueError("Error")
+
+    from fractal_server.app.runner.executors.local.runner import (
+        ThreadPoolExecutor,
+    )
+
+    monkeypatch.setattr(ThreadPoolExecutor, "submit", _fake_submit)
+
+    with LocalRunner(root_dir_local=tmp_path) as runner:
+        results, exceptions = runner.multisubmit(
+            fun,
+            ZARR_URLS_AND_PARAMETER,
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component=str(ind))
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="parallel",
+            history_unit_ids=history_unit_ids,
+            config=get_default_local_backend_config(),
+        )
+    debug(results)
+    debug(exceptions)
+    for exception in exceptions.values():
+        assert isinstance(exception, TaskExecutionError)
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.multisubmit`
+    for ind, _unit_id in enumerate(history_unit_ids):
+        unit = await db.get(HistoryUnit, _unit_id)
+        assert unit.status == HistoryUnitStatus.FAILED
+
+
+async def test_multisubmit_inner_failure(
+    db,
+    history_mock_for_multisubmit,
+    tmp_path,
+    monkeypatch,
+):
+    ERROR_MSG = "very nice error"
+
+    def mock_validate_params(*args, **kwargs):
+        raise ValueError(ERROR_MSG)
+
+    from fractal_server.app.runner.executors.local.runner import BaseRunner
+
+    monkeypatch.setattr(
+        BaseRunner, "validate_multisubmit_parameters", mock_validate_params
+    )
+    history_run_id, history_unit_ids = history_mock_for_multisubmit
+
+    with LocalRunner(root_dir_local=tmp_path) as runner:
+        results, exceptions = runner.multisubmit(
+            fun,
+            ZARR_URLS_AND_PARAMETER,
+            list_task_files=[
+                get_dummy_task_files(tmp_path, component=str(ind))
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="parallel",
+            history_unit_ids=history_unit_ids,
+            config=get_default_local_backend_config(),
+        )
+
+    debug(results)
+    debug(exceptions)
+    for exception in exceptions.values():
+        assert isinstance(exception, TaskExecutionError)
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.multisubmit`
+    for ind, _unit_id in enumerate(history_unit_ids):
+        unit = await db.get(HistoryUnit, _unit_id)
+        assert unit.status == HistoryUnitStatus.FAILED
