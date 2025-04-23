@@ -66,7 +66,7 @@ class TaskGroupCreateV2(BaseModel):
         classmethod(val_absolute_path("wheel_path"))
     )
     _pinned_package_versions = field_validator("pinned_package_versions")(
-        valdict_keys("pinned_package_versions")
+        valdict_keys
     )
 
 

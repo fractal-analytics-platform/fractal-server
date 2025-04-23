@@ -36,19 +36,15 @@ class WorkflowTaskCreateV2(BaseModel):
     _type_filters = field_validator("type_filters")(
         classmethod(validate_type_filters)
     )
-    _meta_non_parallel = field_validator("meta_non_parallel")(
-        classmethod(valdict_keys("meta_non_parallel"))
-    )
-    _meta_parallel = field_validator("meta_parallel")(
-        classmethod(valdict_keys("meta_parallel"))
-    )
+    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
+    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
 
     @field_validator("args_non_parallel")
     @classmethod
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_non_parallel")(cls, value)
+        valdict_keys(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -63,7 +59,7 @@ class WorkflowTaskCreateV2(BaseModel):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_parallel")(cls, value)
+        valdict_keys(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -119,19 +115,15 @@ class WorkflowTaskUpdateV2(BaseModel):
     _type_filters = field_validator("type_filters")(
         classmethod(validate_type_filters)
     )
-    _meta_non_parallel = field_validator("meta_non_parallel")(
-        classmethod(valdict_keys("meta_non_parallel"))
-    )
-    _meta_parallel = field_validator("meta_parallel")(
-        classmethod(valdict_keys("meta_parallel"))
-    )
+    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
+    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
 
     @field_validator("args_non_parallel")
     @classmethod
     def validate_args_non_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_non_parallel")(cls, value)
+        valdict_keys(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -146,7 +138,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     def validate_args_parallel(cls, value):
         if value is None:
             return
-        valdict_keys("args_parallel")(cls, value)
+        valdict_keys(value)
         args_keys = set(value.keys())
         intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
         if intersect_keys:
@@ -201,18 +193,10 @@ class WorkflowTaskImportV2(BaseModel):
     _type_filters = field_validator("type_filters")(
         classmethod(validate_type_filters)
     )
-    _meta_non_parallel = field_validator("meta_non_parallel")(
-        classmethod(valdict_keys("meta_non_parallel"))
-    )
-    _meta_parallel = field_validator("meta_parallel")(
-        classmethod(valdict_keys("meta_parallel"))
-    )
-    _args_non_parallel = field_validator("args_non_parallel")(
-        classmethod(valdict_keys("args_non_parallel"))
-    )
-    _args_parallel = field_validator("args_parallel")(
-        classmethod(valdict_keys("args_parallel"))
-    )
+    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
+    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
+    _args_non_parallel = field_validator("args_non_parallel")(valdict_keys)
+    _args_parallel = field_validator("args_parallel")(valdict_keys)
 
 
 class WorkflowTaskExportV2(BaseModel):

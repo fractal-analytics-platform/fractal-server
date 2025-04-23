@@ -100,24 +100,16 @@ class TaskCreateV2(BaseModel):
 
         return self
 
-    _meta_non_parallel = field_validator("meta_non_parallel")(
-        classmethod(valdict_keys("meta_non_parallel"))
-    )
-    _meta_parallel = field_validator("meta_parallel")(
-        classmethod(valdict_keys("meta_parallel"))
-    )
+    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
+    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
     _args_schema_non_parallel = field_validator("args_schema_non_parallel")(
-        classmethod(valdict_keys("args_schema_non_parallel"))
+        valdict_keys
     )
     _args_schema_parallel = field_validator("args_schema_parallel")(
-        classmethod(valdict_keys("args_schema_parallel"))
+        valdict_keys
     )
-    _input_types = field_validator("input_types")(
-        classmethod(valdict_keys("input_types"))
-    )
-    _output_types = field_validator("output_types")(
-        classmethod(valdict_keys("output_types"))
-    )
+    _input_types = field_validator("input_types")(valdict_keys)
+    _output_types = field_validator("output_types")(valdict_keys)
 
     @field_validator("tags")
     @classmethod
@@ -186,12 +178,8 @@ class TaskUpdateV2(BaseModel):
             raise ValueError
         return v
 
-    _input_types = field_validator("input_types")(
-        classmethod(valdict_keys("input_types"))
-    )
-    _output_types = field_validator("output_types")(
-        classmethod(valdict_keys("output_types"))
-    )
+    _input_types = field_validator("input_types")(valdict_keys)
+    _output_types = field_validator("output_types")(valdict_keys)
 
     @field_validator("tags")
     @classmethod

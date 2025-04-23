@@ -30,10 +30,8 @@ class _SingleImageBase(BaseModel):
     types: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
-    _attributes = field_validator("attributes")(
-        classmethod(valdict_keys("attributes"))
-    )
-    _types = field_validator("types")(classmethod(valdict_keys("types")))
+    _attributes = field_validator("attributes")(valdict_keys)
+    _types = field_validator("types")(valdict_keys)
 
     @field_validator("zarr_url")
     @classmethod
@@ -103,7 +101,7 @@ class SingleImageUpdate(BaseModel):
     ) -> dict[str, Union[int, float, str, bool]]:
         if v is not None:
             # validate keys
-            valdict_keys("attributes")(cls, v)
+            valdict_keys(v)
             # validate values
             for key, value in v.items():
                 if not isinstance(value, (int, float, str, bool)):
@@ -114,4 +112,4 @@ class SingleImageUpdate(BaseModel):
                     )
         return v
 
-    _types = field_validator("types")(classmethod(valdict_keys("types")))
+    _types = field_validator("types")(valdict_keys)
