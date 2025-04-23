@@ -137,8 +137,7 @@ class BaseSlurmRunner(BaseRunner):
                     )
                     slurm_statuses.update({str(job_id): "COMPLETED"})
 
-        # Finished jobs only stay in squeue for a few mins (configurable). If
-        # a job ID isn't there, we'll assume it's finished.
+        # If a job is not in `squeue` output, mark it as completed.
         finished_jobs = {
             job_id
             for job_id in job_ids
