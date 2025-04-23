@@ -62,8 +62,8 @@ async def test_run_squeue(
         with pytest.raises(FractalSSHCommandError):
             runner.run_squeue(job_ids=[invalid_slurm_job_id])
 
-        # Case 2: `runner.jobs = {}`
-        squeue_stdout = runner.run_squeue(job_ids=runner.job_ids)
+        # Case 2: Empty list
+        squeue_stdout = runner.run_squeue(job_ids=[])
         debug(squeue_stdout)
         assert "PENDING" not in squeue_stdout
         assert "RUNNING" not in squeue_stdout
