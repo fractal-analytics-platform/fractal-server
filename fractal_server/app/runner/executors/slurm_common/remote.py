@@ -59,6 +59,7 @@ def _check_versions_mismatch(
     if worker_python_version != server_python_version:
         # FIXME: turn this into an error, after fixing a broader CI issue, see
         # https://github.com/fractal-analytics-platform/fractal-server/issues/375
+        raise RuntimeError("FIXME fake error")
         logging.warning(
             f"{server_python_version=} but {worker_python_version=}. "
             "cloudpickle is not guaranteed to correctly load "
