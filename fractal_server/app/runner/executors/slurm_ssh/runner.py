@@ -256,9 +256,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
                 "[run_squeue] Could not acquire lock, use stdout placeholder."
             )
             FAKE_STATUS = "FRACTAL_STATUS_PLACEHOLDER"
-            placeholder = "\n".join(
+            placeholder_stdout = "\n".join(
                 [f"{job_id} {FAKE_STATUS}" for job_id in job_ids]
             )
-            return placeholder
+            return placeholder_stdout
         except Exception as e:
             logger.error(f"Ignoring `squeue` command failure {e}")
+            return ""

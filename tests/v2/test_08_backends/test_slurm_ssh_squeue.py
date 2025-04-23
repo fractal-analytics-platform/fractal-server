@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from devtools import debug
+from fabric import Connection
 
 from .aux_unit_runner import *  # noqa
 from fractal_server.app.runner.executors.slurm_ssh.runner import SlurmSSHRunner
@@ -107,3 +108,13 @@ async def test_run_squeue(
             runner.shutdown_file.touch()
             main_result = fut_main.result()
             debug(main_result)
+
+        # Case 5: `FractalSSHConnectionError` results into empty stdout
+        with Connection("localhost") as connection:
+            runner.fractal_ssh = FractalSSH(
+                connection=connection,
+                default_base_interval=1.0,
+            )
+            squeue_stdout = runner.run_squeue(job_ids=[123], max_attempts=1)
+            debug(squeue_stdout)
+            assert squeue_stdout == ""

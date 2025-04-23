@@ -340,7 +340,7 @@ class FractalSSH(object):
                     sleeptime = actual_base_interval**ind_attempt
                     self.logger.warning(
                         f"{prefix} Now sleep {sleeptime:.3f} "
-                        "seconds and continue."
+                        "seconds and retry."
                     )
                     time.sleep(sleeptime)
                 else:
