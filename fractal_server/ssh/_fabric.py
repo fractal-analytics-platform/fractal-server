@@ -358,12 +358,14 @@ class FractalSSH(object):
                 )
                 self.logger.error(error_msg)
                 raise FractalSSHCommandError(error_msg)
+            except FractalSSHTimeoutError as e:
+                raise e
             except Exception as e:
                 self.logger.error(
                     f"Running command `{cmd}` over SSH failed.\n"
                     f"Original Error:\n{str(e)}."
                 )
-                raise FractalSSHUnknownError(str(e))
+                raise FractalSSHUnknownError(f"{type(e)}: {str(e)}")
 
     def send_file(
         self,
