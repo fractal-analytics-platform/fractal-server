@@ -107,6 +107,7 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
+
         #  If there is no Slurm job to check, return right away
         if not job_ids:
             return set()
