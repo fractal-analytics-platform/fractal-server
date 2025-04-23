@@ -92,7 +92,6 @@ async def test_check_no_active_jobs(tmp_path: Path):
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
     ) as runner:
-
         # Success
         runner._check_no_active_jobs()
 
@@ -100,3 +99,27 @@ async def test_check_no_active_jobs(tmp_path: Path):
         runner.jobs = {0: "fake"}
         with pytest.raises(JobExecutionError, match="jobs must be empty"):
             runner._check_no_active_jobs()
+
+
+async def test_not_implemented_errors(tmp_path: Path):
+    class MockBaseSlurmRunner(BaseSlurmRunner):
+        def _mkdir_local_folder(self, *args):
+            pass
+
+        def _mkdir_remote_folder(self, *args):
+            pass
+
+    with MockBaseSlurmRunner(
+        root_dir_local=tmp_path / "server",
+        root_dir_remote=tmp_path / "user",
+        slurm_runner_type="sudo",
+        python_worker_interpreter=sys.executable,
+    ) as runner:
+        with pytest.raises(NotImplementedError):
+            runner._run_remote_cmd(cmd="ls")
+
+        with pytest.raises(NotImplementedError):
+            runner.run_squeue(job_ids=[])
+
+        with pytest.raises(NotImplementedError):
+            runner._fetch_artifacts(finished_slurm_jobs=[])
