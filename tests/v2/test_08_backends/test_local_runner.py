@@ -296,15 +296,15 @@ async def test_multisubmit_parallel_fail(
         )
     debug(results)
     debug(exceptions)
+    for exception in exceptions.values():
+        assert isinstance(exception, TaskExecutionError)
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
     run = await db.get(HistoryRun, history_run_id)
-    debug(run)
     assert run.status == HistoryUnitStatus.SUBMITTED
 
     # `HistoryUnit.status` is updated from within `runner.multisubmit`
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
-        debug(unit)
         assert unit.status == HistoryUnitStatus.FAILED
