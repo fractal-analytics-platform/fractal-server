@@ -54,7 +54,7 @@ def _check_versions_mismatch(
                                 do not match with the ones on the server
     """
 
-    server_python_version = server_versions["python"]
+    server_python_version = list(server_versions["python"])
     worker_python_version = list(sys.version_info[:3])
     if worker_python_version != server_python_version:
         # FIXME: turn this into an error, after fixing a broader CI issue, see
