@@ -217,7 +217,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         max_attempts: int = 7,
     ) -> str:
         """
-        Run `squeue -j` for a set of SLURM job IDs.
+        Run `squeue` for a set of SLURM job IDs.
 
         Different scenarios:
 
@@ -236,10 +236,13 @@ class SlurmSSHRunner(BaseSlurmRunner):
            indirectly resulting in marking the job as completed.
         """
 
+        if len(job_ids) == 0:
+            return ""
+
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
             "squeue --noheader --format='%i %T' --states=all "
-            f"--jobs {job_id_single_str}"
+            f"--jobs={job_id_single_str}"
         )
 
         try:

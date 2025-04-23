@@ -177,6 +177,13 @@ class SudoSlurmRunner(BaseSlurmRunner):
         return res.stdout
 
     def run_squeue(self, job_ids: list[str]) -> str:
+        """
+        Run `squeue` for a set of SLURM job IDs.
+        """
+
+        if len(job_ids) == 0:
+            return ""
+
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
             "squeue --noheader --format='%i %T' --states=all "

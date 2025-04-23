@@ -65,8 +65,7 @@ async def test_run_squeue(
         # Case 2: Empty list
         squeue_stdout = runner.run_squeue(job_ids=[])
         debug(squeue_stdout)
-        assert "PENDING" not in squeue_stdout
-        assert "RUNNING" not in squeue_stdout
+        assert squeue_stdout == ""
 
         with ThreadPoolExecutor(max_workers=10) as executor:
 
