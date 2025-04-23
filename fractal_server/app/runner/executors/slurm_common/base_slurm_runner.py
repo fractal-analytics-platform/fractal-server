@@ -103,7 +103,7 @@ class BaseSlurmRunner(BaseRunner):
     def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, job_ids: list[str]) -> str:
+    def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
         raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
@@ -113,7 +113,7 @@ class BaseSlurmRunner(BaseRunner):
             return set()
 
         try:
-            stdout = self.run_squeue(job_ids)
+            stdout = self.run_squeue(job_ids=job_ids)
             slurm_statuses = {
                 out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
@@ -125,7 +125,7 @@ class BaseSlurmRunner(BaseRunner):
             slurm_statuses = dict()
             for job_id in job_ids:
                 try:
-                    stdout = self.run_squeue([job_id])
+                    stdout = self.run_squeue(job_ids=[job_id])
                     slurm_statuses.update(
                         {stdout.split()[0]: stdout.split()[1]}
                     )

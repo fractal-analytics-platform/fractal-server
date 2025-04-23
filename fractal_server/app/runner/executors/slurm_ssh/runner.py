@@ -209,7 +209,13 @@ class SlurmSSHRunner(BaseSlurmRunner):
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         return stdout
 
-    def run_squeue(self, job_ids: list[str]) -> str:
+    def run_squeue(
+        self,
+        *,
+        job_ids: list[str],
+        base_interval: float = 2.0,
+        max_attempts: int = 7,
+    ) -> str:
         """
         Run `squeue -j` for a set of SLURM job IDs.
 
@@ -239,8 +245,8 @@ class SlurmSSHRunner(BaseSlurmRunner):
         try:
             stdout = self.fractal_ssh.run_command(
                 cmd=cmd,
-                base_interval=2.0,
-                max_attempts=7,
+                base_interval=base_interval,
+                max_attempts=max_attempts,
             )
             return stdout
         except FractalSSHCommandError as e:
@@ -251,7 +257,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             )
             FAKE_STATUS = "FRACTAL_STATUS_PLACEHOLDER"
             placeholder = "\n".join(
-                [f"{job_id} {FAKE_STATUS}" for job_id in job_ids.split()]
+                [f"{job_id} {FAKE_STATUS}" for job_id in job_ids]
             )
             return placeholder
         except Exception as e:
