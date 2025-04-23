@@ -119,3 +119,4 @@ async def test_run_squeue(
             squeue_stdout = runner.run_squeue(job_ids=[123], max_attempts=1)
             debug(squeue_stdout)
             assert squeue_stdout == ""
+        runner.fractal_ssh.close()
