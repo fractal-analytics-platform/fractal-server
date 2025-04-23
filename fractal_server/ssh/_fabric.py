@@ -23,6 +23,14 @@ class FractalSSHTimeoutError(RuntimeError):
     pass
 
 
+class SSHConnectionError(RuntimeError):
+    pass
+
+
+class SSHUnknownError(RuntimeError):
+    pass
+
+
 logger = set_logger(__name__)
 
 
@@ -170,7 +178,6 @@ class FractalSSH(object):
             label="read_remote_json_file",
             timeout=self.default_lock_timeout,
         ):
-
             try:
                 with self._sftp_unsafe().open(filepath, "r") as f:
                     data = json.load(f)
@@ -311,7 +318,7 @@ class FractalSSH(object):
                 t_1 = time.perf_counter()
                 self.logger.info(
                     f"{prefix} END   running '{cmd}' over SSH, "
-                    f"elapsed {t_1-t_0:.3f}"
+                    f"elapsed {t_1 - t_0:.3f}"
                 )
                 self.logger.debug("STDOUT:")
                 self.logger.debug(res.stdout)
@@ -334,7 +341,11 @@ class FractalSSH(object):
                     time.sleep(sleeptime)
                 else:
                     self.logger.error(f"{prefix} Reached last attempt")
-                    break
+                    raise SSHConnectionError(
+                        f"Reached last attempt "
+                        f"({max_attempts=}) for running "
+                        f"'{cmd}' over SSH"
+                    )
             except UnexpectedExit as e:
                 # Case 3: Command fails with an actual error
                 error_msg = (
@@ -342,18 +353,13 @@ class FractalSSH(object):
                     f"Original error:\n{str(e)}."
                 )
                 self.logger.error(error_msg)
-                raise RuntimeError(error_msg)
+                raise SSHUnknownError(error_msg)
             except Exception as e:
                 self.logger.error(
                     f"Running command `{cmd}` over SSH failed.\n"
                     f"Original Error:\n{str(e)}."
                 )
                 raise e
-
-        raise RuntimeError(
-            f"Reached last attempt ({max_attempts=}) for running "
-            f"'{cmd}' over SSH"
-        )
 
     def send_file(
         self,
