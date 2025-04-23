@@ -124,7 +124,6 @@ async def test_submit_inner_failure(
     history_mock_for_submit,
     tmp_path,
     monkeypatch,
-    # task_type: str,
 ):
     ERROR_MSG = "very nice error"
 
@@ -141,11 +140,6 @@ async def test_submit_inner_failure(
     )
 
     history_run_id, history_unit_id = history_mock_for_submit
-
-    # if not task_type.startswith("converter_"):
-    #     parameters = dict(zarr_urls=ZARR_URLS)
-    # else:
-    #     parameters = {}
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
