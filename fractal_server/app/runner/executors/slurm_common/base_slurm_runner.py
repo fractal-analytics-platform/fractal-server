@@ -107,7 +107,6 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
-        """ """
         #  If there is no Slurm job to check, return right away
         if not job_ids:
             return set()
@@ -119,7 +118,8 @@ class BaseSlurmRunner(BaseRunner):
             }
         except Exception as e:
             logger.warning(
-                "`squeue` command failed. Repeat with individual job IDs. "
+                "[_get_finished_jobs] `squeue` command failed. "
+                "Repeat with individual job IDs. "
                 f"Original error: {str(e)}."
             )
             slurm_statuses = dict()
@@ -131,8 +131,8 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 except Exception as e:
                     logger.warning(
-                        f"`squeue` command for {job_id=} failed. "
-                        "Mark jobs as completed. "
+                        "[_get_finished_jobs] `squeue` command for "
+                        f"{job_id=} failed. Mark job as completed. "
                         f"Original error: {str(e)}."
                     )
                     slurm_statuses.update({str(job_id): "COMPLETED"})
