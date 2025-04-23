@@ -100,68 +100,51 @@ class BaseSlurmRunner(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def _run_local_cmd(self, cmd: str) -> str:
-        raise NotImplementedError("Implement in child class.")
-
     def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
-        # NOTE: see issue 2482
-
-        if len(job_ids) == 0:
-            return (False, "")
-
-        job_id_single_str = ",".join([str(j) for j in job_ids])
-        cmd = (
-            f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
-            " --states=all"
-        )
-
-        try:
-            if self.slurm_runner_type == "sudo":
-                stdout = self._run_local_cmd(cmd)
-            else:
-                stdout = self._run_remote_cmd(cmd)
-            return (True, stdout)
-        except Exception as e:
-            logger.info(f"{cmd=} failed with {str(e)}")
-            return (False, "")
+    def run_squeue(self, job_ids: list[str]) -> str:
+        raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
-        """
-        FIXME: THIS MUST NEVER FAIL.
-        """
+        """ """
         #  If there is no Slurm job to check, return right away
-
         if not job_ids:
             return set()
-        id_to_state = dict()
 
-        success, stdout = self.run_squeue(job_ids)
-        if success:
-            id_to_state = {
+        try:
+            stdout = self.run_squeue(job_ids)
+            slurm_statuses = {
                 out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
-        else:
-            id_to_state = dict()
-            for j in job_ids:
-                success, res = self.run_squeue([j])
-                if not success:
-                    logger.info(f"Job {j} not found. Marked it as completed")
-                    id_to_state.update({str(j): "COMPLETED"})
-                else:
-                    id_to_state.update(
-                        {res.stdout.split()[0]: res.stdout.split()[1]}
+        except Exception as e:
+            logger.warning(
+                "`squeue` command failed. Repeat with individual job IDs. "
+                f"Original error: {str(e)}."
+            )
+            slurm_statuses = dict()
+            for job_id in job_ids:
+                try:
+                    stdout = self.run_squeue([job_id])
+                    slurm_statuses.update(
+                        {stdout.split()[0]: stdout.split()[1]}
                     )
+                except Exception as e:
+                    logger.warning(
+                        f"`squeue` command for {job_id=} failed. "
+                        "Mark jobs as completed. "
+                        f"Original error: {str(e)}."
+                    )
+                    slurm_statuses.update({str(job_id): "COMPLETED"})
 
         # Finished jobs only stay in squeue for a few mins (configurable). If
         # a job ID isn't there, we'll assume it's finished.
-        return {
-            j
-            for j in job_ids
-            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        finished_jobs = {
+            job_id
+            for job_id in job_ids
+            if slurm_statuses.get(job_id, "COMPLETED") in STATES_FINISHED
         }
+        return finished_jobs
 
     def _mkdir_local_folder(self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
