@@ -6,7 +6,6 @@ from devtools import debug
 
 from .aux_unit_runner import *  # noqa
 from fractal_server.app.runner.executors.slurm_ssh.runner import SlurmSSHRunner
-from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from tests.v2._aux_runner import get_default_slurm_config
@@ -70,26 +69,6 @@ async def test_run_squeue(
                 debug("[squeue_thread]", e)
                 return e
 
-        def keep_lock_thread():
-            try:
-                debug("[keep_lock_thread] START")
-                with _acquire_lock_with_timeout(
-                    lock=runner.fractal_ssh._lock,
-                    label="keep_lock_thread",
-                    timeout=10.0,
-                ):
-                    debug("[keep_lock_thread] LOCK ACQUIRED, NOW SLEEP..")
-                    while True:
-                        if runner.shutdown_file.exists():
-                            debug("[keep_lock_thread] END")
-                            return None
-                        else:
-                            debug("[keep_lock_thread] Sleep and continue.")
-                            time.sleep(0.1)
-            except Exception as e:
-                debug("[keep_lock_thread]", e)
-                return e
-
         # Case 1: invalid job IDs
         invalid_slurm_job_id = 99999999
         with pytest.raises(FractalSSHCommandError):
@@ -121,11 +100,8 @@ async def test_run_squeue(
             RUNNING_MSG = f"{slurm_job_id} RUNNING"
             assert PENDING_MSG in squeue_stdout or RUNNING_MSG in squeue_stdout
 
-            # Start a thread that keeps the `FractalSSH` object locked forever
-            fut_lock = executor.submit(keep_lock_thread)
-
-            # Wait a bit, to make sure the lock was acquired
-            time.sleep(0.5)
+            # Acquire and keep the `FractalSSH` lock
+            fractal_ssh._lock.acquire(timeout=4.0)
 
             # Case 4: When `FractalSSH` lock cannot be acquired, a placeholder
             # must be returned
@@ -136,13 +112,11 @@ async def test_run_squeue(
                 f"{slurm_job_id} FRACTAL_STATUS_PLACEHOLDER" in squeue_stdout
             )
 
+            # Release the lock
+            fractal_ssh._lock.release()
+
             # Write `shutdown_file`, as an indirect way to stop both
             # `main_thread` and `keep_lock_thread`
             runner.shutdown_file.touch()
-
-            keep_lock_result = fut_lock.result()
-            debug(keep_lock_result)
-
-            assert keep_lock_result is None
             main_result = fut_main.result()
             debug(main_result)
