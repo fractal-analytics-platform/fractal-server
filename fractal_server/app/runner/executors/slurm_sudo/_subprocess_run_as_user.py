@@ -88,18 +88,3 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
 
     cmd = f"mkdir -p {folder}"
     _run_command_as_user(cmd=cmd, user=user, check=True)
-
-
-def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
-    """
-    Impersonate a user and check if `path` exists via `ls`
-
-    Arguments:
-        path: Absolute file/folder path
-        user: If not `None`, user to be impersonated
-    """
-    res = _run_command_as_user(cmd=f"ls {path}", user=user)
-    if res.returncode == 0:
-        return True
-    else:
-        return False
