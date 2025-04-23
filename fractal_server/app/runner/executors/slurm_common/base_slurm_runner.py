@@ -118,7 +118,7 @@ class BaseSlurmRunner(BaseRunner):
             }
         except Exception as e:
             logger.warning(
-                "[_get_finished_jobs] `squeue` command failed, "
+                "[_get_finished_jobs] `squeue` failed, "
                 "retry with individual job IDs. "
                 f"Original error: {str(e)}."
             )
@@ -131,8 +131,8 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 except Exception as e:
                     logger.warning(
-                        "[_get_finished_jobs] `squeue` command for "
-                        f"{job_id=} failed. Mark job as completed. "
+                        "[_get_finished_jobs] `squeue` failed for "
+                        f"{job_id=}, mark job as completed. "
                         f"Original error: {str(e)}."
                     )
                     slurm_statuses.update({str(job_id): "COMPLETED"})
