@@ -274,7 +274,7 @@ class FractalSSH(object):
         cmd: str,
         allow_char: Optional[str] = None,
         max_attempts: Optional[int] = None,
-        base_interval: Optional[int] = None,
+        base_interval: Optional[float] = None,
         lock_timeout: Optional[int] = None,
     ) -> str:
         """
