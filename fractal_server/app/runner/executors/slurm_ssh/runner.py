@@ -9,6 +9,8 @@ from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHCommandError
+from fractal_server.ssh._fabric import FractalSSHTimeoutError
 from fractal_server.syringe import Inject
 
 
@@ -208,6 +210,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         return stdout
 
     def run_squeue(self, job_ids: list[str]) -> str:
+        # FIXME: Add explanation of different cases
 
         job_id_single_str = ",".join([str(j) for j in job_ids])
         cmd = (
@@ -218,7 +221,13 @@ class SlurmSSHRunner(BaseSlurmRunner):
         try:
             stdout = self._run_remote_cmd(cmd)
             return stdout
-        except SSHCommandError as e:
+        except FractalSSHCommandError as e:
             raise e
-        except (SSHConnectionError, SSHUnkownError, Exception) as e:
+        except FractalSSHTimeoutError:
+            FAKE_STATUS = "FRACTAL_FAKE_STATUS"
+            mock_squeue_output = "\n".join(
+                [f"{job_id} {FAKE_STATUS}" for job_id in job_ids.split()]
+            )
+            return mock_squeue_output
+        except Exception as e:
             logger.error(f"Original error: {e}")

@@ -23,11 +23,15 @@ class FractalSSHTimeoutError(RuntimeError):
     pass
 
 
-class SSHConnectionError(RuntimeError):
+class FractalSSHConnectionError(RuntimeError):
     pass
 
 
-class SSHUnknownError(RuntimeError):
+class FractalSSHCommandError(RuntimeError):
+    pass
+
+
+class FractalSSHUnknownError(RuntimeError):
     pass
 
 
@@ -341,7 +345,7 @@ class FractalSSH(object):
                     time.sleep(sleeptime)
                 else:
                     self.logger.error(f"{prefix} Reached last attempt")
-                    raise SSHConnectionError(
+                    raise FractalSSHConnectionError(
                         f"Reached last attempt "
                         f"({max_attempts=}) for running "
                         f"'{cmd}' over SSH"
@@ -353,13 +357,13 @@ class FractalSSH(object):
                     f"Original error:\n{str(e)}."
                 )
                 self.logger.error(error_msg)
-                raise SSHUnknownError(error_msg)
+                raise FractalSSHCommandError(error_msg)
             except Exception as e:
                 self.logger.error(
                     f"Running command `{cmd}` over SSH failed.\n"
                     f"Original Error:\n{str(e)}."
                 )
-                raise e
+                raise FractalSSHUnknownError(str(e))
 
     def send_file(
         self,
