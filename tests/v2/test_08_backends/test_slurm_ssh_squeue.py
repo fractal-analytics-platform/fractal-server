@@ -124,9 +124,11 @@ async def test_run_squeue(
             # Start a thread that keeps the `FractalSSH` object locked forever
             fut_lock = executor.submit(keep_lock_thread)
 
+            # Wait a bit, to make sure the lock was acquired
+            time.sleep(0.5)
+
             # Case 4: When `FractalSSH` lock cannot be acquired, a placeholder
             # must be returned
-            debug(runner.jobs)
             fut_squeue = executor.submit(squeue_thread)
             squeue_stdout = fut_squeue.result()
             debug(squeue_stdout)
