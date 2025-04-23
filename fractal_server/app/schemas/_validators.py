@@ -36,27 +36,22 @@ def valdict_keys(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     return d
 
 
-def val_absolute_path(attribute: str, accept_none: bool = False):
+def val_absolute_path(accept_none: bool = False):
     """
     Check that a string attribute is an absolute path
     """
 
-    def val(cls, string: Optional[str]) -> Optional[str]:
+    def val(string: Optional[str]) -> Optional[str]:
         if string is None:
             if accept_none:
                 return string
             else:
-                raise ValueError(
-                    f"String attribute '{attribute}' cannot be None"
-                )
+                raise ValueError("String cannot be None")
         s = string.strip()
         if not s:
-            raise ValueError(f"String attribute '{attribute}' cannot be empty")
+            raise ValueError("String cannot be empty")
         if not os.path.isabs(s):
-            raise ValueError(
-                f"String attribute '{attribute}' must be an absolute path "
-                f"(given '{s}')."
-            )
+            raise ValueError(f"String must be an absolute path (given '{s}').")
         return s
 
     return val

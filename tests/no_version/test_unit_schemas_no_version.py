@@ -142,15 +142,15 @@ def test_user_settings_update():
 
 
 def test_unit_val_absolute_path():
-    val_absolute_path("this_attr")(..., "/path")
-    val_absolute_path("this_attr", accept_none=False)(..., "/path")
-    val_absolute_path("this_attr", accept_none=True)(..., "/path")
+    val_absolute_path()("/path")
+    val_absolute_path(accept_none=False)("/path")
+    val_absolute_path(accept_none=True)("/path")
 
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr")(..., None)
+        val_absolute_path()(None)
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr", accept_none=False)(..., None)
-    val_absolute_path("this_attr", accept_none=True)(..., None)
+        val_absolute_path(accept_none=False)(None)
+    val_absolute_path(accept_none=True)(None)
 
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr")(..., "non/absolute/path")
+        val_absolute_path()("non/absolute/path")

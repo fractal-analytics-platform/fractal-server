@@ -58,16 +58,14 @@ class UserSettingsUpdate(BaseModel):
     project_dir: Optional[NonEmptyString] = None
 
     _ssh_private_key_path = field_validator("ssh_private_key_path")(
-        classmethod(
-            val_absolute_path("ssh_private_key_path", accept_none=True)
-        )
+        val_absolute_path(accept_none=True)
     )
 
     _ssh_tasks_dir = field_validator("ssh_tasks_dir")(
-        classmethod(val_absolute_path("ssh_tasks_dir", accept_none=True))
+        val_absolute_path(accept_none=True)
     )
     _ssh_jobs_dir = field_validator("ssh_jobs_dir")(
-        classmethod(val_absolute_path("ssh_jobs_dir", accept_none=True))
+        val_absolute_path(accept_none=True)
     )
 
     @field_validator("slurm_accounts")
@@ -83,7 +81,7 @@ class UserSettingsUpdate(BaseModel):
         if value is None:
             return None
         validate_cmd(value)
-        return val_absolute_path("project_dir")(cls, value)
+        return val_absolute_path()(value)
 
 
 class UserSettingsUpdateStrict(BaseModel):

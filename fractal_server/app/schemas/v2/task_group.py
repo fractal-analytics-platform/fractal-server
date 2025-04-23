@@ -58,13 +58,9 @@ class TaskGroupCreateV2(BaseModel):
     def _cant_set_none(cls, v):
         return cant_set_none(v)
 
-    _path = field_validator("path")(classmethod(val_absolute_path("path")))
-    _venv_path = field_validator("venv_path")(
-        classmethod(val_absolute_path("venv_path"))
-    )
-    _wheel_path = field_validator("wheel_path")(
-        classmethod(val_absolute_path("wheel_path"))
-    )
+    _path = field_validator("path")(val_absolute_path())
+    _venv_path = field_validator("venv_path")(val_absolute_path())
+    _wheel_path = field_validator("wheel_path")(val_absolute_path())
     _pinned_package_versions = field_validator("pinned_package_versions")(
         valdict_keys
     )
