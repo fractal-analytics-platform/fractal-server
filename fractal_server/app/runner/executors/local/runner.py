@@ -155,12 +155,13 @@ class LocalRunner(BaseRunner):
             exceptions = {
                 ind: exception for ind in range(len(list_parameters))
             }
-            with next(get_sync_db()) as db:
-                bulk_update_status_of_history_unit(
-                    history_unit_ids=history_unit_ids,
-                    status=HistoryUnitStatus.FAILED,
-                    db_sync=db,
-                )
+            if task_type == "parallel":
+                with next(get_sync_db()) as db:
+                    bulk_update_status_of_history_unit(
+                        history_unit_ids=history_unit_ids,
+                        status=HistoryUnitStatus.FAILED,
+                        db_sync=db,
+                    )
             return results, exceptions
 
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
@@ -191,12 +192,13 @@ class LocalRunner(BaseRunner):
                         positional_index
                     ]
                     exceptions[positional_index] = TaskExecutionError(str(e))
-                    with next(get_sync_db()) as db:
-                        update_status_of_history_unit(
-                            history_unit_id=current_history_unit_id,
-                            status=HistoryUnitStatus.FAILED,
-                            db_sync=db,
-                        )
+                    if task_type == "parallel":
+                        with next(get_sync_db()) as db:
+                            update_status_of_history_unit(
+                                history_unit_id=current_history_unit_id,
+                                status=HistoryUnitStatus.FAILED,
+                                db_sync=db,
+                            )
             while active_futures:
                 finished_futures = [
                     index_and_future

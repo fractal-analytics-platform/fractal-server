@@ -442,6 +442,13 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[wait_and_check_shutdown] No shutdown file detected")
         return []
 
+    def _check_no_active_jobs(self):
+        if self.jobs != {}:
+            raise JobExecutionError(
+                "Unexpected branch: jobs should be empty before new "
+                "submissions."
+            )
+
     def submit(
         self,
         func: callable,
@@ -461,11 +468,6 @@ class BaseSlurmRunner(BaseRunner):
             workdir_local = task_files.wftask_subfolder_local
             workdir_remote = task_files.wftask_subfolder_remote
 
-            if self.jobs != {}:
-                raise JobExecutionError(
-                    "Unexpected branch: jobs should be empty."
-                )
-
             if self.is_shutdown():
                 with next(get_sync_db()) as db:
                     update_status_of_history_unit(
@@ -475,6 +477,8 @@ class BaseSlurmRunner(BaseRunner):
                     )
 
                 return None, SHUTDOWN_EXCEPTION
+
+            self._check_no_active_jobs()
 
             # Validation phase
             self.validate_submit_parameters(
@@ -563,10 +567,13 @@ class BaseSlurmRunner(BaseRunner):
 
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
+
+            logger.info("[submit] END")
+            return result, exception
+
         except Exception as e:
             logger.error(
-                "Single submission is failed with "
-                f"the following error: {str(e)}"
+                "[submit] Unexpected exception. " f"Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
@@ -574,11 +581,7 @@ class BaseSlurmRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-            result = None
-            exception = e
-
-        logger.info("[submit] END")
-        return result, exception
+            return None, e
 
     def multisubmit(
         self,
@@ -595,11 +598,8 @@ class BaseSlurmRunner(BaseRunner):
         input images, while for compound tasks these can differ.
         """
 
+        logger.info(f"[multisubmit] START, {len(list_parameters)=}")
         try:
-            if len(self.jobs) > 0:
-                raise RuntimeError(
-                    f"Cannot run `multisubmit` when {len(self.jobs)=}"
-                )
 
             if self.is_shutdown():
                 if task_type == "parallel":
@@ -616,14 +616,13 @@ class BaseSlurmRunner(BaseRunner):
                 }
                 return results, exceptions
 
+            self._check_no_active_jobs()
             self.validate_multisubmit_parameters(
                 list_parameters=list_parameters,
                 task_type=task_type,
                 list_task_files=list_task_files,
                 history_unit_ids=history_unit_ids,
             )
-
-            logger.info(f"[multisubmit] START, {len(list_parameters)=}")
 
             workdir_local = list_task_files[0].wftask_subfolder_local
             workdir_remote = list_task_files[0].wftask_subfolder_remote
@@ -633,18 +632,14 @@ class BaseSlurmRunner(BaseRunner):
                 self._mkdir_local_folder(workdir_local.as_posix())
                 self._mkdir_remote_folder(folder=workdir_remote.as_posix())
 
-            # Execute tasks, in chunks of size `parallel_tasks_per_job`
-            # TODO Pick a data structure for results and exceptions
-            # or review the interface
             results: dict[int, Any] = {}
             exceptions: dict[int, BaseException] = {}
-
-            tot_tasks = len(list_parameters)
 
             # NOTE: chunking has already taken place in `get_slurm_config`,
             # so that `config.tasks_per_job` is now set.
 
             # Divide arguments in batches of `tasks_per_job` tasks each
+            tot_tasks = len(list_parameters)
             args_batches = []
             batch_size = config.tasks_per_job
             for ind_chunk in range(0, tot_tasks, batch_size):
@@ -703,8 +698,8 @@ class BaseSlurmRunner(BaseRunner):
             time.sleep(sleep_time)
         except Exception as e:
             logger.error(
-                "Multi submission failed in submission phase "
-                f"with the following error {str(e)}"
+                "[multisubmit] Unexpected exception during submission."
+                f" Original error {str(e)}"
             )
             self.scancel_jobs()
             if task_type == "parallel":
@@ -728,13 +723,14 @@ class BaseSlurmRunner(BaseRunner):
             finished_jobs = [
                 self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
             ]
-            exp_fetch = None
+            fetch_artifacts_exception = None
             try:
                 self._fetch_artifacts(finished_jobs)
             except Exception as e:
                 logger.error(
-                    "Fetch artifacts failed in multisubmisssion with "
-                    f"the following error {str(e)}"
+                    "[multisubmit] Unexpected exception in "
+                    "`_fetch_artifacts`. "
+                    f"Original error: {str(e)}"
                 )
                 fetch_artifacts_exception = e
 
@@ -745,7 +741,7 @@ class BaseSlurmRunner(BaseRunner):
                     for task in slurm_job.tasks:
                         logger.info(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
-                        if exp_fetch is not None:
+                        if fetch_artifacts_exception is not None:
                             result = None
                             exception = fetch_artifacts_exception
                         else:
@@ -759,8 +755,9 @@ class BaseSlurmRunner(BaseRunner):
                                 )
                             except Exception as e:
                                 logger.error(
-                                    "Retrieval phase failed with the "
-                                    f"following error {str(e)}"
+                                    "[multisubmit] Unexpected exception in "
+                                    "`_postprocess_single_task`. "
+                                    f"Original error: {str(e)}"
                                 )
                                 result = None
                                 exception = e
