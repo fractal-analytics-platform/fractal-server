@@ -118,8 +118,8 @@ class BaseSlurmRunner(BaseRunner):
             }
         except Exception as e:
             logger.warning(
-                "[_get_finished_jobs] `squeue` command failed. "
-                "Repeat with individual job IDs. "
+                "[_get_finished_jobs] `squeue` command failed, "
+                "retry with individual job IDs. "
                 f"Original error: {str(e)}."
             )
             slurm_statuses = dict()
