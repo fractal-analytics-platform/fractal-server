@@ -206,3 +206,19 @@ class SlurmSSHRunner(BaseSlurmRunner):
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         return stdout
+
+    def run_squeue(self, job_ids: list[str]) -> str:
+
+        job_id_single_str = ",".join([str(j) for j in job_ids])
+        cmd = (
+            f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
+            " --states=all"
+        )
+
+        try:
+            stdout = self._run_remote_cmd(cmd)
+            return stdout
+        except SSHCommandError as e:
+            raise e
+        except (SSHConnectionError, SSHUnkownError, Exception) as e:
+            logger.error(f"Original error: {e}")
