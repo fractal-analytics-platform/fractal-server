@@ -36,7 +36,7 @@ async def test_submit_exception(
         poll_interval=0,
     ) as runner:
 
-        runner.jobs = {0: "fake"}
+        runner.jobs = {"0": "fake"}
 
         result, exception = runner.submit(
             do_nothing,
