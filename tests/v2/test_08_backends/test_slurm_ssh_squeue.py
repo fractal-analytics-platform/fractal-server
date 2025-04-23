@@ -5,7 +5,6 @@ import pytest
 from devtools import debug
 
 from .aux_unit_runner import *  # noqa
-from .aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
@@ -47,7 +46,7 @@ async def test_run_squeue(
             debug("[main_thread] START")
             result, exception = runner.submit(
                 sleep_long,
-                parameters=dict(zarr_urls=ZARR_URLS),
+                parameters=dict(zarr_urls=[]),
                 task_files=get_dummy_task_files(
                     tmp777_path, component="", is_slurm=True
                 ),
@@ -77,7 +76,7 @@ async def test_run_squeue(
                 with _acquire_lock_with_timeout(
                     lock=runner.fractal_ssh._lock,
                     label="keep_lock_thread",
-                    timeout=4.0,
+                    timeout=10.0,
                 ):
                     debug("[keep_lock_thread] LOCK ACQUIRED, NOW SLEEP..")
                     while True:
@@ -110,19 +109,30 @@ async def test_run_squeue(
 
             # Wait a bit, to make sure the job was submitted
             time.sleep(0.5)
+            slurm_job_id = runner.job_ids[0]
+            debug(slurm_job_id)
 
             # Case 3: one job is actually running
             fut_squeue = executor.submit(squeue_thread)
             squeue_stdout = fut_squeue.result()
             debug(squeue_stdout)
-            assert "PENDING" in squeue_stdout or "RUNNING" in squeue_stdout
+            assert f"{slurm_job_id} " in squeue_stdout
+            PENDING_MSG = f"{slurm_job_id} PENDING"
+            RUNNING_MSG = f"{slurm_job_id} RUNNING"
+            assert PENDING_MSG in squeue_stdout or RUNNING_MSG in squeue_stdout
 
-            # Case 4: FractalSSH lock cannot be acquired
+            # Start a thread that keeps the `FractalSSH` object locked forever
             fut_lock = executor.submit(keep_lock_thread)
+
+            # Case 4: When `FractalSSH` lock cannot be acquired, a placeholder
+            # must be returned
+            debug(runner.jobs)
             fut_squeue = executor.submit(squeue_thread)
             squeue_stdout = fut_squeue.result()
             debug(squeue_stdout)
-            assert "FRACTAL_STATUS_PLACEHOLDER" in squeue_stdout
+            assert (
+                f"{slurm_job_id} FRACTAL_STATUS_PLACEHOLDER" in squeue_stdout
+            )
 
             # Write `shutdown_file`, as an indirect way to stop both
             # `main_thread` and `keep_lock_thread`
