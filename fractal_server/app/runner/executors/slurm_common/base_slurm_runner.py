@@ -129,6 +129,9 @@ class BaseSlurmRunner(BaseRunner):
             return (False, "")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
+        """
+        FIXME: THIS MUST NEVER FAIL.
+        """
         #  If there is no Slurm job to check, return right away
 
         if not job_ids:
@@ -421,22 +424,22 @@ class BaseSlurmRunner(BaseRunner):
         """
         # Sleep for `self.poll_interval`, but keep checking for shutdowns
         start_time = time.perf_counter()
-        max_time = start_time + self.poll_interval
-        can_return = False
+        # Always wait at least 0.2 (note: this is for cases where
+        # `poll_interval=0`).
+        waiting_time = max(self.poll_interval, 0.2)
+        max_time = start_time + waiting_time
         logger.debug(
             "[wait_and_check_shutdown] "
             f"I will wait at most {self.poll_interval} s, "
             f"in blocks of {self.poll_interval_internal} s."
         )
 
-        while (time.perf_counter() < max_time) or (can_return is False):
-            # Handle shutdown
+        while time.perf_counter() < max_time:
             if self.is_shutdown():
                 logger.info("[wait_and_check_shutdown] Shutdown file detected")
                 scancelled_job_ids = self.scancel_jobs()
                 logger.info(f"[wait_and_check_shutdown] {scancelled_job_ids=}")
                 return scancelled_job_ids
-            can_return = True
             time.sleep(self.poll_interval_internal)
 
         logger.debug("[wait_and_check_shutdown] No shutdown file detected")
@@ -573,7 +576,7 @@ class BaseSlurmRunner(BaseRunner):
 
         except Exception as e:
             logger.error(
-                "[submit] Unexpected exception. " f"Original error: {str(e)}"
+                f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
@@ -581,6 +584,7 @@ class BaseSlurmRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+            self.scancel_jobs()
             return None, e
 
     def multisubmit(
@@ -831,7 +835,7 @@ class BaseSlurmRunner(BaseRunner):
             try:
                 self._run_remote_cmd(scancel_cmd)
             except Exception as e:
-                logger.warning(
+                logger.error(
                     "[scancel_jobs] `scancel` command failed. "
                     f"Original error:\n{str(e)}"
                 )
