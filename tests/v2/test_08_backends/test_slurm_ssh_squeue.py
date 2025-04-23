@@ -110,6 +110,7 @@ async def test_run_squeue(
             debug(main_result)
 
         # Case 5: `FractalSSHConnectionError` results into empty stdout
+        runner.fractal_ssh.close()
         with Connection("localhost") as connection:
             runner.fractal_ssh = FractalSSH(
                 connection=connection,
