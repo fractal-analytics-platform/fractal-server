@@ -100,65 +100,51 @@ class BaseSlurmRunner(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def _run_local_cmd(self, cmd: str) -> str:
-        raise NotImplementedError("Implement in child class.")
-
     def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
-        # NOTE: see issue 2482
-
-        if len(job_ids) == 0:
-            return (False, "")
-
-        job_id_single_str = ",".join([str(j) for j in job_ids])
-        cmd = (
-            f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
-            " --states=all"
-        )
-
-        try:
-            if self.slurm_runner_type == "sudo":
-                stdout = self._run_local_cmd(cmd)
-            else:
-                stdout = self._run_remote_cmd(cmd)
-            return (True, stdout)
-        except Exception as e:
-            logger.info(f"{cmd=} failed with {str(e)}")
-            return (False, "")
+    def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
+        raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
-        #  If there is no Slurm job to check, return right away
 
+        #  If there is no Slurm job to check, return right away
         if not job_ids:
             return set()
-        id_to_state = dict()
 
-        success, stdout = self.run_squeue(job_ids)
-        if success:
-            id_to_state = {
+        try:
+            stdout = self.run_squeue(job_ids=job_ids)
+            slurm_statuses = {
                 out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
-        else:
-            id_to_state = dict()
-            for j in job_ids:
-                success, res = self.run_squeue([j])
-                if not success:
-                    logger.info(f"Job {j} not found. Marked it as completed")
-                    id_to_state.update({str(j): "COMPLETED"})
-                else:
-                    id_to_state.update(
-                        {res.stdout.split()[0]: res.stdout.split()[1]}
+        except Exception as e:
+            logger.warning(
+                "[_get_finished_jobs] `squeue` failed, "
+                "retry with individual job IDs. "
+                f"Original error: {str(e)}."
+            )
+            slurm_statuses = dict()
+            for job_id in job_ids:
+                try:
+                    stdout = self.run_squeue(job_ids=[job_id])
+                    slurm_statuses.update(
+                        {stdout.split()[0]: stdout.split()[1]}
                     )
+                except Exception as e:
+                    logger.warning(
+                        "[_get_finished_jobs] `squeue` failed for "
+                        f"{job_id=}, mark job as completed. "
+                        f"Original error: {str(e)}."
+                    )
+                    slurm_statuses.update({str(job_id): "COMPLETED"})
 
-        # Finished jobs only stay in squeue for a few mins (configurable). If
-        # a job ID isn't there, we'll assume it's finished.
-        return {
-            j
-            for j in job_ids
-            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        # If a job is not in `squeue` output, mark it as completed.
+        finished_jobs = {
+            job_id
+            for job_id in job_ids
+            if slurm_statuses.get(job_id, "COMPLETED") in STATES_FINISHED
         }
+        return finished_jobs
 
     def _mkdir_local_folder(self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
@@ -421,22 +407,22 @@ class BaseSlurmRunner(BaseRunner):
         """
         # Sleep for `self.poll_interval`, but keep checking for shutdowns
         start_time = time.perf_counter()
-        max_time = start_time + self.poll_interval
-        can_return = False
+        # Always wait at least 0.2 (note: this is for cases where
+        # `poll_interval=0`).
+        waiting_time = max(self.poll_interval, 0.2)
+        max_time = start_time + waiting_time
         logger.debug(
             "[wait_and_check_shutdown] "
             f"I will wait at most {self.poll_interval} s, "
             f"in blocks of {self.poll_interval_internal} s."
         )
 
-        while (time.perf_counter() < max_time) or (can_return is False):
-            # Handle shutdown
+        while time.perf_counter() < max_time:
             if self.is_shutdown():
                 logger.info("[wait_and_check_shutdown] Shutdown file detected")
                 scancelled_job_ids = self.scancel_jobs()
                 logger.info(f"[wait_and_check_shutdown] {scancelled_job_ids=}")
                 return scancelled_job_ids
-            can_return = True
             time.sleep(self.poll_interval_internal)
 
         logger.debug("[wait_and_check_shutdown] No shutdown file detected")
@@ -573,7 +559,7 @@ class BaseSlurmRunner(BaseRunner):
 
         except Exception as e:
             logger.error(
-                "[submit] Unexpected exception. " f"Original error: {str(e)}"
+                f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
@@ -581,6 +567,7 @@ class BaseSlurmRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+            self.scancel_jobs()
             return None, e
 
     def multisubmit(
@@ -831,7 +818,7 @@ class BaseSlurmRunner(BaseRunner):
             try:
                 self._run_remote_cmd(scancel_cmd)
             except Exception as e:
-                logger.warning(
+                logger.error(
                     "[scancel_jobs] `scancel` command failed. "
                     f"Original error:\n{str(e)}"
                 )

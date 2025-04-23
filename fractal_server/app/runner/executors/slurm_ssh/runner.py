@@ -9,6 +9,8 @@ from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHCommandError
+from fractal_server.ssh._fabric import FractalSSHTimeoutError
 from fractal_server.syringe import Inject
 
 
@@ -206,3 +208,61 @@ class SlurmSSHRunner(BaseSlurmRunner):
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         return stdout
+
+    def run_squeue(
+        self,
+        *,
+        job_ids: list[str],
+        base_interval: float = 2.0,
+        max_attempts: int = 7,
+    ) -> str:
+        """
+        Run `squeue` for a set of SLURM job IDs.
+
+        Different scenarios:
+
+        1. When `squeue -j` succeeds (with exit code 0), return its stdout.
+        2. When `squeue -j` fails (typical example:
+           `squeue -j {invalid_job_id}` fails with exit code 1), re-raise.
+           The error will be handled upstream.
+        3. When the SSH command fails because another thread is keeping the
+           lock of the `FractalSSH` object for a long time, mock the standard
+           output of the `squeue` command so that it looks like jobs are not
+           completed yet.
+        4. When the SSH command fails for other reasons, despite a forgiving
+           setup (7 connection attempts with base waiting interval of 2
+           seconds, with a cumulative timeout of 126 seconds), return an empty
+           string. This will be treated upstream as an empty `squeu` output,
+           indirectly resulting in marking the job as completed.
+        """
+
+        if len(job_ids) == 0:
+            return ""
+
+        job_id_single_str = ",".join([str(j) for j in job_ids])
+        cmd = (
+            "squeue --noheader --format='%i %T' --states=all "
+            f"--jobs={job_id_single_str}"
+        )
+
+        try:
+            stdout = self.fractal_ssh.run_command(
+                cmd=cmd,
+                base_interval=base_interval,
+                max_attempts=max_attempts,
+            )
+            return stdout
+        except FractalSSHCommandError as e:
+            raise e
+        except FractalSSHTimeoutError:
+            logger.warning(
+                "[run_squeue] Could not acquire lock, use stdout placeholder."
+            )
+            FAKE_STATUS = "FRACTAL_STATUS_PLACEHOLDER"
+            placeholder_stdout = "\n".join(
+                [f"{job_id} {FAKE_STATUS}" for job_id in job_ids]
+            )
+            return placeholder_stdout
+        except Exception as e:
+            logger.error(f"Ignoring `squeue` command failure {e}")
+            return ""
