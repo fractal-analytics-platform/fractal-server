@@ -2,6 +2,7 @@ import pytest
 
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
+from fractal_server.ssh._fabric import FractalSSHUnknownError
 
 
 def test_unit_FractalSSHList():
@@ -92,9 +93,7 @@ def test_run_command_through_FractalSSHList(
     assert fractal_ssh_list.contains(**invalid_credentials)
 
     # Try using the invalid `FractalSSH` object
-    with pytest.raises(
-        ValueError,
-    ):
+    with pytest.raises(FractalSSHUnknownError, match="ValueError"):
         invalid_fractal_ssh.run_command(cmd="ls")
 
     # Check that `close_all` works both for valid and invalid connections
