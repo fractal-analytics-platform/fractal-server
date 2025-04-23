@@ -61,7 +61,7 @@ class UserGroupCreate(BaseModel):
     def viewer_paths_validator(cls, value):
         for i, path in enumerate(value):
             value[i] = val_absolute_path()(path)
-        value = val_unique_list("viewer_paths")(cls, value)
+        value = val_unique_list(value)
         return value
 
 
@@ -81,5 +81,5 @@ class UserGroupUpdate(BaseModel):
             raise ValueError("Cannot set `viewer_paths=None`.")
         for i, path in enumerate(value):
             value[i] = val_absolute_path()(path)
-        value = val_unique_list("viewer_paths")(cls, value)
+        value = val_unique_list(value)
         return value

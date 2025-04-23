@@ -114,7 +114,7 @@ class TaskCreateV2(BaseModel):
     @field_validator("tags")
     @classmethod
     def validate_list_of_strings(cls, value):
-        return val_unique_list("tags")(cls, value)
+        return val_unique_list(value)
 
     @field_validator("docs_link", mode="after")
     @classmethod
@@ -184,7 +184,7 @@ class TaskUpdateV2(BaseModel):
     @field_validator("tags")
     @classmethod
     def validate_tags(cls, value):
-        return val_unique_list("tags")(cls, value)
+        return val_unique_list(value)
 
 
 class TaskImportV2(BaseModel):

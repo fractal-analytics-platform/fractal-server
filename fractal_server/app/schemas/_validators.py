@@ -57,14 +57,11 @@ def val_absolute_path(accept_none: bool = False):
     return val
 
 
-def val_unique_list(attribute: str):
-    def val(cls, must_be_unique: Optional[list]) -> Optional[list]:
-        if must_be_unique is not None:
-            if len(set(must_be_unique)) != len(must_be_unique):
-                raise ValueError(f"`{attribute}` list has repetitions")
-        return must_be_unique
-
-    return val
+def val_unique_list(must_be_unique: Optional[list]) -> Optional[list]:
+    if must_be_unique is not None:
+        if len(set(must_be_unique)) != len(must_be_unique):
+            raise ValueError("List has repetitions")
+    return must_be_unique
 
 
 def root_validate_dict_keys(cls, object: dict) -> dict:

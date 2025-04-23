@@ -73,7 +73,7 @@ class UserSettingsUpdate(BaseModel):
     def slurm_accounts_validator(cls, value):
         if value is None:
             return value
-        return val_unique_list("slurm_accounts")(cls, value)
+        return val_unique_list(value)
 
     @field_validator("project_dir")
     @classmethod
@@ -88,6 +88,4 @@ class UserSettingsUpdateStrict(BaseModel):
     model_config = ConfigDict(extra="forbid")
     slurm_accounts: Optional[list[StrictStr]] = None
 
-    _slurm_accounts = field_validator("slurm_accounts")(
-        classmethod(val_unique_list("slurm_accounts"))
-    )
+    _slurm_accounts = field_validator("slurm_accounts")(val_unique_list)

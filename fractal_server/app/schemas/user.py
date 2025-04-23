@@ -114,6 +114,4 @@ class UserUpdateGroups(BaseModel):
 
     group_ids: list[int] = Field(min_length=1)
 
-    _group_ids = field_validator("group_ids")(
-        classmethod(val_unique_list("group_ids"))
-    )
+    _group_ids = field_validator("group_ids")(val_unique_list)
