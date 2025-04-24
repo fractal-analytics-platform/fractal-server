@@ -80,12 +80,10 @@ async def test_task_collection_from_wheel_non_canonical(
         assert task_group_activity["timestamp_ended"] is not None
 
 
-OLD_FRACTAL_TASKS_CORE_VERSION = "1.3.2"
+OLD_FAKE_PACKAGE_VERSION = "0.0.3"
 
 
-@pytest.mark.parametrize(
-    "package_version", [None, OLD_FRACTAL_TASKS_CORE_VERSION]
-)
+@pytest.mark.parametrize("package_version", [None, OLD_FAKE_PACKAGE_VERSION])
 async def test_task_collection_from_pypi_api_only(
     client,
     MockCurrentUser,
@@ -119,14 +117,14 @@ async def test_task_collection_from_pypi_api_only(
     # Prepare and validate payload
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     payload = dict(
-        package="fractal-tasks-core",
+        package="testing-tasks-mock",
         python_version=PYTHON_VERSION,
     )
     if package_version is None:
         EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
             payload["package"]
         )
-        assert EXPECTED_PACKAGE_VERSION > OLD_FRACTAL_TASKS_CORE_VERSION
+        assert EXPECTED_PACKAGE_VERSION > OLD_FAKE_PACKAGE_VERSION
     else:
         EXPECTED_PACKAGE_VERSION = package_version
         payload["package_version"] = package_version
@@ -174,13 +172,13 @@ async def test_task_collection_from_pypi(
     # Prepare and validate payload
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     payload = dict(
-        package="fractal-tasks-core",
+        package="testing-tasks-mock",
         python_version=PYTHON_VERSION,
     )
     EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
         payload["package"]
     )
-    assert EXPECTED_PACKAGE_VERSION > OLD_FRACTAL_TASKS_CORE_VERSION
+    assert EXPECTED_PACKAGE_VERSION > OLD_FAKE_PACKAGE_VERSION
 
     debug(payload)
     debug(EXPECTED_PACKAGE_VERSION)
@@ -203,6 +201,7 @@ async def test_task_collection_from_pypi(
         assert task_group_activity["status"] == "OK"
         assert task_group_activity["timestamp_ended"] is not None
         assert task_group_activity["log"] is not None
+        debug(task_group_activity["log"])
 
         # Get task-group info
         task_group_id = res.json()["taskgroupv2_id"]
@@ -223,11 +222,11 @@ async def test_task_collection_failure_due_to_existing_path(
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         path = (
-            settings.FRACTAL_TASKS_DIR / f"{user.id}/fractal-tasks-core/1.2.0/"
+            settings.FRACTAL_TASKS_DIR / f"{user.id}/testing-tasks-mock/0.1.0/"
         ).as_posix()
         venv_path = (
             settings.FRACTAL_TASKS_DIR
-            / f"{user.id}/fractal-tasks-core/1.2.0/venv/"
+            / f"{user.id}/testing-tasks-mock/0.1.0/venv/"
         ).as_posix()
 
         # Create fake task group
@@ -235,8 +234,8 @@ async def test_task_collection_failure_due_to_existing_path(
             origin="other",
             path=path,
             venv_path=venv_path,
-            pkg_name="fractal-tasks-core-FAKE",
-            version="1.2.0",
+            pkg_name="testing-tasks-mock-FAKE",
+            version="0.1.0",
             user_id=user.id,
         )
         db.add(tg)
@@ -248,7 +247,7 @@ async def test_task_collection_failure_due_to_existing_path(
         # Collect again and fail due to another group having the same path set
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="fractal-tasks-core", package_version="1.2.0"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.0"),
         )
         assert res.status_code == 422
         assert "Another task-group already has path" in res.json()["detail"]
@@ -265,8 +264,8 @@ async def test_contact_an_admin_message(
                 TaskGroupV2(
                     user_id=userA.id,
                     user_group_id=default_user_group.id,
-                    pkg_name="fractal-tasks-core",
-                    version="1.0.0",
+                    pkg_name="testing-tasks-mock",
+                    version="0.1.0",
                     origin="pypi",
                 )
             )
@@ -276,7 +275,7 @@ async def test_contact_an_admin_message(
         # Fail inside `_verify_non_duplication_group_constraint`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="fractal-tasks-core", package_version="1.0.0"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.0"),
         )
         assert res.status_code == 422
         assert "UserGroup " in res.json()["detail"]
@@ -289,8 +288,8 @@ async def test_contact_an_admin_message(
                 TaskGroupV2(
                     user_id=userB.id,
                     user_group_id=None,
-                    pkg_name="fractal-tasks-core",
-                    version="1.0.0",
+                    pkg_name="testing-tasks-mock",
+                    version="0.1.0",
                     origin="pypi",
                 )
             )
@@ -299,7 +298,7 @@ async def test_contact_an_admin_message(
         # Fail inside `_verify_non_duplication_user_constraint`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="fractal-tasks-core", package_version="1.0.0"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.0"),
         )
         assert res.status_code == 422
         assert "User " in res.json()["detail"]
@@ -308,8 +307,8 @@ async def test_contact_an_admin_message(
         # Create a new TaskGroupV2 associated to userB.
         task_group = TaskGroupV2(
             user_id=userB.id,
-            pkg_name="fractal-tasks-core",
-            version="1.1.0",
+            pkg_name="testing-tasks-mock",
+            version="0.1.1",
             origin="pypi",
         )
         db.add(task_group)
@@ -321,8 +320,8 @@ async def test_contact_an_admin_message(
             taskgroupv2_id=task_group.id,
             action=TaskGroupActivityActionV2.COLLECT,
             status=TaskGroupActivityStatusV2.PENDING,
-            pkg_name="fractal-tasks-core",
-            version="1.1.0",
+            pkg_name="testing-tasks-mock",
+            version="0.1.1",
         )
         db.add(task_group_activity_1)
         await db.commit()
@@ -330,7 +329,7 @@ async def test_contact_an_admin_message(
         # (case `len(states) == 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="fractal-tasks-core", package_version="1.1.0"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.1"),
         )
         assert res.status_code == 422
         assert (
@@ -338,15 +337,15 @@ async def test_contact_an_admin_message(
             in res.json()["detail"]
         )
 
-        # Crete a new CollectionState associated to the same TaskGroup
+        # Create a new CollectionState associated to the same TaskGroup
         # (this is NOT ALLOWED using the API).
         task_group_activity_2 = TaskGroupActivityV2(
             user_id=userB.id,
             taskgroupv2_id=task_group.id,
             action=TaskGroupActivityActionV2.COLLECT,
             status=TaskGroupActivityStatusV2.PENDING,
-            pkg_name="fractal-tasks-core",
-            version="1.1.0",
+            pkg_name="testing-tasks-mock",
+            version="0.1.1",
         )
         db.add(task_group_activity_2)
         await db.commit()
@@ -355,7 +354,7 @@ async def test_contact_an_admin_message(
         # (case `len(states) > 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="fractal-tasks-core", package_version="1.1.0"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.1"),
         )
         assert "TaskGroupActivityV2" in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]

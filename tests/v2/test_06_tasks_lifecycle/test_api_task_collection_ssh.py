@@ -75,11 +75,11 @@ async def test_task_collection_ssh_from_pypi(
         user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
-        package_version = "1.3.2"
+        package_version = "0.0.3"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="fractal-tasks-core",
+                package="testing-tasks-mock",
                 package_version=package_version,
                 python_version=current_py_version,
             ),
@@ -100,7 +100,7 @@ async def test_task_collection_ssh_from_pypi(
         assert res.status_code == 200
         task_group = res.json()
         assert (
-            f"fractal-tasks-core=={package_version}"
+            f"testing-tasks-mock=={package_version}"
             in task_group["pip_freeze"]
         )
         # Check venv_size and venv_file_number in TaskGroupV2
@@ -110,7 +110,7 @@ async def test_task_collection_ssh_from_pypi(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="fractal-tasks-core",
+                package="testing-tasks-mock",
                 package_version=package_version,
                 python_version=current_py_version,
             ),
@@ -122,7 +122,7 @@ async def test_task_collection_ssh_from_pypi(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="fractal-tasks-core-invalid",
+                package="testing-tasks-mock-invalid",
                 python_version=current_py_version,
             ),
         )
@@ -130,7 +130,7 @@ async def test_task_collection_ssh_from_pypi(
         debug(res.json())
         expected_error = (
             "Could not get https://pypi.org/pypi/"
-            "fractal-tasks-core-invalid/json"
+            "testing-tasks-mock-invalid/json"
         )
         assert expected_error in str(res.json()["detail"])
 
@@ -139,7 +139,7 @@ async def test_task_collection_ssh_from_pypi(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="fractal-tasks-core",
+                package="testing-tasks-mock",
                 package_version=package_version,
                 python_version=current_py_version,
             ),
@@ -153,7 +153,7 @@ async def test_task_collection_ssh_from_pypi(
         remote_folder = (
             Path(REMOTE_TASKS_BASE_DIR)
             / str(user.id)
-            / "fractal-tasks-core"
+            / "testing-tasks-mock"
             / f"{package_version}"
         ).as_posix()
         # Create remote folder
@@ -163,7 +163,7 @@ async def test_task_collection_ssh_from_pypi(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="fractal-tasks-core",
+                package="testing-tasks-mock",
                 package_version=package_version,
                 python_version=current_py_version,
             ),
@@ -343,7 +343,7 @@ async def test_task_collection_ssh_failure_no_connection(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="fractal-tasks-core",
+                package="ftesting-tasks-mock",
                 python_version=current_py_version,
             ),
         )
