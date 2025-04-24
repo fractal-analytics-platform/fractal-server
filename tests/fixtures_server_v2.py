@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
@@ -293,3 +294,15 @@ async def workflowtask_factory_v2(db: AsyncSession):
         return wft
 
     return __workflowtask_factory
+
+
+@pytest.fixture
+async def valid_user_id(db: AsyncSession) -> int:
+    user = UserOAuth(
+        email="fake@example.org",
+        hashed_password="fake-hashed-password",
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user.id

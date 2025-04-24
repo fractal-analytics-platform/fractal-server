@@ -58,6 +58,7 @@ class LocalRunner(BaseRunner):
             "converter_compound",
         ],
         config: LocalBackendConfig,
+        user_id: int,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
@@ -116,6 +117,7 @@ class LocalRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: LocalBackendConfig,
+        user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`

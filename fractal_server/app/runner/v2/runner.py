@@ -144,6 +144,7 @@ def execute_tasks_v2(
                 get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
+                user_id=user_id,
                 task_type=task.type,
             )
         elif task.type == "parallel":
@@ -157,6 +158,7 @@ def execute_tasks_v2(
                 get_runner_config=get_runner_config,
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
+                user_id=user_id,
             )
         elif task.type in ["compound", "converter_compound"]:
             outcomes_dict, num_tasks = run_v2_task_compound(
@@ -171,6 +173,7 @@ def execute_tasks_v2(
                 history_run_id=history_run_id,
                 dataset_id=dataset.id,
                 task_type=task.type,
+                user_id=user_id,
             )
         else:
             raise ValueError(f"Unexpected error: Invalid {task.type=}.")
