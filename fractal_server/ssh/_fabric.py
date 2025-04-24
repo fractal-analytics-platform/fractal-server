@@ -322,7 +322,7 @@ class FractalSSH(object):
                 t_1 = time.perf_counter()
                 self.logger.info(
                     f"{prefix} END   running '{cmd}' over SSH, "
-                    f"elapsed {t_1 - t_0:.3f}"
+                    f"elapsed={t_1 - t_0:.3f}"
                 )
                 self.logger.debug("STDOUT:")
                 self.logger.debug(res.stdout)
