@@ -74,11 +74,11 @@ async def test_reactivate_local_fail(
 
     FAILED_RMTREE_MESSAGE = "Broken rm"
 
-    def patched_rmtree(path):
+    def patched_rmtree(*args, **kwargs):
         if make_rmtree_fail:
             raise RuntimeError(FAILED_RMTREE_MESSAGE)
         else:
-            logging.warning(f"Mock of `shutil.rmtree({path})`.")
+            logging.warning("Mock of `shutil.rmtree`.")
 
     monkeypatch.setattr(
         fractal_server.tasks.v2.local.reactivate.shutil,
