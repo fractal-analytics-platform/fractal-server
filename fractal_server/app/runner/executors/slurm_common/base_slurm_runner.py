@@ -15,6 +15,7 @@ from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._job_states import STATES_FINISHED
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -34,7 +35,20 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 
 logger = set_logger(__name__)
 
-# NOTE: see issue 2481.
+
+def create_accounting_record_slurm(
+    *,
+    user_id: int,
+    slurm_job_ids: list[int],
+) -> None:
+    with next(get_sync_db()) as db:
+        db.add(
+            AccountingRecordSlurm(
+                user_id=user_id,
+                slurm_job_ids=slurm_job_ids,
+            )
+        )
+        db.commit()
 
 
 class BaseSlurmRunner(BaseRunner):
@@ -100,65 +114,51 @@ class BaseSlurmRunner(BaseRunner):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def _run_local_cmd(self, cmd: str) -> str:
-        raise NotImplementedError("Implement in child class.")
-
     def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, job_ids: list[str]) -> tuple[bool, str]:
-        # NOTE: see issue 2482
-
-        if len(job_ids) == 0:
-            return (False, "")
-
-        job_id_single_str = ",".join([str(j) for j in job_ids])
-        cmd = (
-            f"squeue --noheader --format='%i %T' --jobs {job_id_single_str}"
-            " --states=all"
-        )
-
-        try:
-            if self.slurm_runner_type == "sudo":
-                stdout = self._run_local_cmd(cmd)
-            else:
-                stdout = self._run_remote_cmd(cmd)
-            return (True, stdout)
-        except Exception as e:
-            logger.info(f"{cmd=} failed with {str(e)}")
-            return (False, "")
+    def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
+        raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
-        #  If there is no Slurm job to check, return right away
 
+        #  If there is no Slurm job to check, return right away
         if not job_ids:
             return set()
-        id_to_state = dict()
 
-        success, stdout = self.run_squeue(job_ids)
-        if success:
-            id_to_state = {
+        try:
+            stdout = self.run_squeue(job_ids=job_ids)
+            slurm_statuses = {
                 out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
-        else:
-            id_to_state = dict()
-            for j in job_ids:
-                success, res = self.run_squeue([j])
-                if not success:
-                    logger.info(f"Job {j} not found. Marked it as completed")
-                    id_to_state.update({str(j): "COMPLETED"})
-                else:
-                    id_to_state.update(
-                        {res.stdout.split()[0]: res.stdout.split()[1]}
+        except Exception as e:
+            logger.warning(
+                "[_get_finished_jobs] `squeue` failed, "
+                "retry with individual job IDs. "
+                f"Original error: {str(e)}."
+            )
+            slurm_statuses = dict()
+            for job_id in job_ids:
+                try:
+                    stdout = self.run_squeue(job_ids=[job_id])
+                    slurm_statuses.update(
+                        {stdout.split()[0]: stdout.split()[1]}
                     )
+                except Exception as e:
+                    logger.warning(
+                        "[_get_finished_jobs] `squeue` failed for "
+                        f"{job_id=}, mark job as completed. "
+                        f"Original error: {str(e)}."
+                    )
+                    slurm_statuses.update({str(job_id): "COMPLETED"})
 
-        # Finished jobs only stay in squeue for a few mins (configurable). If
-        # a job ID isn't there, we'll assume it's finished.
-        return {
-            j
-            for j in job_ids
-            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        # If a job is not in `squeue` output, mark it as completed.
+        finished_jobs = {
+            job_id
+            for job_id in job_ids
+            if slurm_statuses.get(job_id, "COMPLETED") in STATES_FINISHED
         }
+        return finished_jobs
 
     def _mkdir_local_folder(self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
@@ -172,7 +172,7 @@ class BaseSlurmRunner(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        logger.info("[_submit_single_sbatch] START")
+        logger.debug("[_submit_single_sbatch] START")
         # Prepare input pickle(s)
         versions = dict(
             python=sys.version_info[:3],
@@ -189,7 +189,7 @@ class BaseSlurmRunner(BaseRunner):
             funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
             with open(task.input_pickle_file_local, "wb") as f:
                 f.write(funcser)
-            logger.info(
+            logger.debug(
                 "[_submit_single_sbatch] Written "
                 f"{task.input_pickle_file_local=}"
             )
@@ -200,7 +200,7 @@ class BaseSlurmRunner(BaseRunner):
                     local=task.input_pickle_file_local,
                     remote=task.input_pickle_file_remote,
                 )
-                logger.info(
+                logger.debug(
                     "[_submit_single_sbatch] Transferred "
                     f"{task.input_pickle_file_local=}"
                 )
@@ -243,7 +243,7 @@ class BaseSlurmRunner(BaseRunner):
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
-        logger.info(script_lines)
+        logger.debug(script_lines)
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
@@ -272,7 +272,7 @@ class BaseSlurmRunner(BaseRunner):
         # Write submission script
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
-        logger.info(
+        logger.debug(
             "[_submit_single_sbatch] Written "
             f"{slurm_job.slurm_submission_script_local=}"
         )
@@ -294,10 +294,10 @@ class BaseSlurmRunner(BaseRunner):
         # Run sbatch
         pre_submission_cmds = slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
-            logger.info(f"Now run {submit_command=}")
+            logger.debug(f"Now run {submit_command=}")
             sbatch_stdout = self._run_remote_cmd(submit_command)
         else:
-            logger.info(f"Now using {pre_submission_cmds=}")
+            logger.debug(f"Now using {pre_submission_cmds=}")
             script_lines = pre_submission_cmds + [submit_command]
             wrapper_script_contents = "\n".join(script_lines)
             wrapper_script_contents = f"{wrapper_script_contents}\n"
@@ -314,22 +314,22 @@ class BaseSlurmRunner(BaseRunner):
                 )
                 with open(wrapper_script, "w") as f:
                     f.write(wrapper_script_contents)
-            logger.info(f"Now run {wrapper_script=}")
+            logger.debug(f"Now run {wrapper_script=}")
             sbatch_stdout = self._run_remote_cmd(f"bash {wrapper_script}")
 
         # Submit SLURM job and retrieve job ID
-        logger.info(f"[_submit_single_sbatc] {sbatch_stdout=}")
+        logger.info(f"[_submit_single_sbatch] {sbatch_stdout=}")
         stdout = sbatch_stdout.strip("\n")
         submitted_job_id = int(stdout)
         slurm_job.slurm_job_id = str(submitted_job_id)
 
         # Add job to self.jobs
         self.jobs[slurm_job.slurm_job_id] = slurm_job
-        logger.info(
+        logger.debug(
             "[_submit_single_sbatch] Added "
             f"{slurm_job.slurm_job_id} to self.jobs."
         )
-        logger.info("[_submit_single_sbatch] END")
+        logger.debug("[_submit_single_sbatch] END")
 
     def _fetch_artifacts(
         self,
@@ -421,22 +421,22 @@ class BaseSlurmRunner(BaseRunner):
         """
         # Sleep for `self.poll_interval`, but keep checking for shutdowns
         start_time = time.perf_counter()
-        max_time = start_time + self.poll_interval
-        can_return = False
+        # Always wait at least 0.2 (note: this is for cases where
+        # `poll_interval=0`).
+        waiting_time = max(self.poll_interval, 0.2)
+        max_time = start_time + waiting_time
         logger.debug(
             "[wait_and_check_shutdown] "
             f"I will wait at most {self.poll_interval} s, "
             f"in blocks of {self.poll_interval_internal} s."
         )
 
-        while (time.perf_counter() < max_time) or (can_return is False):
-            # Handle shutdown
+        while time.perf_counter() < max_time:
             if self.is_shutdown():
                 logger.info("[wait_and_check_shutdown] Shutdown file detected")
                 scancelled_job_ids = self.scancel_jobs()
                 logger.info(f"[wait_and_check_shutdown] {scancelled_job_ids=}")
                 return scancelled_job_ids
-            can_return = True
             time.sleep(self.poll_interval_internal)
 
         logger.debug("[wait_and_check_shutdown] No shutdown file detected")
@@ -462,8 +462,9 @@ class BaseSlurmRunner(BaseRunner):
             "compound",
             "converter_compound",
         ],
+        user_id: int,
     ) -> tuple[Any, Exception]:
-        logger.info("[submit] START")
+        logger.debug("[submit] START")
         try:
             workdir_local = task_files.wftask_subfolder_local
             workdir_remote = task_files.wftask_subfolder_remote
@@ -487,10 +488,10 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             # Create task subfolder
-            logger.info("[submit] Create local/remote folders - START")
+            logger.debug("[submit] Create local/remote folders - START")
             self._mkdir_local_folder(folder=workdir_local.as_posix())
             self._mkdir_remote_folder(folder=workdir_remote.as_posix())
-            logger.info("[submit] Create local/remote folders - END")
+            logger.debug("[submit] Create local/remote folders - END")
 
             # Submission phase
             slurm_job = SlurmJob(
@@ -516,7 +517,12 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
-            logger.info(f"[submit] END submission phase, {self.job_ids=}")
+            logger.debug(f"[submit] END submission phase, {self.job_ids=}")
+
+            create_accounting_record_slurm(
+                user_id=user_id,
+                slurm_job_ids=self.job_ids,
+            )
 
             # NOTE: see issue 2444
             settings = Inject(get_settings)
@@ -525,7 +531,7 @@ class BaseSlurmRunner(BaseRunner):
             time.sleep(sleep_time)
 
             # Retrieval phase
-            logger.info("[submit] START retrieval phase")
+            logger.debug("[submit] START retrieval phase")
             scancelled_job_ids = []
             while len(self.jobs) > 0:
                 # Look for finished jobs
@@ -568,12 +574,12 @@ class BaseSlurmRunner(BaseRunner):
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
 
-            logger.info("[submit] END")
+            logger.debug("[submit] END")
             return result, exception
 
         except Exception as e:
             logger.error(
-                "[submit] Unexpected exception. " f"Original error: {str(e)}"
+                f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
@@ -581,6 +587,7 @@ class BaseSlurmRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+            self.scancel_jobs()
             return None, e
 
     def multisubmit(
@@ -591,6 +598,7 @@ class BaseSlurmRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
+        user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`
@@ -598,7 +606,7 @@ class BaseSlurmRunner(BaseRunner):
         input images, while for compound tasks these can differ.
         """
 
-        logger.info(f"[multisubmit] START, {len(list_parameters)=}")
+        logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
 
             if self.is_shutdown():
@@ -652,7 +660,7 @@ class BaseSlurmRunner(BaseRunner):
                 raise RuntimeError("Something wrong here while batching tasks")
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
-            logger.info("[multisubmit] Prepare `SlurmJob`s.")
+            logger.debug("[multisubmit] Prepare `SlurmJob`s.")
             jobs_to_submit = []
             for ind_batch, chunk in enumerate(args_batches):
                 # Read prefix based on the first task of this batch
@@ -682,7 +690,7 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             # NOTE: see issue 2431
-            logger.info("[multisubmit] Transfer files and submit jobs.")
+            logger.debug("[multisubmit] Transfer files and submit jobs.")
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
                     func,
@@ -690,11 +698,16 @@ class BaseSlurmRunner(BaseRunner):
                     slurm_config=config,
                 )
 
-            logger.info(f"END submission phase, {self.job_ids=}")
+            logger.info(f"[multisubmit] END submission phase, {self.job_ids=}")
+
+            create_accounting_record_slurm(
+                user_id=user_id,
+                slurm_job_ids=self.job_ids,
+            )
 
             settings = Inject(get_settings)
             sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-            logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
+            logger.warning(f"[multisubmit] Now sleep {sleep_time} seconds.")
             time.sleep(sleep_time)
         except Exception as e:
             logger.error(
@@ -714,7 +727,7 @@ class BaseSlurmRunner(BaseRunner):
             return results, exceptions
 
         # Retrieval phase
-        logger.info("[multisubmit] START retrieval phase")
+        logger.debug("[multisubmit] START retrieval phase")
         scancelled_job_ids = []
         while len(self.jobs) > 0:
             # Look for finished jobs
@@ -736,10 +749,12 @@ class BaseSlurmRunner(BaseRunner):
 
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
-                    logger.info(f"[multisubmit] Now process {slurm_job_id=}")
+                    logger.debug(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     for task in slurm_job.tasks:
-                        logger.info(f"[multisubmit] Now process {task.index=}")
+                        logger.debug(
+                            f"[multisubmit] Now process {task.index=}"
+                        )
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
                         if fetch_artifacts_exception is not None:
                             result = None
@@ -788,7 +803,7 @@ class BaseSlurmRunner(BaseRunner):
             if len(self.jobs) > 0:
                 scancelled_job_ids = self.wait_and_check_shutdown()
 
-        logger.info("[multisubmit] END")
+        logger.debug("[multisubmit] END")
         return results, exceptions
 
     def check_fractal_server_versions(self) -> None:
@@ -827,11 +842,11 @@ class BaseSlurmRunner(BaseRunner):
         if self.jobs:
             scancel_string = " ".join(scancelled_job_ids)
             scancel_cmd = f"scancel {scancel_string}"
-            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
+            logger.warning(f"[scancel_jobs] {scancel_string}")
             try:
                 self._run_remote_cmd(scancel_cmd)
             except Exception as e:
-                logger.warning(
+                logger.error(
                     "[scancel_jobs] `scancel` command failed. "
                     f"Original error:\n{str(e)}"
                 )

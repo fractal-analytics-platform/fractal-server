@@ -21,6 +21,7 @@ async def test_submit_exception(
     tmp777_path,
     history_mock_for_submit,
     monkey_slurm,
+    valid_user_id,
 ):
     def do_nothing(parameters: dict, remote_files: dict):
         return 42
@@ -36,7 +37,7 @@ async def test_submit_exception(
         poll_interval=0,
     ) as runner:
 
-        runner.jobs = {0: "fake"}
+        runner.jobs = {"0": "fake"}
 
         result, exception = runner.submit(
             do_nothing,
@@ -47,6 +48,7 @@ async def test_submit_exception(
             task_type="non_parallel",
             history_unit_id=history_unit_id,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
     assert isinstance(exception, JobExecutionError)
     assert "jobs must be empty" in str(exception)
@@ -63,6 +65,7 @@ async def test_multisubmit_exception_submission(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     """
     Fail because of invalid parameters.
@@ -93,6 +96,7 @@ async def test_multisubmit_exception_submission(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
     assert results == {}
     for e in exceptions.values():
@@ -112,6 +116,7 @@ async def test_multisubmit_exception_fetch_artifacts(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     def do_nothing(parameters: dict, remote_files: dict):
         return 42
@@ -142,6 +147,7 @@ async def test_multisubmit_exception_fetch_artifacts(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
 
     assert results == {}
@@ -162,6 +168,7 @@ async def test_multisubmit_exception_postprocess_single_task(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     def do_nothing(parameters: dict, remote_files: dict):
         return 42
@@ -192,6 +199,7 @@ async def test_multisubmit_exception_postprocess_single_task(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
 
     assert results == {}

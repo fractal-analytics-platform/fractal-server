@@ -139,6 +139,7 @@ def run_v2_task_non_parallel(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["non_parallel", "converter_non_parallel"],
+    user_id: int,
 ) -> tuple[dict[int, SubmissionOutcome], int]:
     """
     This runs server-side (see `executor` argument)
@@ -218,6 +219,7 @@ def run_v2_task_non_parallel(
         task_files=task_files,
         history_unit_id=history_unit_id,
         config=runner_config,
+        user_id=user_id,
     )
 
     positional_index = 0
@@ -261,6 +263,7 @@ def run_v2_task_parallel(
     ],
     dataset_id: int,
     history_run_id: int,
+    user_id: int,
 ) -> tuple[dict[int, SubmissionOutcome], int]:
     if len(images) == 0:
         return {}, 0
@@ -344,6 +347,7 @@ def run_v2_task_parallel(
         list_task_files=list_task_files,
         history_unit_ids=history_unit_ids,
         config=runner_config,
+        user_id=user_id,
     )
 
     outcome = {}
@@ -394,6 +398,7 @@ def run_v2_task_compound(
     dataset_id: int,
     history_run_id: int,
     task_type: Literal["compound", "converter_compound"],
+    user_id: int,
 ) -> tuple[dict[int, SubmissionOutcome], int]:
     # Get TaskFiles object
     task_files_init = TaskFiles(
@@ -463,6 +468,7 @@ def run_v2_task_compound(
         task_files=task_files_init,
         history_unit_id=init_history_unit_id,
         config=runner_config_init,
+        user_id=user_id,
     )
 
     init_outcome = _process_init_task_output(
@@ -565,6 +571,7 @@ def run_v2_task_compound(
         list_task_files=list_task_files,
         history_unit_ids=history_unit_ids,
         config=runner_config_compute,
+        user_id=user_id,
     )
 
     compute_outcomes: dict[int, SubmissionOutcome] = {}

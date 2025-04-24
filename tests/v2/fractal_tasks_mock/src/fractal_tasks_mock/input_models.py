@@ -65,4 +65,4 @@ class InitArgsMIP(BaseModel):
     """
 
     new_zarr_url: str
-    new_plate: str  # FIXME: remove this
+    new_plate: str

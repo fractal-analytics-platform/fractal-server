@@ -20,7 +20,7 @@ def maximum_intensity_projection(
     """
 
     new_zarr_url = init_args.new_zarr_url
-    new_plate = init_args.new_plate  # FIXME: re-compute it here
+    new_plate = init_args.new_plate
 
     shutil.copytree(zarr_url, new_zarr_url)
 

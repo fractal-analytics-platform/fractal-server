@@ -54,18 +54,21 @@ def _check_versions_mismatch(
                                 do not match with the ones on the server
     """
 
-    server_python_version = server_versions["python"]
-    worker_python_version = sys.version_info[:3]
+    server_python_version = list(server_versions["python"])
+    worker_python_version = list(sys.version_info[:3])
     if worker_python_version != server_python_version:
-        # FIXME: turn this into an error, after fixing a broader CI issue, see
-        # https://github.com/fractal-analytics-platform/fractal-server/issues/375
-        logging.warning(
-            f"{server_python_version=} but {worker_python_version=}. "
-            "cloudpickle is not guaranteed to correctly load "
-            "pickle files created with different python versions. "
-            "Note, however, that if you reached this line it means that "
-            "the pickle file was likely loaded correctly."
-        )
+        if worker_python_version[:2] != server_python_version[:2]:
+            # FIXME: Turn this into an error, in some version post 2.14.
+            logging.error(
+                f"{server_python_version=} but {worker_python_version=}. "
+                "This configuration will be deprecated in a future version, "
+                "please contact the admin of this Fractal instance."
+            )
+        else:
+            # Major.minor versions match, patch versions differ
+            logging.warning(
+                f"{server_python_version=} but {worker_python_version=}."
+            )
 
     server_cloudpickle_version = server_versions["cloudpickle"]
     worker_cloudpickle_version = cloudpickle.__version__

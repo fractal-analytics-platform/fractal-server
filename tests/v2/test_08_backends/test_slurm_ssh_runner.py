@@ -34,6 +34,7 @@ async def test_submit_success(
     override_settings_factory,
     task_type: str,
     current_py_version: str,
+    valid_user_id,
 ):
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
@@ -64,6 +65,7 @@ async def test_submit_success(
             task_type=task_type,
             history_unit_id=history_unit_id,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
     debug(result, exception)
     assert result == 42
@@ -103,6 +105,7 @@ async def test_submit_fail(
     override_settings_factory,
     task_type: str,
     current_py_version: str,
+    valid_user_id,
 ):
 
     override_settings_factory(
@@ -136,6 +139,7 @@ async def test_submit_fail(
             ),
             config=get_default_slurm_config(),
             task_type=task_type,
+            user_id=valid_user_id,
         )
     debug(result, exception)
     assert result is None
@@ -163,6 +167,7 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     override_settings_factory,
     current_py_version: str,
+    valid_user_id,
 ):
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
@@ -198,6 +203,7 @@ async def test_multisubmit_parallel(
             task_type="parallel",
             config=get_default_slurm_config(),
             history_unit_ids=history_unit_ids,
+            user_id=valid_user_id,
         )
     debug(results)
     debug(exceptions)
@@ -234,6 +240,7 @@ async def test_multisubmit_compound(
     history_mock_for_multisubmit,
     override_settings_factory,
     current_py_version: str,
+    valid_user_id,
 ):
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
@@ -281,6 +288,7 @@ async def test_multisubmit_compound(
             task_type="compound",
             config=get_default_slurm_config(),
             history_unit_ids=history_unit_ids,
+            user_id=valid_user_id,
         )
     debug(results)
     debug(exceptions)

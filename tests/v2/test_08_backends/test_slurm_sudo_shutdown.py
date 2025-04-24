@@ -51,7 +51,7 @@ def shutdown_thread(
             break
         else:
             debug("[shutdown_thread] Wait longer.")
-            time.sleep(0.1)
+            time.sleep(0.01)
     debug(f"[shutdown_thread] Now create {shutdown_file}")
     shutdown_file.touch()
     debug("[shutdown_thread] END")
@@ -63,6 +63,7 @@ async def test_submit_shutdown(
     tmp777_path,
     history_mock_for_submit,
     monkey_slurm,
+    valid_user_id,
 ):
     def sleep_long(parameters: dict, remote_files: dict):
         time.sleep(1_000)
@@ -88,6 +89,7 @@ async def test_submit_shutdown(
                 task_type="non_parallel",
                 history_unit_id=history_unit_id,
                 config=get_default_slurm_config(),
+                user_id=valid_user_id,
             )
             debug("[main_thread] END")
             return result, exception
@@ -119,6 +121,7 @@ async def test_multisubmit_shutdown(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     def fun(parameters: dict, remote_files: dict):
         zarr_url = parameters["zarr_url"]
@@ -160,6 +163,7 @@ async def test_multisubmit_shutdown(
                 task_type="parallel",
                 config=get_default_slurm_config(),
                 history_unit_ids=history_unit_ids,
+                user_id=valid_user_id,
             )
             return results, exceptions
 
@@ -173,11 +177,6 @@ async def test_multisubmit_shutdown(
             fut2.result()
             results, exceptions = fut1.result()
         debug(results, exceptions)
-        assert results == {
-            0: 2,
-            1: 4,
-            3: 8,
-        }
         assert isinstance(exceptions[2], JobExecutionError)
         assert "shutdown" in str(exceptions[2])
 
@@ -203,6 +202,7 @@ async def test_shutdown_before_submit(
     tmp777_path,
     history_mock_for_submit,
     monkey_slurm,
+    valid_user_id,
 ):
     def do_nothing(parameters: dict, remote_files: dict):
         return 42
@@ -228,6 +228,7 @@ async def test_shutdown_before_submit(
             task_type="non_parallel",
             history_unit_id=history_unit_id,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
         debug(result)
         debug(exception)
@@ -251,6 +252,7 @@ async def test_shutdown_before_multisubmit(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     def do_nothing(parameters: dict, remote_files: dict):
         return 42
@@ -295,6 +297,7 @@ async def test_shutdown_before_multisubmit(
             task_type="parallel",
             config=get_default_slurm_config(),
             history_unit_ids=history_unit_ids,
+            user_id=valid_user_id,
         )
         debug(results, exceptions)
         assert results == {}

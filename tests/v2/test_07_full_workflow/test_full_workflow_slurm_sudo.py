@@ -1,7 +1,9 @@
 import logging
 
 import pytest
+from sqlalchemy import select
 
+from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
 )
@@ -36,6 +38,7 @@ def _reset_permissions_for_user_folder(folder):
 
 @pytest.mark.container
 async def test_full_workflow_slurm(
+    db,
     client,
     MockCurrentUser,
     testdata_path,
@@ -73,6 +76,14 @@ async def test_full_workflow_slurm(
         tasks=fractal_tasks_mock_db,
     )
     _reset_permissions_for_user_folder(project_dir)
+
+    # Assert that SLURM job IDs were recorded
+    res = await db.execute(
+        select(AccountingRecordSlurm).order_by(AccountingRecordSlurm.timestamp)
+    )
+    slurm_records = res.scalars().all()
+    assert len(slurm_records) == 5
+    assert len(slurm_records[0].slurm_job_ids) == 1
 
 
 @pytest.mark.container

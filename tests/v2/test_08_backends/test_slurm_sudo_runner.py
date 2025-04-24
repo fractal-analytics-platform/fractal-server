@@ -32,6 +32,7 @@ async def test_submit_success(
     history_mock_for_submit,
     monkey_slurm,
     task_type: str,
+    valid_user_id,
 ):
     def do_nothing(parameters: dict, remote_files: dict):
         return 42
@@ -58,6 +59,7 @@ async def test_submit_success(
             task_type=task_type,
             history_unit_id=history_unit_id,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
     debug(result, exception)
     assert result == 42
@@ -94,6 +96,7 @@ async def test_submit_fail(
     monkey_slurm,
     history_mock_for_submit,
     task_type: str,
+    valid_user_id,
 ):
     ERROR_MSG = "very nice error"
 
@@ -122,6 +125,7 @@ async def test_submit_fail(
             ),
             config=get_default_slurm_config(),
             task_type=task_type,
+            user_id=valid_user_id,
         )
     debug(result, exception)
     assert result is None
@@ -146,6 +150,7 @@ async def test_multisubmit_parallel(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     def fun(parameters: dict, remote_files: dict):
         zarr_url = parameters["zarr_url"]
@@ -177,6 +182,7 @@ async def test_multisubmit_parallel(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
     debug(results)
     debug(exceptions)
@@ -210,6 +216,7 @@ async def test_multisubmit_compound(
     tmp777_path,
     monkey_slurm,
     history_mock_for_multisubmit,
+    valid_user_id,
 ):
     def fun(parameters: dict, remote_files: dict):
         zarr_url = parameters["zarr_url"]
@@ -250,6 +257,7 @@ async def test_multisubmit_compound(
             task_type="compound",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
+            user_id=valid_user_id,
         )
     debug(results)
     debug(exceptions)

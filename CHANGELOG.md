@@ -1,45 +1,41 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.0a3
+# 2.14.0
 
-* App:
-    * Obfuscate sensitive information from settings using `SecretStr` (\#2333).
-* API:
-    * Remove `valstr` validator and introduce `NonEmptyString` in schemas (\#2352).
-
-
-# 2.14.0a0, 2.14.0a1, 2.14.0a2
-
-All this is from \#2287
-
-* Database
-    * New `HistoryItemV2` and `ImageStatus` tables.
-* API
-    * New history endpoints.
-    * Introduce shared tools for pagination.
-* Runner
-    * Introduce new runner interface.
-    * Update to `HistoryItemV2` and `ImageStatus` from within runner.
-    * Stop filling `Dataset.history` from within runner.
-* App:
-    * Drop obsolete `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` configuration variable.
-
-
-# 2.13.2 (Unreleased)
+This release mostly concerns the new database/runner integration in view of
+providing more granular history/status information. This includes a full
+overhaul of the runner.
 
 * API:
-    * Make request body required for `replace-task` endpoint (\#2355).
+    * Add all new status endpoints.
     * Add `GET /job/latest/` endpoint (\#2389).
+    * Make request body required for `replace-task` endpoint (\#2355).
+    * Introduce shared tools for pagination.
+    * Remove `valstr` validator and introduce `NonEmptyString` in schemas (\#2352).
+* Database
+    * New tables `HistoryRun`, `HistoryUnit` and `HistoryImageCache` tables.
+    * Drop attribute/type filters from dataset table.
+    * Add `type_filters` column to job table.
+    * Use `ondelete` flag in place of custom DELETE-endpoint logics.
+* Runner
+    * Full overhaul of runners. Among the large number of changes, this includes:
+        * Fully drop the `concurrent.futures` interface.
+        * Fully drop the multithreaded nature of SLURM runners, in favor of a more linear submission/retrieval flow.
+        * New `BaseRunner`, `LocalRunner`, `BaseSlurmRunner`, `SlurmSSHRunner` and `SlurmSudoRunner` objects.
+        * The two SLURM runners now share a large part of base logic.
+        * Database updates to `HistoryRun`, `HistoryUnit` and `HistoryImageCache` tables.
+        * We do not fill `Dataset.history` any more.
 * Task lifecycle:
     * Drop hard-coded use of `--no-cache-dir` for `pip install` command (\#2357).
 * App:
+    * Obfuscate sensitive information from settings using `SecretStr` (\#2333).
     * Drop `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` obsolete configuration variable (\#2359).
-* Development:
-    * Add codespell to precommit (\#2358).
 * Testing:
     * Use `fractal-task-tools` to build `fractal-tasks-mock` manifest (\#2374).
-* Other:
+* Development:
+    * Add `codespell` to precommit (\#2358).
     * Drop obsolete `examples` folder (\#2405).
+
 
 # 2.13.1
 
