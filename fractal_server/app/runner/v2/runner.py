@@ -18,6 +18,7 @@ from .merge_outputs import merge_outputs
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
+from .runner_functions import SubmissionOutcome
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecord
@@ -132,51 +133,60 @@ def execute_tasks_v2(
             history_run_id = history_run.id
 
         # TASK EXECUTION (V2)
-        if task.type in ["non_parallel", "converter_non_parallel"]:
-            outcomes_dict, num_tasks = run_v2_task_non_parallel(
-                images=filtered_images,
-                zarr_dir=zarr_dir,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                runner=runner,
-                get_runner_config=get_runner_config,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
-                user_id=user_id,
-                task_type=task.type,
-            )
-        elif task.type == "parallel":
-            outcomes_dict, num_tasks = run_v2_task_parallel(
-                images=filtered_images,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                runner=runner,
-                get_runner_config=get_runner_config,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
-                user_id=user_id,
-            )
-        elif task.type in ["compound", "converter_compound"]:
-            outcomes_dict, num_tasks = run_v2_task_compound(
-                images=filtered_images,
-                zarr_dir=zarr_dir,
-                wftask=wftask,
-                task=task,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                runner=runner,
-                get_runner_config=get_runner_config,
-                history_run_id=history_run_id,
-                dataset_id=dataset.id,
-                task_type=task.type,
-                user_id=user_id,
-            )
-        else:
-            raise ValueError(f"Unexpected error: Invalid {task.type=}.")
+        try:
+            if task.type in ["non_parallel", "converter_non_parallel"]:
+                outcomes_dict, num_tasks = run_v2_task_non_parallel(
+                    images=filtered_images,
+                    zarr_dir=zarr_dir,
+                    wftask=wftask,
+                    task=task,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
+                    runner=runner,
+                    get_runner_config=get_runner_config,
+                    history_run_id=history_run_id,
+                    dataset_id=dataset.id,
+                    user_id=user_id,
+                    task_type=task.type,
+                )
+            elif task.type == "parallel":
+                outcomes_dict, num_tasks = run_v2_task_parallel(
+                    images=filtered_images,
+                    wftask=wftask,
+                    task=task,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
+                    runner=runner,
+                    get_runner_config=get_runner_config,
+                    history_run_id=history_run_id,
+                    dataset_id=dataset.id,
+                    user_id=user_id,
+                )
+            elif task.type in ["compound", "converter_compound"]:
+                outcomes_dict, num_tasks = run_v2_task_compound(
+                    images=filtered_images,
+                    zarr_dir=zarr_dir,
+                    wftask=wftask,
+                    task=task,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
+                    runner=runner,
+                    get_runner_config=get_runner_config,
+                    history_run_id=history_run_id,
+                    dataset_id=dataset.id,
+                    task_type=task.type,
+                    user_id=user_id,
+                )
+            else:
+                raise ValueError(f"Unexpected error: Invalid {task.type=}.")
+        except Exception as e:
+            outcomes_dict = {
+                0: SubmissionOutcome(
+                    result=None,
+                    exception=e,
+                )
+            }
+            num_tasks = 0
 
         # POST TASK EXECUTION
 

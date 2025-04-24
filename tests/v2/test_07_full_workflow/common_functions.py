@@ -560,8 +560,26 @@ async def failing_workflow_UnknownError(
         debug(job_status_data["working_dir"])
         assert job_status_data["log"]
         assert job_status_data["status"] == "failed"
-        assert "UNKNOWN ERROR" in job_status_data["log"]
+        assert "JOB ERROR" in job_status_data["log"]
         assert ERROR_MSG in job_status_data["log"]
+
+        # GET workflow status and assert that there is no "submitted"
+        url = (
+            f"api/v2/project/{project_id}/status/"
+            f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
+        )
+        res = await client.get(url)
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json() == {
+            f"{workflow_task_id}": {
+                "status": "failed",
+                "num_available_images": 0,
+                "num_submitted_images": 0,
+                "num_done_images": 0,
+                "num_failed_images": 0,
+            },
+        }
 
 
 async def workflow_with_non_python_task(
