@@ -149,7 +149,7 @@ async def test_task_collection_ssh_from_pypi(
         debug(res.json())
 
         # BACKGROUND FAILURE 1: existing folder
-        package_version = "1.2.0"
+        package_version = "0.0.3"
         remote_folder = (
             Path(REMOTE_TASKS_BASE_DIR)
             / str(user.id)
@@ -343,7 +343,7 @@ async def test_task_collection_ssh_failure_no_connection(
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
-                package="ftesting-tasks-mock",
+                package="testing-tasks-mock",
                 python_version=current_py_version,
             ),
         )
