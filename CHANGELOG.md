@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.1 (unreleased)
+
+* Testing:
+    * Optimize `test_reactivate_local_fail` (\#2511).
+    * Replace `fractal-tasks-core` with `testing-tasks-mock` in tests (\#2511).
+    * Improve flaky test (\#2513).
+
 # 2.14.0
 
 This release mostly concerns the new database/runner integration in view of

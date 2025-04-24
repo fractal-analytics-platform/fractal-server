@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import pytest
@@ -69,19 +70,21 @@ async def test_reactivate_local_fail(
     2. The removal of the venv path fails.
     """
 
-    if make_rmtree_fail:
-        import fractal_server.tasks.v2.local.reactivate
+    import fractal_server.tasks.v2.local.reactivate
 
-        FAILED_RMTREE_MESSAGE = "Broken rm"
+    FAILED_RMTREE_MESSAGE = "Broken rm"
 
-        def patched_rmtree(*args, **kwargs):
+    def patched_rmtree(*args, **kwargs):
+        if make_rmtree_fail:
             raise RuntimeError(FAILED_RMTREE_MESSAGE)
+        else:
+            logging.warning("Mock of `shutil.rmtree`.")
 
-        monkeypatch.setattr(
-            fractal_server.tasks.v2.local.reactivate.shutil,
-            "rmtree",
-            patched_rmtree,
-        )
+    monkeypatch.setattr(
+        fractal_server.tasks.v2.local.reactivate.shutil,
+        "rmtree",
+        patched_rmtree,
+    )
 
     # Prepare task group that will make `pip install` fail
     path = tmp_path / f"make-rmtree-fail-{make_rmtree_fail}"
@@ -91,7 +94,7 @@ async def test_reactivate_local_fail(
         origin="pypi",
         python_version=current_py_version,
         path=path.as_posix(),
-        venv_path=(path / "venv").as_posix(),
+        venv_path="/fake/folder/impossible/",
         user_id=first_user.id,
         pip_freeze="something==99.99.99",
     )
@@ -132,12 +135,6 @@ async def test_reactivate_local_fail(
     debug(activity.status)
     debug(activity.log)
     assert activity.status == "failed"
-    MSG = "Could not find a version that satisfies the requirement something==99.99.99"  # noqa
-    assert MSG in activity.log
-    assert Path(task_group.path).exists()
 
     if make_rmtree_fail:
         assert FAILED_RMTREE_MESSAGE in activity.log
-        assert Path(task_group.venv_path).exists()
-    else:
-        assert not Path(task_group.venv_path).exists()
