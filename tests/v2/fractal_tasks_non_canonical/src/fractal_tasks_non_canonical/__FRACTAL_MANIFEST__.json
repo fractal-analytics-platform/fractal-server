@@ -3,6 +3,7 @@
   "task_list": [
     {
       "name": "generic_task",
+      "type": "non_parallel",
       "executable_non_parallel": "generic_task.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
@@ -19,18 +20,6 @@
             "title": "Zarr Dir",
             "type": "string",
             "description": "description"
-          },
-          "sleep_time": {
-            "default": 1,
-            "title": "Sleep Time",
-            "type": "integer",
-            "description": "Time to sleep, in seconds"
-          },
-          "raise_error": {
-            "default": false,
-            "title": "Raise Error",
-            "type": "boolean",
-            "description": "If true, the task raises a ValueError"
           }
         },
         "required": [
@@ -41,32 +30,6 @@
         "title": "GenericTask"
       },
       "docs_info": "## generic_task\nDummy task description.\n"
-    },
-    {
-      "name": "generic_task_parallel",
-      "input_types": {
-        "my_type": false
-      },
-      "output_types": {
-        "my_type": true
-      },
-      "executable_parallel": "generic_task_parallel.py",
-      "args_schema_parallel": {
-        "additionalProperties": false,
-        "properties": {
-          "zarr_url": {
-            "title": "Zarr Url",
-            "type": "string",
-            "description": "Missing description"
-          }
-        },
-        "required": [
-          "zarr_url"
-        ],
-        "type": "object",
-        "title": "GenericTaskParallel"
-      },
-      "docs_info": "## generic_task_parallel\nDummy task description.\n"
     }
   ],
   "has_args_schemas": true,
