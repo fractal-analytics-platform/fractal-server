@@ -32,6 +32,7 @@ class BaseRunner(object):
         task_type: TaskTypeType,
         task_files: TaskFiles,
         config: Any,
+        user_id: int,
     ) -> tuple[Any, BaseException]:
         """
         Run a single fractal task.
@@ -44,6 +45,7 @@ class BaseRunner(object):
             task_type: Task type.
             task_files: `TaskFiles` object.
             config: Runner-specific parameters.
+            user_id:
         """
         raise NotImplementedError()
 
@@ -55,6 +57,7 @@ class BaseRunner(object):
         list_task_files: list[TaskFiles],
         task_type: TaskTypeType,
         config: Any,
+        user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Run a parallel fractal task.
@@ -68,6 +71,7 @@ class BaseRunner(object):
             task_type: Task type.
             task_files: `TaskFiles` object.
             config: Runner-specific parameters.
+            user_id
         """
         raise NotImplementedError()
 

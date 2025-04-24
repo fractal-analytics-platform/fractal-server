@@ -14,6 +14,7 @@ def test_NotImplementedError_methods():
             task_type=None,
             task_files=None,
             config=None,
+            user_id=None,
         )
     with pytest.raises(NotImplementedError):
         runner.multisubmit(
@@ -23,6 +24,7 @@ def test_NotImplementedError_methods():
             task_type=None,
             list_task_files=None,
             config=None,
+            user_id=None,
         )
 
 

@@ -15,6 +15,7 @@ from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._job_states import STATES_FINISHED
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -34,7 +35,20 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 
 logger = set_logger(__name__)
 
-# NOTE: see issue 2481.
+
+def create_accounting_record_slurm(
+    *,
+    user_id: int,
+    slurm_job_ids: list[int],
+) -> None:
+    with next(get_sync_db()) as db:
+        db.add(
+            AccountingRecordSlurm(
+                user_id=user_id,
+                slurm_job_ids=slurm_job_ids,
+            )
+        )
+        db.commit()
 
 
 class BaseSlurmRunner(BaseRunner):
@@ -448,6 +462,7 @@ class BaseSlurmRunner(BaseRunner):
             "compound",
             "converter_compound",
         ],
+        user_id: int,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
         try:
@@ -503,6 +518,11 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_config=config,
             )
             logger.debug(f"[submit] END submission phase, {self.job_ids=}")
+
+            create_accounting_record_slurm(
+                user_id=user_id,
+                slurm_job_ids=self.job_ids,
+            )
 
             # NOTE: see issue 2444
             settings = Inject(get_settings)
@@ -578,6 +598,7 @@ class BaseSlurmRunner(BaseRunner):
         list_task_files: list[TaskFiles],
         task_type: Literal["parallel", "compound", "converter_compound"],
         config: SlurmConfig,
+        user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`
@@ -678,6 +699,11 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             logger.info(f"[multisubmit] END submission phase, {self.job_ids=}")
+
+            create_accounting_record_slurm(
+                user_id=user_id,
+                slurm_job_ids=self.job_ids,
+            )
 
             settings = Inject(get_settings)
             sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL

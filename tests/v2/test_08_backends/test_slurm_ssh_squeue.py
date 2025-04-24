@@ -22,6 +22,7 @@ async def test_run_squeue(
     fractal_ssh: FractalSSH,
     override_settings_factory,
     current_py_version: str,
+    valid_user_id,
 ):
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
@@ -53,6 +54,7 @@ async def test_run_squeue(
                 task_type="non_parallel",
                 history_unit_id=history_unit_id,
                 config=get_default_slurm_config(),
+                user_id=valid_user_id,
             )
             debug("[main_thread] END")
             return result, exception

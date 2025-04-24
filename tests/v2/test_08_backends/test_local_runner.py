@@ -46,6 +46,7 @@ async def test_submit_success(
             task_type=task_type,
             history_unit_id=history_unit_id,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
     debug(result, exception)
     assert result == 42
@@ -101,6 +102,7 @@ async def test_submit_fail(
             task_type=task_type,
             history_unit_id=history_unit_id,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
     debug(result, exception)
     assert result is None
@@ -149,6 +151,7 @@ async def test_submit_inner_failure(
             task_type="parallel",
             history_unit_id=history_unit_id,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
     debug(result, exception)
     assert result is None
@@ -195,6 +198,7 @@ async def test_multisubmit_parallel(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
     debug(results)
     debug(exceptions)
@@ -240,6 +244,7 @@ async def test_multisubmit_compound(
             task_type="compound",
             history_unit_ids=history_unit_ids,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
     debug(results)
     debug(exceptions)
@@ -288,6 +293,7 @@ async def test_multisubmit_in_chunks(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=config,
+            user_id=None,
         )
     debug(results)
     debug(exceptions)
@@ -341,6 +347,7 @@ async def test_multisubmit_parallel_fail(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
     debug(results)
     debug(exceptions)
@@ -387,6 +394,7 @@ async def test_multisubmit_inner_failure(
             task_type="parallel",
             history_unit_ids=history_unit_ids,
             config=get_default_local_backend_config(),
+            user_id=None,
         )
 
     debug(results)
