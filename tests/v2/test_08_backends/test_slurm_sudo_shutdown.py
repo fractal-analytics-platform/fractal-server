@@ -186,13 +186,14 @@ async def test_multisubmit_shutdown(
     debug(run)
     assert run.status == HistoryUnitStatus.SUBMITTED
 
-    # `HistoryUnit.status` is updated from within `runner.submit`
+    # Check that `HistoryUnit.status` is updated from within `runner.submit`
+    # NOTE: We only make an assertion about the long-sleeping task, since the
+    # other outcomes are non-deterministic (depending on when precisely the
+    # shutdown is triggered, with respect to the SLURM-job lifecycle).
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        if ind != 2:
-            assert unit.status == HistoryUnitStatus.DONE
-        else:
+        if ind == 2:
             assert unit.status == HistoryUnitStatus.FAILED
 
 
