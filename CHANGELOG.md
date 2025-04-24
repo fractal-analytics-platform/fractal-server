@@ -5,6 +5,7 @@
 * Testing:
     * Optimize `test_reactivate_local_fail` (\#2511).
     * Replace `fractal-tasks-core` with `testing-tasks-mock` in tests (\#2511).
+    * Improve flaky test (\#2513).
 
 # 2.14.0
 
