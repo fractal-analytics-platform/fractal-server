@@ -2,6 +2,8 @@
 
 # 2.14.1 (unreleased)
 
+* Schemas:
+    * Simplify structure of validators used multiple times (\#2504).
 * Testing:
     * Optimize `test_reactivate_local_fail` (\#2511).
     * Replace `fractal-tasks-core` with `testing-tasks-mock` in tests (\#2511).
