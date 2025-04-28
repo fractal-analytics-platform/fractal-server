@@ -2,6 +2,10 @@
 
 # 2.14.1 (unreleased)
 
+
+* Runner:
+    * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
+
 * Testing:
     * Optimize `test_reactivate_local_fail` (\#2511).
     * Replace `fractal-tasks-core` with `testing-tasks-mock` in tests (\#2511).
