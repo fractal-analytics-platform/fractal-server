@@ -2,6 +2,10 @@
 
 # 2.14.1 (unreleased)
 
+
+* Runner:
+    * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
+
 * Testing:
     * Add mock wheel file and update assertion for pip 25.1 (\#2523).
     * Optimize `test_reactivate_local_fail` (\#2511).

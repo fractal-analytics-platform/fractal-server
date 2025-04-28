@@ -151,7 +151,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
         """
         Fetch artifacts for a list of SLURM jobs.
         """
-        MAX_NUM_THREADS = 4
+        MAX_NUM_THREADS = 12
         THREAD_NAME_PREFIX = "fetch_artifacts"
         logger.debug(
             "[_fetch_artifacts] START "
