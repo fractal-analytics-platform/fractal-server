@@ -62,9 +62,7 @@ class JobCreateV2(BaseModel):
     def _cant_set_none(cls, v):
         return cant_set_none(v)
 
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
+    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
     _attribute_filters = field_validator("attribute_filters")(
         validate_attribute_filters
     )
