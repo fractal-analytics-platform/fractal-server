@@ -3,6 +3,7 @@
 # 2.14.1 (unreleased)
 
 * Testing:
+    * Do not run Python3.11 container CI for PRs, but only for merges (\#2519).
     * Optimize `test_reactivate_local_fail` (\#2511).
     * Replace `fractal-tasks-core` with `testing-tasks-mock` in tests (\#2511).
     * Improve flaky test (\#2513).
