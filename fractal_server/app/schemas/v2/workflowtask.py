@@ -30,9 +30,7 @@ class WorkflowTaskCreateV2(BaseModel):
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
+    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
     _type_filters = field_validator("type_filters")(validate_type_filters)
     _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
     _meta_parallel = field_validator("meta_parallel")(valdict_keys)
@@ -107,9 +105,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     type_filters: Optional[dict[str, bool]] = None
 
     # Validators
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
+    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
     _type_filters = field_validator("type_filters")(validate_type_filters)
     _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
     _meta_parallel = field_validator("meta_parallel")(valdict_keys)

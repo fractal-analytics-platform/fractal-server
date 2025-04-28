@@ -29,9 +29,7 @@ class DatasetCreateV2(BaseModel):
 
     # Validators
 
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
+    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
 
     @field_validator("zarr_dir")
     @classmethod
@@ -65,9 +63,7 @@ class DatasetUpdateV2(BaseModel):
 
     # Validators
 
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
+    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
 
     @field_validator("name")
     @classmethod

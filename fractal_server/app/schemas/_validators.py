@@ -64,7 +64,7 @@ def val_unique_list(must_be_unique: Optional[list]) -> Optional[list]:
     return must_be_unique
 
 
-def root_validate_dict_keys(cls, object: dict) -> dict:
+def root_validate_dict_keys(object: dict) -> dict:
     """
     For each dictionary in `object.values()`,
     checks that that dictionary has only keys of type str.

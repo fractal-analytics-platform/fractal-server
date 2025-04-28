@@ -48,9 +48,7 @@ class ImageQuery(BaseModel):
     type_filters: dict[str, bool] = Field(default_factory=dict)
     attribute_filters: AttributeFiltersType = Field(default_factory=dict)
 
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
+    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
     _type_filters = field_validator("type_filters")(validate_type_filters)
     _attribute_filters = field_validator("attribute_filters")(
         validate_attribute_filters
