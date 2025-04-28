@@ -492,7 +492,7 @@ class Settings(BaseSettings):
     still running on SLURM.
     """
 
-    FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL: int = 2
+    FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL: int = 0
     """
     NOTE: see issue 2444
     """
