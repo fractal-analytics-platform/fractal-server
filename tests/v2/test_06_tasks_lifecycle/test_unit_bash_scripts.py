@@ -151,10 +151,17 @@ def test_template_2(
     )
     with pytest.raises(RuntimeError) as expinfo:
         execute_command_sync(command=f"bash {script_path.as_posix()}")
-    assert (
+    # We make the assertion flexible, since the error message changed with
+    # pip 25.1
+    condition_1 = (
         "ERROR: fractal_tasks_mock-0.0.1-py3-none-any (2).whl"
         " is not a valid wheel filename"
     ) in str(expinfo.value)
+    condition_2 = (
+        "ERROR: fractal_tasks_mock-0.0.1-py3-none-any (2).whl"
+        " is not a supported wheel on this platform"
+    ) in str(expinfo.value)
+    assert condition_1 or condition_2
 
 
 def test_template_4_missing_manifest(

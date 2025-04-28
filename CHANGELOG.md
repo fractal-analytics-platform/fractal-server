@@ -3,6 +3,7 @@
 # 2.14.1 (unreleased)
 
 * Testing:
+    * Add mock wheel file and update assertion for pip 25.1 (\#2523).
     * Optimize `test_reactivate_local_fail` (\#2511).
     * Replace `fractal-tasks-core` with `testing-tasks-mock` in tests (\#2511).
     * Improve flaky test (\#2513).
