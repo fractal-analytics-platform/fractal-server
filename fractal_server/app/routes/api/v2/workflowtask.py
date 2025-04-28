@@ -14,7 +14,7 @@ from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ._aux_functions import _get_dataset_or_404
+from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
@@ -391,28 +391,28 @@ async def check_workflowtask(
 
     previous_wft_id = db_workflow.task_list[db_workflow_task.order - 1].id
 
-    dataset = await _get_dataset_or_404(dataset_id=dataset_id, db=db)
+    dataset = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )["dataset"]
     images = filter_image_list(
         images=dataset.images,
         type_filters=filters.types,
         attribute_filters=filters.attributes,
     )
 
-    warnings = []
-    for image in images:
-        res = await db.execute(
-            select(HistoryUnit.status)
-            .join(HistoryImageCache)
-            .where(HistoryImageCache.zarr_url == image["zarr_url"])
-            .where(HistoryImageCache.dataset_id == dataset_id)
-            .where(HistoryImageCache.workflowtask_id == previous_wft_id)
-            .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        )
-        image_status = res.one_or_none()
-        if image_status is None or image_status != "done":
-            warnings.append(image)
-
-    return JSONResponse(
-        status_code=200,
-        content=[f"Missing image {image['zarr_url']}" for image in warnings],
+    zarr_urls = [image["zarr_url"] for image in images]
+    res = await db.execute(
+        select(HistoryImageCache.zarr_url)
+        .join(HistoryUnit)
+        .where(HistoryImageCache.zarr_url.in_(zarr_urls))
+        .where(HistoryImageCache.dataset_id == dataset_id)
+        .where(HistoryImageCache.workflowtask_id == previous_wft_id)
+        .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+        .where(HistoryUnit.status != "done")
     )
+    missing = res.scalars().all()
+
+    return JSONResponse(status_code=200, content=missing)
