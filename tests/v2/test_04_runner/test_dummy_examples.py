@@ -145,6 +145,7 @@ async def test_dummy_insert_single_image(
             types={
                 "is_3D": False,
                 "illumination_corrected": True,
+                "this_should_not_be_propagated": True,
             },
         ),
     ]
