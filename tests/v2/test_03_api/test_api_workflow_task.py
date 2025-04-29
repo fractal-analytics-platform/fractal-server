@@ -991,7 +991,6 @@ async def test_check_workflowtask(
         task2 = await task_factory_v2(
             user_id=user.id, output_types={"x": True}
         )
-        task3 = await task_factory_v2(user_id=user.id)
 
         project = await project_factory_v2(user)
 
@@ -1006,7 +1005,7 @@ async def test_check_workflowtask(
         )
         wft3 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
-            task_id=task3.id,
+            task_id=task1.id,
         )
 
         n = 10
@@ -1016,7 +1015,6 @@ async def test_check_workflowtask(
             images=[
                 dict(
                     zarr_url=f"/zarr_dir/{i}",
-                    attributes={"attribute": str(i % 2)},
                     types={"type": bool(i % 2)},
                 )
                 for i in range(n)
@@ -1081,8 +1079,9 @@ async def test_check_workflowtask(
 
         # case 1: workflow_task.order == 0
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
-            f"wftask/{wft1.id}/check/{dataset.id}/",
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            "images/non-processed/"
+            f"?workflow_id={workflow.id}&workflowtask_id={wft1.id}",
             json={},
         )
         assert res.status_code == 200
@@ -1090,8 +1089,9 @@ async def test_check_workflowtask(
 
         # case 2: workflow.task_list[workflow_task.order - 1].task.output_types
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
-            f"wftask/{wft3.id}/check/{dataset.id}/",
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            "images/non-processed/"
+            f"?workflow_id={workflow.id}&workflowtask_id={wft3.id}",
             json={},
         )
         assert res.status_code == 200
@@ -1099,17 +1099,19 @@ async def test_check_workflowtask(
 
         # case 3
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
-            f"wftask/{wft2.id}/check/{dataset.id}/",
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            "images/non-processed/"
+            f"?workflow_id={workflow.id}&workflowtask_id={wft2.id}",
             json={},
         )
         assert res.status_code == 200
         assert res.json() == [f"/zarr_dir/{i}" for i in range(1, n)]
 
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
-            f"wftask/{wft2.id}/check/{dataset.id}/",
-            json={"types": {"type": True}},
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            "images/non-processed/"
+            f"?workflow_id={workflow.id}&workflowtask_id={wft2.id}",
+            json={"type_filters": {"type": True}},
         )
         assert res.status_code == 200
         assert res.json() == [f"/zarr_dir/{i}" for i in range(1, n) if i % 2]
