@@ -4,11 +4,10 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
+from ....types._validated_types import ListPositiveIntUnique
 from ....types._validated_types import NonEmptyString
-from ....types._validators import cant_set_none
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
@@ -45,24 +44,8 @@ class WorkflowUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[NonEmptyString] = None
-    reordered_workflowtask_ids: Optional[list[int]] = None
-
-    # Validators
-
-    @field_validator("name")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
-
-    @field_validator("reordered_workflowtask_ids")
-    @classmethod
-    def check_positive_and_unique(cls, value):
-        if any(i < 0 for i in value):
-            raise ValueError("Negative `id` in `reordered_workflowtask_ids`")
-        if len(value) != len(set(value)):
-            raise ValueError("`reordered_workflowtask_ids` has repetitions")
-        return value
+    name: NonEmptyString = None
+    reordered_workflowtask_ids: Optional[ListPositiveIntUnique] = None
 
 
 class WorkflowImportV2(BaseModel):

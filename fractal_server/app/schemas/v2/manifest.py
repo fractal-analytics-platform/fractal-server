@@ -4,10 +4,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import field_validator
-from pydantic import HttpUrl
 from pydantic import model_validator
 
+from ....types._validated_types import HttpUrl
 from ....types._validated_types import NonEmptyString
 
 
@@ -51,7 +50,7 @@ class TaskManifestV2(BaseModel):
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     category: Optional[str] = None
     modality: Optional[str] = None
@@ -113,13 +112,6 @@ class TaskManifestV2(BaseModel):
 
         return self
 
-    @field_validator("docs_link", mode="after")
-    @classmethod
-    def validate_docs_link(cls, value):
-        if value is not None:
-            HttpUrl(value)
-        return value
-
 
 class ManifestV2(BaseModel):
     """
@@ -153,6 +145,12 @@ class ManifestV2(BaseModel):
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):
+
+        if self.manifest_version != "2":
+            raise ValueError(
+                f"Wrong manifest version (given {self.manifest_version})"
+            )
+
         has_args_schemas = self.has_args_schemas
         task_list = self.task_list
         if has_args_schemas is True:
@@ -171,10 +169,6 @@ class ManifestV2(BaseModel):
                             f"task '{task.name}' has "
                             f"{task.args_schema_non_parallel=}."
                         )
-        return self
-
-    @model_validator(mode="after")
-    def _unique_task_names(self):
         task_list = self.task_list
         task_list_names = [t.name for t in task_list]
         if len(set(task_list_names)) != len(task_list_names):
@@ -184,11 +178,5 @@ class ManifestV2(BaseModel):
                     f"Given: {task_list_names}.",
                 )
             )
-        return self
 
-    @field_validator("manifest_version")
-    @classmethod
-    def manifest_version_2(cls, value):
-        if value != "2":
-            raise ValueError(f"Wrong manifest version (given {value})")
-        return value
+        return self

@@ -2,11 +2,7 @@ import pytest
 from devtools import debug
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import field_validator
 
-from fractal_server.types._filter_validators import (
-    validate_attribute_filters,
-)
 from fractal_server.types._validated_types import AttributeFilters
 
 
@@ -39,10 +35,6 @@ INVALID_ATTRIBUTE_FILTERS = (
 
 class MyModel(BaseModel):
     attribute_filters: AttributeFilters = Field(default_factory=dict)
-
-    _attribute_filters = field_validator("attribute_filters")(
-        validate_attribute_filters
-    )
 
 
 @pytest.mark.parametrize("attribute_filters", VALID_ATTRIBUTE_FILTERS)

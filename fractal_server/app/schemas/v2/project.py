@@ -1,14 +1,11 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
 from ....types._validated_types import NonEmptyString
-from ....types._validators import cant_set_none
 
 
 class ProjectCreateV2(BaseModel):
@@ -33,9 +30,4 @@ class ProjectUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[NonEmptyString] = None
-
-    @field_validator("name")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
+    name: NonEmptyString = None

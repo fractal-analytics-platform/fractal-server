@@ -26,7 +26,6 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
@@ -34,6 +33,7 @@ from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
+from fractal_server.types._validated_types import AbsolutePath
 
 
 class MailSettings(BaseModel):
@@ -274,51 +274,11 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[Path] = None
+    FRACTAL_TASKS_DIR: Optional[AbsolutePath] = None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
-
-    @field_validator("FRACTAL_TASKS_DIR")
-    @classmethod
-    def make_FRACTAL_TASKS_DIR_absolute(cls, v):
-        """
-        If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
-        on the current working directory).
-        """
-        if v is None:
-            return None
-        FRACTAL_TASKS_DIR_path = Path(v)
-        if not FRACTAL_TASKS_DIR_path.is_absolute():
-            FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
-            logging.warning(
-                f'FRACTAL_TASKS_DIR="{v}" is not an absolute path; '
-                f'converting it to "{str(FRACTAL_TASKS_DIR_path)}"'
-            )
-        return FRACTAL_TASKS_DIR_path
-
-    @field_validator("FRACTAL_RUNNER_WORKING_BASE_DIR")
-    @classmethod
-    def make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute(cls, v):
-        """
-        (Copy of make_FRACTAL_TASKS_DIR_absolute)
-        If `FRACTAL_RUNNER_WORKING_BASE_DIR` is a non-absolute path,
-        make it absolute (based on the current working directory).
-        """
-        if v is None:
-            return None
-        FRACTAL_RUNNER_WORKING_BASE_DIR_path = Path(v)
-        if not FRACTAL_RUNNER_WORKING_BASE_DIR_path.is_absolute():
-            FRACTAL_RUNNER_WORKING_BASE_DIR_path = (
-                FRACTAL_RUNNER_WORKING_BASE_DIR_path.resolve()
-            )
-            logging.warning(
-                f'FRACTAL_RUNNER_WORKING_BASE_DIR="{v}" is not an absolute '
-                "path; converting it to "
-                f'"{str(FRACTAL_RUNNER_WORKING_BASE_DIR_path)}"'
-            )
-        return FRACTAL_RUNNER_WORKING_BASE_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal[
         "local",
@@ -329,7 +289,7 @@ class Settings(BaseSettings):
     Select which runner backend to use.
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[AbsolutePath] = None
     """
     Base directory for running jobs / workflows. All artifacts required to set
     up, run and tear down jobs are placed in subdirs of this directory.
@@ -363,26 +323,11 @@ class Settings(BaseSettings):
     Path of JSON file with configuration for the SLURM backend.
     """
 
-    FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
+    FRACTAL_SLURM_WORKER_PYTHON: Optional[AbsolutePath] = None
     """
     Absolute path to Python interpreter that will run the jobs on the SLURM
     nodes. If not specified, the same interpreter that runs the server is used.
     """
-
-    @field_validator("FRACTAL_SLURM_WORKER_PYTHON")
-    @classmethod
-    def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
-        """
-        If `FRACTAL_SLURM_WORKER_PYTHON` is a relative path, fail.
-        """
-        if v is None:
-            return None
-        elif not Path(v).is_absolute():
-            raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON={v}"
-            )
-        else:
-            return v
 
     FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Optional[
         Literal["3.9", "3.10", "3.11", "3.12"]
@@ -507,26 +452,11 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
-    FRACTAL_PIP_CACHE_DIR: Optional[str] = None
+    FRACTAL_PIP_CACHE_DIR: Optional[AbsolutePath] = None
     """
     Absolute path to the cache directory for `pip`; if unset,
     `--no-cache-dir` is used.
     """
-
-    @field_validator("FRACTAL_PIP_CACHE_DIR")
-    @classmethod
-    def absolute_FRACTAL_PIP_CACHE_DIR(cls, v):
-        """
-        If `FRACTAL_PIP_CACHE_DIR` is a relative path, fail.
-        """
-        if v is None:
-            return None
-        elif not Path(v).is_absolute():
-            raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_PIP_CACHE_DIR={v}"
-            )
-        else:
-            return v
 
     @property
     def PIP_CACHE_DIR_ARG(self) -> str:

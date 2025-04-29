@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -31,16 +32,16 @@ def valdict_keys(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     return d
 
 
-def val_absolute_path(string: str) -> str:
+def val_absolute_path(path: Union[str, Path]) -> Union[str, Path]:
     """
     Check that a string attribute is an absolute path
     """
-    s = string.strip()
+    s = str(path).strip()
     if not s:
         raise ValueError("String cannot be empty")
     if not os.path.isabs(s):
         raise ValueError(f"String must be an absolute path (given '{s}').")
-    return s
+    return path
 
 
 def _val_absolute_path(accept_none: bool = False):
