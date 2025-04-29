@@ -9,7 +9,7 @@ from fractal_server.app.schemas.user_settings import UserSettingsRead
 from fractal_server.app.schemas.user_settings import UserSettingsReadStrict
 from fractal_server.app.schemas.user_settings import UserSettingsUpdate
 from fractal_server.app.schemas.user_settings import UserSettingsUpdateStrict
-from fractal_server.types._validators import _val_absolute_path
+from fractal_server.types._validators import val_absolute_path
 
 
 def test_user_create():
@@ -142,15 +142,11 @@ def test_user_settings_update():
 
 
 def test_unit_val_absolute_path():
-    _val_absolute_path()("/path")
-    _val_absolute_path(accept_none=False)("/path")
-    _val_absolute_path(accept_none=True)("/path")
+    val_absolute_path("/path")
 
     with pytest.raises(ValueError):
-        _val_absolute_path()(None)
+        val_absolute_path(None)
     with pytest.raises(ValueError):
-        _val_absolute_path(accept_none=False)(None)
-    _val_absolute_path(accept_none=True)(None)
-
+        val_absolute_path("   ")
     with pytest.raises(ValueError):
-        _val_absolute_path()("non/absolute/path")
+        val_absolute_path("non/absolute/path")

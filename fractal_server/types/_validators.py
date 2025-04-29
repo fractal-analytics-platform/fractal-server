@@ -8,12 +8,6 @@ from typing import Union
 from pydantic import HttpUrl
 
 
-def cant_set_none(value: Any) -> Any:
-    if value is None:
-        raise ValueError("Field cannot be set to 'None'.")
-    return value
-
-
 def valdict_keys(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     """
     Strip every key of the dictionary, and fail if there are identical keys
@@ -52,27 +46,6 @@ def val_absolute_path_strict(path: Path) -> Path:
             f"converting it to '{path.resolve()}'"
         )
     return path.resolve()
-
-
-def _val_absolute_path(accept_none: bool = False):
-    """
-    Check that a string attribute is an absolute path
-    """
-
-    def val(string: Optional[str]) -> Optional[str]:
-        if string is None:
-            if accept_none:
-                return string
-            else:
-                raise ValueError("String cannot be None")
-        s = string.strip()
-        if not s:
-            raise ValueError("String cannot be empty")
-        if not os.path.isabs(s):
-            raise ValueError(f"String must be an absolute path (given '{s}').")
-        return s
-
-    return val
 
 
 def val_unique_list(must_be_unique: Optional[list]) -> Optional[list]:
