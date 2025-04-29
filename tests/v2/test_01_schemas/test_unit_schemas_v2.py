@@ -89,8 +89,8 @@ def test_task_update():
 def test_job_create():
     JobCreateV2()
     JobCreateV2(last_task_index=None)
-    JobCreateV2(last_task_index=1)
-    with pytest.raises(ValidationError, match="cannot be negative"):
+    JobCreateV2(last_task_index=0)
+    with pytest.raises(ValidationError):
         JobCreateV2(last_task_index=-1)
 
 

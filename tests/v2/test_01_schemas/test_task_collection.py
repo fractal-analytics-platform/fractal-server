@@ -91,10 +91,7 @@ async def test_TaskCollectCustomV2(testdata_path):
             package_root=None,
             package_name="name",
         )
-    assert (
-        "Python interpreter path must be absolute"
-        in e._excinfo[1].errors()[0]["msg"]
-    )
+    assert "String must be an absolute path" in str(e.value)
 
     with pytest.raises(ValidationError) as e:
         TaskCollectCustomV2(
@@ -104,7 +101,7 @@ async def test_TaskCollectCustomV2(testdata_path):
             package_root="non_absolute_path",
             package_name=None,
         )
-    assert "'package_root' must be an absolute path" in str(e.value)
+    assert "String must be an absolute path" in str(e.value)
 
     # Fail because neither 'package_root' nor 'package_name'
     with pytest.raises(ValidationError) as e:
