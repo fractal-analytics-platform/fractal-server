@@ -59,7 +59,7 @@ class UserSettingsUpdate(BaseModel):
     @model_validator(mode="after")
     def validate_command(self):
         if self.project_dir is not None:
-            self.project_dir = validate_cmd(self.project_dir)
+            validate_cmd(self.project_dir)
         return self
 
 
