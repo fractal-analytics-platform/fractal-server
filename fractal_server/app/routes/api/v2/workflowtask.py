@@ -22,7 +22,6 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
 from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
 
-
 router = APIRouter()
 
 
