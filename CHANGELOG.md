@@ -6,6 +6,7 @@
 * Runner:
     * Set `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL=0` as a default (\#2525).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
+    * Support editing re-deriving an existing image with a non-trivial `origin` (\#2527).
 * Testing:
     * Do not run Python3.11 container CI for PRs, but only for merges (\#2519).
     * Add mock wheel file and update assertion for pip 25.1 (\#2523).
