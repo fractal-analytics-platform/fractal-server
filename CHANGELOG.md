@@ -2,7 +2,8 @@
 
 # 2.14.1 (unreleased)
 
-
+* API:
+    * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524).
 * Runner:
     * Set `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL=0` as a default (\#2525).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
