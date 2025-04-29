@@ -33,7 +33,6 @@ from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
-from fractal_server.types._validated_types import AbsolutePath
 from fractal_server.types._validated_types import AbsolutePathStrict
 
 
@@ -324,7 +323,7 @@ class Settings(BaseSettings):
     Path of JSON file with configuration for the SLURM backend.
     """
 
-    FRACTAL_SLURM_WORKER_PYTHON: Optional[AbsolutePath] = None
+    FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
     Absolute path to Python interpreter that will run the jobs on the SLURM
     nodes. If not specified, the same interpreter that runs the server is used.
@@ -453,11 +452,29 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
-    FRACTAL_PIP_CACHE_DIR: Optional[AbsolutePath] = None
+    FRACTAL_PIP_CACHE_DIR: Optional[str] = None
     """
     Absolute path to the cache directory for `pip`; if unset,
     `--no-cache-dir` is used.
     """
+
+    @model_validator(mode="after")
+    def validate_absolute_paths(self):
+        if (
+            self.FRACTAL_PIP_CACHE_DIR is not None
+            and not Path(self.FRACTAL_PIP_CACHE_DIR).is_absolute()
+        ):
+            raise FractalConfigurationError(
+                f"Non-absolute value for {self.FRACTAL_PIP_CACHE_DIR=}"
+            )
+        if (
+            self.FRACTAL_SLURM_WORKER_PYTHON is not None
+            and not Path(self.FRACTAL_SLURM_WORKER_PYTHON).is_absolute()
+        ):
+            raise FractalConfigurationError(
+                f"Non-absolute value for {self.FRACTAL_SLURM_WORKER_PYTHON=}"
+            )
+        return self
 
     @property
     def PIP_CACHE_DIR_ARG(self) -> str:
