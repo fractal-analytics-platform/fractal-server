@@ -465,14 +465,16 @@ class Settings(BaseSettings):
             and not Path(self.FRACTAL_PIP_CACHE_DIR).is_absolute()
         ):
             raise FractalConfigurationError(
-                f"Non-absolute value for {self.FRACTAL_PIP_CACHE_DIR=}"
+                "Non-absolute value for FRACTAL_PIP_CACHE_DIR="
+                f"'{self.FRACTAL_PIP_CACHE_DIR}'"
             )
         if (
             self.FRACTAL_SLURM_WORKER_PYTHON is not None
             and not Path(self.FRACTAL_SLURM_WORKER_PYTHON).is_absolute()
         ):
             raise FractalConfigurationError(
-                f"Non-absolute value for {self.FRACTAL_SLURM_WORKER_PYTHON=}"
+                "Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON="
+                f"{self.FRACTAL_SLURM_WORKER_PYTHON}"
             )
         return self
 
