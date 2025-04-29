@@ -10,8 +10,8 @@ from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
 from .._validators import cant_set_none
-from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
+from ._validated_types import NonEmptyString
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
 from fractal_server.images.models import AttributeFiltersType

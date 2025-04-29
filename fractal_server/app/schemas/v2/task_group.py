@@ -10,9 +10,9 @@ from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
 from .._validators import cant_set_none
-from .._validators import NonEmptyString
 from .._validators import val_absolute_path
 from .._validators import valdict_keys
+from ._validated_types import NonEmptyString
 from .task import TaskReadV2
 
 

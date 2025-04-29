@@ -15,8 +15,8 @@ from pydantic.types import StrictStr
 from .._filter_validators import validate_attribute_filters
 from .._filter_validators import validate_type_filters
 from .._validators import cant_set_none
-from .._validators import NonEmptyString
 from .._validators import root_validate_dict_keys
+from ._validated_types import NonEmptyString
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2

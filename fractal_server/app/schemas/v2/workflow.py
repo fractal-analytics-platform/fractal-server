@@ -8,7 +8,7 @@ from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
 from .._validators import cant_set_none
-from .._validators import NonEmptyString
+from ._validated_types import NonEmptyString
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2

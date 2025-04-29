@@ -1,20 +1,12 @@
 import os
-from typing import Annotated
 from typing import Any
 from typing import Optional
-
-from pydantic.types import StringConstraints
 
 
 def cant_set_none(value: Any) -> Any:
     if value is None:
         raise ValueError("Field cannot be set to 'None'.")
     return value
-
-
-NonEmptyString = Annotated[
-    str, StringConstraints(min_length=1, strip_whitespace=True)
-]
 
 
 def valdict_keys(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
