@@ -5,17 +5,15 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
 from ....types._validated_types import AttributeFilters
 from ....types._validated_types import NonEmptyString
-from ....types._validators import cant_set_none
+from ....types._validated_types import NormalizedUrl
 from ....types._validators import root_validate_dict_keys
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
-from fractal_server.urls import normalize_url
 
 
 class DatasetCreateV2(BaseModel):
@@ -23,20 +21,11 @@ class DatasetCreateV2(BaseModel):
 
     name: NonEmptyString
 
-    zarr_dir: Optional[str] = None
+    zarr_dir: Optional[NormalizedUrl] = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
 
-    # Validators
-
     _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
-
-    @field_validator("zarr_dir")
-    @classmethod
-    def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None:
-            return normalize_url(v)
-        return v
 
 
 class DatasetReadV2(BaseModel):
@@ -58,24 +47,10 @@ class DatasetReadV2(BaseModel):
 class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[NonEmptyString] = None
-    zarr_dir: Optional[str] = None
-
-    # Validators
+    name: NonEmptyString = None
+    zarr_dir: Optional[NormalizedUrl] = None
 
     _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
-
-    @field_validator("name")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
-
-    @field_validator("zarr_dir")
-    @classmethod
-    def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None:
-            return normalize_url(v)
-        return v
 
 
 class DatasetImportV2(BaseModel):
@@ -93,13 +68,8 @@ class DatasetImportV2(BaseModel):
     """
 
     name: str
-    zarr_dir: str
+    zarr_dir: NormalizedUrl
     images: list[SingleImage] = Field(default_factory=list)
-
-    @field_validator("zarr_dir")
-    @classmethod
-    def normalize_zarr_dir(cls, v: str) -> str:
-        return normalize_url(v)
 
 
 class DatasetExportV2(BaseModel):

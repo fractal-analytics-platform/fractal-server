@@ -2,12 +2,11 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import field_validator
-from pydantic.types import StrictStr
+from pydantic import model_validator
 
+from ...types._validated_types import AbsolutePath
+from ...types._validated_types import ListNonEmptyStringUnique
 from ...types._validated_types import NonEmptyString
-from ...types._validators import _val_absolute_path
-from ...types._validators import val_unique_list
 from fractal_server.string_tools import validate_cmd
 
 __all__ = (
@@ -50,42 +49,20 @@ class UserSettingsUpdate(BaseModel):
 
     ssh_host: Optional[NonEmptyString] = None
     ssh_username: Optional[NonEmptyString] = None
-    ssh_private_key_path: Optional[NonEmptyString] = None
-    ssh_tasks_dir: Optional[NonEmptyString] = None
-    ssh_jobs_dir: Optional[NonEmptyString] = None
+    ssh_private_key_path: Optional[AbsolutePath] = None
+    ssh_tasks_dir: Optional[AbsolutePath] = None
+    ssh_jobs_dir: Optional[AbsolutePath] = None
     slurm_user: Optional[NonEmptyString] = None
-    slurm_accounts: Optional[list[NonEmptyString]] = None
-    project_dir: Optional[NonEmptyString] = None
+    slurm_accounts: Optional[ListNonEmptyStringUnique] = None
+    project_dir: Optional[AbsolutePath] = None
 
-    _ssh_private_key_path = field_validator("ssh_private_key_path")(
-        _val_absolute_path(accept_none=True)
-    )
-
-    _ssh_tasks_dir = field_validator("ssh_tasks_dir")(
-        _val_absolute_path(accept_none=True)
-    )
-    _ssh_jobs_dir = field_validator("ssh_jobs_dir")(
-        _val_absolute_path(accept_none=True)
-    )
-
-    @field_validator("slurm_accounts")
-    @classmethod
-    def slurm_accounts_validator(cls, value):
-        if value is None:
-            return value
-        return val_unique_list(value)
-
-    @field_validator("project_dir")
-    @classmethod
-    def project_dir_validator(cls, value):
-        if value is None:
-            return None
-        validate_cmd(value)
-        return _val_absolute_path()(value)
+    @model_validator(mode="after")
+    def validate_command(self):
+        if self.project_dir is not None:
+            self.project_dir = validate_cmd(self.project_dir)
+        return self
 
 
 class UserSettingsUpdateStrict(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    slurm_accounts: Optional[list[StrictStr]] = None
-
-    _slurm_accounts = field_validator("slurm_accounts")(val_unique_list)
+    slurm_accounts: Optional[ListNonEmptyStringUnique] = None

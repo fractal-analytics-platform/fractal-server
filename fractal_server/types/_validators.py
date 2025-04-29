@@ -71,15 +71,15 @@ def val_unique_list(must_be_unique: Optional[list]) -> Optional[list]:
     return must_be_unique
 
 
-def root_validate_dict_keys(object: dict) -> dict:
+def root_validate_dict_keys(obj_values: dict) -> dict:
     """
-    For each dictionary in `object.values()`,
+    For each dictionary in `obj_values.values()`,
     checks that that dictionary has only keys of type str.
     """
-    for dictionary in (v for v in object.values() if isinstance(v, dict)):
+    for dictionary in (v for v in obj_values.values() if isinstance(v, dict)):
         if not all(isinstance(key, str) for key in dictionary.keys()):
             raise ValueError("Dictionary keys must be strings.")
-    return object
+    return obj_values
 
 
 def val_http_url(value: str) -> str:

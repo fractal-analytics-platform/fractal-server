@@ -6,21 +6,18 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import ValidationInfo
 from pydantic.types import AwareDatetime
+from pydantic.types import PositiveInt
 from pydantic.types import StrictStr
 
-from ....types._filter_validators import validate_attribute_filters
-from ....types._filter_validators import validate_type_filters
+from ....types._validated_types import AttributeFilters
+from ....types._validated_types import DictStrBool
 from ....types._validated_types import NonEmptyString
-from ....types._validators import cant_set_none
 from ....types._validators import root_validate_dict_keys
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
-from fractal_server.types._validated_types import AttributeFilters
 
 
 class JobStatusTypeV2(str, Enum):
@@ -47,60 +44,30 @@ class JobStatusTypeV2(str, Enum):
 class JobCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
+    first_task_index: Optional[PositiveInt] = None
+    last_task_index: Optional[PositiveInt] = None
     slurm_account: Optional[StrictStr] = None
-    worker_init: Optional[NonEmptyString] = None
+    worker_init: NonEmptyString = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
-    type_filters: dict[str, bool] = Field(default_factory=dict)
+    type_filters: DictStrBool = Field(default_factory=dict)
 
     # Validators
 
-    @field_validator("worker_init")
+    @model_validator(mode="before")
     @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
+    def root_validate(cls, values):
+        values = root_validate_dict_keys(values)
+        first_task_index = values.get("first_task_index")
+        last_task_index = values.get("last_task_index")
 
-    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
-    _attribute_filters = field_validator("attribute_filters")(
-        validate_attribute_filters
-    )
-    _type_filters = field_validator("type_filters")(validate_type_filters)
-
-    @field_validator("first_task_index")
-    @classmethod
-    def first_task_index_non_negative(cls, v):
-        """
-        Check that `first_task_index` is non-negative.
-        """
-        if v is not None and v < 0:
-            raise ValueError(
-                f"first_task_index cannot be negative (given: {v})"
-            )
-        return v
-
-    @field_validator("last_task_index")
-    @classmethod
-    def first_last_task_indices(cls, v, info: ValidationInfo):
-        """
-        Check that `last_task_index` is non-negative, and that it is not
-        smaller than `first_task_index`.
-        """
-        if v is not None and v < 0:
-            raise ValueError(
-                f"last_task_index cannot be negative (given: {v})"
-            )
-
-        first_task_index = info.data.get("first_task_index")
-        last_task_index = v
         if first_task_index is not None and last_task_index is not None:
             if first_task_index > last_task_index:
                 raise ValueError(
                     f"{first_task_index=} cannot be larger than "
                     f"{last_task_index=}"
                 )
-        return v
+        return values
 
 
 class JobReadV2(BaseModel):

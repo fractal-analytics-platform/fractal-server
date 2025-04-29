@@ -37,7 +37,10 @@ ListPositiveIntUnique = Annotated[
     list[PositiveInt], AfterValidator(val_unique_list)
 ]
 
-AbsolutePath = Annotated[str, AfterValidator(val_absolute_path)]
+AbsolutePath = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
+ListAbsolutePathUnique = Annotated[
+    list[AbsolutePath], AfterValidator(val_unique_list)
+]
 
 WorkflowTaskArgument = Annotated[DictStrAny, AfterValidator(validate_wft_args)]
 NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
