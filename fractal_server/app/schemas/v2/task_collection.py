@@ -1,12 +1,11 @@
-from pathlib import Path
 from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import field_validator
 from pydantic import model_validator
 
+from ....types._validated_types import AbsolutePath
 from ....types._validated_types import NonEmptyString
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
@@ -52,52 +51,36 @@ class TaskCollectPipV2(BaseModel):
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    @field_validator("package")
-    @classmethod
-    def package_validator(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        validate_cmd(value, attribute_name="package")
-        return value
-
-    @field_validator("package_version")
-    @classmethod
-    def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        validate_cmd(value, attribute_name="package_version")
-        return value
-
-    @field_validator("pinned_package_versions")
-    @classmethod
-    def pinned_package_versions_validator(cls, value):
-        if value is None:
-            return value
-
-        old_keys = list(value.keys())
-        new_keys = [key.strip() for key in old_keys]
-        if any(k == "" for k in new_keys):
-            raise ValueError(f"Empty string in {new_keys}.")
-        if len(new_keys) != len(set(new_keys)):
-            raise ValueError(
-                f"Dictionary contains multiple identical keys: {value}."
+    @model_validator(mode="after")
+    def validate_commands(self):
+        if self.package:
+            validate_cmd(self.package, attribute_name="package")
+        if self.package_version:
+            validate_cmd(
+                self.package_version, attribute_name="package_version"
             )
-        for old_key, new_key in zip(old_keys, new_keys):
-            if new_key != old_key:
-                value[new_key] = value.pop(old_key)
+        if self.package_extras:
+            validate_cmd(self.package_extras, attribute_name="package_extras")
+        if self.pinned_package_versions:
+            old_keys = list(self.pinned_package_versions.keys())
+            new_keys = [key.strip() for key in old_keys]
+            if any(k == "" for k in new_keys):
+                raise ValueError(f"Empty string in {new_keys}.")
+            if len(new_keys) != len(set(new_keys)):
+                raise ValueError(
+                    "Dictionary contains multiple identical keys: "
+                    f"{self.pinned_package_versions}."
+                )
+            for old_key, new_key in zip(old_keys, new_keys):
+                if new_key != old_key:
+                    self.pinned_package_versions[
+                        new_key
+                    ] = self.pinned_package_versions.pop(old_key)
 
-        for pkg, version in value.items():
-            validate_cmd(pkg)
-            validate_cmd(version)
-        return value
-
-    @field_validator("package_extras")
-    @classmethod
-    def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        validate_cmd(value, attribute_name="package_extras")
-        return value
+            for pkg, version in self.pinned_package_versions.items():
+                validate_cmd(pkg)
+                validate_cmd(version)
+        return self
 
 
 class TaskCollectCustomV2(BaseModel):
@@ -120,9 +103,9 @@ class TaskCollectCustomV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     manifest: ManifestV2
-    python_interpreter: NonEmptyString
+    python_interpreter: AbsolutePath
     label: NonEmptyString
-    package_root: Optional[NonEmptyString] = None
+    package_root: Optional[AbsolutePath] = None
     package_name: Optional[NonEmptyString] = None
     version: Optional[NonEmptyString] = None
 
@@ -138,33 +121,6 @@ class TaskCollectCustomV2(BaseModel):
                 "One and only one must be set between "
                 "'package_root' and 'package_name'"
             )
+        if values["package_name"]:
+            validate_cmd(values["package_name"])
         return values
-
-    @field_validator("package_name")
-    @classmethod
-    def package_name_validator(cls, value: str):
-        """
-        Remove all whitespace characters, then check for invalid code.
-        """
-        if value is not None:
-            validate_cmd(value)
-            value = value.replace(" ", "")
-        return value
-
-    @field_validator("package_root")
-    @classmethod
-    def package_root_validator(cls, value):
-        if (value is not None) and (not Path(value).is_absolute()):
-            raise ValueError(
-                f"'package_root' must be an absolute path: (given {value})."
-            )
-        return value
-
-    @field_validator("python_interpreter")
-    @classmethod
-    def python_interpreter_validator(cls, value):
-        if not Path(value).is_absolute():
-            raise ValueError(
-                f"Python interpreter path must be absolute: (given {value})."
-            )
-        return value

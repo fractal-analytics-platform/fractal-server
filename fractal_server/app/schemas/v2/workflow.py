@@ -6,7 +6,7 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types._validated_types import ListPositiveIntUnique
+from ....types._validated_types import ListNonNegativeIntUnique
 from ....types._validated_types import NonEmptyString
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
@@ -45,7 +45,7 @@ class WorkflowUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyString = None
-    reordered_workflowtask_ids: Optional[ListPositiveIntUnique] = None
+    reordered_workflowtask_ids: Optional[ListNonNegativeIntUnique] = None
 
 
 class WorkflowImportV2(BaseModel):

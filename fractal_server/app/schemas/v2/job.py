@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
-from pydantic.types import PositiveInt
+from pydantic.types import NonNegativeInt
 from pydantic.types import StrictStr
 
 from ....types._validated_types import AttributeFilters
@@ -44,8 +44,8 @@ class JobStatusTypeV2(str, Enum):
 class JobCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    first_task_index: Optional[PositiveInt] = None
-    last_task_index: Optional[PositiveInt] = None
+    first_task_index: Optional[NonNegativeInt] = None
+    last_task_index: Optional[NonNegativeInt] = None
     slurm_account: Optional[StrictStr] = None
     worker_init: NonEmptyString = None
 

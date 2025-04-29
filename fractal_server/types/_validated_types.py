@@ -3,7 +3,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import AfterValidator
-from pydantic.types import PositiveInt
+from pydantic.types import NonNegativeInt
 from pydantic.types import StringConstraints
 
 from ._filter_validators import validate_attribute_filters
@@ -33,8 +33,8 @@ ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
 ]
 ListIntUnique = Annotated[list[int], AfterValidator(val_unique_list)]
-ListPositiveIntUnique = Annotated[
-    list[PositiveInt], AfterValidator(val_unique_list)
+ListNonNegativeIntUnique = Annotated[
+    list[NonNegativeInt], AfterValidator(val_unique_list)
 ]
 
 AbsolutePath = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
