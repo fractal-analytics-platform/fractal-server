@@ -36,6 +36,36 @@ from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import merge_type_filters
 
 
+def drop_none_attributes(attributes: dict[str, Any]) -> dict[str, Any]:
+    # Unset attributes with `None` value
+    non_none_attributes = {
+        key: value for key, value in attributes.items() if value is not None
+    }
+    return non_none_attributes
+
+
+def get_origin_attribute_and_types(
+    *,
+    origin_url: str,
+    images: list[dict[str, Any]],
+) -> tuple[dict[str, Any], dict[str, bool]]:
+    """
+    Search for origin image and extract its attributes/types.
+    """
+    origin_img_search = find_image_by_zarr_url(
+        images=images,
+        zarr_url=origin_url,
+    )
+    if origin_img_search is None:
+        updated_attributes = {}
+        updated_types = {}
+    else:
+        origin_image = origin_img_search["image"]
+        updated_attributes = copy(origin_image["attributes"])
+        updated_types = copy(origin_image["types"])
+    return updated_attributes, updated_types
+
+
 def execute_tasks_v2(
     *,
     wf_task_list: list[WorkflowTaskV2],
@@ -221,19 +251,7 @@ def execute_tasks_v2(
         # status.
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.model_dump()
-            # Edit existing image
-            tmp_image_paths = [img["zarr_url"] for img in tmp_images]
-            if image["zarr_url"] in tmp_image_paths:
-                if (
-                    image["origin"] is not None
-                    and image["origin"] != image["zarr_url"]
-                ):
-                    raise JobExecutionError(
-                        "Cannot edit an image with zarr_url different from "
-                        "origin.\n"
-                        f"zarr_url={image['zarr_url']}\n"
-                        f"origin={image['origin']}"
-                    )
+            if image["zarr_url"] in [img["zarr_url"] for img in tmp_images]:
                 img_search = find_image_by_zarr_url(
                     images=tmp_images,
                     zarr_url=image["zarr_url"],
@@ -244,77 +262,74 @@ def execute_tasks_v2(
                         f"Image with zarr_url {image['zarr_url']} not found, "
                         "while updating image list."
                     )
-                original_img = img_search["image"]
-                original_index = img_search["index"]
-                updated_attributes = copy(original_img["attributes"])
-                updated_types = copy(original_img["types"])
+                existing_image_index = img_search["index"]
 
-                # Update image attributes/types with task output and manifest
-                updated_attributes.update(image["attributes"])
-                updated_types.update(image["types"])
-                updated_types.update(task.output_types)
-
-                # Unset attributes with None value
-                updated_attributes = {
-                    key: value
-                    for key, value in updated_attributes.items()
-                    if value is not None
-                }
-
-                # Validate new image
-                SingleImage(
-                    zarr_url=image["zarr_url"],
-                    types=updated_types,
-                    attributes=updated_attributes,
-                )
-
-                # Update image in the dataset image list
-                tmp_images[original_index]["attributes"] = updated_attributes
-                tmp_images[original_index]["types"] = updated_types
-            # Add new image
-            else:
-                # Check that image['zarr_url'] is relative to zarr_dir
-                if not image["zarr_url"].startswith(zarr_dir):
-                    raise JobExecutionError(
-                        "Cannot create image if zarr_dir is not a parent "
-                        "directory of zarr_url.\n"
-                        f"zarr_dir: {zarr_dir}\n"
-                        f"zarr_url: {image['zarr_url']}"
+                if (
+                    image["origin"] is None
+                    or image["origin"] == image["zarr_url"]
+                ):
+                    # CASE 1: Edit existing image
+                    existing_image = img_search["image"]
+                    new_attributes = copy(existing_image["attributes"])
+                    new_types = copy(existing_image["types"])
+                    new_image = dict(
+                        zarr_url=image["zarr_url"],
                     )
-                # Check that image['zarr_url'] is not equal to zarr_dir
-                if image["zarr_url"] == zarr_dir:
-                    raise JobExecutionError(
-                        "Cannot create image if zarr_url is equal to "
-                        "zarr_dir.\n"
-                        f"zarr_dir: {zarr_dir}\n"
-                        f"zarr_url: {image['zarr_url']}"
-                    )
-                # Propagate attributes and types from `origin` (if any)
-                updated_attributes = {}
-                updated_types = {}
-                if image["origin"] is not None:
-                    img_search = find_image_by_zarr_url(
+                    if "origin" in existing_image.keys():
+                        new_image["origin"] = existing_image["origin"]
+                else:
+                    # CASE 2: Re-create existing image based on `origin`
+                    # Propagate attributes and types from `origin` (if any)
+                    new_attributes, new_types = get_origin_attribute_and_types(
+                        origin_url=image["origin"],
                         images=tmp_images,
-                        zarr_url=image["origin"],
                     )
-                    if img_search is not None:
-                        original_img = img_search["image"]
-                        updated_attributes = copy(original_img["attributes"])
-                        updated_types = copy(original_img["types"])
-                # Update image attributes/types with task output and manifest
-                updated_attributes.update(image["attributes"])
-                updated_attributes = {
-                    key: value
-                    for key, value in updated_attributes.items()
-                    if value is not None
-                }
-                updated_types.update(image["types"])
-                updated_types.update(task.output_types)
+                    new_image = dict(
+                        zarr_url=image["zarr_url"],
+                        origin=image["origin"],
+                    )
+                # Update attributes
+                new_attributes.update(image["attributes"])
+                new_attributes = drop_none_attributes(new_attributes)
+                new_image["attributes"] = new_attributes
+                # Update types
+                new_types.update(image["types"])
+                new_types.update(task.output_types)
+                new_image["types"] = new_types
+                # Validate new image
+                SingleImage(**new_image)
+                # Update image in the dataset image list
+                tmp_images[existing_image_index] = new_image
+
+            else:
+                # CASE 3: Add new image
+                # Check that image['zarr_url'] is a subfolder of zarr_dir
+                if (
+                    not image["zarr_url"].startswith(zarr_dir)
+                    or image["zarr_url"] == zarr_dir
+                ):
+                    raise JobExecutionError(
+                        "Cannot create image if zarr_url is not a subfolder "
+                        "of zarr_dir.\n"
+                        f"zarr_dir: {zarr_dir}\n"
+                        f"zarr_url: {image['zarr_url']}"
+                    )
+
+                # Propagate attributes and types from `origin` (if any)
+                new_attributes, new_types = get_origin_attribute_and_types(
+                    origin_url=image["origin"],
+                    images=tmp_images,
+                )
+                # Prepare new image
+                new_attributes.update(image["attributes"])
+                new_attributes = drop_none_attributes(new_attributes)
+                new_types.update(image["types"])
+                new_types.update(task.output_types)
                 new_image = dict(
                     zarr_url=image["zarr_url"],
                     origin=image["origin"],
-                    attributes=updated_attributes,
-                    types=updated_types,
+                    attributes=new_attributes,
+                    types=new_types,
                 )
                 # Validate new image
                 SingleImage(**new_image)

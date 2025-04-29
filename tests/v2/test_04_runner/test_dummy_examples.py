@@ -106,7 +106,7 @@ async def test_dummy_insert_single_image(
         status="done",
     )
 
-    # Run successfully on an empty dataset
+    # Case 0: Run successfully on an empty dataset
     execute_tasks_v2_mod(
         wf_task_list=[wftask],
         dataset=dataset,
@@ -115,7 +115,7 @@ async def test_dummy_insert_single_image(
         **execute_tasks_v2_args,
     )
 
-    # Run successfully even if the image already exists
+    # Case 1: Run successfully even if the image already exists
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
     execute_tasks_v2_mod(
@@ -126,54 +126,30 @@ async def test_dummy_insert_single_image(
         **execute_tasks_v2_args,
     )
 
-    # Fail because new image is not relative to zarr_dir
-    execute_tasks_v2_args = dict(
-        runner=local_runner,
-        user_id=user.id,
-    )
-    wftask = await workflowtask_factory_v2(
-        workflow_id=workflow.id,
-        task_id=task_id,
-        order=0,
-        args_non_parallel={"fail": True},
-    )
-    db.expunge_all()
-    dataset = await db.get(DatasetV2, dataset.id)
-    with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2_mod(
-            wf_task_list=[wftask],
-            dataset=dataset,
-            workflow_dir_local=tmp_path / "job3",
-            job_id=job.id,
-            **execute_tasks_v2_args,
-        )
-    error_msg = str(e.value)
-    assert "is not a parent directory" in error_msg
-    assert zarr_dir in error_msg
-
-    # Fail because new image's zarr_url is equal to zarr_dir
-    wftask = await workflowtask_factory_v2(
-        workflow_id=workflow.id,
-        task_id=task_id,
-        order=0,
-        args_non_parallel={"fail_2": True},
-    )
-    db.expunge_all()
-    dataset = await db.get(DatasetV2, dataset.id)
-    with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2_mod(
-            wf_task_list=[wftask],
-            dataset=dataset,
-            workflow_dir_local=tmp_path / "job4",
-            job_id=job.id,
-            **execute_tasks_v2_args,
-        )
-    error_msg = str(e.value)
-    assert "Cannot create image if zarr_url is equal to zarr_dir" in error_msg
-
-    # Fail because new image is not relative to zarr_dir
-    IMAGES = [dict(zarr_url=Path(zarr_dir, "my-image").as_posix())]
-    dataset_with_images = await dataset_factory_v2(
+    # Case 2: Run successfully even if the image already exists but the new
+    # image has an origin - see issue #2497.
+    zarr_url_3D = Path(zarr_dir, "plate.zarr/B03").as_posix()
+    zarr_url_2D = Path(zarr_dir, "plate_mip.zarr/B03").as_posix()
+    IMAGES = [
+        dict(
+            zarr_url=zarr_url_3D,
+            attributes={"well": "B03"},
+            types={
+                "is_3D": True,
+                "illumination_corrected": True,
+            },
+        ),
+        dict(
+            zarr_url=zarr_url_2D,
+            attributes={"well": "B03"},
+            types={
+                "is_3D": False,
+                "illumination_corrected": True,
+                "this_should_not_be_propagated": True,
+            },
+        ),
+    ]
+    dataset_case_2 = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=IMAGES,
@@ -181,27 +157,77 @@ async def test_dummy_insert_single_image(
     wftask = await workflowtask_factory_v2(
         workflow_id=workflow.id,
         task_id=task_id,
-        order=0,
         args_non_parallel={
             "full_new_image": dict(
-                zarr_url=IMAGES[0]["zarr_url"],
-                origin="/somewhere",
+                zarr_url=zarr_url_2D,
+                origin=zarr_url_3D,
+                types={
+                    "is_3D": False,  # Make it look like a projection task
+                    "some_additional_type": False,
+                },
             )
         },
     )
-    with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2_mod(
-            wf_task_list=[wftask],
-            dataset=dataset_with_images,
-            workflow_dir_local=tmp_path / "job2",
-            job_id=job.id,
-            **execute_tasks_v2_args,
-        )
-    error_msg = str(e.value)
-    assert (
-        "Cannot edit an image with zarr_url different from origin."
-        in error_msg
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask],
+        dataset=dataset_case_2,
+        workflow_dir_local=tmp_path / "job2",
+        job_id=job.id,
+        **execute_tasks_v2_args,
     )
+    db.expunge_all()
+    dataset_case_2 = await db.get(DatasetV2, dataset_case_2.id)
+    debug(dataset_case_2.images)
+    assert dataset_case_2.images[0] == {
+        "zarr_url": zarr_url_3D,
+        "attributes": {"well": "B03"},
+        "types": {
+            "is_3D": True,
+            "illumination_corrected": True,
+        },
+    }
+    assert dataset_case_2.images[1] == {
+        "zarr_url": zarr_url_2D,
+        "origin": zarr_url_3D,
+        "attributes": {"well": "B03"},
+        "types": {
+            "is_3D": False,
+            "illumination_corrected": True,
+            "some_additional_type": False,
+        },
+    }
+
+    # Case 3: Fail because the new zarr_url is not relative to zarr_dir, or
+    # because it is identical to zarr_dir
+    EXPECTED_NON_PARENT_MSG = (
+        "Cannot create image if zarr_url is not a subfolder of zarr_dir"
+    )
+    execute_tasks_v2_args = dict(
+        runner=local_runner,
+        user_id=user.id,
+    )
+    for _args_non_parallel in [{"fail": True}, {"fail_2": True}]:
+        debug(_args_non_parallel)
+
+        wftask = await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task_id,
+            args_non_parallel=_args_non_parallel,
+        )
+        db.expunge_all()
+        dataset = await db.get(DatasetV2, dataset.id)
+        with pytest.raises(JobExecutionError) as e:
+            execute_tasks_v2_mod(
+                wf_task_list=[wftask],
+                dataset=dataset,
+                workflow_dir_local=tmp_path / "job3",
+                job_id=job.id,
+                **execute_tasks_v2_args,
+            )
+        error_msg = str(e.value)
+        debug(error_msg)
+        assert EXPECTED_NON_PARENT_MSG in error_msg
+        assert zarr_dir in error_msg
 
 
 async def test_dummy_remove_images(
