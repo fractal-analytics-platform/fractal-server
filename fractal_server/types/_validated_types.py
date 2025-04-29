@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import AfterValidator
 from pydantic.types import StringConstraints
 
+from ._filter_validators import validate_attribute_filters
 from ._validators import val_absolute_path
 from ._validators import val_http_url
 from ._validators import val_unique_list
@@ -30,6 +31,7 @@ OptionalDictStrAny = Annotated[
 ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
 ]
+ListIntUnique = Annotated[list[int], AfterValidator(val_unique_list)]
 
 AbsolutePath = Annotated[str, AfterValidator(val_absolute_path)]
 
@@ -39,4 +41,8 @@ NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
 ImageAttributes = Annotated[DictStrAny, AfterValidator(validate_attributes)]
 ImageAttributesWithNone = Annotated[
     DictStrAny, AfterValidator(validate_attributes_with_none)
+]
+
+AttributeFilters = Annotated[
+    dict[str, list[Any]], AfterValidator(validate_attribute_filters)
 ]

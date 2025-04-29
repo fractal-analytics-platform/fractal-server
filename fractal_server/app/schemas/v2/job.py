@@ -12,15 +12,15 @@ from pydantic import ValidationInfo
 from pydantic.types import AwareDatetime
 from pydantic.types import StrictStr
 
-from .._filter_validators import validate_attribute_filters
-from .._filter_validators import validate_type_filters
-from .._validated_types import NonEmptyString
-from .._validators import cant_set_none
-from .._validators import root_validate_dict_keys
+from ....types._filter_validators import validate_attribute_filters
+from ....types._filter_validators import validate_type_filters
+from ....types._validated_types import NonEmptyString
+from ....types._validators import cant_set_none
+from ....types._validators import root_validate_dict_keys
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
-from fractal_server.images.models import AttributeFiltersType
+from fractal_server.types._validated_types import AttributeFilters
 
 
 class JobStatusTypeV2(str, Enum):
@@ -52,7 +52,7 @@ class JobCreateV2(BaseModel):
     slurm_account: Optional[StrictStr] = None
     worker_init: Optional[NonEmptyString] = None
 
-    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+    attribute_filters: AttributeFilters = Field(default_factory=dict)
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
     # Validators
@@ -122,7 +122,7 @@ class JobReadV2(BaseModel):
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
     worker_init: Optional[str] = None
-    attribute_filters: AttributeFiltersType
+    attribute_filters: AttributeFilters
     type_filters: dict[str, bool]
 
     @field_serializer("start_timestamp")

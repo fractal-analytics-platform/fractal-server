@@ -18,9 +18,9 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
+from fractal_server.types._validated_types import AttributeFilters
 
 router = APIRouter()
 
@@ -71,7 +71,7 @@ async def verify_unique_types(
 
 
 class NonProcessedImagesPayload(BaseModel):
-    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+    attribute_filters: AttributeFilters = Field(default_factory=dict)
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
 

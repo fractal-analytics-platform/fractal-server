@@ -15,7 +15,7 @@ from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
-from fractal_server.images.models import AttributeFiltersType
+from fractal_server.types._validated_types import AttributeFilters
 
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
@@ -24,7 +24,7 @@ logger.setLevel(logging.INFO)
 def dict_values_to_list(
     input_dict: dict[str, Union[int, float, bool, str, None]],
     identifier: str,
-) -> tuple[AttributeFiltersType, bool]:
+) -> tuple[AttributeFilters, bool]:
     was_there_a_warning = False
     for k, v in input_dict.items():
         if not isinstance(v, (int, float, bool, str, type(None))):

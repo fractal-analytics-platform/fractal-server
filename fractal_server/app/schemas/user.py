@@ -3,12 +3,11 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import EmailStr
 from pydantic import Field
-from pydantic import field_validator
-from pydantic import ValidationInfo
 
-from ._validated_types import NonEmptyString
-from ._validators import val_unique_list
+from ...types._validated_types import ListIntUnique
+from ...types._validated_types import NonEmptyString
 
 __all__ = (
     "UserRead",
@@ -56,24 +55,12 @@ class UserUpdate(schemas.BaseUserUpdate):
     """
 
     model_config = ConfigDict(extra="forbid")
-
-    username: Optional[NonEmptyString] = None
-
-    # Validators
-
-    @field_validator(
-        "username",
-        "is_active",
-        "is_verified",
-        "is_superuser",
-        "email",
-        "password",
-    )
-    @classmethod
-    def cant_set_none(cls, v, info: ValidationInfo):
-        if v is None:
-            raise ValueError(f"Cannot set {info.field_name}=None")
-        return v
+    username: NonEmptyString = None
+    password: NonEmptyString = None
+    email: EmailStr = None
+    is_active: bool = None
+    is_superuser: bool = None
+    is_verified: bool = None
 
 
 class UserUpdateStrict(BaseModel):
@@ -94,14 +81,7 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: Optional[NonEmptyString] = None
-
-    @field_validator("username")
-    @classmethod
-    def cant_set_none(cls, v, info: ValidationInfo):
-        if v is None:
-            raise ValueError(f"Cannot set {info.field_name}=None")
-        return v
+    username: NonEmptyString = None
 
 
 class UserUpdateGroups(BaseModel):
@@ -112,6 +92,4 @@ class UserUpdateGroups(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    group_ids: list[int] = Field(min_length=1)
-
-    _group_ids = field_validator("group_ids")(val_unique_list)
+    group_ids: ListIntUnique = Field(min_length=1)

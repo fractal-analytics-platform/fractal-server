@@ -11,7 +11,7 @@ from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
 from ...schemas.v2 import JobStatusTypeV2
-from fractal_server.images.models import AttributeFiltersType
+from fractal_server.types._validated_types import AttributeFilters
 
 
 class JobV2(SQLModel, table=True):
@@ -57,7 +57,7 @@ class JobV2(SQLModel, table=True):
     status: str = JobStatusTypeV2.SUBMITTED
     log: Optional[str] = None
 
-    attribute_filters: AttributeFiltersType = Field(
+    attribute_filters: AttributeFilters = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
     type_filters: dict[str, bool] = Field(

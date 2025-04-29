@@ -1,7 +1,7 @@
+from typing import Any
 from typing import Optional
 
 from ._validators import valdict_keys
-from fractal_server.images.models import AttributeFiltersType
 
 
 def validate_type_filters(
@@ -15,8 +15,8 @@ def validate_type_filters(
 
 
 def validate_attribute_filters(
-    attribute_filters: Optional[AttributeFiltersType],
-) -> AttributeFiltersType:
+    attribute_filters: Optional[dict[str, list[Any]]],
+) -> dict[str, list[Any]]:
     if attribute_filters is None:
         raise ValueError("'attribute_filters' cannot be 'None'.")
 

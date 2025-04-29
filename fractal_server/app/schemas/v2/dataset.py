@@ -9,12 +9,12 @@ from pydantic import field_validator
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
-from .._validated_types import NonEmptyString
-from .._validators import cant_set_none
-from .._validators import root_validate_dict_keys
+from ....types._validated_types import AttributeFilters
+from ....types._validated_types import NonEmptyString
+from ....types._validators import cant_set_none
+from ....types._validators import root_validate_dict_keys
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
-from fractal_server.images.models import AttributeFiltersType
 from fractal_server.urls import normalize_url
 
 
@@ -25,7 +25,7 @@ class DatasetCreateV2(BaseModel):
 
     zarr_dir: Optional[str] = None
 
-    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
+    attribute_filters: AttributeFilters = Field(default_factory=dict)
 
     # Validators
 

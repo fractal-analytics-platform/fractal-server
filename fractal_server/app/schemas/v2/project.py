@@ -7,8 +7,8 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validated_types import NonEmptyString
-from .._validators import cant_set_none
+from ....types._validated_types import NonEmptyString
+from ....types._validators import cant_set_none
 
 
 class ProjectCreateV2(BaseModel):

@@ -4,12 +4,11 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import ValidationError
 
 from ....images import SingleImageTaskOutput
 from fractal_server.app.runner.exceptions import TaskOutputValidationError
-from fractal_server.urls import normalize_url
+from fractal_server.types._validated_types import NormalizedUrl
 
 
 class TaskOutput(BaseModel):
@@ -19,7 +18,7 @@ class TaskOutput(BaseModel):
     image_list_updates: list[SingleImageTaskOutput] = Field(
         default_factory=list
     )
-    image_list_removals: list[str] = Field(default_factory=list)
+    image_list_removals: list[NormalizedUrl] = Field(default_factory=list)
 
     def check_zarr_urls_are_unique(self) -> None:
         zarr_urls = [img.zarr_url for img in self.image_list_updates]
@@ -40,23 +39,13 @@ class TaskOutput(BaseModel):
                 msg = f"{msg}\n{duplicate}"
             raise ValueError(msg)
 
-    @field_validator("image_list_removals")
-    @classmethod
-    def normalize_paths(cls, v: list[str]) -> list[str]:
-        return [normalize_url(zarr_url) for zarr_url in v]
-
 
 class InitArgsModel(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    zarr_url: str
+    zarr_url: NormalizedUrl
     init_args: dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("zarr_url")
-    @classmethod
-    def normalize_path(cls, v: str) -> str:
-        return normalize_url(v)
 
 
 class InitTaskOutput(BaseModel):

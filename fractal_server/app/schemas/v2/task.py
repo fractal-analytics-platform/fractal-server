@@ -7,13 +7,13 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
-from .._validated_types import DictStrBool
-from .._validated_types import HttpUrl
-from .._validated_types import ListNonEmptyStringUnique
-from .._validated_types import OptionalDictStrAny
-from fractal_server.app.schemas._validated_types import NonEmptyString
+from ....types._validated_types import DictStrBool
+from ....types._validated_types import HttpUrl
+from ....types._validated_types import ListNonEmptyStringUnique
+from ....types._validated_types import OptionalDictStrAny
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
+from fractal_server.types._validated_types import NonEmptyString
 
 TaskTypeType = Literal[
     "compound",

@@ -8,9 +8,9 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from .._validated_types import AbsolutePath
-from .._validated_types import DictStrStr
-from .._validated_types import NonEmptyString
+from ....types._validated_types import AbsolutePath
+from ....types._validated_types import DictStrStr
+from ....types._validated_types import NonEmptyString
 from .task import TaskReadV2
 
 

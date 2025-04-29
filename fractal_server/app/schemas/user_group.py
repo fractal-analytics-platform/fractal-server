@@ -8,8 +8,8 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from ._validators import _val_absolute_path
-from ._validators import val_unique_list
+from ...types._validators import _val_absolute_path
+from ...types._validators import val_unique_list
 
 __all__ = (
     "UserGroupRead",
