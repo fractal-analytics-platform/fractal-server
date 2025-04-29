@@ -25,6 +25,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
@@ -412,7 +413,7 @@ async def check_workflowtask(
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == previous_wft_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        .where(HistoryUnit.status != "done")
+        .where(HistoryUnit.status != HistoryUnitStatus.DONE.value)
     )
     missing = res.scalars().all()
 
