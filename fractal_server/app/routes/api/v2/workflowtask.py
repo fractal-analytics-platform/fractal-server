@@ -391,12 +391,13 @@ async def check_workflowtask(
 
     previous_wft_id = db_workflow.task_list[db_workflow_task.order - 1].id
 
-    dataset = await _get_dataset_check_owner(
+    res = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
         db=db,
-    )["dataset"]
+    )
+    dataset = res["dataset"]
     images = filter_image_list(
         images=dataset.images,
         type_filters=filters.types,
