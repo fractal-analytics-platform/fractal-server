@@ -5,6 +5,7 @@
 * Schemas:
     * Simplify structure of validators used multiple times (\#2504).
 * Runner:
+    * Set `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL=0` as a default (\#2525).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
 * Testing:
     * Do not run Python3.11 container CI for PRs, but only for merges (\#2519).
