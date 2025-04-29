@@ -1,6 +1,9 @@
 import os
 from typing import Any
 from typing import Optional
+from typing import Union
+
+from pydantic import HttpUrl
 
 
 def cant_set_none(value: Any) -> Any:
@@ -28,7 +31,19 @@ def valdict_keys(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     return d
 
 
-def val_absolute_path(accept_none: bool = False):
+def val_absolute_path(string: str) -> str:
+    """
+    Check that a string attribute is an absolute path
+    """
+    s = string.strip()
+    if not s:
+        raise ValueError("String cannot be empty")
+    if not os.path.isabs(s):
+        raise ValueError(f"String must be an absolute path (given '{s}').")
+    return s
+
+
+def _val_absolute_path(accept_none: bool = False):
     """
     Check that a string attribute is an absolute path
     """
@@ -65,3 +80,47 @@ def root_validate_dict_keys(object: dict) -> dict:
         if not all(isinstance(key, str) for key in dictionary.keys()):
             raise ValueError("Dictionary keys must be strings.")
     return object
+
+
+def val_http_url(value: str) -> str:
+    if value is not None:
+        HttpUrl(value)
+    return value
+
+
+def validate_wft_args(value):
+    if value is None:
+        return
+    RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
+    args_keys = set(value.keys())
+    intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
+    if intersect_keys:
+        raise ValueError(
+            "`args` contains the following forbidden keys: "
+            f"{intersect_keys}"
+        )
+    return value
+
+
+def validate_attributes(
+    v: dict[str, Any]
+) -> dict[str, Union[int, float, str, bool]]:
+    for key, value in v.items():
+        if not isinstance(value, (int, float, str, bool)):
+            raise ValueError(
+                f"attributes[{key}] must be a scalar "
+                f"(int, float, str or bool). Given {value} ({type(value)})"
+            )
+    return v
+
+
+def validate_attributes_with_none(
+    v: dict[str, Any]
+) -> dict[str, Union[int, float, str, bool, None]]:
+    for key, value in v.items():
+        if not isinstance(value, (int, float, str, bool, type(None))):
+            raise ValueError(
+                f"attributes[{key}] must be a scalar (int, float, str, bool)"
+                f" or None. Given {value} ({type(value)})"
+            )
+    return v

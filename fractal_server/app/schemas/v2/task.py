@@ -5,11 +5,10 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import field_validator
-from pydantic import HttpUrl
 from pydantic import model_validator
 
 from .._validated_types import DictStrBool
+from .._validated_types import HttpUrl
 from .._validated_types import ListNonEmptyStringUnique
 from .._validated_types import OptionalDictStrAny
 from fractal_server.app.schemas._validated_types import NonEmptyString
@@ -43,7 +42,7 @@ class TaskCreateV2(BaseModel):
     args_schema_parallel: OptionalDictStrAny = None
     args_schema_version: Optional[NonEmptyString] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     input_types: DictStrBool = Field(default={})
     output_types: DictStrBool = Field(default={})
@@ -54,8 +53,6 @@ class TaskCreateV2(BaseModel):
     authors: Optional[NonEmptyString] = None
 
     type: Optional[TaskTypeType] = None
-
-    # Validators
 
     @model_validator(mode="after")
     def validate_commands(self):
@@ -89,13 +86,6 @@ class TaskCreateV2(BaseModel):
                 self.type = "compound"
 
         return self
-
-    @field_validator("docs_link", mode="after")
-    @classmethod
-    def validate_docs_link(cls, value):
-        if value is not None:
-            HttpUrl(value)
-        return value
 
 
 class TaskReadV2(BaseModel):

@@ -5,65 +5,29 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 
-from .._filter_validators import validate_type_filters
+from .._validated_types import DictStrBool
+from .._validated_types import OptionalDictStrAny
+from .._validated_types import WorkflowTaskArgument
 from .._validators import root_validate_dict_keys
-from .._validators import valdict_keys
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
 from .task import TaskReadV2
 from .task import TaskTypeType
 
-RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
-
 
 class WorkflowTaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
-    type_filters: dict[str, bool] = Field(default_factory=dict)
+    meta_non_parallel: OptionalDictStrAny = None
+    meta_parallel: OptionalDictStrAny = None
+    args_non_parallel: Optional[WorkflowTaskArgument] = None
+    args_parallel: Optional[WorkflowTaskArgument] = None
+    type_filters: DictStrBool = Field(default_factory=dict)
 
-    # Validators
     _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
-    _type_filters = field_validator("type_filters")(validate_type_filters)
-    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
-    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
-
-    @field_validator("args_non_parallel")
-    @classmethod
-    def validate_args_non_parallel(cls, value):
-        if value is None:
-            return
-        valdict_keys(value)
-        args_keys = set(value.keys())
-        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
-        if intersect_keys:
-            raise ValueError(
-                "`args` contains the following forbidden keys: "
-                f"{intersect_keys}"
-            )
-        return value
-
-    @field_validator("args_parallel")
-    @classmethod
-    def validate_args_parallel(cls, value):
-        if value is None:
-            return
-        valdict_keys(value)
-        args_keys = set(value.keys())
-        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
-        if intersect_keys:
-            raise ValueError(
-                "`args` contains the following forbidden keys: "
-                f"{intersect_keys}"
-            )
-        return value
 
 
 class WorkflowTaskReplaceV2(BaseModel):
@@ -98,62 +62,27 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
 class WorkflowTaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
-    type_filters: Optional[dict[str, bool]] = None
+    meta_non_parallel: OptionalDictStrAny = None
+    meta_parallel: OptionalDictStrAny = None
+    args_non_parallel: Optional[WorkflowTaskArgument] = None
+    args_parallel: Optional[WorkflowTaskArgument] = None
+    type_filters: DictStrBool = None
 
-    # Validators
     _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
-    _type_filters = field_validator("type_filters")(validate_type_filters)
-    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
-    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
-
-    @field_validator("args_non_parallel")
-    @classmethod
-    def validate_args_non_parallel(cls, value):
-        if value is None:
-            return
-        valdict_keys(value)
-        args_keys = set(value.keys())
-        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
-        if intersect_keys:
-            raise ValueError(
-                "`args` contains the following forbidden keys: "
-                f"{intersect_keys}"
-            )
-        return value
-
-    @field_validator("args_parallel")
-    @classmethod
-    def validate_args_parallel(cls, value):
-        if value is None:
-            return
-        valdict_keys(value)
-        args_keys = set(value.keys())
-        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
-        if intersect_keys:
-            raise ValueError(
-                "`args` contains the following forbidden keys: "
-                f"{intersect_keys}"
-            )
-        return value
 
 
 class WorkflowTaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
-    type_filters: Optional[dict[str, bool]] = None
+    meta_non_parallel: OptionalDictStrAny = None
+    meta_parallel: OptionalDictStrAny = None
+    args_non_parallel: OptionalDictStrAny = None
+    args_parallel: OptionalDictStrAny = None
+    type_filters: DictStrBool = None
     input_filters: Optional[dict[str, Any]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
 
-    # Validators
     @model_validator(mode="before")
     @classmethod
     def update_legacy_filters(cls, values: dict):
@@ -181,12 +110,6 @@ class WorkflowTaskImportV2(BaseModel):
                 values["input_filters"] = None
 
         return values
-
-    _type_filters = field_validator("type_filters")(validate_type_filters)
-    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
-    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
-    _args_non_parallel = field_validator("args_non_parallel")(valdict_keys)
-    _args_parallel = field_validator("args_parallel")(valdict_keys)
 
 
 class WorkflowTaskExportV2(BaseModel):

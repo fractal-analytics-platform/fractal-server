@@ -6,7 +6,7 @@ from pydantic import field_validator
 from pydantic.types import StrictStr
 
 from ._validated_types import NonEmptyString
-from ._validators import val_absolute_path
+from ._validators import _val_absolute_path
 from ._validators import val_unique_list
 from fractal_server.string_tools import validate_cmd
 
@@ -58,14 +58,14 @@ class UserSettingsUpdate(BaseModel):
     project_dir: Optional[NonEmptyString] = None
 
     _ssh_private_key_path = field_validator("ssh_private_key_path")(
-        val_absolute_path(accept_none=True)
+        _val_absolute_path(accept_none=True)
     )
 
     _ssh_tasks_dir = field_validator("ssh_tasks_dir")(
-        val_absolute_path(accept_none=True)
+        _val_absolute_path(accept_none=True)
     )
     _ssh_jobs_dir = field_validator("ssh_jobs_dir")(
-        val_absolute_path(accept_none=True)
+        _val_absolute_path(accept_none=True)
     )
 
     @field_validator("slurm_accounts")
@@ -81,7 +81,7 @@ class UserSettingsUpdate(BaseModel):
         if value is None:
             return None
         validate_cmd(value)
-        return val_absolute_path()(value)
+        return _val_absolute_path()(value)
 
 
 class UserSettingsUpdateStrict(BaseModel):

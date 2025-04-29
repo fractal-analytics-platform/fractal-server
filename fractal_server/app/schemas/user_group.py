@@ -8,7 +8,7 @@ from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from ._validators import val_absolute_path
+from ._validators import _val_absolute_path
 from ._validators import val_unique_list
 
 __all__ = (
@@ -60,7 +60,7 @@ class UserGroupCreate(BaseModel):
     @classmethod
     def viewer_paths_validator(cls, value):
         for i, path in enumerate(value):
-            value[i] = val_absolute_path()(path)
+            value[i] = _val_absolute_path()(path)
         value = val_unique_list(value)
         return value
 
@@ -80,6 +80,6 @@ class UserGroupUpdate(BaseModel):
         if value is None:
             raise ValueError("Cannot set `viewer_paths=None`.")
         for i, path in enumerate(value):
-            value[i] = val_absolute_path()(path)
+            value[i] = _val_absolute_path()(path)
         value = val_unique_list(value)
         return value

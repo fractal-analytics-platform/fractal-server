@@ -6,13 +6,11 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
+from .._validated_types import AbsolutePath
+from .._validated_types import DictStrStr
 from .._validated_types import NonEmptyString
-from .._validators import cant_set_none
-from .._validators import val_absolute_path
-from .._validators import valdict_keys
 from .task import TaskReadV2
 
 
@@ -43,27 +41,13 @@ class TaskGroupCreateV2(BaseModel):
     origin: TaskGroupV2OriginEnum
     pkg_name: str
     version: Optional[str] = None
-    python_version: Optional[NonEmptyString] = None
-    path: Optional[str] = None
-    venv_path: Optional[str] = None
-    wheel_path: Optional[str] = None
-    pip_extras: Optional[NonEmptyString] = None
+    python_version: NonEmptyString = None
+    path: AbsolutePath = None
+    venv_path: AbsolutePath = None
+    wheel_path: AbsolutePath = None
+    pip_extras: NonEmptyString = None
     pip_freeze: Optional[str] = None
-    pinned_package_versions: dict[str, str] = Field(default_factory=dict)
-
-    # Validators
-
-    @field_validator("python_version", "pip_extras")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
-
-    _path = field_validator("path")(val_absolute_path())
-    _venv_path = field_validator("venv_path")(val_absolute_path())
-    _wheel_path = field_validator("wheel_path")(val_absolute_path())
-    _pinned_package_versions = field_validator("pinned_package_versions")(
-        valdict_keys
-    )
+    pinned_package_versions: DictStrStr = Field(default_factory=dict)
 
 
 class TaskGroupCreateV2Strict(TaskGroupCreateV2):
@@ -71,10 +55,10 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
     A strict version of TaskGroupCreateV2, to be used for task collection.
     """
 
-    path: str
-    venv_path: str
-    version: str
-    python_version: str
+    path: AbsolutePath
+    venv_path: AbsolutePath
+    version: NonEmptyString
+    python_version: NonEmptyString
 
 
 class TaskGroupReadV2(BaseModel):
