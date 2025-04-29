@@ -524,12 +524,6 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job_ids=self.job_ids,
             )
 
-            # NOTE: see issue 2444
-            settings = Inject(get_settings)
-            sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-            logger.warning(f"[submit] Now sleep {sleep_time} seconds.")
-            time.sleep(sleep_time)
-
             # Retrieval phase
             logger.debug("[submit] START retrieval phase")
             scancelled_job_ids = []
@@ -705,10 +699,6 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job_ids=self.job_ids,
             )
 
-            settings = Inject(get_settings)
-            sleep_time = settings.FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL
-            logger.warning(f"[multisubmit] Now sleep {sleep_time} seconds.")
-            time.sleep(sleep_time)
         except Exception as e:
             logger.error(
                 "[multisubmit] Unexpected exception during submission."
