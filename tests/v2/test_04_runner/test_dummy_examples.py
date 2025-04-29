@@ -128,7 +128,73 @@ async def test_dummy_insert_single_image(
 
     # Case 2: Run successfully even if the image already exists but the new
     # image has an origin - see issue #2497.
-    # FIXME
+    zarr_url_3D = Path(zarr_dir, "plate.zarr/B03").as_posix()
+    zarr_url_2D = Path(zarr_dir, "plate_mip.zarr/B03").as_posix()
+    IMAGES = [
+        dict(
+            zarr_url=zarr_url_3D,
+            attributes={"well": "B03"},
+            types={
+                "is_3D": True,
+                "illumination_corrected": True,
+            },
+        ),
+        dict(
+            zarr_url=zarr_url_2D,
+            attributes={"well": "B03"},
+            types={
+                "is_3D": False,
+                "illumination_corrected": True,
+            },
+        ),
+    ]
+    dataset_case_2 = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
+    wftask = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        args_non_parallel={
+            "full_new_image": dict(
+                zarr_url=zarr_url_2D,
+                origin=zarr_url_3D,
+                types={
+                    "is_3D": False,  # Make it look like a projection task
+                    "some_additional_type": False,
+                },
+            )
+        },
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask],
+        dataset=dataset_case_2,
+        workflow_dir_local=tmp_path / "job2",
+        job_id=job.id,
+        **execute_tasks_v2_args,
+    )
+    db.expunge_all()
+    dataset_case_2 = await db.get(DatasetV2, dataset_case_2.id)
+    debug(dataset_case_2.images)
+    assert dataset_case_2.images[0] == {
+        "zarr_url": zarr_url_3D,
+        "attributes": {"well": "B03"},
+        "types": {
+            "is_3D": True,
+            "illumination_corrected": True,
+        },
+    }
+    assert dataset_case_2.images[1] == {
+        "zarr_url": zarr_url_2D,
+        "origin": zarr_url_3D,
+        "attributes": {"well": "B03"},
+        "types": {
+            "is_3D": False,
+            "illumination_corrected": True,
+            "some_additional_type": False,
+        },
+    }
 
     # Case 3: Fail because the new zarr_url is not relative to zarr_dir, or
     # because it is identical to zarr_dir
@@ -161,38 +227,6 @@ async def test_dummy_insert_single_image(
         debug(error_msg)
         assert EXPECTED_NON_PARENT_MSG in error_msg
         assert zarr_dir in error_msg
-
-    # Fail because new image is not relative to zarr_dir
-    IMAGES = [dict(zarr_url=Path(zarr_dir, "my-image").as_posix())]
-    dataset_with_images = await dataset_factory_v2(
-        project_id=project.id,
-        zarr_dir=zarr_dir,
-        images=IMAGES,
-    )
-    wftask = await workflowtask_factory_v2(
-        workflow_id=workflow.id,
-        task_id=task_id,
-        order=0,
-        args_non_parallel={
-            "full_new_image": dict(
-                zarr_url=IMAGES[0]["zarr_url"],
-                origin="/somewhere",
-            )
-        },
-    )
-    with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2_mod(
-            wf_task_list=[wftask],
-            dataset=dataset_with_images,
-            workflow_dir_local=tmp_path / "job2",
-            job_id=job.id,
-            **execute_tasks_v2_args,
-        )
-    error_msg = str(e.value)
-    assert (
-        "Cannot edit an image with zarr_url different from origin."
-        in error_msg
-    )
 
 
 async def test_dummy_remove_images(
