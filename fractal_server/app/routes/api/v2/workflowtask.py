@@ -413,7 +413,7 @@ async def check_workflowtask(
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == previous_wft_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        .where(HistoryUnit.status != HistoryUnitStatus.DONE.value)
+        .where(HistoryUnit.status != HistoryUnitStatus.DONE)
     )
     missing = res.scalars().all()
 
