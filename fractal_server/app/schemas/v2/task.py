@@ -10,10 +10,10 @@ from pydantic import HttpUrl
 from pydantic import model_validator
 
 from .._validated_types import DictStrBool
-from .._validated_types import ListStrUnique
+from .._validated_types import ListNonEmptyStringUnique
 from .._validated_types import OptionalDictStrAny
 from .._validated_types import OptionalDictStrBoolNotNone
-from .._validated_types import OptionalStrNotNone
+from .._validated_types import OptionalNonEmptyStringNotNone
 from fractal_server.app.schemas._validated_types import NonEmptyString
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
@@ -35,12 +35,12 @@ class TaskCreateV2(BaseModel):
 
     name: NonEmptyString
 
-    command_non_parallel: OptionalStrNotNone = None
-    command_parallel: OptionalStrNotNone = None
+    command_non_parallel: OptionalNonEmptyStringNotNone = None
+    command_parallel: OptionalNonEmptyStringNotNone = None
 
     meta_non_parallel: OptionalDictStrAny = None
     meta_parallel: OptionalDictStrAny = None
-    version: OptionalStrNotNone = None
+    version: OptionalNonEmptyStringNotNone = None
     args_schema_non_parallel: OptionalDictStrAny = None
     args_schema_parallel: OptionalDictStrAny = None
     args_schema_version: Optional[NonEmptyString] = None
@@ -52,7 +52,7 @@ class TaskCreateV2(BaseModel):
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
-    tags: ListStrUnique = Field(default_factory=list)
+    tags: ListNonEmptyStringUnique = Field(default_factory=list)
     authors: Optional[NonEmptyString] = None
 
     type: Optional[TaskTypeType] = None
@@ -130,15 +130,15 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: OptionalStrNotNone = None
-    command_non_parallel: OptionalStrNotNone = None
+    command_parallel: OptionalNonEmptyStringNotNone = None
+    command_non_parallel: OptionalNonEmptyStringNotNone = None
     input_types: OptionalDictStrBoolNotNone = None
     output_types: OptionalDictStrBoolNotNone = None
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
     authors: Optional[NonEmptyString] = None
-    tags: Optional[ListStrUnique] = None
+    tags: Optional[ListNonEmptyStringUnique] = None
 
 
 class TaskImportV2(BaseModel):

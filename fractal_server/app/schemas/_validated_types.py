@@ -21,13 +21,13 @@ OptionalDictStrAny = Annotated[
     Optional[dict[str, Any]], AfterValidator(valdict_keys)
 ]
 
-OptionalStrNotNone = Annotated[
+OptionalNonEmptyStringNotNone = Annotated[
     Optional[NonEmptyString], BeforeValidator(cant_set_none)
 ]
 OptionalDictStrBoolNotNone = Annotated[
     Optional[DictStrBool], BeforeValidator(cant_set_none)
 ]
 
-ListStrUnique = Annotated[
+ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
 ]
