@@ -5,9 +5,9 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic.types import StrictStr
 
+from ._validated_types import NonEmptyString
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
-from .v2._validated_types import NonEmptyString
 from fractal_server.string_tools import validate_cmd
 
 __all__ = (

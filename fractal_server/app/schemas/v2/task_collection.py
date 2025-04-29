@@ -7,7 +7,7 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
-from ._validated_types import NonEmptyString
+from .._validated_types import NonEmptyString
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 

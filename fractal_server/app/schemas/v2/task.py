@@ -10,9 +10,9 @@ from pydantic import HttpUrl
 from pydantic import model_validator
 
 from .._validators import cant_set_none
+from fractal_server.app.schemas._validated_types import NonEmptyString
 from fractal_server.app.schemas._validators import val_unique_list
 from fractal_server.app.schemas._validators import valdict_keys
-from fractal_server.app.schemas.v2._validated_types import NonEmptyString
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 

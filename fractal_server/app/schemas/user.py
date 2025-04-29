@@ -7,8 +7,8 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import ValidationInfo
 
+from ._validated_types import NonEmptyString
 from ._validators import val_unique_list
-from .v2._validated_types import NonEmptyString
 
 __all__ = (
     "UserRead",
