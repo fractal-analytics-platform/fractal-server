@@ -4,7 +4,7 @@
 
 * API:
     * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524).
-    * Simplify structure of schema validators (\#2504).
+    * Replace all `field_validator` with `Annotated` types (\#2504).
 * Runner:
     * Drop `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL` (\#2525, \#2531).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
