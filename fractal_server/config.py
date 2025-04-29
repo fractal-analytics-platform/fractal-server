@@ -492,11 +492,6 @@ class Settings(BaseSettings):
     still running on SLURM.
     """
 
-    FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL: int = 0
-    """
-    NOTE: see issue 2444
-    """
-
     FRACTAL_SLURM_SBATCH_SLEEP: float = 0
     """
     Interval to wait (in seconds) between two subsequent `sbatch` calls, when
