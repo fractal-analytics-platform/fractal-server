@@ -1,4 +1,6 @@
+import logging
 import os
+from pathlib import Path
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -41,6 +43,16 @@ def val_absolute_path(path: str) -> str:
     if not os.path.isabs(s):
         raise ValueError(f"String must be an absolute path (given '{s}').")
     return s
+
+
+def val_absolute_path_strict(path: Path) -> Path:
+    if not path.is_absolute():
+        resolved_path = path.resolve()
+        logging.warning(
+            f"'{path}' is not an absolute path; "
+            f"converting it to '{resolved_path.as_posix()}'"
+        )
+        return resolved_path
 
 
 def _val_absolute_path(accept_none: bool = False):

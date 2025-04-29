@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated
 from typing import Any
 from typing import Optional
@@ -8,6 +9,7 @@ from pydantic.types import StringConstraints
 
 from ._filter_validators import validate_attribute_filters
 from ._validators import val_absolute_path
+from ._validators import val_absolute_path_strict
 from ._validators import val_http_url
 from ._validators import val_unique_list
 from ._validators import valdict_keys
@@ -41,6 +43,7 @@ AbsolutePath = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
 ListAbsolutePathUnique = Annotated[
     list[AbsolutePath], AfterValidator(val_unique_list)
 ]
+AbsolutePathStrict = Annotated[Path, AfterValidator(val_absolute_path_strict)]
 
 WorkflowTaskArgument = Annotated[DictStrAny, AfterValidator(validate_wft_args)]
 NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
