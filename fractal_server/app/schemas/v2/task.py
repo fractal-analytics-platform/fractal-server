@@ -9,10 +9,12 @@ from pydantic import field_validator
 from pydantic import HttpUrl
 from pydantic import model_validator
 
-from .._validators import cant_set_none
+from .._validated_types import DictStrBool
+from .._validated_types import ListStrUnique
+from .._validated_types import OptionalDictStrAny
+from .._validated_types import OptionalDictStrBoolNotNone
+from .._validated_types import OptionalStrNotNone
 from fractal_server.app.schemas._validated_types import NonEmptyString
-from fractal_server.app.schemas._validators import val_unique_list
-from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
@@ -33,39 +35,29 @@ class TaskCreateV2(BaseModel):
 
     name: NonEmptyString
 
-    command_non_parallel: Optional[NonEmptyString] = None
-    command_parallel: Optional[NonEmptyString] = None
+    command_non_parallel: OptionalStrNotNone = None
+    command_parallel: OptionalStrNotNone = None
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    version: Optional[NonEmptyString] = None
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: OptionalDictStrAny = None
+    meta_parallel: OptionalDictStrAny = None
+    version: OptionalStrNotNone = None
+    args_schema_non_parallel: OptionalDictStrAny = None
+    args_schema_parallel: OptionalDictStrAny = None
     args_schema_version: Optional[NonEmptyString] = None
     docs_info: Optional[str] = None
     docs_link: Optional[str] = None
 
-    input_types: dict[str, bool] = Field(default={})
-    output_types: dict[str, bool] = Field(default={})
+    input_types: DictStrBool = Field(default={})
+    output_types: DictStrBool = Field(default={})
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
-    tags: list[NonEmptyString] = Field(default_factory=list)
+    tags: ListStrUnique = Field(default_factory=list)
     authors: Optional[NonEmptyString] = None
 
     type: Optional[TaskTypeType] = None
 
     # Validators
-
-    @field_validator(
-        "command_non_parallel",
-        "command_parallel",
-        "version",
-        "args_schema_version",
-    )
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
 
     @model_validator(mode="after")
     def validate_commands(self):
@@ -99,22 +91,6 @@ class TaskCreateV2(BaseModel):
                 self.type = "compound"
 
         return self
-
-    _meta_non_parallel = field_validator("meta_non_parallel")(valdict_keys)
-    _meta_parallel = field_validator("meta_parallel")(valdict_keys)
-    _args_schema_non_parallel = field_validator("args_schema_non_parallel")(
-        valdict_keys
-    )
-    _args_schema_parallel = field_validator("args_schema_parallel")(
-        valdict_keys
-    )
-    _input_types = field_validator("input_types")(valdict_keys)
-    _output_types = field_validator("output_types")(valdict_keys)
-
-    @field_validator("tags")
-    @classmethod
-    def validate_list_of_strings(cls, value):
-        return val_unique_list(value)
 
     @field_validator("docs_link", mode="after")
     @classmethod
@@ -154,37 +130,15 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: Optional[NonEmptyString] = None
-    command_non_parallel: Optional[NonEmptyString] = None
-    input_types: Optional[dict[str, bool]] = None
-    output_types: Optional[dict[str, bool]] = None
+    command_parallel: OptionalStrNotNone = None
+    command_non_parallel: OptionalStrNotNone = None
+    input_types: OptionalDictStrBoolNotNone = None
+    output_types: OptionalDictStrBoolNotNone = None
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
     authors: Optional[NonEmptyString] = None
-    tags: Optional[list[NonEmptyString]] = None
-
-    # Validators
-
-    @field_validator("command_parallel", "command_non_parallel")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
-
-    @field_validator("input_types", "output_types")
-    @classmethod
-    def val_is_dict(cls, v):
-        if not isinstance(v, dict):
-            raise ValueError
-        return v
-
-    _input_types = field_validator("input_types")(valdict_keys)
-    _output_types = field_validator("output_types")(valdict_keys)
-
-    @field_validator("tags")
-    @classmethod
-    def validate_tags(cls, value):
-        return val_unique_list(value)
+    tags: Optional[ListStrUnique] = None
 
 
 class TaskImportV2(BaseModel):
