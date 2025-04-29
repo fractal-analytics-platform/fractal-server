@@ -47,12 +47,11 @@ def val_absolute_path(path: str) -> str:
 
 def val_absolute_path_strict(path: Path) -> Path:
     if not path.is_absolute():
-        resolved_path = path.resolve()
         logging.warning(
             f"'{path}' is not an absolute path; "
-            f"converting it to '{resolved_path.as_posix()}'"
+            f"converting it to '{path.resolve()}'"
         )
-        return resolved_path
+    return path.resolve()
 
 
 def _val_absolute_path(accept_none: bool = False):
