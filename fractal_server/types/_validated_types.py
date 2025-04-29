@@ -1,8 +1,6 @@
-from pathlib import Path
 from typing import Annotated
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import AfterValidator
 from pydantic.types import PositiveInt
@@ -39,7 +37,7 @@ ListPositiveIntUnique = Annotated[
     list[PositiveInt], AfterValidator(val_unique_list)
 ]
 
-AbsolutePath = Annotated[Union[str, Path], AfterValidator(val_absolute_path)]
+AbsolutePath = Annotated[str, AfterValidator(val_absolute_path)]
 
 WorkflowTaskArgument = Annotated[DictStrAny, AfterValidator(validate_wft_args)]
 NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
