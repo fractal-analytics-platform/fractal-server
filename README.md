@@ -42,6 +42,7 @@
 | fractal\_server/app/routes/api/v2/history.py                                    |      181 |        3 |       32 |        3 |     97% |178, 310, 448 |
 | fractal\_server/app/routes/api/v2/images.py                                     |      111 |        1 |       26 |        1 |     99% |       155 |
 | fractal\_server/app/routes/api/v2/job.py                                        |       92 |        0 |       12 |        0 |    100% |           |
+| fractal\_server/app/routes/api/v2/pre\_submission\_checks.py                    |       55 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/project.py                                    |       73 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/status\_legacy.py                             |       74 |        5 |       20 |        0 |     95% |   135-148 |
 | fractal\_server/app/routes/api/v2/submit.py                                     |      102 |        0 |       24 |        1 |     99% |  213->219 |
@@ -50,7 +51,6 @@
 | fractal\_server/app/routes/api/v2/task\_collection\_custom.py                   |       63 |        0 |       12 |        1 |     99% |    62->88 |
 | fractal\_server/app/routes/api/v2/task\_group.py                                |       99 |        0 |       34 |        1 |     99% |  216->220 |
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                     |       93 |        0 |       14 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/verify\_image\_types.py                       |       28 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/workflow.py                                   |      119 |        0 |       18 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/workflow\_import.py                           |      114 |        2 |       28 |        1 |     98% |   248-251 |
 | fractal\_server/app/routes/api/v2/workflowtask.py                               |      106 |        3 |       40 |        3 |     96% |67, 293, 303 |
@@ -162,7 +162,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8799** |  **299** | **1736** |  **113** | **95%** |           |
+|                                                                       **TOTAL** | **8826** |  **299** | **1740** |  **113** | **95%** |           |
 
 
 ## Setup coverage badge
