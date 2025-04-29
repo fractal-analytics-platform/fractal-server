@@ -1,4 +1,4 @@
-FROM ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1
+FROM ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1
 
 # Copy public SSH keys to container
 COPY public_ssh_key ./

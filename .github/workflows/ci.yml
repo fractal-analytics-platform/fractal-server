@@ -147,7 +147,7 @@ jobs:
 
       - name: Update SLURM Docker Image Cache if cache miss
         if: steps.cache-docker-slurm-multipy.outputs.cache-hit != 'true'
-        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu22-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
+        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
 
       - name: Install poetry
         run: pipx install poetry==2.1.0
