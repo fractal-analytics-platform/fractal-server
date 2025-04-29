@@ -274,6 +274,7 @@ def execute_tasks_v2(
                     new_types = copy(existing_image["types"])
                     new_image = dict(
                         zarr_url=image["zarr_url"],
+                        origin=None,
                     )
                 else:
                     # CASE 2: Re-create existing image based on `origin`
