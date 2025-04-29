@@ -301,22 +301,18 @@ def execute_tasks_v2(
 
             else:
                 # CASE 3: Add new image
-                # Check that image['zarr_url'] is relative to zarr_dir
-                if not image["zarr_url"].startswith(zarr_dir):
+                # Check that image['zarr_url'] is a subfolder of zarr_dir
+                if (
+                    not image["zarr_url"].startswith(zarr_dir)
+                    or image["zarr_url"] == zarr_dir
+                ):
                     raise JobExecutionError(
-                        "Cannot create image if zarr_dir is not a parent "
-                        "directory of zarr_url.\n"
+                        "Cannot create image if zarr_url is not a subfolder "
+                        "of zarr_dir.\n"
                         f"zarr_dir: {zarr_dir}\n"
                         f"zarr_url: {image['zarr_url']}"
                     )
-                # Check that image['zarr_url'] is not equal to zarr_dir
-                if image["zarr_url"] == zarr_dir:
-                    raise JobExecutionError(
-                        "Cannot create image if zarr_url is equal to "
-                        "zarr_dir.\n"
-                        f"zarr_dir: {zarr_dir}\n"
-                        f"zarr_url: {image['zarr_url']}"
-                    )
+
                 # Propagate attributes and types from `origin` (if any)
                 new_attributes, new_types = get_origin_attribute_and_types(
                     origin_url=image["origin"],
