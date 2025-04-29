@@ -135,19 +135,19 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
       - name: Cache SLURM Docker images
-        id: cache-docker-slurm-multipy
+        id: cache-docker-ubuntu24-slurm-multipy
         uses: actions/cache@v4
         with:
-          path: ci/cache/docker/slurm-multipy
-          key: cache-docker-slurm-multipy
+          path: ci/cache/docker/ubuntu24-slurm-multipy
+          key: cache-docker-ubuntu24-slurm-multipy
 
-      - name: Use SLURM Docker Image Cache if cache hit
-        if: steps.cache-docker-slurm-multipy.outputs.cache-hit == 'true'
-        run: docker image load --input ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
+      - name: Use Ubuntu24 SLURM Docker Image Cache if cache hit
+        if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
 
-      - name: Update SLURM Docker Image Cache if cache miss
-        if: steps.cache-docker-slurm-multipy.outputs.cache-hit != 'true'
-        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/slurm-multipy/slurm-multipy.tar
+      - name: Update Ubuntu24 SLURM Docker Image Cache if cache miss
+        if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit != 'true'
+        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
 
       - name: Install poetry
         run: pipx install poetry==2.1.0
