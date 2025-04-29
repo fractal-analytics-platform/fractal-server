@@ -12,8 +12,6 @@ from pydantic import model_validator
 from .._validated_types import DictStrBool
 from .._validated_types import ListNonEmptyStringUnique
 from .._validated_types import OptionalDictStrAny
-from .._validated_types import OptionalDictStrBoolNotNone
-from .._validated_types import OptionalNonEmptyStringNotNone
 from fractal_server.app.schemas._validated_types import NonEmptyString
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
@@ -35,12 +33,12 @@ class TaskCreateV2(BaseModel):
 
     name: NonEmptyString
 
-    command_non_parallel: OptionalNonEmptyStringNotNone = None
-    command_parallel: OptionalNonEmptyStringNotNone = None
+    command_non_parallel: NonEmptyString = None
+    command_parallel: NonEmptyString = None
 
     meta_non_parallel: OptionalDictStrAny = None
     meta_parallel: OptionalDictStrAny = None
-    version: OptionalNonEmptyStringNotNone = None
+    version: NonEmptyString = None
     args_schema_non_parallel: OptionalDictStrAny = None
     args_schema_parallel: OptionalDictStrAny = None
     args_schema_version: Optional[NonEmptyString] = None
@@ -130,10 +128,10 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: OptionalNonEmptyStringNotNone = None
-    command_non_parallel: OptionalNonEmptyStringNotNone = None
-    input_types: OptionalDictStrBoolNotNone = None
-    output_types: OptionalDictStrBoolNotNone = None
+    command_parallel: NonEmptyString = None
+    command_non_parallel: NonEmptyString = None
+    input_types: DictStrBool = None
+    output_types: DictStrBool = None
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
