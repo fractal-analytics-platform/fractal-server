@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess  # nosec
 from pathlib import Path
@@ -65,7 +66,19 @@ async def collect_task_custom(
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
     else:
-        if not Path(task_collect.python_interpreter).is_file():
+        python_interpreter_path = Path(task_collect.python_interpreter)
+        if not os.access(python_interpreter_path, os.X_OK) or not os.access(
+            python_interpreter_path, os.R_OK
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"{task_collect.python_interpreter=} "
+                    "is not accessible to the Fractal user "
+                    "or it's not executable."
+                ),
+            )
+        if python_interpreter_path.is_file():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -73,20 +86,25 @@ async def collect_task_custom(
                     "doesn't exist or is not a file."
                 ),
             )
-        res = subprocess.run(  # nosec
-            shlex.split(f"{task_collect.python_interpreter} --version"),
-            capture_output=True,
-            encoding="utf8",
-        )
-        if res.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Cannot access python {task_collect.python_interpreter=}."
-                    f"\nOriginal output: {res.stdout}"
-                    f"\nOriginal error: {res.stderr}"
-                ),
-            )
+        if task_collect.package_root is not None:
+            package_root_path = Path(task_collect.package_root)
+            if not os.access(package_root_path, os.R_OK):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"{task_collect.package_root=} "
+                        "is not accessible to the Fractal user."
+                    ),
+                )
+            if package_root_path.is_dir():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"{task_collect.python_interpreter=} "
+                        "doesn't exist or is not a directory."
+                    ),
+                )
+
         if (
             task_collect.package_root is not None
             and not Path(task_collect.package_root).is_dir()
