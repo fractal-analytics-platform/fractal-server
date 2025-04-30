@@ -10,6 +10,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.images.models import SingleImage
 
 
 PREFIX = "api/v2"
@@ -1013,11 +1014,16 @@ async def test_check_workflowtask(
             project_id=project.id,
             zarr_dir="/zarr_dir",
             images=[
-                dict(
+                SingleImage(
                     zarr_url=f"/zarr_dir/{i}",
                     types={"type": bool(i % 2)},
-                )
+                ).model_dump()
                 for i in range(n)
+            ]
+            + [
+                SingleImage(
+                    zarr_url="/another/image.zarr",
+                ).model_dump()
             ],
         )
         job = await job_factory_v2(
@@ -1105,7 +1111,9 @@ async def test_check_workflowtask(
             json={},
         )
         assert res.status_code == 200
-        assert res.json() == [f"/zarr_dir/{i}" for i in range(1, n)]
+        assert set(res.json()) == set(
+            ["/another/image.zarr"] + [f"/zarr_dir/{i}" for i in range(1, n)]
+        )
 
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
@@ -1114,4 +1122,6 @@ async def test_check_workflowtask(
             json={"type_filters": {"type": True}},
         )
         assert res.status_code == 200
-        assert res.json() == [f"/zarr_dir/{i}" for i in range(1, n) if i % 2]
+        assert set(res.json()) == set(
+            [f"/zarr_dir/{i}" for i in range(1, n) if i % 2]
+        )

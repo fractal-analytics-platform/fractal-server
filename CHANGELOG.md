@@ -3,7 +3,7 @@
 # 2.14.1 (unreleased)
 
 * API:
-    * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524).
+    * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524, \#2533).
 * Runner:
     * Drop `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL` (\#2525, \#2531).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
