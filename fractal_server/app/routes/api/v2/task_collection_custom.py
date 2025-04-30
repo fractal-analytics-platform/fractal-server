@@ -73,6 +73,20 @@ async def collect_task_custom(
                     "doesn't exist or is not a file."
                 ),
             )
+        res = subprocess.run(  # nosec
+            shlex.split(f"{task_collect.python_interpreter} --version"),
+            capture_output=True,
+            encoding="utf8",
+        )
+        if res.returncode != 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Cannot access python {task_collect.python_interpreter=}."
+                    f"\nOriginal output: {res.stdout}"
+                    f"\nOriginal error: {res.stderr}"
+                ),
+            )
         if (
             task_collect.package_root is not None
             and not Path(task_collect.package_root).is_dir()
