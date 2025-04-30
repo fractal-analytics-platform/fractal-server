@@ -78,13 +78,10 @@ async def collect_task_custom(
                     "or it's not executable."
                 ),
             )
-        if python_interpreter_path.is_file():
+        if not python_interpreter_path.is_file():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"{task_collect.python_interpreter=} "
-                    "doesn't exist or is not a file."
-                ),
+                detail=f"{task_collect.python_interpreter=} is not a file.",
             )
         if task_collect.package_root is not None:
             package_root_path = Path(task_collect.package_root)
@@ -96,13 +93,10 @@ async def collect_task_custom(
                         "is not accessible to the Fractal user."
                     ),
                 )
-            if package_root_path.is_dir():
+            if not package_root_path.is_dir():
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"{task_collect.package_root=} "
-                        "doesn't exist or is not a directory."
-                    ),
+                    detail=f"{task_collect.package_root=} is not a directory.",
                 )
 
         if (
