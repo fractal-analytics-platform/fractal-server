@@ -1111,7 +1111,7 @@ async def test_check_workflowtask(
             json={},
         )
         assert res.status_code == 200
-        assert res.json() == (
+        assert set(res.json()) == set(
             ["/another/image.zarr"] + [f"/zarr_dir/{i}" for i in range(1, n)]
         )
 
@@ -1122,4 +1122,6 @@ async def test_check_workflowtask(
             json={"type_filters": {"type": True}},
         )
         assert res.status_code == 200
-        assert res.json() == [f"/zarr_dir/{i}" for i in range(1, n) if i % 2]
+        assert set(res.json()) == set(
+            [f"/zarr_dir/{i}" for i in range(1, n) if i % 2]
+        )

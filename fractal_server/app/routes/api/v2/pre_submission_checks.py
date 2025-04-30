@@ -121,30 +121,16 @@ async def check_workflowtask(
     filtered_zarr_urls = [image["zarr_url"] for image in filtered_images]
 
     res = await db.execute(
-        select(HistoryImageCache.zarr_url, HistoryUnit.status)
+        select(HistoryImageCache.zarr_url)
+        .join(HistoryUnit)
         .where(HistoryImageCache.zarr_url.in_(filtered_zarr_urls))
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == previous_wft.id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+        .where(HistoryUnit.status == HistoryUnitStatus.DONE)
     )
-    cached_zarr_url_with_status = res.all()
+    done_zarr_urls = res.scalars().all()
 
-    non_processed_zarr_urls = [
-        zarr_url_status[0]
-        for zarr_url_status in cached_zarr_url_with_status
-        if zarr_url_status[1] != HistoryUnitStatus.DONE
-    ]
-    missing_zarr_url = list(
-        set(filtered_zarr_urls)
-        - set(
-            [
-                zarr_url_status[0]
-                for zarr_url_status in cached_zarr_url_with_status
-            ]
-        )
-    )
+    missing_zarr_urls = list(set(filtered_zarr_urls) - set(done_zarr_urls))
 
-    return JSONResponse(
-        status_code=200,
-        content=missing_zarr_url + non_processed_zarr_urls,
-    )
+    return JSONResponse(status_code=200, content=missing_zarr_urls)
