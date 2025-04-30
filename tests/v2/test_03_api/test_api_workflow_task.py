@@ -1105,6 +1105,7 @@ async def test_check_workflowtask(
             json={},
         )
         assert res.status_code == 200
+        debug(res.json())
         assert res.json() == [f"/zarr_dir/{i}" for i in range(1, n)]
 
         res = await client.post(
