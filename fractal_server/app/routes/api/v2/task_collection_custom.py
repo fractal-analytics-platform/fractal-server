@@ -100,7 +100,7 @@ async def collect_task_custom(
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
-                        f"{task_collect.python_interpreter=} "
+                        f"{task_collect.package_root=} "
                         "doesn't exist or is not a directory."
                     ),
                 )
