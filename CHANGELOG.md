@@ -7,6 +7,7 @@
     * Set `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL=0` as a default (\#2525).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
 * Testing:
+    * Adopt ubuntu24 containers for CI (\#2530).
     * Do not run Python3.11 container CI for PRs, but only for merges (\#2519).
     * Add mock wheel file and update assertion for pip 25.1 (\#2523).
     * Optimize `test_reactivate_local_fail` (\#2511).
