@@ -148,10 +148,8 @@ def worker(
         out = cloudpickle.dumps(result)
 
     # Write the output pickle file
-    tempfile = out_fname + ".tmp"
-    with open(tempfile, "wb") as f:
+    with open(out_fname, "wb") as f:
         f.write(out)
-    os.rename(tempfile, out_fname)
 
 
 if __name__ == "__main__":

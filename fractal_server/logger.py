@@ -58,6 +58,7 @@ def set_logger(
     logger_name: str,
     *,
     log_file_path: Optional[Union[str, Path]] = None,
+    default_logging_level: Optional[int] = None,
 ) -> logging.Logger:
     """
     Set up a `fractal-server` logger
@@ -66,7 +67,8 @@ def set_logger(
 
     * The attribute `Logger.propagate` set to `False`;
     * One and only one `logging.StreamHandler` handler, with severity level set
-    to `FRACTAL_LOGGING_LEVEL` and formatter set as in the `logger.LOG_FORMAT`
+    to `FRACTAL_LOGGING_LEVEL` (or `default_logging_level`, if set), and
+    formatter set as in the `logger.LOG_FORMAT`
     variable from the current module;
     * One or many `logging.FileHandler` handlers, including one pointint to
     `log_file_path` (if set); all these handlers have severity level set to
@@ -75,6 +77,7 @@ def set_logger(
     Args:
         logger_name: The identifier of the logger.
         log_file_path: Path to the log file.
+        default_logging_level: Override for `settings.FRACTAL_LOGGING_LEVEL`
 
     Returns:
         logger: The logger, as configured by the arguments.
@@ -92,8 +95,10 @@ def set_logger(
 
     if not current_stream_handlers:
         stream_handler = logging.StreamHandler()
-        settings = Inject(get_settings)
-        stream_handler.setLevel(settings.FRACTAL_LOGGING_LEVEL)
+        if default_logging_level is None:
+            settings = Inject(get_settings)
+            default_logging_level = settings.FRACTAL_LOGGING_LEVEL
+        stream_handler.setLevel(default_logging_level)
         stream_handler.setFormatter(LOG_FORMATTER)
         logger.addHandler(stream_handler)
 

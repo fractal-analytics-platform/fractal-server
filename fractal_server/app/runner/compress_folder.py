@@ -80,6 +80,7 @@ def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
 def compress_folder(
     subfolder_path: Path,
     filelist_path: str | None,
+    default_logging_level: int | None = None,
 ) -> str:
     """
     Compress e.g. `/path/archive` into `/path/archive.tar.gz`
@@ -90,13 +91,17 @@ def compress_folder(
     Args:
         subfolder_path: Absolute path to the folder to compress.
         remote_to_local: If `True`, exclude some files from the tar.gz archive.
+        default_logging_level:
 
     Returns:
         Absolute path to the tar.gz archive.
     """
 
     logger_name = "compress_folder"
-    logger = set_logger(logger_name)
+    logger = set_logger(
+        logger_name,
+        default_logging_level=default_logging_level,
+    )
 
     logger.debug("START")
     logger.debug(f"{subfolder_path=}")
@@ -132,7 +137,10 @@ def compress_folder(
         )
 
 
-def main(sys_argv: list[str]):
+def main(
+    sys_argv: list[str],
+    default_logging_level: int | None = None,
+):
 
     help_msg = (
         "Expected use:\n"
@@ -146,15 +154,19 @@ def main(sys_argv: list[str]):
         compress_folder(
             subfolder_path=Path(sys_argv[1]),
             filelist_path=None,
+            default_logging_level=default_logging_level,
         )
     elif num_args == 3 and sys_argv[2] == "--filelist":
         compress_folder(
             subfolder_path=Path(sys_argv[1]),
             filelist_path=sys_argv[3],
+            default_logging_level=default_logging_level,
         )
     else:
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    import logging
+
+    main(sys.argv, default_logging_level=logging.DEBUG)

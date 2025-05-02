@@ -396,7 +396,7 @@ def execute_tasks_v2(
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-                logger.error(
+                logger.warning(
                     f'END    {wftask.order}-th task (name="{task_name}") - '
                     "ERROR."
                 )
