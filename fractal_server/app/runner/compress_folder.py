@@ -104,7 +104,6 @@ def compress_folder(
     )
 
     logger.debug("START")
-    print("START")
     logger.debug(f"{subfolder_path=}")
     parent_dir = subfolder_path.parent
     subfolder_name = subfolder_path.name
