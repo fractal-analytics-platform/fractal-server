@@ -159,8 +159,8 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
     command = (
         f"docker exec --user root {slurmlogin_container} service ssh status"
     )
-    max_attempts = 10
-    interval = 15
+    max_attempts = 50
+    interval = 0.5
     logging.info(
         f"Now run {command=} at most {max_attempts} times, "
         f"with a sleep interval of {interval} seconds."
