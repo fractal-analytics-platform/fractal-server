@@ -25,7 +25,10 @@ def _remove_suffix(*, string: str, suffix: str) -> str:
         raise ValueError(f"Cannot remove {suffix=} from {string=}.")
 
 
-def extract_archive(archive_path: Path):
+def extract_archive(
+    archive_path: Path,
+    default_logging_level: int | None,
+):
     """
     Extract e.g. `/path/archive.tar.gz` archive into `/path/archive` folder
 
@@ -34,10 +37,14 @@ def extract_archive(archive_path: Path):
 
     Arguments:
         archive_path: Absolute path to the archive file.
+        default_logging_level
     """
 
     logger_name = "extract_archive"
-    logger = set_logger(logger_name)
+    logger = set_logger(
+        logger_name,
+        default_logging_level=default_logging_level,
+    )
 
     logger.debug("START")
     logger.debug(f"{archive_path.as_posix()=}")
@@ -65,7 +72,10 @@ def extract_archive(archive_path: Path):
     logger.debug("END")
 
 
-def main(sys_argv: list[str]):
+def main(
+    sys_argv: list[str],
+    default_logging_level: int | None = None,
+):
     help_msg = (
         "Expected use:\n"
         "python -m fractal_server.app.runner.extract_archive "
@@ -76,13 +86,14 @@ def main(sys_argv: list[str]):
         sys.exit(f"Invalid argument.\n{help_msg}\nProvided: {sys_argv[1:]=}")
     else:
         tarfile_path = Path(sys_argv[1])
-        extract_archive(tarfile_path)
+        extract_archive(
+            tarfile_path,
+            default_logging_level=default_logging_level,
+        )
 
 
 if __name__ == "__main__":
 
-    import os
     import logging
 
-    os.environ["FRACTAL_LOGGING_LEVEL"] = str(logging.DEBUG)
-    main(sys.argv)
+    main(sys.argv, default_logging_level=logging.DEBUG)
