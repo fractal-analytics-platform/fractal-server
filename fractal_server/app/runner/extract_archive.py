@@ -84,5 +84,5 @@ if __name__ == "__main__":
     import os
     import logging
 
-    os.environ["FRACTAL_LOGGING_LEVEL"] = logging.DEBUG
+    os.environ["FRACTAL_LOGGING_LEVEL"] = str(logging.DEBUG)
     main(sys.argv)
