@@ -5,6 +5,9 @@
 * API:
     * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524, \#2533).
 * Runner:
+    * Do not create temporary output-pickle files (\#2538).
+    * Set `FRACTAL_LOGGING_LEVEL=DEBUG` within `compress_folder` and `extract_archive` modules (\#2538).
+    * Transform job-error log into warning (\#2538).
     * Drop `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL` (\#2525, \#2531).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
     * Support re-deriving an existing image with a non-trivial `origin` (\#2527).
