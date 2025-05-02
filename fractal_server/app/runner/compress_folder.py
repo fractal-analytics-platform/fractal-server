@@ -80,7 +80,7 @@ def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
 def compress_folder(
     subfolder_path: Path,
     filelist_path: str | None,
-    default_logging_level: int | None,
+    default_logging_level: int | None = None,
 ) -> str:
     """
     Compress e.g. `/path/archive` into `/path/archive.tar.gz`

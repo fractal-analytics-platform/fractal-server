@@ -27,7 +27,7 @@ def _remove_suffix(*, string: str, suffix: str) -> str:
 
 def extract_archive(
     archive_path: Path,
-    default_logging_level: int | None,
+    default_logging_level: int | None = None,
 ):
     """
     Extract e.g. `/path/archive.tar.gz` archive into `/path/archive` folder
