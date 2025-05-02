@@ -70,7 +70,7 @@
 | fractal\_server/app/routes/pagination.py                                        |       28 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/\_\_init\_\_.py                                      |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/components.py                                        |        2 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/compress\_folder.py                                  |       67 |        3 |       10 |        1 |     95% |71-72, 160 |
+| fractal\_server/app/runner/compress\_folder.py                                  |       68 |        4 |       10 |        1 |     94% |71-72, 170-172 |
 | fractal\_server/app/runner/exceptions.py                                        |       52 |       14 |       14 |        5 |     65% |95-103, 111-112, 116-117, 121-122, 127->130, 131 |
 | fractal\_server/app/runner/executors/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/base\_runner.py                            |       46 |        0 |       32 |        1 |     99% |  100->105 |
@@ -90,7 +90,7 @@
 | fractal\_server/app/runner/executors/slurm\_sudo/\_\_init\_\_.py                |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_sudo/\_subprocess\_run\_as\_user.py |       24 |        2 |        6 |        2 |     87% |    56, 87 |
 | fractal\_server/app/runner/executors/slurm\_sudo/runner.py                      |       70 |        1 |        6 |        1 |     97% |       185 |
-| fractal\_server/app/runner/extract\_archive.py                                  |       32 |        2 |        8 |        2 |     90% |    25, 83 |
+| fractal\_server/app/runner/extract\_archive.py                                  |       33 |        3 |        8 |        2 |     88% | 25, 97-99 |
 | fractal\_server/app/runner/filenames.py                                         |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/run\_subprocess.py                                   |       20 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/set\_start\_and\_last\_task\_index.py                |       15 |        0 |       12 |        0 |    100% |           |
@@ -135,7 +135,7 @@
 | fractal\_server/images/\_\_init\_\_.py                                          |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                                |       59 |        0 |       16 |        1 |     99% |  104->115 |
 | fractal\_server/images/tools.py                                                 |       47 |        0 |       20 |        0 |    100% |           |
-| fractal\_server/logger.py                                                       |       44 |        3 |       12 |        3 |     89% |112, 161, 165 |
+| fractal\_server/logger.py                                                       |       46 |        3 |       14 |        4 |     88% |98->101, 117, 166, 170 |
 | fractal\_server/main.py                                                         |       66 |        1 |       10 |        1 |     97% |       132 |
 | fractal\_server/ssh/\_\_init\_\_.py                                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/ssh/\_fabric.py                                                 |      273 |        0 |       46 |        3 |     99% |162->164, 268->exit, 310->exit |
@@ -162,7 +162,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8817** |  **299** | **1740** |  **113** | **95%** |           |
+|                                                                       **TOTAL** | **8821** |  **301** | **1742** |  **114** | **95%** |           |
 
 
 ## Setup coverage badge
