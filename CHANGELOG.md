@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.2 (Unreleased)
+
+* App:
+    * Fix `Enum` values in f-strings (\#2540).
+
 # 2.14.1
 
 * API:

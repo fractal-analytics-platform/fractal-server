@@ -1,3 +1,11 @@
+"""
+These tests are related to issue
+https://github.com/fractal-analytics-platform/fractal-server/issues/2449
+
+They will be removed when Python 3.10 is deprecated
+(https://github.com/fractal-analytics-platform/fractal-server/issues/2529)
+and all `str, Enum` classes are replaced by `StrEnum`.
+"""
 import sys
 from enum import Enum
 
@@ -43,9 +51,9 @@ async def test_unit_enum_in_db_queries(db):
 
 async def test_unit_enum_comparison():
 
-    assert FakeEnum.FOO == "foo"
-    assert FakeEnum.FOO.value == "foo"
-    assert f"{FakeEnum.FOO.value}" == "foo"
+    assert (
+        FakeEnum.FOO == FakeEnum.FOO.value == f"{FakeEnum.FOO.value}" == "foo"
+    )
 
     if sys.version_info.minor < 11:
         assert f"{FakeEnum.FOO}" == "foo"
