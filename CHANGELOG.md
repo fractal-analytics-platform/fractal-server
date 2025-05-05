@@ -4,6 +4,8 @@
 
 * API:
     * Replace all `field_validator` with `Annotated` types (\#2504).
+* Runner:
+    * Handle exceptions in post-task-execution runner code (\#2543).
 
 # 2.14.1
 
