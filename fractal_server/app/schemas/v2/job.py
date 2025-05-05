@@ -52,8 +52,6 @@ class JobCreateV2(BaseModel):
     attribute_filters: AttributeFilters = Field(default_factory=dict)
     type_filters: DictStrBool = Field(default_factory=dict)
 
-    # Validators
-
     @model_validator(mode="before")
     @classmethod
     def root_validate(cls, values):

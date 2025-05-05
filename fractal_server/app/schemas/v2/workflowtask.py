@@ -27,7 +27,10 @@ class WorkflowTaskCreateV2(BaseModel):
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: DictStrBool = Field(default_factory=dict)
 
-    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
+    @model_validator(mode="before")
+    @classmethod
+    def validate_dict_keys(cls, values: dict):
+        return root_validate_dict_keys(values)
 
 
 class WorkflowTaskReplaceV2(BaseModel):
@@ -68,7 +71,10 @@ class WorkflowTaskUpdateV2(BaseModel):
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: DictStrBool = None
 
-    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
+    @model_validator(mode="before")
+    @classmethod
+    def validate_dict_keys(cls, values: dict):
+        return root_validate_dict_keys(values)
 
 
 class WorkflowTaskImportV2(BaseModel):

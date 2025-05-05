@@ -44,7 +44,10 @@ class ImageQuery(BaseModel):
     type_filters: DictStrBool = Field(default_factory=dict)
     attribute_filters: AttributeFilters = Field(default_factory=dict)
 
-    _dict_keys = model_validator(mode="before")(root_validate_dict_keys)
+    @model_validator(mode="before")
+    @classmethod
+    def validate_dict_keys(cls, values: dict):
+        return root_validate_dict_keys(values)
 
 
 class ImageQueryWithZarrUrl(ImageQuery):
