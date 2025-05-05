@@ -71,7 +71,7 @@
 | fractal\_server/app/runner/\_\_init\_\_.py                                      |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/components.py                                        |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/compress\_folder.py                                  |       68 |        4 |       10 |        1 |     94% |71-72, 170-172 |
-| fractal\_server/app/runner/exceptions.py                                        |       52 |       14 |       14 |        5 |     65% |95-103, 111-112, 116-117, 121-122, 127->130, 131 |
+| fractal\_server/app/runner/exceptions.py                                        |       52 |       13 |       14 |        3 |     70% |95-103, 111-112, 116-117, 121-122 |
 | fractal\_server/app/runner/executors/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/base\_runner.py                            |       46 |        0 |       32 |        1 |     99% |  100->105 |
 | fractal\_server/app/runner/executors/local/\_\_init\_\_.py                      |        0 |        0 |        0 |        0 |    100% |           |
@@ -103,7 +103,7 @@
 | fractal\_server/app/runner/v2/db\_tools.py                                      |       41 |        2 |       10 |        2 |     92% |    27, 41 |
 | fractal\_server/app/runner/v2/deduplicate\_list.py                              |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/merge\_outputs.py                                 |       14 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/runner.py                                         |      159 |        2 |       36 |        2 |     98% |  211, 260 |
+| fractal\_server/app/runner/v2/runner.py                                         |      168 |        2 |       36 |        2 |     98% |  213, 264 |
 | fractal\_server/app/runner/v2/runner\_functions.py                              |      187 |       10 |       48 |        7 |     92% |114, 149, 172->176, 179-180, 356-361, 425->429, 582-587 |
 | fractal\_server/app/runner/v2/runner\_functions\_low\_level.py                  |       56 |        8 |        8 |        2 |     84% |26-27, 44-45, 52, 75-76, 121 |
 | fractal\_server/app/runner/v2/submit\_workflow.py                               |      160 |       15 |       30 |        4 |     90% |117-122, 130->132, 132->136, 189-205, 265, 314-324 |
@@ -162,7 +162,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8821** |  **301** | **1742** |  **114** | **95%** |           |
+|                                                                       **TOTAL** | **8830** |  **300** | **1742** |  **112** | **95%** |           |
 
 
 ## Setup coverage badge
