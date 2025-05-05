@@ -80,11 +80,11 @@ class WorkflowTaskUpdateV2(BaseModel):
 class WorkflowTaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: DictStrAny = None
-    meta_parallel: DictStrAny = None
-    args_non_parallel: DictStrAny = None
-    args_parallel: DictStrAny = None
-    type_filters: DictStrBool = None
+    meta_non_parallel: Optional[DictStrAny] = None
+    meta_parallel: Optional[DictStrAny] = None
+    args_non_parallel: Optional[DictStrAny] = None
+    args_parallel: Optional[DictStrAny] = None
+    type_filters: Optional[DictStrBool] = None
     input_filters: Optional[dict[str, Any]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]
