@@ -15,7 +15,7 @@ from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)

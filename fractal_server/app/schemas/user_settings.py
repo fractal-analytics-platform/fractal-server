@@ -4,9 +4,9 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
 
-from ...types._validated_types import AbsolutePath
-from ...types._validated_types import ListNonEmptyStringUnique
-from ...types._validated_types import NonEmptyString
+from ...types import AbsolutePath
+from ...types import ListNonEmptyStringUnique
+from ...types import NonEmptyString
 from fractal_server.string_tools import validate_cmd
 
 __all__ = (

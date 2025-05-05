@@ -1,6 +1,6 @@
 import pytest
 
-from fractal_server.types._common_validators import root_validate_dict_keys
+from fractal_server.types.validators import root_validate_dict_keys
 
 
 def test_unit_root_validate_dict_keys():

@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from ....images import SingleImageTaskOutput
 from fractal_server.app.runner.exceptions import TaskOutputValidationError
-from fractal_server.types._validated_types import NormalizedUrl
+from fractal_server.types import NormalizedUrl
 
 
 class TaskOutput(BaseModel):

@@ -11,7 +11,7 @@ from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
 from ...schemas.v2 import JobStatusTypeV2
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 
 class JobV2(SQLModel, table=True):

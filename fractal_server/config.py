@@ -33,7 +33,7 @@ from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
-from fractal_server.types._validated_types import AbsolutePathStrict
+from fractal_server.types import AbsolutePathStrict
 
 
 class MailSettings(BaseModel):

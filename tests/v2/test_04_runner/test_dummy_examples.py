@@ -14,7 +14,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.urls import normalize_url
+from fractal_server.types.validators import normalize_url
 
 
 async def add_history_image_cache(

@@ -35,7 +35,7 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
 from fractal_server.images.tools import merge_type_filters
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 
 def drop_none_attributes(attributes: dict[str, Any]) -> dict[str, Any]:

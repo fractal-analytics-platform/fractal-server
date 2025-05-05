@@ -27,9 +27,9 @@ from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
-from fractal_server.types._common_validators import root_validate_dict_keys
-from fractal_server.types._validated_types import AttributeFilters
-from fractal_server.types._validated_types import DictStrBool
+from fractal_server.types import AttributeFilters
+from fractal_server.types import DictStrBool
+from fractal_server.types.validators import root_validate_dict_keys
 
 router = APIRouter()
 

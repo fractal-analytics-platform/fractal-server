@@ -8,10 +8,10 @@ from pydantic import field_serializer
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
-from ....types._common_validators import root_validate_dict_keys
-from ....types._validated_types import AttributeFilters
-from ....types._validated_types import NonEmptyString
-from ....types._validated_types import NormalizedUrl
+from ....types import AttributeFilters
+from ....types import NonEmptyString
+from ....types import NormalizedUrl
+from ....types.validators import root_validate_dict_keys
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
 

@@ -7,7 +7,7 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ...types._validated_types import ListAbsolutePathUnique
+from ...types import ListAbsolutePathUnique
 
 __all__ = (
     "UserGroupRead",

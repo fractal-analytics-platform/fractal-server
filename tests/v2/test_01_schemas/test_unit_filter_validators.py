@@ -3,7 +3,7 @@ from devtools import debug
 from pydantic import BaseModel
 from pydantic import Field
 
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 
 VALID_ATTRIBUTE_FILTERS = (

@@ -6,8 +6,8 @@ from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
 
-from ...types._validated_types import ListIntUnique
-from ...types._validated_types import NonEmptyString
+from ...types import ListIntUnique
+from ...types import NonEmptyString
 
 __all__ = (
     "UserRead",

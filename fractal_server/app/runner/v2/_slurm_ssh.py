@@ -28,7 +28,7 @@ from ..executors.slurm_ssh.runner import SlurmSSHRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.logger import set_logger
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 logger = set_logger(__name__)
 

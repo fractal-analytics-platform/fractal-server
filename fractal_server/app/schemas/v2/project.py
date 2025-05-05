@@ -5,7 +5,7 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types._validated_types import NonEmptyString
+from ....types import NonEmptyString
 
 
 class ProjectCreateV2(BaseModel):

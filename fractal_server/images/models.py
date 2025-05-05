@@ -3,11 +3,11 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 
-from fractal_server.types._validated_types import DictStrAny
-from fractal_server.types._validated_types import DictStrBool
-from fractal_server.types._validated_types import ImageAttributes
-from fractal_server.types._validated_types import ImageAttributesWithNone
-from fractal_server.types._validated_types import NormalizedUrl
+from fractal_server.types import DictStrAny
+from fractal_server.types import DictStrBool
+from fractal_server.types import ImageAttributes
+from fractal_server.types import ImageAttributesWithNone
+from fractal_server.types import NormalizedUrl
 
 
 class _SingleImageBase(BaseModel):

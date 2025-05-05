@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
-from ....types._validated_types import HttpUrlStr
-from ....types._validated_types import NonEmptyString
+from ....types import HttpUrlStr
+from ....types import NonEmptyString
 
 
 class TaskManifestV2(BaseModel):

@@ -7,7 +7,7 @@ from ..executors.local.get_local_config import get_local_backend_config
 from ..executors.local.runner import LocalRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 
 def process_workflow(

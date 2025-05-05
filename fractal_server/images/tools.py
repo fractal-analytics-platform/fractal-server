@@ -4,7 +4,7 @@ from typing import Literal
 from typing import Optional
 from typing import Union
 
-from fractal_server.types._validated_types import AttributeFilters
+from fractal_server.types import AttributeFilters
 
 ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
 

@@ -6,8 +6,8 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types._validated_types import ListNonNegativeIntUnique
-from ....types._validated_types import NonEmptyString
+from ....types import ListNonNegativeIntUnique
+from ....types import NonEmptyString
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
