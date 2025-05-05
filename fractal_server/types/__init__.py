@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Annotated
 from typing import Any
-from typing import Optional
 
 from pydantic import AfterValidator
 from pydantic.types import NonNegativeInt
@@ -26,10 +25,6 @@ HttpUrlStr = Annotated[str, AfterValidator(val_http_url)]
 DictStrAny = Annotated[dict[str, Any], AfterValidator(valdict_keys)]
 DictStrStr = Annotated[dict[str, str], AfterValidator(valdict_keys)]
 DictStrBool = Annotated[dict[str, bool], AfterValidator(valdict_keys)]
-
-OptionalDictStrAny = Annotated[
-    Optional[dict[str, Any]], AfterValidator(valdict_keys)
-]
 
 ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)

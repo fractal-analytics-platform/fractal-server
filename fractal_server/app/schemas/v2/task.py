@@ -9,11 +9,11 @@ from pydantic import model_validator
 
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
+from fractal_server.types import DictStrAny
 from fractal_server.types import DictStrBool
 from fractal_server.types import HttpUrlStr
 from fractal_server.types import ListNonEmptyStringUnique
 from fractal_server.types import NonEmptyString
-from fractal_server.types import OptionalDictStrAny
 
 TaskTypeType = Literal[
     "compound",
@@ -35,11 +35,11 @@ class TaskCreateV2(BaseModel):
     command_non_parallel: NonEmptyString = None
     command_parallel: NonEmptyString = None
 
-    meta_non_parallel: OptionalDictStrAny = None
-    meta_parallel: OptionalDictStrAny = None
+    meta_non_parallel: DictStrAny = None
+    meta_parallel: DictStrAny = None
     version: NonEmptyString = None
-    args_schema_non_parallel: OptionalDictStrAny = None
-    args_schema_parallel: OptionalDictStrAny = None
+    args_schema_non_parallel: DictStrAny = None
+    args_schema_parallel: DictStrAny = None
     args_schema_version: Optional[NonEmptyString] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrlStr] = None

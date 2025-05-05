@@ -7,8 +7,8 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
+from ....types import DictStrAny
 from ....types import DictStrBool
-from ....types import OptionalDictStrAny
 from ....types import WorkflowTaskArgument
 from ....types.validators import root_validate_dict_keys
 from .task import TaskExportV2
@@ -21,8 +21,8 @@ from .task import TaskTypeType
 class WorkflowTaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: OptionalDictStrAny = None
-    meta_parallel: OptionalDictStrAny = None
+    meta_non_parallel: DictStrAny = None
+    meta_parallel: DictStrAny = None
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: DictStrBool = Field(default_factory=dict)
@@ -65,8 +65,8 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
 class WorkflowTaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: OptionalDictStrAny = None
-    meta_parallel: OptionalDictStrAny = None
+    meta_non_parallel: DictStrAny = None
+    meta_parallel: DictStrAny = None
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: DictStrBool = None
@@ -80,10 +80,10 @@ class WorkflowTaskUpdateV2(BaseModel):
 class WorkflowTaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: OptionalDictStrAny = None
-    meta_parallel: OptionalDictStrAny = None
-    args_non_parallel: OptionalDictStrAny = None
-    args_parallel: OptionalDictStrAny = None
+    meta_non_parallel: DictStrAny = None
+    meta_parallel: DictStrAny = None
+    args_non_parallel: DictStrAny = None
+    args_parallel: DictStrAny = None
     type_filters: DictStrBool = None
     input_filters: Optional[dict[str, Any]] = None
 
