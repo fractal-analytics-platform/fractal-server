@@ -29,7 +29,6 @@ DictStrBool = Annotated[dict[str, bool], AfterValidator(valdict_keys)]
 ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
 ]
-ListIntUnique = Annotated[list[int], AfterValidator(val_unique_list)]
 ListNonNegativeIntUnique = Annotated[
     list[NonNegativeInt], AfterValidator(val_unique_list)
 ]
