@@ -1,3 +1,4 @@
+import sys
 from enum import Enum
 
 from sqlmodel import select
@@ -10,7 +11,7 @@ class FakeEnum(str, Enum):
     BAR = "bar"
 
 
-async def test_enum_in_db_queries(db):
+async def test_unit_enum_in_db_queries(db):
     db.add_all(
         [
             ProjectV2(name="foo"),
@@ -38,3 +39,15 @@ async def test_enum_in_db_queries(db):
         select(ProjectV2).where(ProjectV2.name != FakeEnum.BAR)
     )
     assert len(res.scalars().all()) == 3
+
+
+async def test_unit_enum_comparison():
+
+    assert FakeEnum.FOO == "foo"
+    assert FakeEnum.FOO.value == "foo"
+    assert f"{FakeEnum.FOO.value}" == "foo"
+
+    if sys.version_info.minor < 11:
+        assert f"{FakeEnum.FOO}" == "foo"
+    else:
+        assert f"{FakeEnum.FOO}" == "FakeEnum.FOO"
