@@ -7,10 +7,10 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
+from ....types._common_validators import root_validate_dict_keys
 from ....types._validated_types import DictStrBool
 from ....types._validated_types import OptionalDictStrAny
 from ....types._validated_types import WorkflowTaskArgument
-from ....types._validators import root_validate_dict_keys
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy

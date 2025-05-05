@@ -7,15 +7,15 @@ from pydantic import AfterValidator
 from pydantic.types import NonNegativeInt
 from pydantic.types import StringConstraints
 
+from ._attributes_validator import validate_attributes
+from ._attributes_validator import validate_attributes_with_none
+from ._common_validators import val_absolute_path
+from ._common_validators import val_absolute_path_strict
+from ._common_validators import val_http_url
+from ._common_validators import val_unique_list
+from ._common_validators import valdict_keys
 from ._filter_validators import validate_attribute_filters
-from ._validators import val_absolute_path
-from ._validators import val_absolute_path_strict
-from ._validators import val_http_url
-from ._validators import val_unique_list
-from ._validators import valdict_keys
-from ._validators import validate_attributes
-from ._validators import validate_attributes_with_none
-from ._validators import validate_wft_args
+from ._workflow_task_arguments_validators import validate_wft_args
 from fractal_server.urls import normalize_url
 
 NonEmptyString = Annotated[

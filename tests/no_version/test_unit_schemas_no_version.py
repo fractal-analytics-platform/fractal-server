@@ -9,7 +9,7 @@ from fractal_server.app.schemas.user_settings import UserSettingsRead
 from fractal_server.app.schemas.user_settings import UserSettingsReadStrict
 from fractal_server.app.schemas.user_settings import UserSettingsUpdate
 from fractal_server.app.schemas.user_settings import UserSettingsUpdateStrict
-from fractal_server.types._validators import val_absolute_path
+from fractal_server.types._common_validators import val_absolute_path
 
 
 def test_user_create():
