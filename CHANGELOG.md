@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.2 (Unreleased)
+
+* Runner:
+    * Handle exceptions in post-task-execution runner code (\#2543).
+
 # 2.14.1
 
 * API:
