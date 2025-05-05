@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.2 (Unreleased)
+
+* API:
+    * Handle unaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
+
 # 2.14.1
 
 * API:
