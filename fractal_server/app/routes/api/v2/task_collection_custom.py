@@ -66,10 +66,9 @@ async def collect_task_custom(
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
     else:
-        python_interpreter_path = Path(task_collect.python_interpreter)
-        if not os.access(python_interpreter_path, os.X_OK) or not os.access(
-            python_interpreter_path, os.R_OK
-        ):
+        if not os.access(
+            task_collect.python_interpreter, os.X_OK
+        ) or not os.access(task_collect.python_interpreter, os.R_OK):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -78,14 +77,13 @@ async def collect_task_custom(
                     "or it's not executable."
                 ),
             )
-        if not python_interpreter_path.is_file():
+        if not Path(task_collect.python_interpreter).is_file():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"{task_collect.python_interpreter=} is not a file.",
             )
         if task_collect.package_root is not None:
-            package_root_path = Path(task_collect.package_root)
-            if not os.access(package_root_path, os.R_OK):
+            if not os.access(task_collect.package_root, os.R_OK):
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
@@ -93,23 +91,11 @@ async def collect_task_custom(
                         "is not accessible to the Fractal user."
                     ),
                 )
-            if not package_root_path.is_dir():
+            if not Path(task_collect.package_root).is_dir():
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"{task_collect.package_root=} is not a directory.",
                 )
-
-        if (
-            task_collect.package_root is not None
-            and not Path(task_collect.package_root).is_dir()
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"{task_collect.package_root=} "
-                    "doesn't exist or is not a directory."
-                ),
-            )
 
     if task_collect.package_root is None:
 
