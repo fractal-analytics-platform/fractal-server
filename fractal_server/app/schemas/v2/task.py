@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from ....types._validated_types import DictStrBool
-from ....types._validated_types import HttpUrl
+from ....types._validated_types import HttpUrlStr
 from ....types._validated_types import ListNonEmptyStringUnique
 from ....types._validated_types import OptionalDictStrAny
 from fractal_server.logger import set_logger
@@ -42,7 +42,7 @@ class TaskCreateV2(BaseModel):
     args_schema_parallel: OptionalDictStrAny = None
     args_schema_version: Optional[NonEmptyString] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[HttpUrlStr] = None
 
     input_types: DictStrBool = Field(default={})
     output_types: DictStrBool = Field(default={})

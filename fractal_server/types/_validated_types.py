@@ -21,7 +21,7 @@ from fractal_server.urls import normalize_url
 NonEmptyString = Annotated[
     str, StringConstraints(min_length=1, strip_whitespace=True)
 ]
-HttpUrl = Annotated[str, AfterValidator(val_http_url)]
+HttpUrlStr = Annotated[str, AfterValidator(val_http_url)]
 
 DictStrAny = Annotated[dict[str, Any], AfterValidator(valdict_keys)]
 DictStrStr = Annotated[dict[str, str], AfterValidator(valdict_keys)]

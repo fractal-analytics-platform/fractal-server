@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
-from ....types._validated_types import HttpUrl
+from ....types._validated_types import HttpUrlStr
 from ....types._validated_types import NonEmptyString
 
 
@@ -50,7 +50,7 @@ class TaskManifestV2(BaseModel):
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
+    docs_link: Optional[HttpUrlStr] = None
 
     category: Optional[str] = None
     modality: Optional[str] = None
