@@ -41,7 +41,6 @@ def is_responsive(container_name):
 
 @pytest.fixture(scope="session")
 def ssh_keys(tmp_path_factory: TempPathFactory) -> dict[str, str]:
-
     folder = tmp_path_factory.mktemp(basename="ssh-keys")
     private_key_path = folder / "testing-ssh-key"
     public_key_path = folder / "testing-ssh-key.pub"
@@ -64,7 +63,6 @@ def docker_compose_file(
     ssh_keys: dict[str, str],
     current_py_version: str,
 ):
-
     import fractal_server
     import tarfile
 
@@ -161,8 +159,8 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
     command = (
         f"docker exec --user root {slurmlogin_container} service ssh status"
     )
-    max_attempts = 10
-    interval = 0.2
+    max_attempts = 50
+    interval = 0.5
     logging.info(
         f"Now run {command=} at most {max_attempts} times, "
         f"with a sleep interval of {interval} seconds."
@@ -174,10 +172,10 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
             encoding="utf-8",
         )
         logging.info(
-            f"[ssh_alive] Attempt {attempt+1}/{max_attempts}, {res.stdout=}"
+            f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
         )
         logging.info(
-            f"[ssh_alive] Attempt {attempt+1}/{max_attempts}, {res.stderr=}"
+            f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}"
         )
         if "sshd is running" in res.stdout:
             logging.info("[ssh_alive] SSH status seems OK, exit.")
@@ -221,7 +219,6 @@ def fractal_ssh(
     slurmlogin_ip,
     ssh_keys,
 ) -> Generator[FractalSSH, Any, None]:
-
     fractal_ssh_obj: FractalSSH = fractal_ssh_list.get(
         host=slurmlogin_ip,
         user="fractal",
