@@ -22,28 +22,25 @@ class SlurmTask(BaseModel):
     @property
     def input_pickle_file_local_path(self) -> Path:
         return (
-            self.workdir_local / f"{self.prefix}-{self.component}-input.pickle"
+            self.workdir_local / f"{self.prefix}-{self.component}-input.json"
         )
 
     @property
     def input_pickle_file_remote_path(self) -> Path:
         return (
-            self.workdir_remote
-            / f"{self.prefix}-{self.component}-input.pickle"
+            self.workdir_remote / f"{self.prefix}-{self.component}-input.json"
         )
 
     @property
     def output_pickle_file_local_path(self) -> Path:
         return (
-            self.workdir_local
-            / f"{self.prefix}-{self.component}-output.pickle"
+            self.workdir_local / f"{self.prefix}-{self.component}-output.json"
         )
 
     @property
     def output_pickle_file_remote_path(self) -> Path:
         return (
-            self.workdir_remote
-            / f"{self.prefix}-{self.component}-output.pickle"
+            self.workdir_remote / f"{self.prefix}-{self.component}-output.json"
         )
 
     @property

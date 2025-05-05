@@ -7,8 +7,6 @@ from typing import Any
 from typing import Literal
 from typing import Optional
 
-import cloudpickle
-
 from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
@@ -121,7 +119,6 @@ class BaseSlurmRunner(BaseRunner):
         raise NotImplementedError("Implement in child class.")
 
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
-
         #  If there is no Slurm job to check, return right away
         if not job_ids:
             return set()
@@ -168,7 +165,8 @@ class BaseSlurmRunner(BaseRunner):
 
     def _submit_single_sbatch(
         self,
-        func,
+        # func,
+        dict_to_remote,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
@@ -176,19 +174,35 @@ class BaseSlurmRunner(BaseRunner):
         # Prepare input pickle(s)
         versions = dict(
             python=sys.version_info[:3],
-            cloudpickle=cloudpickle.__version__,
+            # cloudpickle=cloudpickle.__version__,
             fractal_server=__VERSION__,
         )
         for task in slurm_job.tasks:
             # Write input pickle
-            _args = []
+            # _args = []
+
+            # FIXME compose the full_command
+            # full_command = (
+            #     f"{command} "
+            #     f"--args-json {args_file_remote} "
+            #     f"--out-json {metadiff_file_remote}"
+            # )
+
             _kwargs = dict(
+                **dict_to_remote,
+                versions=versions,
                 parameters=task.parameters,
                 remote_files=task.task_files.remote_files_dict,
             )
-            funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
-            with open(task.input_pickle_file_local, "wb") as f:
-                f.write(funcser)
+            # funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
+
+            with open(task.input_pickle_file_local, "w") as f:
+                json.dump(_kwargs, f, indent=2)
+
+            # with open(task.input_pickle_file_local, "r") as g:
+            #     x = json.load(g)
+            #
+
             logger.debug(
                 "[_submit_single_sbatch] Written "
                 f"{task.input_pickle_file_local=}"
@@ -217,7 +231,7 @@ class BaseSlurmRunner(BaseRunner):
                 (
                     f"{self.python_worker_interpreter}"
                     " -m fractal_server.app.runner."
-                    "executors.slurm_common.remote "
+                    "executors.slurm_common.new_remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
                 )
@@ -362,13 +376,18 @@ class BaseSlurmRunner(BaseRunner):
         task: SlurmTask,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
+        # with open(task.output_pickle_file_local, "r") as f:
+        #     outdata = json.load(f)
+        # success, output = (0, 0)
+        #
+        # debug(outdata)
         try:
-            with open(task.output_pickle_file_local, "rb") as f:
-                outdata = f.read()
-            success, output = cloudpickle.loads(outdata)
+            with open(task.output_pickle_file_local, "r") as f:
+                output = json.load(f)
+            success = output[0]
             if success:
                 # Task succeeded
-                result = output
+                result = output[1]
                 return (result, None)
             else:
                 # Task failed in a controlled way, and produced an `output`
@@ -376,19 +395,19 @@ class BaseSlurmRunner(BaseRunner):
                 # `exc_type_name` and `traceback_string` and with optional
                 # keys `workflow_task_order`, `workflow_task_id` and
                 # `task_name`.
-                exc_type_name = output.get("exc_type_name")
+                exc_type_name = output[1].get("exc_type_name")
                 logger.debug(
                     f"Output pickle contains a '{exc_type_name}' exception."
                 )
-                traceback_string = output.get("traceback_string")
+                traceback_string = output[1].get("traceback_string")
                 kwargs = {
-                    key: output[key]
+                    key: output[1][key]
                     for key in [
                         "workflow_task_order",
                         "workflow_task_id",
                         "task_name",
                     ]
-                    if key in output.keys()
+                    if key in output[1].keys()
                 }
                 exception = TaskExecutionError(traceback_string, **kwargs)
                 return (None, exception)
@@ -451,7 +470,8 @@ class BaseSlurmRunner(BaseRunner):
 
     def submit(
         self,
-        func: callable,
+        # func: callable,
+        dict_to_remote: dict[str, Any],
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
@@ -512,8 +532,10 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
+            time.sleep(5)  # FIXME please
             self._submit_single_sbatch(
-                func,
+                # func,
+                dict_to_remote=dict_to_remote,
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
@@ -602,7 +624,6 @@ class BaseSlurmRunner(BaseRunner):
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
-
             if self.is_shutdown():
                 if task_type == "parallel":
                     with next(get_sync_db()) as db:

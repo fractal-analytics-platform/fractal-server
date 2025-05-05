@@ -207,8 +207,14 @@ def run_v2_task_non_parallel(
         )
 
     result, exception = runner.submit(
-        functools.partial(
-            run_single_task,
+        # functools.partial(
+        #     run_single_task,
+        #     command=task.command_non_parallel,
+        #     workflow_task_order=wftask.order,
+        #     workflow_task_id=wftask.task_id,
+        #     task_name=wftask.task.name,
+        # ),
+        dict_to_remote=dict(
             command=task.command_non_parallel,
             workflow_task_order=wftask.order,
             workflow_task_id=wftask.task_id,
