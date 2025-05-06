@@ -20,17 +20,6 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 
 
-def _copy_subfolder(src: Path, dest: Path, logger_name: str):
-    t_start = time.perf_counter()
-    cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
-    logger = get_logger(logger_name=logger_name)
-    logger.debug(f"{cmd_cp=}")
-    res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
-    elapsed = time.perf_counter() - t_start
-    logger.debug(f"[_copy_subfolder] END {elapsed=} s ({dest.as_posix()})")
-    return res
-
-
 def _create_tar_archive(
     tarfile_path: str,
     subfolder_path_tmp_copy: Path,
@@ -59,22 +48,6 @@ def _create_tar_archive(
     run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
     elapsed = time.perf_counter() - t_start
     logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
-
-
-def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
-    logger = get_logger(logger_name)
-    t_start = time.perf_counter()
-    try:
-        cmd_rm = f"rm -rf {subfolder_path_tmp_copy}"
-        logger.debug(f"cmd rm:\n{cmd_rm}")
-        run_subprocess(cmd=cmd_rm, logger_name=logger_name, allow_char="*")
-    except Exception as e:
-        logger.debug(f"ERROR during {cmd_rm}: {e}")
-    elapsed = time.perf_counter() - t_start
-    logger.debug(
-        f"[_remove_temp_subfolder] END {elapsed=} s "
-        f"({subfolder_path_tmp_copy=})"
-    )
 
 
 def compress_folder(
@@ -110,18 +83,11 @@ def compress_folder(
     tarfile_path = (parent_dir / f"{subfolder_name}.tar.gz").as_posix()
     logger.debug(f"{tarfile_path=}")
 
-    subfolder_path_tmp_copy = (
-        subfolder_path.parent / f"{subfolder_path.name}_copy"
-    )
     try:
-        _copy_subfolder(
-            subfolder_path,
-            subfolder_path_tmp_copy,
-            logger_name=logger_name,
-        )
+
         _create_tar_archive(
             tarfile_path,
-            subfolder_path_tmp_copy,
+            subfolder_path,
             logger_name=logger_name,
             filelist_path=filelist_path,
         )
@@ -130,11 +96,6 @@ def compress_folder(
     except Exception as e:
         logger.debug(f"ERROR: {e}")
         sys.exit(1)
-
-    finally:
-        _remove_temp_subfolder(
-            subfolder_path_tmp_copy, logger_name=logger_name
-        )
 
 
 def main(
