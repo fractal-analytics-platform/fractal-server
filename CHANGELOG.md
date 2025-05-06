@@ -4,6 +4,8 @@
 
 * API:
     * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
+* App:
+    * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
 * Runner:
     * Handle exceptions in post-task-execution runner code (\#2543).
 
