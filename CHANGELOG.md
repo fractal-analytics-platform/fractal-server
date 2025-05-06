@@ -13,7 +13,6 @@
 # 2.14.1
 
 * API:
-    * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524).
     * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524, \#2533).
 * Runner:
     * Do not create temporary output-pickle files (\#2538).
