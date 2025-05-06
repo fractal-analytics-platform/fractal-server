@@ -3,7 +3,8 @@
 # 2.14.2 (Unreleased)
 
 * API:
-    * Replace all `field_validator` with `Annotated` types (\#2504).
+    * Replace all `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
+    * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
 * App:
     * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
 * Runner:
@@ -12,7 +13,6 @@
 # 2.14.1
 
 * API:
-    * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524).
     * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524, \#2533).
 * Runner:
     * Do not create temporary output-pickle files (\#2538).
