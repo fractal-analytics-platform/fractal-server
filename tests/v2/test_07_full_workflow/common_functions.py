@@ -693,3 +693,118 @@ async def workflow_with_non_python_task(
         assert "This goes to standard error" in log
 
         return job_status_data["log"]
+
+
+async def failing_workflow_post_task_execution(
+    *,
+    MockCurrentUser,
+    client,
+    project_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    tasks: dict[str, TaskV2],
+    user_kwargs: Optional[dict] = None,
+    user_settings_dict: Optional[dict] = None,
+    tmp_path: Path,
+):
+    if user_kwargs is None:
+        user_kwargs = {}
+
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, **user_kwargs},
+        user_settings_dict=user_settings_dict,
+    ) as user:
+        project = await project_factory_v2(user)
+        project_id = project.id
+
+        zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+        dataset = await dataset_factory_v2(
+            project_id=project_id,
+            name="dataset",
+            zarr_dir=zarr_dir,
+            images=[
+                dict(zarr_url=Path(zarr_dir, str(index)).as_posix())
+                for index in range(2)
+            ],
+        )
+        dataset_id = dataset.id
+        workflow = await workflow_factory_v2(
+            project_id=project_id, name="workflow"
+        )
+        workflow_id = workflow.id
+
+        task_id = tasks["dummy_remove_images"].id
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id}",
+            json=dict(
+                args_non_parallel=dict(
+                    more_zarr_urls=[Path(zarr_dir, "missing-image").as_posix()]
+                ),
+            ),
+        )
+        assert res.status_code == 201
+        wftask_id = res.json()["id"]
+        debug(wftask_id)
+
+        # EXECUTE WORKFLOW
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/job/submit/"
+            f"?workflow_id={workflow_id}&dataset_id={dataset_id}",
+            json={},
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check job
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
+        )
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["log"]
+        debug(job_status_data["working_dir"])
+        with informative_assertion_block(job_status_data):
+            assert job_status_data["status"] == "failed"
+
+        # GET workflow status
+        url = (
+            f"api/v2/project/{project_id}/status/"
+            f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
+        )
+        res = await client.get(url)
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json() == {
+            str(wftask_id): {
+                "status": "submitted",
+                "num_available_images": 2,
+                "num_submitted_images": 0,
+                "num_done_images": 0,
+                "num_failed_images": 2,
+            },
+        }
+
+        # GET history runs
+        query_wft = f"dataset_id={dataset_id}&workflowtask_id={wftask_id}"
+        this_prefix = f"api/v2/project/{project_id}/status"
+        url = f"{this_prefix}/run/?{query_wft}"
+        res = await client.get(url)
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        history_run_id = res.json()[0]["id"]
+        debug(res.json())
+        assert res.json()[0]["num_submitted_units"] == 0
+        assert res.json()[0]["num_done_units"] == 0
+        assert res.json()[0]["num_failed_units"] == 1
+
+        # Get history units
+        url = f"{this_prefix}/run/{history_run_id}/units/?{query_wft}"
+        res = await client.get(url)
+        assert res.status_code == 200
+        debug(res.json())
+        first_history_unit = res.json()["items"][0]
+        assert first_history_unit["status"] == "failed"

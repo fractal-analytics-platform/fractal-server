@@ -1,4 +1,7 @@
 from tests.v2.test_07_full_workflow.common_functions import (
+    failing_workflow_post_task_execution,
+)
+from tests.v2.test_07_full_workflow.common_functions import (
     failing_workflow_UnknownError,
 )
 from tests.v2.test_07_full_workflow.common_functions import full_workflow
@@ -162,4 +165,34 @@ async def test_non_python_task_local(
         task_factory_v2=task_factory_v2,
         testdata_path=testdata_path,
         tmp777_path=tmp777_path,
+    )
+
+
+async def test_failing_workflow_post_task_execution(
+    client,
+    MockCurrentUser,
+    tmp777_path,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    override_settings_factory,
+    tmp_path_factory,
+    tmp_path,
+    fractal_tasks_mock_db,
+):
+    # Use a session-scoped FRACTAL_TASKS_DIR folder
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
+    )
+
+    await failing_workflow_post_task_execution(
+        MockCurrentUser=MockCurrentUser,
+        project_factory_v2=project_factory_v2,
+        dataset_factory_v2=dataset_factory_v2,
+        workflow_factory_v2=workflow_factory_v2,
+        client=client,
+        tasks=fractal_tasks_mock_db,
+        tmp_path=tmp_path,
     )
