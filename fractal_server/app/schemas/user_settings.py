@@ -5,7 +5,7 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 
 from ...types import AbsolutePathStr
-from ...types import ListNonEmptyStringUnique
+from ...types import ListUniqueNonEmptyString
 from ...types import NonEmptyString
 from fractal_server.string_tools import validate_cmd
 
@@ -53,7 +53,7 @@ class UserSettingsUpdate(BaseModel):
     ssh_tasks_dir: Optional[AbsolutePathStr] = None
     ssh_jobs_dir: Optional[AbsolutePathStr] = None
     slurm_user: Optional[NonEmptyString] = None
-    slurm_accounts: Optional[ListNonEmptyStringUnique] = None
+    slurm_accounts: Optional[ListUniqueNonEmptyString] = None
     project_dir: Optional[AbsolutePathStr] = None
 
     @model_validator(mode="after")
@@ -65,4 +65,4 @@ class UserSettingsUpdate(BaseModel):
 
 class UserSettingsUpdateStrict(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    slurm_accounts: Optional[ListNonEmptyStringUnique] = None
+    slurm_accounts: Optional[ListUniqueNonEmptyString] = None

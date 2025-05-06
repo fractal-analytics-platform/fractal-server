@@ -7,7 +7,7 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ...types import ListAbsolutePathUnique
+from ...types import ListUniqueAbsolutePathStr
 
 __all__ = (
     "UserGroupRead",
@@ -52,7 +52,7 @@ class UserGroupCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    viewer_paths: ListAbsolutePathUnique = Field(default_factory=list)
+    viewer_paths: ListUniqueAbsolutePathStr = Field(default_factory=list)
 
 
 class UserGroupUpdate(BaseModel):
@@ -62,4 +62,4 @@ class UserGroupUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    viewer_paths: ListAbsolutePathUnique = None
+    viewer_paths: ListUniqueAbsolutePathStr = None
