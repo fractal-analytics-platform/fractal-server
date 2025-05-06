@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types import AbsolutePath
+from ....types import AbsolutePathStr
 from ....types import DictStrStr
 from ....types import NonEmptyString
 from .task import TaskReadV2
@@ -42,9 +42,9 @@ class TaskGroupCreateV2(BaseModel):
     pkg_name: str
     version: Optional[str] = None
     python_version: NonEmptyString = None
-    path: AbsolutePath = None
-    venv_path: AbsolutePath = None
-    wheel_path: AbsolutePath = None
+    path: AbsolutePathStr = None
+    venv_path: AbsolutePathStr = None
+    wheel_path: AbsolutePathStr = None
     pip_extras: NonEmptyString = None
     pip_freeze: Optional[str] = None
     pinned_package_versions: DictStrStr = Field(default_factory=dict)
@@ -55,8 +55,8 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
     A strict version of TaskGroupCreateV2, to be used for task collection.
     """
 
-    path: AbsolutePath
-    venv_path: AbsolutePath
+    path: AbsolutePathStr
+    venv_path: AbsolutePathStr
     version: NonEmptyString
     python_version: NonEmptyString
 

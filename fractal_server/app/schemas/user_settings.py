@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
 
-from ...types import AbsolutePath
+from ...types import AbsolutePathStr
 from ...types import ListNonEmptyString
 from ...types import NonEmptyString
 from fractal_server.string_tools import validate_cmd
@@ -49,12 +49,12 @@ class UserSettingsUpdate(BaseModel):
 
     ssh_host: Optional[NonEmptyString] = None
     ssh_username: Optional[NonEmptyString] = None
-    ssh_private_key_path: Optional[AbsolutePath] = None
-    ssh_tasks_dir: Optional[AbsolutePath] = None
-    ssh_jobs_dir: Optional[AbsolutePath] = None
+    ssh_private_key_path: Optional[AbsolutePathStr] = None
+    ssh_tasks_dir: Optional[AbsolutePathStr] = None
+    ssh_jobs_dir: Optional[AbsolutePathStr] = None
     slurm_user: Optional[NonEmptyString] = None
     slurm_accounts: Optional[ListNonEmptyString] = None
-    project_dir: Optional[AbsolutePath] = None
+    project_dir: Optional[AbsolutePathStr] = None
 
     @model_validator(mode="after")
     def validate_command(self):

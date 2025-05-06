@@ -21,7 +21,7 @@ NonEmptyString = Annotated[
     str, StringConstraints(min_length=1, strip_whitespace=True)
 ]
 
-AbsolutePath = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
+AbsolutePathStr = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
 AbsolutePathStrict = Annotated[Path, AfterValidator(val_absolute_path_strict)]
 HttpUrlStr = Annotated[NonEmptyString, AfterValidator(val_http_url)]
 NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
@@ -37,7 +37,7 @@ ListNonNegativeInt = Annotated[
     list[NonNegativeInt], AfterValidator(val_unique_list)
 ]
 ListAbsolutePathUnique = Annotated[
-    list[AbsolutePath], AfterValidator(val_unique_list)
+    list[AbsolutePathStr], AfterValidator(val_unique_list)
 ]
 
 WorkflowTaskArgument = Annotated[DictStrAny, AfterValidator(validate_wft_args)]
