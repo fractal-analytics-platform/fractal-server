@@ -4,6 +4,8 @@
 
 * API:
     * Replace all `field_validator` with `Annotated` types (\#2504).
+* App:
+    * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
 * Runner:
     * Handle exceptions in post-task-execution runner code (\#2543).
 
