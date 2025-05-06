@@ -8,10 +8,10 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types import AbsolutePathStr
-from ....types import DictStrStr
-from ....types import NonEmptyString
-from .task import TaskReadV2
+from fractal_server.app.schemas.v2.task import TaskReadV2
+from fractal_server.types import AbsolutePathStr
+from fractal_server.types import DictStrStr
+from fractal_server.types import NonEmptyString
 
 
 class TaskGroupV2OriginEnum(str, Enum):

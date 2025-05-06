@@ -8,12 +8,12 @@ from pydantic import field_serializer
 from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
-from ....types import AttributeFilters
-from ....types import NonEmptyString
-from ....types import ZarrDirStr
-from ....types.validators import validate_dict_keys
-from .project import ProjectReadV2
+from fractal_server.app.schemas.v2.project import ProjectReadV2
 from fractal_server.images import SingleImage
+from fractal_server.types import AttributeFilters
+from fractal_server.types import NonEmptyString
+from fractal_server.types import ZarrDirStr
+from fractal_server.types.validators import validate_dict_keys
 
 
 class DatasetCreateV2(BaseModel):

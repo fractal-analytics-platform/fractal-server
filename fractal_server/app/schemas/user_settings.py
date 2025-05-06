@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
 
-from ...types import AbsolutePathStr
-from ...types import ListUniqueNonEmptyString
-from ...types import NonEmptyString
 from fractal_server.string_tools import validate_cmd
+from fractal_server.types import AbsolutePathStr
+from fractal_server.types import ListUniqueNonEmptyString
+from fractal_server.types import NonEmptyString
 
 __all__ = (
     "UserSettingsRead",

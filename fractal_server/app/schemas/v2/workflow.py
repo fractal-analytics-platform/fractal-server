@@ -6,13 +6,15 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types import ListUniqueNonNegativeInt
-from ....types import NonEmptyString
-from .project import ProjectReadV2
-from .workflowtask import WorkflowTaskExportV2
-from .workflowtask import WorkflowTaskImportV2
-from .workflowtask import WorkflowTaskReadV2
-from .workflowtask import WorkflowTaskReadV2WithWarning
+from fractal_server.app.schemas.v2.project import ProjectReadV2
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskExportV2
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskImportV2
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2.workflowtask import (
+    WorkflowTaskReadV2WithWarning,
+)
+from fractal_server.types import ListUniqueNonNegativeInt
+from fractal_server.types import NonEmptyString
 
 
 class WorkflowCreateV2(BaseModel):

@@ -11,13 +11,13 @@ from pydantic.types import AwareDatetime
 from pydantic.types import NonNegativeInt
 from pydantic.types import StrictStr
 
-from ....types import AttributeFilters
-from ....types import NonEmptyString
-from ....types import TypeFilters
-from ....types.validators import validate_dict_keys
-from .dumps import DatasetDumpV2
-from .dumps import ProjectDumpV2
-from .dumps import WorkflowDumpV2
+from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
+from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
+from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
+from fractal_server.types import AttributeFilters
+from fractal_server.types import NonEmptyString
+from fractal_server.types import TypeFilters
+from fractal_server.types.validators import validate_dict_keys
 
 
 class JobStatusTypeV2(str, Enum):

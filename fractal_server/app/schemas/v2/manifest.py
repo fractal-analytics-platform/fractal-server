@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
-from ....types import DictStrAny
-from ....types import HttpUrlStr
-from ....types import NonEmptyString
+from fractal_server.types import DictStrAny
+from fractal_server.types import HttpUrlStr
+from fractal_server.types import NonEmptyString
 
 
 class TaskManifestV2(BaseModel):
