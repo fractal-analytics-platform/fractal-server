@@ -1,6 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.2 (Unreleased)
+# 2.14.3 (unreleased)
+
+* Runner:
+    * Drop obsolete `--extra-import-paths` option from SLURM remote worker (\#2550).
+
+# 2.14.2
 
 * API:
     * Replace all `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
