@@ -2,6 +2,8 @@
 
 # 2.14.2 (Unreleased)
 
+* API:
+    * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
 * App:
     * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
 * Runner:
