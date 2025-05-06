@@ -29,11 +29,11 @@ HttpUrlStr = Annotated[
     AfterValidator(val_http_url),
 ]
 ZarrUrlStr = Annotated[
-    str,
+    NonEmptyStr,
     AfterValidator(normalize_url),
 ]
 ZarrDirStr = Annotated[
-    str,
+    NonEmptyStr,
     AfterValidator(normalize_url),
 ]
 
