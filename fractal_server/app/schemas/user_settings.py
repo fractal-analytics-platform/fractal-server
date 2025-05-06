@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import model_validator
+from pydantic import field_validator
 
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
@@ -56,11 +56,11 @@ class UserSettingsUpdate(BaseModel):
     slurm_accounts: Optional[ListUniqueNonEmptyString] = None
     project_dir: Optional[AbsolutePathStr] = None
 
-    @model_validator(mode="after")
-    def validate_command(self):
-        if self.project_dir is not None:
-            validate_cmd(self.project_dir)
-        return self
+    @field_validator("project_dir", mode="after")
+    @classmethod
+    def validate_project_dir(cls, value):
+        validate_cmd(value)
+        return value
 
 
 class UserSettingsUpdateStrict(BaseModel):
