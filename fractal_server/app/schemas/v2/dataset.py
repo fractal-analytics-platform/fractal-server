@@ -27,7 +27,7 @@ class DatasetCreateV2(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_dict_keys(cls, values: dict):
+    def _validate_dict_keys(cls, values: dict):
         return validate_dict_keys(values)
 
 
@@ -55,7 +55,7 @@ class DatasetUpdateV2(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_dict_keys(cls, values: dict):
+    def _validate_dict_keys(cls, values: dict):
         return validate_dict_keys(values)
 
 
