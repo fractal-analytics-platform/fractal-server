@@ -130,8 +130,9 @@ def test_ManifestV2():
     )
 
     # 1: invalid manifest_version
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         ManifestV2(manifest_version="1", task_list=[])
+    print(exc_info.value)
 
     # 2: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:
