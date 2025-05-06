@@ -12,8 +12,8 @@ from pydantic.types import NonNegativeInt
 from pydantic.types import StrictStr
 
 from ....types import AttributeFilters
-from ....types import DictStrBool
 from ....types import NonEmptyString
+from ....types import TypeFilters
 from ....types.validators import validate_dict_keys
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
@@ -50,7 +50,7 @@ class JobCreateV2(BaseModel):
     worker_init: NonEmptyString = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
-    type_filters: DictStrBool = Field(default_factory=dict)
+    type_filters: TypeFilters = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod

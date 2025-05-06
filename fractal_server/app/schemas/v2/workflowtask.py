@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from ....types import DictStrAny
-from ....types import DictStrBool
+from ....types import TypeFilters
 from ....types import WorkflowTaskArgument
 from ....types.validators import validate_dict_keys
 from .task import TaskExportV2
@@ -25,7 +25,7 @@ class WorkflowTaskCreateV2(BaseModel):
     meta_parallel: Optional[DictStrAny] = None
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
-    type_filters: DictStrBool = Field(default_factory=dict)
+    type_filters: TypeFilters = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod
@@ -69,7 +69,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     meta_parallel: Optional[DictStrAny] = None
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
-    type_filters: DictStrBool = None
+    type_filters: TypeFilters = None
 
     @model_validator(mode="before")
     @classmethod
@@ -84,7 +84,7 @@ class WorkflowTaskImportV2(BaseModel):
     meta_parallel: Optional[DictStrAny] = None
     args_non_parallel: Optional[DictStrAny] = None
     args_parallel: Optional[DictStrAny] = None
-    type_filters: Optional[DictStrBool] = None
+    type_filters: Optional[TypeFilters] = None
     input_filters: Optional[dict[str, Any]] = None
 
     task: Union[TaskImportV2, TaskImportV2Legacy]

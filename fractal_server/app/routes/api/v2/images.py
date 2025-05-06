@@ -28,7 +28,7 @@ from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 from fractal_server.types import AttributeFilters
-from fractal_server.types import DictStrBool
+from fractal_server.types import TypeFilters
 from fractal_server.types.validators import validate_dict_keys
 
 router = APIRouter()
@@ -41,7 +41,7 @@ class ImagePage(PaginationResponse[SingleImage]):
 
 
 class ImageQuery(BaseModel):
-    type_filters: DictStrBool = Field(default_factory=dict)
+    type_filters: TypeFilters = Field(default_factory=dict)
     attribute_filters: AttributeFilters = Field(default_factory=dict)
 
     @model_validator(mode="before")

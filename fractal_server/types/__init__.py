@@ -26,7 +26,6 @@ ZarrDir = Annotated[str, AfterValidator(normalize_url)]
 
 DictStrAny = Annotated[dict[str, Any], AfterValidator(valdict_keys)]
 DictStrStr = Annotated[dict[str, NonEmptyString], AfterValidator(valdict_keys)]
-DictStrBool = Annotated[dict[str, bool], AfterValidator(valdict_keys)]
 
 ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
@@ -46,3 +45,4 @@ ImageAttributesWithNone = Annotated[
 AttributeFilters = Annotated[
     dict[str, list[Any]], AfterValidator(validate_attribute_filters)
 ]
+TypeFilters = Annotated[dict[str, bool], AfterValidator(valdict_keys)]

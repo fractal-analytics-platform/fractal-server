@@ -3,11 +3,6 @@ from typing import Any
 from ._common_validators import valdict_keys
 
 
-def validate_type_filters(type_filters: dict[str, bool]) -> dict[str, bool]:
-    type_filters = valdict_keys(type_filters)
-    return type_filters
-
-
 def validate_attribute_filters(
     attribute_filters: dict[str, list[Any]]
 ) -> dict[str, list[Any]]:

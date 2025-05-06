@@ -4,9 +4,9 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from fractal_server.types import DictStrAny
-from fractal_server.types import DictStrBool
 from fractal_server.types import ImageAttributes
 from fractal_server.types import ImageAttributesWithNone
+from fractal_server.types import TypeFilters
 from fractal_server.types import ZarrDir
 from fractal_server.types import ZarrUrl
 
@@ -26,7 +26,7 @@ class _SingleImageBase(BaseModel):
     origin: Optional[ZarrDir] = None
 
     attributes: DictStrAny = Field(default_factory=dict)
-    types: DictStrBool = Field(default_factory=dict)
+    types: TypeFilters = Field(default_factory=dict)
 
 
 class SingleImageTaskOutput(_SingleImageBase):
@@ -48,4 +48,4 @@ class SingleImage(_SingleImageBase):
 class SingleImageUpdate(BaseModel):
     zarr_url: ZarrUrl
     attributes: ImageAttributes = None
-    types: Optional[DictStrBool] = None
+    types: Optional[TypeFilters] = None
