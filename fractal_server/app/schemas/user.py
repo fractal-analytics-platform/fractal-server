@@ -1,16 +1,13 @@
-from typing import Annotated
 from typing import Optional
 
 from fastapi_users import schemas
-from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
 
+from ...types import ListNonNegativeInt
 from ...types import NonEmptyString
-from ...types import NonNegativeInt
-from ...types.validators import val_unique_list
 
 __all__ = (
     "UserRead",
@@ -95,6 +92,4 @@ class UserUpdateGroups(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    group_ids: Annotated[
-        list[NonNegativeInt], AfterValidator(val_unique_list)
-    ] = Field(min_length=1)
+    group_ids: ListNonNegativeInt = Field(min_length=1)
