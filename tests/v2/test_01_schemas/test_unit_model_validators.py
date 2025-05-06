@@ -17,6 +17,5 @@ def test_unit_root_validate_dict_keys():
         0: {"key1": 0, "key2": 0},
         1: {"key3": 1, 4: 1},
     }
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, match="Dictionary keys must be strings"):
         validate_dict_keys(obj_values)
-    assert "Dictionary keys must be strings" in e._excinfo[1].args[0]
