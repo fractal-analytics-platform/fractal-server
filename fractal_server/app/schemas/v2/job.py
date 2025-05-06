@@ -15,7 +15,7 @@ from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
 from fractal_server.types import AttributeFilters
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
 
@@ -46,7 +46,7 @@ class JobCreateV2(BaseModel):
     first_task_index: Optional[NonNegativeInt] = None
     last_task_index: Optional[NonNegativeInt] = None
     slurm_account: Optional[StrictStr] = None
-    worker_init: NonEmptyString = None
+    worker_init: NonEmptyStr = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
     type_filters: TypeFilters = Field(default_factory=dict)

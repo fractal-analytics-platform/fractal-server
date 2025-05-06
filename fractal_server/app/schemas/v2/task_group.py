@@ -11,7 +11,7 @@ from pydantic.types import AwareDatetime
 from fractal_server.app.schemas.v2.task import TaskReadV2
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 
 class TaskGroupV2OriginEnum(str, Enum):
@@ -41,11 +41,11 @@ class TaskGroupCreateV2(BaseModel):
     origin: TaskGroupV2OriginEnum
     pkg_name: str
     version: Optional[str] = None
-    python_version: NonEmptyString = None
+    python_version: NonEmptyStr = None
     path: AbsolutePathStr = None
     venv_path: AbsolutePathStr = None
     wheel_path: AbsolutePathStr = None
-    pip_extras: NonEmptyString = None
+    pip_extras: NonEmptyStr = None
     pip_freeze: Optional[str] = None
     pinned_package_versions: DictStrStr = Field(default_factory=dict)
 
@@ -57,8 +57,8 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
 
     path: AbsolutePathStr
     venv_path: AbsolutePathStr
-    version: NonEmptyString
-    python_version: NonEmptyString
+    version: NonEmptyStr
+    python_version: NonEmptyStr
 
 
 class TaskGroupReadV2(BaseModel):

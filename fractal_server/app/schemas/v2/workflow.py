@@ -14,14 +14,14 @@ from fractal_server.app.schemas.v2.workflowtask import (
     WorkflowTaskReadV2WithWarning,
 )
 from fractal_server.types import ListUniqueNonNegativeInt
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 
 class WorkflowCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyString
+    name: NonEmptyStr
 
 
 class WorkflowReadV2(BaseModel):
@@ -46,7 +46,7 @@ class WorkflowUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyString = None
+    name: NonEmptyStr = None
     reordered_workflowtask_ids: Optional[ListUniqueNonNegativeInt] = None
 
 
@@ -59,7 +59,7 @@ class WorkflowImportV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    name: NonEmptyString
+    name: NonEmptyStr
     task_list: list[WorkflowTaskImportV2]
 
 

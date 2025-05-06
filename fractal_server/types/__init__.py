@@ -15,17 +15,17 @@ from .validators import valdict_keys
 from .validators import validate_attribute_filters
 from .validators import validate_wft_args
 
-NonEmptyString = Annotated[
+NonEmptyStr = Annotated[
     str,
     StringConstraints(min_length=1, strip_whitespace=True),
 ]
 
 AbsolutePathStr = Annotated[
-    NonEmptyString,
+    NonEmptyStr,
     AfterValidator(val_absolute_path),
 ]
 HttpUrlStr = Annotated[
-    NonEmptyString,
+    NonEmptyStr,
     AfterValidator(val_http_url),
 ]
 ZarrUrlStr = Annotated[
@@ -42,12 +42,12 @@ DictStrAny = Annotated[
     AfterValidator(valdict_keys),
 ]
 DictStrStr = Annotated[
-    dict[str, NonEmptyString],
+    dict[str, NonEmptyStr],
     AfterValidator(valdict_keys),
 ]
 
 ListUniqueNonEmptyString = Annotated[
-    list[NonEmptyString],
+    list[NonEmptyStr],
     AfterValidator(val_unique_list),
 ]
 ListUniqueNonNegativeInt = Annotated[

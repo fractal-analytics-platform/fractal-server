@@ -7,7 +7,7 @@ from pydantic import model_validator
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import ListUniqueNonEmptyString
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 __all__ = (
     "UserSettingsRead",
@@ -47,12 +47,12 @@ class UserSettingsUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    ssh_host: Optional[NonEmptyString] = None
-    ssh_username: Optional[NonEmptyString] = None
+    ssh_host: Optional[NonEmptyStr] = None
+    ssh_username: Optional[NonEmptyStr] = None
     ssh_private_key_path: Optional[AbsolutePathStr] = None
     ssh_tasks_dir: Optional[AbsolutePathStr] = None
     ssh_jobs_dir: Optional[AbsolutePathStr] = None
-    slurm_user: Optional[NonEmptyString] = None
+    slurm_user: Optional[NonEmptyStr] = None
     slurm_accounts: Optional[ListUniqueNonEmptyString] = None
     project_dir: Optional[AbsolutePathStr] = None
 

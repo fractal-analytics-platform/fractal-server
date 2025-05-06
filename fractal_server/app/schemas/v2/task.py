@@ -12,7 +12,7 @@ from fractal_server.string_tools import validate_cmd
 from fractal_server.types import DictStrAny
 from fractal_server.types import HttpUrlStr
 from fractal_server.types import ListUniqueNonEmptyString
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
 TaskTypeType = Literal[
@@ -30,27 +30,27 @@ logger = set_logger(__name__)
 class TaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyString
+    name: NonEmptyStr
 
-    command_non_parallel: NonEmptyString = None
-    command_parallel: NonEmptyString = None
+    command_non_parallel: NonEmptyStr = None
+    command_parallel: NonEmptyStr = None
 
     meta_non_parallel: Optional[DictStrAny] = None
     meta_parallel: Optional[DictStrAny] = None
-    version: NonEmptyString = None
+    version: NonEmptyStr = None
     args_schema_non_parallel: Optional[DictStrAny] = None
     args_schema_parallel: Optional[DictStrAny] = None
-    args_schema_version: Optional[NonEmptyString] = None
+    args_schema_version: Optional[NonEmptyStr] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrlStr] = None
 
     input_types: TypeFilters = Field(default={})
     output_types: TypeFilters = Field(default={})
 
-    category: Optional[NonEmptyString] = None
-    modality: Optional[NonEmptyString] = None
+    category: Optional[NonEmptyStr] = None
+    modality: Optional[NonEmptyStr] = None
     tags: ListUniqueNonEmptyString = Field(default_factory=list)
-    authors: Optional[NonEmptyString] = None
+    authors: Optional[NonEmptyStr] = None
 
     type: Optional[TaskTypeType] = None
 
@@ -118,30 +118,30 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: NonEmptyString = None
-    command_non_parallel: NonEmptyString = None
+    command_parallel: NonEmptyStr = None
+    command_non_parallel: NonEmptyStr = None
     input_types: TypeFilters = None
     output_types: TypeFilters = None
 
-    category: Optional[NonEmptyString] = None
-    modality: Optional[NonEmptyString] = None
-    authors: Optional[NonEmptyString] = None
+    category: Optional[NonEmptyStr] = None
+    modality: Optional[NonEmptyStr] = None
+    authors: Optional[NonEmptyStr] = None
     tags: Optional[ListUniqueNonEmptyString] = None
 
 
 class TaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    pkg_name: NonEmptyString
-    version: Optional[NonEmptyString] = None
-    name: NonEmptyString
+    pkg_name: NonEmptyStr
+    version: Optional[NonEmptyStr] = None
+    name: NonEmptyStr
 
 
 class TaskImportV2Legacy(BaseModel):
-    source: NonEmptyString
+    source: NonEmptyStr
 
 
 class TaskExportV2(BaseModel):
-    pkg_name: NonEmptyString
-    version: Optional[NonEmptyString] = None
-    name: NonEmptyString
+    pkg_name: NonEmptyStr
+    version: Optional[NonEmptyStr] = None
+    name: NonEmptyStr

@@ -7,7 +7,7 @@ from pydantic import EmailStr
 from pydantic import Field
 
 from fractal_server.types import ListUniqueNonNegativeInt
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 __all__ = (
     "UserRead",
@@ -55,8 +55,8 @@ class UserUpdate(schemas.BaseUserUpdate):
     """
 
     model_config = ConfigDict(extra="forbid")
-    username: NonEmptyString = None
-    password: NonEmptyString = None
+    username: NonEmptyStr = None
+    password: NonEmptyStr = None
     email: EmailStr = None
     is_active: bool = None
     is_superuser: bool = None
@@ -81,7 +81,7 @@ class UserCreate(schemas.BaseUserCreate):
         username:
     """
 
-    username: NonEmptyString = None
+    username: NonEmptyStr = None
 
 
 class UserUpdateGroups(BaseModel):

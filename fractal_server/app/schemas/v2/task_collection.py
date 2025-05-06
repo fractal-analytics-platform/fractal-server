@@ -8,7 +8,7 @@ from pydantic import model_validator
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 
 class WheelFile(BaseModel):
@@ -45,9 +45,9 @@ class TaskCollectPipV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    package: Optional[NonEmptyString] = None
-    package_version: Optional[NonEmptyString] = None
-    package_extras: Optional[NonEmptyString] = None
+    package: Optional[NonEmptyStr] = None
+    package_version: Optional[NonEmptyStr] = None
+    package_extras: Optional[NonEmptyStr] = None
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
@@ -104,10 +104,10 @@ class TaskCollectCustomV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
     manifest: ManifestV2
     python_interpreter: AbsolutePathStr
-    label: NonEmptyString
+    label: NonEmptyStr
     package_root: Optional[AbsolutePathStr] = None
-    package_name: Optional[NonEmptyString] = None
-    version: Optional[NonEmptyString] = None
+    package_name: Optional[NonEmptyStr] = None
+    version: Optional[NonEmptyStr] = None
 
     @model_validator(mode="before")
     @classmethod

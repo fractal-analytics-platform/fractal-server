@@ -7,7 +7,7 @@ from pydantic import model_validator
 
 from fractal_server.types import DictStrAny
 from fractal_server.types import HttpUrlStr
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 
 class TaskManifestV2(BaseModel):
@@ -141,7 +141,7 @@ class ManifestV2(BaseModel):
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
-    authors: Optional[NonEmptyString] = None
+    authors: Optional[NonEmptyStr] = None
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):
