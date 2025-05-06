@@ -40,7 +40,7 @@ class TaskCreateV2(BaseModel):
     version: NonEmptyStr = None
     args_schema_non_parallel: Optional[DictStrAny] = None
     args_schema_parallel: Optional[DictStrAny] = None
-    args_schema_version: Optional[NonEmptyStr] = None
+    args_schema_version: NonEmptyStr = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrlStr] = None
 
