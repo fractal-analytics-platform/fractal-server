@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess  # nosec
 from pathlib import Path
@@ -65,25 +66,36 @@ async def collect_task_custom(
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
     else:
-        if not Path(task_collect.python_interpreter).is_file():
+        if not os.access(
+            task_collect.python_interpreter, os.X_OK
+        ) or not os.access(task_collect.python_interpreter, os.R_OK):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
                     f"{task_collect.python_interpreter=} "
-                    "doesn't exist or is not a file."
+                    "is not accessible to the Fractal user "
+                    "or it is not executable."
                 ),
             )
-        if (
-            task_collect.package_root is not None
-            and not Path(task_collect.package_root).is_dir()
-        ):
+        if not Path(task_collect.python_interpreter).is_file():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"{task_collect.package_root=} "
-                    "doesn't exist or is not a directory."
-                ),
+                detail=f"{task_collect.python_interpreter=} is not a file.",
             )
+        if task_collect.package_root is not None:
+            if not os.access(task_collect.package_root, os.R_OK):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"{task_collect.package_root=} "
+                        "is not accessible to the Fractal user."
+                    ),
+                )
+            if not Path(task_collect.package_root).is_dir():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"{task_collect.package_root=} is not a directory.",
+                )
 
     if task_collect.package_root is None:
 
