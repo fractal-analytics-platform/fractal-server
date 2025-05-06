@@ -120,8 +120,8 @@ class TaskUpdateV2(BaseModel):
 
     command_parallel: NonEmptyStr = None
     command_non_parallel: NonEmptyStr = None
-    input_types: TypeFilters = None
-    output_types: TypeFilters = None
+    input_types: Optional[TypeFilters] = None
+    output_types: Optional[TypeFilters] = None
 
     category: Optional[NonEmptyStr] = None
     modality: Optional[NonEmptyStr] = None
