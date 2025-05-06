@@ -4,11 +4,12 @@
 
 * Runner:
     * Drop obsolete `--extra-import-paths` option from SLURM remote worker (\#2550).
+* API:
+    * Replace all `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
 
 # 2.14.2
 
 * API:
-    * Replace all `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
     * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
     * Do not raise non-processed-images warning if the previous task is a converter (\#2546).
 * App:
