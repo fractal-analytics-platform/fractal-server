@@ -59,7 +59,8 @@ class UserSettingsUpdate(BaseModel):
     @field_validator("project_dir", mode="after")
     @classmethod
     def validate_project_dir(cls, value):
-        validate_cmd(value)
+        if value is not None:
+            validate_cmd(value)
         return value
 
 

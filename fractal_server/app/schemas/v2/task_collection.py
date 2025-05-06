@@ -101,7 +101,8 @@ class TaskCollectCustomV2(BaseModel):
     @field_validator("package_name", mode="after")
     @classmethod
     def validate_package_name(cls, value):
-        validate_cmd(value)
+        if value is not None:
+            validate_cmd(value)
         return value
 
     @model_validator(mode="before")
