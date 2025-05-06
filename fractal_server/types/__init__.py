@@ -81,3 +81,7 @@ TypeFilters = Annotated[
     dict[str, bool],
     AfterValidator(valdict_keys),
 ]
+ImageTypes = Annotated[
+    dict[str, bool],
+    AfterValidator(valdict_keys),
+]
