@@ -1,7 +1,5 @@
-import logging
 import os
 from os.path import normpath
-from pathlib import Path
 from typing import Any
 
 from pydantic import HttpUrl
@@ -35,15 +33,6 @@ def val_absolute_path(path: str) -> str:
     if not os.path.isabs(s):
         raise ValueError(f"String must be an absolute path (given '{s}').")
     return s
-
-
-def val_absolute_path_strict(path: Path) -> Path:
-    if not path.is_absolute():
-        logging.warning(
-            f"'{path}' is not an absolute path; "
-            f"converting it to '{path.resolve()}'"
-        )
-    return path.resolve()
 
 
 def val_unique_list(must_be_unique: list) -> list:

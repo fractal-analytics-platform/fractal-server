@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
@@ -33,7 +34,6 @@ from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
-from fractal_server.types import AbsolutePathStrict
 
 
 class MailSettings(BaseModel):
@@ -274,11 +274,29 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[AbsolutePathStrict] = None
+    FRACTAL_TASKS_DIR: Optional[Path] = None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
+
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
+    """
+    Base directory for running jobs / workflows. All artifacts required to set
+    up, run and tear down jobs are placed in subdirs of this directory.
+    """
+
+    @field_validator(
+        "FRACTAL_TASKS_DIR", "FRACTAL_RUNNER_WORKING_BASE_DIR", mode="after"
+    )
+    @classmethod
+    def validate_absolute_path_strict(cls, path: Path) -> Path:
+        if not path.is_absolute():
+            logging.warning(
+                f"'{path}' is not an absolute path; "
+                f"converting it to '{path.resolve()}'"
+            )
+        return path.resolve()
 
     FRACTAL_RUNNER_BACKEND: Literal[
         "local",
@@ -287,12 +305,6 @@ class Settings(BaseSettings):
     ] = "local"
     """
     Select which runner backend to use.
-    """
-
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[AbsolutePathStrict] = None
-    """
-    Base directory for running jobs / workflows. All artifacts required to set
-    up, run and tear down jobs are placed in subdirs of this directory.
     """
 
     FRACTAL_LOGGING_LEVEL: int = logging.INFO

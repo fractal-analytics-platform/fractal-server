@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Annotated
 from typing import Any
 
@@ -8,7 +7,6 @@ from pydantic.types import StringConstraints
 
 from .validators import normalize_url
 from .validators import val_absolute_path
-from .validators import val_absolute_path_strict
 from .validators import val_http_url
 from .validators import val_unique_list
 from .validators import valdict_keys
@@ -22,7 +20,6 @@ NonEmptyString = Annotated[
 ]
 
 AbsolutePathStr = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
-AbsolutePathStrict = Annotated[Path, AfterValidator(val_absolute_path_strict)]
 HttpUrlStr = Annotated[NonEmptyString, AfterValidator(val_http_url)]
 NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
 
