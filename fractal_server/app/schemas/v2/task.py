@@ -35,11 +35,11 @@ class TaskCreateV2(BaseModel):
     command_non_parallel: NonEmptyString = None
     command_parallel: NonEmptyString = None
 
-    meta_non_parallel: DictStrAny = None
-    meta_parallel: DictStrAny = None
+    meta_non_parallel: Optional[DictStrAny] = None
+    meta_parallel: Optional[DictStrAny] = None
     version: NonEmptyString = None
-    args_schema_non_parallel: DictStrAny = None
-    args_schema_parallel: DictStrAny = None
+    args_schema_non_parallel: Optional[DictStrAny] = None
+    args_schema_parallel: Optional[DictStrAny] = None
     args_schema_version: Optional[NonEmptyString] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrlStr] = None

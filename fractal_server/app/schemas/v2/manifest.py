@@ -1,4 +1,3 @@
-from typing import Any
 from typing import Literal
 from typing import Optional
 
@@ -6,6 +5,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
+from ....types import DictStrAny
 from ....types import HttpUrlStr
 from ....types import NonEmptyString
 
@@ -45,10 +45,10 @@ class TaskManifestV2(BaseModel):
     executable_parallel: Optional[str] = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
-    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: DictStrAny = Field(default_factory=dict)
+    meta_parallel: DictStrAny = Field(default_factory=dict)
+    args_schema_non_parallel: Optional[DictStrAny] = None
+    args_schema_parallel: Optional[DictStrAny] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrlStr] = None
 

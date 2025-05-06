@@ -21,8 +21,8 @@ from .task import TaskTypeType
 class WorkflowTaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: DictStrAny = None
-    meta_parallel: DictStrAny = None
+    meta_non_parallel: Optional[DictStrAny] = None
+    meta_parallel: Optional[DictStrAny] = None
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: DictStrBool = Field(default_factory=dict)
@@ -65,8 +65,8 @@ class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
 class WorkflowTaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: DictStrAny = None
-    meta_parallel: DictStrAny = None
+    meta_non_parallel: Optional[DictStrAny] = None
+    meta_parallel: Optional[DictStrAny] = None
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: DictStrBool = None
