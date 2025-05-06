@@ -137,7 +137,7 @@ class ManifestV2(BaseModel):
             Label of how `args_schema`s were generated (e.g. `pydantic_v1`).
     """
 
-    manifest_version: str
+    manifest_version: Literal["2"]
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
@@ -145,12 +145,6 @@ class ManifestV2(BaseModel):
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):
-
-        if self.manifest_version != "2":
-            raise ValueError(
-                f"Wrong manifest version (given {self.manifest_version})"
-            )
-
         has_args_schemas = self.has_args_schemas
         task_list = self.task_list
         if has_args_schemas is True:
