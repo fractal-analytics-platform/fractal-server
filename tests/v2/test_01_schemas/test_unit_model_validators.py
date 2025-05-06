@@ -3,7 +3,7 @@ import pytest
 from fractal_server.types.validators import validate_dict_keys
 
 
-def test_unit_root_validate_dict_keys():
+def test_unit_validate_dict_keys():
 
     # OK
     obj_values = {
