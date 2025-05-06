@@ -45,7 +45,10 @@ def _create_tar_archive(
 
     logger.debug(f"cmd tar:\n{cmd_tar}")
 
-    run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
+    run_subprocess(
+        cmd=cmd_tar,
+        logger_name=logger_name,
+    )
     elapsed = time.perf_counter() - t_start
     logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
 
@@ -95,6 +98,14 @@ def compress_folder(
 
     except Exception as e:
         logger.debug(f"ERROR: {e}")
+        cmd_rm = f"rm {tarfile_path}"
+        try:
+            run_subprocess(cmd=cmd_rm, logger_name=logger_name)
+        except Exception as e_rm:
+            logger.error(
+                f"Running {cmd_rm=} failed, original error: {str(e_rm)}."
+            )
+
         sys.exit(1)
 
 
