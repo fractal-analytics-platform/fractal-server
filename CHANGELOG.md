@@ -5,7 +5,7 @@
 * Runner:
     * Drop obsolete `--extra-import-paths` option from SLURM remote worker (\#2550).
 * API:
-    * Replace all `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
+    * Replace most `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
 
 # 2.14.2
 
