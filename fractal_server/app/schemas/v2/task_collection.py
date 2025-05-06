@@ -96,6 +96,12 @@ class TaskCollectCustomV2(BaseModel):
     package_name: Optional[NonEmptyStr] = None
     version: Optional[NonEmptyStr] = None
 
+    @field_validator("package_name", mode="after")
+    @classmethod
+    def validate_package_name(cls, value):
+        validate_cmd(value)
+        return value
+
     @model_validator(mode="before")
     @classmethod
     def one_of_package_root_or_name(cls, values):
@@ -108,6 +114,4 @@ class TaskCollectCustomV2(BaseModel):
                 "One and only one must be set between "
                 "'package_root' and 'package_name'"
             )
-        if values["package_name"]:
-            validate_cmd(values["package_name"])
         return values
