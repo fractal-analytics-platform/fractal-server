@@ -64,17 +64,17 @@ WorkflowTaskArgument = Annotated[
     AfterValidator(validate_wft_args),
 ]
 
-ImageAttribute = Union[int, float, str, bool]
+ImageAttributeValue = Union[int, float, str, bool]
 ImageAttributes = Annotated[
-    dict[str, ImageAttribute],
+    dict[str, ImageAttributeValue],
     AfterValidator(valdict_keys),
 ]
 ImageAttributesWithNone = Annotated[
-    dict[str, Optional[ImageAttribute]],
+    dict[str, Optional[ImageAttributeValue]],
     AfterValidator(valdict_keys),
 ]
 AttributeFilters = Annotated[
-    dict[str, list[ImageAttribute]],
+    dict[str, list[ImageAttributeValue]],
     AfterValidator(validate_attribute_filters),
 ]
 TypeFilters = Annotated[
