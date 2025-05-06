@@ -2,6 +2,8 @@
 
 # 2.14.2 (Unreleased)
 
+* App:
+    * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
 * Runner:
     * Handle exceptions in post-task-execution runner code (\#2543).
 
