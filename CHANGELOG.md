@@ -5,6 +5,7 @@
 * API:
     * Replace all `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
     * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
+    * Do not raise non-processed-images warning if the previous task is a converter (\#2546).
 * App:
     * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
 * Runner:

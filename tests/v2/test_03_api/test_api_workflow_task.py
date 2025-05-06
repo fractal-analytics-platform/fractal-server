@@ -992,6 +992,10 @@ async def test_check_workflowtask(
         task2 = await task_factory_v2(
             user_id=user.id, output_types={"x": True}
         )
+        task3 = await task_factory_v2(
+            user_id=user.id,
+            type="converter_non_parallel",
+        )
 
         project = await project_factory_v2(user)
 
@@ -1005,6 +1009,14 @@ async def test_check_workflowtask(
             task_id=task2.id,
         )
         wft3 = await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task1.id,
+        )
+        await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task3.id,  # converter task
+        )
+        wft5 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
             task_id=task1.id,
         )
@@ -1083,7 +1095,7 @@ async def test_check_workflowtask(
             )
         await db.commit()
 
-        # case 1: workflow_task.order == 0
+        # case 1: first task in the workflow
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
             "images/non-processed/"
@@ -1093,7 +1105,7 @@ async def test_check_workflowtask(
         assert res.status_code == 200
         assert res.json() == []
 
-        # case 2: workflow.task_list[workflow_task.order - 1].task.output_types
+        # case 2: previous task sets output_types
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
             "images/non-processed/"
@@ -1103,7 +1115,17 @@ async def test_check_workflowtask(
         assert res.status_code == 200
         assert res.json() == []
 
-        # case 3
+        # case 3: previous task is converter
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            "images/non-processed/"
+            f"?workflow_id={workflow.id}&workflowtask_id={wft5.id}",
+            json={},
+        )
+        assert res.status_code == 200
+        assert res.json() == []
+
+        # case 4: actual check
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
             "images/non-processed/"
