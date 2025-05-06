@@ -58,15 +58,17 @@ class TaskCollectPipV2(BaseModel):
     )
     @classmethod
     def validate_commands(cls, value):
-        validate_cmd(value)
+        if value is not None:
+            validate_cmd(value)
         return value
 
     @field_validator("pinned_package_versions", mode="after")
     @classmethod
     def validate_pinned_package_versions(cls, value):
-        for pkg, version in value.items():
-            validate_cmd(pkg)
-            validate_cmd(version)
+        if value is not None:
+            for pkg, version in value.items():
+                validate_cmd(pkg)
+                validate_cmd(version)
         return value
 
 
