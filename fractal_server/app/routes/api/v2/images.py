@@ -8,7 +8,6 @@ from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import model_validator
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
 
@@ -29,7 +28,6 @@ from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 from fractal_server.types import AttributeFilters
 from fractal_server.types import TypeFilters
-from fractal_server.types.validators import validate_dict_keys
 
 router = APIRouter()
 
@@ -43,11 +41,6 @@ class ImagePage(PaginationResponse[SingleImage]):
 class ImageQuery(BaseModel):
     type_filters: TypeFilters = Field(default_factory=dict)
     attribute_filters: AttributeFilters = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _validate_dict_keys(cls, values: dict):
-        return validate_dict_keys(values)
 
 
 class ImageQueryWithZarrUrl(ImageQuery):

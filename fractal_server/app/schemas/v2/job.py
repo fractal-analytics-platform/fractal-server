@@ -17,7 +17,6 @@ from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
 from fractal_server.types import AttributeFilters
 from fractal_server.types import NonEmptyString
 from fractal_server.types import TypeFilters
-from fractal_server.types.validators import validate_dict_keys
 
 
 class JobStatusTypeV2(str, Enum):
@@ -54,8 +53,7 @@ class JobCreateV2(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def root_validate(cls, values):
-        values = validate_dict_keys(values)
+    def validate_first_last_indices(cls, values):
         first_task_index = values.get("first_task_index")
         last_task_index = values.get("last_task_index")
 

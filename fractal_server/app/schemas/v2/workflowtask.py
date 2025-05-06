@@ -15,7 +15,6 @@ from .task import TaskTypeType
 from fractal_server.types import DictStrAny
 from fractal_server.types import TypeFilters
 from fractal_server.types import WorkflowTaskArgument
-from fractal_server.types.validators import validate_dict_keys
 
 
 class WorkflowTaskCreateV2(BaseModel):
@@ -26,11 +25,6 @@ class WorkflowTaskCreateV2(BaseModel):
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: TypeFilters = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _validate_dict_keys(cls, values: dict):
-        return validate_dict_keys(values)
 
 
 class WorkflowTaskReplaceV2(BaseModel):
@@ -70,11 +64,6 @@ class WorkflowTaskUpdateV2(BaseModel):
     args_non_parallel: Optional[WorkflowTaskArgument] = None
     args_parallel: Optional[WorkflowTaskArgument] = None
     type_filters: TypeFilters = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def _validate_dict_keys(cls, values: dict):
-        return validate_dict_keys(values)
 
 
 class WorkflowTaskImportV2(BaseModel):

@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
-from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.project import ProjectReadV2
@@ -13,7 +12,6 @@ from fractal_server.images import SingleImage
 from fractal_server.types import AttributeFilters
 from fractal_server.types import NonEmptyString
 from fractal_server.types import ZarrDirStr
-from fractal_server.types.validators import validate_dict_keys
 
 
 class DatasetCreateV2(BaseModel):
@@ -24,11 +22,6 @@ class DatasetCreateV2(BaseModel):
     zarr_dir: Optional[ZarrDirStr] = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _validate_dict_keys(cls, values: dict):
-        return validate_dict_keys(values)
 
 
 class DatasetReadV2(BaseModel):
@@ -52,11 +45,6 @@ class DatasetUpdateV2(BaseModel):
 
     name: NonEmptyString = None
     zarr_dir: Optional[ZarrDirStr] = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def _validate_dict_keys(cls, values: dict):
-        return validate_dict_keys(values)
 
 
 class DatasetImportV2(BaseModel):

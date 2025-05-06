@@ -40,17 +40,6 @@ def val_unique_list(must_be_unique: list) -> list:
     return must_be_unique
 
 
-def validate_dict_keys(obj_values: dict) -> dict:
-    """
-    For each dictionary in `obj_values.values()`,
-    checks that that dictionary has only keys of type str.
-    """
-    for dictionary in (v for v in obj_values.values() if isinstance(v, dict)):
-        if not all(isinstance(key, str) for key in dictionary.keys()):
-            raise ValueError("Dictionary keys must be strings.")
-    return obj_values
-
-
 def val_http_url(value: str) -> str:
     HttpUrl(value)
     return value
