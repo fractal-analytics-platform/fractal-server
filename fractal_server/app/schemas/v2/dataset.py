@@ -10,7 +10,7 @@ from pydantic.types import AwareDatetime
 
 from ....types import AttributeFilters
 from ....types import NonEmptyString
-from ....types import ZarrDir
+from ....types import ZarrDirStr
 from ....types.validators import validate_dict_keys
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
@@ -21,7 +21,7 @@ class DatasetCreateV2(BaseModel):
 
     name: NonEmptyString
 
-    zarr_dir: Optional[ZarrDir] = None
+    zarr_dir: Optional[ZarrDirStr] = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
 
@@ -51,7 +51,7 @@ class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyString = None
-    zarr_dir: Optional[ZarrDir] = None
+    zarr_dir: Optional[ZarrDirStr] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -74,7 +74,7 @@ class DatasetImportV2(BaseModel):
     """
 
     name: str
-    zarr_dir: ZarrDir
+    zarr_dir: ZarrDirStr
     images: list[SingleImage] = Field(default_factory=list)
 
 

@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from ....images import SingleImageTaskOutput
 from fractal_server.app.runner.exceptions import TaskOutputValidationError
-from fractal_server.types import ZarrUrl
+from fractal_server.types import ZarrUrlStr
 
 
 class TaskOutput(BaseModel):
@@ -18,7 +18,7 @@ class TaskOutput(BaseModel):
     image_list_updates: list[SingleImageTaskOutput] = Field(
         default_factory=list
     )
-    image_list_removals: list[ZarrUrl] = Field(default_factory=list)
+    image_list_removals: list[ZarrUrlStr] = Field(default_factory=list)
 
     def check_zarr_urls_are_unique(self) -> None:
         zarr_urls = [img.zarr_url for img in self.image_list_updates]
@@ -44,7 +44,7 @@ class InitArgsModel(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    zarr_url: ZarrUrl
+    zarr_url: ZarrUrlStr
     init_args: dict[str, Any] = Field(default_factory=dict)
 
 

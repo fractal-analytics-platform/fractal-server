@@ -21,8 +21,8 @@ NonEmptyString = Annotated[
 
 AbsolutePathStr = Annotated[NonEmptyString, AfterValidator(val_absolute_path)]
 HttpUrlStr = Annotated[NonEmptyString, AfterValidator(val_http_url)]
-ZarrUrl = Annotated[str, AfterValidator(normalize_url)]
-ZarrDir = Annotated[str, AfterValidator(normalize_url)]
+ZarrUrlStr = Annotated[str, AfterValidator(normalize_url)]
+ZarrDirStr = Annotated[str, AfterValidator(normalize_url)]
 
 DictStrAny = Annotated[dict[str, Any], AfterValidator(valdict_keys)]
 DictStrStr = Annotated[dict[str, NonEmptyString], AfterValidator(valdict_keys)]

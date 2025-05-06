@@ -7,8 +7,8 @@ from fractal_server.types import DictStrAny
 from fractal_server.types import ImageAttributes
 from fractal_server.types import ImageAttributesWithNone
 from fractal_server.types import TypeFilters
-from fractal_server.types import ZarrDir
-from fractal_server.types import ZarrUrl
+from fractal_server.types import ZarrDirStr
+from fractal_server.types import ZarrUrlStr
 
 
 class _SingleImageBase(BaseModel):
@@ -22,8 +22,8 @@ class _SingleImageBase(BaseModel):
         types:
     """
 
-    zarr_url: ZarrUrl
-    origin: Optional[ZarrDir] = None
+    zarr_url: ZarrUrlStr
+    origin: Optional[ZarrDirStr] = None
 
     attributes: DictStrAny = Field(default_factory=dict)
     types: TypeFilters = Field(default_factory=dict)
@@ -46,6 +46,6 @@ class SingleImage(_SingleImageBase):
 
 
 class SingleImageUpdate(BaseModel):
-    zarr_url: ZarrUrl
+    zarr_url: ZarrUrlStr
     attributes: ImageAttributes = None
     types: Optional[TypeFilters] = None
