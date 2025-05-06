@@ -1,5 +1,7 @@
 from typing import Annotated
 from typing import Any
+from typing import Optional
+from typing import Union
 
 from pydantic import AfterValidator
 from pydantic.types import NonNegativeInt
@@ -11,8 +13,6 @@ from .validators import val_http_url
 from .validators import val_unique_list
 from .validators import valdict_keys
 from .validators import validate_attribute_filters
-from .validators import validate_attributes
-from .validators import validate_attributes_with_none
 from .validators import validate_wft_args
 
 NonEmptyString = Annotated[
@@ -38,11 +38,13 @@ ListAbsolutePathUnique = Annotated[
 ]
 
 WorkflowTaskArgument = Annotated[DictStrAny, AfterValidator(validate_wft_args)]
-ImageAttributes = Annotated[DictStrAny, AfterValidator(validate_attributes)]
+
+Attribute = Union[int, float, str, bool]
+ImageAttributes = Annotated[dict[str, Attribute], AfterValidator(valdict_keys)]
 ImageAttributesWithNone = Annotated[
-    DictStrAny, AfterValidator(validate_attributes_with_none)
+    dict[str, Optional[Attribute]], AfterValidator(valdict_keys)
 ]
 AttributeFilters = Annotated[
-    dict[str, list[Any]], AfterValidator(validate_attribute_filters)
+    dict[str, list[Attribute]], AfterValidator(validate_attribute_filters)
 ]
 TypeFilters = Annotated[dict[str, bool], AfterValidator(valdict_keys)]
