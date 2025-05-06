@@ -74,7 +74,7 @@ async def collect_task_custom(
                 detail=(
                     f"{task_collect.python_interpreter=} "
                     "is not accessible to the Fractal user "
-                    "or it's not executable."
+                    "or it is not executable."
                 ),
             )
         if not Path(task_collect.python_interpreter).is_file():
