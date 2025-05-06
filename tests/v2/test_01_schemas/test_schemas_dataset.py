@@ -7,7 +7,7 @@ from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import DatasetUpdateV2
-from fractal_server.types.validators import normalize_url
+from fractal_server.urls import normalize_url
 
 
 async def test_schemas_dataset_v2():

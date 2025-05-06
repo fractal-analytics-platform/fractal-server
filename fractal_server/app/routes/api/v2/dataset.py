@@ -23,7 +23,7 @@ from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.string_tools import sanitize_string
-from fractal_server.types.validators import normalize_url
+from fractal_server.urls import normalize_url
 
 router = APIRouter()
 
