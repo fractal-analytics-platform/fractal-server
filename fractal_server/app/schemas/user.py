@@ -6,8 +6,8 @@ from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
 
-from ...types import ListNonNegativeIntUnique
-from ...types import NonEmptyString
+from fractal_server.types import ListNonNegativeIntUnique
+from fractal_server.types import NonEmptyString
 
 __all__ = (
     "UserRead",
