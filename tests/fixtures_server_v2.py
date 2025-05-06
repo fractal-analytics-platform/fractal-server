@@ -185,7 +185,13 @@ async def task_factory_v2(db: AsyncSession):
         task_group_kwargs: Optional[dict[str, str]] = None,
         db: AsyncSession = db,
         index: int = 0,
-        type: Literal["parallel", "non_parallel", "compound"] = "compound",
+        type: Literal[
+            "parallel",
+            "non_parallel",
+            "compound",
+            "converter_compound",
+            "converter_non_parallel",
+        ] = "compound",
         **kwargs,
     ) -> TaskV2:
         args = dict(
@@ -208,7 +214,7 @@ async def task_factory_v2(db: AsyncSession):
                 raise TypeError("Invalid argument for a parallel TaskV2")
             else:
                 del args["command_non_parallel"]
-        elif type == "non_parallel":
+        elif type == "non_parallel" or type == "converter_non_parallel":
             if any(
                 arg in kwargs
                 for arg in [
