@@ -283,25 +283,25 @@ class Settings(BaseSettings):
 
     FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
     """
-    Base directory for running jobs / workflows. All artifacts required to set
-    up, run and tear down jobs are placed in subdirs of this directory.
+    Base directory for job files (either an absolute path or a path relative to
+    current working directory).
     """
 
     @field_validator(
-        "FRACTAL_TASKS_DIR", "FRACTAL_RUNNER_WORKING_BASE_DIR", mode="after"
+        "FRACTAL_TASKS_DIR",
+        "FRACTAL_RUNNER_WORKING_BASE_DIR",
+        mode="after",
     )
     @classmethod
-    def validate_absolute_path_strict(
-        cls, path: Optional[Path]
-    ) -> Optional[Path]:
-        if path is None:
+    def make_paths_absolute(cls, path: Optional[Path]) -> Optional[Path]:
+        if path is None or path.is_absolute():
             return path
-        if not path.is_absolute():
+        else:
             logging.warning(
                 f"'{path}' is not an absolute path; "
                 f"converting it to '{path.resolve()}'"
             )
-        return path.resolve()
+            return path.resolve()
 
     FRACTAL_RUNNER_BACKEND: Literal[
         "local",
