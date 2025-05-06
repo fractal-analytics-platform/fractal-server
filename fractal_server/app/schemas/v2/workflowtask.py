@@ -10,7 +10,7 @@ from pydantic import model_validator
 from ....types import DictStrAny
 from ....types import DictStrBool
 from ....types import WorkflowTaskArgument
-from ....types.validators import root_validate_dict_keys
+from ....types.validators import validate_dict_keys
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
@@ -30,7 +30,7 @@ class WorkflowTaskCreateV2(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_dict_keys(cls, values: dict):
-        return root_validate_dict_keys(values)
+        return validate_dict_keys(values)
 
 
 class WorkflowTaskReplaceV2(BaseModel):
@@ -74,7 +74,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_dict_keys(cls, values: dict):
-        return root_validate_dict_keys(values)
+        return validate_dict_keys(values)
 
 
 class WorkflowTaskImportV2(BaseModel):

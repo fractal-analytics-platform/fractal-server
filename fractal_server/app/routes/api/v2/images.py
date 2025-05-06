@@ -29,7 +29,7 @@ from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 from fractal_server.types import AttributeFilters
 from fractal_server.types import DictStrBool
-from fractal_server.types.validators import root_validate_dict_keys
+from fractal_server.types.validators import validate_dict_keys
 
 router = APIRouter()
 
@@ -47,7 +47,7 @@ class ImageQuery(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_dict_keys(cls, values: dict):
-        return root_validate_dict_keys(values)
+        return validate_dict_keys(values)
 
 
 class ImageQueryWithZarrUrl(ImageQuery):

@@ -11,7 +11,7 @@ from pydantic.types import AwareDatetime
 from ....types import AttributeFilters
 from ....types import NonEmptyString
 from ....types import NormalizedUrl
-from ....types.validators import root_validate_dict_keys
+from ....types.validators import validate_dict_keys
 from .project import ProjectReadV2
 from fractal_server.images import SingleImage
 
@@ -28,7 +28,7 @@ class DatasetCreateV2(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_dict_keys(cls, values: dict):
-        return root_validate_dict_keys(values)
+        return validate_dict_keys(values)
 
 
 class DatasetReadV2(BaseModel):
@@ -56,7 +56,7 @@ class DatasetUpdateV2(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_dict_keys(cls, values: dict):
-        return root_validate_dict_keys(values)
+        return validate_dict_keys(values)
 
 
 class DatasetImportV2(BaseModel):

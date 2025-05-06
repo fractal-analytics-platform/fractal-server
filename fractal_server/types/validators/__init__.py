@@ -1,11 +1,11 @@
 from ._attributes_validator import validate_attributes  # noqa F401
 from ._attributes_validator import validate_attributes_with_none  # noqa F401
 from ._common_validators import normalize_url  # noqa F401
-from ._common_validators import root_validate_dict_keys  # noqa F401
 from ._common_validators import val_absolute_path  # noqa F401
 from ._common_validators import val_http_url  # noqa F401
 from ._common_validators import val_unique_list  # noqa F401
 from ._common_validators import valdict_keys  # noqa F401
+from ._common_validators import validate_dict_keys  # noqa F401
 from ._filter_validators import validate_attribute_filters  # noqa F401
 from ._filter_validators import validate_type_filters  # noqa F401
 from ._workflow_task_arguments_validators import validate_wft_args  # noqa F401

@@ -14,7 +14,7 @@ from pydantic.types import StrictStr
 from ....types import AttributeFilters
 from ....types import DictStrBool
 from ....types import NonEmptyString
-from ....types.validators import root_validate_dict_keys
+from ....types.validators import validate_dict_keys
 from .dumps import DatasetDumpV2
 from .dumps import ProjectDumpV2
 from .dumps import WorkflowDumpV2
@@ -55,7 +55,7 @@ class JobCreateV2(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def root_validate(cls, values):
-        values = root_validate_dict_keys(values)
+        values = validate_dict_keys(values)
         first_task_index = values.get("first_task_index")
         last_task_index = values.get("last_task_index")
 
