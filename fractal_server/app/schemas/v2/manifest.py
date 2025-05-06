@@ -163,6 +163,10 @@ class ManifestV2(BaseModel):
                             f"task '{task.name}' has "
                             f"{task.args_schema_non_parallel=}."
                         )
+        return self
+
+    @model_validator(mode="after")
+    def _unique_task_names(self):
         task_list = self.task_list
         task_list_names = [t.name for t in task_list]
         if len(set(task_list_names)) != len(task_list_names):
@@ -172,5 +176,4 @@ class ManifestV2(BaseModel):
                     f"Given: {task_list_names}.",
                 )
             )
-
         return self
