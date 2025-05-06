@@ -12,7 +12,7 @@ from fractal_server.string_tools import validate_cmd
 from fractal_server.types import DictStrAny
 from fractal_server.types import DictStrBool
 from fractal_server.types import HttpUrlStr
-from fractal_server.types import ListNonEmptyString
+from fractal_server.types import ListNonEmptyStringUnique
 from fractal_server.types import NonEmptyString
 
 TaskTypeType = Literal[
@@ -49,7 +49,7 @@ class TaskCreateV2(BaseModel):
 
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
-    tags: ListNonEmptyString = Field(default_factory=list)
+    tags: ListNonEmptyStringUnique = Field(default_factory=list)
     authors: Optional[NonEmptyString] = None
 
     type: Optional[TaskTypeType] = None
@@ -126,7 +126,7 @@ class TaskUpdateV2(BaseModel):
     category: Optional[NonEmptyString] = None
     modality: Optional[NonEmptyString] = None
     authors: Optional[NonEmptyString] = None
-    tags: Optional[ListNonEmptyString] = None
+    tags: Optional[ListNonEmptyStringUnique] = None
 
 
 class TaskImportV2(BaseModel):

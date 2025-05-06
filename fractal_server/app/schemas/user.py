@@ -6,7 +6,7 @@ from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
 
-from ...types import ListNonNegativeInt
+from ...types import ListNonNegativeIntUnique
 from ...types import NonEmptyString
 
 __all__ = (
@@ -92,4 +92,4 @@ class UserUpdateGroups(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    group_ids: ListNonNegativeInt = Field(min_length=1)
+    group_ids: ListNonNegativeIntUnique = Field(min_length=1)

@@ -28,10 +28,10 @@ DictStrAny = Annotated[dict[str, Any], AfterValidator(valdict_keys)]
 DictStrStr = Annotated[dict[str, NonEmptyString], AfterValidator(valdict_keys)]
 DictStrBool = Annotated[dict[str, bool], AfterValidator(valdict_keys)]
 
-ListNonEmptyString = Annotated[
+ListNonEmptyStringUnique = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
 ]
-ListNonNegativeInt = Annotated[
+ListNonNegativeIntUnique = Annotated[
     list[NonNegativeInt], AfterValidator(val_unique_list)
 ]
 ListAbsolutePathUnique = Annotated[
