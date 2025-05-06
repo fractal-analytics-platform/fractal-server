@@ -97,7 +97,6 @@ def worker(
     Arguments:
         in_fname: Absolute path to the input pickle file (must be readable).
         out_fname: Absolute path of the output pickle file (must be writeable).
-        extra_import_paths: Additional import paths
     """
 
     # Create output folder, if missing
