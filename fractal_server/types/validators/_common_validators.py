@@ -26,12 +26,9 @@ def val_absolute_path(path: str) -> str:
     """
     Check that a string attribute is an absolute path
     """
-    s = str(path).strip()
-    if not s:
-        raise ValueError("String cannot be empty")
-    if not os.path.isabs(s):
-        raise ValueError(f"String must be an absolute path (given '{s}').")
-    return s
+    if not os.path.isabs(path):
+        raise ValueError(f"String must be an absolute path (given '{path}').")
+    return path
 
 
 def val_unique_list(must_be_unique: list) -> list:
