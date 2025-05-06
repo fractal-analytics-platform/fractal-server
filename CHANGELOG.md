@@ -3,7 +3,7 @@
 # 2.14.2 (Unreleased)
 
 * API:
-    * Handle unaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
+    * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
 * Runner:
     * Handle exceptions in post-task-execution runner code (\#2543).
 
