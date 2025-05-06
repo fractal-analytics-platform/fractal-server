@@ -22,7 +22,7 @@ from fractal_server.logger import set_logger
 
 def _create_tar_archive(
     tarfile_path: str,
-    subfolder_path_tmp_copy: Path,
+    subfolder_path: Path,
     logger_name: str,
     filelist_path: str | None,
 ):
@@ -33,13 +33,13 @@ def _create_tar_archive(
     if filelist_path is None:
         cmd_tar = (
             f"tar -c -z -f {tarfile_path} "
-            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            f"--directory={subfolder_path.as_posix()} "
             "."
         )
     else:
         cmd_tar = (
             f"tar -c -z -f {tarfile_path} "
-            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            f"--directory={subfolder_path.as_posix()} "
             f"--files-from={filelist_path} --ignore-failed-read"
         )
 
