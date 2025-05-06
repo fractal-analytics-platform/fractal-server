@@ -5,7 +5,7 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from ....types import NonEmptyString
+from fractal_server.types import NonEmptyString
 
 
 class ProjectCreateV2(BaseModel):
