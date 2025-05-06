@@ -1,8 +1,6 @@
 import json
 import sys
 
-from devtools import debug  # noqa
-
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 
@@ -14,6 +12,7 @@ async def test_task_collection_custom(
     client,
     MockCurrentUser,
     fractal_tasks_mock_collection,
+    tmp_path,
 ):
     package_name = "fractal_tasks_mock"
     python_bin = fractal_tasks_mock_collection["python_bin"].as_posix()
@@ -83,16 +82,32 @@ async def test_task_collection_custom(
             f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
         )
         assert res.status_code == 422
-        assert "doesn't exist or is not a file" in res.json()["detail"]
+        assert "is not accessible" in res.json()["detail"]
 
-        # Fail because package_root does not exist
-        payload_root.python_interpreter = sys.executable
-        payload_root.package_root = "/foo/bar"
+        # Fail because python_interpreter is not valid
+        payload_root.python_interpreter = tmp_path.as_posix()
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
         )
         assert res.status_code == 422
-        assert "doesn't exist or is not a directory" in res.json()["detail"]
+        assert "is not a file" in res.json()["detail"]
+
+        # Fail because package_root does not exist
+        payload_root.python_interpreter = sys.executable
+        package_root_path = tmp_path / "foo"
+        payload_root.package_root = package_root_path.as_posix()
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
+        )
+        assert res.status_code == 422
+        assert "not accessible to the Fractal user" in res.json()["detail"]
+
+        package_root_path.touch()
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.model_dump()
+        )
+        assert res.status_code == 422
+        assert "is not a directory" in res.json()["detail"]
 
 
 async def test_task_collection_custom_fail_with_ssh(
