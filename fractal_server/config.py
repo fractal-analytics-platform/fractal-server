@@ -290,7 +290,11 @@ class Settings(BaseSettings):
         "FRACTAL_TASKS_DIR", "FRACTAL_RUNNER_WORKING_BASE_DIR", mode="after"
     )
     @classmethod
-    def validate_absolute_path_strict(cls, path: Path) -> Path:
+    def validate_absolute_path_strict(
+        cls, path: Optional[Path]
+    ) -> Optional[Path]:
+        if path is None:
+            return path
         if not path.is_absolute():
             logging.warning(
                 f"'{path}' is not an absolute path; "
