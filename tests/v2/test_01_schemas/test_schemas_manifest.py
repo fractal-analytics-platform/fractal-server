@@ -66,6 +66,11 @@ def test_TaskManifestV2():
             executable_parallel="exec",
             docs_link="not-an-url",
         )
+    TaskManifestV2(
+        name="task",
+        executable_parallel="exec",
+        docs_link="https://url.com",
+    )
 
 
 def test_ManifestV2():

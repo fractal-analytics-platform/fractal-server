@@ -46,6 +46,11 @@ def test_TaskCollectPipV2():
             package="pkg",
             pinned_package_versions={" a ": "1.0.0", "a": "2.0.0"},
         )
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(
+            package="pkg",
+            pinned_package_versions={" ": "1.0.0"},
+        )
 
     with pytest.raises(ValidationError, match="package must not contain"):
         TaskCollectPipV2(package="; rm x")
