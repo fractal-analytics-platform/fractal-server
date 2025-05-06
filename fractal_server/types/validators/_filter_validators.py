@@ -1,25 +1,16 @@
 from typing import Any
-from typing import Optional
 
 from ._common_validators import valdict_keys
 
 
-def validate_type_filters(
-    type_filters: Optional[dict[str, bool]]
-) -> dict[str, bool]:
-    if type_filters is None:
-        raise ValueError("'type_filters' cannot be 'None'.")
-
+def validate_type_filters(type_filters: dict[str, bool]) -> dict[str, bool]:
     type_filters = valdict_keys(type_filters)
     return type_filters
 
 
 def validate_attribute_filters(
-    attribute_filters: Optional[dict[str, list[Any]]],
+    attribute_filters: dict[str, list[Any]]
 ) -> dict[str, list[Any]]:
-    if attribute_filters is None:
-        raise ValueError("'attribute_filters' cannot be 'None'.")
-
     attribute_filters = valdict_keys(attribute_filters)
     for key, values in attribute_filters.items():
         if values == []:
