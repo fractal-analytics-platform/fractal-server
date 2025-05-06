@@ -26,13 +26,9 @@ AbsolutePathStrict = Annotated[Path, AfterValidator(val_absolute_path_strict)]
 HttpUrlStr = Annotated[NonEmptyString, AfterValidator(val_http_url)]
 NormalizedUrl = Annotated[str, AfterValidator(normalize_url)]
 
-DictStrAny = Annotated[dict[NonEmptyString, Any], AfterValidator(valdict_keys)]
-DictStrStr = Annotated[
-    dict[NonEmptyString, NonEmptyString], AfterValidator(valdict_keys)
-]
-DictStrBool = Annotated[
-    dict[NonEmptyString, bool], AfterValidator(valdict_keys)
-]
+DictStrAny = Annotated[dict[str, Any], AfterValidator(valdict_keys)]
+DictStrStr = Annotated[dict[str, NonEmptyString], AfterValidator(valdict_keys)]
+DictStrBool = Annotated[dict[str, bool], AfterValidator(valdict_keys)]
 
 ListNonEmptyString = Annotated[
     list[NonEmptyString], AfterValidator(val_unique_list)
