@@ -3,11 +3,13 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import field_validator
 from pydantic import model_validator
 
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
+from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
@@ -49,38 +51,23 @@ class TaskCollectPipV2(BaseModel):
     package_version: Optional[NonEmptyStr] = None
     package_extras: Optional[NonEmptyStr] = None
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[dict[str, str]] = None
+    pinned_package_versions: Optional[DictStrStr] = None
 
-    @model_validator(mode="after")
-    def validate_commands(self):
-        if self.package:
-            validate_cmd(self.package, attribute_name="package")
-        if self.package_version:
-            validate_cmd(
-                self.package_version, attribute_name="package_version"
-            )
-        if self.package_extras:
-            validate_cmd(self.package_extras, attribute_name="package_extras")
-        if self.pinned_package_versions:
-            old_keys = list(self.pinned_package_versions.keys())
-            new_keys = [key.strip() for key in old_keys]
-            if any(k == "" for k in new_keys):
-                raise ValueError(f"Empty string in {new_keys}.")
-            if len(new_keys) != len(set(new_keys)):
-                raise ValueError(
-                    "Dictionary contains multiple identical keys: "
-                    f"{self.pinned_package_versions}."
-                )
-            for old_key, new_key in zip(old_keys, new_keys):
-                if new_key != old_key:
-                    self.pinned_package_versions[
-                        new_key
-                    ] = self.pinned_package_versions.pop(old_key)
+    @field_validator(
+        "package", "package_version", "package_extras", mode="after"
+    )
+    @classmethod
+    def validate_commands(cls, value):
+        validate_cmd(value)
+        return value
 
-            for pkg, version in self.pinned_package_versions.items():
-                validate_cmd(pkg)
-                validate_cmd(version)
-        return self
+    @field_validator("pinned_package_versions", mode="after")
+    @classmethod
+    def validate_pinned_package_versions(cls, value):
+        for pkg, version in value.items():
+            validate_cmd(pkg)
+            validate_cmd(version)
+        return value
 
 
 class TaskCollectCustomV2(BaseModel):
