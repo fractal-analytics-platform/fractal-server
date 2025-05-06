@@ -4,6 +4,8 @@
 
 * App:
     * Fix `Enum` values in f-strings (\#2540).
+* Runner:
+    * Handle exceptions in post-task-execution runner code (\#2543).
 
 # 2.14.1
 
