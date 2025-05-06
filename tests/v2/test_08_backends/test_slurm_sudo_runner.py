@@ -65,7 +65,7 @@ async def test_submit_success(
             user_id=valid_user_id,
         )
     debug(result, exception)
-    # assert result == 42
+    assert result == {}
     assert exception is None
 
     # `HistoryRun.status` is updated at a higher level, not from
