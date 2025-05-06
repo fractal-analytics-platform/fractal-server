@@ -98,11 +98,19 @@ async def check_workflowtask(
     )
 
     if db_workflow_task.order == 0:
+        # Skip check for first task in the workflow
         return JSONResponse(status_code=200, content=[])
 
     previous_wft = db_workflow.task_list[db_workflow_task.order - 1]
 
     if previous_wft.task.output_types != {}:
+        # Skip check if previous task has non-trivial `output_types`
+        return JSONResponse(status_code=200, content=[])
+    elif previous_wft.task.type in [
+        "converter_compound",
+        "converter_non_parallel",
+    ]:
+        # Skip check if previous task is converter
         return JSONResponse(status_code=200, content=[])
 
     res = await _get_dataset_check_owner(
