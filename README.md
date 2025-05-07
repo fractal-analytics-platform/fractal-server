@@ -70,7 +70,7 @@
 | fractal\_server/app/routes/pagination.py                                        |       28 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/\_\_init\_\_.py                                      |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/components.py                                        |        2 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/compress\_folder.py                                  |       68 |        4 |       10 |        1 |     94% |71-72, 170-172 |
+| fractal\_server/app/runner/compress\_folder.py                                  |       45 |        4 |       10 |        1 |     91% |85-86, 123-125 |
 | fractal\_server/app/runner/exceptions.py                                        |       52 |       13 |       14 |        3 |     70% |95-103, 111-112, 116-117, 121-122 |
 | fractal\_server/app/runner/executors/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/base\_runner.py                            |       46 |        0 |       32 |        1 |     99% |  100->105 |
@@ -162,7 +162,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8838** |  **300** | **1750** |  **112** | **96%** |           |
+|                                                                       **TOTAL** | **8815** |  **300** | **1750** |  **112** | **95%** |           |
 
 
 ## Setup coverage badge
