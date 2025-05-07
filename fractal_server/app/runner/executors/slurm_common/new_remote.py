@@ -22,7 +22,6 @@ import subprocess  # nosec
 import sys  # nosec
 from shlex import split
 from typing import Literal
-from typing import Optional
 from typing import Union
 
 from fractal_server import __VERSION__
@@ -132,7 +131,6 @@ def worker(
     *,
     in_fname: str,
     out_fname: str,
-    extra_import_paths: Optional[str] = None,
 ) -> None:
     """
     Execute a job, possibly on a remote node.
@@ -140,7 +138,6 @@ def worker(
     Arguments:
         in_fname: Absolute path to the input pickle file (must be readable).
         out_fname: Absolute path of the output pickle file (must be writeable).
-        extra_import_paths: Additional import paths
     """
 
     # Create output folder, if missing
@@ -148,10 +145,6 @@ def worker(
     if not os.path.exists(out_dir):
         logging.debug(f"_slurm.remote.worker: create {out_dir=}")
         os.mkdir(out_dir)
-
-    if extra_import_paths:
-        _extra_import_paths = extra_import_paths.split(":")
-        sys.path[:0] = _extra_import_paths
 
     # Execute the job and capture exceptions
     try:
@@ -236,18 +229,10 @@ if __name__ == "__main__":
         help="Path of output pickle file",
         required=True,
     )
-    parser.add_argument(
-        "--extra-import-paths",
-        type=str,
-        help="Extra import paths",
-        required=False,
-    )
     parsed_args = parser.parse_args()
     logging.debug(f"{parsed_args=}")
 
     kwargs = dict(
         in_fname=parsed_args.input_file, out_fname=parsed_args.output_file
     )
-    if parsed_args.extra_import_paths:
-        kwargs["extra_import_paths"] = parsed_args.extra_import_paths
     worker(**kwargs)
