@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.3 (unreleased)
+# 2.14.3
 
 * Runner:
     * Skip creation/removal of folder copy in compress-folder module (\#2553).
