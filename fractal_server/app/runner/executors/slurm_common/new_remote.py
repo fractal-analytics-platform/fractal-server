@@ -17,9 +17,9 @@ import argparse
 import json
 import logging
 import os
-import shutil  # nosec
+import shutil
 import subprocess  # nosec
-import sys  # nosec
+import sys
 from shlex import split
 from typing import Literal
 from typing import Union
@@ -39,10 +39,9 @@ class FractalVersionMismatch(RuntimeError):
 
 
 def _check_versions_mismatch(
-    server_versions: dict[
-        Literal["python", "fractal_server"],
-        Union[str, tuple[int]],
-    ],
+    *,
+    server_python_version: tuple[int, int, int],
+    server_fractal_server_version: str,
 ):
     """
     Compare the server {python,cloudpickle,fractal_server} versions with the
@@ -58,8 +57,7 @@ def _check_versions_mismatch(
                                 do not match with the ones on the server
     """
 
-    server_python_version = list(server_versions["python"])
-    worker_python_version = list(sys.version_info[:3])
+    worker_python_version = tuple(sys.version_info[:3])
     if worker_python_version != server_python_version:
         if worker_python_version[:2] != server_python_version[:2]:
             # FIXME: Turn this into an error, in some version post 2.14.
@@ -74,7 +72,6 @@ def _check_versions_mismatch(
                 f"{server_python_version=} but {worker_python_version=}."
             )
 
-    server_fractal_server_version = server_versions["fractal_server"]
     worker_fractal_server_version = __VERSION__
     if worker_fractal_server_version != server_fractal_server_version:
         raise FractalVersionMismatch(
@@ -149,26 +146,38 @@ def worker(
     # Execute the job and capture exceptions
     try:
         with open(in_fname, "r") as f:
-            indata = json.load(f)
-        server_versions = indata["versions"]
-        args_file_remote = indata["remote_files"]["args_file_remote"]
-        metadiff_file_remote = indata["remote_files"]["metadiff_file_remote"]
-        parameters = indata["parameters"]
-        command = indata["command"]
+            input_data = json.load(f)
+
+        # Extract some information which are useful upon failure
+        # FIXME: validate input_data somewhere else, e.g. to avoid `KeyError`s
+        failure_info = dict(
+            workflow_task_order=input_data["workflow_task_order"],
+            workflow_task_id=["workflow_task_id"],
+            task_name=["task_name"],
+        )
+
+        server_python_version = input_data["python_version"]
+        server_fractal_server_version = input_data["fractal_server_version"]
+
+        _check_versions_mismatch(
+            server_python_version=server_python_version,
+            server_fractal_server_version=server_fractal_server_version,
+        )
+
+        # Extract some useful paths
+        args_file_remote = input_data["remote_files"]["args_file_remote"]
+        metadiff_file_remote = input_data["remote_files"][
+            "metadiff_file_remote"
+        ]
+
+        # Write parameters to args.json file (FIXME: to move server-side)
+        parameters = input_data["parameters"]
         with open(args_file_remote, "w") as f:
             json.dump(parameters, f, indent=2)
 
-        full_command = (
-            f"{command} "
-            f"--args-json {args_file_remote} "
-            f"--out-json {metadiff_file_remote}"
-        )
-        log_path = indata["remote_files"]["log_file_remote"]
-        # fun,
-        # args = indata["args"]
-        # kwargs = indata["kwargs"]
-        _check_versions_mismatch(server_versions)
-
+        # Execute command
+        full_command = input_data["full_command"]
+        log_path = input_data["remote_files"]["log_file_remote"]
         _call_command_wrapper(cmd=full_command, log_path=log_path)
 
         try:
@@ -176,20 +185,14 @@ def worker(
                 out_meta = json.load(f)
             result = (True, out_meta)
         except FileNotFoundError:
-            # logger.debug(
-            #     "Task did not produce output metadata. "
-            #     f"Original FileNotFoundError: {str(e)}"
-            # )
-            result = (True, {})
+            # Command completed, but it produced no metadiff file
+            result = (True, None)
 
-        with open(out_fname, "w") as f:
-            json.dump(result, f, indent=2)
     except Exception as e:
         # Exception objects are not serialisable. Here we save the relevant
         # exception contents in a serializable dictionary. Note that whenever
         # the task failed "properly", the exception is a `TaskExecutionError`
         # and it has additional attributes.
-        #
         import traceback
 
         exc_type, exc_value, traceback_obj = sys.exc_info()
@@ -203,16 +206,13 @@ def worker(
         exc_proxy = dict(
             exc_type_name=type(e).__name__,
             traceback_string=traceback_string,
-            workflow_task_order=getattr(e, "workflow_task_order", None),
-            workflow_task_id=getattr(e, "workflow_task_id", None),
-            task_name=getattr(e, "task_name", None),
+            **failure_info,
         )
-        # out = cloudpickle.dumps(result)
-
-        # Write the output pickle file
         result = (False, exc_proxy)
-        with open(out_fname, "w") as f:
-            json.dump(result, f, indent=2)
+
+    # Write output file
+    with open(out_fname, "w") as f:
+        json.dump(result, f, indent=2)
 
 
 if __name__ == "__main__":

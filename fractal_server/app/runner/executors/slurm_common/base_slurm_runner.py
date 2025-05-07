@@ -7,6 +7,11 @@ from typing import Any
 from typing import Literal
 from typing import Optional
 
+from devtools import debug
+from pydantic import BaseModel
+from pydantic import ConfigDict
+from pydantic import Field
+
 from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
@@ -32,6 +37,19 @@ SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 
 logger = set_logger(__name__)
+
+
+class RemoteInputData(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    python_version: tuple[int, int, int]
+    fractal_server_version: str
+    remote_files: dict[str, str]  # remove or improve
+    full_command: str
+    workflow_task_order: int
+    workflow_task_id: int
+    task_name: str
+    parameters: dict[str, Any]  # -> move to args.json?
 
 
 def create_accounting_record_slurm(
@@ -165,39 +183,58 @@ class BaseSlurmRunner(BaseRunner):
 
     def _submit_single_sbatch(
         self,
-        # func,
         dict_to_remote,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
+
         logger.debug("[_submit_single_sbatch] START")
-        # Prepare input pickle(s)
-        versions = dict(
-            python=sys.version_info[:3],
-            # cloudpickle=cloudpickle.__version__,
-            fractal_server=__VERSION__,
-        )
+
+        from copy import copy
+
+        dict_to_remote = copy(dict_to_remote)  # FIXME
+        base_command = dict_to_remote.pop("base_command")
         for task in slurm_job.tasks:
             # Write input pickle
-            # _args = []
+            args_file_remote = task.task_files.remote_files_dict[
+                "args_file_remote"
+            ]
+            metadiff_file_remote = task.task_files.remote_files_dict[
+                "metadiff_file_remote"
+            ]
+            full_command = (
+                f"{base_command} "
+                f"--args-json {args_file_remote} "
+                f"--out-json {metadiff_file_remote}"
+            )
 
-            # FIXME compose the full_command
-            # full_command = (
-            #     f"{command} "
-            #     f"--args-json {args_file_remote} "
-            #     f"--out-json {metadiff_file_remote}"
-            # )
+            debug(
+                dict(
+                    full_command=full_command,
+                    python_version=sys.version_info[:3],
+                    fractal_server_version=__VERSION__,
+                    parameters=task.parameters,
+                    workflow_task_order=dict_to_remote["workflow_task_order"],
+                    workflow_task_id=dict_to_remote["workflow_task_id"],
+                    task_name=dict_to_remote["task_name"],
+                    remote_files=task.task_files.remote_files_dict,
+                )
+            )
 
-            _kwargs = dict(
-                **dict_to_remote,
-                versions=versions,
+            input_data = RemoteInputData(
+                full_command=full_command,
+                python_version=sys.version_info[:3],
+                fractal_server_version=__VERSION__,
                 parameters=task.parameters,
+                workflow_task_order=dict_to_remote["workflow_task_order"],
+                workflow_task_id=dict_to_remote["workflow_task_id"],
+                task_name=dict_to_remote["task_name"],
                 remote_files=task.task_files.remote_files_dict,
             )
-            # funcser = cloudpickle.dumps((versions, func, _args, _kwargs))
+            debug(input_data)
 
             with open(task.input_pickle_file_local, "w") as f:
-                json.dump(_kwargs, f, indent=2)
+                json.dump(input_data.model_dump(), f, indent=2)
 
             # with open(task.input_pickle_file_local, "r") as g:
             #     x = json.load(g)
@@ -470,7 +507,6 @@ class BaseSlurmRunner(BaseRunner):
 
     def submit(
         self,
-        # func: callable,
         dict_to_remote: dict[str, Any],
         parameters: dict[str, Any],
         history_unit_id: int,
@@ -484,6 +520,9 @@ class BaseSlurmRunner(BaseRunner):
         ],
         user_id: int,
     ) -> tuple[Any, Exception]:
+
+        debug("submit", dict_to_remote)
+
         logger.debug("[submit] START")
         try:
             workdir_local = task_files.wftask_subfolder_local
@@ -534,7 +573,6 @@ class BaseSlurmRunner(BaseRunner):
             config.parallel_tasks_per_job = 1
             time.sleep(5)  # FIXME please
             self._submit_single_sbatch(
-                # func,
                 dict_to_remote=dict_to_remote,
                 slurm_job=slurm_job,
                 slurm_config=config,
@@ -608,7 +646,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def multisubmit(
         self,
-        func: callable,
+        dict_to_remote: dict[str, Any],
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
@@ -708,7 +746,7 @@ class BaseSlurmRunner(BaseRunner):
             logger.debug("[multisubmit] Transfer files and submit jobs.")
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
-                    func,
+                    dict_to_remote=dict_to_remote,
                     slurm_job=slurm_job,
                     slurm_config=config,
                 )
