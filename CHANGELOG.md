@@ -1,5 +1,21 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.3
+
+* Runner:
+    * Skip creation/removal of folder copy in compress-folder module (\#2553).
+    * Drop obsolete `--extra-import-paths` option from SLURM remote worker (\#2550).
+
+# 2.14.2
+
+* API:
+    * Handle inaccessible `python_interpreter` or `package_root` in custom task collection  (\#2536).
+    * Do not raise non-processed-images warning if the previous task is a converter (\#2546).
+* App:
+    * Use `Enum` values in f-strings, for filenames and error messages (\#2540).
+* Runner:
+    * Handle exceptions in post-task-execution runner code (\#2543).
+
 # 2.14.1
 
 * API:

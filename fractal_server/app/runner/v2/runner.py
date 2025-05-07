@@ -9,6 +9,7 @@ from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
+from sqlmodel import update
 
 from ....images import SingleImage
 from ....images.tools import filter_image_list
@@ -25,6 +26,7 @@ from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
@@ -219,139 +221,160 @@ def execute_tasks_v2(
             num_tasks = 0
 
         # POST TASK EXECUTION
-
-        non_failed_task_outputs = [
-            value.task_output
-            for value in outcomes_dict.values()
-            if value.task_output is not None
-        ]
-        if len(non_failed_task_outputs) > 0:
-            current_task_output = merge_outputs(non_failed_task_outputs)
-            # If `current_task_output` includes no images (to be created or
-            # removed), then flag all the input images as modified.
-            # See fractal-server issues #1374 and #2409.
-            if (
-                current_task_output.image_list_updates == []
-                and current_task_output.image_list_removals == []
-            ):
-                current_task_output = TaskOutput(
-                    image_list_updates=[
-                        dict(zarr_url=img["zarr_url"])
-                        for img in filtered_images
-                    ],
-                )
-        else:
-            current_task_output = TaskOutput()
-
-        # Update image list
-        num_new_images = 0
-        current_task_output.check_zarr_urls_are_unique()
-        # NOTE: In principle we could make the task-output processing more
-        # granular, and also associate output-processing failures to history
-        # status.
-        for image_obj in current_task_output.image_list_updates:
-            image = image_obj.model_dump()
-            if image["zarr_url"] in [img["zarr_url"] for img in tmp_images]:
-                img_search = find_image_by_zarr_url(
-                    images=tmp_images,
-                    zarr_url=image["zarr_url"],
-                )
-                if img_search is None:
-                    raise ValueError(
-                        "Unexpected error: "
-                        f"Image with zarr_url {image['zarr_url']} not found, "
-                        "while updating image list."
-                    )
-                existing_image_index = img_search["index"]
-
+        try:
+            non_failed_task_outputs = [
+                value.task_output
+                for value in outcomes_dict.values()
+                if value.task_output is not None
+            ]
+            if len(non_failed_task_outputs) > 0:
+                current_task_output = merge_outputs(non_failed_task_outputs)
+                # If `current_task_output` includes no images (to be created or
+                # removed), then flag all the input images as modified.
+                # See fractal-server issues #1374 and #2409.
                 if (
-                    image["origin"] is None
-                    or image["origin"] == image["zarr_url"]
+                    current_task_output.image_list_updates == []
+                    and current_task_output.image_list_removals == []
                 ):
-                    # CASE 1: Edit existing image
-                    existing_image = img_search["image"]
-                    new_attributes = copy(existing_image["attributes"])
-                    new_types = copy(existing_image["types"])
-                    new_image = dict(
+                    current_task_output = TaskOutput(
+                        image_list_updates=[
+                            dict(zarr_url=img["zarr_url"])
+                            for img in filtered_images
+                        ],
+                    )
+            else:
+                current_task_output = TaskOutput()
+
+            # Update image list
+            num_new_images = 0
+            current_task_output.check_zarr_urls_are_unique()
+            # NOTE: In principle we could make the task-output processing more
+            # granular, and also associate output-processing failures to
+            # history status.
+            for image_obj in current_task_output.image_list_updates:
+                image = image_obj.model_dump()
+                if image["zarr_url"] in [
+                    img["zarr_url"] for img in tmp_images
+                ]:
+                    img_search = find_image_by_zarr_url(
+                        images=tmp_images,
                         zarr_url=image["zarr_url"],
                     )
-                    if "origin" in existing_image.keys():
-                        new_image["origin"] = existing_image["origin"]
+                    if img_search is None:
+                        raise ValueError(
+                            "Unexpected error: "
+                            f"Image with zarr_url {image['zarr_url']} not "
+                            "found, while updating image list."
+                        )
+                    existing_image_index = img_search["index"]
+
+                    if (
+                        image["origin"] is None
+                        or image["origin"] == image["zarr_url"]
+                    ):
+                        # CASE 1: Edit existing image
+                        existing_image = img_search["image"]
+                        new_attributes = copy(existing_image["attributes"])
+                        new_types = copy(existing_image["types"])
+                        new_image = dict(
+                            zarr_url=image["zarr_url"],
+                        )
+                        if "origin" in existing_image.keys():
+                            new_image["origin"] = existing_image["origin"]
+                    else:
+                        # CASE 2: Re-create existing image based on `origin`
+                        # Propagate attributes and types from `origin` (if any)
+                        (
+                            new_attributes,
+                            new_types,
+                        ) = get_origin_attribute_and_types(
+                            origin_url=image["origin"],
+                            images=tmp_images,
+                        )
+                        new_image = dict(
+                            zarr_url=image["zarr_url"],
+                            origin=image["origin"],
+                        )
+                    # Update attributes
+                    new_attributes.update(image["attributes"])
+                    new_attributes = drop_none_attributes(new_attributes)
+                    new_image["attributes"] = new_attributes
+                    # Update types
+                    new_types.update(image["types"])
+                    new_types.update(task.output_types)
+                    new_image["types"] = new_types
+                    # Validate new image
+                    SingleImage(**new_image)
+                    # Update image in the dataset image list
+                    tmp_images[existing_image_index] = new_image
+
                 else:
-                    # CASE 2: Re-create existing image based on `origin`
+                    # CASE 3: Add new image
+                    # Check that image['zarr_url'] is a subfolder of zarr_dir
+                    if (
+                        not image["zarr_url"].startswith(zarr_dir)
+                        or image["zarr_url"] == zarr_dir
+                    ):
+                        raise JobExecutionError(
+                            "Cannot create image if zarr_url is not a "
+                            "subfolder of zarr_dir.\n"
+                            f"zarr_dir: {zarr_dir}\n"
+                            f"zarr_url: {image['zarr_url']}"
+                        )
+
                     # Propagate attributes and types from `origin` (if any)
                     new_attributes, new_types = get_origin_attribute_and_types(
                         origin_url=image["origin"],
                         images=tmp_images,
                     )
+                    # Prepare new image
+                    new_attributes.update(image["attributes"])
+                    new_attributes = drop_none_attributes(new_attributes)
+                    new_types.update(image["types"])
+                    new_types.update(task.output_types)
                     new_image = dict(
                         zarr_url=image["zarr_url"],
                         origin=image["origin"],
+                        attributes=new_attributes,
+                        types=new_types,
                     )
-                # Update attributes
-                new_attributes.update(image["attributes"])
-                new_attributes = drop_none_attributes(new_attributes)
-                new_image["attributes"] = new_attributes
-                # Update types
-                new_types.update(image["types"])
-                new_types.update(task.output_types)
-                new_image["types"] = new_types
-                # Validate new image
-                SingleImage(**new_image)
-                # Update image in the dataset image list
-                tmp_images[existing_image_index] = new_image
+                    # Validate new image
+                    SingleImage(**new_image)
+                    # Add image into the dataset image list
+                    tmp_images.append(new_image)
+                    num_new_images += 1
 
-            else:
-                # CASE 3: Add new image
-                # Check that image['zarr_url'] is a subfolder of zarr_dir
-                if (
-                    not image["zarr_url"].startswith(zarr_dir)
-                    or image["zarr_url"] == zarr_dir
-                ):
+            # Remove images from tmp_images
+            for img_zarr_url in current_task_output.image_list_removals:
+                img_search = find_image_by_zarr_url(
+                    images=tmp_images, zarr_url=img_zarr_url
+                )
+                if img_search is None:
                     raise JobExecutionError(
-                        "Cannot create image if zarr_url is not a subfolder "
-                        "of zarr_dir.\n"
-                        f"zarr_dir: {zarr_dir}\n"
-                        f"zarr_url: {image['zarr_url']}"
+                        "Cannot remove missing image "
+                        f"(zarr_url={img_zarr_url})."
                     )
+                else:
+                    tmp_images.pop(img_search["index"])
 
-                # Propagate attributes and types from `origin` (if any)
-                new_attributes, new_types = get_origin_attribute_and_types(
-                    origin_url=image["origin"],
-                    images=tmp_images,
-                )
-                # Prepare new image
-                new_attributes.update(image["attributes"])
-                new_attributes = drop_none_attributes(new_attributes)
-                new_types.update(image["types"])
-                new_types.update(task.output_types)
-                new_image = dict(
-                    zarr_url=image["zarr_url"],
-                    origin=image["origin"],
-                    attributes=new_attributes,
-                    types=new_types,
-                )
-                # Validate new image
-                SingleImage(**new_image)
-                # Add image into the dataset image list
-                tmp_images.append(new_image)
-                num_new_images += 1
-
-        # Remove images from tmp_images
-        for img_zarr_url in current_task_output.image_list_removals:
-            img_search = find_image_by_zarr_url(
-                images=tmp_images, zarr_url=img_zarr_url
+            # Update type_filters based on task-manifest output_types
+            type_filters_from_task_manifest = task.output_types
+            current_dataset_type_filters.update(
+                type_filters_from_task_manifest
             )
-            if img_search is None:
-                raise JobExecutionError(
-                    f"Cannot remove missing image (zarr_url={img_zarr_url})."
+        except Exception as e:
+            logger.error(
+                "Unexpected error in post-task-execution block. "
+                f"Original error: {str(e)}"
+            )
+            with next(get_sync_db()) as db:
+                db.execute(
+                    update(HistoryUnit)
+                    .where(HistoryUnit.history_run_id == history_run_id)
+                    .values(status=HistoryUnitStatus.FAILED)
                 )
-            else:
-                tmp_images.pop(img_search["index"])
-
-        # Update type_filters based on task-manifest output_types
-        type_filters_from_task_manifest = task.output_types
-        current_dataset_type_filters.update(type_filters_from_task_manifest)
+                db.commit()
+            raise e
 
         with next(get_sync_db()) as db:
             # Write current dataset images into the database.
