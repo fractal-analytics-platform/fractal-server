@@ -16,41 +16,7 @@ import time
 from pathlib import Path
 
 from fractal_server.app.runner.run_subprocess import run_subprocess
-from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-
-
-def _create_tar_archive(
-    tarfile_path: str,
-    subfolder_path: Path,
-    logger_name: str,
-    filelist_path: str | None,
-):
-    logger = get_logger(logger_name)
-    logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
-    t_start = time.perf_counter()
-
-    if filelist_path is None:
-        cmd_tar = (
-            f"tar -c -z -f {tarfile_path} "
-            f"--directory={subfolder_path.as_posix()} "
-            "."
-        )
-    else:
-        cmd_tar = (
-            f"tar -c -z -f {tarfile_path} "
-            f"--directory={subfolder_path.as_posix()} "
-            f"--files-from={filelist_path} --ignore-failed-read"
-        )
-
-    logger.debug(f"cmd tar:\n{cmd_tar}")
-
-    run_subprocess(
-        cmd=cmd_tar,
-        logger_name=logger_name,
-    )
-    elapsed = time.perf_counter() - t_start
-    logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
 
 
 def compress_folder(
@@ -73,31 +39,46 @@ def compress_folder(
         Absolute path to the tar.gz archive.
     """
 
-    logger_name = "compress_folder"
+    # Assign an almost-unique label to the logger name, to simplify grepping
+    # logs when several `compress_folder` functions are run concurrently
+    label = round(time.time(), 2)
+    logger_name = f"compress_folder_{label}"
     logger = set_logger(
         logger_name,
         default_logging_level=default_logging_level,
     )
-
     logger.debug("START")
-    logger.debug(f"{subfolder_path=}")
-    parent_dir = subfolder_path.parent
+    t_start = time.perf_counter()
+
     subfolder_name = subfolder_path.name
-    tarfile_path = (parent_dir / f"{subfolder_name}.tar.gz").as_posix()
+    tarfile_path = (
+        subfolder_path.parent / f"{subfolder_name}.tar.gz"
+    ).as_posix()
+
+    logger.debug(f"{subfolder_path=}")
     logger.debug(f"{tarfile_path=}")
 
-    try:
-
-        _create_tar_archive(
-            tarfile_path,
-            subfolder_path,
-            logger_name=logger_name,
-            filelist_path=filelist_path,
+    if filelist_path is None:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path.as_posix()} "
+            "."
         )
-        return tarfile_path
+    else:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path.as_posix()} "
+            f"--files-from={filelist_path} --ignore-failed-read"
+        )
+    logger.debug(f"{cmd_tar=}")
 
+    try:
+        run_subprocess(cmd=cmd_tar, logger_name=logger_name)
+        elapsed = time.perf_counter() - t_start
+        logger.debug(f"END {elapsed=} s ({tarfile_path})")
+        return tarfile_path
     except Exception as e:
-        logger.debug(f"ERROR: {e}")
+        logger.debug(f"ERROR: {str(e)}")
         cmd_rm = f"rm {tarfile_path}"
         try:
             run_subprocess(cmd=cmd_rm, logger_name=logger_name)
