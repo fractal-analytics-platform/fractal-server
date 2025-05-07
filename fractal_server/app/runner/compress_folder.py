@@ -16,65 +16,7 @@ import time
 from pathlib import Path
 
 from fractal_server.app.runner.run_subprocess import run_subprocess
-from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-
-
-def _copy_subfolder(src: Path, dest: Path, logger_name: str):
-    t_start = time.perf_counter()
-    cmd_cp = f"cp -r {src.as_posix()} {dest.as_posix()}"
-    logger = get_logger(logger_name=logger_name)
-    logger.debug(f"{cmd_cp=}")
-    res = run_subprocess(cmd=cmd_cp, logger_name=logger_name)
-    elapsed = time.perf_counter() - t_start
-    logger.debug(f"[_copy_subfolder] END {elapsed=} s ({dest.as_posix()})")
-    return res
-
-
-def _create_tar_archive(
-    tarfile_path: str,
-    subfolder_path_tmp_copy: Path,
-    logger_name: str,
-    filelist_path: str | None,
-):
-    logger = get_logger(logger_name)
-    logger.debug(f"[_create_tar_archive] START ({tarfile_path})")
-    t_start = time.perf_counter()
-
-    if filelist_path is None:
-        cmd_tar = (
-            f"tar -c -z -f {tarfile_path} "
-            f"--directory={subfolder_path_tmp_copy.as_posix()} "
-            "."
-        )
-    else:
-        cmd_tar = (
-            f"tar -c -z -f {tarfile_path} "
-            f"--directory={subfolder_path_tmp_copy.as_posix()} "
-            f"--files-from={filelist_path} --ignore-failed-read"
-        )
-
-    logger.debug(f"cmd tar:\n{cmd_tar}")
-
-    run_subprocess(cmd=cmd_tar, logger_name=logger_name, allow_char="*")
-    elapsed = time.perf_counter() - t_start
-    logger.debug(f"[_create_tar_archive] END {elapsed=} s ({tarfile_path})")
-
-
-def _remove_temp_subfolder(subfolder_path_tmp_copy: Path, logger_name: str):
-    logger = get_logger(logger_name)
-    t_start = time.perf_counter()
-    try:
-        cmd_rm = f"rm -rf {subfolder_path_tmp_copy}"
-        logger.debug(f"cmd rm:\n{cmd_rm}")
-        run_subprocess(cmd=cmd_rm, logger_name=logger_name, allow_char="*")
-    except Exception as e:
-        logger.debug(f"ERROR during {cmd_rm}: {e}")
-    elapsed = time.perf_counter() - t_start
-    logger.debug(
-        f"[_remove_temp_subfolder] END {elapsed=} s "
-        f"({subfolder_path_tmp_copy=})"
-    )
 
 
 def compress_folder(
@@ -97,44 +39,55 @@ def compress_folder(
         Absolute path to the tar.gz archive.
     """
 
-    logger_name = "compress_folder"
+    # Assign an almost-unique label to the logger name, to simplify grepping
+    # logs when several `compress_folder` functions are run concurrently
+    label = round(time.time(), 2)
+    logger_name = f"compress_folder_{label}"
     logger = set_logger(
         logger_name,
         default_logging_level=default_logging_level,
     )
-
     logger.debug("START")
-    logger.debug(f"{subfolder_path=}")
-    parent_dir = subfolder_path.parent
+    t_start = time.perf_counter()
+
     subfolder_name = subfolder_path.name
-    tarfile_path = (parent_dir / f"{subfolder_name}.tar.gz").as_posix()
+    tarfile_path = (
+        subfolder_path.parent / f"{subfolder_name}.tar.gz"
+    ).as_posix()
+
+    logger.debug(f"{subfolder_path=}")
     logger.debug(f"{tarfile_path=}")
 
-    subfolder_path_tmp_copy = (
-        subfolder_path.parent / f"{subfolder_path.name}_copy"
-    )
+    if filelist_path is None:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path.as_posix()} "
+            "."
+        )
+    else:
+        cmd_tar = (
+            f"tar -c -z -f {tarfile_path} "
+            f"--directory={subfolder_path.as_posix()} "
+            f"--files-from={filelist_path} --ignore-failed-read"
+        )
+    logger.debug(f"{cmd_tar=}")
+
     try:
-        _copy_subfolder(
-            subfolder_path,
-            subfolder_path_tmp_copy,
-            logger_name=logger_name,
-        )
-        _create_tar_archive(
-            tarfile_path,
-            subfolder_path_tmp_copy,
-            logger_name=logger_name,
-            filelist_path=filelist_path,
-        )
+        run_subprocess(cmd=cmd_tar, logger_name=logger_name)
+        elapsed = time.perf_counter() - t_start
+        logger.debug(f"END {elapsed=} s ({tarfile_path})")
         return tarfile_path
-
     except Exception as e:
-        logger.debug(f"ERROR: {e}")
-        sys.exit(1)
+        logger.debug(f"ERROR: {str(e)}")
+        cmd_rm = f"rm {tarfile_path}"
+        try:
+            run_subprocess(cmd=cmd_rm, logger_name=logger_name)
+        except Exception as e_rm:
+            logger.error(
+                f"Running {cmd_rm=} failed, original error: {str(e_rm)}."
+            )
 
-    finally:
-        _remove_temp_subfolder(
-            subfolder_path_tmp_copy, logger_name=logger_name
-        )
+        sys.exit(1)
 
 
 def main(
