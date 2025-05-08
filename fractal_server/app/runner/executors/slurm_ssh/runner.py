@@ -85,12 +85,8 @@ class SlurmSSHRunner(BaseSlurmRunner):
         workdir_remote = finished_slurm_jobs[0].workdir_remote
 
         # Define local/remote tarfile paths
-        tarfile_path_local = (
-            workdir_local.parent / f"{workdir_local.name}.tar.gz"
-        ).as_posix()
-        tarfile_path_remote = (
-            workdir_remote.parent / f"{workdir_remote.name}.tar.gz"
-        ).as_posix()
+        tarfile_path_local = workdir_local.with_suffix(".tar.gz").as_posix()
+        tarfile_path_remote = workdir_remote.with_suffix(".tar.gz").as_posix()
 
         # Create file list
         # NOTE: see issue 2483
@@ -131,21 +127,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Create remote tarfile
         t_0_tar = time.perf_counter()
-        tar_command, tmp_tarfile_path_remote = get_tar_compression_cmd(
-            subfolder_path=workdir_remote, filelist_path=tmp_filelist_path
+        tar_command = get_tar_compression_cmd(
+            subfolder_path=workdir_remote,
+            filelist_path=tmp_filelist_path,
         )
-        # Consistency check
-        if tmp_tarfile_path_remote != tarfile_path_remote:
-            raise ValueError(
-                f"Unexpected error: {tmp_tarfile_path_remote=} "
-                f"but {tarfile_path_remote=}"
-            )
-
-        try:
-            self.fractal_ssh.run_command(cmd=tar_command)
-        except Exception as e:
-            self.fractal_ssh.run_command(f"rm -f {tarfile_path_remote}")
-            raise e
+        self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
         logger.info(
             f"[_fetch_artifacts] Remote archive {tarfile_path_remote} created"
@@ -169,8 +155,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         target_dir, cmd_tar = get_tar_extraction_cmd(Path(tarfile_path_local))
         Path(target_dir).mkdir(exist_ok=True)
         run_subprocess(cmd=cmd_tar, logger_name=logger.name)
-
-        # Remove local tarfile
         Path(tarfile_path_local).unlink(missing_ok=True)
 
         t_1 = time.perf_counter()

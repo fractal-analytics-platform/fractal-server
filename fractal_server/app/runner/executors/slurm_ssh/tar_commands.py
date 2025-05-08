@@ -17,15 +17,12 @@ def get_tar_compression_cmd(
     Args:
         subfolder_path: Absolute path to the folder to compress.
         filelist_path: If set, to be used in the `--files-from` option.
+        expected_tarfile: If set, it should match to the returned one.
 
     Returns:
-        tar command and path to of the tar.gz archive
+        tar command
     """
-    subfolder_name = subfolder_path.name
-    tarfile_path = (
-        subfolder_path.parent / f"{subfolder_name}.tar.gz"
-    ).as_posix()
-
+    tarfile_path = subfolder_path.with_suffix(".tar.gz")
     if filelist_path is None:
         cmd_tar = (
             f"tar -c -z "
@@ -40,7 +37,7 @@ def get_tar_compression_cmd(
             f"--files-from={filelist_path.as_posix()} --ignore-failed-read"
         )
 
-    return cmd_tar, tarfile_path
+    return cmd_tar
 
 
 def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
