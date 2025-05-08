@@ -94,6 +94,12 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=dict(password=""),
     )
+    assert res.status_code == 422
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(password="abc"),
+    )
     assert res.status_code == 400
     debug(res.json())
     assert "The password is too short" in str(res.json()["detail"])

@@ -4,7 +4,7 @@ from typing import Literal
 from typing import Optional
 from typing import Union
 
-from fractal_server.images.models import AttributeFiltersType
+from fractal_server.types import AttributeFilters
 
 ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
 
@@ -36,7 +36,7 @@ def match_filter(
     *,
     image: dict[str, Any],
     type_filters: dict[str, bool],
-    attribute_filters: AttributeFiltersType,
+    attribute_filters: AttributeFilters,
 ) -> bool:
     """
     Find whether an image matches a filter set.
@@ -66,7 +66,7 @@ def match_filter(
 def filter_image_list(
     images: list[dict[str, Any]],
     type_filters: Optional[dict[str, bool]] = None,
-    attribute_filters: Optional[AttributeFiltersType] = None,
+    attribute_filters: Optional[AttributeFilters] = None,
 ) -> list[dict[str, Any]]:
     """
     Compute a sublist with images that match a filter set.

@@ -8,8 +8,6 @@ from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import field_validator
-from pydantic import model_validator
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
 
@@ -22,18 +20,14 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
-from fractal_server.app.schemas._filter_validators import (
-    validate_attribute_filters,
-)
-from fractal_server.app.schemas._filter_validators import validate_type_filters
-from fractal_server.app.schemas._validators import root_validate_dict_keys
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
-from fractal_server.images.models import AttributeFiltersType
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
+from fractal_server.types import AttributeFilters
+from fractal_server.types import TypeFilters
 
 router = APIRouter()
 
@@ -45,18 +39,8 @@ class ImagePage(PaginationResponse[SingleImage]):
 
 
 class ImageQuery(BaseModel):
-    type_filters: dict[str, bool] = Field(default_factory=dict)
-    attribute_filters: AttributeFiltersType = Field(default_factory=dict)
-
-    _dict_keys = model_validator(mode="before")(
-        classmethod(root_validate_dict_keys)
-    )
-    _type_filters = field_validator("type_filters")(
-        classmethod(validate_type_filters)
-    )
-    _attribute_filters = field_validator("attribute_filters")(
-        classmethod(validate_attribute_filters)
-    )
+    type_filters: TypeFilters = Field(default_factory=dict)
+    attribute_filters: AttributeFilters = Field(default_factory=dict)
 
 
 class ImageQueryWithZarrUrl(ImageQuery):

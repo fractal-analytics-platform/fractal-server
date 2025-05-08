@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Literal
 from typing import Optional
 
@@ -7,9 +6,11 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
-from .._validators import NonEmptyString
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
+from fractal_server.types import AbsolutePathStr
+from fractal_server.types import DictStrStr
+from fractal_server.types import NonEmptyStr
 
 
 class WheelFile(BaseModel):
@@ -46,57 +47,28 @@ class TaskCollectPipV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    package: Optional[NonEmptyString] = None
-    package_version: Optional[NonEmptyString] = None
-    package_extras: Optional[NonEmptyString] = None
+    package: Optional[NonEmptyStr] = None
+    package_version: Optional[NonEmptyStr] = None
+    package_extras: Optional[NonEmptyStr] = None
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[dict[str, str]] = None
+    pinned_package_versions: Optional[DictStrStr] = None
 
-    @field_validator("package")
+    @field_validator(
+        "package", "package_version", "package_extras", mode="after"
+    )
     @classmethod
-    def package_validator(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        validate_cmd(value, attribute_name="package")
+    def validate_commands(cls, value):
+        if value is not None:
+            validate_cmd(value)
         return value
 
-    @field_validator("package_version")
+    @field_validator("pinned_package_versions", mode="after")
     @classmethod
-    def package_version_validator(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        validate_cmd(value, attribute_name="package_version")
-        return value
-
-    @field_validator("pinned_package_versions")
-    @classmethod
-    def pinned_package_versions_validator(cls, value):
-        if value is None:
-            return value
-
-        old_keys = list(value.keys())
-        new_keys = [key.strip() for key in old_keys]
-        if any(k == "" for k in new_keys):
-            raise ValueError(f"Empty string in {new_keys}.")
-        if len(new_keys) != len(set(new_keys)):
-            raise ValueError(
-                f"Dictionary contains multiple identical keys: {value}."
-            )
-        for old_key, new_key in zip(old_keys, new_keys):
-            if new_key != old_key:
-                value[new_key] = value.pop(old_key)
-
-        for pkg, version in value.items():
-            validate_cmd(pkg)
-            validate_cmd(version)
-        return value
-
-    @field_validator("package_extras")
-    @classmethod
-    def package_extras_validator(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return value
-        validate_cmd(value, attribute_name="package_extras")
+    def validate_pinned_package_versions(cls, value):
+        if value is not None:
+            for pkg, version in value.items():
+                validate_cmd(pkg)
+                validate_cmd(version)
         return value
 
 
@@ -120,11 +92,18 @@ class TaskCollectCustomV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     manifest: ManifestV2
-    python_interpreter: NonEmptyString
-    label: NonEmptyString
-    package_root: Optional[NonEmptyString] = None
-    package_name: Optional[NonEmptyString] = None
-    version: Optional[NonEmptyString] = None
+    python_interpreter: AbsolutePathStr
+    label: NonEmptyStr
+    package_root: Optional[AbsolutePathStr] = None
+    package_name: Optional[NonEmptyStr] = None
+    version: Optional[NonEmptyStr] = None
+
+    @field_validator("package_name", mode="after")
+    @classmethod
+    def validate_package_name(cls, value):
+        if value is not None:
+            validate_cmd(value)
+        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -139,32 +118,3 @@ class TaskCollectCustomV2(BaseModel):
                 "'package_root' and 'package_name'"
             )
         return values
-
-    @field_validator("package_name")
-    @classmethod
-    def package_name_validator(cls, value: str):
-        """
-        Remove all whitespace characters, then check for invalid code.
-        """
-        if value is not None:
-            validate_cmd(value)
-            value = value.replace(" ", "")
-        return value
-
-    @field_validator("package_root")
-    @classmethod
-    def package_root_validator(cls, value):
-        if (value is not None) and (not Path(value).is_absolute()):
-            raise ValueError(
-                f"'package_root' must be an absolute path: (given {value})."
-            )
-        return value
-
-    @field_validator("python_interpreter")
-    @classmethod
-    def python_interpreter_validator(cls, value):
-        if not Path(value).is_absolute():
-            raise ValueError(
-                f"Python interpreter path must be absolute: (given {value})."
-            )
-        return value

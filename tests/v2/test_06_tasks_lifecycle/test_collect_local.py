@@ -243,7 +243,7 @@ async def test_invalid_wheel(
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
 
     pkgnames_logs = [
-        ("invalid_manifest", "Wrong manifest version"),
+        ("invalid_manifest", "manifest_version"),
         ("missing_manifest", "manifest path not found"),
         ("missing_executable", "missing file"),
     ]

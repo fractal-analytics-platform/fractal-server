@@ -5,16 +5,15 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import field_validator
-from pydantic import HttpUrl
 from pydantic import model_validator
 
-from .._validators import cant_set_none
-from fractal_server.app.schemas._validators import NonEmptyString
-from fractal_server.app.schemas._validators import val_unique_list
-from fractal_server.app.schemas._validators import valdict_keys
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
+from fractal_server.types import DictStrAny
+from fractal_server.types import HttpUrlStr
+from fractal_server.types import ListUniqueNonEmptyString
+from fractal_server.types import NonEmptyStr
+from fractal_server.types import TypeFilters
 
 TaskTypeType = Literal[
     "compound",
@@ -31,41 +30,29 @@ logger = set_logger(__name__)
 class TaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyString
+    name: NonEmptyStr
 
-    command_non_parallel: Optional[NonEmptyString] = None
-    command_parallel: Optional[NonEmptyString] = None
+    command_non_parallel: NonEmptyStr = None
+    command_parallel: NonEmptyStr = None
 
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    version: Optional[NonEmptyString] = None
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[NonEmptyString] = None
+    meta_non_parallel: Optional[DictStrAny] = None
+    meta_parallel: Optional[DictStrAny] = None
+    version: NonEmptyStr = None
+    args_schema_non_parallel: Optional[DictStrAny] = None
+    args_schema_parallel: Optional[DictStrAny] = None
+    args_schema_version: NonEmptyStr = None
     docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    docs_link: Optional[HttpUrlStr] = None
 
-    input_types: dict[str, bool] = Field(default={})
-    output_types: dict[str, bool] = Field(default={})
+    input_types: TypeFilters = Field(default={})
+    output_types: TypeFilters = Field(default={})
 
-    category: Optional[NonEmptyString] = None
-    modality: Optional[NonEmptyString] = None
-    tags: list[NonEmptyString] = Field(default_factory=list)
-    authors: Optional[NonEmptyString] = None
+    category: Optional[NonEmptyStr] = None
+    modality: Optional[NonEmptyStr] = None
+    tags: ListUniqueNonEmptyString = Field(default_factory=list)
+    authors: Optional[NonEmptyStr] = None
 
     type: Optional[TaskTypeType] = None
-
-    # Validators
-
-    @field_validator(
-        "command_non_parallel",
-        "command_parallel",
-        "version",
-        "args_schema_version",
-    )
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
 
     @model_validator(mode="after")
     def validate_commands(self):
@@ -100,37 +87,6 @@ class TaskCreateV2(BaseModel):
 
         return self
 
-    _meta_non_parallel = field_validator("meta_non_parallel")(
-        classmethod(valdict_keys("meta_non_parallel"))
-    )
-    _meta_parallel = field_validator("meta_parallel")(
-        classmethod(valdict_keys("meta_parallel"))
-    )
-    _args_schema_non_parallel = field_validator("args_schema_non_parallel")(
-        classmethod(valdict_keys("args_schema_non_parallel"))
-    )
-    _args_schema_parallel = field_validator("args_schema_parallel")(
-        classmethod(valdict_keys("args_schema_parallel"))
-    )
-    _input_types = field_validator("input_types")(
-        classmethod(valdict_keys("input_types"))
-    )
-    _output_types = field_validator("output_types")(
-        classmethod(valdict_keys("output_types"))
-    )
-
-    @field_validator("tags")
-    @classmethod
-    def validate_list_of_strings(cls, value):
-        return val_unique_list("tags")(cls, value)
-
-    @field_validator("docs_link", mode="after")
-    @classmethod
-    def validate_docs_link(cls, value):
-        if value is not None:
-            HttpUrl(value)
-        return value
-
 
 class TaskReadV2(BaseModel):
     id: int
@@ -162,56 +118,30 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: Optional[NonEmptyString] = None
-    command_non_parallel: Optional[NonEmptyString] = None
-    input_types: Optional[dict[str, bool]] = None
-    output_types: Optional[dict[str, bool]] = None
+    command_parallel: NonEmptyStr = None
+    command_non_parallel: NonEmptyStr = None
+    input_types: TypeFilters = None
+    output_types: TypeFilters = None
 
-    category: Optional[NonEmptyString] = None
-    modality: Optional[NonEmptyString] = None
-    authors: Optional[NonEmptyString] = None
-    tags: Optional[list[NonEmptyString]] = None
-
-    # Validators
-
-    @field_validator("command_parallel", "command_non_parallel")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
-
-    @field_validator("input_types", "output_types")
-    @classmethod
-    def val_is_dict(cls, v):
-        if not isinstance(v, dict):
-            raise ValueError
-        return v
-
-    _input_types = field_validator("input_types")(
-        classmethod(valdict_keys("input_types"))
-    )
-    _output_types = field_validator("output_types")(
-        classmethod(valdict_keys("output_types"))
-    )
-
-    @field_validator("tags")
-    @classmethod
-    def validate_tags(cls, value):
-        return val_unique_list("tags")(cls, value)
+    category: Optional[NonEmptyStr] = None
+    modality: Optional[NonEmptyStr] = None
+    authors: Optional[NonEmptyStr] = None
+    tags: Optional[ListUniqueNonEmptyString] = None
 
 
 class TaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    pkg_name: NonEmptyString
-    version: Optional[NonEmptyString] = None
-    name: NonEmptyString
+    pkg_name: NonEmptyStr
+    version: Optional[NonEmptyStr] = None
+    name: NonEmptyStr
 
 
 class TaskImportV2Legacy(BaseModel):
-    source: NonEmptyString
+    source: NonEmptyStr
 
 
 class TaskExportV2(BaseModel):
-    pkg_name: NonEmptyString
-    version: Optional[NonEmptyString] = None
-    name: NonEmptyString
+    pkg_name: NonEmptyStr
+    version: Optional[NonEmptyStr] = None
+    name: NonEmptyStr

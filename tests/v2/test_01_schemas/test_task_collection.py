@@ -46,18 +46,16 @@ def test_TaskCollectPipV2():
             package="pkg",
             pinned_package_versions={" a ": "1.0.0", "a": "2.0.0"},
         )
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(package="pkg", pinned_package_versions={" ": "1.0.0"})
 
-    with pytest.raises(ValidationError, match="package must not contain"):
+    with pytest.raises(ValidationError, match="must not contain"):
         TaskCollectPipV2(package="; rm x")
 
-    with pytest.raises(
-        ValidationError, match="package_version must not contain"
-    ):
+    with pytest.raises(ValidationError, match="must not contain"):
         TaskCollectPipV2(package="pkg", package_version="; rm x")
 
-    with pytest.raises(
-        ValidationError, match="package_extras must not contain"
-    ):
+    with pytest.raises(ValidationError, match="must not contain"):
         TaskCollectPipV2(
             package="pkg", package_version="1.2.3", package_extras="]; rm x; ["
         )
@@ -91,10 +89,7 @@ async def test_TaskCollectCustomV2(testdata_path):
             package_root=None,
             package_name="name",
         )
-    assert (
-        "Python interpreter path must be absolute"
-        in e._excinfo[1].errors()[0]["msg"]
-    )
+    assert "String must be an absolute path" in str(e.value)
 
     with pytest.raises(ValidationError) as e:
         TaskCollectCustomV2(
@@ -104,7 +99,7 @@ async def test_TaskCollectCustomV2(testdata_path):
             package_root="non_absolute_path",
             package_name=None,
         )
-    assert "'package_root' must be an absolute path" in str(e.value)
+    assert "String must be an absolute path" in str(e.value)
 
     # Fail because neither 'package_root' nor 'package_name'
     with pytest.raises(ValidationError) as e:
