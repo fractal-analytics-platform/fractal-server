@@ -153,7 +153,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Extract tarfile locally
         target_dir, cmd_tar = get_tar_extraction_cmd(Path(tarfile_path_local))
-        Path(target_dir).mkdir(exist_ok=True)
+        target_dir.mkdir(exist_ok=True)
         run_subprocess(cmd=cmd_tar, logger_name=logger.name)
         Path(tarfile_path_local).unlink(missing_ok=True)
 

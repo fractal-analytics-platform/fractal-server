@@ -40,7 +40,7 @@ def get_tar_compression_cmd(
     return cmd_tar
 
 
-def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
+def get_tar_extraction_cmd(archive_path: Path) -> tuple[Path, str]:
     """
     Prepare command to extract e.g. `/path/dir.tar.gz` into `/path/dir`.
 
@@ -48,7 +48,7 @@ def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
         archive_path: Absolute path to the tar.gz archive.
 
     Returns:
-        Target folder, and tar command
+        Target extraction folder and tar command
     """
 
     # Prepare subfolder path
@@ -62,4 +62,4 @@ def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
     cmd_tar = (
         f"tar -xzvf {archive_path} --directory={subfolder_path.as_posix()}"
     )
-    return subfolder_path.as_posix(), cmd_tar
+    return subfolder_path, cmd_tar
