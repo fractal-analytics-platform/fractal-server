@@ -549,3 +549,65 @@ async def test_workflow_type_filters_flow(
 
         debug(res.json())
         assert res.json() == expected_response
+
+
+async def test_get_workflow_version_update_candidates(
+    MockCurrentUser,
+    project_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    task_factory_v2,
+    client,
+):
+    async with MockCurrentUser() as user:
+
+        project = await project_factory_v2(user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+
+        await task_factory_v2(
+            user_id=user.id,
+            name="my_task",
+            args_schema_parallel={"foo": "bar"},
+            task_group_kwargs={"pkg_name": "my_pkg", "version": "1.0.0a0"},
+        )
+        task0 = await task_factory_v2(
+            user_id=user.id,
+            name="my_task",
+            args_schema_parallel={"foo": "bar"},
+            task_group_kwargs={"pkg_name": "my_pkg", "version": "1.0.0a1"},
+        )
+        task1 = await task_factory_v2(
+            user_id=user.id,
+            name="my_task",
+            args_schema_parallel={"foo": "bar"},
+            task_group_kwargs={"pkg_name": "my_pkg", "version": "1.0.0"},
+        )
+        task2 = await task_factory_v2(
+            user_id=user.id,
+            name="my_task",
+            args_schema_parallel={"foo": "bar"},
+            task_group_kwargs={"pkg_name": "my_pkg", "version": "1.0.1"},
+        )
+        task3 = await task_factory_v2(
+            user_id=user.id,
+            name="my_task",
+            args_schema_parallel={"foo": "bar"},
+            task_group_kwargs={"pkg_name": "my_pkg", "version": "2.0.0rc4"},
+        )
+
+        wft = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task0.id
+        )
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/"
+            "version-update-candidates/",
+        )
+
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        new_versions = res.json()[str(wft.id)]
+        assert len(new_versions) == 3
+        assert {"new_version": "1.0.0", "task_id": task1.id} in new_versions
+        assert {"new_version": "1.0.1", "task_id": task2.id} in new_versions
+        assert {"new_version": "2.0.0rc4", "task_id": task3.id} in new_versions
