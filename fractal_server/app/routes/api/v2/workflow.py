@@ -353,7 +353,7 @@ async def get_workflow_version_update_candidates(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> dict[int, dict[str, Union[str, int]]]:
+) -> dict[int, list[dict[str, Union[str, int]]]]:
 
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
@@ -373,7 +373,7 @@ async def get_workflow_version_update_candidates(
             select(TaskGroupV2.version, TaskV2.id)
             .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
             .where(TaskGroupV2.pkg_name == old_task_group.pkg_name)
-            .where(TaskGroupV2.active is True)
+            .where(TaskGroupV2.active.is_(True))
             .where(
                 or_(
                     TaskGroupV2.user_id == user.id,
@@ -398,6 +398,7 @@ async def get_workflow_version_update_candidates(
             for version, task_id in query_results
             if is_version_greater_than(version, old_task_group.version)
         ]
+
         if filtered_groups_and_taskids:
             response[wftask.id] = filtered_groups_and_taskids
 
