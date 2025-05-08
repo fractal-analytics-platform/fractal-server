@@ -5,8 +5,12 @@ from typing import Optional
 from ...run_subprocess import run_subprocess
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from fractal_server.app.runner.tar_commands import get_tar_compression_cmd
-from fractal_server.app.runner.tar_commands import get_tar_extraction_cmd
+from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_compression_cmd,
+)
+from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_extraction_cmd,
+)
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
