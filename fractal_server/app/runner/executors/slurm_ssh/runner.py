@@ -4,15 +4,14 @@ from typing import Optional
 
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from fractal_server.app.runner.extract_archive import extract_archive  # FIXME
-from fractal_server.app.runner.tar_commands import get_tar_compression_command
+from fractal_server.app.runner.compress_folder import compress_folder
+from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 from fractal_server.syringe import Inject
-from fractal_server.utils import execute_command_sync
 
 
 logger = set_logger(__name__)
@@ -131,11 +130,12 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Create remote tarfile
         t_0_tar = time.perf_counter()
-        tar_command, tmp = get_tar_compression_command(
-            subfolder_path=workdir_remote, filelist_path=tmp_filelist_path
+        tar_command = (
+            f"{self.python_worker_interpreter} "
+            "-m fractal_server.app.runner.compress_folder "
+            f"{workdir_remote.as_posix()} "
+            f"--filelist {tmp_filelist_path}"
         )
-        if tmp != tarfile_path_remote:  # FIXME
-            raise ValueError("unexpected branch")
         self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
         logger.info(
@@ -170,17 +170,15 @@ class SlurmSSHRunner(BaseSlurmRunner):
         Transfer the jobs subfolder to the remote host.
         """
         for job in jobs:
-
             # Create local archive
-            tar_cmd, tarfile_path_local = get_tar_compression_command(
+            tarfile_path_local = compress_folder(
                 job.workdir_local,
                 filelist_path=None,
             )
-            execute_command_sync(tar_cmd)
+            tarfile_name = Path(tarfile_path_local).name
             logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
             # Transfer archive
-            tarfile_name = Path(tarfile_path_local).name
             tarfile_path_remote = (
                 job.workdir_remote.parent / tarfile_name
             ).as_posix()
