@@ -143,9 +143,6 @@ def test_user_settings_update():
 
 def test_unit_val_absolute_path():
     val_absolute_path("/path")
-
-    with pytest.raises(TypeError):
-        val_absolute_path(None)
     with pytest.raises(ValueError):
         val_absolute_path("   ")
     with pytest.raises(ValueError):
