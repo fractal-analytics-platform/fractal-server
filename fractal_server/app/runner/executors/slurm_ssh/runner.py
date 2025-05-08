@@ -2,17 +2,17 @@ import time
 from pathlib import Path
 from typing import Optional
 
+from ...run_subprocess import run_subprocess
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from fractal_server.app.runner.extract_archive import extract_archive  # FIXME
 from fractal_server.app.runner.tar_commands import get_tar_compression_command
+from fractal_server.app.runner.tar_commands import get_tar_extraction_command
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
 from fractal_server.syringe import Inject
-from fractal_server.utils import execute_command_sync
 
 
 logger = set_logger(__name__)
@@ -131,11 +131,16 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Create remote tarfile
         t_0_tar = time.perf_counter()
-        tar_command, tmp = get_tar_compression_command(
+        tar_command, tmp_tarfile_path_remote = get_tar_compression_command(
             subfolder_path=workdir_remote, filelist_path=tmp_filelist_path
         )
-        if tmp != tarfile_path_remote:  # FIXME
-            raise ValueError("unexpected branch")
+        # Consistency check
+        if tmp_tarfile_path_remote != tarfile_path_remote:
+            raise ValueError(
+                f"Unexpected error: {tmp_tarfile_path_remote=} "
+                f"but {tarfile_path_remote=}"
+            )
+
         self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
         logger.info(
@@ -157,7 +162,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
 
         # Extract tarfile locally
-        extract_archive(Path(tarfile_path_local))
+        target_dir, cmd_tar = get_tar_extraction_command(
+            Path(tarfile_path_local)
+        )
+        Path(target_dir).mkdir(exist_ok=True)
+        run_subprocess(cmd=cmd_tar, logger_name=logger.name)
 
         # Remove local tarfile
         Path(tarfile_path_local).unlink(missing_ok=True)
@@ -176,7 +185,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
                 job.workdir_local,
                 filelist_path=None,
             )
-            execute_command_sync(tar_cmd)
+            run_subprocess(tar_cmd, logger_name=logger.name)
             logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
             # Transfer archive
@@ -200,12 +209,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
             logger.debug(f"Local archive {tarfile_path_local} removed")
 
             # Uncompress remote archive
-            tar_command = (
-                f"{self.python_worker_interpreter} -m "
-                "fractal_server.app.runner.extract_archive "
-                f"{tarfile_path_remote}"
+            target_dir, tar_cmd = get_tar_extraction_command(
+                Path(tarfile_path_remote)
             )
-            self.fractal_ssh.run_command(cmd=tar_command)
+            self.fractal_ssh.mkdir(target_dir, parents=True)
+            self.fractal_ssh.run_command(cmd=tar_cmd)
 
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
