@@ -2,7 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from fractal_server.app.runner.run_subprocess import run_subprocess
+from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
+    run_subprocess,
+)
 
 
 def test_run_subprocess(tmp_path: Path):

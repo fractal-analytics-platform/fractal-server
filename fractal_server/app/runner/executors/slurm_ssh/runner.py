@@ -2,9 +2,9 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from ...run_subprocess import run_subprocess
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
+from .run_subprocess import run_subprocess
 from .tar_commands import get_tar_compression_cmd
 from .tar_commands import get_tar_extraction_cmd
 from fractal_server.config import get_settings
