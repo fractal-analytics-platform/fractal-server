@@ -371,16 +371,9 @@ async def get_workflow_version_update_candidates(
 
         res = await db.execute(
             select(TaskGroupV2, TaskV2.id)
+            .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
             .where(TaskGroupV2.pkg_name == old_task_group.pkg_name)
             .where(TaskGroupV2.active is True)
-            .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
-            .where(TaskV2.name == task.name)
-            .where(
-                or_(
-                    TaskV2.args_schema_parallel is not None,
-                    TaskV2.args_schema_non_parallel is not None,
-                )
-            )
             .where(
                 or_(
                     TaskGroupV2.user_id == user.id,
@@ -391,14 +384,19 @@ async def get_workflow_version_update_candidates(
                     ),
                 )
             )
+            .where(
+                or_(
+                    TaskV2.args_schema_parallel is not None,
+                    TaskV2.args_schema_non_parallel is not None,
+                )
+            )
+            .where(TaskV2.name == task.name)
         )
         query_results: list[tuple[TaskGroupV2, int]] = res.all()
         filtered_groups_and_taskids = [
-            group_and_taskid
-            for group_and_taskid in query_results
-            if is_version_larger_than(
-                group_and_taskid[0].version, old_task_group.version
-            )
+            (group, task_id)
+            for group, task_id in query_results
+            if is_version_larger_than(group.version, old_task_group.version)
         ]
         if filtered_groups_and_taskids:
             response[wftask.id] = [
