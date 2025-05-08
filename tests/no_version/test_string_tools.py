@@ -52,6 +52,8 @@ def test_is_version_greater_than_than():
         "0.2.0a0",
     ]
 
+    # FIXME this order differs from
+    # https://github.com/fractal-analytics-platform/fractal-web/blob/edfd62660ac20220b14d516eb3f67d826d217b45/components/__tests__/version.test.js
     expected_sorted_versions = [
         "0.1.dev27+g1458b59",
         "0.1.2",
