@@ -32,7 +32,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.images.tools import merge_type_filters
-from fractal_server.string_tools import is_version_larger_than
+from fractal_server.string_tools import is_version_greater_than
 
 router = APIRouter()
 
@@ -370,7 +370,7 @@ async def get_workflow_version_update_candidates(
         old_task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
 
         res = await db.execute(
-            select(TaskGroupV2, TaskV2.id)
+            select(TaskGroupV2.version, TaskV2.id)
             .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
             .where(TaskGroupV2.pkg_name == old_task_group.pkg_name)
             .where(TaskGroupV2.active is True)
@@ -394,14 +394,11 @@ async def get_workflow_version_update_candidates(
         )
         query_results: list[tuple[TaskGroupV2, int]] = res.all()
         filtered_groups_and_taskids = [
-            (group, task_id)
-            for group, task_id in query_results
-            if is_version_larger_than(group.version, old_task_group.version)
+            dict(new_version=version, task_id=task_id)
+            for version, task_id in query_results
+            if is_version_greater_than(version, old_task_group.version)
         ]
         if filtered_groups_and_taskids:
-            response[wftask.id] = [
-                dict(new_version=group.version, task_id=task_id)
-                for group, task_id in filtered_groups_and_taskids
-            ]
+            response[wftask.id] = filtered_groups_and_taskids
 
     return response
