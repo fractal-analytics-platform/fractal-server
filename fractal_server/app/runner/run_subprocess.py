@@ -29,6 +29,8 @@ def run_subprocess(
         logger.info(f"stderr: {e.stderr}")
         raise e
     except Exception as e:
-        logger.warning(f"An error occurred while running command: {cmd}")
+        logger.warning(
+            f"An unexpected error occurred while running command: {cmd}"
+        )
         logger.warning(str(e))
         raise e
