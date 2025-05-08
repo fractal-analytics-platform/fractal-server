@@ -43,13 +43,6 @@ def get_tar_compression_cmd(
     return cmd_tar, tarfile_path
 
 
-def _remove_suffix(*, string: str, suffix: str) -> str:
-    if string.endswith(suffix):
-        return string[: -len(suffix)]
-    else:
-        raise ValueError(f"Cannot remove {suffix=} from {string=}.")
-
-
 def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
     """
     Prepare command to extract e.g. `/path/dir.tar.gz` into `/path/dir`.
@@ -62,9 +55,12 @@ def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
     """
 
     # Prepare subfolder path
-    parent_dir = archive_path.parent
-    subfolder_name = _remove_suffix(string=archive_path.name, suffix=".tar.gz")
-    subfolder_path = parent_dir / subfolder_name
+    if archive_path.suffixes != [".tar", ".gz"]:
+        raise ValueError(
+            "Archive path must end with `.tar.gz` "
+            f"(given: {archive_path.as_posix()})"
+        )
+    subfolder_path = archive_path.with_suffix("").with_suffix("")
 
     cmd_tar = (
         f"tar -xzvf {archive_path} --directory={subfolder_path.as_posix()}"
