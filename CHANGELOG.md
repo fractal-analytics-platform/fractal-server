@@ -1,12 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.4 (unreleased)
+
+* API:
+    * Replace most `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
+
 # 2.14.3
 
 * Runner:
     * Skip creation/removal of folder copy in compress-folder module (\#2553).
     * Drop obsolete `--extra-import-paths` option from SLURM remote worker (\#2550).
-* API:
-    * Replace most `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
 
 # 2.14.2
 
