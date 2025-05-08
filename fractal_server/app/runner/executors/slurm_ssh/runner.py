@@ -141,7 +141,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
                 f"but {tarfile_path_remote=}"
             )
 
-        self.fractal_ssh.run_command(cmd=tar_command)
+        try:
+            self.fractal_ssh.run_command(cmd=tar_command)
+        except Exception as e:
+            self.fractal_ssh.run_command(f"rm -f {tarfile_path_remote}")
+            raise e
         t_1_tar = time.perf_counter()
         logger.info(
             f"[_fetch_artifacts] Remote archive {tarfile_path_remote} created"
@@ -185,8 +189,14 @@ class SlurmSSHRunner(BaseSlurmRunner):
                 job.workdir_local,
                 filelist_path=None,
             )
-            run_subprocess(tar_cmd, logger_name=logger.name)
-            logger.info(f"Subfolder archive created at {tarfile_path_local}")
+            try:
+                run_subprocess(tar_cmd, logger_name=logger.name)
+                logger.info(
+                    f"Subfolder archive created at {tarfile_path_local}"
+                )
+            except Exception as e:
+                Path(tarfile_path_local).unlink(missing_ok=True)
+                raise e
 
             # Transfer archive
             tarfile_name = Path(tarfile_path_local).name

@@ -55,6 +55,6 @@ def get_tar_extraction_command(archive_path: Path) -> tuple[str, str]:
     subfolder_path = parent_dir / subfolder_name
 
     cmd_tar = (
-        f"tar -xzvf {archive_path} " f"--directory={subfolder_path.as_posix()}"
+        f"tar -xzvf {archive_path} --directory={subfolder_path.as_posix()}"
     )
     return subfolder_path.as_posix(), cmd_tar
