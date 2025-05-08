@@ -64,9 +64,12 @@ def validate_cmd(
         )
 
 
-def is_version_larger_than(a: str, b: str) -> bool:
-    """Replies to the question: 'Is version `a` larger than version `b`?'."""
-    if parse(a) > parse(b):
+def is_version_greater_than(version_1: str, version_2: str) -> bool:
+    """
+    Replies to the question:
+        'Is version `version_1` greater than version `version_2`?'
+    """
+    if parse(version_1) > parse(version_2):
         return True
     else:
         return False

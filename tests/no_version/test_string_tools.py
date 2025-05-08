@@ -4,7 +4,7 @@ import pytest
 
 from fractal_server.string_tools import __NOT_ALLOWED_FOR_COMMANDS__
 from fractal_server.string_tools import __SPECIAL_CHARACTERS__
-from fractal_server.string_tools import is_version_larger_than
+from fractal_server.string_tools import is_version_greater_than
 from fractal_server.string_tools import sanitize_string
 from fractal_server.string_tools import validate_cmd
 
@@ -33,7 +33,7 @@ def test_unit_validate_cmd():
         validate_cmd("; rm", attribute_name="MyAttribute")
 
 
-def test_is_version_larger_than():
+def test_is_version_greater_than_than():
 
     versions = [
         "2",
@@ -70,17 +70,12 @@ def test_is_version_larger_than():
     ]
 
     def compare_versions(a, b):
-        if is_version_larger_than(a, b):
+        if is_version_greater_than(a, b):
             return 1
-        elif is_version_larger_than(b, a):
+        elif is_version_greater_than(b, a):
             return -1
         else:
             return 0
 
     sorted_versions = sorted(versions, key=cmp_to_key(compare_versions))
-
-    from devtools import debug
-
-    debug(sorted_versions)
-
     assert sorted_versions == expected_sorted_versions
