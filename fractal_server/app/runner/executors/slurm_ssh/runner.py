@@ -176,53 +176,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         t_1 = time.perf_counter()
         logger.info(f"[_fetch_artifacts] End - elapsed={t_1 - t_0:.3f} s")
 
-    def _send_inputs(self, jobs: list[SlurmJob]) -> None:
-        """
-        Transfer the jobs subfolder to the remote host.
-        """
-        for job in jobs:
-
-            # Create local archive
-            tar_cmd, tarfile_path_local = get_tar_compression_cmd(
-                job.workdir_local,
-                filelist_path=None,
-            )
-            try:
-                run_subprocess(tar_cmd, logger_name=logger.name)
-                logger.info(
-                    f"Subfolder archive created at {tarfile_path_local}"
-                )
-            except Exception as e:
-                Path(tarfile_path_local).unlink(missing_ok=True)
-                raise e
-
-            # Transfer archive
-            tarfile_name = Path(tarfile_path_local).name
-            tarfile_path_remote = (
-                job.workdir_remote.parent / tarfile_name
-            ).as_posix()
-            t_0_put = time.perf_counter()
-            self.fractal_ssh.send_file(
-                local=tarfile_path_local,
-                remote=tarfile_path_remote,
-            )
-            t_1_put = time.perf_counter()
-            logger.info(
-                f"Subfolder archive transferred to {tarfile_path_remote}"
-                f" - elapsed={t_1_put - t_0_put:.3f} s"
-            )
-
-            # Remove local archive
-            Path(tarfile_path_local).unlink()
-            logger.debug(f"Local archive {tarfile_path_local} removed")
-
-            # Uncompress remote archive
-            target_dir, tar_cmd = get_tar_extraction_cmd(
-                Path(tarfile_path_remote)
-            )
-            self.fractal_ssh.mkdir(target_dir, parents=True)
-            self.fractal_ssh.run_command(cmd=tar_cmd)
-
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         return stdout
