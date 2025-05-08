@@ -1,6 +1,8 @@
 import string
 from typing import Optional
 
+from packaging.version import parse
+
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
 
 # List of invalid characters discussed here:
@@ -64,4 +66,7 @@ def validate_cmd(
 
 def is_version_larger_than(a: str, b: str) -> bool:
     """Replies to the question: 'Is version `a` larger than version `b`?'."""
-    return True
+    if parse(a) > parse(b):
+        return True
+    else:
+        return False
