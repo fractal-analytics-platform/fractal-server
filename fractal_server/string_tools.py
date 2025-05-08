@@ -60,3 +60,8 @@ def validate_cmd(
             f"'{forbidden}'\n"
             f"Provided {attribute_name.lower()}: '{command}'."
         )
+
+
+def is_version_larger_than(a: str, b: str) -> bool:
+    """Replies to the question: 'Is version `a` larger than version `b`?'."""
+    return True

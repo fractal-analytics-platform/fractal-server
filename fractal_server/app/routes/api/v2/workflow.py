@@ -1,5 +1,6 @@
 from copy import copy
 from typing import Optional
+from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -7,12 +8,15 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
+from sqlmodel import or_
 from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models import LinkUserGroup
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
+from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
@@ -28,6 +32,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.images.tools import merge_type_filters
+from fractal_server.string_tools import is_version_larger_than
 
 router = APIRouter()
 
@@ -338,3 +343,67 @@ async def get_workflow_type_filters(
         current_type_filters.update(wftask.task.output_types)
 
     return response_items
+
+
+@router.get(
+    "/project/{project_id}/workflow/{workflow_id}/version-update-candidates/"
+)
+async def get_workflow_version_update_candidates(
+    project_id: int,
+    workflow_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> dict[int, dict[str, Union[str, int]]]:
+
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        db=db,
+    )
+    response = {}
+
+    for wftask in workflow.task_list:
+        task = wftask.task
+        if not (task.args_schema_parallel or task.args_schema_non_parallel):
+            continue
+        old_task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
+
+        res = await db.execute(
+            select(TaskGroupV2, TaskV2.id)
+            .where(TaskGroupV2.pkg_name == old_task_group.pkg_name)
+            .where(TaskGroupV2.active is True)
+            .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+            .where(TaskV2.name == task.name)
+            .where(
+                or_(
+                    TaskV2.args_schema_parallel is not None,
+                    TaskV2.args_schema_non_parallel is not None,
+                )
+            )
+            .where(
+                or_(
+                    TaskGroupV2.user_id == user.id,
+                    TaskGroupV2.user_group_id.in_(
+                        select(LinkUserGroup.group_id).where(
+                            LinkUserGroup.user_id == user.id
+                        )
+                    ),
+                )
+            )
+        )
+        query_results: list[tuple[TaskGroupV2, int]] = res.all()
+        filtered_groups_and_taskids = [
+            group_and_taskid
+            for group_and_taskid in query_results
+            if is_version_larger_than(
+                group_and_taskid[0].version, old_task_group.version
+            )
+        ]
+        if filtered_groups_and_taskids:
+            response[wftask.id] = [
+                dict(new_version=group.version, task_id=task_id)
+                for group, task_id in filtered_groups_and_taskids
+            ]
+
+    return response
