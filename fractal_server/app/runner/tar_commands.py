@@ -1,3 +1,6 @@
+"""
+Prepare tar commands for task-subfolder compression/extraction.
+"""
 from pathlib import Path
 
 
@@ -6,17 +9,17 @@ def get_tar_compression_cmd(
     filelist_path: Path | None,
 ) -> tuple[str, str]:
     """
-    Compress e.g. `/path/archive` into `/path/archive.tar.gz`
+    Prepare command to compress e.g. `/path/dir` into `/path/dir.tar.gz`.
 
-    Note that `/path/archive.tar.gz` may already exist. In this case, it will
+    Note that `/path/dir.tar.gz` may already exist. In this case, it will
     be overwritten.
 
     Args:
         subfolder_path: Absolute path to the folder to compress.
-        remote_to_local: If `True`, exclude some files from the tar.gz archive.
+        filelist_path: If set, to be used in the `--files-from` option.
 
     Returns:
-        Absolute path to the tar.gz archive.
+        tar command and path to of the tar.gz archive
     """
     subfolder_name = subfolder_path.name
     tarfile_path = (
@@ -48,6 +51,15 @@ def _remove_suffix(*, string: str, suffix: str) -> str:
 
 
 def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
+    """
+    Prepare command to extract e.g. `/path/dir.tar.gz` into `/path/dir`.
+
+    Args:
+        archive_path: Absolute path to the tar.gz archive.
+
+    Returns:
+        Target folder, and tar command
+    """
 
     # Prepare subfolder path
     parent_dir = archive_path.parent
