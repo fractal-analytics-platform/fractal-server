@@ -52,7 +52,7 @@ def get_tar_extraction_cmd(archive_path: Path) -> tuple[Path, str]:
     """
 
     # Prepare subfolder path
-    if archive_path.suffixes != [".tar", ".gz"]:
+    if archive_path.suffixes[-2:] != [".tar", ".gz"]:
         raise ValueError(
             "Archive path must end with `.tar.gz` "
             f"(given: {archive_path.as_posix()})"

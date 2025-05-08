@@ -134,9 +134,22 @@ def test_compress_folder_failure(tmp_path: Path):
 
 
 def test_extract_archive_failure(tmp_path: Path):
-    with pytest.raises(subprocess.CalledProcessError) as exc_info:
-        _extract_archive(tmp_path / "missing.tar.gz")
-    print(exc_info.value)
+
+    # Wwrong suffixes
 
     with pytest.raises(ValueError, match="must end with"):
         _extract_archive(tmp_path / "wrong.suffix")
+
+    with pytest.raises(ValueError, match="must end with"):
+        _extract_archive(tmp_path / "wrong.tar")
+
+    with pytest.raises(ValueError, match="must end with"):
+        _extract_archive(tmp_path / "wrong")
+
+    # Valid suffixes, missing archive file
+    with pytest.raises(subprocess.CalledProcessError):
+        _extract_archive(tmp_path / "something.with.a.dot.tar.gz")
+
+    # Valid suffixes, missing archive file
+    with pytest.raises(subprocess.CalledProcessError):
+        _extract_archive(tmp_path / "missing.xyz.tar.gz")
