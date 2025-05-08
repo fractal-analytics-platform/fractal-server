@@ -5,11 +5,9 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from ._validators import val_absolute_path
-from ._validators import val_unique_list
+from fractal_server.types import ListUniqueAbsolutePathStr
 
 __all__ = (
     "UserGroupRead",
@@ -54,15 +52,7 @@ class UserGroupCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    viewer_paths: list[str] = Field(default_factory=list)
-
-    @field_validator("viewer_paths")
-    @classmethod
-    def viewer_paths_validator(cls, value):
-        for i, path in enumerate(value):
-            value[i] = val_absolute_path(f"viewer_paths[{i}]")(cls, path)
-        value = val_unique_list("viewer_paths")(cls, value)
-        return value
+    viewer_paths: ListUniqueAbsolutePathStr = Field(default_factory=list)
 
 
 class UserGroupUpdate(BaseModel):
@@ -72,14 +62,4 @@ class UserGroupUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    viewer_paths: Optional[list[str]] = None
-
-    @field_validator("viewer_paths")
-    @classmethod
-    def viewer_paths_validator(cls, value):
-        if value is None:
-            raise ValueError("Cannot set `viewer_paths=None`.")
-        for i, path in enumerate(value):
-            value[i] = val_absolute_path(f"viewer_paths[{i}]")(cls, path)
-        value = val_unique_list("viewer_paths")(cls, value)
-        return value
+    viewer_paths: ListUniqueAbsolutePathStr = None

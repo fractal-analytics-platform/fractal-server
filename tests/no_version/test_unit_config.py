@@ -295,7 +295,7 @@ def test_FRACTAL_PIP_CACHE_DIR():
         == "--no-cache-dir"
     )
 
-    with pytest.raises(FractalConfigurationError):
+    with pytest.raises(ValidationError):
         Settings(
             JWT_SECRET_KEY="secret",
             POSTGRES_DB="db-name",
@@ -537,9 +537,9 @@ def test_python_interpreters():
     assert settings.FRACTAL_TASKS_PYTHON_3_12 == "/some/python3.12"
 
     # Non-absolute paths
-    with pytest.raises(FractalConfigurationError) as e:
+    with pytest.raises(ValidationError) as e:
         Settings(FRACTAL_SLURM_WORKER_PYTHON="python3.10", **common_attributes)
-    assert "Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON" in str(e.value)
+    assert "String must be an absolute path" in str(e.value)
 
     for version in ["3_9", "3_10", "3_11", "3_12"]:
         key = f"FRACTAL_TASKS_PYTHON_{version}"

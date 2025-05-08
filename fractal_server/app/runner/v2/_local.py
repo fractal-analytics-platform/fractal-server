@@ -7,7 +7,7 @@ from ..executors.local.get_local_config import get_local_backend_config
 from ..executors.local.runner import LocalRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
-from fractal_server.images.models import AttributeFiltersType
+from fractal_server.types import AttributeFilters
 
 
 def process_workflow(
@@ -20,7 +20,7 @@ def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
-    job_attribute_filters: AttributeFiltersType,
+    job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
     user_id: int,
     **kwargs,

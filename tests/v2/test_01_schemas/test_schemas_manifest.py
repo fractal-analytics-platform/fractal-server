@@ -66,6 +66,11 @@ def test_TaskManifestV2():
             executable_parallel="exec",
             docs_link="not-an-url",
         )
+    TaskManifestV2(
+        name="task",
+        executable_parallel="exec",
+        docs_link="https://url.com",
+    )
 
 
 def test_ManifestV2():
@@ -125,9 +130,9 @@ def test_ManifestV2():
     )
 
     # 1: invalid manifest_version
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(ValidationError) as exc_info:
         ManifestV2(manifest_version="1", task_list=[])
-    assert "Wrong manifest version" in msg(e)
+    print(exc_info.value)
 
     # 2: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:

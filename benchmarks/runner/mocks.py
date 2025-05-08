@@ -3,9 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import ValidationInfo
 
 
 class DatasetV2Mock(BaseModel):
@@ -36,30 +34,20 @@ class TaskV2Mock(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _not_both_commands_none(cls, values):
-        print(values)
         _command_non_parallel = values.get("command_non_parallel")
         _command_parallel = values.get("command_parallel")
         if _command_non_parallel is None and _command_parallel is None:
             raise ValueError(
                 "Both command_non_parallel and command_parallel are None"
             )
-        return values
-
-    @field_validator("type")
-    @classmethod
-    def _set_type(cls, value: Optional[str], info: ValidationInfo):
-        if info.data.get("command_non_parallel") is None:
-            if info.data.get("command_parallel") is None:
-                raise ValueError(
-                    "This TaskV2Mock object has both commands unset."
-                )
-            else:
-                return "parallel"
+        elif _command_non_parallel is None:
+            values["type"] = "parallel"
+        elif _command_parallel is None:
+            values["type"] = "non_parallel"
         else:
-            if info.data.get("command_parallel") is None:
-                return "non_parallel"
-            else:
-                return "compound"
+            values["type"] = "compound"
+
+        return values
 
 
 class WorkflowTaskV2Mock(BaseModel):

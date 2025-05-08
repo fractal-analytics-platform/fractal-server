@@ -1,14 +1,13 @@
-from typing import Any
 from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import field_validator
-from pydantic import HttpUrl
 from pydantic import model_validator
 
-from .._validators import NonEmptyString
+from fractal_server.types import DictStrAny
+from fractal_server.types import HttpUrlStr
+from fractal_server.types import NonEmptyStr
 
 
 class TaskManifestV2(BaseModel):
@@ -46,12 +45,12 @@ class TaskManifestV2(BaseModel):
     executable_parallel: Optional[str] = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
-    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: dict[str, Any] = Field(default_factory=dict)
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: DictStrAny = Field(default_factory=dict)
+    meta_parallel: DictStrAny = Field(default_factory=dict)
+    args_schema_non_parallel: Optional[DictStrAny] = None
+    args_schema_parallel: Optional[DictStrAny] = None
     docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    docs_link: Optional[HttpUrlStr] = None
 
     category: Optional[str] = None
     modality: Optional[str] = None
@@ -113,13 +112,6 @@ class TaskManifestV2(BaseModel):
 
         return self
 
-    @field_validator("docs_link", mode="after")
-    @classmethod
-    def validate_docs_link(cls, value):
-        if value is not None:
-            HttpUrl(value)
-        return value
-
 
 class ManifestV2(BaseModel):
     """
@@ -145,11 +137,11 @@ class ManifestV2(BaseModel):
             Label of how `args_schema`s were generated (e.g. `pydantic_v1`).
     """
 
-    manifest_version: str
+    manifest_version: Literal["2"]
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
-    authors: Optional[NonEmptyString] = None
+    authors: Optional[NonEmptyStr] = None
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):
@@ -185,10 +177,3 @@ class ManifestV2(BaseModel):
                 )
             )
         return self
-
-    @field_validator("manifest_version")
-    @classmethod
-    def manifest_version_2(cls, value):
-        if value != "2":
-            raise ValueError(f"Wrong manifest version (given {value})")
-        return value
