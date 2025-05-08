@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from fractal_server.app.runner.compress_folder import compress_folder
-from fractal_server.app.runner.compress_folder import main as main_compress
 from fractal_server.app.runner.extract_archive import extract_archive
 from fractal_server.app.runner.extract_archive import main as main_extract
+from fractal_server.app.runner.tar_commands import compress_folder
+from fractal_server.app.runner.tar_commands import main as main_compress
 
 
 def create_test_files(path: Path):
