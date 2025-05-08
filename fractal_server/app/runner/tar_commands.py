@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def get_tar_compression_command(
+def get_tar_compression_cmd(
     subfolder_path: Path,
     filelist_path: Path | None,
 ) -> tuple[str, str]:
@@ -47,7 +47,7 @@ def _remove_suffix(*, string: str, suffix: str) -> str:
         raise ValueError(f"Cannot remove {suffix=} from {string=}.")
 
 
-def get_tar_extraction_command(archive_path: Path) -> tuple[str, str]:
+def get_tar_extraction_cmd(archive_path: Path) -> tuple[str, str]:
 
     # Prepare subfolder path
     parent_dir = archive_path.parent

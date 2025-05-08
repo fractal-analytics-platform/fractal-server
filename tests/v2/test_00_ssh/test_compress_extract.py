@@ -5,15 +5,15 @@ from pathlib import Path
 import pytest
 
 from fractal_server.app.runner.run_subprocess import run_subprocess
-from fractal_server.app.runner.tar_commands import get_tar_compression_command
-from fractal_server.app.runner.tar_commands import get_tar_extraction_command
+from fractal_server.app.runner.tar_commands import get_tar_compression_cmd
+from fractal_server.app.runner.tar_commands import get_tar_extraction_cmd
 
 
-def compress_folder(
-    subfolder_path: Path,
-    filelist_path: Path | None,
-):
-    tar_cmd, tarfile_path = get_tar_compression_command(
+def _compress_folder(subfolder_path: Path, filelist_path: Path | None):
+    """
+    This function simulates the typical usage of `get_tar_compression_cmd`.
+    """
+    tar_cmd, tarfile_path = get_tar_compression_cmd(
         subfolder_path=subfolder_path,
         filelist_path=filelist_path,
     )
@@ -24,8 +24,11 @@ def compress_folder(
         raise e
 
 
-def extract_archive(tarfile_path_local: Path):
-    target_dir, cmd_tar = get_tar_extraction_command(Path(tarfile_path_local))
+def _extract_archive(tarfile_path_local: Path):
+    """
+    This function simulates the typical usage of `get_tar_extraction_cmd`.
+    """
+    target_dir, cmd_tar = get_tar_extraction_cmd(Path(tarfile_path_local))
     Path(target_dir).mkdir(exist_ok=True)
     run_subprocess(cmd=cmd_tar)
 
@@ -47,9 +50,9 @@ def test_compress_and_extract_without_filelist(tmp_path: Path):
     new_tarfile_path = extracted_path / "subfolder.tar.gz"
 
     # First run (without overwrite)
-    compress_folder(subfolder_path, filelist_path=None)
+    _compress_folder(subfolder_path, filelist_path=None)
     shutil.copy(tarfile_path, new_tarfile_path)
-    extract_archive(new_tarfile_path)
+    _extract_archive(new_tarfile_path)
 
     assert tarfile_path.exists()
     assert new_tarfile_path.exists()
@@ -63,9 +66,9 @@ def test_compress_and_extract_without_filelist(tmp_path: Path):
     (subfolder_path / "file3.txt").write_text("File 2")
 
     # Second run (with overwrite)
-    compress_folder(subfolder_path, filelist_path=None)
+    _compress_folder(subfolder_path, filelist_path=None)
     shutil.copy(tarfile_path, new_tarfile_path)
-    extract_archive(new_tarfile_path)
+    _extract_archive(new_tarfile_path)
 
     assert tarfile_path.exists()
     assert new_tarfile_path.exists()
@@ -93,9 +96,9 @@ def test_compress_and_extract_with_filelist(tmp_path: Path):
         f.write("missing.txt\n")
 
     # First run (without overwrite)
-    compress_folder(subfolder_path, filelist_path=Path(filelist_path))
+    _compress_folder(subfolder_path, filelist_path=Path(filelist_path))
     shutil.copy(tarfile_path, new_tarfile_path)
-    extract_archive(new_tarfile_path)
+    _extract_archive(new_tarfile_path)
 
     assert tarfile_path.exists()
     assert new_tarfile_path.exists()
@@ -111,9 +114,9 @@ def test_compress_and_extract_with_filelist(tmp_path: Path):
         f.write("file3.txt\n")
 
     # Second run (with overwrite)
-    compress_folder(subfolder_path, filelist_path=Path(filelist_path))
+    _compress_folder(subfolder_path, filelist_path=Path(filelist_path))
     shutil.copy(tarfile_path, new_tarfile_path)
-    extract_archive(new_tarfile_path)
+    _extract_archive(new_tarfile_path)
 
     assert tarfile_path.exists()
     assert new_tarfile_path.exists()
@@ -131,12 +134,12 @@ def test_compress_folder_failure(tmp_path: Path):
     tarfile_path = tmp_path / "non_existent_subfolder.tar.gz"
 
     with pytest.raises(subprocess.CalledProcessError) as exc_info:
-        compress_folder(invalid_subfolder_path, filelist_path=None)
+        _compress_folder(invalid_subfolder_path, filelist_path=None)
     assert not tarfile_path.exists()
     print(exc_info.value)
 
 
 def test_extract_archive_failure(tmp_path: Path):
     with pytest.raises(subprocess.CalledProcessError) as exc_info:
-        extract_archive(tmp_path / "missing.tar.gz")
+        _extract_archive(tmp_path / "missing.tar.gz")
     print(exc_info.value)

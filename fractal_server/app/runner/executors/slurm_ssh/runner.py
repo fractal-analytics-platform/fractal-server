@@ -5,8 +5,8 @@ from typing import Optional
 from ...run_subprocess import run_subprocess
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from fractal_server.app.runner.tar_commands import get_tar_compression_command
-from fractal_server.app.runner.tar_commands import get_tar_extraction_command
+from fractal_server.app.runner.tar_commands import get_tar_compression_cmd
+from fractal_server.app.runner.tar_commands import get_tar_extraction_cmd
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -131,7 +131,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Create remote tarfile
         t_0_tar = time.perf_counter()
-        tar_command, tmp_tarfile_path_remote = get_tar_compression_command(
+        tar_command, tmp_tarfile_path_remote = get_tar_compression_cmd(
             subfolder_path=workdir_remote, filelist_path=tmp_filelist_path
         )
         # Consistency check
@@ -166,9 +166,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
 
         # Extract tarfile locally
-        target_dir, cmd_tar = get_tar_extraction_command(
-            Path(tarfile_path_local)
-        )
+        target_dir, cmd_tar = get_tar_extraction_cmd(Path(tarfile_path_local))
         Path(target_dir).mkdir(exist_ok=True)
         run_subprocess(cmd=cmd_tar, logger_name=logger.name)
 
@@ -185,7 +183,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         for job in jobs:
 
             # Create local archive
-            tar_cmd, tarfile_path_local = get_tar_compression_command(
+            tar_cmd, tarfile_path_local = get_tar_compression_cmd(
                 job.workdir_local,
                 filelist_path=None,
             )
@@ -219,7 +217,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             logger.debug(f"Local archive {tarfile_path_local} removed")
 
             # Uncompress remote archive
-            target_dir, tar_cmd = get_tar_extraction_command(
+            target_dir, tar_cmd = get_tar_extraction_cmd(
                 Path(tarfile_path_remote)
             )
             self.fractal_ssh.mkdir(target_dir, parents=True)
