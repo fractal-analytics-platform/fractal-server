@@ -1,21 +1,18 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic.types import AwareDatetime
 
-from .._validators import cant_set_none
-from .._validators import NonEmptyString
+from fractal_server.types import NonEmptyStr
 
 
 class ProjectCreateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyString
+    name: NonEmptyStr
 
 
 class ProjectReadV2(BaseModel):
@@ -33,9 +30,4 @@ class ProjectUpdateV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[NonEmptyString] = None
-
-    @field_validator("name")
-    @classmethod
-    def _cant_set_none(cls, v):
-        return cant_set_none(v)
+    name: NonEmptyStr = None

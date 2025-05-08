@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.schemas._validators import val_absolute_path
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
@@ -10,6 +9,7 @@ from fractal_server.app.schemas.user_settings import UserSettingsRead
 from fractal_server.app.schemas.user_settings import UserSettingsReadStrict
 from fractal_server.app.schemas.user_settings import UserSettingsUpdate
 from fractal_server.app.schemas.user_settings import UserSettingsUpdateStrict
+from fractal_server.types.validators import val_absolute_path
 
 
 def test_user_create():
@@ -142,15 +142,8 @@ def test_user_settings_update():
 
 
 def test_unit_val_absolute_path():
-    val_absolute_path("this_attr")(..., "/path")
-    val_absolute_path("this_attr", accept_none=False)(..., "/path")
-    val_absolute_path("this_attr", accept_none=True)(..., "/path")
-
+    val_absolute_path("/path")
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr")(..., None)
+        val_absolute_path("   ")
     with pytest.raises(ValueError):
-        val_absolute_path("this_attr", accept_none=False)(..., None)
-    val_absolute_path("this_attr", accept_none=True)(..., None)
-
-    with pytest.raises(ValueError):
-        val_absolute_path("this_attr")(..., "non/absolute/path")
+        val_absolute_path("non/absolute/path")
