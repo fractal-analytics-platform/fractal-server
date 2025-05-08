@@ -4,6 +4,8 @@
 
 * API:
     * Replace most `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
+* SSH:
+    * Add `elapsed` information to SSH-lock-was-acquired log (\#2558).
 
 # 2.14.3
 
