@@ -1,3 +1,5 @@
+import shutil
+
 import pytest
 from devtools import debug
 
@@ -256,3 +258,64 @@ async def test_multisubmit_compound(
         # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
+
+
+@pytest.mark.container
+async def test_multisubmit_parallel_partial_failure(
+    db,
+    tmp777_path,
+    monkey_slurm,
+    history_mock_for_multisubmit,
+    valid_user_id,
+    testdata_path,
+):
+
+    raw_script_path = testdata_path / "script_for_selective_failure.py"
+    script_path = tmp777_path / "script_for_selective_failure.py"
+
+    shutil.copy(raw_script_path, script_path)
+
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
+
+    with SudoSlurmRunner(
+        slurm_user=SLURM_USER,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        poll_interval=0,
+    ) as runner:
+        results, exceptions = runner.multisubmit(
+            base_command=f"python3 {script_path.as_posix()}",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
+            list_task_files=[
+                get_dummy_task_files(
+                    tmp777_path, component=str(ind), is_slurm=True
+                )
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="parallel",
+            history_unit_ids=history_unit_ids,
+            config=get_default_slurm_config(),
+            user_id=valid_user_id,
+        )
+    debug(results)
+    debug(exceptions)
+    assert results == {key: None for key in range(1, 4)}
+    assert isinstance(exceptions[0], TaskExecutionError)
+    assert "Bad result" in str(exceptions[0])
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    debug(run)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.multisubmit`
+    for ind, _unit_id in enumerate(history_unit_ids):
+        unit = await db.get(HistoryUnit, _unit_id)
+        if ind == 0:
+            assert unit.status == HistoryUnitStatus.FAILED
+        else:
+            assert unit.status == HistoryUnitStatus.DONE
