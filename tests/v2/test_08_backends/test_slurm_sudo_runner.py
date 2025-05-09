@@ -21,9 +21,9 @@ from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
     "task_type",
     [
         "non_parallel",
-        # "compound",
-        # "converter_non_parallel",
-        # "converter_compound",
+        "compound",
+        "converter_non_parallel",
+        "converter_compound",
     ],
 )
 async def test_submit_success(
@@ -152,15 +152,6 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    # def fun(parameters: dict, remote_files: dict):
-    #     zarr_url = parameters["zarr_url"]
-    #     x = parameters["parameter"]
-    #     if x != 3:
-    #         print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-    #         return 2 * x
-    #     else:
-    #         print(f"Running with {zarr_url=} and {x=}, raising error.")
-    #         raise ValueError("parameter=3 is very very bad")
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 

@@ -156,27 +156,21 @@ def run_in_container(slurmlogin_container) -> str:
 
 @pytest.fixture
 def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
-    command_ssh = (
+    command = (
         f"docker exec --user root {slurmlogin_container} service ssh status"
     )
-    command_slurm = f"docker exec --user root {slurmlogin_container} service slurmcltd status"
     max_attempts = 50
     interval = 0.5
     logging.info(
-        f"Now run {command_ssh=} at most {max_attempts} times, "
-        f"with a sleep interval of {interval} seconds."
-    )
-    logging.info(
-        f"Now run {command_slurm=} at most {max_attempts} times, "
+        f"Now run {command=} at most {max_attempts} times, "
         f"with a sleep interval of {interval} seconds."
     )
     for attempt in range(max_attempts):
-        res= subprocess.run(
-            shlex.split(command_ssh),
+        res = subprocess.run(
+            shlex.split(command),
             capture_output=True,
             encoding="utf-8",
         )
-
         logging.info(
             f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
         )
@@ -191,9 +185,42 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
 
 
 @pytest.fixture
+def ssh_slurm(slurmlogin_ip, slurmlogin_container) -> None:
+    command = (
+        f"docker exec --user root {slurmlogin_container} service ssh slurmctld"
+    )
+    max_attempts = 50
+    interval = 0.5
+    logging.info(
+        f"Now run {command=} at most {max_attempts} times, "
+        f"with a sleep interval of {interval} seconds."
+    )
+    for attempt in range(max_attempts):
+        res = subprocess.run(
+            shlex.split(command),
+            capture_output=True,
+            encoding="utf-8",
+        )
+        logging.info(
+            f"[ssh_slurm] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
+        )
+        logging.info(
+            f"[ssh_slurm] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}"
+        )
+        if "running" in res.stdout:
+            logging.info("[ssh_slurm] SLURM status seems OK, exit.")
+            return
+        time.sleep(interval)
+    raise RuntimeError(
+        f"[ssh_slurm] SLURM not active on {slurmlogin_container}"
+    )
+
+
+@pytest.fixture
 def fractal_ssh_list(
     slurmlogin_ip,
     ssh_alive,
+    ssh_slurm,
     ssh_keys,
     monkeypatch,
 ) -> Generator[FractalSSHList, Any, None]:
