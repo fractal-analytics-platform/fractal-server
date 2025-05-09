@@ -187,7 +187,6 @@ class BaseSlurmRunner(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-
         logger.debug("[_submit_single_sbatch] START")
 
         for task in slurm_job.tasks:
@@ -394,7 +393,6 @@ class BaseSlurmRunner(BaseRunner):
         task: SlurmTask,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
-
         try:
             with open(task.output_pickle_file_local, "r") as f:
                 output = json.load(f)
@@ -497,7 +495,6 @@ class BaseSlurmRunner(BaseRunner):
         ],
         user_id: int,
     ) -> tuple[Any, Exception]:
-
         logger.debug("[submit] START")
         try:
             workdir_local = task_files.wftask_subfolder_local
@@ -549,7 +546,7 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            time.sleep(10)  # FIXME please
+            time.sleep(5)  # FIXME please
             self._submit_single_sbatch(
                 base_command=base_command,
                 slurm_job=slurm_job,
@@ -728,6 +725,7 @@ class BaseSlurmRunner(BaseRunner):
 
             # NOTE: see issue 2431
             logger.debug("[multisubmit] Transfer files and submit jobs.")
+            time.sleep(15)  # FIXME please
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
                     base_command=base_command,
