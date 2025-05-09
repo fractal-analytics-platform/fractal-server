@@ -223,7 +223,6 @@ def slurm_alive(slurmlogin_ip, slurmlogin_container) -> None:
 def fractal_ssh_list(
     slurmlogin_ip,
     ssh_alive,
-    ssh_slurm,
     ssh_keys,
     monkeypatch,
 ) -> Generator[FractalSSHList, Any, None]:
