@@ -155,15 +155,9 @@ def worker(
         )
 
         # Extract some useful paths
-        args_file_remote = input_data["remote_files"]["args_file_remote"]
         metadiff_file_remote = input_data["remote_files"][
             "metadiff_file_remote"
         ]
-
-        # Write parameters to args.json file (FIXME: to move server-side)
-        parameters = input_data["parameters"]
-        with open(args_file_remote, "w") as f:
-            json.dump(parameters, f, indent=2)
 
         # Execute command
         full_command = input_data["full_command"]

@@ -110,10 +110,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
                         task.task_files.log_file_local,
                     ),
                     (
-                        task.task_files.args_file_remote,
-                        task.task_files.args_file_local,
-                    ),
-                    (
                         task.task_files.metadiff_file_remote,
                         task.task_files.metadiff_file_local,
                     ),

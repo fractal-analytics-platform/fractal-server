@@ -46,7 +46,6 @@ class RemoteInputData(BaseModel):
     full_command: str
 
     remote_files: dict[str, str]  # remove or improve
-    parameters: dict[str, Any]  # -> move to args.json?
 
 
 def create_accounting_record_slurm(
@@ -190,17 +189,17 @@ class BaseSlurmRunner(BaseRunner):
 
         for task in slurm_job.tasks:
             # Write input pickle
-            args_file_remote = task.task_files.remote_files_dict[
-                "args_file_remote"
-            ]
-            metadiff_file_remote = task.task_files.remote_files_dict[
-                "metadiff_file_remote"
-            ]
+            if self.slurm_runner_type == "ssh":
+                args_file_remote = task.task_files.args_file_remote
+            else:
+                args_file_remote = task.task_files.args_file_local
+            metadiff_file_remote = task.task_files.metadiff_file_remote
             full_command = (
                 f"{base_command} "
                 f"--args-json {args_file_remote} "
                 f"--out-json {metadiff_file_remote}"
             )
+            from devtools import debug
 
             debug(
                 dict(
@@ -216,13 +215,18 @@ class BaseSlurmRunner(BaseRunner):
                 full_command=full_command,
                 python_version=sys.version_info[:3],
                 fractal_server_version=__VERSION__,
-                parameters=task.parameters,
-                remote_files=task.task_files.remote_files_dict,
+                remote_files=task.task_files.remote_files_dict,  # FIXME
             )
             debug(input_data)
 
             with open(task.input_pickle_file_local, "w") as f:
                 json.dump(input_data.model_dump(), f, indent=2)
+
+            debug("Now writing", task.task_files.args_file_local)
+            debug("Not writing", task.task_files.args_file_remote)
+
+            with open(task.task_files.args_file_local, "w") as f:
+                json.dump(task.parameters, f, indent=2)
 
             logger.debug(
                 "[_submit_single_sbatch] Written "
@@ -234,6 +238,10 @@ class BaseSlurmRunner(BaseRunner):
                 self.fractal_ssh.send_file(
                     local=task.input_pickle_file_local,
                     remote=task.input_pickle_file_remote,
+                )
+                self.fractal_ssh.send_file(
+                    local=task.task_files.args_file_local,
+                    remote=task.task_files.args_file_remote,
                 )
                 logger.debug(
                     "[_submit_single_sbatch] Transferred "
