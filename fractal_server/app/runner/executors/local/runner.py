@@ -177,8 +177,9 @@ class LocalRunner(BaseRunner):
             )
 
             workdir_local = list_task_files[0].wftask_subfolder_local
-            if task_type == "parallel":
-                workdir_local.mkdir()
+            # Note: the `mkdir` is not needed for compound tasks, but it is
+            # needed for parallel tasks
+            workdir_local.mkdir(exist_ok=True)
 
             # Set `n_elements` and `parallel_tasks_per_job`
             n_elements = len(list_parameters)
