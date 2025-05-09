@@ -73,3 +73,12 @@ def is_version_greater_than(version_1: str, version_2: str) -> bool:
         return True
     else:
         return False
+
+
+def compare_versions(version_1: str, version_2: str) -> int:
+    if is_version_greater_than(version_1, version_2):
+        return 1
+    elif is_version_greater_than(version_2, version_1):
+        return -1
+    else:
+        return 0
