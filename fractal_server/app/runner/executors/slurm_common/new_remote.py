@@ -155,13 +155,11 @@ def worker(
         )
 
         # Extract some useful paths
-        metadiff_file_remote = input_data["remote_files"][
-            "metadiff_file_remote"
-        ]
+        metadiff_file_remote = input_data["metadiff_file_remote"]
+        log_path = input_data["log_file_remote"]
 
         # Execute command
         full_command = input_data["full_command"]
-        log_path = input_data["remote_files"]["log_file_remote"]
         _call_command_wrapper(cmd=full_command, log_path=log_path)
 
         try:

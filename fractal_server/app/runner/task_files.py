@@ -134,13 +134,6 @@ class TaskFiles(BaseModel):
     def metadiff_file_remote(self) -> str:
         return self.metadiff_file_remote_path.as_posix()
 
-    @property
-    def remote_files_dict(self) -> dict[str, str]:
-        return dict(
-            metadiff_file_remote=self.metadiff_file_remote,
-            log_file_remote=self.log_file_remote,
-        )
-
 
 def enrich_task_files_multisubmit(
     *,

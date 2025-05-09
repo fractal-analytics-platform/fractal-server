@@ -45,7 +45,8 @@ class RemoteInputData(BaseModel):
     fractal_server_version: str
     full_command: str
 
-    remote_files: dict[str, str]  # remove or improve
+    metadiff_file_remote: str
+    log_file_remote: str
 
 
 def create_accounting_record_slurm(
@@ -201,21 +202,12 @@ class BaseSlurmRunner(BaseRunner):
             )
             from devtools import debug
 
-            debug(
-                dict(
-                    full_command=full_command,
-                    python_version=sys.version_info[:3],
-                    fractal_server_version=__VERSION__,
-                    parameters=task.parameters,
-                    remote_files=task.task_files.remote_files_dict,
-                )
-            )
-
             input_data = RemoteInputData(
                 full_command=full_command,
                 python_version=sys.version_info[:3],
                 fractal_server_version=__VERSION__,
-                remote_files=task.task_files.remote_files_dict,  # FIXME
+                metadiff_file_remote=task.task_files.metadiff_file_remote,
+                log_file_remote=task.task_files.log_file_remote,
             )
             debug(input_data)
 
