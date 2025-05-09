@@ -5,6 +5,7 @@
 * API:
     * Replace most `field_validator`s with `Annotated` types, and review `model_validator`s (\#2504).
 * SSH:
+    * Remove Python-wrapper layer for `tar` commands (\#2554).
     * Add `elapsed` information to SSH-lock-was-acquired log (\#2558).
 
 # 2.14.3
