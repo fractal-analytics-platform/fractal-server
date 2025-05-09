@@ -34,7 +34,6 @@ async def test_submit_success(
     task_type: str,
     valid_user_id,
 ):
-
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if task_type.startswith("converter_"):
@@ -143,7 +142,6 @@ async def test_submit_fail(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
-@pytest.mark.skip(reason="Not ready yet - FIXME")
 @pytest.mark.container
 async def test_multisubmit_parallel(
     db,
@@ -152,17 +150,17 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def fun(parameters: dict, remote_files: dict):
-        zarr_url = parameters["zarr_url"]
-        x = parameters["parameter"]
-        if x != 3:
-            print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-            return 2 * x
-        else:
-            print(f"Running with {zarr_url=} and {x=}, raising error.")
-            raise ValueError("parameter=3 is very very bad")
+    # def fun(parameters: dict, remote_files: dict):
+    #     zarr_url = parameters["zarr_url"]
+    #     x = parameters["parameter"]
+    #     if x != 3:
+    #         print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
+    #         return 2 * x
+    #     else:
+    #         print(f"Running with {zarr_url=} and {x=}, raising error.")
+    #         raise ValueError("parameter=3 is very very bad")
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -171,8 +169,11 @@ async def test_multisubmit_parallel(
         poll_interval=0,
     ) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path, component=str(ind), is_slurm=True
