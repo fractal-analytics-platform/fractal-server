@@ -21,9 +21,9 @@ from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
     "task_type",
     [
         "non_parallel",
-        # "compound",
-        # "converter_non_parallel",
-        # "converter_compound",
+        "compound",
+        "converter_non_parallel",
+        "converter_compound",
     ],
 )
 async def test_submit_success(
@@ -34,8 +34,6 @@ async def test_submit_success(
     task_type: str,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
@@ -51,13 +49,10 @@ async def test_submit_success(
         poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
-            # do_nothing,
-            dict_to_remote=dict(
-                base_command="true",
-                workflow_task_order=0,
-                workflow_task_id=wftask_id,
-                task_name="fake-task-name",
-            ),
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
@@ -67,9 +62,7 @@ async def test_submit_success(
             config=get_default_slurm_config(),
             user_id=valid_user_id,
         )
-    debug(result, exception)
-    return  # FIXME
-    assert result == {}
+    assert result is None
     assert exception is None
 
     # `HistoryRun.status` is updated at a higher level, not from
@@ -105,8 +98,7 @@ async def test_submit_fail(
     task_type: str,
     valid_user_id,
 ):
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if not task_type.startswith("converter_"):
         parameters = dict(zarr_urls=ZARR_URLS)
@@ -120,12 +112,10 @@ async def test_submit_fail(
         poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
-            dict_to_remote=dict(
-                workflow_task_order="0",
-                workflow_task_id=9999,
-                task_name="fake-task-name",
-                base_command="false",
-            ),
+            base_command="false",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             history_unit_id=history_unit_id,
             task_files=get_dummy_task_files(

@@ -28,10 +28,7 @@ async def test_submit_success(
     tmp_path,
     task_type: str,
 ):
-    def do_nothing(parameters: dict, remote_files: dict) -> int:
-        return 42
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if task_type.startswith("converter_"):
         parameters = {}
@@ -40,7 +37,10 @@ async def test_submit_success(
 
     with LocalRunner(tmp_path) as runner:
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
@@ -48,8 +48,7 @@ async def test_submit_success(
             config=get_default_local_backend_config(),
             user_id=None,
         )
-    debug(result, exception)
-    assert result == 42
+    assert result is None
     assert exception is None
 
     # `HistoryRun.status` is updated at a higher level, not from
@@ -82,12 +81,8 @@ async def test_submit_fail(
     tmp_path,
     task_type: str,
 ):
-    ERROR_MSG = "very nice error"
 
-    def raise_ValueError(parameters: dict, remote_files: dict):
-        raise ValueError(ERROR_MSG)
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if not task_type.startswith("converter_"):
         parameters = dict(zarr_urls=ZARR_URLS)
@@ -96,7 +91,10 @@ async def test_submit_fail(
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
-            raise_ValueError,
+            base_command="false",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
@@ -107,7 +105,6 @@ async def test_submit_fail(
     debug(result, exception)
     assert result is None
     assert isinstance(exception, TaskExecutionError)
-    assert ERROR_MSG in str(exception)
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
