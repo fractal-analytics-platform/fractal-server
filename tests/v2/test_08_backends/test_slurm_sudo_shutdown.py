@@ -65,11 +65,8 @@ async def test_submit_shutdown(
     monkey_slurm,
     valid_user_id,
 ):
-    def sleep_long(parameters: dict, remote_files: dict):
-        time.sleep(1_000)
-        return 42
 
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -81,7 +78,10 @@ async def test_submit_shutdown(
         def main_thread():
             debug("[main_thread] START")
             result, exception = runner.submit(
-                sleep_long,
+                base_command="sleep 1000 && echo",
+                workflow_task_order=0,
+                workflow_task_id=wftask_id,
+                task_name="fake-task-name",
                 parameters=dict(zarr_urls=ZARR_URLS),
                 task_files=get_dummy_task_files(
                     tmp777_path, component="", is_slurm=True
@@ -123,22 +123,8 @@ async def test_multisubmit_shutdown(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def fun(parameters: dict, remote_files: dict):
-        zarr_url = parameters["zarr_url"]
-        x = parameters["parameter"]
 
-        def sleep_long(parameters: dict, remote_files: dict):
-            time.sleep(1_000)
-
-        if x != 3:
-            print(f"Running with {zarr_url=} and {x=}, not sleeping.")
-            return 2 * x
-        else:
-            print(f"Running with {zarr_url=} and {x=}, sleep 1_000.")
-            time.sleep(1_000)
-            raise ValueError("parameter=3 is very very bad")
-
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -150,8 +136,11 @@ async def test_multisubmit_shutdown(
         def main_thread():
             debug("[main_thread] START")
             results, exceptions = runner.multisubmit(
-                fun,
-                ZARR_URLS_AND_PARAMETER,
+                base_command="sleep 1000 && echo",
+                workflow_task_order=0,
+                workflow_task_id=wftask_id,
+                task_name="fake-task-name",
+                list_parameters=ZARR_URLS_AND_PARAMETER,
                 list_task_files=[
                     get_dummy_task_files(
                         tmp777_path,
@@ -186,15 +175,12 @@ async def test_multisubmit_shutdown(
     debug(run)
     assert run.status == HistoryUnitStatus.SUBMITTED
 
-    # Check that `HistoryUnit.status` is updated from within `runner.submit`
-    # NOTE: We only make an assertion about the long-sleeping task, since the
-    # other outcomes are non-deterministic (depending on when precisely the
-    # shutdown is triggered, with respect to the SLURM-job lifecycle).
+    # Check that `HistoryUnit.status` is updated from within
+    # `runner.multisubmit`
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        if ind == 2:
-            assert unit.status == HistoryUnitStatus.FAILED
+        assert unit.status == HistoryUnitStatus.FAILED
 
 
 @pytest.mark.container
@@ -205,10 +191,8 @@ async def test_shutdown_before_submit(
     monkey_slurm,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
 
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -221,7 +205,10 @@ async def test_shutdown_before_submit(
 
         # Submit
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=dict(zarr_urls=ZARR_URLS),
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
@@ -255,10 +242,8 @@ async def test_shutdown_before_multisubmit(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -270,8 +255,11 @@ async def test_shutdown_before_multisubmit(
         runner.shutdown_file.touch()
 
         results, exceptions = runner.multisubmit(
-            do_nothing,
-            [
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=[
                 {
                     "zarr_url": "a",
                     "parameter": 1,
