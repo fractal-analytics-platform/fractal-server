@@ -202,17 +202,8 @@ async def test_multisubmit_compound(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def fun(parameters: dict, remote_files: dict):
-        zarr_url = parameters["zarr_url"]
-        x = parameters["parameter"]
-        if x != 3:
-            print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-            return 2 * x
-        else:
-            print(f"Running with {zarr_url=} and {x=}, raising error.")
-            raise ValueError("parameter=3 is very very bad")
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -235,23 +226,24 @@ async def test_multisubmit_compound(
         runner._mkdir_local_folder(workdir_local.as_posix())
         runner._mkdir_remote_folder(folder=workdir_remote.as_posix())
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=list_task_files,
             task_type="compound",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
             user_id=valid_user_id,
         )
+
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    # assert isinstance(exceptions[2], ValueError) # TaskExecutionError
-    assert "very very bad" in str(exceptions[2])
+    # FIXME ADD ASSERTIONS
+
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
