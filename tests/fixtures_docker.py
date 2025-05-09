@@ -46,9 +46,7 @@ def ssh_keys(tmp_path_factory: TempPathFactory) -> dict[str, str]:
     public_key_path = folder / "testing-ssh-key.pub"
 
     cmd = f"ssh-keygen -C testing-key -f {private_key_path.as_posix()}  -N ''"
-    subprocess.run(
-        shlex.split(cmd), capture_output=True, encoding="utf-8", check=True
-    )
+    subprocess.run(shlex.split(cmd), capture_output=True, encoding="utf-8", check=True)
     key_paths = dict(
         public=public_key_path.as_posix(),
         private=private_key_path.as_posix(),
@@ -68,9 +66,7 @@ def docker_compose_file(
 
     # Provide a tar.gz archive with fractal-server package
     CODE_ROOT = Path(fractal_server.__file__).parent.parent
-    TAR_FILE = (
-        testdata_path / "slurm_docker_images/slurm/fractal_server_local.tar.gz"
-    )
+    TAR_FILE = testdata_path / "slurm_docker_images/slurm/fractal_server_local.tar.gz"
     TAR_ROOT = CODE_ROOT.name
     with tarfile.open(TAR_FILE, "w:gz") as tar:
         tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
@@ -156,9 +152,7 @@ def run_in_container(slurmlogin_container) -> str:
 
 @pytest.fixture
 def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
-    command = (
-        f"docker exec --user root {slurmlogin_container} service ssh status"
-    )
+    command = f"docker exec --user root {slurmlogin_container} service ssh status"
     max_attempts = 50
     interval = 0.5
     logging.info(
@@ -171,12 +165,8 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
             capture_output=True,
             encoding="utf-8",
         )
-        logging.info(
-            f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
-        )
-        logging.info(
-            f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}"
-        )
+        logging.info(f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}")
+        logging.info(f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}")
         if "sshd is running" in res.stdout:
             logging.info("[ssh_alive] SSH status seems OK, exit.")
             return
@@ -185,35 +175,33 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
 
 
 @pytest.fixture
-def ssh_slurm(slurmlogin_ip, slurmlogin_container) -> None:
-    command = (
-        f"docker exec --user root {slurmlogin_container} service ssh slurmctld"
-    )
+def slurm_alive(slurmlogin_ip, slurmlogin_container) -> None:
+    command = f"docker exec --user root {slurmlogin_container} service slurmctld status"
     max_attempts = 50
     interval = 0.5
     logging.info(
         f"Now run {command=} at most {max_attempts} times, "
         f"with a sleep interval of {interval} seconds."
     )
+    from devtools import debug
     for attempt in range(max_attempts):
+        debug("H")
         res = subprocess.run(
             shlex.split(command),
             capture_output=True,
             encoding="utf-8",
         )
         logging.info(
-            f"[ssh_slurm] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
+            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
         )
         logging.info(
-            f"[ssh_slurm] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}"
+            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}"
         )
         if "running" in res.stdout:
-            logging.info("[ssh_slurm] SLURM status seems OK, exit.")
+            logging.info("[slurm_alive] SLURM status seems OK, exit.")
             return
         time.sleep(interval)
-    raise RuntimeError(
-        f"[ssh_slurm] SLURM not active on {slurmlogin_container}"
-    )
+    raise RuntimeError(f"[slurm_alive] SLURM not active on {slurmlogin_container}")
 
 
 @pytest.fixture

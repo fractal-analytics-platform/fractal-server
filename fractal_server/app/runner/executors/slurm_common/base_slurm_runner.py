@@ -98,9 +98,7 @@ class BaseSlurmRunner(BaseRunner):
 
         settings = Inject(get_settings)
 
-        self.poll_interval = (
-            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
-        )
+        self.poll_interval = poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
         self.poll_interval_internal = self.poll_interval / 10.0
 
         self.check_fractal_server_versions()
@@ -155,9 +153,7 @@ class BaseSlurmRunner(BaseRunner):
             for job_id in job_ids:
                 try:
                     stdout = self.run_squeue(job_ids=[job_id])
-                    slurm_statuses.update(
-                        {stdout.split()[0]: stdout.split()[1]}
-                    )
+                    slurm_statuses.update({stdout.split()[0]: stdout.split()[1]})
                 except Exception as e:
                     logger.warning(
                         "[_get_finished_jobs] `squeue` failed for "
@@ -217,8 +213,7 @@ class BaseSlurmRunner(BaseRunner):
                 json.dump(task.parameters, f, indent=2)
 
             logger.debug(
-                "[_submit_single_sbatch] Written "
-                f"{task.input_pickle_file_local=}"
+                "[_submit_single_sbatch] Written " f"{task.input_pickle_file_local=}"
             )
 
             if self.slurm_runner_type == "ssh":
@@ -279,9 +274,7 @@ class BaseSlurmRunner(BaseRunner):
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
         script_lines.append('echo "Current directory: $(pwd)"')
-        script_lines.append(
-            'echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"'
-        )
+        script_lines.append('echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"')
 
         # Complete script preamble
         script_lines.append("\n")
@@ -296,9 +289,7 @@ class BaseSlurmRunner(BaseRunner):
             )
         script_lines.append("wait\n")
         script = "\n".join(script_lines)
-        script_lines.append(
-            'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
-        )
+        script_lines.append('echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"')
 
         # Write submission script
         with open(slurm_job.slurm_submission_script_local, "w") as f:
@@ -314,13 +305,11 @@ class BaseSlurmRunner(BaseRunner):
                 remote=slurm_job.slurm_submission_script_remote,
             )
             submit_command = (
-                "sbatch --parsable "
-                f"{slurm_job.slurm_submission_script_remote}"
+                "sbatch --parsable " f"{slurm_job.slurm_submission_script_remote}"
             )
         else:
             submit_command = (
-                "sbatch --parsable "
-                f"{slurm_job.slurm_submission_script_local}"
+                "sbatch --parsable " f"{slurm_job.slurm_submission_script_local}"
             )
         # Run sbatch
         pre_submission_cmds = slurm_config.pre_submission_commands
@@ -340,9 +329,7 @@ class BaseSlurmRunner(BaseRunner):
                     path=wrapper_script, content=wrapper_script_contents
                 )
             else:
-                wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
-                )
+                wrapper_script = f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
                 with open(wrapper_script, "w") as f:
                     f.write(wrapper_script_contents)
             logger.debug(f"Now run {wrapper_script=}")
@@ -357,8 +344,7 @@ class BaseSlurmRunner(BaseRunner):
         # Add job to self.jobs
         self.jobs[slurm_job.slurm_job_id] = slurm_job
         logger.debug(
-            "[_submit_single_sbatch] Added "
-            f"{slurm_job.slurm_job_id} to self.jobs."
+            "[_submit_single_sbatch] Added " f"{slurm_job.slurm_job_id} to self.jobs."
         )
         logger.debug("[_submit_single_sbatch] END")
 
@@ -409,9 +395,7 @@ class BaseSlurmRunner(BaseRunner):
                 # `task_name`.
                 exc_proxy = output[1]
                 exc_type_name = exc_proxy.get("exc_type_name")
-                logger.debug(
-                    f"Output pickle contains a '{exc_type_name}' exception."
-                )
+                logger.debug(f"Output pickle contains a '{exc_type_name}' exception.")
                 traceback_string = output[1].get("traceback_string")
                 exception = TaskExecutionError(
                     traceback_string,
@@ -473,8 +457,7 @@ class BaseSlurmRunner(BaseRunner):
     def _check_no_active_jobs(self):
         if self.jobs != {}:
             raise JobExecutionError(
-                "Unexpected branch: jobs must be empty before new "
-                "submissions."
+                "Unexpected branch: jobs must be empty before new " "submissions."
             )
 
     def submit(
@@ -546,7 +529,7 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            time.sleep(5)  # FIXME please
+            # time.sleep(5)  # FIXME please
             self._submit_single_sbatch(
                 base_command=base_command,
                 slurm_job=slurm_job,
@@ -564,13 +547,10 @@ class BaseSlurmRunner(BaseRunner):
             scancelled_job_ids = []
             while len(self.jobs) > 0:
                 # Look for finished jobs
-                finished_job_ids = self._get_finished_jobs(
-                    job_ids=self.job_ids
-                )
+                finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
                 logger.debug(f"[submit] {finished_job_ids=}")
                 finished_jobs = [
-                    self.jobs[_slurm_job_id]
-                    for _slurm_job_id in finished_job_ids
+                    self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
                 ]
                 self._fetch_artifacts(finished_jobs)
                 with next(get_sync_db()) as db:
@@ -607,9 +587,7 @@ class BaseSlurmRunner(BaseRunner):
             return result, exception
 
         except Exception as e:
-            logger.error(
-                f"[submit] Unexpected exception. Original error: {str(e)}"
-            )
+            logger.error(f"[submit] Unexpected exception. Original error: {str(e)}")
             with next(get_sync_db()) as db:
                 update_status_of_history_unit(
                     history_unit_id=history_unit_id,
@@ -650,8 +628,7 @@ class BaseSlurmRunner(BaseRunner):
                         )
                 results = {}
                 exceptions = {
-                    ind: SHUTDOWN_EXCEPTION
-                    for ind in range(len(list_parameters))
+                    ind: SHUTDOWN_EXCEPTION for ind in range(len(list_parameters))
                 }
                 return results, exceptions
 
@@ -685,9 +662,7 @@ class BaseSlurmRunner(BaseRunner):
                 args_batches.append(
                     list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
                 )
-            if len(args_batches) != math.ceil(
-                tot_tasks / config.tasks_per_job
-            ):
+            if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
                 raise RuntimeError("Something wrong here while batching tasks")
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
@@ -725,7 +700,7 @@ class BaseSlurmRunner(BaseRunner):
 
             # NOTE: see issue 2431
             logger.debug("[multisubmit] Transfer files and submit jobs.")
-            time.sleep(15)  # FIXME please
+            # time.sleep(15)  # FIXME please
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
                     base_command=base_command,
@@ -783,9 +758,7 @@ class BaseSlurmRunner(BaseRunner):
                     logger.debug(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     for task in slurm_job.tasks:
-                        logger.debug(
-                            f"[multisubmit] Now process {task.index=}"
-                        )
+                        logger.debug(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
                         if fetch_artifacts_exception is not None:
                             result = None
@@ -814,9 +787,7 @@ class BaseSlurmRunner(BaseRunner):
                             exceptions[task.index] = exception
                             if task_type == "parallel":
                                 update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
+                                    history_unit_id=history_unit_ids[task.index],
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
@@ -824,9 +795,7 @@ class BaseSlurmRunner(BaseRunner):
                             results[task.index] = result
                             if task_type == "parallel":
                                 update_status_of_history_unit(
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
+                                    history_unit_id=history_unit_ids[task.index],
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
@@ -849,8 +818,7 @@ class BaseSlurmRunner(BaseRunner):
 
         # Fetch remote fractal-server version
         cmd = (
-            f"{self.python_worker_interpreter} "
-            "-m fractal_server.app.runner.versions"
+            f"{self.python_worker_interpreter} " "-m fractal_server.app.runner.versions"
         )
         stdout = self._run_remote_cmd(cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
