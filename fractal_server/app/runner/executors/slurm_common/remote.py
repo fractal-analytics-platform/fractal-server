@@ -20,40 +20,6 @@ class FractalVersionMismatch(RuntimeError):
     pass
 
 
-def _check_versions_mismatch(
-    *,
-    server_python_version: tuple[int, int, int],
-    server_fractal_server_version: str,
-):
-    """
-    Compare the server {python,cloudpickle,fractal_server} versions with the
-    ones available to the current worker
-
-    Arguments:
-        server_versions:
-            The version used in the fractal-server instance that created the
-            cloudpickle file
-
-    Raises:
-        FractalVersionMismatch: If the cloudpickle or fractal_server versions
-                                do not match with the ones on the server
-    """
-
-    worker_python_version = tuple(sys.version_info[:3])
-    if worker_python_version != server_python_version:
-        if worker_python_version[:2] != server_python_version[:2]:
-            logging.warning(
-                f"{server_python_version=} but {worker_python_version=}."
-            )
-
-    worker_fractal_server_version = __VERSION__
-    if worker_fractal_server_version != server_fractal_server_version:
-        raise FractalVersionMismatch(
-            f"{server_fractal_server_version=} but "
-            f"{worker_fractal_server_version=}"
-        )
-
-
 def worker(
     *,
     in_fname: str,
@@ -81,10 +47,21 @@ def worker(
         server_python_version = input_data["python_version"]
         server_fractal_server_version = input_data["fractal_server_version"]
 
-        _check_versions_mismatch(
-            server_python_version=server_python_version,
-            server_fractal_server_version=server_fractal_server_version,
-        )
+        # Fractal-server version must be identical
+        worker_fractal_server_version = __VERSION__
+        if worker_fractal_server_version != server_fractal_server_version:
+            raise FractalVersionMismatch(
+                f"{server_fractal_server_version=} but "
+                f"{worker_fractal_server_version=}"
+            )
+
+        # Python version mismatch only raises a warning
+        worker_python_version = tuple(sys.version_info[:3])
+        if worker_python_version != server_python_version:
+            if worker_python_version[:2] != server_python_version[:2]:
+                logging.warning(
+                    f"{server_python_version=} but {worker_python_version=}."
+                )
 
         # Extract some useful paths
         metadiff_file_remote = input_data["metadiff_file_remote"]
