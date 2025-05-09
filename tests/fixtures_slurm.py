@@ -88,7 +88,9 @@ def run_squeue(squeue_format=None, header=True):
     return res.stdout
 
 
-def scancel_all_jobs_of_a_slurm_user(slurm_user: str, show_squeue: bool = True):
+def scancel_all_jobs_of_a_slurm_user(
+    slurm_user: str, show_squeue: bool = True
+):
     """
     Call scancel for all jobs of a given SLURM user
     """
@@ -108,7 +110,9 @@ def scancel_all_jobs_of_a_slurm_user(slurm_user: str, show_squeue: bool = True):
         slurm_user,
         "-v",
     ]
-    logging.warning(f"Now running scancel_all_jobs_of_a_slurm_user with {cmd=}")
+    logging.warning(
+        f"Now running scancel_all_jobs_of_a_slurm_user with {cmd=}"
+    )
     res = subprocess.run(
         cmd,
         capture_output=True,
@@ -122,7 +126,9 @@ def scancel_all_jobs_of_a_slurm_user(slurm_user: str, show_squeue: bool = True):
 
     if show_squeue:
         debug(run_squeue())
-    logging.warning(f"Now completed scancel_all_jobs_of_a_slurm_user with {cmd=}")
+    logging.warning(
+        f"Now completed scancel_all_jobs_of_a_slurm_user with {cmd=}"
+    )
 
 
 @pytest.fixture
