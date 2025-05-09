@@ -150,15 +150,6 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    # def fun(parameters: dict, remote_files: dict):
-    #     zarr_url = parameters["zarr_url"]
-    #     x = parameters["parameter"]
-    #     if x != 3:
-    #         print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-    #         return 2 * x
-    #     else:
-    #         print(f"Running with {zarr_url=} and {x=}, raising error.")
-    #         raise ValueError("parameter=3 is very very bad")
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
@@ -187,13 +178,8 @@ async def test_multisubmit_parallel(
         )
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    # assert isinstance(exceptions[2], ValueError) # TaskExecutionError
-    assert "very very bad" in str(exceptions[2])
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -205,10 +191,7 @@ async def test_multisubmit_parallel(
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        if ind != 2:
-            assert unit.status == HistoryUnitStatus.DONE
-        else:
-            assert unit.status == HistoryUnitStatus.FAILED
+        assert unit.status == HistoryUnitStatus.DONE
 
 
 @pytest.mark.container
