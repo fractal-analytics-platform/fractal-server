@@ -205,12 +205,10 @@ def run_v2_task_non_parallel(
         )
 
     result, exception = runner.submit(
-        dict_to_remote=dict(
-            base_command=task.command_non_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_non_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         parameters=function_kwargs,
         task_type=task_type,
         task_files=task_files,
@@ -332,12 +330,10 @@ def run_v2_task_parallel(
         )
 
     results, exceptions = runner.multisubmit(
-        dict_to_remote=dict(
-            base_command=task.command_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         list_parameters=list_function_kwargs,
         task_type="parallel",
         list_task_files=list_task_files,
@@ -452,12 +448,10 @@ def run_v2_task_compound(
             ],
         )
     result, exception = runner.submit(
-        dict_to_remote=dict(
-            base_command=task.command_non_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_non_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         parameters=function_kwargs,
         task_type=task_type,
         task_files=task_files_init,
@@ -554,12 +548,10 @@ def run_v2_task_compound(
         history_unit_ids = [history_unit.id for history_unit in history_units]
 
     results, exceptions = runner.multisubmit(
-        dict_to_remote=dict(
-            base_command=task.command_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         list_parameters=list_function_kwargs,
         task_type=task_type,
         list_task_files=list_task_files,

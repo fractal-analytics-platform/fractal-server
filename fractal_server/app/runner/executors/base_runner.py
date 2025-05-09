@@ -26,8 +26,10 @@ class BaseRunner(object):
 
     def submit(
         self,
-        # func: callable,
-        dict_to_remote: dict[str, Any],
+        base_command: str,
+        workflow_task_order: int,
+        workflow_task_id: int,
+        task_name: str,
         parameters: dict[str, Any],
         history_unit_id: int,
         task_type: TaskTypeType,

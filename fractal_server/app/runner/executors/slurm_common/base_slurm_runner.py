@@ -7,7 +7,6 @@ from typing import Any
 from typing import Literal
 from typing import Optional
 
-from devtools import debug
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
@@ -200,7 +199,6 @@ class BaseSlurmRunner(BaseRunner):
                 f"--args-json {args_file_remote} "
                 f"--out-json {metadiff_file_remote}"
             )
-            from devtools import debug
 
             input_data = RemoteInputData(
                 full_command=full_command,
@@ -209,13 +207,9 @@ class BaseSlurmRunner(BaseRunner):
                 metadiff_file_remote=task.task_files.metadiff_file_remote,
                 log_file_remote=task.task_files.log_file_remote,
             )
-            debug(input_data)
 
             with open(task.input_pickle_file_local, "w") as f:
                 json.dump(input_data.model_dump(), f, indent=2)
-
-            debug("Now writing", task.task_files.args_file_local)
-            debug("Not writing", task.task_files.args_file_remote)
 
             with open(task.task_files.args_file_local, "w") as f:
                 json.dump(task.parameters, f, indent=2)
@@ -488,7 +482,10 @@ class BaseSlurmRunner(BaseRunner):
 
     def submit(
         self,
-        dict_to_remote: dict[str, Any],  # FIXME
+        base_command: str,
+        workflow_task_order: int,
+        workflow_task_id: int,
+        task_name: str,
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
@@ -501,8 +498,6 @@ class BaseSlurmRunner(BaseRunner):
         ],
         user_id: int,
     ) -> tuple[Any, Exception]:
-
-        debug("submit", dict_to_remote)
 
         logger.debug("[submit] START")
         try:
@@ -547,11 +542,9 @@ class BaseSlurmRunner(BaseRunner):
                         workdir_remote=workdir_remote,
                         workdir_local=workdir_local,
                         task_files=task_files,
-                        workflow_task_order=dict_to_remote[
-                            "workflow_task_order"
-                        ],
-                        workflow_task_id=dict_to_remote["workflow_task_id"],
-                        task_name=dict_to_remote["task_name"],
+                        workflow_task_order=workflow_task_order,
+                        workflow_task_id=workflow_task_id,
+                        task_name=task_name,
                     )
                 ],
             )
@@ -559,7 +552,7 @@ class BaseSlurmRunner(BaseRunner):
             config.parallel_tasks_per_job = 1
             time.sleep(5)  # FIXME please
             self._submit_single_sbatch(
-                base_command=dict_to_remote["base_command"],
+                base_command=base_command,
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
@@ -632,7 +625,10 @@ class BaseSlurmRunner(BaseRunner):
 
     def multisubmit(
         self,
-        dict_to_remote: dict[str, Any],  # FIXME
+        base_command: str,
+        workflow_task_order: int,
+        workflow_task_id: int,
+        task_name: str,
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
@@ -717,13 +713,9 @@ class BaseSlurmRunner(BaseRunner):
                             parameters=parameters,
                             zarr_url=parameters["zarr_url"],
                             task_files=list_task_files[index],
-                            workflow_task_order=dict_to_remote[
-                                "workflow_task_order"
-                            ],
-                            workflow_task_id=dict_to_remote[
-                                "workflow_task_id"
-                            ],
-                            task_name=dict_to_remote["task_name"],
+                            workflow_task_order=workflow_task_order,
+                            workflow_task_id=workflow_task_id,
+                            task_name=task_name,
                         ),
                     )
                 jobs_to_submit.append(
@@ -739,7 +731,7 @@ class BaseSlurmRunner(BaseRunner):
             logger.debug("[multisubmit] Transfer files and submit jobs.")
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
-                    base_command=dict_to_remote["base_command"],
+                    base_command=base_command,
                     slurm_job=slurm_job,
                     slurm_config=config,
                 )
