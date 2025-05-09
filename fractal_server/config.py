@@ -460,15 +460,6 @@ class Settings(BaseSettings):
     running a task that produces multiple SLURM jobs.
     """
 
-    FRACTAL_SLURM_ERROR_HANDLING_INTERVAL: int = 5
-    """
-    Interval to wait (in seconds) when the SLURM backend does not find an
-    output pickle file - which could be due to several reasons (e.g. the SLURM
-    job was cancelled or failed, or writing the file is taking long). If the
-    file is still missing after this time interval, this leads to a
-    `JobExecutionError`.
-    """
-
     FRACTAL_PIP_CACHE_DIR: Optional[AbsolutePathStr] = None
     """
     Absolute path to the cache directory for `pip`; if unset,
