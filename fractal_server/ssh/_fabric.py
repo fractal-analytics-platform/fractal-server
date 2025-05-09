@@ -56,6 +56,7 @@ def _acquire_lock_with_timeout(
     """
     logger = get_logger(logger_name)
     logger.info(f"Trying to acquire lock for '{label}', with {timeout=}")
+    t_start_lock_acquire = time.perf_counter()
     result = lock.acquire(timeout=timeout)
     try:
         if not result:
@@ -64,7 +65,9 @@ def _acquire_lock_with_timeout(
                 f"Failed to acquire lock for '{label}' within "
                 f"{timeout} seconds"
             )
-        logger.info(f"Lock for '{label}' was acquired.")
+        t_end_lock_acquire = time.perf_counter()
+        elapsed = t_end_lock_acquire - t_start_lock_acquire
+        logger.info(f"Lock for '{label}' was acquired - {elapsed=:.4f} s")
         yield result
     finally:
         if result:
