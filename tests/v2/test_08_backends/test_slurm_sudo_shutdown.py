@@ -57,7 +57,6 @@ def shutdown_thread(
     debug("[shutdown_thread] END")
 
 
-@pytest.mark.skip(reason="FIXME")
 @pytest.mark.container
 async def test_submit_shutdown(
     db,
@@ -79,7 +78,7 @@ async def test_submit_shutdown(
         def main_thread():
             debug("[main_thread] START")
             result, exception = runner.submit(
-                base_command="sleep 1000 && echo",
+                base_command="bash -c 'sleep 1000'",
                 workflow_task_order=0,
                 workflow_task_id=wftask_id,
                 task_name="fake-task-name",
@@ -116,7 +115,6 @@ async def test_submit_shutdown(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
-@pytest.mark.skip(reason="FIXME")
 @pytest.mark.container
 async def test_multisubmit_shutdown(
     db,
@@ -138,7 +136,7 @@ async def test_multisubmit_shutdown(
         def main_thread():
             debug("[main_thread] START")
             results, exceptions = runner.multisubmit(
-                base_command="sleep 1000",  # FIXME
+                base_command="bash -c 'sleep 1000'",
                 workflow_task_order=0,
                 workflow_task_id=wftask_id,
                 task_name="fake-task-name",
