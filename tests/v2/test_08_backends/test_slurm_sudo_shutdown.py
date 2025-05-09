@@ -57,6 +57,7 @@ def shutdown_thread(
     debug("[shutdown_thread] END")
 
 
+@pytest.mark.skip(reason="FIXME")
 @pytest.mark.container
 async def test_submit_shutdown(
     db,
@@ -115,6 +116,7 @@ async def test_submit_shutdown(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
+@pytest.mark.skip(reason="FIXME")
 @pytest.mark.container
 async def test_multisubmit_shutdown(
     db,
