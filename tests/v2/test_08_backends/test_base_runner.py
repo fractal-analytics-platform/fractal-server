@@ -8,7 +8,10 @@ def test_NotImplementedError_methods():
     runner = BaseRunner()
     with pytest.raises(NotImplementedError):
         runner.submit(
-            func=None,
+            base_command="fake",
+            workflow_task_id=0,
+            workflow_task_order=0,
+            task_name="fake",
             parameters=None,
             history_unit_id=None,
             task_type=None,
@@ -18,7 +21,10 @@ def test_NotImplementedError_methods():
         )
     with pytest.raises(NotImplementedError):
         runner.multisubmit(
-            func=None,
+            base_command="fake",
+            workflow_task_id=0,
+            workflow_task_order=0,
+            task_name="fake",
             list_parameters=None,
             history_unit_ids=None,
             task_type=None,
