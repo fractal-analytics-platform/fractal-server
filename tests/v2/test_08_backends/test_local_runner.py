@@ -126,9 +126,6 @@ async def test_submit_inner_failure(
 ):
     ERROR_MSG = "very nice error"
 
-    def do_nothing(parameters: dict, remote_files: dict) -> int:
-        return 42
-
     def mock_validate_params(*args, **kwargs):
         raise ValueError(ERROR_MSG)
 
@@ -138,11 +135,14 @@ async def test_submit_inner_failure(
         BaseRunner, "validate_submit_parameters", mock_validate_params
     )
 
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=dict(zarr_urls=ZARR_URLS),
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type="parallel",
