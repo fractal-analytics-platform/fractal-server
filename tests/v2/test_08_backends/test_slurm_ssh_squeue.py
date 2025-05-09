@@ -11,21 +11,11 @@ from fractal_server.ssh._fabric import FractalSSHCommandError
 @pytest.mark.ssh
 @pytest.mark.container
 async def test_run_squeue(
-    db,
     tmp777_path,
-    history_mock_for_submit,
     fractal_ssh: FractalSSH,
-    override_settings_factory,
-    current_py_version: str,
-    valid_user_id,
 ):
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
-    )
 
     fractal_ssh.default_lock_timeout = 1.0
-
-    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
