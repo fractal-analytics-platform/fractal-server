@@ -173,8 +173,6 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
 ):
 
-    # FIXME THESE ARE ALL SUCCESSFUL TASKS, CAN WE MAKE A PARTIALLY-FAILED ONE?
-
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
