@@ -546,7 +546,7 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            time.sleep(5)  # FIXME please
+            time.sleep(10)  # FIXME please
             self._submit_single_sbatch(
                 base_command=base_command,
                 slurm_job=slurm_job,
