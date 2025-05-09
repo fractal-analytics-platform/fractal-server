@@ -19,6 +19,10 @@ class SlurmTask(BaseModel):
     task_files: TaskFiles
     index: int
 
+    workflow_task_order: int
+    workflow_task_id: int
+    task_name: str
+
     @property
     def input_pickle_file_local_path(self) -> Path:
         return (

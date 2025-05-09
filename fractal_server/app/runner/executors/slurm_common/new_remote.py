@@ -21,11 +21,8 @@ import shutil
 import subprocess  # nosec
 import sys
 from shlex import split
-from typing import Literal
-from typing import Union
 
 from fractal_server import __VERSION__
-from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.string_tools import validate_cmd
 
@@ -114,13 +111,14 @@ def _call_command_wrapper(cmd: str, log_path: str) -> None:
         except Exception as e:
             raise e
 
-    if result.returncode > 0:
-        with open(log_path, "r") as fp_stderr:
-            err = fp_stderr.read()
-        raise TaskExecutionError(err)
-    elif result.returncode < 0:
-        raise JobExecutionError(
-            info=f"Task failed with returncode={result.returncode}"
+    if result.returncode != 0:
+        if os.path.isfile(log_path):
+            with open(log_path, "r") as fp_stderr:
+                err = fp_stderr.read()
+        else:
+            err = ""
+        raise TaskExecutionError(
+            f"Task failed with returncode={result.returncode}.\nSTDERR: {err}"
         )
 
 
@@ -147,14 +145,6 @@ def worker(
     try:
         with open(in_fname, "r") as f:
             input_data = json.load(f)
-
-        # Extract some information which are useful upon failure
-        # FIXME: validate input_data somewhere else, e.g. to avoid `KeyError`s
-        failure_info = dict(
-            workflow_task_order=input_data["workflow_task_order"],
-            workflow_task_id=["workflow_task_id"],
-            task_name=["task_name"],
-        )
 
         server_python_version = input_data["python_version"]
         server_fractal_server_version = input_data["fractal_server_version"]
@@ -206,7 +196,6 @@ def worker(
         exc_proxy = dict(
             exc_type_name=type(e).__name__,
             traceback_string=traceback_string,
-            **failure_info,
         )
         result = (False, exc_proxy)
 
