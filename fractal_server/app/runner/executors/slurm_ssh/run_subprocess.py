@@ -15,17 +15,22 @@ def run_subprocess(
     logger = get_logger(logger_name)
     try:
         res = subprocess.run(  # nosec
-            shlex.split(cmd), check=True, capture_output=True, encoding="utf-8"
+            shlex.split(cmd),
+            check=True,
+            capture_output=True,
+            encoding="utf-8",
         )
         return res
     except subprocess.CalledProcessError as e:
-        logger.debug(
+        logger.info(
             f"Command '{e.cmd}' returned non-zero exit status {e.returncode}."
         )
-        logger.debug(f"stdout: {e.stdout}")
-        logger.debug(f"stderr: {e.stderr}")
+        logger.info(f"stdout: {e.stdout}")
+        logger.info(f"stderr: {e.stderr}")
         raise e
     except Exception as e:
-        logger.debug(f"An error occurred while running command: {cmd}")
-        logger.debug(str(e))
+        logger.warning(
+            f"An unexpected error occurred while running command: {cmd}"
+        )
+        logger.warning(str(e))
         raise e
