@@ -19,6 +19,7 @@ from ....models.v2 import TaskV2
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions_tasks import _check_type_filters_compatibility
+from ._aux_functions_tasks import _get_task_group_or_404
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -72,7 +73,10 @@ async def get_workflow_version_update_candidates(
         if not (task.args_schema_parallel or task.args_schema_non_parallel):
             response.append([])
             continue
-        current_task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
+
+        current_task_group = await _get_task_group_or_404(
+            task_group_id=task.taskgroupv2_id, db=db
+        )
 
         res = await db.execute(
             select(TaskV2.id, TaskGroupV2.version)
