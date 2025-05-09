@@ -37,9 +37,6 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 logger = set_logger(__name__)
 
 
-# FIXME: Remove all references to pickle
-
-
 class RemoteInputData(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -190,7 +187,7 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[_submit_single_sbatch] START")
 
         for task in slurm_job.tasks:
-            # Write input pickle
+            # Write input file
             if self.slurm_runner_type == "ssh":
                 args_file_remote = task.task_files.args_file_remote
             else:
@@ -210,22 +207,21 @@ class BaseSlurmRunner(BaseRunner):
                 log_file_remote=task.task_files.log_file_remote,
             )
 
-            with open(task.input_pickle_file_local, "w") as f:
+            with open(task.input_file_local, "w") as f:
                 json.dump(input_data.model_dump(), f, indent=2)
 
             with open(task.task_files.args_file_local, "w") as f:
                 json.dump(task.parameters, f, indent=2)
 
             logger.debug(
-                "[_submit_single_sbatch] Written "
-                f"{task.input_pickle_file_local=}"
+                "[_submit_single_sbatch] Written " f"{task.input_file_local=}"
             )
 
             if self.slurm_runner_type == "ssh":
-                # Send input pickle (only relevant for SSH)
+                # Send input file (only relevant for SSH)
                 self.fractal_ssh.send_file(
-                    local=task.input_pickle_file_local,
-                    remote=task.input_pickle_file_remote,
+                    local=task.input_file_local,
+                    remote=task.input_file_remote,
                 )
                 self.fractal_ssh.send_file(
                     local=task.task_files.args_file_local,
@@ -233,24 +229,24 @@ class BaseSlurmRunner(BaseRunner):
                 )
                 logger.debug(
                     "[_submit_single_sbatch] Transferred "
-                    f"{task.input_pickle_file_local=}"
+                    f"{task.input_file_local=}"
                 )
 
         # Prepare commands to be included in SLURM submission script
         cmdlines = []
         for task in slurm_job.tasks:
             if self.slurm_runner_type == "ssh":
-                input_pickle_file = task.input_pickle_file_remote
+                input_file = task.input_file_remote
             else:
-                input_pickle_file = task.input_pickle_file_local
-            output_pickle_file = task.output_pickle_file_remote
+                input_file = task.input_file_local
+            output_file = task.output_file_remote
             cmdlines.append(
                 (
                     f"{self.python_worker_interpreter}"
                     " -m fractal_server.app.runner."
                     "executors.slurm_common.remote "
-                    f"--input-file {input_pickle_file} "
-                    f"--output-file {output_pickle_file}"
+                    f"--input-file {input_file} "
+                    f"--output-file {output_file}"
                 )
             )
 
@@ -394,7 +390,7 @@ class BaseSlurmRunner(BaseRunner):
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
-            with open(task.output_pickle_file_local, "r") as f:
+            with open(task.output_file_local, "r") as f:
                 output = json.load(f)
             success = output[0]
             if success:
@@ -410,7 +406,7 @@ class BaseSlurmRunner(BaseRunner):
                 exc_proxy = output[1]
                 exc_type_name = exc_proxy.get("exc_type_name")
                 logger.debug(
-                    f"Output pickle contains a '{exc_type_name}' exception."
+                    f"Output file contains a '{exc_type_name}' exception."
                 )
                 traceback_string = output[1].get("traceback_string")
                 exception = TaskExecutionError(
@@ -433,8 +429,8 @@ class BaseSlurmRunner(BaseRunner):
                 exception = SHUTDOWN_EXCEPTION
             return (None, exception)
         finally:
-            Path(task.input_pickle_file_local).unlink(missing_ok=True)
-            Path(task.output_pickle_file_local).unlink(missing_ok=True)
+            Path(task.input_file_local).unlink(missing_ok=True)
+            Path(task.output_file_local).unlink(missing_ok=True)
 
     def is_shutdown(self) -> bool:
         return self.shutdown_file.exists()

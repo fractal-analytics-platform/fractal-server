@@ -1,7 +1,3 @@
-"""
-This module provides a simple self-standing script that executes arbitrary
-python code received via pickled files on a cluster node.
-"""
 import argparse
 import json
 import logging
@@ -29,8 +25,8 @@ def worker(
     Execute a job, possibly on a remote node.
 
     Arguments:
-        in_fname: Absolute path to the input pickle file (must be readable).
-        out_fname: Absolute path of the output pickle file (must be writeable).
+        in_fname: Absolute path to the input file (must be readable).
+        out_fname: Absolute path of the output file (must be writeable).
     """
 
     # Create output folder, if missing
@@ -110,13 +106,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input-file",
         type=str,
-        help="Path of input pickle file",
+        help="Path of input JSON file",
         required=True,
     )
     parser.add_argument(
         "--output-file",
         type=str,
-        help="Path of output pickle file",
+        help="Path of output JSON file",
         required=True,
     )
     parsed_args = parser.parse_args()

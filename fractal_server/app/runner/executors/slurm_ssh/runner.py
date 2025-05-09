@@ -99,9 +99,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
             for task in _slurm_job.tasks:
                 _single_job_filelist.extend(
                     [
-                        task.output_pickle_file_remote_path.name,
+                        task.output_file_remote_path.name,
                         task.task_files.log_file_remote_path.name,
-                        task.task_files.args_file_remote_path.name,
+                        task.task_files.args_file_remote_path.name,  # FIXME
                         task.task_files.metadiff_file_remote_path.name,
                     ]
                 )

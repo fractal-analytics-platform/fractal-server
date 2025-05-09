@@ -29,7 +29,6 @@ def _run_command_as_user(
     *,
     cmd: str,
     user: Optional[str] = None,
-    encoding: Optional[str] = "utf-8",
     check: bool = False,
 ) -> subprocess.CompletedProcess:
     """
@@ -38,8 +37,6 @@ def _run_command_as_user(
     Arguments:
         cmd: Command to be run
         user: User to be impersonated
-        encoding: Argument for `subprocess.run`. Note that this must be `None`
-                  to have stdout/stderr as bytes.
         check: If `True`, check that `returncode=0` and fail otherwise.
 
     Raises:
@@ -57,7 +54,7 @@ def _run_command_as_user(
     res = subprocess.run(  # nosec
         shlex.split(new_cmd),
         capture_output=True,
-        encoding=encoding,
+        encoding="utf-8",
     )
     logger.debug(f"[_run_command_as_user] {res.returncode=}")
     logger.debug(f"[_run_command_as_user] {res.stdout=}")
