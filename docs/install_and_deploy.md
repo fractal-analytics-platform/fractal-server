@@ -34,7 +34,7 @@ pip install fractal-server
 ```
 
 For details on how to install Fractal Server in a development environment, see
-the [Contribute](../contribute) page.
+the [Development](../development) page.
 
 ## How to deploy
 
