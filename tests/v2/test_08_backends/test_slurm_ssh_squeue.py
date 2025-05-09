@@ -46,7 +46,10 @@ async def test_run_squeue(
         def main_thread():
             debug("[main_thread] START")
             result, exception = runner.submit(
-                sleep_long,
+                base_command="sleep 1000 && echo",
+                workflow_task_order=0,
+                workflow_task_id=wftask_id,
+                task_name="fake-task-name",
                 parameters=dict(zarr_urls=[]),
                 task_files=get_dummy_task_files(
                     tmp777_path, component="", is_slurm=True
