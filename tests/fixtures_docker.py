@@ -156,21 +156,27 @@ def run_in_container(slurmlogin_container) -> str:
 
 @pytest.fixture
 def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
-    command = (
+    command_ssh = (
         f"docker exec --user root {slurmlogin_container} service ssh status"
     )
+    command_slurm = f"docker exec --user root {slurmlogin_container} service slurmcltd status"
     max_attempts = 50
     interval = 0.5
     logging.info(
-        f"Now run {command=} at most {max_attempts} times, "
+        f"Now run {command_ssh=} at most {max_attempts} times, "
+        f"with a sleep interval of {interval} seconds."
+    )
+    logging.info(
+        f"Now run {command_slurm=} at most {max_attempts} times, "
         f"with a sleep interval of {interval} seconds."
     )
     for attempt in range(max_attempts):
-        res = subprocess.run(
-            shlex.split(command),
+        res= subprocess.run(
+            shlex.split(command_ssh),
             capture_output=True,
             encoding="utf-8",
         )
+
         logging.info(
             f"[ssh_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
         )

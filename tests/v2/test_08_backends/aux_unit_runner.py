@@ -120,7 +120,11 @@ async def history_mock_for_multisubmit(
         )
         await db.commit()
 
-    return history_run_mock.id, unit_ids
+    return (
+        history_run_mock.id,
+        unit_ids,
+        history_run_mock.workflowtask_id,
+    )
 
 
 def get_dummy_task_files(
@@ -129,7 +133,6 @@ def get_dummy_task_files(
     prefix: str | None = None,
     is_slurm: bool = False,
 ) -> TaskFiles:
-
     if is_slurm:
         root_dir_local = base_dir / "server"
         root_dir_remote = base_dir / "user"
