@@ -235,7 +235,6 @@ async def test_multisubmit_compound(
         )
     debug(results)
     debug(exceptions)
-    # FIXME ADD ASSERTIONS
 
     assert results == {key: None for key in range(4)}
     assert exceptions == {}
