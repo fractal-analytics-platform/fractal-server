@@ -391,11 +391,7 @@ class BaseSlurmRunner(BaseRunner):
         task: SlurmTask,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
-        # with open(task.output_pickle_file_local, "r") as f:
-        #     outdata = json.load(f)
-        # success, output = (0, 0)
-        #
-        # debug(outdata)
+
         try:
             with open(task.output_pickle_file_local, "r") as f:
                 output = json.load(f)

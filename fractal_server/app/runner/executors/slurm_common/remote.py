@@ -1,14 +1,3 @@
-# This adapts clusterfutures <https://github.com/sampsyo/clusterfutures>
-# Original Copyright
-# Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
-# License: MIT
-#
-# Modified by:
-# Marco Franzon <marco.franzon@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
 """
 This module provides a simple self-standing script that executes arbitrary
 python code received via pickled files on a cluster node.
