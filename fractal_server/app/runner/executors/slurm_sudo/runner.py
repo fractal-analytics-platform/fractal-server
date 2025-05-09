@@ -124,7 +124,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
                     check=True,
                 )
                 # Write local file
-                with open(target, "wb") as f:
+                with open(target, "w") as f:
                     f.write(res.stdout)
                 logger.debug(
                     f"[_fetch_artifacts_single_job] Copied {source} into "
