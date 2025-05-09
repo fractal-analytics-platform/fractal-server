@@ -37,6 +37,9 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 logger = set_logger(__name__)
 
 
+# FIXME: Remove all references to pickle
+
+
 class RemoteInputData(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
