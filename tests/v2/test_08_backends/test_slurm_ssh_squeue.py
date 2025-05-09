@@ -24,6 +24,7 @@ async def test_run_squeue(
         poll_interval=0,
     ) as runner:
 
+        # Start a long SLURM job
         stdout = fractal_ssh.run_command(
             cmd="sbatch --parsable --wrap 'sleep 1000' "
         )
