@@ -46,12 +46,7 @@ class JobExecutionError(RuntimeError):
     Forwards errors in the execution of a task that are due to external factors
 
     This error wraps and forwards errors occurred during the execution of
-    tasks, but related to external factors like:
-
-    1. A negative exit code (e.g. because the task received a TERM or KILL
-       signal); FIXME
-    2. An error on the executor side (e.g. the SLURM executor could not
-       find the pickled file with task output).
+    tasks, but related to external factors like an error on the executor side.
 
     This error also adds information that is useful to track down and debug the
     failing task within a workflow.
