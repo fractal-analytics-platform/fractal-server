@@ -49,7 +49,7 @@ class JobExecutionError(RuntimeError):
     tasks, but related to external factors like:
 
     1. A negative exit code (e.g. because the task received a TERM or KILL
-       signal);
+       signal); FIXME
     2. An error on the executor side (e.g. the SLURM executor could not
        find the pickled file with task output).
 
