@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 
+from ..call_command_wrapper import call_command_wrapper
 from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import TaskExecutionError
@@ -36,9 +37,8 @@ def run_single_task(
         f"--args-json {task_files.args_file_local} "
         f"--out-json {task_files.metadiff_file_local}"
     )
-    from ..slurm_common.remote import _call_command_wrapper  # FIXME
 
-    _call_command_wrapper(
+    call_command_wrapper(
         cmd=full_command,
         log_path=task_files.log_file_local,
     )

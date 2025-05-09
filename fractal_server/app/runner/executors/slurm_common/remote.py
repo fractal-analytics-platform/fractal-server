@@ -6,14 +6,10 @@ import argparse
 import json
 import logging
 import os
-import shutil
-import subprocess  # nosec
 import sys
-from shlex import split
 
+from ..call_command_wrapper import call_command_wrapper
 from fractal_server import __VERSION__
-from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.string_tools import validate_cmd
 
 
 class FractalVersionMismatch(RuntimeError):
@@ -58,51 +54,6 @@ def _check_versions_mismatch(
         )
 
 
-def _call_command_wrapper(cmd: str, log_path: str) -> None:
-    """
-    Call a command and write its stdout and stderr to files
-
-    Raises:
-        TaskExecutionError: If the `subprocess.run` call returns a positive
-                            exit code
-        JobExecutionError:  If the `subprocess.run` call returns a negative
-                            exit code (e.g. due to the subprocess receiving a
-                            TERM or KILL signal)
-    """
-    try:
-        validate_cmd(cmd)
-    except ValueError as e:
-        raise TaskExecutionError(f"Invalid command. Original error: {str(e)}")
-
-    # Verify that task command is executable
-    if shutil.which(split(cmd)[0]) is None:
-        msg = (
-            f'Command "{split(cmd)[0]}" is not valid. '
-            "Hint: make sure that it is executable."
-        )
-        raise TaskExecutionError(msg)
-
-    with open(log_path, "w") as fp_log:
-        try:
-            result = subprocess.run(  # nosec
-                split(cmd),
-                stderr=fp_log,
-                stdout=fp_log,
-            )
-        except Exception as e:
-            raise e
-
-    if result.returncode != 0:
-        if os.path.isfile(log_path):
-            with open(log_path, "r") as fp_stderr:
-                err = fp_stderr.read()
-        else:
-            err = ""
-        raise TaskExecutionError(
-            f"Task failed with returncode={result.returncode}.\nSTDERR: {err}"
-        )
-
-
 def worker(
     *,
     in_fname: str,
@@ -141,7 +92,7 @@ def worker(
 
         # Execute command
         full_command = input_data["full_command"]
-        _call_command_wrapper(cmd=full_command, log_path=log_path)
+        call_command_wrapper(cmd=full_command, log_path=log_path)
 
         try:
             with open(metadiff_file_remote, "r") as f:
@@ -195,6 +146,7 @@ if __name__ == "__main__":
     logging.debug(f"{parsed_args=}")
 
     kwargs = dict(
-        in_fname=parsed_args.input_file, out_fname=parsed_args.output_file
+        in_fname=parsed_args.input_file,
+        out_fname=parsed_args.output_file,
     )
     worker(**kwargs)
