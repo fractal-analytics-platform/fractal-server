@@ -70,7 +70,6 @@
 | fractal\_server/app/routes/pagination.py                                        |       28 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/\_\_init\_\_.py                                      |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/components.py                                        |        2 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/compress\_folder.py                                  |       45 |        4 |       10 |        1 |     91% |85-86, 123-125 |
 | fractal\_server/app/runner/exceptions.py                                        |       52 |       13 |       14 |        3 |     70% |95-103, 111-112, 116-117, 121-122 |
 | fractal\_server/app/runner/executors/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/base\_runner.py                            |       46 |        0 |       32 |        1 |     99% |  100->105 |
@@ -86,13 +85,13 @@
 | fractal\_server/app/runner/executors/slurm\_common/slurm\_job\_task\_models.py  |       81 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_common/utils\_executors.py          |       17 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_ssh/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm\_ssh/runner.py                       |       97 |       13 |       10 |        0 |     86% |   172-206 |
+| fractal\_server/app/runner/executors/slurm\_ssh/run\_subprocess.py              |       20 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/runner/executors/slurm\_ssh/runner.py                       |       86 |        0 |        8 |        0 |    100% |           |
+| fractal\_server/app/runner/executors/slurm\_ssh/tar\_commands.py                |       13 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_sudo/\_\_init\_\_.py                |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_sudo/\_subprocess\_run\_as\_user.py |       24 |        2 |        6 |        2 |     87% |    56, 87 |
 | fractal\_server/app/runner/executors/slurm\_sudo/runner.py                      |       70 |        1 |        6 |        1 |     97% |       185 |
-| fractal\_server/app/runner/extract\_archive.py                                  |       33 |        3 |        8 |        2 |     88% | 25, 97-99 |
 | fractal\_server/app/runner/filenames.py                                         |        2 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/run\_subprocess.py                                   |       20 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/set\_start\_and\_last\_task\_index.py                |       15 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/runner/shutdown.py                                          |       34 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/runner/task\_files.py                                       |       78 |        2 |        6 |        2 |     95% |    56, 77 |
@@ -165,7 +164,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       42 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8488** |  **293** | **1636** |  **104** | **95%** |           |
+|                                                                       **TOTAL** | **8412** |  **273** | **1620** |  **101** | **96%** |           |
 
 
 ## Setup coverage badge
