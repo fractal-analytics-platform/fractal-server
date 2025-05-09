@@ -41,7 +41,10 @@ class BaseRunner(object):
         Run a single fractal task.
 
         Args:
-            func: Function to be executed.
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
             parameters: Dictionary of parameters.
             history_unit_id:
                 Database ID of the corresponding `HistoryUnit` entry.
@@ -54,7 +57,10 @@ class BaseRunner(object):
 
     def multisubmit(
         self,
-        func: callable,
+        base_command: str,
+        workflow_task_order: int,
+        workflow_task_id: int,
+        task_name: str,
         list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
@@ -66,7 +72,10 @@ class BaseRunner(object):
         Run a parallel fractal task.
 
         Args:
-            func: Function to be executed.
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
             parameters:
                 Dictionary of parameters. Must include `zarr_urls` key.
             history_unit_ids:

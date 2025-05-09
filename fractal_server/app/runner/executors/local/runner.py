@@ -26,6 +26,7 @@ def run_single_task(
     parameters: dict[str, Any],
     task_files: TaskFiles,
 ):
+
     # Write args.json file
     with open(task_files.args_file_local, "w") as f:
         json.dump(parameters, f)
@@ -36,7 +37,6 @@ def run_single_task(
         f"--args-json {task_files.args_file_local} "
         f"--out-json {task_files.metadiff_file_local}"
     )
-
     _call_command_wrapper(
         cmd=full_command,
         log_path=task_files.log_file_local,

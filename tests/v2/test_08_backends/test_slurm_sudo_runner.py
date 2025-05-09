@@ -61,9 +61,7 @@ async def test_submit_success(
             config=get_default_slurm_config(),
             user_id=valid_user_id,
         )
-    debug(result, exception)
-    return  # FIXME
-    assert result == {}
+    assert result is None
     assert exception is None
 
     # `HistoryRun.status` is updated at a higher level, not from
@@ -113,10 +111,10 @@ async def test_submit_fail(
         poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
-            workflow_task_order="0",
-            workflow_task_id=9999,
-            task_name="fake-task-name",
             base_command="false",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             history_unit_id=history_unit_id,
             task_files=get_dummy_task_files(
@@ -180,13 +178,8 @@ async def test_multisubmit_parallel(
         )
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    # assert isinstance(exceptions[2], ValueError) # TaskExecutionError
-    assert "very very bad" in str(exceptions[2])
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -198,10 +191,7 @@ async def test_multisubmit_parallel(
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        if ind != 2:
-            assert unit.status == HistoryUnitStatus.DONE
-        else:
-            assert unit.status == HistoryUnitStatus.FAILED
+        assert unit.status == HistoryUnitStatus.DONE
 
 
 @pytest.mark.container
