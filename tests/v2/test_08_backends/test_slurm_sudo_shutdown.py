@@ -136,7 +136,7 @@ async def test_multisubmit_shutdown(
         def main_thread():
             debug("[main_thread] START")
             results, exceptions = runner.multisubmit(
-                base_command="sleep 1000 --",
+                base_command="sleep 1000",  # FIXME
                 workflow_task_order=0,
                 workflow_task_id=wftask_id,
                 task_name="fake-task-name",
