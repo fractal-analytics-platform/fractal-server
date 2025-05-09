@@ -356,7 +356,8 @@ class TaskVersion(BaseModel):
     @field_validator("version")
     @classmethod
     def validate_version(cls, v: str) -> str:
-        return parse(v).__str__()
+        parse(v)
+        return v
 
     def __eq__(self, other):
         return parse(self.version) == parse(other.version)
