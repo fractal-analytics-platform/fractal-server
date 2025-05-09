@@ -4,8 +4,9 @@ from typing import Optional
 
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
-from fractal_server.app.runner.compress_folder import compress_folder
-from fractal_server.app.runner.extract_archive import extract_archive
+from .run_subprocess import run_subprocess
+from .tar_commands import get_tar_compression_cmd
+from .tar_commands import get_tar_extraction_cmd
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -84,12 +85,8 @@ class SlurmSSHRunner(BaseSlurmRunner):
         workdir_remote = finished_slurm_jobs[0].workdir_remote
 
         # Define local/remote tarfile paths
-        tarfile_path_local = (
-            workdir_local.parent / f"{workdir_local.name}.tar.gz"
-        ).as_posix()
-        tarfile_path_remote = (
-            workdir_remote.parent / f"{workdir_remote.name}.tar.gz"
-        ).as_posix()
+        tarfile_path_local = workdir_local.with_suffix(".tar.gz").as_posix()
+        tarfile_path_remote = workdir_remote.with_suffix(".tar.gz").as_posix()
 
         # Create file list
         # NOTE: see issue 2483
@@ -130,11 +127,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         # Create remote tarfile
         t_0_tar = time.perf_counter()
-        tar_command = (
-            f"{self.python_worker_interpreter} "
-            "-m fractal_server.app.runner.compress_folder "
-            f"{workdir_remote.as_posix()} "
-            f"--filelist {tmp_filelist_path}"
+        tar_command = get_tar_compression_cmd(
+            subfolder_path=workdir_remote,
+            filelist_path=tmp_filelist_path,
         )
         self.fractal_ssh.run_command(cmd=tar_command)
         t_1_tar = time.perf_counter()
@@ -157,53 +152,13 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
 
         # Extract tarfile locally
-        extract_archive(Path(tarfile_path_local))
-
-        # Remove local tarfile
+        target_dir, cmd_tar = get_tar_extraction_cmd(Path(tarfile_path_local))
+        target_dir.mkdir(exist_ok=True)
+        run_subprocess(cmd=cmd_tar, logger_name=logger.name)
         Path(tarfile_path_local).unlink(missing_ok=True)
 
         t_1 = time.perf_counter()
         logger.info(f"[_fetch_artifacts] End - elapsed={t_1 - t_0:.3f} s")
-
-    def _send_inputs(self, jobs: list[SlurmJob]) -> None:
-        """
-        Transfer the jobs subfolder to the remote host.
-        """
-        for job in jobs:
-            # Create local archive
-            tarfile_path_local = compress_folder(
-                job.workdir_local,
-                filelist_path=None,
-            )
-            tarfile_name = Path(tarfile_path_local).name
-            logger.info(f"Subfolder archive created at {tarfile_path_local}")
-
-            # Transfer archive
-            tarfile_path_remote = (
-                job.workdir_remote.parent / tarfile_name
-            ).as_posix()
-            t_0_put = time.perf_counter()
-            self.fractal_ssh.send_file(
-                local=tarfile_path_local,
-                remote=tarfile_path_remote,
-            )
-            t_1_put = time.perf_counter()
-            logger.info(
-                f"Subfolder archive transferred to {tarfile_path_remote}"
-                f" - elapsed={t_1_put - t_0_put:.3f} s"
-            )
-
-            # Remove local archive
-            Path(tarfile_path_local).unlink()
-            logger.debug(f"Local archive {tarfile_path_local} removed")
-
-            # Uncompress remote archive
-            tar_command = (
-                f"{self.python_worker_interpreter} -m "
-                "fractal_server.app.runner.extract_archive "
-                f"{tarfile_path_remote}"
-            )
-            self.fractal_ssh.run_command(cmd=tar_command)
 
     def _run_remote_cmd(self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
