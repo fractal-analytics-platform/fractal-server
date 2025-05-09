@@ -246,7 +246,7 @@ class BaseSlurmRunner(BaseRunner):
                 (
                     f"{self.python_worker_interpreter}"
                     " -m fractal_server.app.runner."
-                    "executors.slurm_common.new_remote "
+                    "executors.slurm_common.remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
                 )
