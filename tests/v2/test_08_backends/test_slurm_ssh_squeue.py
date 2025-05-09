@@ -34,7 +34,7 @@ async def test_run_squeue(
         time.sleep(1_000)
         return 42
 
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
