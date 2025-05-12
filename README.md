@@ -39,7 +39,7 @@
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_task\_lifecycle.py          |       70 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_tasks.py                    |      115 |        0 |       40 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/dataset.py                                    |      111 |        4 |       14 |        0 |     97% |   254-264 |
-| fractal\_server/app/routes/api/v2/history.py                                    |      181 |        3 |       32 |        3 |     97% |178, 310, 448 |
+| fractal\_server/app/routes/api/v2/history.py                                    |      181 |        3 |       32 |        3 |     97% |176, 308, 446 |
 | fractal\_server/app/routes/api/v2/images.py                                     |      104 |        1 |       26 |        1 |     98% |       139 |
 | fractal\_server/app/routes/api/v2/job.py                                        |       92 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/pre\_submission\_checks.py                    |       58 |        0 |       12 |        0 |    100% |           |

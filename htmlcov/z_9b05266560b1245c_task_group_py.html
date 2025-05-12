@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_9b05266560b1245c_workflow_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-12 06:53 +0000
+            created at 2025-05-12 14:52 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -83,7 +83,7 @@
 </header>
 <main id="source">
     <p class="run"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">enum</span> <span class="key">import</span> <span class="nam">Enum</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">from</span> <span class="nam">enum</span> <span class="key">import</span> <span class="nam">StrEnum</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">pydantic</span> <span class="key">import</span> <span class="nam">BaseModel</span>&nbsp;</span><span class="r"></span></p>
@@ -98,20 +98,20 @@
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">types</span> <span class="key">import</span> <span class="nam">NonEmptyStr</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">class</span> <span class="nam">TaskGroupV2OriginEnum</span><span class="op">(</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Enum</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">class</span> <span class="nam">TaskGroupV2OriginEnum</span><span class="op">(</span><span class="nam">StrEnum</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">    <span class="nam">PYPI</span> <span class="op">=</span> <span class="str">"pypi"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">    <span class="nam">WHEELFILE</span> <span class="op">=</span> <span class="str">"wheel-file"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">OTHER</span> <span class="op">=</span> <span class="str">"other"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">class</span> <span class="nam">TaskGroupActivityStatusV2</span><span class="op">(</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Enum</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">class</span> <span class="nam">TaskGroupActivityStatusV2</span><span class="op">(</span><span class="nam">StrEnum</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="nam">PENDING</span> <span class="op">=</span> <span class="str">"pending"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="nam">ONGOING</span> <span class="op">=</span> <span class="str">"ongoing"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="nam">FAILED</span> <span class="op">=</span> <span class="str">"failed"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">OK</span> <span class="op">=</span> <span class="str">"OK"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="key">class</span> <span class="nam">TaskGroupActivityActionV2</span><span class="op">(</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Enum</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="key">class</span> <span class="nam">TaskGroupActivityActionV2</span><span class="op">(</span><span class="nam">StrEnum</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="nam">COLLECT</span> <span class="op">=</span> <span class="str">"collect"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="nam">DEACTIVATE</span> <span class="op">=</span> <span class="str">"deactivate"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="nam">REACTIVATE</span> <span class="op">=</span> <span class="str">"reactivate"</span>&nbsp;</span><span class="r"></span></p>
@@ -211,7 +211,7 @@
             <a class="nav" href="z_9b05266560b1245c_workflow_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-12 06:53 +0000
+            created at 2025-05-12 14:52 +0000
         </p>
     </div>
 </footer>
