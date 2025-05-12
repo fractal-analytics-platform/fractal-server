@@ -107,7 +107,7 @@ def reactivate_local(
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.REACTIVATE.value}_"
+                        f"{TaskGroupActivityActionV2.REACTIVATE}_"
                     ),
                     logger_name=LOGGER_NAME,
                 )

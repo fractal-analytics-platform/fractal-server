@@ -144,7 +144,7 @@ def reactivate_ssh(
                     script_dir_remote=script_dir_remote,
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.REACTIVATE.value}"
+                        f"{TaskGroupActivityActionV2.REACTIVATE}"
                     ),
                     fractal_ssh=fractal_ssh,
                     logger_name=LOGGER_NAME,
