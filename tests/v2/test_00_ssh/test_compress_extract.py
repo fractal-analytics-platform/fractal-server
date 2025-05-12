@@ -39,8 +39,6 @@ def create_test_files(path: Path):
     path.mkdir()
     (path / "file1.txt").write_text("File 1")
     (path / "file2.txt").write_text("File 2")
-    (path / "job.sbatch").write_text("Exclude this file")
-    (path / "file_in_name.pickle").write_text("Exclude this pickle")
 
 
 def test_compress_and_extract_without_filelist(tmp_path: Path):
@@ -60,8 +58,6 @@ def test_compress_and_extract_without_filelist(tmp_path: Path):
     assert new_tarfile_path.exists()
     assert (extracted_path / "subfolder/file1.txt").exists()
     assert (extracted_path / "subfolder/file2.txt").exists()
-    assert (extracted_path / "subfolder/job.sbatch").exists()
-    assert (extracted_path / "subfolder/file_in_name.pickle").exists()
 
     # Create new file
     (subfolder_path / "file3.txt").write_text("File 2")
@@ -77,8 +73,6 @@ def test_compress_and_extract_without_filelist(tmp_path: Path):
     assert (extracted_path / "subfolder/file1.txt").exists()
     assert (extracted_path / "subfolder/file2.txt").exists()
     assert (extracted_path / "subfolder/file3.txt").exists()
-    assert (extracted_path / "subfolder/job.sbatch").exists()
-    assert (extracted_path / "subfolder/file_in_name.pickle").exists()
 
 
 def test_compress_and_extract_with_filelist(tmp_path: Path):
@@ -105,8 +99,6 @@ def test_compress_and_extract_with_filelist(tmp_path: Path):
     assert new_tarfile_path.exists()
     assert (extracted_path / "subfolder/file1.txt").exists()
     assert (extracted_path / "subfolder/file2.txt").exists()
-    assert not (extracted_path / "subfolder/job.sbatch").exists()
-    assert not (extracted_path / "subfolder/file_in_name.pickle").exists()
 
     # Create new file and update filelist
     (subfolder_path / "file3.txt").write_text("File 2")
@@ -123,8 +115,6 @@ def test_compress_and_extract_with_filelist(tmp_path: Path):
     assert (extracted_path / "subfolder/file1.txt").exists()
     assert (extracted_path / "subfolder/file2.txt").exists()
     assert (extracted_path / "subfolder/file3.txt").exists()
-    assert not (extracted_path / "subfolder/job.sbatch").exists()
-    assert not (extracted_path / "subfolder/file_in_name.pickle").exists()
 
 
 def test_compress_folder_failure(tmp_path: Path):

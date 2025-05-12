@@ -13,8 +13,7 @@
 """
 Slurm Backend
 
-This backend runs fractal workflows in a SLURM cluster using Clusterfutures
-Executor objects.
+This backend runs fractal workflows in a SLURM cluster.
 """
 from pathlib import Path
 from typing import Optional

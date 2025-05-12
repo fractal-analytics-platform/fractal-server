@@ -63,7 +63,9 @@ async def history_run_mock(
 
 
 @pytest.fixture
-async def history_mock_for_submit(db, history_run_mock) -> tuple[int, int]:
+async def history_mock_for_submit(
+    db, history_run_mock
+) -> tuple[int, int, int]:
     unit = HistoryUnit(
         history_run_id=history_run_mock.id,
         status=HistoryUnitStatus.SUBMITTED,
@@ -85,7 +87,11 @@ async def history_mock_for_submit(db, history_run_mock) -> tuple[int, int]:
         )
     await db.commit()
 
-    return history_run_mock.id, unit.id
+    return (
+        history_run_mock.id,
+        unit.id,
+        history_run_mock.workflowtask_id,
+    )
 
 
 @pytest.fixture
@@ -114,7 +120,11 @@ async def history_mock_for_multisubmit(
         )
         await db.commit()
 
-    return history_run_mock.id, unit_ids
+    return (
+        history_run_mock.id,
+        unit_ids,
+        history_run_mock.workflowtask_id,
+    )
 
 
 def get_dummy_task_files(
@@ -123,7 +133,6 @@ def get_dummy_task_files(
     prefix: str | None = None,
     is_slurm: bool = False,
 ) -> TaskFiles:
-
     if is_slurm:
         root_dir_local = base_dir / "server"
         root_dir_remote = base_dir / "user"

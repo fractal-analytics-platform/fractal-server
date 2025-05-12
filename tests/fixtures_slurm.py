@@ -30,10 +30,7 @@ def is_responsive(container_name):
 
 
 @pytest.fixture
-def monkey_slurm(
-    monkeypatch,
-    slurmlogin_container,
-):
+def monkey_slurm(monkeypatch, slurmlogin_container, slurm_alive):
     """
     Monkeypatch Popen to execute overridden command in container
 

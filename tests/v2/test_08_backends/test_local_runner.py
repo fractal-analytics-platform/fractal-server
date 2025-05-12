@@ -28,10 +28,7 @@ async def test_submit_success(
     tmp_path,
     task_type: str,
 ):
-    def do_nothing(parameters: dict, remote_files: dict) -> int:
-        return 42
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if task_type.startswith("converter_"):
         parameters = {}
@@ -40,7 +37,10 @@ async def test_submit_success(
 
     with LocalRunner(tmp_path) as runner:
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
@@ -48,8 +48,7 @@ async def test_submit_success(
             config=get_default_local_backend_config(),
             user_id=None,
         )
-    debug(result, exception)
-    assert result == 42
+    assert result is None
     assert exception is None
 
     # `HistoryRun.status` is updated at a higher level, not from
@@ -82,12 +81,8 @@ async def test_submit_fail(
     tmp_path,
     task_type: str,
 ):
-    ERROR_MSG = "very nice error"
 
-    def raise_ValueError(parameters: dict, remote_files: dict):
-        raise ValueError(ERROR_MSG)
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if not task_type.startswith("converter_"):
         parameters = dict(zarr_urls=ZARR_URLS)
@@ -96,7 +91,10 @@ async def test_submit_fail(
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
-            raise_ValueError,
+            base_command="false",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type=task_type,
@@ -107,7 +105,6 @@ async def test_submit_fail(
     debug(result, exception)
     assert result is None
     assert isinstance(exception, TaskExecutionError)
-    assert ERROR_MSG in str(exception)
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -129,9 +126,6 @@ async def test_submit_inner_failure(
 ):
     ERROR_MSG = "very nice error"
 
-    def do_nothing(parameters: dict, remote_files: dict) -> int:
-        return 42
-
     def mock_validate_params(*args, **kwargs):
         raise ValueError(ERROR_MSG)
 
@@ -141,11 +135,14 @@ async def test_submit_inner_failure(
         BaseRunner, "validate_submit_parameters", mock_validate_params
     )
 
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=dict(zarr_urls=ZARR_URLS),
             task_files=get_dummy_task_files(tmp_path, component="0"),
             task_type="parallel",
@@ -170,27 +167,20 @@ async def test_submit_inner_failure(
     assert unit.status == HistoryUnitStatus.FAILED
 
 
-def fun(parameters: dict, remote_files: dict):
-    zarr_url = parameters["zarr_url"]
-    x = parameters["parameter"]
-    if x != 3:
-        print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-        return 2 * x
-    else:
-        print(f"Running with {zarr_url=} and {x=}, raising error.")
-        raise ValueError("parameter=3 is very very bad")
-
-
 async def test_multisubmit_parallel(
     tmp_path,
     db,
     history_mock_for_multisubmit,
 ):
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))
@@ -202,13 +192,8 @@ async def test_multisubmit_parallel(
         )
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    assert isinstance(exceptions[2], TaskExecutionError)
-    assert "very very bad" in str(exceptions[2])
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -220,10 +205,7 @@ async def test_multisubmit_parallel(
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        if ind != 2:
-            assert unit.status == HistoryUnitStatus.DONE
-        else:
-            assert unit.status == HistoryUnitStatus.FAILED
+        assert unit.status == HistoryUnitStatus.DONE
 
 
 async def test_multisubmit_compound(
@@ -231,12 +213,15 @@ async def test_multisubmit_compound(
     db,
     history_mock_for_multisubmit,
 ):
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))
@@ -248,13 +233,9 @@ async def test_multisubmit_compound(
         )
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    assert isinstance(exceptions[2], TaskExecutionError)
-    assert "very very bad" in str(exceptions[2])
+
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -280,12 +261,15 @@ async def test_multisubmit_in_chunks(
     config = get_default_local_backend_config()
     config.parallel_tasks_per_job = parallel_tasks_per_job
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))
@@ -295,15 +279,8 @@ async def test_multisubmit_in_chunks(
             config=config,
             user_id=None,
         )
-    debug(results)
-    debug(exceptions)
-    assert results == {
-        3: 8,
-        0: 2,
-        1: 4,
-    }
-    assert isinstance(exceptions[2], TaskExecutionError)
-    assert "very very bad" in str(exceptions[2])
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -313,10 +290,7 @@ async def test_multisubmit_in_chunks(
     # `HistoryUnit.status` is updated from within `runner.submit`
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
-        if ind != 2:
-            assert unit.status == HistoryUnitStatus.DONE
-        else:
-            assert unit.status == HistoryUnitStatus.FAILED
+        assert unit.status == HistoryUnitStatus.DONE
 
 
 async def test_multisubmit_parallel_fail(
@@ -325,7 +299,7 @@ async def test_multisubmit_parallel_fail(
     history_mock_for_multisubmit,
     monkeypatch,
 ):
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     def _fake_submit(*args, **kwargs):
         raise ValueError("Error")
@@ -338,8 +312,11 @@ async def test_multisubmit_parallel_fail(
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))
@@ -381,12 +358,15 @@ async def test_multisubmit_inner_failure(
     monkeypatch.setattr(
         BaseRunner, "validate_multisubmit_parameters", mock_validate_params
     )
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(tmp_path, component=str(ind))
                 for ind in range(len(ZARR_URLS))
