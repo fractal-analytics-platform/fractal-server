@@ -1,12 +1,11 @@
-from functools import total_ordering
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from packaging.version import parse
+from packaging.version import Version
 from pydantic import BaseModel
-from pydantic import field_validator
+from pydantic import ConfigDict
 from sqlmodel import cast
 from sqlmodel import or_
 from sqlmodel import select
@@ -32,22 +31,42 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
 router = APIRouter()
 
 
-@total_ordering
+VALID_TYPE_UPDATES = set(
+    [
+        ("non_parallel", "converter_non_parallel"),
+        ("compound", "converter_compound"),
+        ("converter_non_parallel", "converter_non_parallel"),
+        ("converter_compound", "converter_compound"),
+        ("non_parallel", "non_parallel"),
+        ("compound", "compound"),
+        ("parallel", "parallel"),
+    ]
+)
+
+
+def _is_type_update_valid(*, old_type: str, new_type: str) -> bool:
+    return (old_type, new_type) in VALID_TYPE_UPDATES
+
+
+def _is_version_parsable(version: str) -> bool:
+    try:
+        parse(version)
+        return True
+    except Exception:
+        return False
+
+
 class TaskVersion(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     task_id: int
     version: str
+    parsed_version: Version
 
-    @field_validator("version")
-    @classmethod
-    def validate_version(cls, v: str) -> str:
-        parse(v)
-        return v
 
-    def __eq__(self, other):
-        return parse(self.version) == parse(other.version)
-
-    def __lt__(self, other):
-        return parse(self.version) < parse(other.version)
+class TaskVersionRead(BaseModel):
+    task_id: int
+    version: str
 
 
 @router.get(
@@ -58,7 +77,7 @@ async def get_workflow_version_update_candidates(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[list[TaskVersion]]:
+) -> list[list[TaskVersionRead]]:
 
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
@@ -69,24 +88,36 @@ async def get_workflow_version_update_candidates(
 
     response = []
     for wftask in workflow.task_list:
-        task = wftask.task
-        if not (task.args_schema_parallel or task.args_schema_non_parallel):
+        current_task = wftask.task
+
+        # Skip tasks with no args schemas
+        if not (
+            current_task.args_schema_parallel
+            or current_task.args_schema_non_parallel
+        ):
             response.append([])
             continue
 
         current_task_group = await _get_task_group_or_404(
-            task_group_id=task.taskgroupv2_id, db=db
+            task_group_id=current_task.taskgroupv2_id, db=db
         )
 
+        # Skip tasks with non-parsable version
+        if _is_version_parsable(current_task_group.version):
+            current_parsed_version = parse(current_task_group.version)
+        else:
+            response.append([])
+            continue
+
         res = await db.execute(
-            select(TaskV2.id, TaskGroupV2.version)
+            select(TaskV2.id, TaskV2.type, TaskGroupV2.version)
             .where(
                 or_(
                     cast(TaskV2.args_schema_parallel, String) != "null",
                     cast(TaskV2.args_schema_non_parallel, String) != "null",
                 )
             )
-            .where(TaskV2.name == task.name)
+            .where(TaskV2.name == current_task.name)
             .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
             .where(TaskGroupV2.pkg_name == current_task_group.pkg_name)
             .where(TaskGroupV2.active.is_(True))
@@ -101,21 +132,37 @@ async def get_workflow_version_update_candidates(
                 )
             )
         )
-        query_results: list[tuple[int, str]] = res.all()
-        task_version = sorted(
-            [
-                TaskVersion(task_id=task_id, version=version)
-                for task_id, version in query_results
-            ]
-        )
-        version_threshold = TaskVersion(
-            task_id=0,  # irrelevant
-            version=current_task_group.version,
-        )
-        filtered_groups_and_task_ids = [
-            item for item in task_version if item > version_threshold
+        query_results: list[tuple[int, str, str]] = res.all()
+
+        # Exclude tasks with non-compatible types or non-parsable versions
+        current_task_type = current_task.type
+        update_candidates = [
+            TaskVersion(
+                task_id=task_id,
+                version=version,
+                parsed_version=parse(version),
+            )
+            for task_id, _type, version in query_results
+            if (
+                _is_type_update_valid(
+                    old_type=current_task_type,
+                    new_type=_type,
+                )
+                and _is_version_parsable(version)
+            )
         ]
-        response.append(filtered_groups_and_task_ids)
+        # Exclude tasks with old versions from update candidates
+        update_candidates = [
+            item
+            for item in update_candidates
+            if item.parsed_version > current_parsed_version
+        ]
+        # Sort update candidates by parsed version
+        update_candidates = sorted(
+            update_candidates,
+            key=lambda obj: obj.parsed_version,
+        )
+        response.append(update_candidates)
 
     return response
 
@@ -151,13 +198,9 @@ async def replace_workflowtask(
     )
 
     # Preliminary checks
-    EQUIVALENT_TASK_TYPES = [
-        {"non_parallel", "converter_non_parallel"},
-        {"compound", "converter_compound"},
-    ]
-    if (
-        old_wftask.task_type != new_task.type
-        and {old_wftask.task_type, new_task.type} not in EQUIVALENT_TASK_TYPES
+    if not _is_type_update_valid(
+        old_type=old_wftask.task_type,
+        new_type=new_task.type,
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
