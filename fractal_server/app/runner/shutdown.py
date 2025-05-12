@@ -43,9 +43,7 @@ async def cleanup_after_shutdown(*, jobsV2: list[int], logger_name: str):
                 )
                 return
             else:
-                logger.info(
-                    f"Some jobs are still 'submitted' " f"{jobsV2_db=}"
-                )
+                logger.info(f"Some jobs are still 'submitted' {jobsV2_db=}")
         logger.info(
             "Graceful shutdown reached its maximum time, "
             "but some jobs are still submitted"
