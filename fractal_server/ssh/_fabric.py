@@ -7,7 +7,6 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 import paramiko.sftp_client
 from fabric import Connection
@@ -159,7 +158,7 @@ class FractalSSH:
         raise e
 
     def _run(
-        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
+        self, *args, label: str, lock_timeout: float | None = None, **kwargs
     ) -> Any:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
@@ -275,10 +274,10 @@ class FractalSSH:
         self,
         *,
         cmd: str,
-        allow_char: Optional[str] = None,
-        max_attempts: Optional[int] = None,
-        base_interval: Optional[float] = None,
-        lock_timeout: Optional[int] = None,
+        allow_char: str | None = None,
+        max_attempts: int | None = None,
+        base_interval: float | None = None,
+        lock_timeout: int | None = None,
     ) -> str:
         """
         Run a command within an open SSH connection.
@@ -375,7 +374,7 @@ class FractalSSH:
         *,
         local: str,
         remote: str,
-        lock_timeout: Optional[float] = None,
+        lock_timeout: float | None = None,
     ) -> None:
         """
         Transfer a file via SSH
@@ -415,7 +414,7 @@ class FractalSSH:
         *,
         local: str,
         remote: str,
-        lock_timeout: Optional[float] = None,
+        lock_timeout: float | None = None,
     ) -> None:
         """
         Transfer a file via SSH
@@ -506,7 +505,7 @@ class FractalSSH:
         *,
         path: str,
         content: str,
-        lock_timeout: Optional[float] = None,
+        lock_timeout: float | None = None,
     ) -> None:
         """
         Open a remote file via SFTP and write it.

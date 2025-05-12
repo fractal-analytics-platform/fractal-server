@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -50,7 +48,7 @@ async def create_project(
     project: ProjectCreateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ProjectReadV2]:
+) -> ProjectReadV2 | None:
     """
     Create new project
     """
@@ -76,7 +74,7 @@ async def read_project(
     project_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ProjectReadV2]:
+) -> ProjectReadV2 | None:
     """
     Return info on an existing project
     """

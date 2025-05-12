@@ -16,7 +16,6 @@ Slurm Backend
 This backend runs fractal workflows in a SLURM cluster.
 """
 from pathlib import Path
-from typing import Optional
 
 from ...models.v2 import DatasetV2
 from ...models.v2 import WorkflowV2
@@ -33,18 +32,18 @@ def process_workflow(
     dataset: DatasetV2,
     workflow_dir_local: Path,
     job_id: int,
-    workflow_dir_remote: Optional[Path] = None,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
+    workflow_dir_remote: Path | None = None,
+    first_task_index: int | None = None,
+    last_task_index: int | None = None,
     logger_name: str,
     job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
     user_id: int,
     # Slurm-specific
-    user_cache_dir: Optional[str] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    worker_init: Optional[str] = None,
+    user_cache_dir: str | None = None,
+    slurm_user: str | None = None,
+    slurm_account: str | None = None,
+    worker_init: str | None = None,
 ) -> None:
     """
     Process workflow (SLURM backend public interface).

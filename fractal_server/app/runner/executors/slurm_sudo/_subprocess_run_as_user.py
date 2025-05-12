@@ -17,7 +17,6 @@ another user. Note that this requires appropriate sudo permissions.
 """
 import shlex
 import subprocess  # nosec
-from typing import Optional
 
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
@@ -28,7 +27,7 @@ logger = set_logger(__name__)
 def _run_command_as_user(
     *,
     cmd: str,
-    user: Optional[str] = None,
+    user: str | None = None,
     check: bool = False,
 ) -> subprocess.CompletedProcess:
     """

@@ -5,7 +5,6 @@ import subprocess  # nosec
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Optional
 
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
@@ -21,7 +20,7 @@ logger = set_logger(__name__)
 
 def _subprocess_run_or_raise(
     full_command: str,
-) -> Optional[subprocess.CompletedProcess]:
+) -> subprocess.CompletedProcess | None:
     try:
         output = subprocess.run(  # nosec
             shlex.split(full_command),
@@ -43,7 +42,7 @@ def _subprocess_run_or_raise(
 
 class SudoSlurmRunner(BaseSlurmRunner):
     slurm_user: str
-    slurm_account: Optional[str] = None
+    slurm_account: str | None = None
 
     def __init__(
         self,
@@ -51,11 +50,11 @@ class SudoSlurmRunner(BaseSlurmRunner):
         # Common
         root_dir_local: Path,
         root_dir_remote: Path,
-        common_script_lines: Optional[list[str]] = None,
-        user_cache_dir: Optional[str] = None,
-        poll_interval: Optional[int] = None,
+        common_script_lines: list[str] | None = None,
+        user_cache_dir: str | None = None,
+        poll_interval: int | None = None,
         # Specific
-        slurm_account: Optional[str] = None,
+        slurm_account: str | None = None,
         slurm_user: str,
     ) -> None:
         """

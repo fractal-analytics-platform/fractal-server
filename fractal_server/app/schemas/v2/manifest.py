@@ -1,5 +1,4 @@
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -41,22 +40,22 @@ class TaskManifestV2(BaseModel):
     """
 
     name: str
-    executable_non_parallel: Optional[str] = None
-    executable_parallel: Optional[str] = None
+    executable_non_parallel: str | None = None
+    executable_parallel: str | None = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
     meta_non_parallel: DictStrAny = Field(default_factory=dict)
     meta_parallel: DictStrAny = Field(default_factory=dict)
-    args_schema_non_parallel: Optional[DictStrAny] = None
-    args_schema_parallel: Optional[DictStrAny] = None
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrlStr] = None
+    args_schema_non_parallel: DictStrAny | None = None
+    args_schema_parallel: DictStrAny | None = None
+    docs_info: str | None = None
+    docs_link: HttpUrlStr | None = None
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
+    category: str | None = None
+    modality: str | None = None
     tags: list[str] = Field(default_factory=list)
 
-    type: Optional[
+    type: None | (
         Literal[
             "compound",
             "converter_compound",
@@ -64,7 +63,7 @@ class TaskManifestV2(BaseModel):
             "converter_non_parallel",
             "parallel",
         ]
-    ] = None
+    ) = None
 
     @model_validator(mode="after")
     def validate_executable_args_meta(self):
@@ -140,8 +139,8 @@ class ManifestV2(BaseModel):
     manifest_version: Literal["2"]
     task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
-    args_schema_version: Optional[str] = None
-    authors: Optional[NonEmptyStr] = None
+    args_schema_version: str | None = None
+    authors: NonEmptyStr | None = None
 
     @model_validator(mode="after")
     def _check_args_schemas_are_present(self):

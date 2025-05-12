@@ -1,11 +1,10 @@
 import json
 import sys
-from typing import Union
 
 import fractal_server
 
 
-def get_versions() -> dict[str, Union[list[int], str]]:
+def get_versions() -> dict[str, list[int] | str]:
     """
     Extract versions of Python and fractal-server.
     """

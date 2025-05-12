@@ -2,7 +2,6 @@ import os
 import shlex
 import subprocess  # nosec
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -44,7 +43,7 @@ logger = set_logger(__name__)
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
     private: bool = False,
-    user_group_id: Optional[int] = None,
+    user_group_id: int | None = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:

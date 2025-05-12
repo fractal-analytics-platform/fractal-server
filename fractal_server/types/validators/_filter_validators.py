@@ -1,11 +1,10 @@
 from typing import Any
-from typing import Union
 
 from ._common_validators import valdict_keys
 
 
 def validate_attribute_filters(
-    attribute_filters: dict[str, list[Union[int, float, str, bool]]]
+    attribute_filters: dict[str, list[int | float | str | bool]]
 ) -> dict[str, list[Any]]:
     attribute_filters = valdict_keys(attribute_filters)
     for key, values in attribute_filters.items():

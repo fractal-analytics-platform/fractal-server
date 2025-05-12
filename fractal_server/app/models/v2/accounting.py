@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy import Integer
@@ -12,7 +11,7 @@ from ....utils import get_timestamp
 
 
 class AccountingRecord(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
     timestamp: datetime = Field(
         default_factory=get_timestamp,
@@ -23,7 +22,7 @@ class AccountingRecord(SQLModel, table=True):
 
 
 class AccountingRecordSlurm(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
     timestamp: datetime = Field(
         default_factory=get_timestamp,

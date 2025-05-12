@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -14,7 +13,7 @@ from .workflowtask import WorkflowTaskV2
 
 class WorkflowV2(SQLModel, table=True):
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")
     project: "ProjectV2" = Relationship(  # noqa: F821

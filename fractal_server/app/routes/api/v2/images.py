@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -44,7 +43,7 @@ class ImageQuery(BaseModel):
 
 
 class ImageQueryWithZarrUrl(ImageQuery):
-    zarr_url: Optional[str] = None
+    zarr_url: str | None = None
 
 
 @router.post(
@@ -106,7 +105,7 @@ async def post_new_image(
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
-    query: Optional[ImageQueryWithZarrUrl] = None,
+    query: ImageQueryWithZarrUrl | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),

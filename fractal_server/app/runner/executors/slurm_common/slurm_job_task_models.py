@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -15,7 +14,7 @@ class SlurmTask(BaseModel):
     workdir_local: Path
     workdir_remote: Path
     parameters: dict[str, Any]
-    zarr_url: Optional[str] = None
+    zarr_url: str | None = None
     task_files: TaskFiles
     index: int
 
@@ -65,7 +64,7 @@ class SlurmTask(BaseModel):
 
 
 class SlurmJob(BaseModel):
-    slurm_job_id: Optional[str] = None
+    slurm_job_id: str | None = None
     prefix: str
     workdir_local: Path
     workdir_remote: Path

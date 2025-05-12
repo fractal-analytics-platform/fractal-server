@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
-from typing import Optional
 
 from pydantic import AwareDatetime
 from pydantic import BaseModel
@@ -36,7 +35,7 @@ class HistoryUnitStatusQuery(StrEnum):
 
 class HistoryUnitRead(BaseModel):
     id: int
-    logfile: Optional[str] = None
+    logfile: str | None = None
     status: HistoryUnitStatus
     zarr_urls: list[str]
 
@@ -44,7 +43,7 @@ class HistoryUnitRead(BaseModel):
 class HistoryRunRead(BaseModel):
     id: int
     dataset_id: int
-    workflowtask_id: Optional[int] = None
+    workflowtask_id: int | None = None
     job_id: int
     workflowtask_dump: dict[str, Any]
     task_group_dump: dict[str, Any]
@@ -77,4 +76,4 @@ class ImageLogsRequest(BaseModel):
 
 
 class SingleImageWithStatus(SingleImage):
-    status: Optional[HistoryUnitStatus] = None
+    status: HistoryUnitStatus | None = None

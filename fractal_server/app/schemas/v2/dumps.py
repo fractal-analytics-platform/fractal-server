@@ -7,8 +7,6 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of Job models;
 2. In the history items, to trim their size.
 """
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -29,10 +27,10 @@ class TaskDumpV2(BaseModel):
     name: str
     type: TaskTypeType
 
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
-    source: Optional[str] = None
-    version: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
+    source: str | None = None
+    version: str | None = None
 
     input_types: dict[str, bool]
     output_types: dict[str, bool]
@@ -47,12 +45,12 @@ class WorkflowTaskDumpV2(BaseModel):
 
     id: int
     workflow_id: int
-    order: Optional[int] = None
+    order: int | None = None
 
     type_filters: dict[str, bool]
 
-    task_id: Optional[int] = None
-    task: Optional[TaskDumpV2] = None
+    task_id: int | None = None
+    task: TaskDumpV2 | None = None
 
 
 class WorkflowDumpV2(BaseModel):
@@ -81,11 +79,11 @@ class TaskGroupDumpV2(BaseModel):
     id: int
     origin: TaskGroupV2OriginEnum
     pkg_name: str
-    version: Optional[str] = None
-    python_version: Optional[str] = None
-    pip_extras: Optional[str] = None
+    version: str | None = None
+    python_version: str | None = None
+    pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
-    path: Optional[str] = None
-    venv_path: Optional[str] = None
-    wheel_path: Optional[str] = None
+    path: str | None = None
+    venv_path: str | None = None
+    wheel_path: str | None = None

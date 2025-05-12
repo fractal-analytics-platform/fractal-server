@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -27,10 +25,10 @@ class TaskV2Minimal(BaseModel):
     name: str
     type: str
     taskgroupv2_id: int
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
-    source: Optional[str] = None
-    version: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
+    source: str | None = None
+    version: str | None = None
 
 
 class ProjectUser(BaseModel):
@@ -56,14 +54,14 @@ class TaskV2Info(BaseModel):
 
 @router.get("/", response_model=list[TaskV2Info])
 async def query_tasks(
-    id: Optional[int] = None,
-    source: Optional[str] = None,
-    version: Optional[str] = None,
-    name: Optional[str] = None,
+    id: int | None = None,
+    source: str | None = None,
+    version: str | None = None,
+    name: str | None = None,
     max_number_of_results: int = 25,
-    category: Optional[str] = None,
-    modality: Optional[str] = None,
-    author: Optional[str] = None,
+    category: str | None = None,
+    modality: str | None = None,
+    author: str | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:

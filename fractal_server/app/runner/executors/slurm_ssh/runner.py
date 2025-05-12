@@ -1,6 +1,5 @@
 import time
 from pathlib import Path
-from typing import Optional
 
 from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
@@ -27,9 +26,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
         # Common
         root_dir_local: Path,
         root_dir_remote: Path,
-        common_script_lines: Optional[list[str]] = None,
-        user_cache_dir: Optional[str] = None,
-        poll_interval: Optional[int] = None,
+        common_script_lines: list[str] | None = None,
+        user_cache_dir: str | None = None,
+        poll_interval: int | None = None,
         # Specific
         fractal_ssh: FractalSSH,
     ) -> None:

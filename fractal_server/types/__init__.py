@@ -1,6 +1,5 @@
 from typing import Annotated
 from typing import Any
-from typing import Optional
 from typing import Union
 
 from pydantic import AfterValidator
@@ -70,7 +69,7 @@ ImageAttributes = Annotated[
     AfterValidator(valdict_keys),
 ]
 ImageAttributesWithNone = Annotated[
-    dict[str, Optional[ImageAttributeValue]],
+    dict[str, ImageAttributeValue | None],
     AfterValidator(valdict_keys),
 ]
 AttributeFilters = Annotated[

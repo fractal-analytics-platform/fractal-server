@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_validator
@@ -23,21 +21,21 @@ class UserSettingsRead(BaseModel):
     """
 
     id: int
-    ssh_host: Optional[str] = None
-    ssh_username: Optional[str] = None
-    ssh_private_key_path: Optional[str] = None
-    ssh_tasks_dir: Optional[str] = None
-    ssh_jobs_dir: Optional[str] = None
-    slurm_user: Optional[str] = None
+    ssh_host: str | None = None
+    ssh_username: str | None = None
+    ssh_private_key_path: str | None = None
+    ssh_tasks_dir: str | None = None
+    ssh_jobs_dir: str | None = None
+    slurm_user: str | None = None
     slurm_accounts: list[str]
-    project_dir: Optional[str] = None
+    project_dir: str | None = None
 
 
 class UserSettingsReadStrict(BaseModel):
-    slurm_user: Optional[str] = None
+    slurm_user: str | None = None
     slurm_accounts: list[str]
-    ssh_username: Optional[str] = None
-    project_dir: Optional[str] = None
+    ssh_username: str | None = None
+    project_dir: str | None = None
 
 
 class UserSettingsUpdate(BaseModel):
@@ -47,14 +45,14 @@ class UserSettingsUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    ssh_host: Optional[NonEmptyStr] = None
-    ssh_username: Optional[NonEmptyStr] = None
-    ssh_private_key_path: Optional[AbsolutePathStr] = None
-    ssh_tasks_dir: Optional[AbsolutePathStr] = None
-    ssh_jobs_dir: Optional[AbsolutePathStr] = None
-    slurm_user: Optional[NonEmptyStr] = None
-    slurm_accounts: Optional[ListUniqueNonEmptyString] = None
-    project_dir: Optional[AbsolutePathStr] = None
+    ssh_host: NonEmptyStr | None = None
+    ssh_username: NonEmptyStr | None = None
+    ssh_private_key_path: AbsolutePathStr | None = None
+    ssh_tasks_dir: AbsolutePathStr | None = None
+    ssh_jobs_dir: AbsolutePathStr | None = None
+    slurm_user: NonEmptyStr | None = None
+    slurm_accounts: ListUniqueNonEmptyString | None = None
+    project_dir: AbsolutePathStr | None = None
 
     @field_validator("project_dir", mode="after")
     @classmethod
@@ -66,4 +64,4 @@ class UserSettingsUpdate(BaseModel):
 
 class UserSettingsUpdateStrict(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    slurm_accounts: Optional[ListUniqueNonEmptyString] = None
+    slurm_accounts: ListUniqueNonEmptyString | None = None

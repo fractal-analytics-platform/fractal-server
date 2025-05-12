@@ -5,7 +5,6 @@ import time
 from pathlib import Path
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -81,9 +80,9 @@ class BaseSlurmRunner(BaseRunner):
         root_dir_remote: Path,
         slurm_runner_type: Literal["ssh", "sudo"],
         python_worker_interpreter: str,
-        common_script_lines: Optional[list[str]] = None,
-        user_cache_dir: Optional[str] = None,
-        poll_interval: Optional[int] = None,
+        common_script_lines: list[str] | None = None,
+        user_cache_dir: str | None = None,
+        poll_interval: int | None = None,
     ):
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local

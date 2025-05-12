@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -33,7 +32,7 @@ class UserGroupRead(BaseModel):
     id: int
     name: str
     timestamp_created: AwareDatetime
-    user_ids: Optional[list[int]] = None
+    user_ids: list[int] | None = None
     viewer_paths: list[str]
 
     @field_serializer("timestamp_created")

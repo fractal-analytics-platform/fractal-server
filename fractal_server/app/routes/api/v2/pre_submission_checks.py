@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
@@ -32,7 +30,7 @@ router = APIRouter()
 async def verify_unique_types(
     project_id: int,
     dataset_id: int,
-    query: Optional[ImageQuery] = None,
+    query: ImageQuery | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:

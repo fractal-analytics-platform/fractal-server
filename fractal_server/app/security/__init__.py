@@ -30,7 +30,6 @@ import contextlib
 from collections.abc import AsyncGenerator
 from typing import Any
 from typing import Generic
-from typing import Optional
 
 from fastapi import Depends
 from fastapi import Request
@@ -82,23 +81,23 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
     session: AsyncSession
     user_model: type[UP]
-    oauth_account_model: Optional[type[OAuthAccount]] = None
+    oauth_account_model: type[OAuthAccount] | None = None
 
     def __init__(
         self,
         session: AsyncSession,
         user_model: type[UP],
-        oauth_account_model: Optional[type[OAuthAccount]] = None,
+        oauth_account_model: type[OAuthAccount] | None = None,
     ):
         self.session = session
         self.user_model = user_model
         self.oauth_account_model = oauth_account_model
 
-    async def get(self, id: ID) -> Optional[UP]:
+    async def get(self, id: ID) -> UP | None:
         """Get a single user by id."""
         return await self.session.get(self.user_model, id)
 
-    async def get_by_email(self, email: str) -> Optional[UP]:
+    async def get_by_email(self, email: str) -> UP | None:
         """Get a single user by email."""
         statement = select(self.user_model).where(
             func.lower(self.user_model.email) == func.lower(email)
@@ -111,7 +110,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
     async def get_by_oauth_account(
         self, oauth: str, account_id: str
-    ) -> Optional[UP]:  # noqa
+    ) -> UP | None:  # noqa
         """Get a single user by OAuth account id."""
         if self.oauth_account_model is None:
             raise NotImplementedError()
@@ -211,7 +210,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             )
 
     async def on_after_register(
-        self, user: UserOAuth, request: Optional[Request] = None
+        self, user: UserOAuth, request: Request | None = None
     ):
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
@@ -289,7 +288,7 @@ async def _create_first_user(
     password: str,
     is_superuser: bool = False,
     is_verified: bool = False,
-    username: Optional[str] = None,
+    username: str | None = None,
 ) -> None:
     """
     Private method to create the first fractal-server user
