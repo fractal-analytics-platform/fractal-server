@@ -3,7 +3,6 @@ Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
 from typing import Any
-from typing import Optional
 
 from fastapi import HTTPException
 from fastapi import status
@@ -191,11 +190,11 @@ async def _get_task_read_access(
 
 async def _get_valid_user_group_id(
     *,
-    user_group_id: Optional[int] = None,
+    user_group_id: int | None = None,
     private: bool,
     user_id: int,
     db: AsyncSession,
-) -> Optional[int]:
+) -> int | None:
     """
     Validate query parameters for endpoints that create some task(s).
 
@@ -257,7 +256,7 @@ async def _verify_non_duplication_user_constraint(
     db: AsyncSession,
     user_id: int,
     pkg_name: str,
-    version: Optional[str],
+    version: str | None,
 ):
     stm = (
         select(TaskGroupV2)
@@ -294,9 +293,9 @@ async def _verify_non_duplication_user_constraint(
 
 async def _verify_non_duplication_group_constraint(
     db: AsyncSession,
-    user_group_id: Optional[int],
+    user_group_id: int | None,
     pkg_name: str,
-    version: Optional[str],
+    version: str | None,
 ):
     if user_group_id is None:
         return

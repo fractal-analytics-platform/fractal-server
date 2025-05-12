@@ -68,7 +68,7 @@ async def test_TaskCollectCustomV2(testdata_path):
         / "src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json"
     ).as_posix()
 
-    with open(manifest_file, "r") as f:
+    with open(manifest_file) as f:
         manifest_dict = json.load(f)
 
     with pytest.raises(ValidationError) as e:

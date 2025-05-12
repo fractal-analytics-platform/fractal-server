@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -38,7 +36,7 @@ async def create_dataset(
     dataset: DatasetCreateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV2]:
+) -> DatasetReadV2 | None:
     """
     Add new dataset to current project
     """
@@ -92,7 +90,7 @@ async def read_dataset_list(
     project_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[DatasetReadV2]]:
+) -> list[DatasetReadV2] | None:
     """
     Get dataset list for given project
     """
@@ -120,7 +118,7 @@ async def read_dataset(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV2]:
+) -> DatasetReadV2 | None:
     """
     Get info on a dataset associated to the current project
     """
@@ -145,7 +143,7 @@ async def update_dataset(
     dataset_update: DatasetUpdateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV2]:
+) -> DatasetReadV2 | None:
     """
     Edit a dataset associated to the current project
     """
@@ -247,7 +245,7 @@ async def export_dataset(
     dataset_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetExportV2]:
+) -> DatasetExportV2 | None:
     """
     Export an existing dataset
     """
@@ -274,7 +272,7 @@ async def import_dataset(
     dataset: DatasetImportV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetReadV2]:
+) -> DatasetReadV2 | None:
     """
     Import an existing dataset into a project
     """

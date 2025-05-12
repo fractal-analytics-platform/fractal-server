@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -19,7 +18,7 @@ class DatasetCreateV2(BaseModel):
 
     name: NonEmptyStr
 
-    zarr_dir: Optional[ZarrDirStr] = None
+    zarr_dir: ZarrDirStr | None = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
 
@@ -44,7 +43,7 @@ class DatasetUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None
-    zarr_dir: Optional[ZarrDirStr] = None
+    zarr_dir: ZarrDirStr | None = None
 
 
 class DatasetImportV2(BaseModel):

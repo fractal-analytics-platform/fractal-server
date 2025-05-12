@@ -1,6 +1,5 @@
 import shlex
 import subprocess  # nosec
-from typing import Optional
 
 from fractal_server.logger import get_logger
 from fractal_server.string_tools import validate_cmd
@@ -8,8 +7,8 @@ from fractal_server.string_tools import validate_cmd
 
 def run_subprocess(
     cmd: str,
-    allow_char: Optional[str] = None,
-    logger_name: Optional[str] = None,
+    allow_char: str | None = None,
+    logger_name: str | None = None,
 ) -> subprocess.CompletedProcess:
     validate_cmd(cmd, allow_char=allow_char)
     logger = get_logger(logger_name)

@@ -1,5 +1,4 @@
 from itertools import chain
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -22,9 +21,9 @@ from fractal_server.app.schemas.v2 import AccountingRecordRead
 
 
 class AccountingQuery(BaseModel):
-    user_id: Optional[int] = None
-    timestamp_min: Optional[AwareDatetime] = None
-    timestamp_max: Optional[AwareDatetime] = None
+    user_id: int | None = None
+    timestamp_min: AwareDatetime | None = None
+    timestamp_max: AwareDatetime | None = None
 
 
 router = APIRouter()

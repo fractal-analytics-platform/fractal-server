@@ -37,7 +37,7 @@ def worker(
 
     # Execute the job and capture exceptions
     try:
-        with open(in_fname, "r") as f:
+        with open(in_fname) as f:
             input_data = json.load(f)
 
         server_python_version = input_data["python_version"]
@@ -68,7 +68,7 @@ def worker(
         call_command_wrapper(cmd=full_command, log_path=log_path)
 
         try:
-            with open(metadiff_file_remote, "r") as f:
+            with open(metadiff_file_remote) as f:
                 out_meta = json.load(f)
             result = (True, out_meta)
         except FileNotFoundError:

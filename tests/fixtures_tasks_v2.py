@@ -66,7 +66,7 @@ def fractal_tasks_mock_collection(
         / f"lib/python{current_py_version}/site-packages/fractal_tasks_mock"
     )
 
-    with open(package_root / "__FRACTAL_MANIFEST__.json", "r") as f:
+    with open(package_root / "__FRACTAL_MANIFEST__.json") as f:
         manifest_dict = json.load(f)
 
     manifest = ManifestV2(**manifest_dict)

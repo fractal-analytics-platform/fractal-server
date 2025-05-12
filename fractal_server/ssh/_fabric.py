@@ -1,13 +1,12 @@
 import json
 import logging
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock
 from typing import Any
-from typing import Generator
 from typing import Literal
-from typing import Optional
 
 import paramiko.sftp_client
 from fabric import Connection
@@ -75,7 +74,7 @@ def _acquire_lock_with_timeout(
             logger.info(f"Lock for '{label}' was released.")
 
 
-class FractalSSH(object):
+class FractalSSH:
     """
     Wrapper of `fabric.Connection` object, enriched with locks.
 
@@ -159,7 +158,7 @@ class FractalSSH(object):
         raise e
 
     def _run(
-        self, *args, label: str, lock_timeout: Optional[float] = None, **kwargs
+        self, *args, label: str, lock_timeout: float | None = None, **kwargs
     ) -> Any:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
@@ -275,10 +274,10 @@ class FractalSSH(object):
         self,
         *,
         cmd: str,
-        allow_char: Optional[str] = None,
-        max_attempts: Optional[int] = None,
-        base_interval: Optional[float] = None,
-        lock_timeout: Optional[int] = None,
+        allow_char: str | None = None,
+        max_attempts: int | None = None,
+        base_interval: float | None = None,
+        lock_timeout: int | None = None,
     ) -> str:
         """
         Run a command within an open SSH connection.
@@ -375,7 +374,7 @@ class FractalSSH(object):
         *,
         local: str,
         remote: str,
-        lock_timeout: Optional[float] = None,
+        lock_timeout: float | None = None,
     ) -> None:
         """
         Transfer a file via SSH
@@ -415,7 +414,7 @@ class FractalSSH(object):
         *,
         local: str,
         remote: str,
-        lock_timeout: Optional[float] = None,
+        lock_timeout: float | None = None,
     ) -> None:
         """
         Transfer a file via SSH
@@ -506,7 +505,7 @@ class FractalSSH(object):
         *,
         path: str,
         content: str,
-        lock_timeout: Optional[float] = None,
+        lock_timeout: float | None = None,
     ) -> None:
         """
         Open a remote file via SFTP and write it.
@@ -560,7 +559,7 @@ class FractalSSH(object):
                 )
 
 
-class FractalSSHList(object):
+class FractalSSHList:
     """
     Collection of `FractalSSH` objects
 

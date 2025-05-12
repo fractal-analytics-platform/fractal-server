@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
@@ -22,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 
 def dict_values_to_list(
-    input_dict: dict[str, Union[int, float, bool, str, None]],
+    input_dict: dict[str, int | float | bool | str | None],
     identifier: str,
 ) -> tuple[AttributeFilters, bool]:
     was_there_a_warning = False

@@ -1,7 +1,6 @@
 import asyncio
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -71,7 +70,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[JobReadV2]]:
+) -> list[JobReadV2] | None:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -123,7 +122,7 @@ async def read_job(
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[JobReadV2]:
+) -> JobReadV2 | None:
     """
     Return info on an existing job
     """
@@ -139,7 +138,7 @@ async def read_job(
 
     if show_tmp_logs and (job.status == JobStatusTypeV2.SUBMITTED):
         try:
-            with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
+            with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}") as f:
                 job.log = f.read()
         except FileNotFoundError:
             pass
@@ -187,7 +186,7 @@ async def get_job_list(
     user: UserOAuth = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[JobReadV2]]:
+) -> list[JobReadV2] | None:
     """
     Get job list for given project
     """

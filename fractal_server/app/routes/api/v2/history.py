@@ -1,6 +1,5 @@
 from copy import deepcopy
 from typing import Any
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -211,7 +210,7 @@ async def get_history_run_units(
     dataset_id: int,
     workflowtask_id: int,
     history_run_id: int,
-    unit_status: Optional[HistoryUnitStatus] = None,
+    unit_status: HistoryUnitStatus | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -272,7 +271,7 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
-    unit_status: Optional[HistoryUnitStatusQuery] = None,
+    unit_status: HistoryUnitStatusQuery | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),

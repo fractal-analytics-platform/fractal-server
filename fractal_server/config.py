@@ -18,7 +18,6 @@ from os import environ
 from os import getenv
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 from typing import TypeVar
 
 from cryptography.fernet import Fernet
@@ -56,8 +55,8 @@ class MailSettings(BaseModel):
     recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
-    encrypted_password: Optional[SecretStr] = None
-    encryption_key: Optional[SecretStr] = None
+    encrypted_password: SecretStr | None = None
+    encryption_key: SecretStr | None = None
     instance_name: str
     use_starttls: bool
     use_login: bool
@@ -100,8 +99,8 @@ class OAuthClientConfig(BaseModel):
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: SecretStr
-    OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
-    REDIRECT_URL: Optional[str] = None
+    OIDC_CONFIGURATION_ENDPOINT: str | None = None
+    REDIRECT_URL: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -139,7 +138,7 @@ class Settings(BaseSettings):
     JWT token lifetime, in seconds.
     """
 
-    JWT_SECRET_KEY: Optional[SecretStr] = None
+    JWT_SECRET_KEY: SecretStr | None = None
     """
     JWT secret
 
@@ -202,23 +201,23 @@ class Settings(BaseSettings):
     """
     If `True`, make database operations verbose.
     """
-    POSTGRES_USER: Optional[str] = None
+    POSTGRES_USER: str | None = None
     """
     User to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_PASSWORD: Optional[SecretStr] = None
+    POSTGRES_PASSWORD: SecretStr | None = None
     """
     Password to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_HOST: Optional[str] = "localhost"
+    POSTGRES_HOST: str | None = "localhost"
     """
     URL to the PostgreSQL server or path to a UNIX domain socket.
     """
-    POSTGRES_PORT: Optional[str] = "5432"
+    POSTGRES_PORT: str | None = "5432"
     """
     Port number to use when connecting to the PostgreSQL server.
     """
-    POSTGRES_DB: Optional[str] = None
+    POSTGRES_DB: str | None = None
     """
     Name of the PostgreSQL database to connect to.
     """
@@ -275,13 +274,13 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[Path] = None
+    FRACTAL_TASKS_DIR: Path | None = None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Path | None = None
     """
     Base directory for job files (either an absolute path or a path relative to
     current working directory).
@@ -293,7 +292,7 @@ class Settings(BaseSettings):
         mode="after",
     )
     @classmethod
-    def make_paths_absolute(cls, path: Optional[Path]) -> Optional[Path]:
+    def make_paths_absolute(cls, path: Path | None) -> Path | None:
         if path is None or path.is_absolute():
             return path
         else:
@@ -319,7 +318,7 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path] = None
+    FRACTAL_LOCAL_CONFIG_FILE: Path | None = None
     """
     Path of JSON file with configuration for the local backend.
     """
@@ -335,27 +334,27 @@ class Settings(BaseSettings):
     Waiting time for the shutdown phase of executors
     """
 
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path] = None
+    FRACTAL_SLURM_CONFIG_FILE: Path | None = None
     """
     Path of JSON file with configuration for the SLURM backend.
     """
 
-    FRACTAL_SLURM_WORKER_PYTHON: Optional[AbsolutePathStr] = None
+    FRACTAL_SLURM_WORKER_PYTHON: AbsolutePathStr | None = None
     """
     Absolute path to Python interpreter that will run the jobs on the SLURM
     nodes. If not specified, the same interpreter that runs the server is used.
     """
 
-    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Optional[
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: None | (
         Literal["3.9", "3.10", "3.11", "3.12"]
-    ] = None
+    ) = None
     """
     Default Python version to be used for task collection. Defaults to the
     current version. Requires the corresponding variable (e.g
     `FRACTAL_TASKS_PYTHON_3_10`) to be set.
     """
 
-    FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_9: str | None = None
     """
     Absolute path to the Python 3.9 interpreter that serves as base for virtual
     environments tasks. Note that this interpreter must have the `venv` module
@@ -364,17 +363,17 @@ class Settings(BaseSettings):
     unset, `sys.executable` is used as a default.
     """
 
-    FRACTAL_TASKS_PYTHON_3_10: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_10: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.10.
     """
 
-    FRACTAL_TASKS_PYTHON_3_11: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_11: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
     """
 
-    FRACTAL_TASKS_PYTHON_3_12: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_12: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
@@ -460,7 +459,7 @@ class Settings(BaseSettings):
     running a task that produces multiple SLURM jobs.
     """
 
-    FRACTAL_PIP_CACHE_DIR: Optional[AbsolutePathStr] = None
+    FRACTAL_PIP_CACHE_DIR: AbsolutePathStr | None = None
     """
     Absolute path to the cache directory for `pip`; if unset,
     `--no-cache-dir` is used.
@@ -507,7 +506,7 @@ class Settings(BaseSettings):
        viewer paths. Useful when vizarr viewer is not used.
     """
 
-    FRACTAL_VIEWER_BASE_FOLDER: Optional[str] = None
+    FRACTAL_VIEWER_BASE_FOLDER: str | None = None
     """
     Base path to Zarr files that will be served by fractal-vizarr-viewer;
     This variable is required and used only when
@@ -518,31 +517,31 @@ class Settings(BaseSettings):
     # SMTP SERVICE
     ###########################################################################
 
-    FRACTAL_EMAIL_SENDER: Optional[EmailStr] = None
+    FRACTAL_EMAIL_SENDER: EmailStr | None = None
     """
     Address of the OAuth-signup email sender.
     """
-    FRACTAL_EMAIL_PASSWORD: Optional[SecretStr] = None
+    FRACTAL_EMAIL_PASSWORD: SecretStr | None = None
     """
     Password for the OAuth-signup email sender.
     """
-    FRACTAL_EMAIL_PASSWORD_KEY: Optional[SecretStr] = None
+    FRACTAL_EMAIL_PASSWORD_KEY: SecretStr | None = None
     """
     Key value for `cryptography.fernet` decrypt
     """
-    FRACTAL_EMAIL_SMTP_SERVER: Optional[str] = None
+    FRACTAL_EMAIL_SMTP_SERVER: str | None = None
     """
     SMTP server for the OAuth-signup emails.
     """
-    FRACTAL_EMAIL_SMTP_PORT: Optional[int] = None
+    FRACTAL_EMAIL_SMTP_PORT: int | None = None
     """
     SMTP server port for the OAuth-signup emails.
     """
-    FRACTAL_EMAIL_INSTANCE_NAME: Optional[str] = None
+    FRACTAL_EMAIL_INSTANCE_NAME: str | None = None
     """
     Fractal instance name, to be included in the OAuth-signup emails.
     """
-    FRACTAL_EMAIL_RECIPIENTS: Optional[str] = None
+    FRACTAL_EMAIL_RECIPIENTS: str | None = None
     """
     Comma-separated list of recipients of the OAuth-signup emails.
     """
@@ -558,7 +557,7 @@ class Settings(BaseSettings):
     provided.
     Accepted values: 'true', 'false'.
     """
-    email_settings: Optional[MailSettings] = None
+    email_settings: MailSettings | None = None
 
     @model_validator(mode="after")
     def validate_email_settings(self):

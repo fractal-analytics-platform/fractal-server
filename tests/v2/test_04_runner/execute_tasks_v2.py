@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.local.get_local_config import (
@@ -13,7 +12,7 @@ def execute_tasks_v2_mod(
     workflow_dir_local: Path,
     user_id: int,
     job_id: int,
-    job_type_filters: Optional[dict[str, bool]] = None,
+    job_type_filters: dict[str, bool] | None = None,
     **kwargs,
 ) -> None:
     """

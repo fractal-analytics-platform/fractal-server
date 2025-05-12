@@ -1,5 +1,4 @@
 from copy import copy
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -40,7 +39,7 @@ async def get_workflow_list(
     project_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[WorkflowReadV2]]:
+) -> list[WorkflowReadV2] | None:
     """
     Get workflow list for given project
     """
@@ -67,7 +66,7 @@ async def create_workflow(
     workflow: WorkflowCreateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2]:
+) -> WorkflowReadV2 | None:
     """
     Create a workflow, associate to a project
     """
@@ -95,7 +94,7 @@ async def read_workflow(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2WithWarnings]:
+) -> WorkflowReadV2WithWarnings | None:
     """
     Get info on an existing workflow
     """
@@ -129,7 +128,7 @@ async def update_workflow(
     patch: WorkflowUpdateV2,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowReadV2WithWarnings]:
+) -> WorkflowReadV2WithWarnings | None:
     """
     Edit a workflow
     """
@@ -237,7 +236,7 @@ async def export_workflow(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowExportV2]:
+) -> WorkflowExportV2 | None:
     """
     Export an existing workflow, after stripping all IDs
     """

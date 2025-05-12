@@ -1,8 +1,8 @@
 import os
 import shutil
+from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
-from typing import Iterator
 from typing import TypeVar
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile

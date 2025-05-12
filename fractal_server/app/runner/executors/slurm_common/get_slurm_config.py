@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
 from ._batching import heuristics
 from ._slurm_config import _parse_mem_value
@@ -14,7 +13,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 def get_slurm_config_internal(
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
-    config_path: Optional[Path] = None,
+    config_path: Path | None = None,
 ) -> SlurmConfig:
     """
     Prepare a `SlurmConfig` configuration object
@@ -168,7 +167,7 @@ def get_slurm_config_internal(
 def get_slurm_config(
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
-    config_path: Optional[Path] = None,
+    config_path: Path | None = None,
     tot_tasks: int = 1,
 ) -> SlurmConfig:
     config = get_slurm_config_internal(

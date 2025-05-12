@@ -3,8 +3,6 @@ Auxiliary functions to get object from the database or perform simple checks
 """
 from typing import Any
 from typing import Literal
-from typing import Optional
-from typing import Union
 
 from fastapi import HTTPException
 from fastapi import status
@@ -233,7 +231,7 @@ async def _get_dataset_check_owner(
     dataset_id: int,
     user_id: int,
     db: AsyncSession,
-) -> dict[Literal["dataset", "project"], Union[DatasetV2, ProjectV2]]:
+) -> dict[Literal["dataset", "project"], DatasetV2 | ProjectV2]:
     """
     Get a dataset and a project, after access control on the project
 
@@ -279,7 +277,7 @@ async def _get_job_check_owner(
     job_id: int,
     user_id: int,
     db: AsyncSession,
-) -> dict[Literal["job", "project"], Union[JobV2, ProjectV2]]:
+) -> dict[Literal["job", "project"], JobV2 | ProjectV2]:
     """
     Get a job and a project, after access control on the project
 
@@ -331,11 +329,11 @@ async def _workflow_insert_task(
     *,
     workflow_id: int,
     task_id: int,
-    meta_parallel: Optional[dict[str, Any]] = None,
-    meta_non_parallel: Optional[dict[str, Any]] = None,
-    args_non_parallel: Optional[dict[str, Any]] = None,
-    args_parallel: Optional[dict[str, Any]] = None,
-    type_filters: Optional[dict[str, bool]] = None,
+    meta_parallel: dict[str, Any] | None = None,
+    meta_non_parallel: dict[str, Any] | None = None,
+    args_non_parallel: dict[str, Any] | None = None,
+    args_parallel: dict[str, Any] | None = None,
+    type_filters: dict[str, bool] | None = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """

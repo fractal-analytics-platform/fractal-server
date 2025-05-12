@@ -123,7 +123,7 @@ async def test_task_collection_custom_fail_with_ssh(
         / "src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json"
     ).as_posix()
 
-    with open(manifest_file, "r") as f:
+    with open(manifest_file) as f:
         manifest_dict = json.load(f)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):

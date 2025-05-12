@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -57,7 +56,7 @@ class InitTaskOutput(BaseModel):
 
 def _cast_and_validate_TaskOutput(
     task_output: dict[str, Any]
-) -> Optional[TaskOutput]:
+) -> TaskOutput | None:
     try:
         validated_task_output = TaskOutput(**task_output)
         return validated_task_output
@@ -71,7 +70,7 @@ def _cast_and_validate_TaskOutput(
 
 def _cast_and_validate_InitTaskOutput(
     init_task_output: dict[str, Any],
-) -> Optional[InitTaskOutput]:
+) -> InitTaskOutput | None:
     try:
         validated_init_task_output = InitTaskOutput(**init_task_output)
         return validated_init_task_output

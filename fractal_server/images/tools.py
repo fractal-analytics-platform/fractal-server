@@ -1,7 +1,6 @@
 from copy import copy
 from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import Union
 
 from fractal_server.types import AttributeFilters
@@ -13,7 +12,7 @@ def find_image_by_zarr_url(
     *,
     images: list[dict[str, Any]],
     zarr_url: str,
-) -> Optional[ImageSearch]:
+) -> ImageSearch | None:
     """
     Return a copy of the image with a given zarr_url, and its positional index.
 
@@ -65,8 +64,8 @@ def match_filter(
 
 def filter_image_list(
     images: list[dict[str, Any]],
-    type_filters: Optional[dict[str, bool]] = None,
-    attribute_filters: Optional[AttributeFilters] = None,
+    type_filters: dict[str, bool] | None = None,
+    attribute_filters: AttributeFilters | None = None,
 ) -> list[dict[str, Any]]:
     """
     Compute a sublist with images that match a filter set.
@@ -141,6 +140,4 @@ def aggregate_types(images: list[dict[str, Any]]) -> list[str]:
     """
     Given a list of images, this function returns a list of all image types.
     """
-    return list(
-        set(type for image in images for type in image["types"].keys())
-    )
+    return list({type for image in images for type in image["types"].keys()})

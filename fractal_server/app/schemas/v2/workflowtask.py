@@ -1,6 +1,4 @@
 from typing import Any
-from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -20,30 +18,30 @@ from fractal_server.types import WorkflowTaskArgument
 class WorkflowTaskCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: Optional[DictStrAny] = None
-    meta_parallel: Optional[DictStrAny] = None
-    args_non_parallel: Optional[WorkflowTaskArgument] = None
-    args_parallel: Optional[WorkflowTaskArgument] = None
+    meta_non_parallel: DictStrAny | None = None
+    meta_parallel: DictStrAny | None = None
+    args_non_parallel: WorkflowTaskArgument | None = None
+    args_parallel: WorkflowTaskArgument | None = None
     type_filters: TypeFilters = Field(default_factory=dict)
 
 
 class WorkflowTaskReplaceV2(BaseModel):
     """Used by 'replace-task' endpoint"""
 
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
 
 
 class WorkflowTaskReadV2(BaseModel):
     id: int
 
     workflow_id: int
-    order: Optional[int] = None
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
+    order: int | None = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
 
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
 
     type_filters: dict[str, bool]
 
@@ -53,30 +51,30 @@ class WorkflowTaskReadV2(BaseModel):
 
 
 class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
-    warning: Optional[str] = None
+    warning: str | None = None
 
 
 class WorkflowTaskUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: Optional[DictStrAny] = None
-    meta_parallel: Optional[DictStrAny] = None
-    args_non_parallel: Optional[WorkflowTaskArgument] = None
-    args_parallel: Optional[WorkflowTaskArgument] = None
+    meta_non_parallel: DictStrAny | None = None
+    meta_parallel: DictStrAny | None = None
+    args_non_parallel: WorkflowTaskArgument | None = None
+    args_parallel: WorkflowTaskArgument | None = None
     type_filters: TypeFilters = None
 
 
 class WorkflowTaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    meta_non_parallel: Optional[DictStrAny] = None
-    meta_parallel: Optional[DictStrAny] = None
-    args_non_parallel: Optional[DictStrAny] = None
-    args_parallel: Optional[DictStrAny] = None
-    type_filters: Optional[TypeFilters] = None
-    input_filters: Optional[dict[str, Any]] = None
+    meta_non_parallel: DictStrAny | None = None
+    meta_parallel: DictStrAny | None = None
+    args_non_parallel: DictStrAny | None = None
+    args_parallel: DictStrAny | None = None
+    type_filters: TypeFilters | None = None
+    input_filters: dict[str, Any] | None = None
 
-    task: Union[TaskImportV2, TaskImportV2Legacy]
+    task: TaskImportV2 | TaskImportV2Legacy
 
     @model_validator(mode="before")
     @classmethod
@@ -108,10 +106,10 @@ class WorkflowTaskImportV2(BaseModel):
 
 
 class WorkflowTaskExportV2(BaseModel):
-    meta_non_parallel: Optional[dict[str, Any]] = None
-    meta_parallel: Optional[dict[str, Any]] = None
-    args_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
     task: TaskExportV2

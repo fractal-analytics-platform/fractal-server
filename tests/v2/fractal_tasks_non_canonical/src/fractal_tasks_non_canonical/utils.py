@@ -2,8 +2,8 @@ import json
 import logging
 import sys
 from argparse import ArgumentParser
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 
 def run_fractal_task(task_function: Callable) -> None:
@@ -25,7 +25,7 @@ def run_fractal_task(task_function: Callable) -> None:
         sys.exit(1)
 
     # Read parameters dictionary
-    with open(cli_args.args_json, "r") as f:
+    with open(cli_args.args_json) as f:
         task_args = json.load(f)
 
     # Run task

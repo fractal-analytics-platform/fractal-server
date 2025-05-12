@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -23,7 +21,7 @@ class _SingleImageBase(BaseModel):
     """
 
     zarr_url: ZarrUrlStr
-    origin: Optional[ZarrDirStr] = None
+    origin: ZarrDirStr | None = None
 
     attributes: DictStrAny = Field(default_factory=dict)
     types: ImageTypes = Field(default_factory=dict)
@@ -48,4 +46,4 @@ class SingleImage(_SingleImageBase):
 class SingleImageUpdate(BaseModel):
     zarr_url: ZarrUrlStr
     attributes: ImageAttributes = None
-    types: Optional[ImageTypes] = None
+    types: ImageTypes | None = None

@@ -34,9 +34,9 @@ def n_images(n: int) -> list[dict]:
 def assert_expected_attributes_and_flags(res, tot_images: int):
     for attribute, values in res.json()["attributes"].items():
         if attribute == "string_attribute":
-            assert set(values) == set(["0", "1"])
+            assert set(values) == {"0", "1"}
         elif attribute == "int_attribute":
-            assert set(values) == set([0, 1])
+            assert set(values) == {0, 1}
         else:
             assert values == [int(values[0])]
 

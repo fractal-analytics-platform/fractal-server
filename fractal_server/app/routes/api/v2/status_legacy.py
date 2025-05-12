@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -32,7 +30,7 @@ async def get_workflowtask_status(
     workflow_id: int,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[LegacyStatusReadV2]:
+) -> LegacyStatusReadV2 | None:
     """
     Extract the status of all `WorkflowTaskV2` of a given `WorkflowV2` that ran
     on a given `DatasetV2`.

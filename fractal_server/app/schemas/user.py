@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -41,8 +39,8 @@ class UserRead(schemas.BaseUser[int]):
         username:
     """
 
-    username: Optional[str] = None
-    group_ids_names: Optional[list[tuple[int, str]]] = None
+    username: str | None = None
+    group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
 
 

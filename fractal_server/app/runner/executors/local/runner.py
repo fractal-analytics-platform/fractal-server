@@ -44,7 +44,7 @@ def run_single_task(
     )
 
     try:
-        with open(task_files.metadiff_file_local, "r") as f:
+        with open(task_files.metadiff_file_local) as f:
             out_meta = json.load(f)
         return out_meta
     except FileNotFoundError:

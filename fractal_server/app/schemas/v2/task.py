@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -35,24 +34,24 @@ class TaskCreateV2(BaseModel):
     command_non_parallel: NonEmptyStr = None
     command_parallel: NonEmptyStr = None
 
-    meta_non_parallel: Optional[DictStrAny] = None
-    meta_parallel: Optional[DictStrAny] = None
+    meta_non_parallel: DictStrAny | None = None
+    meta_parallel: DictStrAny | None = None
     version: NonEmptyStr = None
-    args_schema_non_parallel: Optional[DictStrAny] = None
-    args_schema_parallel: Optional[DictStrAny] = None
+    args_schema_non_parallel: DictStrAny | None = None
+    args_schema_parallel: DictStrAny | None = None
     args_schema_version: NonEmptyStr = None
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrlStr] = None
+    docs_info: str | None = None
+    docs_link: HttpUrlStr | None = None
 
     input_types: TypeFilters = Field(default={})
     output_types: TypeFilters = Field(default={})
 
-    category: Optional[NonEmptyStr] = None
-    modality: Optional[NonEmptyStr] = None
+    category: NonEmptyStr | None = None
+    modality: NonEmptyStr | None = None
     tags: ListUniqueNonEmptyString = Field(default_factory=list)
-    authors: Optional[NonEmptyStr] = None
+    authors: NonEmptyStr | None = None
 
-    type: Optional[TaskTypeType] = None
+    type: TaskTypeType | None = None
 
     @model_validator(mode="after")
     def validate_commands(self):
@@ -92,26 +91,26 @@ class TaskReadV2(BaseModel):
     id: int
     name: str
     type: TaskTypeType
-    source: Optional[str] = None
-    version: Optional[str] = None
+    source: str | None = None
+    version: str | None = None
 
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
+    command_non_parallel: str | None = None
+    command_parallel: str | None = None
     meta_parallel: dict[str, Any]
     meta_non_parallel: dict[str, Any]
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[str] = None
-    docs_info: Optional[str] = None
-    docs_link: Optional[str] = None
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
+    args_schema_version: str | None = None
+    docs_info: str | None = None
+    docs_link: str | None = None
     input_types: dict[str, bool]
     output_types: dict[str, bool]
 
-    taskgroupv2_id: Optional[int] = None
+    taskgroupv2_id: int | None = None
 
-    category: Optional[str] = None
-    modality: Optional[str] = None
-    authors: Optional[str] = None
+    category: str | None = None
+    modality: str | None = None
+    authors: str | None = None
     tags: list[str]
 
 
@@ -123,17 +122,17 @@ class TaskUpdateV2(BaseModel):
     input_types: TypeFilters = None
     output_types: TypeFilters = None
 
-    category: Optional[NonEmptyStr] = None
-    modality: Optional[NonEmptyStr] = None
-    authors: Optional[NonEmptyStr] = None
-    tags: Optional[ListUniqueNonEmptyString] = None
+    category: NonEmptyStr | None = None
+    modality: NonEmptyStr | None = None
+    authors: NonEmptyStr | None = None
+    tags: ListUniqueNonEmptyString | None = None
 
 
 class TaskImportV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     pkg_name: NonEmptyStr
-    version: Optional[NonEmptyStr] = None
+    version: NonEmptyStr | None = None
     name: NonEmptyStr
 
 
@@ -143,5 +142,5 @@ class TaskImportV2Legacy(BaseModel):
 
 class TaskExportV2(BaseModel):
     pkg_name: NonEmptyStr
-    version: Optional[NonEmptyStr] = None
+    version: NonEmptyStr | None = None
     name: NonEmptyStr

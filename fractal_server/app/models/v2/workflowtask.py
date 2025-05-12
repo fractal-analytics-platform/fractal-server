@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Optional
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
@@ -14,20 +13,20 @@ from .task import TaskV2
 class WorkflowTaskV2(SQLModel, table=True):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     workflow_id: int = Field(foreign_key="workflowv2.id", ondelete="CASCADE")
-    order: Optional[int] = None
-    meta_parallel: Optional[dict[str, Any]] = Field(
+    order: int | None = None
+    meta_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
-    meta_non_parallel: Optional[dict[str, Any]] = Field(
+    meta_non_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
-    args_parallel: Optional[dict[str, Any]] = Field(
+    args_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
-    args_non_parallel: Optional[dict[str, Any]] = Field(
+    args_non_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
 

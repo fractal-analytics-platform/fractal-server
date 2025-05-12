@@ -1,6 +1,4 @@
 from pathlib import Path
-from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 
@@ -12,7 +10,7 @@ MULTISUBMIT_PREFIX = "par"
 
 
 def task_subfolder_name(
-    order: Union[int, str],
+    order: int | str,
     task_name: str,
 ) -> str:
     """
@@ -48,8 +46,8 @@ class TaskFiles(BaseModel):
     task_order: int
 
     # Per-single-component
-    component: Optional[str] = None
-    prefix: Optional[str] = None
+    component: str | None = None
+    prefix: str | None = None
 
     def _check_component(self):
         if self.component is None:

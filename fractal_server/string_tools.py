@@ -1,5 +1,5 @@
 import string
-from typing import Optional
+
 
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
 
@@ -36,7 +36,7 @@ def sanitize_string(value: str) -> str:
 def validate_cmd(
     command: str,
     *,
-    allow_char: Optional[str] = None,
+    allow_char: str | None = None,
     attribute_name: str = "Command",
 ):
     """
