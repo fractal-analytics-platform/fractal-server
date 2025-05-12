@@ -151,9 +151,11 @@ async def test_get_workflow_version_update_candidates_ordering():
         "1.0.0rc4.dev7",
         "0.10.0beta5",
         "0.10.0alpha0",
+        "0.10.0alpha",
         "0.1.2",
         "0.1.dev27+g1458b59",
         "0.2.0a0",
+        "0.10.0a",
     ]
     ordered_versions = sorted(
         versions,
@@ -168,6 +170,8 @@ async def test_get_workflow_version_update_candidates_ordering():
         "0.2.0a0",
         "0.10.0a0",
         "0.10.0alpha0",
+        "0.10.0alpha",
+        "0.10.0a",
         "0.10.0a2",
         "0.10.0alpha3",
         "0.10.0b4",
