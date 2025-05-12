@@ -60,7 +60,7 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
             f"{PREFIX}/project/", json=dict(name="project")
         )
         assert res.status_code == 422
-        assert len((await _project_list_v2(userB, db))) == 1
+        assert len(await _project_list_v2(userB, db)) == 1
 
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200

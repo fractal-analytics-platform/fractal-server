@@ -30,19 +30,19 @@ def test_slurm_remote(tmp_path: Path):
     # CASE 1: metadiff file exists
     out_fname = (tmp_path / "subdir2/out_1.json").as_posix()
     worker(in_fname=in_fname, out_fname=out_fname)
-    with open(out_fname, "r") as f:
+    with open(out_fname) as f:
         success, result = json.load(f)
         assert success
         assert result == RESULT
 
-    with open(log_path, "r") as f:
+    with open(log_path) as f:
         assert f.read() == "--in-json xxx --out-json yyy\n"
 
     # CASE 2: metadiff file does not exist
     Path(metadiff_path).unlink()
     out_fname = (tmp_path / "subdir2/out_2.json").as_posix()
     worker(in_fname=in_fname, out_fname=out_fname)
-    with open(out_fname, "r") as f:
+    with open(out_fname) as f:
         success, result = json.load(f)
         assert success
         assert result is None
@@ -61,7 +61,7 @@ def test_slurm_remote(tmp_path: Path):
         )
     out_fname = (tmp_path / "subdir2/out_3.json").as_posix()
     worker(in_fname=in_fname, out_fname=out_fname)
-    with open(out_fname, "r") as f:
+    with open(out_fname) as f:
         success, exc_proxy = json.load(f)
         assert not success
         assert exc_proxy["exc_type_name"] == "FractalVersionMismatch"
@@ -81,6 +81,6 @@ def test_slurm_remote(tmp_path: Path):
         )
     out_fname = (tmp_path / "subdir2/out_3.json").as_posix()
     worker(in_fname=in_fname, out_fname=out_fname)
-    with open(out_fname, "r") as f:
+    with open(out_fname) as f:
         success, exc_proxy = json.load(f)
         assert success

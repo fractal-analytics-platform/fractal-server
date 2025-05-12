@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 from pydantic import validate_call
 
@@ -10,7 +9,7 @@ def illumination_correction(
     *,
     zarr_url: str,
     overwrite_input: bool = False,
-) -> Optional[dict]:
+) -> dict | None:
     """
     Dummy task description.
     """

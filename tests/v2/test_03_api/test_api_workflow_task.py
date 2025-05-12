@@ -477,13 +477,12 @@ async def test_patch_workflow_task_with_args_schema(
     """
 
     from pydantic import BaseModel
-    from typing import Optional
 
     # Prepare models to generate a valid JSON Schema
     class _Arguments(BaseModel):
         a: int
         b: str = "one"
-        c: Optional[str] = None
+        c: str | None = None
         d: list[int] = [1, 2, 3]
 
     args_schema = _Arguments.model_json_schema()
@@ -1144,6 +1143,6 @@ async def test_check_workflowtask(
             json={"type_filters": {"type": True}},
         )
         assert res.status_code == 200
-        assert set(res.json()) == set(
-            [f"/zarr_dir/{i}" for i in range(1, n) if i % 2]
-        )
+        assert set(res.json()) == {
+            f"/zarr_dir/{i}" for i in range(1, n) if i % 2
+        }

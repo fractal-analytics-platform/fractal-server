@@ -3,7 +3,6 @@ import shutil
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
 
 from devtools import debug
 
@@ -34,8 +33,8 @@ async def full_workflow(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -184,11 +183,11 @@ async def full_workflow(
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
-        task_actual_files = set(
+        task_actual_files = {
             file.split("/")[-1]
             for file in all_actual_files
             if "0_create_ome_zarr_compound" in file
-        )
+        }
         with informative_assertion_block(
             expected_files,
             all_actual_files,
@@ -203,11 +202,11 @@ async def full_workflow(
             "par-000000-0000000-log.txt",
             "par-000000-0000000-metadiff.json",
         }
-        task_actual_files = set(
+        task_actual_files = {
             file.split("/")[-1]
             for file in all_actual_files
             if "1_mip_compound" in file
-        )
+        }
         with informative_assertion_block(
             expected_files,
             all_actual_files,
@@ -310,8 +309,8 @@ async def full_workflow_TaskExecutionError(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -415,8 +414,8 @@ async def non_executable_task_command(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -489,8 +488,8 @@ async def failing_workflow_UnknownError(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
@@ -594,7 +593,7 @@ async def workflow_with_non_python_task(
     tmp777_path: Path,
     additional_user_kwargs=None,
     this_should_fail: bool = False,
-    user_settings_dict: Optional[dict] = None,
+    user_settings_dict: dict | None = None,
 ) -> str:
     """
     Run a non-python-task Fractal job.
@@ -703,8 +702,8 @@ async def failing_workflow_post_task_execution(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
-    user_kwargs: Optional[dict] = None,
-    user_settings_dict: Optional[dict] = None,
+    user_kwargs: dict | None = None,
+    user_settings_dict: dict | None = None,
     tmp_path: Path,
 ):
     if user_kwargs is None:

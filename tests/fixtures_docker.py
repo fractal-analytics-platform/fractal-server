@@ -6,9 +6,9 @@ import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
-from typing import Generator
 
 import pytest
 from pytest import TempPathFactory

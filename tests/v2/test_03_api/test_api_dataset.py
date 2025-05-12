@@ -165,7 +165,7 @@ async def test_get_user_datasets(
         assert res.status_code == 200
         datasets = res.json()
         assert len(res.json()) == 3
-        assert set(ds["name"] for ds in datasets) == {"ds1a", "ds1b", "ds2a"}
+        assert {ds["name"] for ds in datasets} == {"ds1a", "ds1b", "ds2a"}
 
 
 async def test_post_dataset(client, MockCurrentUser, project_factory_v2):

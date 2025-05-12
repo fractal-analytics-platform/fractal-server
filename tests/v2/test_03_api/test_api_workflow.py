@@ -299,7 +299,7 @@ async def test_get_user_workflows(
         assert res.status_code == 200
         debug(res.json())
         assert len(res.json()) == 3
-        assert set(wf["name"] for wf in res.json()) == {"wf1a", "wf1b", "wf2a"}
+        assert {wf["name"] for wf in res.json()} == {"wf1a", "wf1b", "wf2a"}
 
 
 async def test_get_project_workflows(
