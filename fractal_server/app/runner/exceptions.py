@@ -88,7 +88,7 @@ class JobExecutionError(RuntimeError):
         empty or missing
         """
         if os.path.exists(filepath):
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 content = f.read()
                 if content:
                     return f"Content of {filepath}:\n{content}"

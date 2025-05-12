@@ -2,8 +2,8 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
-from typing import AsyncGenerator
-from typing import Generator
+from collections.abc import AsyncGenerator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession

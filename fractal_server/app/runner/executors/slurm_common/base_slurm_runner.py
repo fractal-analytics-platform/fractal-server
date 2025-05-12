@@ -241,13 +241,11 @@ class BaseSlurmRunner(BaseRunner):
                 input_file = task.input_file_local
             output_file = task.output_file_remote
             cmdlines.append(
-                (
-                    f"{self.python_worker_interpreter}"
-                    " -m fractal_server.app.runner."
-                    "executors.slurm_common.remote "
-                    f"--input-file {input_file} "
-                    f"--output-file {output_file}"
-                )
+                f"{self.python_worker_interpreter}"
+                " -m fractal_server.app.runner."
+                "executors.slurm_common.remote "
+                f"--input-file {input_file} "
+                f"--output-file {output_file}"
             )
 
         # Set ntasks
@@ -390,7 +388,7 @@ class BaseSlurmRunner(BaseRunner):
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
-            with open(task.output_file_local, "r") as f:
+            with open(task.output_file_local) as f:
                 output = json.load(f)
             success = output[0]
             if success:
@@ -885,8 +883,8 @@ class BaseSlurmRunner(BaseRunner):
         """
         Check that a list of `SlurmJob`s have homogeneous working folders.
         """
-        set_workdir_local = set(_job.workdir_local for _job in slurm_jobs)
-        set_workdir_remote = set(_job.workdir_remote for _job in slurm_jobs)
+        set_workdir_local = {_job.workdir_local for _job in slurm_jobs}
+        set_workdir_remote = {_job.workdir_remote for _job in slurm_jobs}
         if len(set_workdir_local) > 1:
             raise ValueError(f"Non-unique values in {set_workdir_local=}.")
         if len(set_workdir_remote) > 1:

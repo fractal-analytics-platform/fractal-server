@@ -141,6 +141,4 @@ def aggregate_types(images: list[dict[str, Any]]) -> list[str]:
     """
     Given a list of images, this function returns a list of all image types.
     """
-    return list(
-        set(type for image in images for type in image["types"].keys())
-    )
+    return list({type for image in images for type in image["types"].keys()})

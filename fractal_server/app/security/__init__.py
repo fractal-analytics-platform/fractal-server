@@ -27,11 +27,10 @@ registers the client and the relative routes.
 All routes are registered under the `auth/` prefix.
 """
 import contextlib
+from collections.abc import AsyncGenerator
 from typing import Any
-from typing import AsyncGenerator
 from typing import Generic
 from typing import Optional
-from typing import Type
 
 from fastapi import Depends
 from fastapi import Request
@@ -82,14 +81,14 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
     """
 
     session: AsyncSession
-    user_model: Type[UP]
-    oauth_account_model: Optional[Type[OAuthAccount]] = None
+    user_model: type[UP]
+    oauth_account_model: Optional[type[OAuthAccount]] = None
 
     def __init__(
         self,
         session: AsyncSession,
-        user_model: Type[UP],
-        oauth_account_model: Optional[Type[OAuthAccount]] = None,
+        user_model: type[UP],
+        oauth_account_model: Optional[type[OAuthAccount]] = None,
     ):
         self.session = session
         self.user_model = user_model

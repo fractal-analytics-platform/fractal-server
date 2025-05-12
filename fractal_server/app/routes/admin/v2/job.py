@@ -123,7 +123,7 @@ async def view_single_job(
 
     if show_tmp_logs and (job.status == JobStatusTypeV2.SUBMITTED):
         try:
-            with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
+            with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}") as f:
                 job.log = f.read()
         except FileNotFoundError:
             pass

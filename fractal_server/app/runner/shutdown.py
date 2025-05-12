@@ -38,21 +38,17 @@ async def cleanup_after_shutdown(*, jobsV2: list[int], logger_name: str):
 
             if len(jobsV2_db) == 0:
                 logger.info(
-                    (
-                        "All jobs associated to this app are "
-                        "either done or failed. Exit."
-                    )
+                    "All jobs associated to this app are "
+                    "either done or failed. Exit."
                 )
                 return
             else:
                 logger.info(
-                    (f"Some jobs are still 'submitted' " f"{jobsV2_db=}")
+                    f"Some jobs are still 'submitted' " f"{jobsV2_db=}"
                 )
         logger.info(
-            (
-                "Graceful shutdown reached its maximum time, "
-                "but some jobs are still submitted"
-            )
+            "Graceful shutdown reached its maximum time, "
+            "but some jobs are still submitted"
         )
 
         for job in jobsV2_db:

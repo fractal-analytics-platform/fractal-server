@@ -1,11 +1,11 @@
 import json
 import logging
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock
 from typing import Any
-from typing import Generator
 from typing import Literal
 from typing import Optional
 
@@ -75,7 +75,7 @@ def _acquire_lock_with_timeout(
             logger.info(f"Lock for '{label}' was released.")
 
 
-class FractalSSH(object):
+class FractalSSH:
     """
     Wrapper of `fabric.Connection` object, enriched with locks.
 
@@ -560,7 +560,7 @@ class FractalSSH(object):
                 )
 
 
-class FractalSSHList(object):
+class FractalSSHList:
     """
     Collection of `FractalSSH` objects
 

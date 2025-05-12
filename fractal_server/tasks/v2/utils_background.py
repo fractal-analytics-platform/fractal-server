@@ -101,5 +101,5 @@ def _prepare_tasks_metadata(
 
 
 def get_current_log(logger_file_path: str) -> str:
-    with open(logger_file_path, "r") as f:
+    with open(logger_file_path) as f:
         return f.read()
