@@ -3,8 +3,8 @@
 # 2.14.6
 
 * Inherit from `StrEnum` rather than `str, Enum` (\#2561).
-* Dependencies:
-    * Deprecate Python 3.10 (\#2561).
+* Run `pyupgrade` on codebase (\#2563).
+* Deprecate Python 3.10 (\#2561).
 
 # 2.14.5
 
