@@ -1,6 +1,5 @@
 from datetime import datetime
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -14,20 +13,20 @@ from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
-class TaskGroupV2OriginEnum(str, Enum):
+class TaskGroupV2OriginEnum(StrEnum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
     OTHER = "other"
 
 
-class TaskGroupActivityStatusV2(str, Enum):
+class TaskGroupActivityStatusV2(StrEnum):
     PENDING = "pending"
     ONGOING = "ongoing"
     FAILED = "failed"
     OK = "OK"
 
 
-class TaskGroupActivityActionV2(str, Enum):
+class TaskGroupActivityActionV2(StrEnum):
     COLLECT = "collect"
     DEACTIVATE = "deactivate"
     REACTIVATE = "reactivate"
@@ -36,17 +35,17 @@ class TaskGroupActivityActionV2(str, Enum):
 class TaskGroupCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_id: int
-    user_group_id: Optional[int] = None
+    user_group_id: int | None = None
     active: bool = True
     origin: TaskGroupV2OriginEnum
     pkg_name: str
-    version: Optional[str] = None
+    version: str | None = None
     python_version: NonEmptyStr = None
     path: AbsolutePathStr = None
     venv_path: AbsolutePathStr = None
     wheel_path: AbsolutePathStr = None
     pip_extras: NonEmptyStr = None
-    pip_freeze: Optional[str] = None
+    pip_freeze: str | None = None
     pinned_package_versions: DictStrStr = Field(default_factory=dict)
 
 
@@ -66,21 +65,21 @@ class TaskGroupReadV2(BaseModel):
     task_list: list[TaskReadV2]
 
     user_id: int
-    user_group_id: Optional[int] = None
+    user_group_id: int | None = None
 
     origin: TaskGroupV2OriginEnum
     pkg_name: str
-    version: Optional[str] = None
-    python_version: Optional[str] = None
-    path: Optional[str] = None
-    venv_path: Optional[str] = None
-    wheel_path: Optional[str] = None
-    pip_freeze: Optional[str] = None
-    pip_extras: Optional[str] = None
+    version: str | None = None
+    python_version: str | None = None
+    path: str | None = None
+    venv_path: str | None = None
+    wheel_path: str | None = None
+    pip_freeze: str | None = None
+    pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
-    venv_size_in_kB: Optional[int] = None
-    venv_file_number: Optional[int] = None
+    venv_size_in_kB: int | None = None
+    venv_file_number: int | None = None
 
     active: bool
     timestamp_created: AwareDatetime
@@ -93,27 +92,27 @@ class TaskGroupReadV2(BaseModel):
 
 class TaskGroupUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    user_group_id: Optional[int] = None
+    user_group_id: int | None = None
 
 
 class TaskGroupActivityV2Read(BaseModel):
     id: int
     user_id: int
-    taskgroupv2_id: Optional[int] = None
+    taskgroupv2_id: int | None = None
     timestamp_started: AwareDatetime
-    timestamp_ended: Optional[AwareDatetime] = None
+    timestamp_ended: AwareDatetime | None = None
     pkg_name: str
     version: str
     status: TaskGroupActivityStatusV2
     action: TaskGroupActivityActionV2
-    log: Optional[str] = None
+    log: str | None = None
 
     @field_serializer("timestamp_started")
     def serialize_datetime_start(v: datetime) -> str:
         return v.isoformat()
 
     @field_serializer("timestamp_ended")
-    def serialize_datetime_end(v: Optional[datetime]) -> Optional[str]:
+    def serialize_datetime_end(v: datetime | None) -> str | None:
         if v is None:
             return None
         else:

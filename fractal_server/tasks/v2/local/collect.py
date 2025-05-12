@@ -4,7 +4,6 @@ import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
@@ -39,7 +38,7 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_file: Optional[WheelFile] = None,
+    wheel_file: WheelFile | None = None,
 ) -> None:
     """
     Collect a task package.
@@ -132,7 +131,7 @@ def collect_local(
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT.value}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
                     logger_name=LOGGER_NAME,
                 )

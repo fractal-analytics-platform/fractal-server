@@ -121,7 +121,7 @@ def test_merge_outputs():
         SingleImageTaskOutput(zarr_url="/b"),
         SingleImageTaskOutput(zarr_url="/c"),
     ]
-    assert set(merged.image_list_removals) == set(["/x", "/y", "/z", "/w"])
+    assert set(merged.image_list_removals) == {"/x", "/y", "/z", "/w"}
 
 
 def test_process_task_output():

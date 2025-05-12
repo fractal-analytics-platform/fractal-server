@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
@@ -16,7 +15,7 @@ from ....utils import get_timestamp
 class DatasetV2(SQLModel, table=True):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
 
     project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")

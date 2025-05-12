@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -35,13 +33,13 @@ logger = set_logger(__name__)
 
 @router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
 async def get_task_group_activity_list(
-    task_group_activity_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    taskgroupv2_id: Optional[int] = None,
-    pkg_name: Optional[str] = None,
-    status: Optional[TaskGroupActivityStatusV2] = None,
-    action: Optional[TaskGroupActivityActionV2] = None,
-    timestamp_started_min: Optional[AwareDatetime] = None,
+    task_group_activity_id: int | None = None,
+    user_id: int | None = None,
+    taskgroupv2_id: int | None = None,
+    pkg_name: str | None = None,
+    status: TaskGroupActivityStatusV2 | None = None,
+    action: TaskGroupActivityActionV2 | None = None,
+    timestamp_started_min: AwareDatetime | None = None,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:
@@ -87,14 +85,14 @@ async def query_task_group(
 
 @router.get("/", response_model=list[TaskGroupReadV2])
 async def query_task_group_list(
-    user_id: Optional[int] = None,
-    user_group_id: Optional[int] = None,
-    private: Optional[bool] = None,
-    active: Optional[bool] = None,
-    pkg_name: Optional[str] = None,
-    origin: Optional[TaskGroupV2OriginEnum] = None,
-    timestamp_last_used_min: Optional[AwareDatetime] = None,
-    timestamp_last_used_max: Optional[AwareDatetime] = None,
+    user_id: int | None = None,
+    user_group_id: int | None = None,
+    private: bool | None = None,
+    active: bool | None = None,
+    pkg_name: str | None = None,
+    origin: TaskGroupV2OriginEnum | None = None,
+    timestamp_last_used_min: AwareDatetime | None = None,
+    timestamp_last_used_max: AwareDatetime | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:

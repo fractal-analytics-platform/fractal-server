@@ -2,7 +2,6 @@ import logging
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
@@ -38,7 +37,7 @@ def collect_ssh(
     task_group_activity_id: int,
     fractal_ssh: FractalSSH,
     tasks_base_dir: str,
-    wheel_file: Optional[WheelFile] = None,
+    wheel_file: WheelFile | None = None,
 ) -> None:
     """
     Collect a task package over SSH
@@ -166,7 +165,7 @@ def collect_ssh(
                     script_dir_remote=script_dir_remote,
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT.value}"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
                     ),
                     fractal_ssh=fractal_ssh,
                     logger_name=LOGGER_NAME,

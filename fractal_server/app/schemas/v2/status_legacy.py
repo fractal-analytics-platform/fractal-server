@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import Field
 
 
-class WorkflowTaskStatusTypeV2(str, Enum):
+class WorkflowTaskStatusTypeV2(StrEnum):
     """
     Define the available values for the status of a `WorkflowTask`.
 

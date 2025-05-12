@@ -617,9 +617,7 @@ async def test_get_history_images(
         assert res["page_size"] == 5
         assert res["total_count"] == 5
         assert len(res["attributes"]) == 1
-        assert set(res["attributes"]["well"]) == set(
-            [f"{i}B" for i in range(5)]
-        )
+        assert set(res["attributes"]["well"]) == {f"{i}B" for i in range(5)}
         assert set(res["types"]) == {"y", "x", "z"}
         assert res["items"] == [
             {

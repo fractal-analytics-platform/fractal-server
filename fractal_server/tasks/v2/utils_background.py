@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 from typing import TypeVar
 
 from sqlalchemy.orm import Session as DBSyncSession
@@ -53,7 +52,7 @@ def _prepare_tasks_metadata(
     package_manifest: ManifestV2,
     python_bin: Path,
     package_root: Path,
-    package_version: Optional[str] = None,
+    package_version: str | None = None,
 ) -> list[TaskCreateV2]:
     """
     Based on the package manifest and additional info, prepare the task list.
@@ -101,5 +100,5 @@ def _prepare_tasks_metadata(
 
 
 def get_current_log(logger_file_path: str) -> str:
-    with open(logger_file_path, "r") as f:
+    with open(logger_file_path) as f:
         return f.read()

@@ -1,6 +1,5 @@
 from copy import deepcopy
 from typing import Any
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -123,19 +122,17 @@ async def get_workflow_tasks_statuses(
                 .where(
                     HistoryImageCache.latest_history_unit_id == HistoryUnit.id
                 )
-                .where(HistoryUnit.status == target_status.value)
+                .where(HistoryUnit.status == target_status)
             )
             res = await db.execute(stm)
             num_images = res.scalar()
-            response[wftask.id][
-                f"num_{target_status.value}_images"
-            ] = num_images
+            response[wftask.id][f"num_{target_status}_images"] = num_images
 
     new_response = deepcopy(response)
     for key, value in response.items():
         if value is not None:
             num_total_images = sum(
-                value[f"num_{target_status.value}_images"]
+                value[f"num_{target_status}_images"]
                 for target_status in HistoryUnitStatus
             )
             if num_total_images > value["num_available_images"]:
@@ -213,7 +210,7 @@ async def get_history_run_units(
     dataset_id: int,
     workflowtask_id: int,
     history_run_id: int,
-    unit_status: Optional[HistoryUnitStatus] = None,
+    unit_status: HistoryUnitStatus | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -274,7 +271,7 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
-    unit_status: Optional[HistoryUnitStatusQuery] = None,
+    unit_status: HistoryUnitStatusQuery | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),

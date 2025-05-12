@@ -122,7 +122,7 @@ async def test_fractal_demos_01(
         job_id=job.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
-    assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
+    assert {img["zarr_url"] for img in dataset_attrs["images"]} == {
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     }

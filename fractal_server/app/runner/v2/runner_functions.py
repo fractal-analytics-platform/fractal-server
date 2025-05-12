@@ -1,8 +1,7 @@
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -129,7 +128,7 @@ def run_v2_task_non_parallel(
         [
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
-            Optional[Path],
+            Path | None,
             int,
         ],
         Any,
@@ -251,7 +250,7 @@ def run_v2_task_parallel(
         [
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
-            Optional[Path],
+            Path | None,
             int,
         ],
         Any,
@@ -382,7 +381,7 @@ def run_v2_task_compound(
         [
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
-            Optional[Path],
+            Path | None,
             int,
         ],
         Any,

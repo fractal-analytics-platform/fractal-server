@@ -44,7 +44,7 @@ def call_command_wrapper(*, cmd: str, log_path: str) -> None:
     if result.returncode != 0:
         stderr = ""
         if os.path.isfile(log_path):
-            with open(log_path, "r") as fp_stderr:
+            with open(log_path) as fp_stderr:
                 stderr = fp_stderr.read()
         raise TaskExecutionError(
             f"Task failed with returncode={result.returncode}.\n"

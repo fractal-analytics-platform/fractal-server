@@ -136,7 +136,7 @@ def deactivate_ssh(
                         script_dir_remote=script_dir_remote,
                         prefix=(
                             f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.DEACTIVATE.value}"
+                            f"{TaskGroupActivityActionV2.DEACTIVATE}"
                         ),
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,

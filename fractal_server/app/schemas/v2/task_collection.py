@@ -1,5 +1,4 @@
 from typing import Literal
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -47,11 +46,11 @@ class TaskCollectPipV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    package: Optional[NonEmptyStr] = None
-    package_version: Optional[NonEmptyStr] = None
-    package_extras: Optional[NonEmptyStr] = None
-    python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
-    pinned_package_versions: Optional[DictStrStr] = None
+    package: NonEmptyStr | None = None
+    package_version: NonEmptyStr | None = None
+    package_extras: NonEmptyStr | None = None
+    python_version: Literal["3.9", "3.10", "3.11", "3.12"] | None = None
+    pinned_package_versions: DictStrStr | None = None
 
     @field_validator(
         "package", "package_version", "package_extras", mode="after"
@@ -94,9 +93,9 @@ class TaskCollectCustomV2(BaseModel):
     manifest: ManifestV2
     python_interpreter: AbsolutePathStr
     label: NonEmptyStr
-    package_root: Optional[AbsolutePathStr] = None
-    package_name: Optional[NonEmptyStr] = None
-    version: Optional[NonEmptyStr] = None
+    package_root: AbsolutePathStr | None = None
+    package_name: NonEmptyStr | None = None
+    version: NonEmptyStr | None = None
 
     @field_validator("package_name", mode="after")
     @classmethod

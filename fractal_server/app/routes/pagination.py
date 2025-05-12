@@ -1,5 +1,4 @@
 from typing import Generic
-from typing import Optional
 from typing import TypeVar
 
 from fastapi import HTTPException
@@ -14,7 +13,7 @@ T = TypeVar("T")
 class PaginationRequest(BaseModel):
 
     page: int = Field(ge=1)
-    page_size: Optional[int] = Field(ge=1)
+    page_size: int | None = Field(ge=1)
 
     @model_validator(mode="after")
     def valid_pagination_parameters(self):
@@ -26,7 +25,7 @@ class PaginationRequest(BaseModel):
 
 
 def get_pagination_params(
-    page: int = 1, page_size: Optional[int] = None
+    page: int = 1, page_size: int | None = None
 ) -> PaginationRequest:
     try:
         pagination = PaginationRequest(page=page, page_size=page_size)

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -25,14 +23,14 @@ class UserSettings(SQLModel, table=True):
 
     __tablename__ = "user_settings"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     slurm_accounts: list[str] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
-    ssh_host: Optional[str] = None
-    ssh_username: Optional[str] = None
-    ssh_private_key_path: Optional[str] = None
-    ssh_tasks_dir: Optional[str] = None
-    ssh_jobs_dir: Optional[str] = None
-    slurm_user: Optional[str] = None
-    project_dir: Optional[str] = None
+    ssh_host: str | None = None
+    ssh_username: str | None = None
+    ssh_private_key_path: str | None = None
+    ssh_tasks_dir: str | None = None
+    ssh_jobs_dir: str | None = None
+    slurm_user: str | None = None
+    project_dir: str | None = None

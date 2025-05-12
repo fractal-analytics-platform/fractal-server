@@ -315,7 +315,7 @@ def test_venv_size_and_file_number(tmp_path):
         logger_name=__name__,
         prefix="prefix",
     )
-    size_in_kB, file_number = [int(item) for item in stdout.split()]
+    size_in_kB, file_number = (int(item) for item in stdout.split())
     print(f"{size_in_kB=}")
     print(f"{file_number=}")
 

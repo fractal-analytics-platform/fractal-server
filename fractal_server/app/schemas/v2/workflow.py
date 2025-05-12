@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -47,7 +46,7 @@ class WorkflowUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None
-    reordered_workflowtask_ids: Optional[ListUniqueNonNegativeInt] = None
+    reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
 
 
 class WorkflowImportV2(BaseModel):

@@ -1,6 +1,5 @@
 from datetime import datetime
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -19,7 +18,7 @@ from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
 
-class JobStatusTypeV2(str, Enum):
+class JobStatusTypeV2(StrEnum):
     """
     Define the available job statuses
 
@@ -43,9 +42,9 @@ class JobStatusTypeV2(str, Enum):
 class JobCreateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    first_task_index: Optional[NonNegativeInt] = None
-    last_task_index: Optional[NonNegativeInt] = None
-    slurm_account: Optional[StrictStr] = None
+    first_task_index: NonNegativeInt | None = None
+    last_task_index: NonNegativeInt | None = None
+    slurm_account: StrictStr | None = None
     worker_init: NonEmptyStr = None
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
@@ -68,23 +67,23 @@ class JobCreateV2(BaseModel):
 
 class JobReadV2(BaseModel):
     id: int
-    project_id: Optional[int] = None
+    project_id: int | None = None
     project_dump: ProjectDumpV2
     user_email: str
-    slurm_account: Optional[str] = None
-    workflow_id: Optional[int] = None
+    slurm_account: str | None = None
+    workflow_id: int | None = None
     workflow_dump: WorkflowDumpV2
-    dataset_id: Optional[int] = None
+    dataset_id: int | None = None
     dataset_dump: DatasetDumpV2
     start_timestamp: AwareDatetime
-    end_timestamp: Optional[AwareDatetime] = None
+    end_timestamp: AwareDatetime | None = None
     status: str
-    log: Optional[str] = None
-    working_dir: Optional[str] = None
-    working_dir_user: Optional[str] = None
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
-    worker_init: Optional[str] = None
+    log: str | None = None
+    working_dir: str | None = None
+    working_dir_user: str | None = None
+    first_task_index: int | None = None
+    last_task_index: int | None = None
+    worker_init: str | None = None
     attribute_filters: AttributeFilters
     type_filters: dict[str, bool]
 
@@ -93,7 +92,7 @@ class JobReadV2(BaseModel):
         return v.isoformat()
 
     @field_serializer("end_timestamp")
-    def serialize_datetime_end(v: Optional[datetime]) -> Optional[str]:
+    def serialize_datetime_end(v: datetime | None) -> str | None:
         if v is None:
             return None
         else:

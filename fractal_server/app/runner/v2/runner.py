@@ -1,11 +1,10 @@
 import logging
+from collections.abc import Callable
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Literal
-from typing import Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
@@ -76,13 +75,13 @@ def execute_tasks_v2(
     user_id: int,
     workflow_dir_local: Path,
     job_id: int,
-    workflow_dir_remote: Optional[Path] = None,
-    logger_name: Optional[str] = None,
+    workflow_dir_remote: Path | None = None,
+    logger_name: str | None = None,
     get_runner_config: Callable[
         [
             WorkflowTaskV2,
             Literal["non_parallel", "parallel"],
-            Optional[Path],
+            Path | None,
         ],
         Any,
     ],

@@ -81,7 +81,7 @@ def read_log_file(
         )
 
     try:
-        with open(logfile, "r") as f:
+        with open(logfile) as f:
             return f.read()
     except Exception as e:
         return (

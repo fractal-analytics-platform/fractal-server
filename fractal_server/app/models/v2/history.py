@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from typing import Optional
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
@@ -17,12 +16,12 @@ from ....utils import get_timestamp
 class HistoryRun(SQLModel, table=True):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     dataset_id: int = Field(
         foreign_key="datasetv2.id",
         ondelete="CASCADE",
     )
-    workflowtask_id: Optional[int] = Field(
+    workflowtask_id: int | None = Field(
         foreign_key="workflowtaskv2.id",
         default=None,
         ondelete="SET NULL",
@@ -45,7 +44,7 @@ class HistoryRun(SQLModel, table=True):
 
 
 class HistoryUnit(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     history_run_id: int = Field(
         foreign_key="historyrun.id",
         ondelete="CASCADE",

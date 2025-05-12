@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -65,7 +64,7 @@ class CollectionRequestData(BaseModel):
     """
 
     task_collect: TaskCollectPipV2
-    file: Optional[UploadFile] = None
+    file: UploadFile | None = None
     origin: TaskGroupV2OriginEnum
 
     @model_validator(mode="before")
@@ -105,12 +104,12 @@ class CollectionRequestData(BaseModel):
 
 
 def parse_request_data(
-    package: Optional[str] = Form(None),
-    package_version: Optional[str] = Form(None),
-    package_extras: Optional[str] = Form(None),
-    python_version: Optional[str] = Form(None),
-    pinned_package_versions: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
+    package: str | None = Form(None),
+    package_version: str | None = Form(None),
+    package_extras: str | None = Form(None),
+    python_version: str | None = Form(None),
+    pinned_package_versions: str | None = Form(None),
+    file: UploadFile | None = File(None),
 ) -> CollectionRequestData:
     """
     Expand the parsing/validation of `parse_form_data`, based on `file`.
@@ -156,7 +155,7 @@ async def collect_tasks_pip(
     background_tasks: BackgroundTasks,
     request_data: CollectionRequestData = Depends(parse_request_data),
     private: bool = False,
-    user_group_id: Optional[int] = None,
+    user_group_id: int | None = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:

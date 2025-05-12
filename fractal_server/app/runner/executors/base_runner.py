@@ -19,7 +19,7 @@ TASK_TYPES_MULTISUBMIT: list[TaskTypeType] = [
 logger = set_logger(__name__)
 
 
-class BaseRunner(object):
+class BaseRunner:
     """
     Base class for Fractal runners.
     """
@@ -150,9 +150,9 @@ class BaseRunner(object):
                 f"{len(list_parameters)=}."
             )
 
-        subfolders = set(
+        subfolders = {
             task_file.wftask_subfolder_local for task_file in list_task_files
-        )
+        }
         if len(subfolders) != 1:
             raise ValueError(f"More than one subfolders: {subfolders}.")
 
