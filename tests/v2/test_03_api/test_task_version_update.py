@@ -81,6 +81,18 @@ async def test_get_workflow_version_update_candidates(
             args_schema_parallel={"foo": "bar"},
         )
         assert task0.type != task7.type
+        # Non-active task
+        task6 = await task_factory_v2(
+            user_id=user.id,
+            version="6",
+            task_group_kwargs={
+                "pkg_name": "my_pkg",
+                "version": "6",
+                "active": False,
+            },
+            name="my_task",
+            args_schema_parallel={"foo": "bar"},
+        )
 
         for task in [
             task0,
