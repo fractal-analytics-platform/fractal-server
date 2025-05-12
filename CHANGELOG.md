@@ -1,5 +1,26 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.5
+
+This version introduces an important _internal_ refactor of the runner
+component, with the goal of simplifying the SLURM version.
+
+* Runner:
+    * Make `submit/multisubmit` method take static arguments, rather than a callable (\#2549).
+    * Replace input/output pickle files with JSON files (\#2549).
+    * Drop possibility of non-`utf-8` encoding for `_run_command_as_user` function (\#2549).
+    * Avoid local-remote-local round trip for task parameters, by writing the local file first (\#2549).
+    * Stop relying on positive/negative return codes to produce either `TaskExecutionError`/`JobExecutionError`, in favor of only producing `TaskExecutionError` at the lowest task-execution level (\#2549).
+    * Re-implement `run_single_task` within SLURM remote `worker` function (\#2549).
+    * Drop `TaskFiles.remote_files_dict` (\#2549).
+    * Drop obsolete `FRACTAL_SLURM_ERROR_HANDLING_INTERVAL` config variable (\#2549).
+    * Drop obsolete `utils_executors.py` module (\#2549).
+* Dependencies:
+    * Drop `cloudpickle` dependency (\#2549).
+    * Remove copyright references to `clusterfutures` (\#2549).
+* Testing:
+    * Introduce `slurm_alive` fixture that checks `scontrol ping` results (\#2549).
+
 # 2.14.4
 
 * API:

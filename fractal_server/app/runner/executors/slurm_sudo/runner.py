@@ -102,16 +102,12 @@ class SudoSlurmRunner(BaseSlurmRunner):
             source_target_list.extend(
                 [
                     (
-                        task.output_pickle_file_remote,
-                        task.output_pickle_file_local,
+                        task.output_file_remote,
+                        task.output_file_local,
                     ),
                     (
                         task.task_files.log_file_remote,
                         task.task_files.log_file_local,
-                    ),
-                    (
-                        task.task_files.args_file_remote,
-                        task.task_files.args_file_local,
                     ),
                     (
                         task.task_files.metadiff_file_remote,
@@ -121,17 +117,14 @@ class SudoSlurmRunner(BaseSlurmRunner):
             )
 
         for source, target in source_target_list:
-            # NOTE: By setting encoding=None, we read/write bytes instead
-            # of strings; this is needed to also handle pickle files.
             try:
                 res = _run_command_as_user(
                     cmd=f"cat {source}",
                     user=self.slurm_user,
-                    encoding=None,
                     check=True,
                 )
                 # Write local file
-                with open(target, "wb") as f:
+                with open(target, "w") as f:
                     f.write(res.stdout)
                 logger.debug(
                     f"[_fetch_artifacts_single_job] Copied {source} into "
@@ -171,7 +164,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
         res = _run_command_as_user(
             cmd=cmd,
             user=self.slurm_user,
-            encoding="utf-8",
             check=True,
         )
         return res.stdout

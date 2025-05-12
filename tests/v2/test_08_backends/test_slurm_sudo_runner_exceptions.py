@@ -23,10 +23,8 @@ async def test_submit_exception(
     monkey_slurm,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
 
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     parameters = dict(zarr_urls=ZARR_URLS)
 
@@ -40,7 +38,10 @@ async def test_submit_exception(
         runner.jobs = {"0": "fake"}
 
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
@@ -71,10 +72,7 @@ async def test_multisubmit_exception_submission(
     Fail because of invalid parameters.
     """
 
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
-
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -84,8 +82,13 @@ async def test_multisubmit_exception_submission(
     ) as runner:
 
         results, exceptions = runner.multisubmit(
-            do_nothing,
-            [{"non_zarr_url": "something"}],  # invalid parameters
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=[
+                {"non_zarr_url": "something"}
+            ],  # invalid parameters
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path,
@@ -118,13 +121,10 @@ async def test_multisubmit_exception_fetch_artifacts(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
-
     def fake_fetch_artifacts(*args, **kwargs):
         raise RuntimeError("Error from fake_fetch_artifacts.")
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -136,8 +136,11 @@ async def test_multisubmit_exception_fetch_artifacts(
         runner._fetch_artifacts = fake_fetch_artifacts
 
         results, exceptions = runner.multisubmit(
-            do_nothing,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path, component=str(ind), is_slurm=True
@@ -170,13 +173,10 @@ async def test_multisubmit_exception_postprocess_single_task(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
-
     def fake_postprocess_single_task(*args, **kwargs):
         raise RuntimeError("Error from fake_postprocess_single_task.")
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -188,8 +188,11 @@ async def test_multisubmit_exception_postprocess_single_task(
         runner._postprocess_single_task = fake_postprocess_single_task
 
         results, exceptions = runner.multisubmit(
-            do_nothing,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path, component=str(ind), is_slurm=True

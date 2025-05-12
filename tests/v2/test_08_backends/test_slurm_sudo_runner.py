@@ -1,3 +1,5 @@
+import shutil
+
 import pytest
 from devtools import debug
 
@@ -34,10 +36,7 @@ async def test_submit_success(
     task_type: str,
     valid_user_id,
 ):
-    def do_nothing(parameters: dict, remote_files: dict):
-        return 42
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if task_type.startswith("converter_"):
         parameters = {}
@@ -51,7 +50,10 @@ async def test_submit_success(
         poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
-            do_nothing,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(
                 tmp777_path, component="0", is_slurm=True
@@ -61,8 +63,7 @@ async def test_submit_success(
             config=get_default_slurm_config(),
             user_id=valid_user_id,
         )
-    debug(result, exception)
-    assert result == 42
+    assert result is None
     assert exception is None
 
     # `HistoryRun.status` is updated at a higher level, not from
@@ -98,12 +99,7 @@ async def test_submit_fail(
     task_type: str,
     valid_user_id,
 ):
-    ERROR_MSG = "very nice error"
-
-    def raise_ValueError(parameters: dict, remote_files: dict):
-        raise ValueError(ERROR_MSG)
-
-    history_run_id, history_unit_id = history_mock_for_submit
+    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if not task_type.startswith("converter_"):
         parameters = dict(zarr_urls=ZARR_URLS)
@@ -117,11 +113,16 @@ async def test_submit_fail(
         poll_interval=0,
     ) as runner:
         result, exception = runner.submit(
-            raise_ValueError,
+            base_command="false",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
             parameters=parameters,
             history_unit_id=history_unit_id,
             task_files=get_dummy_task_files(
-                tmp777_path, component="0", is_slurm=True
+                tmp777_path,
+                component="0",
+                is_slurm=True,
             ),
             config=get_default_slurm_config(),
             task_type=task_type,
@@ -130,7 +131,6 @@ async def test_submit_fail(
     debug(result, exception)
     assert result is None
     assert isinstance(exception, TaskExecutionError)
-    assert ERROR_MSG in str(exception)
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -152,17 +152,8 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def fun(parameters: dict, remote_files: dict):
-        zarr_url = parameters["zarr_url"]
-        x = parameters["parameter"]
-        if x != 3:
-            print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-            return 2 * x
-        else:
-            print(f"Running with {zarr_url=} and {x=}, raising error.")
-            raise ValueError("parameter=3 is very very bad")
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -171,8 +162,11 @@ async def test_multisubmit_parallel(
         poll_interval=0,
     ) as runner:
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
                     tmp777_path, component=str(ind), is_slurm=True
@@ -186,13 +180,8 @@ async def test_multisubmit_parallel(
         )
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    # assert isinstance(exceptions[2], ValueError) # TaskExecutionError
-    assert "very very bad" in str(exceptions[2])
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -204,10 +193,7 @@ async def test_multisubmit_parallel(
     for ind, _unit_id in enumerate(history_unit_ids):
         unit = await db.get(HistoryUnit, _unit_id)
         debug(unit)
-        if ind != 2:
-            assert unit.status == HistoryUnitStatus.DONE
-        else:
-            assert unit.status == HistoryUnitStatus.FAILED
+        assert unit.status == HistoryUnitStatus.DONE
 
 
 @pytest.mark.container
@@ -218,17 +204,8 @@ async def test_multisubmit_compound(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-    def fun(parameters: dict, remote_files: dict):
-        zarr_url = parameters["zarr_url"]
-        x = parameters["parameter"]
-        if x != 3:
-            print(f"Running with {zarr_url=} and {x=}, returning {2 * x=}.")
-            return 2 * x
-        else:
-            print(f"Running with {zarr_url=} and {x=}, raising error.")
-            raise ValueError("parameter=3 is very very bad")
 
-    history_run_id, history_unit_ids = history_mock_for_multisubmit
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
         slurm_user=SLURM_USER,
@@ -251,23 +228,23 @@ async def test_multisubmit_compound(
         runner._mkdir_local_folder(workdir_local.as_posix())
         runner._mkdir_remote_folder(folder=workdir_remote.as_posix())
         results, exceptions = runner.multisubmit(
-            fun,
-            ZARR_URLS_AND_PARAMETER,
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=list_task_files,
             task_type="compound",
             history_unit_ids=history_unit_ids,
             config=get_default_slurm_config(),
             user_id=valid_user_id,
         )
+
     debug(results)
     debug(exceptions)
-    assert results == {
-        0: 2,
-        1: 4,
-        3: 8,
-    }
-    # assert isinstance(exceptions[2], ValueError) # TaskExecutionError
-    assert "very very bad" in str(exceptions[2])
+
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
 
     # `HistoryRun.status` is updated at a higher level, not from
     # within `runner.submit`
@@ -281,3 +258,64 @@ async def test_multisubmit_compound(
         # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
+
+
+@pytest.mark.container
+async def test_multisubmit_parallel_partial_failure(
+    db,
+    tmp777_path,
+    monkey_slurm,
+    history_mock_for_multisubmit,
+    valid_user_id,
+    testdata_path,
+):
+
+    raw_script_path = testdata_path / "script_for_selective_failure.py"
+    script_path = tmp777_path / "script_for_selective_failure.py"
+
+    shutil.copy(raw_script_path, script_path)
+
+    history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
+
+    with SudoSlurmRunner(
+        slurm_user=SLURM_USER,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        poll_interval=0,
+    ) as runner:
+        results, exceptions = runner.multisubmit(
+            base_command=f"python3 {script_path.as_posix()}",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
+            list_task_files=[
+                get_dummy_task_files(
+                    tmp777_path, component=str(ind), is_slurm=True
+                )
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="parallel",
+            history_unit_ids=history_unit_ids,
+            config=get_default_slurm_config(),
+            user_id=valid_user_id,
+        )
+    debug(results)
+    debug(exceptions)
+    assert results == {key: None for key in range(1, 4)}
+    assert isinstance(exceptions[0], TaskExecutionError)
+    assert "Bad result" in str(exceptions[0])
+
+    # `HistoryRun.status` is updated at a higher level, not from
+    # within `runner.submit`
+    run = await db.get(HistoryRun, history_run_id)
+    debug(run)
+    assert run.status == HistoryUnitStatus.SUBMITTED
+
+    # `HistoryUnit.status` is updated from within `runner.multisubmit`
+    for ind, _unit_id in enumerate(history_unit_ids):
+        unit = await db.get(HistoryUnit, _unit_id)
+        if ind == 0:
+            assert unit.status == HistoryUnitStatus.FAILED
+        else:
+            assert unit.status == HistoryUnitStatus.DONE

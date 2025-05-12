@@ -1,9 +1,11 @@
+import json
 from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from typing import Literal
 
+from ..call_command_wrapper import call_command_wrapper
 from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import TaskExecutionError
@@ -16,8 +18,38 @@ from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
 
-
 logger = set_logger(__name__)
+
+
+def run_single_task(
+    base_command: str,
+    parameters: dict[str, Any],
+    task_files: TaskFiles,
+):
+
+    # Write args.json file
+    with open(task_files.args_file_local, "w") as f:
+        json.dump(parameters, f)
+
+    # Run command
+    full_command = (
+        f"{base_command} "
+        f"--args-json {task_files.args_file_local} "
+        f"--out-json {task_files.metadiff_file_local}"
+    )
+
+    call_command_wrapper(
+        cmd=full_command,
+        log_path=task_files.log_file_local,
+    )
+
+    try:
+        with open(task_files.metadiff_file_local, "r") as f:
+            out_meta = json.load(f)
+        return out_meta
+    except FileNotFoundError:
+        # Command completed, but it produced no metadiff file
+        return None
 
 
 class LocalRunner(BaseRunner):
@@ -47,17 +79,20 @@ class LocalRunner(BaseRunner):
 
     def submit(
         self,
-        func: callable,
+        base_command: str,
+        workflow_task_order: int,
+        workflow_task_id: int,
+        task_name: str,
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
+        config: LocalBackendConfig,
         task_type: Literal[
             "non_parallel",
             "converter_non_parallel",
             "compound",
             "converter_compound",
         ],
-        config: LocalBackendConfig,
         user_id: int,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
@@ -69,9 +104,10 @@ class LocalRunner(BaseRunner):
 
             # SUBMISSION PHASE
             future = self.executor.submit(
-                func,
+                run_single_task,
+                base_command=base_command,
                 parameters=parameters,
-                remote_files=task_files.remote_files_dict,
+                task_files=task_files,
             )
         except Exception as e:
             logger.error(
@@ -111,7 +147,10 @@ class LocalRunner(BaseRunner):
 
     def multisubmit(
         self,
-        func: callable,
+        base_command: str,
+        workflow_task_order: int,
+        workflow_task_id: int,
+        task_name: str,
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
@@ -139,8 +178,9 @@ class LocalRunner(BaseRunner):
             )
 
             workdir_local = list_task_files[0].wftask_subfolder_local
-            if task_type == "parallel":
-                workdir_local.mkdir()
+            # Note: the `mkdir` is not needed for compound tasks, but it is
+            # needed for parallel tasks
+            workdir_local.mkdir(exist_ok=True)
 
             # Set `n_elements` and `parallel_tasks_per_job`
             n_elements = len(list_parameters)
@@ -178,11 +218,10 @@ class LocalRunner(BaseRunner):
                 positional_index = ind_chunk + ind_within_chunk
                 try:
                     future = self.executor.submit(
-                        func,
-                        parameters=kwargs,
-                        remote_files=list_task_files[
-                            positional_index
-                        ].remote_files_dict,
+                        run_single_task,
+                        base_command=base_command,
+                        parameters=list_parameters[positional_index],
+                        task_files=list_task_files[positional_index],
                     )
                     active_futures[positional_index] = future
                 except Exception as e:

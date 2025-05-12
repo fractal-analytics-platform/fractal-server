@@ -1,4 +1,3 @@
-import functools
 from pathlib import Path
 from typing import Any
 from typing import Callable
@@ -12,7 +11,6 @@ from ..exceptions import JobExecutionError
 from ..exceptions import TaskOutputValidationError
 from .db_tools import update_status_of_history_unit
 from .deduplicate_list import deduplicate_list
-from .runner_functions_low_level import run_single_task
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
@@ -207,13 +205,10 @@ def run_v2_task_non_parallel(
         )
 
     result, exception = runner.submit(
-        functools.partial(
-            run_single_task,
-            command=task.command_non_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_non_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         parameters=function_kwargs,
         task_type=task_type,
         task_files=task_files,
@@ -335,13 +330,10 @@ def run_v2_task_parallel(
         )
 
     results, exceptions = runner.multisubmit(
-        functools.partial(
-            run_single_task,
-            command=task.command_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         list_parameters=list_function_kwargs,
         task_type="parallel",
         list_task_files=list_task_files,
@@ -456,13 +448,10 @@ def run_v2_task_compound(
             ],
         )
     result, exception = runner.submit(
-        functools.partial(
-            run_single_task,
-            command=task.command_non_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_non_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         parameters=function_kwargs,
         task_type=task_type,
         task_files=task_files_init,
@@ -559,13 +548,10 @@ def run_v2_task_compound(
         history_unit_ids = [history_unit.id for history_unit in history_units]
 
     results, exceptions = runner.multisubmit(
-        functools.partial(
-            run_single_task,
-            command=task.command_parallel,
-            workflow_task_order=wftask.order,
-            workflow_task_id=wftask.task_id,
-            task_name=wftask.task.name,
-        ),
+        base_command=task.command_parallel,
+        workflow_task_order=wftask.order,
+        workflow_task_id=wftask.task_id,
+        task_name=wftask.task.name,
         list_parameters=list_function_kwargs,
         task_type=task_type,
         list_task_files=list_task_files,

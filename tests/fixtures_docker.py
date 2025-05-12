@@ -185,6 +185,41 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
 
 
 @pytest.fixture
+def slurm_alive(slurmlogin_ip, slurmlogin_container) -> None:
+    max_attempts = 50
+    interval = 0.5
+    command = f"docker exec --user root {slurmlogin_container} scontrol ping"
+    logging.info(
+        f"Now run {command=} at most {max_attempts} times, "
+        f"with a sleep interval of {interval} seconds."
+    )
+    for attempt in range(max_attempts):
+
+        res = subprocess.run(
+            shlex.split(command),
+            capture_output=True,
+            encoding="utf-8",
+        )
+        logging.info(
+            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, "
+            f"{res.stdout=}"
+        )
+        logging.info(
+            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, "
+            f"{res.stderr=}"
+        )
+
+        if "Slurmctld(primary) at slurm is UP" in res.stdout:
+            logging.info("[slurm_alive] SLURM status seems OK, exit.")
+            return
+
+        time.sleep(interval)
+    raise RuntimeError(
+        f"[slurm_alive] SLURM not active on {slurmlogin_container}"
+    )
+
+
+@pytest.fixture
 def fractal_ssh_list(
     slurmlogin_ip,
     ssh_alive,

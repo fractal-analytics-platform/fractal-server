@@ -19,48 +19,49 @@ class SlurmTask(BaseModel):
     task_files: TaskFiles
     index: int
 
+    workflow_task_order: int
+    workflow_task_id: int
+    task_name: str
+
     @property
-    def input_pickle_file_local_path(self) -> Path:
+    def input_file_local_path(self) -> Path:
         return (
-            self.workdir_local / f"{self.prefix}-{self.component}-input.pickle"
+            self.workdir_local / f"{self.prefix}-{self.component}-input.json"
         )
 
     @property
-    def input_pickle_file_remote_path(self) -> Path:
+    def input_file_remote_path(self) -> Path:
         return (
-            self.workdir_remote
-            / f"{self.prefix}-{self.component}-input.pickle"
+            self.workdir_remote / f"{self.prefix}-{self.component}-input.json"
         )
 
     @property
-    def output_pickle_file_local_path(self) -> Path:
+    def output_file_local_path(self) -> Path:
         return (
-            self.workdir_local
-            / f"{self.prefix}-{self.component}-output.pickle"
+            self.workdir_local / f"{self.prefix}-{self.component}-output.json"
         )
 
     @property
-    def output_pickle_file_remote_path(self) -> Path:
+    def output_file_remote_path(self) -> Path:
         return (
-            self.workdir_remote
-            / f"{self.prefix}-{self.component}-output.pickle"
+            self.workdir_remote / f"{self.prefix}-{self.component}-output.json"
         )
 
     @property
-    def input_pickle_file_local(self) -> str:
-        return self.input_pickle_file_local_path.as_posix()
+    def input_file_local(self) -> str:
+        return self.input_file_local_path.as_posix()
 
     @property
-    def input_pickle_file_remote(self) -> str:
-        return self.input_pickle_file_remote_path.as_posix()
+    def input_file_remote(self) -> str:
+        return self.input_file_remote_path.as_posix()
 
     @property
-    def output_pickle_file_local(self) -> str:
-        return self.output_pickle_file_local_path.as_posix()
+    def output_file_local(self) -> str:
+        return self.output_file_local_path.as_posix()
 
     @property
-    def output_pickle_file_remote(self) -> str:
-        return self.output_pickle_file_remote_path.as_posix()
+    def output_file_remote(self) -> str:
+        return self.output_file_remote_path.as_posix()
 
 
 class SlurmJob(BaseModel):
