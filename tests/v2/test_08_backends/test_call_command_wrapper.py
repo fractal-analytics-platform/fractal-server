@@ -7,32 +7,45 @@ from fractal_server.app.runner.executors.call_command_wrapper import (
 
 
 def test_call_command_wrapper(tmp_path):
+
+    # Invalid command
     with pytest.raises(
         TaskExecutionError,
         match="Invalid command",
     ):
         call_command_wrapper(
-            "echo; echo",
-            log_path=(tmp_path / "log").as_posix(),
+            cmd="echo; echo",
+            log_path=(tmp_path / "log1").as_posix(),
         )
 
+    # Non-executable command
     with pytest.raises(
         TaskExecutionError,
         match="is executable",
     ):
         call_command_wrapper(
-            "xxxx something",
-            log_path=(tmp_path / "log").as_posix(),
+            cmd="xxxx something",
+            log_path=(tmp_path / "log2").as_posix(),
         )
 
+    # Internal failure (cannot call `shlex.split`)
+
+    # Command that actually fails with returncode!=0
     with pytest.raises(
         TaskExecutionError,
         match="Task failed with returncode=1",
     ):
-        call_command_wrapper("false", log_path=(tmp_path / "log").as_posix())
-
-    with pytest.raises(TaskExecutionError, match="unrecognized option"):
         call_command_wrapper(
-            "sleep --fake-arg",
-            log_path=(tmp_path / "log").as_posix(),
+            cmd="false",
+            log_path=(tmp_path / "log3").as_posix(),
+        )
+
+    # Command that actually fails with returncode!=0
+    with pytest.raises(
+        TaskExecutionError,
+        match="unrecognized option",
+    ):
+        call_command_wrapper(
+            cmd="sleep --fake-arg",
+            log_path=(tmp_path / "log4").as_posix(),
         )
