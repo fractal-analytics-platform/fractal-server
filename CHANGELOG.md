@@ -2,6 +2,7 @@
 
 # 2.14.6
 
+* Inherit from `StrEnum` rather than `str, Enum` (\#2561).
 * Dependencies:
     * Deprecate Python 3.10 (\#2561).
 
