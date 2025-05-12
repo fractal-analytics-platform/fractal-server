@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -14,20 +14,20 @@ from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
-class TaskGroupV2OriginEnum(str, Enum):
+class TaskGroupV2OriginEnum(StrEnum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
     OTHER = "other"
 
 
-class TaskGroupActivityStatusV2(str, Enum):
+class TaskGroupActivityStatusV2(StrEnum):
     PENDING = "pending"
     ONGOING = "ongoing"
     FAILED = "failed"
     OK = "OK"
 
 
-class TaskGroupActivityActionV2(str, Enum):
+class TaskGroupActivityActionV2(StrEnum):
     COLLECT = "collect"
     DEACTIVATE = "deactivate"
     REACTIVATE = "reactivate"

@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.6
+
+* Inherit from `StrEnum` rather than `str, Enum` (\#2561).
+* Dependencies:
+    * Deprecate Python 3.10 (\#2561).
+
 # 2.14.5
 
 This version introduces an important _internal_ refactor of the runner

@@ -1,20 +1,15 @@
 """
 These tests are related to issue
 https://github.com/fractal-analytics-platform/fractal-server/issues/2449
-
-They will be removed when Python 3.10 is deprecated
-(https://github.com/fractal-analytics-platform/fractal-server/issues/2529)
-and all `str, Enum` classes are replaced by `StrEnum`.
 """
-import sys
-from enum import Enum
+from enum import StrEnum
 
 from sqlmodel import select
 
 from fractal_server.app.models.v2 import ProjectV2
 
 
-class FakeEnum(str, Enum):
+class FakeEnum(StrEnum):
     FOO = "foo"
     BAR = "bar"
 
@@ -47,15 +42,3 @@ async def test_unit_enum_in_db_queries(db):
         select(ProjectV2).where(ProjectV2.name != FakeEnum.BAR)
     )
     assert len(res.scalars().all()) == 3
-
-
-async def test_unit_enum_comparison():
-
-    assert (
-        FakeEnum.FOO == FakeEnum.FOO.value == f"{FakeEnum.FOO.value}" == "foo"
-    )
-
-    if sys.version_info.minor < 11:
-        assert f"{FakeEnum.FOO}" == "foo"
-    else:
-        assert f"{FakeEnum.FOO}" == "FakeEnum.FOO"

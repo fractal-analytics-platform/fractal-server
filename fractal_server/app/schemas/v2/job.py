@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
 
-class JobStatusTypeV2(str, Enum):
+class JobStatusTypeV2(StrEnum):
     """
     Define the available job statuses
 

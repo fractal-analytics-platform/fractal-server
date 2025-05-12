@@ -154,7 +154,7 @@ async def update_job(
     if job_update.status != JobStatusTypeV2.FAILED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Cannot set job status to {job_update.status.value}",
+            detail=f"Cannot set job status to {job_update.status}",
         )
 
     setattr(job, "status", job_update.status)
