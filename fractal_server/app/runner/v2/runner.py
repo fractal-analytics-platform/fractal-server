@@ -153,6 +153,7 @@ def execute_tasks_v2(
                 dataset_id=dataset.id,
                 workflowtask_id=wftask.id,
                 job_id=job_id,
+                task_id=wftask.task.id,
                 workflowtask_dump=workflowtask_dump,
                 task_group_dump=task_group_dump,
                 num_available_images=num_available_images,
