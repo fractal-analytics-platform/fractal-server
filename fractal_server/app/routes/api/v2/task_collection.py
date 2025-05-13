@@ -44,6 +44,7 @@ from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
 from fractal_server.tasks.v2.ssh import collect_ssh
+from fractal_server.tasks.v2.ssh._utils import SSHConfig
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.tasks.v2.utils_python_interpreter import (
@@ -341,19 +342,17 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
         # Use appropriate FractalSSH object
-        ssh_credentials = dict(
+        ssh_credentials = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
             collect_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_credentials=ssh_credentials,
             tasks_base_dir=user_settings.ssh_tasks_dir,
             wheel_file=wheel_file,
         )

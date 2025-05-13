@@ -1,10 +1,28 @@
 import os
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.v2.utils_templates import customize_template
+
+
+class SSHConfig(BaseModel):
+    host: str
+    user: str
+    key_path: str
+
+
+def get_new_fractal_ssh(
+    *,
+    ssh_credentials: SSHConfig,
+    logger_name: str,
+) -> FractalSSH:
+    fractal_ssh_list = FractalSSHList(logger_name=logger_name)
+    return fractal_ssh_list.get(**ssh_credentials.model_dump())
 
 
 def _customize_and_run_template(

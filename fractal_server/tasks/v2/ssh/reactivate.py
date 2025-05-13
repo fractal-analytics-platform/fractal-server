@@ -7,6 +7,8 @@ from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
+from ._utils import get_new_fractal_ssh
+from ._utils import SSHConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -14,7 +16,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_python_interpreter import (
@@ -28,7 +29,7 @@ def reactivate_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    fractal_ssh: FractalSSH,
+    ssh_credentials: SSHConfig,
     tasks_base_dir: str,
 ) -> None:
     """
@@ -55,6 +56,11 @@ def reactivate_ssh(
             log_file_path=log_file_path,
         )
 
+        fractal_ssh = get_new_fractal_ssh(
+            ssh_credentials=ssh_credentials,
+            logger_name=LOGGER_NAME,
+        )
+
         with next(get_sync_db()) as db:
 
             # Get main objects from db
@@ -67,6 +73,7 @@ def reactivate_ssh(
                     f"{task_group_id=} and {task_group_activity_id=}:\n"
                     f"{task_group=}\n{activity=}. Exit."
                 )
+                fractal_ssh.close()
                 return
 
             # Log some info
@@ -87,6 +94,7 @@ def reactivate_ssh(
                     exception=e,
                     db=db,
                 )
+                fractal_ssh.close()
                 return
 
             # Check that the (remote) task_group venv_path does not exist
@@ -101,6 +109,7 @@ def reactivate_ssh(
                     exception=FileExistsError(error_msg),
                     db=db,
                 )
+                fractal_ssh.close()
                 return
 
             try:
@@ -201,4 +210,6 @@ def reactivate_ssh(
                     exception=reactivate_e,
                     db=db,
                 )
+                fractal_ssh.close()
+        fractal_ssh.close()
         return

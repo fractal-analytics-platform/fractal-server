@@ -6,6 +6,8 @@ from tempfile import TemporaryDirectory
 from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
 from ..utils_database import create_db_tasks_and_update_task_group_sync
+from ._utils import get_new_fractal_ssh
+from ._utils import SSHConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -15,7 +17,6 @@ from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
@@ -35,7 +36,7 @@ def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,
-    fractal_ssh: FractalSSH,
+    ssh_credentials: SSHConfig,
     tasks_base_dir: str,
     wheel_file: WheelFile | None = None,
 ) -> None:
@@ -64,11 +65,15 @@ def collect_ssh(
 
     # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
-        LOGGER_NAME = "task_collection_ssh"
         log_file_path = Path(tmpdir) / "log"
         logger = set_logger(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
+        )
+
+        fractal_ssh = get_new_fractal_ssh(
+            ssh_credentials=ssh_credentials,
+            logger_name=LOGGER_NAME,
         )
 
         with next(get_sync_db()) as db:
@@ -82,6 +87,7 @@ def collect_ssh(
                     f"{task_group_id=} and {task_group_activity_id=}:\n"
                     f"{task_group=}\n{activity=}. Exit."
                 )
+                fractal_ssh.close()
                 return
 
             # Log some info
@@ -102,6 +108,7 @@ def collect_ssh(
                     exception=e,
                     db=db,
                 )
+                fractal_ssh.close()
                 return
 
             # Check that the (remote) task_group path does not exist
@@ -116,6 +123,7 @@ def collect_ssh(
                     exception=FileExistsError(error_msg),
                     db=db,
                 )
+                fractal_ssh.close()
                 return
 
             try:
@@ -295,6 +303,7 @@ def collect_ssh(
                 reset_logger_handlers(logger)
 
             except Exception as collection_e:
+                fractal_ssh.close()
                 # Delete corrupted package dir
                 try:
                     logger.info(f"Now delete remote folder {task_group.path}")
@@ -316,4 +325,5 @@ def collect_ssh(
                     exception=collection_e,
                     db=db,
                 )
+    fractal_ssh.close()
     return
