@@ -162,8 +162,8 @@ async def test_get_workflow_version_update_candidates_ordering():
         key=lambda _version: parse(_version),
     )
 
-    # FIXME this order differs from
-    # https://github.com/fractal-analytics-platform/fractal-web/blob/edfd62660ac20220b14d516eb3f67d826d217b45/components/__tests__/version.test.js
+    # NOTE: several versions are considered identical, e.g.
+    # "0.10.0a0", "0.10.0alpha0", "0.10.0alpha", "0.10.0a"
     expected_sorted_versions = [
         "0.1.dev27+g1458b59",
         "0.1.2",
