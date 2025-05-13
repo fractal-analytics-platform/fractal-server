@@ -31,17 +31,15 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
 router = APIRouter()
 
 
-VALID_TYPE_UPDATES = set(
-    [
-        ("non_parallel", "converter_non_parallel"),
-        ("compound", "converter_compound"),
-        ("converter_non_parallel", "converter_non_parallel"),
-        ("converter_compound", "converter_compound"),
-        ("non_parallel", "non_parallel"),
-        ("compound", "compound"),
-        ("parallel", "parallel"),
-    ]
-)
+VALID_TYPE_UPDATES = {
+    ("non_parallel", "converter_non_parallel"),
+    ("compound", "converter_compound"),
+    ("converter_non_parallel", "converter_non_parallel"),
+    ("converter_compound", "converter_compound"),
+    ("non_parallel", "non_parallel"),
+    ("compound", "compound"),
+    ("parallel", "parallel"),
+}
 
 
 def _is_type_update_valid(*, old_type: str, new_type: str) -> bool:
