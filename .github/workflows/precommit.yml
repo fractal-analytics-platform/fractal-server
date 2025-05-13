@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "2453-partly-move-task-version-update-from-fractal-web-to-fractal-server"]
 
 jobs:
   precommit:
