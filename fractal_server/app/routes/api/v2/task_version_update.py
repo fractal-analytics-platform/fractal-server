@@ -6,6 +6,7 @@ from packaging.version import parse
 from packaging.version import Version
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import cast
 from sqlmodel import or_
 from sqlmodel import select
@@ -22,7 +23,6 @@ from ._aux_functions_tasks import _get_task_group_or_404
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
@@ -181,7 +181,7 @@ async def replace_workflowtask(
 ) -> WorkflowTaskReadV2:
 
     # Get objects from database
-    old_wftask, workflow = await _get_workflow_task_check_owner(
+    workflow_task, workflow = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_id=workflow_id,
         workflow_task_id=workflow_task_id,
@@ -197,14 +197,14 @@ async def replace_workflowtask(
 
     # Preliminary checks
     if not _is_type_update_valid(
-        old_type=old_wftask.task_type,
+        old_type=workflow_task.task_type,
         new_type=new_task.type,
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Cannot change task type from "
-                f"{old_wftask.task_type} to {new_task.type}."
+                f"{workflow_task.task_type} to {new_task.type}."
             ),
         )
 
@@ -220,51 +220,47 @@ async def replace_workflowtask(
         )
     _check_type_filters_compatibility(
         task_input_types=new_task.input_types,
-        wftask_type_filters=old_wftask.type_filters,
+        wftask_type_filters=workflow_task.type_filters,
     )
 
     # Task arguments
     if replace.args_non_parallel is None:
-        _args_non_parallel = old_wftask.args_non_parallel
+        _args_non_parallel = workflow_task.args_non_parallel
     else:
         _args_non_parallel = replace.args_non_parallel
     if replace.args_parallel is None:
-        _args_parallel = old_wftask.args_parallel
+        _args_parallel = workflow_task.args_parallel
     else:
         _args_parallel = replace.args_parallel
 
-    # If user's changes to `meta_non_parallel` are compatible with new task,
-    # keep them; else, get `meta_non_parallel` from new task
-    if (
-        old_wftask.meta_non_parallel != old_wftask.task.meta_non_parallel
-    ) and (old_wftask.task.meta_non_parallel == new_task.meta_non_parallel):
-        _meta_non_parallel = old_wftask.meta_non_parallel
-    else:
-        _meta_non_parallel = new_task.meta_non_parallel
-    # Same for `meta_parallel`
-    if (old_wftask.meta_parallel != old_wftask.task.meta_parallel) and (
-        old_wftask.task.meta_parallel == new_task.meta_parallel
-    ):
-        _meta_parallel = old_wftask.meta_parallel
-    else:
-        _meta_parallel = new_task.meta_parallel
+    meta_parallel_patch = {
+        k: v
+        for k, v in workflow_task.meta_parallel.items()
+        if v != workflow_task.task.meta_parallel.get(k)
+    }
+    meta_non_parallel_patch = {
+        k: v
+        for k, v in workflow_task.meta_non_parallel.items()
+        if v != workflow_task.task.meta_non_parallel.get(k)
+    }
 
-    new_workflow_task = WorkflowTaskV2(
-        task_id=new_task.id,
-        task_type=new_task.type,
-        task=new_task,
-        # old-task values
-        type_filters=old_wftask.type_filters,
-        # possibly new values
-        args_non_parallel=_args_non_parallel,
-        args_parallel=_args_parallel,
-        meta_non_parallel=_meta_non_parallel,
-        meta_parallel=_meta_parallel,
+    workflow_task.task_id = new_task.id
+    workflow_task.task_type = new_task.type
+    workflow_task.task = new_task
+    workflow_task.args_non_parallel = _args_non_parallel
+    workflow_task.args_parallel = _args_parallel
+    workflow_task.meta_non_parallel = (
+        new_task.meta_non_parallel | meta_non_parallel_patch
     )
-
-    workflow_task_order = old_wftask.order
-    workflow.task_list.remove(old_wftask)
-    workflow.task_list.insert(workflow_task_order, new_workflow_task)
+    workflow_task.meta_parallel = new_task.meta_parallel | meta_parallel_patch
+    for modified in [
+        "args_non_parallel",
+        "args_parallel",
+        "meta_non_parallel",
+        "meta_parallel",
+    ]:
+        flag_modified(workflow_task, modified)
+    db.add(workflow_task)
     await db.commit()
-    await db.refresh(new_workflow_task)
-    return new_workflow_task
+    await db.refresh(workflow_task)
+    return workflow_task
