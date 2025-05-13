@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import AwareDatetime
 from pydantic import BaseModel
 from pydantic import field_serializer
+from pydantic import JsonValue
 
 from ....images import SingleImage
 
@@ -63,6 +64,8 @@ class HistoryRunReadAggregated(BaseModel):
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
+    args_schema_parallel: dict[str, JsonValue] | None = None
+    args_schema_non_parallel: dict[str, JsonValue] | None = None
 
     @field_serializer("timestamp_started")
     def serialize_datetime(v: datetime) -> str:
