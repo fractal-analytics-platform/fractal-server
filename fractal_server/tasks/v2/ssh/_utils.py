@@ -38,7 +38,12 @@ class SingleUseFractalSSH:
         )
         return self._fractal_ssh
 
-    def __exit__(self):
+    def __exit__(
+        self,
+        exception_type,
+        exception_value,
+        exception_traceback,
+    ):
         self._fractal_ssh.close()
 
 
