@@ -64,10 +64,7 @@ def _get_new_workflow_task_meta(
     meta_patch = {
         k: v for k, v in old_wft_meta.items() if v != old_task_meta.get(k)
     }
-    forbidden_keys = {k for k in old_task_meta if k not in old_wft_meta}
     new_wft_meta = new_task_meta | meta_patch
-    for forbidden_key in forbidden_keys:
-        new_wft_meta.pop(forbidden_key)
     return new_wft_meta
 
 
