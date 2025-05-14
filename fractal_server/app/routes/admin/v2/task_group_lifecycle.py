@@ -35,6 +35,7 @@ from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+from fractal_server.tasks.v2.ssh._utils import SSHConfig
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()
@@ -120,7 +121,7 @@ async def deactivate_task_group(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
         # User appropriate FractalSSH object
-        ssh_credentials = dict(
+        ssh_credentials = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
@@ -236,7 +237,7 @@ async def reactivate_task_group(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
         # Use appropriate FractalSSH object
-        ssh_credentials = dict(
+        ssh_credentials = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
