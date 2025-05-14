@@ -4,6 +4,7 @@ from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+from fractal_server.tasks.v2.ssh._utils import SSHConfig
 
 
 def test_unit_missing_objects(db, caplog):
@@ -41,7 +42,11 @@ def test_unit_missing_objects(db, caplog):
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                fractal_ssh=None,
+                ssh_credentials=SSHConfig(
+                    host="fake",
+                    user="fake",
+                    key_path="fake",
+                ),
                 tasks_base_dir="/invalid",
                 wheel_file=None,
             )
@@ -49,7 +54,11 @@ def test_unit_missing_objects(db, caplog):
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                fractal_ssh=None,
+                ssh_credentials=SSHConfig(
+                    host="fake",
+                    user="fake",
+                    key_path="fake",
+                ),
                 tasks_base_dir="/invalid",
             )
         assert "Cannot find database rows" in caplog.text
