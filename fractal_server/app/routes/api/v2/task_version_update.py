@@ -249,7 +249,7 @@ async def replace_workflowtask(
 
     workflow_task.task_id = new_task.id
     workflow_task.task_type = new_task.type
-    workflow_task.task = new_task
+
     workflow_task.args_non_parallel = _args_non_parallel
     workflow_task.args_parallel = _args_parallel
     workflow_task.meta_non_parallel = _get_new_workflow_task_meta(
