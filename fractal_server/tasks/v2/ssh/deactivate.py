@@ -8,7 +8,7 @@ from ..utils_background import fail_and_cleanup
 from ..utils_templates import get_collection_replacements
 from ._utils import _copy_wheel_file_ssh
 from ._utils import _customize_and_run_template
-from ._utils import get_new_fractal_ssh
+from ._utils import SingleUseFractalSSH
 from ._utils import SSHConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -55,226 +55,236 @@ def deactivate_ssh(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-
-        fractal_ssh = get_new_fractal_ssh(
+        with SingleUseFractalSSH(
             ssh_credentials=ssh_credentials,
             logger_name=LOGGER_NAME,
-        )
+        ) as fractal_ssh:
 
-        with next(get_sync_db()) as db:
+            with next(get_sync_db()) as db:
 
-            # Get main objects from db
-            activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-            task_group = db.get(TaskGroupV2, task_group_id)
-            if activity is None or task_group is None:
-                # Use `logging` directly
-                logging.error(
-                    "Cannot find database rows with "
-                    f"{task_group_id=} and {task_group_activity_id=}:\n"
-                    f"{task_group=}\n{activity=}. Exit."
-                )
-                fractal_ssh.close()
-                return
-
-            # Log some info
-            logger.debug("START")
-            for key, value in task_group.model_dump().items():
-                logger.debug(f"task_group.{key}: {value}")
-
-            # Check that SSH connection works
-            try:
-                fractal_ssh.check_connection()
-            except Exception as e:
-                logger.error("Cannot establish SSH connection.")
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=e,
-                    db=db,
-                )
-                fractal_ssh.close()
-                return
-
-            # Check that the (local) task_group venv_path does exist
-            if not fractal_ssh.remote_exists(task_group.venv_path):
-                error_msg = f"{task_group.venv_path} does not exist."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
-                    db=db,
-                )
-                fractal_ssh.close()
-                return
-
-            try:
-
-                activity.status = TaskGroupActivityStatusV2.ONGOING
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                if task_group.pip_freeze is None:
-                    logger.warning(
-                        "Recreate pip-freeze information, since "
-                        f"{task_group.pip_freeze=}. NOTE: this should only "
-                        "happen for task groups created before 2.9.0."
+                # Get main objects from db
+                activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+                task_group = db.get(TaskGroupV2, task_group_id)
+                if activity is None or task_group is None:
+                    # Use `logging` directly
+                    logging.error(
+                        "Cannot find database rows with "
+                        f"{task_group_id=} and {task_group_activity_id=}:\n"
+                        f"{task_group=}\n{activity=}. Exit."
                     )
+                    return
 
-                    # Prepare replacements for templates
-                    replacements = get_collection_replacements(
+                # Log some info
+                logger.debug("START")
+                for key, value in task_group.model_dump().items():
+                    logger.debug(f"task_group.{key}: {value}")
+
+                # Check that SSH connection works
+                try:
+                    fractal_ssh.check_connection()
+                except Exception as e:
+                    logger.error("Cannot establish SSH connection.")
+                    fail_and_cleanup(
                         task_group=task_group,
-                        python_bin="/not/applicable",
-                    )
-
-                    # Define script_dir_remote and create it if missing
-                    script_dir_remote = (
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
-                    ).as_posix()
-                    fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
-
-                    # Prepare arguments for `_customize_and_run_template`
-                    common_args = dict(
-                        replacements=replacements,
-                        script_dir_local=(
-                            Path(tmpdir) / SCRIPTS_SUBFOLDER
-                        ).as_posix(),
-                        script_dir_remote=script_dir_remote,
-                        prefix=(
-                            f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.DEACTIVATE}"
-                        ),
-                        fractal_ssh=fractal_ssh,
+                        task_group_activity=activity,
                         logger_name=LOGGER_NAME,
+                        log_file_path=log_file_path,
+                        exception=e,
+                        db=db,
                     )
+                    return
 
-                    # Run `pip freeze`
-                    pip_freeze_stdout = _customize_and_run_template(
-                        template_filename="3_pip_freeze.sh",
-                        **common_args,
+                # Check that the (local) task_group venv_path does exist
+                if not fractal_ssh.remote_exists(task_group.venv_path):
+                    error_msg = f"{task_group.venv_path} does not exist."
+                    logger.error(error_msg)
+                    fail_and_cleanup(
+                        task_group=task_group,
+                        task_group_activity=activity,
+                        logger_name=LOGGER_NAME,
+                        log_file_path=log_file_path,
+                        exception=FileNotFoundError(error_msg),
+                        db=db,
                     )
+                    return
 
-                    # Update pip-freeze data
-                    logger.info("Add pip freeze stdout to TaskGroupV2 - start")
-                    activity.log = get_current_log(log_file_path)
+                try:
+
+                    activity.status = TaskGroupActivityStatusV2.ONGOING
                     activity = add_commit_refresh(obj=activity, db=db)
-                    task_group.pip_freeze = pip_freeze_stdout
-                    task_group = add_commit_refresh(obj=task_group, db=db)
-                    logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
-                # Handle some specific cases for wheel-file case
-                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
-
-                    logger.info(
-                        f"Handle specific cases for {task_group.origin=}."
-                    )
-
-                    # Blocking situation: `wheel_path` is not set or points
-                    # to a missing path
-                    if (
-                        task_group.wheel_path is None
-                        or not fractal_ssh.remote_exists(task_group.wheel_path)
-                    ):
-                        error_msg = (
-                            "Invalid wheel path for task group with "
-                            f"{task_group_id=}. {task_group.wheel_path=} is "
-                            "unset or does not exist."
-                        )
-                        logger.error(error_msg)
-                        fail_and_cleanup(
-                            task_group=task_group,
-                            task_group_activity=activity,
-                            logger_name=LOGGER_NAME,
-                            log_file_path=log_file_path,
-                            exception=FileNotFoundError(error_msg),
-                            db=db,
-                        )
-                        fractal_ssh.close()
-                        return
-
-                    # Recoverable situation: `wheel_path` was not yet copied
-                    # over to the correct server-side folder
-                    wheel_path_parent_dir = Path(task_group.wheel_path).parent
-                    if wheel_path_parent_dir != Path(task_group.path):
+                    if task_group.pip_freeze is None:
                         logger.warning(
-                            f"{wheel_path_parent_dir.as_posix()} differs from "
-                            f"{task_group.path}. NOTE: this should only "
-                            "happen for task groups created before 2.9.0."
+                            "Recreate pip-freeze information, since "
+                            f"{task_group.pip_freeze=}. NOTE: this should "
+                            "only happen for task groups created before 2.9.0."
                         )
 
-                        if task_group.wheel_path not in task_group.pip_freeze:
-                            fractal_ssh.close()
-                            raise ValueError(
-                                f"Cannot find {task_group.wheel_path=} in "
-                                "pip-freeze data. Exit."
-                            )
-
-                        logger.info(
-                            f"Now copy wheel file into {task_group.path}."
-                        )
-                        new_wheel_path = _copy_wheel_file_ssh(
+                        # Prepare replacements for templates
+                        replacements = get_collection_replacements(
                             task_group=task_group,
+                            python_bin="/not/applicable",
+                        )
+
+                        # Define script_dir_remote and create it if missing
+                        script_dir_remote = (
+                            Path(task_group.path) / SCRIPTS_SUBFOLDER
+                        ).as_posix()
+                        fractal_ssh.mkdir(
+                            folder=script_dir_remote, parents=True
+                        )
+
+                        # Prepare arguments for `_customize_and_run_template`
+                        common_args = dict(
+                            replacements=replacements,
+                            script_dir_local=(
+                                Path(tmpdir) / SCRIPTS_SUBFOLDER
+                            ).as_posix(),
+                            script_dir_remote=script_dir_remote,
+                            prefix=(
+                                f"{int(time.time())}_"
+                                f"{TaskGroupActivityActionV2.DEACTIVATE}"
+                            ),
                             fractal_ssh=fractal_ssh,
                             logger_name=LOGGER_NAME,
                         )
-                        logger.info(f"Copied wheel file to {new_wheel_path}.")
 
-                        task_group.wheel_path = new_wheel_path
-                        new_pip_freeze = task_group.pip_freeze.replace(
-                            task_group.wheel_path,
-                            new_wheel_path,
+                        # Run `pip freeze`
+                        pip_freeze_stdout = _customize_and_run_template(
+                            template_filename="3_pip_freeze.sh",
+                            **common_args,
                         )
-                        task_group.pip_freeze = new_pip_freeze
+
+                        # Update pip-freeze data
+                        logger.info(
+                            "Add pip freeze stdout to TaskGroupV2 - start"
+                        )
+                        activity.log = get_current_log(log_file_path)
+                        activity = add_commit_refresh(obj=activity, db=db)
+                        task_group.pip_freeze = pip_freeze_stdout
                         task_group = add_commit_refresh(obj=task_group, db=db)
                         logger.info(
-                            "Updated `wheel_path` and `pip_freeze` "
-                            "task-group attributes."
+                            "Add pip freeze stdout to TaskGroupV2 - end"
                         )
 
-                # Fail if `pip_freeze` includes "github", see
-                # https://github.com/fractal-analytics-platform/fractal-server/issues/2142
-                for forbidden_string in FORBIDDEN_DEPENDENCY_STRINGS:
-                    if forbidden_string in task_group.pip_freeze:
-                        raise ValueError(
-                            "Deactivation and reactivation of task packages "
-                            f"with direct {forbidden_string} dependencies "
-                            "are not currently supported. Exit."
+                    # Handle some specific cases for wheel-file case
+                    if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
+
+                        logger.info(
+                            f"Handle specific cases for {task_group.origin=}."
                         )
 
-                # We now have all required information for reactivating the
-                # virtual environment at a later point
+                        # Blocking situation: `wheel_path` is not set or points
+                        # to a missing path
+                        if (
+                            task_group.wheel_path is None
+                            or not fractal_ssh.remote_exists(
+                                task_group.wheel_path
+                            )
+                        ):
+                            error_msg = (
+                                "Invalid wheel path for task group with "
+                                f"{task_group_id=}. {task_group.wheel_path=} "
+                                "is unset or does not exist."
+                            )
+                            logger.error(error_msg)
+                            fail_and_cleanup(
+                                task_group=task_group,
+                                task_group_activity=activity,
+                                logger_name=LOGGER_NAME,
+                                log_file_path=log_file_path,
+                                exception=FileNotFoundError(error_msg),
+                                db=db,
+                            )
+                            return
 
-                # Actually mark the task group as non-active
-                logger.info("Now setting `active=False`.")
-                task_group.active = False
-                task_group = add_commit_refresh(obj=task_group, db=db)
+                        # Recoverable situation: `wheel_path` was not yet
+                        # copied over to the correct server-side folder
+                        wheel_path_parent_dir = Path(
+                            task_group.wheel_path
+                        ).parent
+                        if wheel_path_parent_dir != Path(task_group.path):
+                            logger.warning(
+                                f"{wheel_path_parent_dir.as_posix()} differs "
+                                f"from {task_group.path}. NOTE: this should "
+                                "only happen for task groups created before "
+                                "2.9.0."
+                            )
 
-                # Proceed with deactivation
-                logger.info(f"Now removing {task_group.venv_path}.")
-                fractal_ssh.remove_folder(
-                    folder=task_group.venv_path,
-                    safe_root=tasks_base_dir,
-                )
-                logger.info(f"All good, {task_group.venv_path} removed.")
-                activity.status = TaskGroupActivityStatusV2.OK
-                activity.log = get_current_log(log_file_path)
-                activity.timestamp_ended = get_timestamp()
-                activity = add_commit_refresh(obj=activity, db=db)
+                            if (
+                                task_group.wheel_path
+                                not in task_group.pip_freeze
+                            ):
+                                raise ValueError(
+                                    f"Cannot find {task_group.wheel_path=} in "
+                                    "pip-freeze data. Exit."
+                                )
 
-                reset_logger_handlers(logger)
+                            logger.info(
+                                f"Now copy wheel file into {task_group.path}."
+                            )
+                            new_wheel_path = _copy_wheel_file_ssh(
+                                task_group=task_group,
+                                fractal_ssh=fractal_ssh,
+                                logger_name=LOGGER_NAME,
+                            )
+                            logger.info(
+                                f"Copied wheel file to {new_wheel_path}."
+                            )
 
-            except Exception as e:
-                fractal_ssh.close()
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=e,
-                    db=db,
-                )
-        fractal_ssh.close()
-        return
+                            task_group.wheel_path = new_wheel_path
+                            new_pip_freeze = task_group.pip_freeze.replace(
+                                task_group.wheel_path,
+                                new_wheel_path,
+                            )
+                            task_group.pip_freeze = new_pip_freeze
+                            task_group = add_commit_refresh(
+                                obj=task_group, db=db
+                            )
+                            logger.info(
+                                "Updated `wheel_path` and `pip_freeze` "
+                                "task-group attributes."
+                            )
+
+                    # Fail if `pip_freeze` includes "github", see
+                    # https://github.com/fractal-analytics-platform/fractal-server/issues/2142
+                    for forbidden_string in FORBIDDEN_DEPENDENCY_STRINGS:
+                        if forbidden_string in task_group.pip_freeze:
+                            raise ValueError(
+                                "Deactivation and reactivation of task "
+                                f"packages with direct {forbidden_string} "
+                                "dependencies are not currently supported. "
+                                "Exit."
+                            )
+
+                    # We now have all required information for reactivating the
+                    # virtual environment at a later point
+
+                    # Actually mark the task group as non-active
+                    logger.info("Now setting `active=False`.")
+                    task_group.active = False
+                    task_group = add_commit_refresh(obj=task_group, db=db)
+
+                    # Proceed with deactivation
+                    logger.info(f"Now removing {task_group.venv_path}.")
+                    fractal_ssh.remove_folder(
+                        folder=task_group.venv_path,
+                        safe_root=tasks_base_dir,
+                    )
+                    logger.info(f"All good, {task_group.venv_path} removed.")
+                    activity.status = TaskGroupActivityStatusV2.OK
+                    activity.log = get_current_log(log_file_path)
+                    activity.timestamp_ended = get_timestamp()
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    reset_logger_handlers(logger)
+
+                except Exception as e:
+                    fail_and_cleanup(
+                        task_group=task_group,
+                        task_group_activity=activity,
+                        logger_name=LOGGER_NAME,
+                        log_file_path=log_file_path,
+                        exception=e,
+                        db=db,
+                    )

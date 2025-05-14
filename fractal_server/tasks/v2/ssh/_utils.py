@@ -16,13 +16,30 @@ class SSHConfig(BaseModel):
     key_path: str
 
 
-def get_new_fractal_ssh(
-    *,
-    ssh_credentials: SSHConfig,
-    logger_name: str,
-) -> FractalSSH:
-    fractal_ssh_list = FractalSSHList(logger_name=logger_name)
-    return fractal_ssh_list.get(**ssh_credentials.model_dump())
+class SingleUseFractalSSH:
+    _fractal_ssh: FractalSSH
+    _fractal_ssh_list: FractalSSHList
+    _ssh_credentials: SSHConfig
+    _logger_name: str
+
+    def __init__(
+        self,
+        *,
+        ssh_credentials: SSHConfig,
+        logger_name: str,
+    ):
+        self._logger_name = logger_name
+        self._ssh_credentials = ssh_credentials
+        self._fractal_ssh_list = FractalSSHList(logger_name=logger_name)
+
+    def __enter__(self):
+        self._fractal_ssh = self._fractal_ssh_list.get(
+            **self._ssh_credentials.model_dump()
+        )
+        return self._fractal_ssh
+
+    def __exit__(self):
+        self._fractal_ssh.close()
 
 
 def _customize_and_run_template(
