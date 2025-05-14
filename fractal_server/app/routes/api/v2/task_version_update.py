@@ -55,13 +55,22 @@ def _is_version_parsable(version: str) -> bool:
 
 
 def _get_new_workflow_task_meta(
-    *, old_task_meta, old_workflow_task_meta, new_task_meta
+    *,
+    old_task_meta: dict,
+    old_workflow_task_meta: dict | None,
+    new_task_meta: dict,
 ) -> dict:
-    wft_meta = old_workflow_task_meta or {}
+    old_wft_meta = old_workflow_task_meta or {}
     meta_patch = {
-        k: v for k, v in wft_meta.items() if v != old_task_meta.get(k)
+        k: v for k, v in old_wft_meta.items() if v != old_task_meta.get(k)
     }
-    return new_task_meta | meta_patch
+    forbidden_keys = {
+        k for k in old_task_meta if k not in old_workflow_task_meta
+    }
+    new_wft_meta = {new_task_meta | meta_patch}
+    for forbidden_key in forbidden_keys:
+        new_wft_meta.pop(forbidden_key)
+    return new_wft_meta
 
 
 class TaskVersion(BaseModel):
