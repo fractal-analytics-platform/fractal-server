@@ -374,6 +374,8 @@ async def test_get_history_run_list(
                 "num_failed_units": 12,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
+                "args_schema_non_parallel": None,
+                "args_schema_parallel": None,
             },
             {
                 "id": hr2.id,
@@ -382,6 +384,8 @@ async def test_get_history_run_list(
                 "num_failed_units": 22,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
+                "args_schema_non_parallel": None,
+                "args_schema_parallel": None,
             },
             {
                 "id": hr3.id,
@@ -390,6 +394,8 @@ async def test_get_history_run_list(
                 "num_failed_units": 0,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
+                "args_schema_non_parallel": None,
+                "args_schema_parallel": None,
             },
         ]
 
