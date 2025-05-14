@@ -233,14 +233,16 @@ async def replace_workflowtask(
     else:
         _args_parallel = replace.args_parallel
 
+    wft_meta_parallel = workflow_task.meta_parallel or {}
+    wft_meta_non_parallel = workflow_task.meta_non_parallel or {}
     meta_parallel_patch = {
         k: v
-        for k, v in workflow_task.meta_parallel.items()
+        for k, v in wft_meta_parallel.items()
         if v != workflow_task.task.meta_parallel.get(k)
     }
     meta_non_parallel_patch = {
         k: v
-        for k, v in workflow_task.meta_non_parallel.items()
+        for k, v in wft_meta_non_parallel.items()
         if v != workflow_task.task.meta_non_parallel.get(k)
     }
 
