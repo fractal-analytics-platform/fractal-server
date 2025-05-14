@@ -203,6 +203,7 @@ async def get_history_run_list(
     res = await db.execute(
         select(
             TaskV2.id,
+            TaskV2.version,
             TaskV2.args_schema_parallel,
             TaskV2.args_schema_non_parallel,
         ).where(
@@ -213,8 +214,12 @@ async def get_history_run_list(
     )
 
     task_args = {
-        _id: {"args_schema_parallel": p, "args_schema_non_parallel": np}
-        for _id, p, np in res.all()
+        _id: {
+            "version": version,
+            "args_schema_parallel": parallel,
+            "args_schema_non_parallel": non_parallel,
+        }
+        for _id, version, parallel, non_parallel in res.all()
     }
 
     runs = [

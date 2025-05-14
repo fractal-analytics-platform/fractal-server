@@ -65,6 +65,7 @@ class HistoryRunReadAggregated(BaseModel):
     num_failed_units: int
     args_schema_parallel: DictStrAny | None = None
     args_schema_non_parallel: DictStrAny | None = None
+    version: str | None = None
 
     @field_serializer("timestamp_started")
     def serialize_datetime(v: datetime) -> str:
