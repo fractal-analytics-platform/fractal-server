@@ -125,14 +125,12 @@ async def deactivate_task_group(
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
             deactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_credentials=ssh_credentials,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
     else:
@@ -243,14 +241,12 @@ async def reactivate_task_group(
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
             reactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_credentials=ssh_credentials,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
     else:
