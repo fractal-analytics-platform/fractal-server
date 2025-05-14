@@ -3,11 +3,10 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ....ssh._fabric import SingleUseFractalSSH
 from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
 from ..utils_database import create_db_tasks_and_update_task_group_sync
-from ._utils import SingleUseFractalSSH
-from ._utils import SSHConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -17,6 +16,7 @@ from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log

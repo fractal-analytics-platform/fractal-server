@@ -44,7 +44,7 @@ from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
 from fractal_server.tasks.v2.ssh import collect_ssh
-from fractal_server.tasks.v2.ssh._utils import SSHConfig
+from fractal_server.tasks.v2.ssh.SSHConfig import SSHConfig
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.tasks.v2.utils_python_interpreter import (

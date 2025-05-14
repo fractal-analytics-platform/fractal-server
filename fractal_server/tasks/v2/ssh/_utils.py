@@ -1,72 +1,10 @@
 import os
-from collections.abc import Generator
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
-
-from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.v2.utils_templates import customize_template
-
-
-class SSHConfig(BaseModel):
-    host: str
-    user: str
-    key_path: str
-
-
-@contextmanager
-def SingleUseFractalSSH(
-    *,
-    ssh_credentials: SSHConfig,
-    logger_name: str,
-) -> Generator[FractalSSH, Any, None]:
-    """
-    Get a new FractalSSH object (with a fresh connection).
-
-    Args:
-        ssh_credentials:
-        logger_name:
-    """
-    _fractal_ssh_list = FractalSSHList(logger_name=logger_name)
-    _fractal_ssh = _fractal_ssh_list.get(**ssh_credentials.model_dump())
-    yield _fractal_ssh
-    _fractal_ssh.close()
-
-
-class XSingleUseFractalSSH:
-    _fractal_ssh: FractalSSH
-    _fractal_ssh_list: FractalSSHList
-    _ssh_credentials: SSHConfig
-    _logger_name: str
-
-    def __init__(
-        self,
-        *,
-        ssh_credentials: SSHConfig,
-        logger_name: str,
-    ):
-        self._logger_name = logger_name
-        self._ssh_credentials = ssh_credentials
-        self._fractal_ssh_list = FractalSSHList(logger_name=logger_name)
-
-    def __enter__(self):
-        self._fractal_ssh = self._fractal_ssh_list.get(
-            **self._ssh_credentials.model_dump()
-        )
-        return self._fractal_ssh
-
-    def __exit__(
-        self,
-        exception_type,
-        exception_value,
-        exception_traceback,
-    ):
-        self._fractal_ssh.close()
 
 
 def _customize_and_run_template(

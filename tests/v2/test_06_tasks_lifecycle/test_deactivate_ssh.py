@@ -9,6 +9,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 
@@ -18,7 +19,7 @@ async def test_deactivate_fail_no_venv_path(
     tmp777_path,
     db,
     first_user,
-    fractal_ssh,
+    ssh_credentials_dict,
 ):
     path = tmp777_path / "something"
     task_group = TaskGroupV2(
@@ -49,7 +50,7 @@ async def test_deactivate_fail_no_venv_path(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        fractal_ssh=fractal_ssh,
+        ssh_credentials=SSHConfig(**ssh_credentials_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
 
@@ -64,11 +65,7 @@ async def test_deactivate_fail_no_venv_path(
 
 @pytest.mark.container
 async def test_deactivate_ssh_fail(
-    tmp777_path,
-    db,
-    first_user,
-    monkeypatch,
-    fractal_ssh,
+    tmp777_path, db, first_user, monkeypatch, fractal_ssh, ssh_credentials_dict
 ):
     FAKE_ERROR_MSG = "this is some fake error message"
 
@@ -116,7 +113,7 @@ async def test_deactivate_ssh_fail(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        fractal_ssh=fractal_ssh,
+        ssh_credentials=SSHConfig(**ssh_credentials_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
 
@@ -132,6 +129,7 @@ async def test_deactivate_wheel_no_wheel_path(
     db,
     first_user,
     fractal_ssh,
+    ssh_credentials_dict,
 ):
     # Prepare db objects
     path = tmp777_path / "something"
@@ -169,7 +167,7 @@ async def test_deactivate_wheel_no_wheel_path(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        fractal_ssh=fractal_ssh,
+        ssh_credentials=SSHConfig(**ssh_credentials_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
     # Verify that deactivate failed
@@ -189,6 +187,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     current_py_version,
     testdata_path,
     fractal_ssh,
+    ssh_credentials_dict,
     tmp777_path,
     override_settings_factory,
 ):
@@ -243,7 +242,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     collect_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=activity_collect.id,
-        fractal_ssh=fractal_ssh,
+        ssh_credentials=SSHConfig(**ssh_credentials_dict),
         tasks_base_dir=tmp777_path.as_posix(),
         wheel_file=WheelFile(
             contents=wheel_buffer,
@@ -285,7 +284,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=activity_deactivate.id,
-        fractal_ssh=fractal_ssh,
+        ssh_credentials=SSHConfig(**ssh_credentials_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
 
@@ -305,6 +304,7 @@ async def test_deactivate_ssh_github_dependency(
     db,
     first_user,
     fractal_ssh,
+    ssh_credentials_dict,
 ):
 
     path = tmp777_path / "something"
@@ -347,7 +347,7 @@ async def test_deactivate_ssh_github_dependency(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        fractal_ssh=fractal_ssh,
+        ssh_credentials=SSHConfig(**ssh_credentials_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
 

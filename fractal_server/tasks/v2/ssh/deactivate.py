@@ -8,8 +8,6 @@ from ..utils_background import fail_and_cleanup
 from ..utils_templates import get_collection_replacements
 from ._utils import _copy_wheel_file_ssh
 from ._utils import _customize_and_run_template
-from ._utils import SingleUseFractalSSH
-from ._utils import SSHConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -18,6 +16,8 @@ from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import SingleUseFractalSSH
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.utils import FORBIDDEN_DEPENDENCY_STRINGS
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log

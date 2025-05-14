@@ -12,6 +12,7 @@ import paramiko.sftp_client
 from fabric import Connection
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
+from pydantic import BaseModel
 
 from ..logger import get_logger
 from ..logger import set_logger
@@ -32,6 +33,12 @@ class FractalSSHCommandError(RuntimeError):
 
 class FractalSSHUnknownError(RuntimeError):
     pass
+
+
+class SSHConfig(BaseModel):
+    host: str
+    user: str
+    key_path: str
 
 
 logger = set_logger(__name__)
@@ -713,3 +720,22 @@ class FractalSSHList:
                 f"({fractal_ssh_obj.is_connected=})."
             )
             fractal_ssh_obj.close()
+
+
+@contextmanager
+def SingleUseFractalSSH(
+    *,
+    ssh_credentials: SSHConfig,
+    logger_name: str,
+) -> Generator[FractalSSH, Any, None]:
+    """
+    Get a new FractalSSH object (with a fresh connection).
+
+    Args:
+        ssh_credentials:
+        logger_name:
+    """
+    _fractal_ssh_list = FractalSSHList(logger_name=logger_name)
+    _fractal_ssh = _fractal_ssh_list.get(**ssh_credentials.model_dump())
+    yield _fractal_ssh
+    _fractal_ssh.close()

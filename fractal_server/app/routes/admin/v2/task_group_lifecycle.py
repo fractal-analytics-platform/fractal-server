@@ -35,7 +35,7 @@ from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
-from fractal_server.tasks.v2.ssh._utils import SSHConfig
+from fractal_server.tasks.v2.ssh.SSHConfig import SSHConfig
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()
