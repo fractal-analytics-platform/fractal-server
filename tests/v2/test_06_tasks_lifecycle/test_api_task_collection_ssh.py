@@ -263,7 +263,7 @@ async def test_task_collection_ssh_failure(
         user_settings_dict=user_settings_dict,
     ):
         # Patch ssh.remove_folder
-        import fractal_server.tasks.v2.ssh.collect
+        import fractal_server.tasks.v2.ssh._utils
 
         ERROR_MSG_1 = "Failed to send file!"
         ERROR_MSG_2 = "Could not remove folder!"
@@ -275,12 +275,12 @@ async def test_task_collection_ssh_failure(
             raise RuntimeError(ERROR_MSG_2)
 
         monkeypatch.setattr(
-            fractal_server.tasks.v2.ssh.collect.FractalSSH,
+            fractal_server.tasks.v2.ssh._utils.FractalSSH,
             "remove_folder",
             patched_remove_folder,
         )
         monkeypatch.setattr(
-            fractal_server.tasks.v2.ssh.collect.FractalSSH,
+            fractal_server.tasks.v2.ssh._utils.FractalSSH,
             "send_file",
             patched_send_file,
         )
