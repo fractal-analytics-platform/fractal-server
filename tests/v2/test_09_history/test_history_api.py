@@ -376,6 +376,7 @@ async def test_get_history_run_list(
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": None,
+                "version": None,
             },
             {
                 "id": hr2.id,
@@ -386,6 +387,7 @@ async def test_get_history_run_list(
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": None,
+                "version": None,
             },
             {
                 "id": hr3.id,
@@ -396,6 +398,7 @@ async def test_get_history_run_list(
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": None,
+                "version": None,
             },
         ]
 
