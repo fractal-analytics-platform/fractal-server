@@ -6,7 +6,6 @@ from packaging.version import parse
 from packaging.version import Version
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import cast
 from sqlmodel import or_
 from sqlmodel import select
@@ -263,13 +262,6 @@ async def replace_workflowtask(
         new_task_meta=new_task.meta_parallel,
     )
 
-    for modified in [
-        "args_non_parallel",
-        "args_parallel",
-        "meta_non_parallel",
-        "meta_parallel",
-    ]:
-        flag_modified(workflow_task, modified)
     db.add(workflow_task)
     await db.commit()
     await db.refresh(workflow_task)
