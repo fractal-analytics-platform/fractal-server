@@ -2,9 +2,13 @@
 
 # 2.14.6
 
-* Inherit from `StrEnum` rather than `str, Enum` (\#2561).
-* Run `pyupgrade` on codebase (\#2563).
-* Deprecate Python 3.10 (\#2561).
+* API:
+    * Introduce `api/v2/project/{project.id}/workflow/{workflow.id}/version-update-candidates/` endpoint (\#2556).
+* Internal:
+    * Inherit from `StrEnum` rather than `str, Enum` (\#2561).
+    * Run `pyupgrade` on codebase (\#2563).
+* Dependencies:
+    * Deprecate Python 3.10 (\#2561).
 
 # 2.14.5
 
