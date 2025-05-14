@@ -1,5 +1,8 @@
 import os
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -16,7 +19,26 @@ class SSHConfig(BaseModel):
     key_path: str
 
 
-class SingleUseFractalSSH:
+@contextmanager
+def SingleUseFractalSSH(
+    *,
+    ssh_credentials: SSHConfig,
+    logger_name: str,
+) -> Generator[FractalSSH, Any, None]:
+    """
+    Get a new FractalSSH object (with a fresh connection).
+
+    Args:
+        ssh_credentials:
+        logger_name:
+    """
+    _fractal_ssh_list = FractalSSHList(logger_name=logger_name)
+    _fractal_ssh = _fractal_ssh_list.get(**ssh_credentials.model_dump())
+    yield _fractal_ssh
+    _fractal_ssh.close()
+
+
+class XSingleUseFractalSSH:
     _fractal_ssh: FractalSSH
     _fractal_ssh_list: FractalSSHList
     _ssh_credentials: SSHConfig
