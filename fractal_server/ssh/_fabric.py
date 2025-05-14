@@ -725,17 +725,17 @@ class FractalSSHList:
 @contextmanager
 def SingleUseFractalSSH(
     *,
-    ssh_credentials: SSHConfig,
+    ssh_config: SSHConfig,
     logger_name: str,
 ) -> Generator[FractalSSH, Any, None]:
     """
     Get a new FractalSSH object (with a fresh connection).
 
     Args:
-        ssh_credentials:
+        ssh_config:
         logger_name:
     """
     _fractal_ssh_list = FractalSSHList(logger_name=logger_name)
-    _fractal_ssh = _fractal_ssh_list.get(**ssh_credentials.model_dump())
+    _fractal_ssh = _fractal_ssh_list.get(**ssh_config.model_dump())
     yield _fractal_ssh
     _fractal_ssh.close()

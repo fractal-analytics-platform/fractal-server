@@ -19,7 +19,7 @@ async def test_reactivate_ssh_venv_exists(
     first_user,
     ssh_alive,
     fractal_ssh: FractalSSH,
-    ssh_credentials_dict: dict,
+    ssh_config_dict: dict,
 ):
     path = tmp777_path / "package"
     task_group = TaskGroupV2(
@@ -53,7 +53,7 @@ async def test_reactivate_ssh_venv_exists(
     reactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_credentials=SSHConfig(**ssh_credentials_dict),
+        ssh_config=SSHConfig(**ssh_config_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
 
@@ -75,7 +75,7 @@ async def test_reactivate_ssh_fail(
     monkeypatch,
     make_rmtree_fail: bool,
     fractal_ssh: FractalSSH,
-    ssh_credentials_dict: dict,
+    ssh_config_dict: dict,
     override_settings_factory,
     current_py_version,
 ):
@@ -142,7 +142,7 @@ async def test_reactivate_ssh_fail(
         reactivate_ssh(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_credentials=SSHConfig(**ssh_credentials_dict),
+            ssh_config=SSHConfig(**ssh_config_dict),
             tasks_base_dir=tmp777_path.as_posix(),
         )
     except RuntimeError as e:

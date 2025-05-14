@@ -29,7 +29,7 @@ def reactivate_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    ssh_credentials: SSHConfig,
+    ssh_config: SSHConfig,
     tasks_base_dir: str,
 ) -> None:
     """
@@ -41,7 +41,7 @@ def reactivate_ssh(
     Arguments:
         task_group_id:
         task_group_activity_id:
-        fractal_ssh:
+        ssh_config:
         tasks_base_dir:
             Only used as a `safe_root` in `remove_dir`, and typically set to
             `user_settings.ssh_tasks_dir`.
@@ -57,7 +57,7 @@ def reactivate_ssh(
         )
 
         with SingleUseFractalSSH(
-            ssh_credentials=ssh_credentials,
+            ssh_config=ssh_config,
             logger_name=LOGGER_NAME,
         ) as fractal_ssh:
 

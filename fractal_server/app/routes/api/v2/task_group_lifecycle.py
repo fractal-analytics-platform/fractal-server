@@ -120,7 +120,7 @@ async def deactivate_task_group(
         )
 
         # User appropriate FractalSSH object
-        ssh_credentials = SSHConfig(
+        ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
@@ -130,7 +130,7 @@ async def deactivate_task_group(
             deactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_credentials=ssh_credentials,
+            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
 
@@ -241,7 +241,7 @@ async def reactivate_task_group(
         )
 
         # Use appropriate SSH credentials
-        ssh_credentials = SSHConfig(
+        ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
@@ -251,7 +251,7 @@ async def reactivate_task_group(
             reactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_credentials=ssh_credentials,
+            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
 

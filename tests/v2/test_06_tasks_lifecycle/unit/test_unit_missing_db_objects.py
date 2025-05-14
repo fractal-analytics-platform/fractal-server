@@ -42,7 +42,7 @@ def test_unit_missing_objects(db, caplog):
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                ssh_credentials=SSHConfig(
+                ssh_config=SSHConfig(
                     host="fake",
                     user="fake",
                     key_path="fake",
@@ -54,7 +54,7 @@ def test_unit_missing_objects(db, caplog):
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                ssh_credentials=SSHConfig(
+                ssh_config=SSHConfig(
                     host="fake",
                     user="fake",
                     key_path="fake",
