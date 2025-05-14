@@ -54,6 +54,16 @@ def _is_version_parsable(version: str) -> bool:
         return False
 
 
+def _get_new_workflow_task_meta(
+    *, old_task_meta, old_workflow_task_meta, new_task_meta
+) -> dict:
+    wft_meta = old_workflow_task_meta or {}
+    meta_patch = {
+        k: v for k, v in wft_meta.items() if v != old_task_meta.get(k)
+    }
+    return new_task_meta | meta_patch
+
+
 class TaskVersion(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -233,28 +243,22 @@ async def replace_workflowtask(
     else:
         _args_parallel = replace.args_parallel
 
-    wft_meta_parallel = workflow_task.meta_parallel or {}
-    wft_meta_non_parallel = workflow_task.meta_non_parallel or {}
-    meta_parallel_patch = {
-        k: v
-        for k, v in wft_meta_parallel.items()
-        if v != workflow_task.task.meta_parallel.get(k)
-    }
-    meta_non_parallel_patch = {
-        k: v
-        for k, v in wft_meta_non_parallel.items()
-        if v != workflow_task.task.meta_non_parallel.get(k)
-    }
-
     workflow_task.task_id = new_task.id
     workflow_task.task_type = new_task.type
     workflow_task.task = new_task
     workflow_task.args_non_parallel = _args_non_parallel
     workflow_task.args_parallel = _args_parallel
-    workflow_task.meta_non_parallel = (
-        new_task.meta_non_parallel | meta_non_parallel_patch
+    workflow_task.meta_non_parallel = _get_new_workflow_task_meta(
+        old_task_meta=workflow_task.task.meta_non_parallel,
+        old_workflow_task_meta=workflow_task.meta_non_parallel,
+        new_task_meta=new_task.meta_non_parallel,
     )
-    workflow_task.meta_parallel = new_task.meta_parallel | meta_parallel_patch
+    workflow_task.meta_parallel = _get_new_workflow_task_meta(
+        old_task_meta=workflow_task.task.meta_parallel,
+        old_workflow_task_meta=workflow_task.meta_parallel,
+        new_task_meta=new_task.meta_parallel,
+    )
+
     for modified in [
         "args_non_parallel",
         "args_parallel",
