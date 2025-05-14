@@ -249,16 +249,25 @@ def fractal_ssh_list(
 
 
 @pytest.fixture
-def fractal_ssh(
-    fractal_ssh_list,
-    slurmlogin_ip,
-    ssh_keys,
-) -> Generator[FractalSSH, Any, None]:
-    fractal_ssh_obj: FractalSSH = fractal_ssh_list.get(
+def ssh_credentials_dict(
+    slurmlogin_ip: str,
+    ssh_keys: dict[str, str],
+) -> dict[str, str | dict[str, str]]:
+    return dict(
         host=slurmlogin_ip,
         user="fractal",
         key_path=ssh_keys["private"],
     )
+
+
+@pytest.fixture
+def fractal_ssh(
+    fractal_ssh_list,
+    slurmlogin_ip,
+    ssh_keys,
+    ssh_credentials_dict,
+) -> Generator[FractalSSH, Any, None]:
+    fractal_ssh_obj: FractalSSH = fractal_ssh_list.get(**ssh_credentials_dict)
     yield fractal_ssh_obj
 
     fractal_ssh_obj.close()
