@@ -211,9 +211,10 @@ async def get_history_run_list(
             )
         )
     )
+
     task_args = {
         _id: {"args_schema_parallel": p, "args_schema_non_parallel": np}
-        for _id, p, np in res.scalars().all()
+        for _id, p, np in res.all()
     }
 
     runs = [
