@@ -7,6 +7,7 @@
 * Internal:
     * Inherit from `StrEnum` rather than `str, Enum` (\#2561).
     * Run `pyupgrade` on codebase (\#2563).
+    * Remove init file of obsolete folder (\#2571).
 * Dependencies:
     * Deprecate Python 3.10 (\#2561).
 
