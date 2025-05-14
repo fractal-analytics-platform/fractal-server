@@ -8,8 +8,8 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import reactivate_ssh
-from fractal_server.tasks.v2.ssh.SSHConfig import SSHConfig
 
 
 @pytest.mark.container
