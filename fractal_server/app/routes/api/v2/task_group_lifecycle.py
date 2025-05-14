@@ -130,7 +130,7 @@ async def deactivate_task_group(
             deactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_credentials,
+            ssh_credentials=ssh_credentials,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
 
