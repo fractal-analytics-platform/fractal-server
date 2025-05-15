@@ -289,7 +289,7 @@ async def test_get_history_run_list(
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
+        task = await task_factory_v2(user_id=user.id, version="3.1.4")
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
@@ -310,6 +310,7 @@ async def test_get_history_run_list(
             num_available_images=1000,
             timestamp_started=timestamp,
             job_id=job.id,
+            task_id=task.id,
         )
         hr2 = HistoryRun(
             dataset_id=dataset.id,
@@ -320,6 +321,7 @@ async def test_get_history_run_list(
             num_available_images=2000,
             timestamp_started=timestamp,
             job_id=job.id,
+            task_id=task.id,
         )
         hr3 = HistoryRun(
             dataset_id=dataset.id,
@@ -330,6 +332,7 @@ async def test_get_history_run_list(
             num_available_images=2000,
             timestamp_started=timestamp,
             job_id=job.id,
+            task_id=task.id,
         )
         db.add(hr1)
         db.add(hr2)
@@ -376,7 +379,7 @@ async def test_get_history_run_list(
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": None,
-                "version": None,
+                "version": "3.1.4",
             },
             {
                 "id": hr2.id,
@@ -387,7 +390,7 @@ async def test_get_history_run_list(
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": None,
-                "version": None,
+                "version": "3.1.4",
             },
             {
                 "id": hr3.id,
@@ -398,7 +401,7 @@ async def test_get_history_run_list(
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": None,
-                "version": None,
+                "version": "3.1.4",
             },
         ]
 
