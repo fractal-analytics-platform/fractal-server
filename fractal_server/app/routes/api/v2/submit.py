@@ -222,13 +222,13 @@ async def apply_workflow(
 
     # User appropriate FractalSSH object
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        ssh_credentials = dict(
+        ssh_config = dict(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
+        fractal_ssh = fractal_ssh_list.get(**ssh_config)
     else:
         fractal_ssh = None
 
