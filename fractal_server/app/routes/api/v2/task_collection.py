@@ -40,6 +40,7 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
@@ -341,19 +342,17 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
         # Use appropriate FractalSSH object
-        ssh_credentials = dict(
+        ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
             collect_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
             wheel_file=wheel_file,
         )
