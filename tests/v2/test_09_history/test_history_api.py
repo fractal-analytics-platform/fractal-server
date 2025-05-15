@@ -289,9 +289,16 @@ async def test_get_history_run_list(
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, version="3.1.4")
-        wftask = await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=task.id
+        task1 = await task_factory_v2(user_id=user.id, version="3.1.4")
+        task2 = await task_factory_v2(
+            user_id=user.id, args_schema_parallel={"foo": "bar"}, version="1.2"
+        )
+        debug(task1, task2)
+        wftask1 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task1.id
+        )
+        wftask2 = await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=task2.id
         )
         job = await job_factory_v2(
             project_id=project.id,
@@ -303,36 +310,36 @@ async def test_get_history_run_list(
 
         hr1 = HistoryRun(
             dataset_id=dataset.id,
-            workflowtask_id=wftask.id,
+            workflowtask_id=wftask1.id,
             workflowtask_dump={},
             task_group_dump={},
             status=HistoryUnitStatus.DONE,
             num_available_images=1000,
             timestamp_started=timestamp,
             job_id=job.id,
-            task_id=task.id,
+            task_id=task1.id,
         )
         hr2 = HistoryRun(
             dataset_id=dataset.id,
-            workflowtask_id=wftask.id,
+            workflowtask_id=wftask1.id,
             workflowtask_dump={},
             task_group_dump={},
             status=HistoryUnitStatus.SUBMITTED,
             num_available_images=2000,
             timestamp_started=timestamp,
             job_id=job.id,
-            task_id=task.id,
+            task_id=task1.id,
         )
         hr3 = HistoryRun(
             dataset_id=dataset.id,
-            workflowtask_id=wftask.id,
+            workflowtask_id=wftask2.id,
             workflowtask_dump={},
             task_group_dump={},
             status=HistoryUnitStatus.FAILED,
             num_available_images=2000,
             timestamp_started=timestamp,
             job_id=job.id,
-            task_id=task.id,
+            task_id=task2.id,
         )
         db.add(hr1)
         db.add(hr2)
@@ -364,11 +371,10 @@ async def test_get_history_run_list(
 
         res = await client.get(
             f"/api/v2/project/{project.id}/status/run/"
-            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            f"?workflowtask_id={wftask1.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
         res = res.json()
-        assert len(res) == 3
         assert res == [
             {
                 "id": hr1.id,
@@ -392,6 +398,15 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": "3.1.4",
             },
+        ]
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/"
+            f"?workflowtask_id={wftask2.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        res = res.json()
+        assert res == [
             {
                 "id": hr3.id,
                 "num_done_units": 0,
@@ -400,9 +415,9 @@ async def test_get_history_run_list(
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
-                "args_schema_parallel": None,
-                "version": "3.1.4",
-            },
+                "args_schema_parallel": {"foo": "bar"},
+                "version": "1.2",
+            }
         ]
 
 
