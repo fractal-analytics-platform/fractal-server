@@ -64,6 +64,10 @@ def _get_new_workflow_task_meta(
         k: v for k, v in old_wft_meta.items() if v != old_task_meta.get(k)
     }
     new_wft_meta = new_task_meta | meta_patch
+
+    for key in old_task_meta.keys() - old_wft_meta.keys():
+        new_task_meta.pop(key)
+
     return new_wft_meta
 
 
