@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from pydantic import validate_call
 
@@ -8,7 +9,7 @@ def dummy_remove_images(
     *,
     zarr_urls: list[str],
     zarr_dir: str,
-    more_zarr_urls: list[str] | None = None,
+    more_zarr_urls: Optional[list[str]] = None,
 ) -> dict:
     """
     Remove images

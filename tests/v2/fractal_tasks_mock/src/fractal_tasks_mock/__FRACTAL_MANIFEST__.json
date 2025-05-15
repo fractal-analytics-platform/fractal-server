@@ -355,6 +355,9 @@
                 "additionalProperties": {
                   "type": "integer"
                 },
+                "propertyNames": {
+                  "const": "C_index"
+                },
                 "title": "Subsets",
                 "type": "object",
                 "description": "dummy attribute description."
@@ -676,11 +679,13 @@
             "description": "Missing description"
           },
           "attributes": {
+            "additionalProperties": true,
             "title": "Attributes",
             "type": "object",
             "description": "Missing description"
           },
           "types": {
+            "additionalProperties": true,
             "title": "Types",
             "type": "object",
             "description": "Missing description"
@@ -704,6 +709,7 @@
             "description": "If `True`, add 10 trailing slashes to zarr_urls"
           },
           "full_new_image": {
+            "additionalProperties": true,
             "title": "Full New Image",
             "type": "object",
             "description": "If set, it takes priority"

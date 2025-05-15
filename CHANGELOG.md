@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.7 (unreleased)
+
+* Testing:
+    * Use `Optional` for argument type hints in mock tasks (\#2575).
+
 # 2.14.6
 
 * API:

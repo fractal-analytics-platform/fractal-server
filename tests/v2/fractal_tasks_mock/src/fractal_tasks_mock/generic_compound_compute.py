@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fractal_tasks_mock.input_models import InitArgsGeneric
 from pydantic import validate_call
 
@@ -9,7 +11,7 @@ def generic_compound_compute(
     init_args: InitArgsGeneric,
     raise_error: bool = False,
     raise_error_if_ind_is_even: bool = False,
-) -> dict | None:
+) -> Optional[dict]:
     """
     Dummy task description.
 
