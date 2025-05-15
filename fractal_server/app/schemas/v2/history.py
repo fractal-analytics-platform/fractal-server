@@ -1,12 +1,12 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pydantic import AwareDatetime
 from pydantic import BaseModel
 from pydantic import field_serializer
 
 from ....images import SingleImage
-from fractal_server.types import DictStrAny
 
 
 class HistoryUnitStatus(StrEnum):
@@ -45,8 +45,8 @@ class HistoryRunRead(BaseModel):
     dataset_id: int
     workflowtask_id: int | None = None
     job_id: int
-    workflowtask_dump: DictStrAny
-    task_group_dump: DictStrAny
+    workflowtask_dump: dict[str, Any]
+    task_group_dump: dict[str, Any]
     timestamp_started: AwareDatetime
     status: HistoryUnitStatus
     num_available_images: int
@@ -59,12 +59,12 @@ class HistoryRunRead(BaseModel):
 class HistoryRunReadAggregated(BaseModel):
     id: int
     timestamp_started: AwareDatetime
-    workflowtask_dump: DictStrAny
+    workflowtask_dump: dict[str, Any]
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
-    args_schema_parallel: DictStrAny | None = None
-    args_schema_non_parallel: DictStrAny | None = None
+    args_schema_parallel: dict[str, Any] | None = None
+    args_schema_non_parallel: dict[str, Any] | None = None
     version: str | None = None
 
     @field_serializer("timestamp_started")
