@@ -17,6 +17,7 @@ from ....models import LinkUserGroup
 from ....models.v2 import TaskV2
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions_task_lifecycle import get_new_workflow_task_meta
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_group_or_404
 from ._aux_functions_tasks import _get_task_read_access
@@ -51,40 +52,6 @@ def _is_version_parsable(version: str) -> bool:
         return True
     except Exception:
         return False
-
-
-def _get_new_workflow_task_meta(
-    *,
-    old_task_meta: dict | None,
-    old_workflow_task_meta: dict | None,
-    new_task_meta: dict | None,
-) -> dict:
-
-    if old_task_meta is None:
-        # all the contents of old_workflow_task_meta are user-made,
-        # and this should be the output.
-        return old_workflow_task_meta
-
-    if old_workflow_task_meta is None:
-        return new_task_meta
-
-    if new_task_meta is None:
-        new_task_meta = {}
-
-    additions = {
-        k: v
-        for k, v in old_workflow_task_meta.items()
-        if v != old_task_meta.get(k)
-    }
-    removals = old_task_meta.keys() - old_workflow_task_meta.keys()
-
-    new_workflowtask_meta = {
-        k: v
-        for k, v in (new_task_meta | additions).items()
-        if k not in removals
-    }
-
-    return new_workflowtask_meta
 
 
 class TaskVersion(BaseModel):
@@ -258,12 +225,12 @@ async def replace_workflowtask(
 
     workflow_task.task_id = new_task.id
     workflow_task.task_type = new_task.type
-    workflow_task.meta_non_parallel = _get_new_workflow_task_meta(
+    workflow_task.meta_non_parallel = get_new_workflow_task_meta(
         old_task_meta=workflow_task.task.meta_non_parallel,
         old_workflow_task_meta=workflow_task.meta_non_parallel,
         new_task_meta=new_task.meta_non_parallel,
     )
-    workflow_task.meta_parallel = _get_new_workflow_task_meta(
+    workflow_task.meta_parallel = get_new_workflow_task_meta(
         old_task_meta=workflow_task.task.meta_parallel,
         old_workflow_task_meta=workflow_task.meta_parallel,
         new_task_meta=new_task.meta_parallel,
