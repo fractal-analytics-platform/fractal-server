@@ -59,6 +59,7 @@ def _get_new_workflow_task_meta(
     old_workflow_task_meta: dict | None,
     new_task_meta: dict,
 ) -> dict:
+
     old_wft_meta = old_workflow_task_meta or {}
     additions = {
         k: v for k, v in old_wft_meta.items() if v != old_task_meta.get(k)
@@ -67,7 +68,7 @@ def _get_new_workflow_task_meta(
 
     new_wft_meta = new_task_meta | additions
     for key in removals:
-        new_wft_meta.pop(key)
+        new_wft_meta.pop(key, None)
 
     return new_wft_meta
 
@@ -241,16 +242,8 @@ async def replace_workflowtask(
         wftask_type_filters=workflow_task.type_filters,
     )
 
-    if replace.args_non_parallel is None:
-        replace.args_non_parallel = workflow_task.args_non_parallel
-    if replace.args_parallel is None:
-        replace.args_parallel = workflow_task.args_parallel
-
     workflow_task.task_id = new_task.id
     workflow_task.task_type = new_task.type
-
-    workflow_task.args_non_parallel = replace.args_non_parallel
-    workflow_task.args_parallel = replace.args_parallel
     workflow_task.meta_non_parallel = _get_new_workflow_task_meta(
         old_task_meta=workflow_task.task.meta_non_parallel,
         old_workflow_task_meta=workflow_task.meta_non_parallel,
@@ -261,6 +254,10 @@ async def replace_workflowtask(
         old_workflow_task_meta=workflow_task.meta_parallel,
         new_task_meta=new_task.meta_parallel,
     )
+    if replace.args_non_parallel is not None:
+        workflow_task.args_non_parallel = replace.args_non_parallel
+    if replace.args_parallel is not None:
+        workflow_task.args_parallel = replace.args_parallel
 
     db.add(workflow_task)
     await db.commit()
