@@ -19,6 +19,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
+from fractal_server.app.routes.api.v2.task_version_update import (
+    _get_new_workflow_task_meta,
+)
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
@@ -237,3 +240,30 @@ async def test_get_collection_task_group_activity_status_message(
         )
         debug(msg)
         assert "please contact an admin" in msg
+
+
+def test_get_new_workflow_task_meta():
+
+    assert _get_new_workflow_task_meta(
+        old_task_meta=None,
+        old_workflow_task_meta={"foo": "bar"},
+        new_task_meta=None,
+    ) == {"foo": "bar"}
+
+    assert _get_new_workflow_task_meta(
+        old_task_meta={"foo": "bar"},
+        old_workflow_task_meta=None,
+        new_task_meta={"bar": "foo"},
+    ) == {"bar": "foo"}
+
+    assert _get_new_workflow_task_meta(
+        old_task_meta={"mem": 6000, "cpus_per_task": 1, "needs_gpu": True},
+        old_workflow_task_meta={"mem": 6000, "cpus_per_task": 2},
+        new_task_meta={"needs_luck": True},
+    ) == {"cpus_per_task": 2, "needs_luck": True}
+
+    assert _get_new_workflow_task_meta(
+        old_task_meta={"mem": 6000, "cpus_per_task": 1, "needs_gpu": True},
+        old_workflow_task_meta={"mem": 6000, "cpus_per_task": 2},
+        new_task_meta=None,
+    ) == {"cpus_per_task": 2}
