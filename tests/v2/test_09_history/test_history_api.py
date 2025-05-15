@@ -341,13 +341,22 @@ async def test_get_history_run_list(
             job_id=job.id,
             task_id=task2.id,
         )
-        db.add(hr1)
-        db.add(hr2)
-        db.add(hr3)
+        hr4 = HistoryRun(
+            dataset_id=dataset.id,
+            workflowtask_id=wftask2.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            status=HistoryUnitStatus.FAILED,
+            num_available_images=2000,
+            timestamp_started=timestamp,
+            job_id=job.id,
+            task_id=None,
+        )
+        for hr in [hr1, hr2, hr3, hr4]:
+            db.add(hr)
         await db.commit()
-        await db.refresh(hr1)
-        await db.refresh(hr2)
-        await db.refresh(hr3)
+        for hr in [hr1, hr2, hr3, hr4]:
+            await db.refresh(hr)
 
         def add_units(hr_id: int, quantity: int, status: HistoryUnitStatus):
             for _ in range(quantity):
@@ -374,8 +383,7 @@ async def test_get_history_run_list(
             f"?workflowtask_id={wftask1.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
-        res = res.json()
-        assert res == [
+        assert res.json() == [
             {
                 "id": hr1.id,
                 "num_done_units": 10,
@@ -405,8 +413,7 @@ async def test_get_history_run_list(
             f"?workflowtask_id={wftask2.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
-        res = res.json()
-        assert res == [
+        assert res.json() == [
             {
                 "id": hr3.id,
                 "num_done_units": 0,
@@ -417,7 +424,18 @@ async def test_get_history_run_list(
                 "args_schema_non_parallel": None,
                 "args_schema_parallel": {"foo": "bar"},
                 "version": "1.2",
-            }
+            },
+            {
+                "id": hr4.id,
+                "num_done_units": 0,
+                "num_submitted_units": 0,
+                "num_failed_units": 0,
+                "timestamp_started": timestamp.isoformat(),
+                "workflowtask_dump": {},
+                "args_schema_non_parallel": None,
+                "args_schema_parallel": None,
+                "version": None,
+            },
         ]
 
 
