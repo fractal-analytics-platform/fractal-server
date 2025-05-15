@@ -6,9 +6,11 @@
     * Introduce `api/v2/project/{project.id}/workflow/{workflow.id}/version-update-candidates/` endpoint (\#2556).
 * Task lifecycle:
     * Use dedicated SSH connections for lifecycle background tasks (\#2569).
+    * Also set `TaskGroup.version` for custom task collections (\#2573).
 * Internal:
     * Inherit from `StrEnum` rather than `str, Enum` (\#2561).
     * Run `pyupgrade` on codebase (\#2563).
+    * Remove init file of obsolete folder (\#2571).
 * Dependencies:
     * Deprecate Python 3.10 (\#2561).
 
