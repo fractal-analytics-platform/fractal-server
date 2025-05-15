@@ -241,21 +241,16 @@ async def replace_workflowtask(
         wftask_type_filters=workflow_task.type_filters,
     )
 
-    # Task arguments
     if replace.args_non_parallel is None:
-        _args_non_parallel = workflow_task.args_non_parallel
-    else:
-        _args_non_parallel = replace.args_non_parallel
+        replace.args_non_parallel = workflow_task.args_non_parallel
     if replace.args_parallel is None:
-        _args_parallel = workflow_task.args_parallel
-    else:
-        _args_parallel = replace.args_parallel
+        replace.args_parallel = workflow_task.args_parallel
 
     workflow_task.task_id = new_task.id
     workflow_task.task_type = new_task.type
 
-    workflow_task.args_non_parallel = _args_non_parallel
-    workflow_task.args_parallel = _args_parallel
+    workflow_task.args_non_parallel = replace.args_non_parallel
+    workflow_task.args_parallel = replace.args_parallel
     workflow_task.meta_non_parallel = _get_new_workflow_task_meta(
         old_task_meta=workflow_task.task.meta_non_parallel,
         old_workflow_task_meta=workflow_task.meta_non_parallel,
