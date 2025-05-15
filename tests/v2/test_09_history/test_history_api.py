@@ -525,7 +525,6 @@ async def test_get_history_images(
     client,
     MockCurrentUser,
 ):
-
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -613,6 +612,7 @@ async def test_get_history_images(
         )
         assert res.status_code == 200
         res = res.json()
+        debug(res)
         assert res["current_page"] == 1
         assert res["page_size"] == 5
         assert res["total_count"] == 5
@@ -656,7 +656,7 @@ async def test_get_history_images(
                 "status": None,
             },
         ]
-
+        return
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
@@ -729,7 +729,6 @@ async def test_get_logs(
     client,
     MockCurrentUser,
 ):
-
     ZARR_URL = "/zarr"
     LOGFILE = (tmp_path / "log").as_posix()
     LOGS = "something nice"

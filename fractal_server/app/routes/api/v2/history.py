@@ -34,6 +34,7 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusQuery
 from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.app.schemas.v2 import SingleImageWithStatus
+from fractal_server.images.image_status import image_list_status_task
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -60,7 +61,6 @@ def check_historyrun_related_to_dataset_and_wftask(
 
 
 class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
-
     attributes: dict[str, list[Any]]
     types: list[str]
 
@@ -77,7 +77,6 @@ async def get_workflow_tasks_statuses(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-
     # Access control
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
@@ -150,7 +149,6 @@ async def get_history_run_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[HistoryRunReadAggregated]:
-
     # Access control
     await get_wftask_check_owner(
         project_id=project_id,
@@ -215,7 +213,6 @@ async def get_history_run_units(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[HistoryUnitRead]:
-
     # Access control
     await get_wftask_check_owner(
         project_id=project_id,
@@ -276,7 +273,6 @@ async def get_history_images(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> ImageWithStatusPage:
-
     # Access control and object retrieval
     wftask = await get_wftask_check_owner(
         project_id=project_id,
@@ -330,87 +326,105 @@ async def get_history_images(
     logger.debug(f"{prefix} {len(dataset.images)=}")
     logger.debug(f"{prefix} {len(filtered_dataset_images)=}")
     # (1E) Extract the list of URLs for filtered images
-    filtered_dataset_images_url = list(
-        img["zarr_url"] for img in filtered_dataset_images
+    sorted_images_list = await image_list_status_task(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+        filtered_dataset_images=filtered_dataset_images,
+        db=db,
     )
+    from devtools import debug
 
-    # (2) Get `(zarr_url, status)` pairs for all images that have already
-    # been processed, and
-    # (3) When relevant, find images that have not been processed
-    base_stmt = (
-        select(HistoryImageCache.zarr_url, HistoryUnit.status)
-        .join(HistoryUnit)
-        .where(HistoryImageCache.dataset_id == dataset_id)
-        .where(HistoryImageCache.workflowtask_id == workflowtask_id)
-        .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
-    )
+    debug(sorted_images_list)
 
+    # filtered_dataset_images_url = list(
+    #     img["zarr_url"] for img in filtered_dataset_images
+    # )
+    #
+    # # (2) Get `(zarr_url, status)` pairs for all images that have already
+    # # been processed, and
+    # # (3) When relevant, find images that have not been processed
+    # base_stmt = (
+    #     select(HistoryImageCache.zarr_url, HistoryUnit.status)
+    #     .join(HistoryUnit)
+    #     .where(HistoryImageCache.dataset_id == dataset_id)
+    #     .where(HistoryImageCache.workflowtask_id == workflowtask_id)
+    #     .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
+    #     .where(HistoryImageCache.zarr_url.in_(filtered_dataset_images_url))
+    # )
+    # from devtools import debug
+    #
     if unit_status in [HistoryUnitStatusQuery.UNSET, None]:
-        stmt = base_stmt.order_by(HistoryImageCache.zarr_url)
-        res = await db.execute(stmt)
-        list_processed_url_status = res.all()
-        list_processed_url = list(
-            item[0] for item in list_processed_url_status
-        )
-        list_non_processed_url_status = list(
-            (url, None)
-            for url in filtered_dataset_images_url
-            if url not in list_processed_url
-        )
-        if unit_status == HistoryUnitStatusQuery.UNSET:
-            list_processed_url_status = []
+        image_list = [
+            image
+            for image in sorted_images_list
+            if image.attributes["status"] == HistoryUnitStatusQuery.UNSET
+        ]
+        debug(f"1 {image_list}")
     else:
-        stmt = base_stmt.where(HistoryUnit.status == unit_status).order_by(
-            HistoryImageCache.zarr_url
-        )
-        res = await db.execute(stmt)
-        list_processed_url_status = res.all()
-        list_non_processed_url_status = []
-
-    logger.debug(f"{prefix} {len(list_processed_url_status)=}")
-    logger.debug(f"{prefix} {len(list_non_processed_url_status)=}")
+        image_list = [
+            image
+            for image in sorted_images_list
+            if image.attributes["status"] != HistoryUnitStatusQuery.UNSET
+        ]
+        debug(f"2 {image_list}")
+    #     stmt = base_stmt.order_by(HistoryImageCache.zarr_url)
+    #     res = await db.execute(stmt)
+    #     list_processed_url_status = res.all()
+    #     list_processed_url = list(item[0] for item in list_processed_url_status)
+    #     list_non_processed_url_status = list(
+    #         (url, None)
+    #         for url in filtered_dataset_images_url
+    #         if url not in list_processed_url
+    #     )
+    #     if unit_status == HistoryUnitStatusQuery.UNSET:
+    #         list_processed_url_status = []
+    # else:
+    #     stmt = base_stmt.where(HistoryUnit.status == unit_status).order_by(
+    #         HistoryImageCache.zarr_url
+    #     )
+    #     res = await db.execute(stmt)
+    #     list_processed_url_status = res.all()
+    #     list_non_processed_url_status = []
+    # logger.debug(f"{prefix} {len(list_processed_url_status)=}")
+    # logger.debug(f"{prefix} {len(list_non_processed_url_status)=}")
 
     # (3) Combine outputs from 1 and 2
-    full_list_url_status = (
-        list_processed_url_status + list_non_processed_url_status
-    )
-    logger.debug(f"{prefix} {len(full_list_url_status)=}")
-
+    # full_list_url_status = list_processed_url_status + list_non_processed_url_status
+    # logger.debug(f"{prefix} {len(full_list_url_status)=}")
+    # debug(full_list_url_status)
     attributes = aggregate_attributes(pre_filtered_dataset_images)
     types = aggregate_types(pre_filtered_dataset_images)
 
-    sorted_list_url_status = sorted(
-        full_list_url_status,
-        key=lambda url_status: url_status[0],
-    )
-    logger.debug(f"{prefix} {len(sorted_list_url_status)=}")
+    # sorted_list_url_status = sorted(
+    #     full_list_url_status,
+    #     key=lambda url_status: url_status[0],
+    # )
+    # debug(sorted_list_url_status)
+    # logger.debug(f"{prefix} {len(sorted_list_url_status)=}")
 
     # Final list of objects
 
-    total_count = len(sorted_list_url_status)
+    total_count = len(sorted_images_list)
     page_size = pagination.page_size or total_count
 
-    paginated_list_url_status = sorted_list_url_status[
-        (pagination.page - 1) * page_size : pagination.page * page_size
-    ]
-
-    # Aggregate information to create 'SingleImageWithStatus'
-    items = [
-        {
-            **filtered_dataset_images[
-                filtered_dataset_images_url.index(url_status[0])
-            ],
-            "status": url_status[1],
-        }
-        for url_status in paginated_list_url_status
-    ]
+    # paginated_list_url_status = sorted_images_list[
+    #     (pagination.page - 1) * page_size : pagination.page * page_size
+    # ]
+    #
+    # # Aggregate information to create 'SingleImageWithStatus'
+    # items = [
+    #     {
+    #         **filtered_dataset_images[filtered_dataset_images_url.index(url_status[0])],
+    #         "status": url_status[1],
+    #     }
+    #     for url_status in paginated_list_url_status
+    # ]
 
     return dict(
         current_page=pagination.page,
         page_size=page_size,
         total_count=total_count,
-        items=items,
+        items=image_list,
         attributes=attributes,
         types=types,
     )
