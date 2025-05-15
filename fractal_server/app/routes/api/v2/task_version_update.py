@@ -60,12 +60,13 @@ def _get_new_workflow_task_meta(
     new_task_meta: dict,
 ) -> dict:
     old_wft_meta = old_workflow_task_meta or {}
-    meta_patch = {
+    additions = {
         k: v for k, v in old_wft_meta.items() if v != old_task_meta.get(k)
     }
-    new_wft_meta = new_task_meta | meta_patch
+    removals = old_task_meta.keys() - old_wft_meta.keys()
 
-    for key in old_task_meta.keys() - old_wft_meta.keys():
+    new_wft_meta = new_task_meta | additions
+    for key in removals:
         new_wft_meta.pop(key)
 
     return new_wft_meta
