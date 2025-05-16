@@ -73,6 +73,7 @@ class BaseSlurmRunner(BaseRunner):
     jobs: dict[str, SlurmJob]
     python_worker_interpreter: str
     slurm_runner_type: Literal["ssh", "sudo"]
+    slurm_account: str | None = None
 
     def __init__(
         self,
@@ -83,6 +84,7 @@ class BaseSlurmRunner(BaseRunner):
         common_script_lines: list[str] | None = None,
         user_cache_dir: str | None = None,
         poll_interval: int | None = None,
+        slurm_account: str | None = None,
     ):
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
@@ -91,6 +93,7 @@ class BaseSlurmRunner(BaseRunner):
         self._check_slurm_account()
         self.user_cache_dir = user_cache_dir
         self.python_worker_interpreter = python_worker_interpreter
+        self.slurm_account = slurm_account
 
         settings = Inject(get_settings)
 
@@ -184,6 +187,13 @@ class BaseSlurmRunner(BaseRunner):
         slurm_config: SlurmConfig,
     ) -> str:
         logger.debug("[_submit_single_sbatch] START")
+
+        # Include SLURM account in `slurm_config`. Note: we make this change
+        # here, rather than exposing a new argument of `get_slurm_config`,
+        # because it's a backend-specific argument while `get_slurm_config` has
+        # a generic interface.
+        if self.slurm_account is not None:
+            slurm_config.account = self.slurm_account
 
         for task in slurm_job.tasks:
             # Write input file

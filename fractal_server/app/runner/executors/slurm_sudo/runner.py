@@ -63,7 +63,6 @@ class SudoSlurmRunner(BaseSlurmRunner):
         """
 
         self.slurm_user = slurm_user
-        self.slurm_account = slurm_account
         settings = Inject(get_settings)
 
         super().__init__(
@@ -76,6 +75,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
             python_worker_interpreter=(
                 settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
             ),
+            slurm_account=slurm_account,
         )
 
     def _mkdir_local_folder(self, folder: str) -> None:
