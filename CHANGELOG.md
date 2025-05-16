@@ -4,6 +4,7 @@
 
 * Runner:
     * Re-include SLURM accounts for both sudo-slurm and ssh-slurm runners (\#2580)
+    * Re-include use of `worker_init` for both sudo-slurm and ssh-slurm runners (\#2580)
 * Testing:
     * Use `Optional` for argument type hints in mock tasks (\#2575).
 
