@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for fractal_server/app/runner/executors/slurm_common/_slurm_config.py: 72%</title>
+    <title>Coverage for fractal_server/app/runner/executors/slurm_common/_slurm_config.py: 79%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>fractal_server/app/runner/executors/slurm_common/_slurm_config.py</b>:
-            <span class="pc_cov">72%</span>
+            <span class="pc_cov">79%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -56,10 +56,10 @@
         </aside>
         <h2>
             <span class="text">160 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">126<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">34<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">134<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">26<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
-            <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">12<span class="text"> partial</span></button>
+            <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">11<span class="text"> partial</span></button>
         </h2>
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_eb514012d4c8c3fa__job_states_py.html">&#xab; prev</a> &nbsp; &nbsp;
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_eb514012d4c8c3fa_base_slurm_runner_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-15 12:35 +0000
+            created at 2025-05-16 09:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -378,13 +378,13 @@
     <p class="pln"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t"><span class="str">        `self.prefix` are listed first.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">        <span class="key">def</span> <span class="nam">_no_prefix</span><span class="op">(</span><span class="nam">_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">            <span class="key">if</span> <span class="nam">_line</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">prefix</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">        <span class="key">def</span> <span class="nam">_no_prefix</span><span class="op">(</span><span class="nam">_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="par run show_par"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">            <span class="key">if</span> <span class="nam">_line</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">prefix</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">298&#x202F;&#x219B;&#x202F;299</span><span class="annotate long">line 298 didn't jump to line 299 because the condition on line 298 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">                <span class="key">return</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">            <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">                <span class="key">return</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">                <span class="key">return</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">        <span class="key">return</span> <span class="nam">sorted</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">,</span> <span class="nam">key</span><span class="op">=</span><span class="nam">_no_prefix</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">        <span class="key">return</span> <span class="nam">sorted</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">,</span> <span class="nam">key</span><span class="op">=</span><span class="nam">_no_prefix</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t304" href="#t304">304</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t305" href="#t305">305</a></span><span class="t">    <span class="key">def</span> <span class="nam">sort_script_lines</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">script_lines</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t306" href="#t306">306</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
@@ -401,10 +401,10 @@
     <p class="run"><span class="n"><a id="t317" href="#t317">317</a></span><span class="t">        <span class="key">def</span> <span class="nam">_sorting_function</span><span class="op">(</span><span class="nam">_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t318" href="#t318">318</a></span><span class="t">            <span class="key">if</span> <span class="nam">_line</span> <span class="op">==</span> <span class="nam">self</span><span class="op">.</span><span class="nam">shebang_line</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t319" href="#t319">319</a></span><span class="t">                <span class="key">return</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t320" href="#t320">320</a></span><span class="t">            <span class="key">elif</span> <span class="nam">_line</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">prefix</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">320&#x202F;&#x219B;&#x202F;323</span><span class="annotate long">line 320 didn't jump to line 323 because the condition on line 320 was always true</span></span></p>
+    <p class="run"><span class="n"><a id="t320" href="#t320">320</a></span><span class="t">            <span class="key">elif</span> <span class="nam">_line</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">prefix</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t321" href="#t321">321</a></span><span class="t">                <span class="key">return</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t322" href="#t322">322</a></span><span class="t">            <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t323" href="#t323">323</a></span><span class="t">                <span class="key">return</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t323" href="#t323">323</a></span><span class="t">                <span class="key">return</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t324" href="#t324">324</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t325" href="#t325">325</a></span><span class="t">        <span class="key">return</span> <span class="nam">sorted</span><span class="op">(</span><span class="nam">script_lines</span><span class="op">,</span> <span class="nam">key</span><span class="op">=</span><span class="nam">_sorting_function</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t326" href="#t326">326</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -426,8 +426,8 @@
     <p class="pln"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t">                <span class="str">"SlurmConfig.sbatch_preamble requires that "</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">parallel_tasks_per_job</span><span class="op">=</span><span class="op">}</span><span class="fst"> is not None.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">345&#x202F;&#x219B;&#x202F;346</span><span class="annotate long">line 345 didn't jump to line 346 because the condition on line 345 was never true</span></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">            <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">)</span> <span class="op">!=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="par run show_par"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">            <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">)</span> <span class="op">!=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">set</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">346&#x202F;&#x219B;&#x202F;347</span><span class="annotate long">line 346 didn't jump to line 347 because the condition on line 346 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t">                <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">=</span><span class="op">}</span><span class="fst"> contains repetitions</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t349" href="#t349">349</a></span><span class="t">        <span class="nam">mem_per_job_MB</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">parallel_tasks_per_job</span> <span class="op">*</span> <span class="nam">self</span><span class="op">.</span><span class="nam">mem_per_task_MB</span>&nbsp;</span><span class="r"></span></p>
@@ -459,9 +459,9 @@
     <p class="run"><span class="n"><a id="t375" href="#t375">375</a></span><span class="t">                <span class="nam">option</span> <span class="op">=</span> <span class="nam">key</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">"_"</span><span class="op">,</span> <span class="str">"-"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t376" href="#t376">376</a></span><span class="t">                <span class="nam">lines</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">prefix</span><span class="op">}</span><span class="fst"> --</span><span class="op">{</span><span class="nam">option</span><span class="op">}</span><span class="fst">=</span><span class="op">{</span><span class="nam">value</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t377" href="#t377">377</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t378" href="#t378">378</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">378&#x202F;&#x219B;&#x202F;379</span><span class="annotate long">line 378 didn't jump to line 379 because the condition on line 378 was never true</span></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t379" href="#t379">379</a></span><span class="t">            <span class="key">for</span> <span class="nam">line</span> <span class="key">in</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_sorted_extra_lines</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t380" href="#t380">380</a></span><span class="t">                <span class="nam">lines</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">line</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t378" href="#t378">378</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">extra_lines</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t379" href="#t379">379</a></span><span class="t">            <span class="key">for</span> <span class="nam">line</span> <span class="key">in</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_sorted_extra_lines</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t380" href="#t380">380</a></span><span class="t">                <span class="nam">lines</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">line</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t381" href="#t381">381</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="par run show_par"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">user_local_exports</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">382&#x202F;&#x219B;&#x202F;383</span><span class="annotate long">line 382 didn't jump to line 383 because the condition on line 382 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t383" href="#t383">383</a></span><span class="t">            <span class="key">if</span> <span class="nam">remote_export_dir</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -557,7 +557,7 @@
             <a class="nav" href="z_eb514012d4c8c3fa_base_slurm_runner_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-15 12:35 +0000
+            created at 2025-05-16 09:30 +0000
         </p>
     </div>
 </footer>
