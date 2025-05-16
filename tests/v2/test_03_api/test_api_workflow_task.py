@@ -1,6 +1,7 @@
 from typing import Literal
 
 from devtools import debug  # noqa
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.models import LinkUserGroup
@@ -854,20 +855,20 @@ async def test_replace_task_in_workflowtask(
         )
 
         # replace task in wft3 with task5
-        wft3_id = wft3.id
+        old_wft3 = wft3.model_dump()
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft3_id}&task_id={task5.id}",
+            f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
             json={},
         )
         assert res.status_code == 201
-        wft5 = res.json()
-        assert wft5["task"] == task5.model_dump()
-        assert wft5["task_id"] == task5.id
-        assert wft5["args_parallel"] == wft3.args_parallel
-        assert wft5["args_non_parallel"] == wft3.args_non_parallel
-        assert wft5["meta_parallel"] == task5.meta_parallel
-        assert wft5["meta_non_parallel"] == task5.meta_non_parallel
+        await db.refresh(wft3)
+        assert wft3.task.model_dump() == task5.model_dump()
+        assert wft3.task_id == task5.id
+        assert wft3.args_parallel == old_wft3["args_parallel"]
+        assert wft3.args_non_parallel == old_wft3["args_non_parallel"]
+        assert wft3.meta_parallel == task5.meta_parallel
+        assert wft3.meta_non_parallel == task5.meta_non_parallel
 
         # Get a fresh workflow from the database
         db.expunge(workflow)
@@ -882,52 +883,52 @@ async def test_replace_task_in_workflowtask(
         assert wft_ids == [
             wft1.id,
             wft2.id,
-            wft5["id"],
+            wft3.id,
             wft4.id,
         ]
-
-        # Check that old workflowtask was removed
-        current_wft3 = await db.get(WorkflowTaskV2, wft3_id)
-        assert current_wft3 is None
+        # Check that no new workflowtask was created
+        res = await db.execute(select(func.count(WorkflowTaskV2.id)))
+        wft_count = res.scalar()
+        assert wft_count == 4
 
         # Replace a workflowtask with itself, and check that it was updated
-        wft1_id = wft1.id
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1_id}&task_id={task1.id}",
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task1.id}",
             json={},
         )
         assert res.status_code == 201
-        wft1b = res.json()
-        assert wft1b["id"] != wft1_id
-        # Check that old workflowtask was removed
-        db.expunge_all()
-        current_wft1 = await db.get(WorkflowTaskV2, wft1_id)
-        assert current_wft1 is None
+        assert res.json()["id"] == wft1.id
+        # Check that no new workflowtask was created
+        res = await db.execute(select(func.count(WorkflowTaskV2.id)))
+        wft_count = res.scalar()
+        assert wft_count == 4
 
         # replace with payload
         # case 1
         payload = dict(args_parallel={"1": "1"}, args_non_parallel={"2": "2"})
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft5['id']}&task_id={task3.id}",
+            f"replace-task/?workflow_task_id={wft3.id}&task_id={task3.id}",
             json=payload,
         )
         assert res.status_code == 201
-        wft6 = res.json()
-        assert wft6["args_parallel"] == payload["args_parallel"]
-        assert wft6["args_non_parallel"] == payload["args_non_parallel"]
+        db.expunge_all()
+        wft3 = await db.get(WorkflowTaskV2, wft3.id)
+        assert wft3.args_parallel == payload["args_parallel"]
+        assert wft3.args_non_parallel == payload["args_non_parallel"]
         # case 2
         payload = dict(args_parallel={"3": "3"})
+        old_args_non_parallele = wft3.args_non_parallel
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft6['id']}&task_id={task5.id}",
+            f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
             json=payload,
         )
         assert res.status_code == 201
-        wft7 = res.json()
-        assert wft7["args_parallel"] == payload["args_parallel"]
-        assert wft7["args_non_parallel"] == wft6["args_non_parallel"]
+        await db.refresh(wft3)
+        assert wft3.args_parallel == payload["args_parallel"]
+        assert wft3.args_non_parallel == old_args_non_parallele
         # case 3:
         # Cannot set 'args_non_parallel' when Task is 'parallel', and v.v.
         payload = dict(args_parallel={"1": "1"}, args_non_parallel={"2": "2"})
@@ -947,27 +948,26 @@ async def test_replace_task_in_workflowtask(
         # replace with different type
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task2.id}",
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task2.id}",
         )
         assert res.status_code == 422
         debug(res.json())
 
         # Test type filters compatibility
-        debug(wft1b)
         task6 = await task_factory_v2(
             user_id=user.id, input_types={"a": False}
         )
         task7 = await task_factory_v2(user_id=user.id, input_types={"a": True})
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task6.id}",
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task6.id}",
             json={},
         )
         assert res.status_code == 422
         assert "filters" in res.json()["detail"]
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"replace-task/?workflow_task_id={wft1b['id']}&task_id={task7.id}",
+            f"replace-task/?workflow_task_id={wft1.id}&task_id={task7.id}",
             json={},
         )
         assert res.status_code == 201
