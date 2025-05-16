@@ -43,10 +43,11 @@ def process_workflow(
     logger_name: str,
     job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
-    fractal_ssh: FractalSSH,
-    worker_init: str | None = None,
     user_id: int,
-    **kwargs,  # not used
+    # SLURM-ssh-specific
+    fractal_ssh: FractalSSH,
+    slurm_account: str | None = None,
+    worker_init: str | None = None,
 ) -> None:
     """
     Process workflow (SLURM backend public interface)
@@ -79,6 +80,7 @@ def process_workflow(
         fractal_ssh=fractal_ssh,
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
+        slurm_account=slurm_account,
         common_script_lines=worker_init,
     ) as runner:
         execute_tasks_v2(

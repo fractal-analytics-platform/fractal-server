@@ -236,6 +236,7 @@ def submit_workflow(
         elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
             logger.debug(f"ssh_user: {user_settings.ssh_username}")
             logger.debug(f"base dir: {user_settings.ssh_tasks_dir}")
+            logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
@@ -257,7 +258,10 @@ def submit_workflow(
             )
         elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
             process_workflow = slurm_ssh_process_workflow
-            backend_specific_kwargs = dict(fractal_ssh=fractal_ssh)
+            backend_specific_kwargs = dict(
+                fractal_ssh=fractal_ssh,
+                slurm_account=job.slurm_account,
+            )
         else:
             raise RuntimeError(
                 f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"

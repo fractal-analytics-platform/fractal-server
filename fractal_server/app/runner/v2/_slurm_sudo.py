@@ -39,7 +39,7 @@ def process_workflow(
     job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
     user_id: int,
-    # Slurm-specific
+    # SLURM-sudo-specific
     user_cache_dir: str | None = None,
     slurm_user: str | None = None,
     slurm_account: str | None = None,
