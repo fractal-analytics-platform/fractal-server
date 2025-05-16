@@ -2,6 +2,8 @@
 
 # 2.14.7 (unreleased)
 
+* Runner:
+    * Re-include SLURM accounts for both sudo-slurm and ssh-slurm runners (\#2580)
 * Testing:
     * Use `Optional` for argument type hints in mock tasks (\#2575).
 
