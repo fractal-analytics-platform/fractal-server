@@ -195,6 +195,17 @@ class BaseSlurmRunner(BaseRunner):
         if self.slurm_account is not None:
             slurm_config.account = self.slurm_account
 
+        # Include common_script_lines in extra_lines
+        if len(self.common_script_lines) > 0:
+            logger.debug(
+                f"Add {self.common_script_lines} to "
+                f"{slurm_config.extra_lines=}."
+            )
+            current_extra_lines = slurm_config.extra_lines or []
+            slurm_config.extra_lines = (
+                current_extra_lines + self.common_script_lines
+            )
+
         for task in slurm_job.tasks:
             # Write input file
             if self.slurm_runner_type == "ssh":
