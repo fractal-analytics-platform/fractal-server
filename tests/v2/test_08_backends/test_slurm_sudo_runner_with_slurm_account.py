@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from .aux_unit_runner import *  # noqa
@@ -12,6 +13,7 @@ from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
+@pytest.mark.container
 async def test_submit_with_slurm_account(
     db,
     tmp777_path: Path,
