@@ -14,7 +14,7 @@ from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
 @pytest.mark.container
-async def test_submit_with_slurm_account(
+async def test_submit_with_slurm_account_and_worker_init(
     db,
     tmp777_path: Path,
     history_mock_for_submit,
@@ -22,10 +22,11 @@ async def test_submit_with_slurm_account(
     valid_user_id,
 ):
     """
-    Test that SLURM account is written in submission script.
+    Test that SLURM account and `worker_init` are set in submission script.
     """
 
     SLURM_ACCOUNT = "something-random"
+    COMMON_SCRIPT_LINES = ["export MYVAR1=VALUE1", "export MYVAR2=Value2"]
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     with SudoSlurmRunner(
@@ -34,6 +35,7 @@ async def test_submit_with_slurm_account(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
         slurm_account=SLURM_ACCOUNT,
+        common_script_lines=COMMON_SCRIPT_LINES,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -54,5 +56,7 @@ async def test_submit_with_slurm_account(
     debug(submission_script)
     with submission_script.open() as f:
         script_lines = f.read().strip().split("\n")
-        expected_line = f"#SBATCH --account={SLURM_ACCOUNT}"
+    for expected_line in COMMON_SCRIPT_LINES + [
+        f"#SBATCH --account={SLURM_ACCOUNT}"
+    ]:
         assert expected_line in script_lines
