@@ -2,6 +2,7 @@ from pathlib import Path
 
 from devtools import debug
 
+from .aux_unit_runner import *  # noqa
 from .aux_unit_runner import ZARR_URLS
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
