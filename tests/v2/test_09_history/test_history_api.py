@@ -9,7 +9,9 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.images import SingleImage
+from fractal_server.images.image_status import IMAGE_STATUS_KEY
 
 
 async def test_status_api(
@@ -570,7 +572,6 @@ async def test_get_history_images(
     client,
     MockCurrentUser,
 ):
-
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -669,62 +670,85 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B"},
-                "status": None,
+                "attributes": {
+                    "well": "0B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
+                },
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B"},
-                "status": "done",
+                "attributes": {
+                    "well": "1B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.DONE,
+                },
             },
             {
                 "zarr_url": "/b2",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "2B"},
-                "status": None,
+                "attributes": {
+                    "well": "2B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
+                },
             },
             {
                 "zarr_url": "/b3",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "3B"},
-                "status": None,
+                "attributes": {
+                    "well": "3B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
+                },
             },
             {
                 "zarr_url": "/b4",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "4B"},
-                "status": None,
+                "attributes": {
+                    "well": "4B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
+                },
             },
         ]
 
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
-            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
-            "&unit_status=unset",
-            json={},
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
+            json=dict(
+                attribute_filters={
+                    IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.UNSET]
+                }
+            ),
         )
+        debug(res.json())
         assert res.status_code == 200
         assert res.json()["total_count"] == 4
         for img in res.json()["items"]:
-            assert img["status"] is None
+            assert (
+                img["attributes"][IMAGE_STATUS_KEY]
+                == HistoryUnitStatusWithUnset.UNSET
+            )
 
         # CASE 3: status=done filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
-            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
-            "&unit_status=done",
-            json={},
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
+            json=dict(
+                attribute_filters={
+                    IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE]
+                }
+            ),
         )
         assert res.status_code == 200
         debug(res.json())
         assert res.json()["total_count"] == 1
-        assert res.json()["items"][0]["status"] == "done"
+        assert (
+            res.json()["items"][0]["attributes"][IMAGE_STATUS_KEY]
+            == HistoryUnitStatusWithUnset.DONE
+        )
 
         # CASE 4: no status filter, some attribute filters
         res = await client.post(
@@ -738,15 +762,19 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B"},
-                "status": None,
+                "attributes": {
+                    "well": "0B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
+                },
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B"},
-                "status": "done",
+                "attributes": {
+                    "well": "1B",
+                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.DONE,
+                },
             },
         ]
 
@@ -774,7 +802,6 @@ async def test_get_logs(
     client,
     MockCurrentUser,
 ):
-
     ZARR_URL = "/zarr"
     LOGFILE = (tmp_path / "log").as_posix()
     LOGS = "something nice"

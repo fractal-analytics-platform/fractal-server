@@ -32,11 +32,9 @@ from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.app.schemas.v2 import SingleImageWithStatus
+from fractal_server.images import SingleImage
 from fractal_server.images.image_status import enrich_image_list
-from fractal_server.images.image_status import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -62,7 +60,7 @@ def check_historyrun_related_to_dataset_and_wftask(
         )
 
 
-class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
+class ImageWithStatusPage(PaginationResponse[SingleImage]):
     attributes: dict[str, list[Any]]
     types: list[str]
 
@@ -299,7 +297,6 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
-    unit_status: HistoryUnitStatusWithUnset | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -358,8 +355,8 @@ async def get_history_images(
         db=db,
     )
 
-    if unit_status is not None:
-        request_body.attribute_filters[IMAGE_STATUS_KEY] = unit_status
+    # if unit_status is not None:
+    #     request_body.attribute_filters[IMAGE_STATUS_KEY] = unit_status
 
     filtered_dataset_images = filter_image_list(
         full_images_list,
@@ -382,18 +379,6 @@ async def get_history_images(
     )
     paginated_images_list = sorted_images_list[
         (pagination.page - 1) * page_size : pagination.page * page_size
-    ]
-
-    # FIXME: This is only for backwards-compatibility. To remove when we
-    # update the webclient
-    paginated_images_list = [
-        {
-            **img,
-            "status": (
-                lambda x: None if x == HistoryUnitStatusWithUnset.UNSET else x
-            )(img["attributes"].pop(IMAGE_STATUS_KEY)),
-        }
-        for img in paginated_images_list
     ]
 
     return dict(
