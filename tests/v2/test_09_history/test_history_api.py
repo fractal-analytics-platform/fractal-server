@@ -9,6 +9,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import HistoryUnitStatusQuery
 from fractal_server.images import SingleImage
 
 
@@ -651,7 +652,6 @@ async def test_get_history_images(
                 "attributes": {"well": "4B", "status": "unset"},
             },
         ]
-        return
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
@@ -660,9 +660,10 @@ async def test_get_history_images(
             json={},
         )
         assert res.status_code == 200
+        debug(res.json())
         assert res.json()["total_count"] == 4
         for img in res.json()["items"]:
-            assert img["status"] is None
+            assert img["attributes"]["status"] == HistoryUnitStatusQuery.UNSET
 
         # CASE 3: status=done filter, no type/attribute filters
         res = await client.post(
@@ -674,7 +675,7 @@ async def test_get_history_images(
         assert res.status_code == 200
         debug(res.json())
         assert res.json()["total_count"] == 1
-        assert res.json()["items"][0]["status"] == "done"
+        assert res.json()["items"][0]["attributes"]["status"] == "done"
 
         # CASE 4: no status filter, some attribute filters
         res = await client.post(
@@ -688,15 +689,13 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B"},
-                "status": None,
+                "attributes": {"well": "0B", "status": "unset"},
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B"},
-                "status": "done",
+                "attributes": {"well": "1B", "status": "done"},
             },
         ]
 

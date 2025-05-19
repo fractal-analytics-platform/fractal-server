@@ -354,7 +354,7 @@ async def get_history_images(
 
     # Final list of objects
 
-    total_count = len(filtered_dataset_images)
+    total_count = len(image_list)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
         image_list, key=lambda image: image["zarr_url"]
