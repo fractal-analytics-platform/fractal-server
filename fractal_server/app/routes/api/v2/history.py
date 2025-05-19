@@ -33,7 +33,7 @@ from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.images import SingleImage
+from fractal_server.app.schemas.v2 import SingleImageWithStatus
 from fractal_server.images.image_status import enrich_image_list
 from fractal_server.images.image_status import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
@@ -61,7 +61,7 @@ def check_historyrun_related_to_dataset_and_wftask(
         )
 
 
-class ImageWithStatusPage(PaginationResponse[SingleImage]):
+class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
     attributes: dict[str, list[Any]]
     types: list[str]
 
@@ -353,6 +353,19 @@ async def get_history_images(
     paginated_images_list = sorted_images_list[
         (pagination.page - 1) * page_size : pagination.page * page_size
     ]
+
+    # FIXME: This is only for backwards-compatibility. To remove when we
+    # update the webclient
+    paginated_images_list = [
+        {
+            **img,
+            "status": (
+                lambda x: None if x == HistoryUnitStatusWithUnset.UNSET else x
+            )(img["attributes"].pop(IMAGE_STATUS_KEY)),
+        }
+        for img in paginated_images_list
+    ]
+
     return dict(
         current_page=pagination.page,
         page_size=page_size,

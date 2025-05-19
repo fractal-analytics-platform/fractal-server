@@ -9,9 +9,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.images import SingleImage
-from fractal_server.images.image_status import IMAGE_STATUS_KEY
 
 
 async def test_status_api(
@@ -119,7 +117,7 @@ async def test_status_api(
         debug(res.json())
         assert res.json() == {
             str(wftask1.id): {
-                IMAGE_STATUS_KEY: "submitted",
+                "status": "submitted",
                 "num_available_images": 3,
                 "num_done_images": 1,
                 "num_submitted_images": 1,
@@ -140,7 +138,7 @@ async def test_status_api(
         assert res.status_code == 200
         assert res.json() == {
             "1": {
-                IMAGE_STATUS_KEY: "submitted",
+                "status": "submitted",
                 "num_available_images": None,
                 "num_submitted_images": 1,
                 "num_done_images": 1,
@@ -527,6 +525,7 @@ async def test_get_history_images(
     client,
     MockCurrentUser,
 ):
+
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -614,7 +613,6 @@ async def test_get_history_images(
         )
         assert res.status_code == 200
         res = res.json()
-        debug(res)
         assert res["current_page"] == 1
         assert res["page_size"] == 5
         assert res["total_count"] == 5
@@ -626,33 +624,39 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B", IMAGE_STATUS_KEY: "unset"},
+                "attributes": {"well": "0B"},
+                "status": None,
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B", IMAGE_STATUS_KEY: "done"},
+                "attributes": {"well": "1B"},
+                "status": "done",
             },
             {
                 "zarr_url": "/b2",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "2B", IMAGE_STATUS_KEY: "unset"},
+                "attributes": {"well": "2B"},
+                "status": None,
             },
             {
                 "zarr_url": "/b3",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "3B", IMAGE_STATUS_KEY: "unset"},
+                "attributes": {"well": "3B"},
+                "status": None,
             },
             {
                 "zarr_url": "/b4",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "4B", IMAGE_STATUS_KEY: "unset"},
+                "attributes": {"well": "4B"},
+                "status": None,
             },
         ]
+
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
@@ -661,13 +665,9 @@ async def test_get_history_images(
             json={},
         )
         assert res.status_code == 200
-        debug(res.json())
         assert res.json()["total_count"] == 4
         for img in res.json()["items"]:
-            assert (
-                img["attributes"][IMAGE_STATUS_KEY]
-                == HistoryUnitStatusWithUnset.UNSET
-            )
+            assert img["status"] is None
 
         # CASE 3: status=done filter, no type/attribute filters
         res = await client.post(
@@ -679,7 +679,7 @@ async def test_get_history_images(
         assert res.status_code == 200
         debug(res.json())
         assert res.json()["total_count"] == 1
-        assert res.json()["items"][0]["attributes"][IMAGE_STATUS_KEY] == "done"
+        assert res.json()["items"][0]["status"] == "done"
 
         # CASE 4: no status filter, some attribute filters
         res = await client.post(
@@ -693,13 +693,15 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B", IMAGE_STATUS_KEY: "unset"},
+                "attributes": {"well": "0B"},
+                "status": None,
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B", IMAGE_STATUS_KEY: "done"},
+                "attributes": {"well": "1B"},
+                "status": "done",
             },
         ]
 
@@ -727,6 +729,7 @@ async def test_get_logs(
     client,
     MockCurrentUser,
 ):
+
     ZARR_URL = "/zarr"
     LOGFILE = (tmp_path / "log").as_posix()
     LOGS = "something nice"
