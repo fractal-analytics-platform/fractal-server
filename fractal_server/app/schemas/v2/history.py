@@ -24,12 +24,19 @@ class HistoryUnitStatus(StrEnum):
     FAILED = "failed"
 
 
-class HistoryUnitStatusQuery(StrEnum):
+class HistoryUnitStatusWithUnset(StrEnum):
+    """
+    Available status for history queries
+
+    Attributes:
+        SUBMITTED:
+        DONE:
+        FAILED:
+    """
 
     SUBMITTED = "submitted"
     DONE = "done"
     FAILED = "failed"
-
     UNSET = "unset"
 
 
@@ -78,5 +85,6 @@ class ImageLogsRequest(BaseModel):
     zarr_url: str
 
 
+# FIXME: remove this when we update the webclient
 class SingleImageWithStatus(SingleImage):
     status: HistoryUnitStatus | None = None
