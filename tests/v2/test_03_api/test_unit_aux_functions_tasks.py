@@ -7,7 +7,7 @@ from fractal_server.app.models import TaskGroupActivityV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
+from fractal_server.app.routes.api.v2._aux_functions_task_version_update import (  # noqa
     get_new_workflow_task_meta,
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
