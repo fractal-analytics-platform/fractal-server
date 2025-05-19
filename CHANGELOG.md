@@ -3,6 +3,10 @@
 
 # 2.14.8
 
+> This version requires a data-migration script (`fractalctl update-db-data`).
+
+* API:
+    * Update `POST /project/{project_id}/workflow/{workflow_id}/wftask/replace-task/` so that it re-uses existing workflow task (\#2565).
 * Internal:
     * Refactor: extract `enrich_image_list` function from `/project/{project_id}/status/images/` endpoint (\#2585).
 

@@ -7,6 +7,9 @@ from fractal_server.app.models import TaskGroupActivityV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.api.v2._aux_functions_task_version_update import (  # noqa
+    get_new_workflow_task_meta,
+)
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_collection_task_group_activity_status_message,
 )
@@ -237,3 +240,30 @@ async def test_get_collection_task_group_activity_status_message(
         )
         debug(msg)
         assert "please contact an admin" in msg
+
+
+def test_get_new_workflow_task_meta():
+
+    assert get_new_workflow_task_meta(
+        old_task_meta=None,
+        old_workflow_task_meta={"foo": "bar"},
+        new_task_meta=None,
+    ) == {"foo": "bar"}
+
+    assert get_new_workflow_task_meta(
+        old_task_meta={"foo": "bar"},
+        old_workflow_task_meta=None,
+        new_task_meta={"bar": "foo"},
+    ) == {"bar": "foo"}
+
+    assert get_new_workflow_task_meta(
+        old_task_meta={"mem": 6000, "cpus_per_task": 1, "needs_gpu": True},
+        old_workflow_task_meta={"mem": 6000, "cpus_per_task": 2},
+        new_task_meta={"needs_luck": True},
+    ) == {"cpus_per_task": 2, "needs_luck": True}
+
+    assert get_new_workflow_task_meta(
+        old_task_meta={"mem": 6000, "cpus_per_task": 1, "needs_gpu": True},
+        old_workflow_task_meta={"mem": 6000, "cpus_per_task": 2},
+        new_task_meta=None,
+    ) == {"cpus_per_task": 2}

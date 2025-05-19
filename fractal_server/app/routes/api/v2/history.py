@@ -23,6 +23,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
@@ -198,7 +199,36 @@ async def get_history_run_list(
     for run_id, unit_status, count in unit_counts:
         count_map[run_id][f"num_{unit_status}_units"] = count
 
-    runs = [dict(**run.model_dump(), **count_map[run.id]) for run in runs]
+    res = await db.execute(
+        select(
+            TaskV2.id,
+            TaskV2.version,
+            TaskV2.args_schema_parallel,
+            TaskV2.args_schema_non_parallel,
+        ).where(
+            TaskV2.id.in_(
+                [run.task_id for run in runs if run.task_id is not None]
+            )
+        )
+    )
+
+    task_args = {
+        _id: {
+            "version": version,
+            "args_schema_parallel": parallel,
+            "args_schema_non_parallel": non_parallel,
+        }
+        for _id, version, parallel, non_parallel in res.all()
+    }
+
+    runs = [
+        dict(
+            **run.model_dump(),
+            **count_map[run.id],
+            **task_args.get(run.task_id, {}),
+        )
+        for run in runs
+    ]
 
     return runs
 
