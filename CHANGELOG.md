@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
+# 2.14.8
+
+* Internal:
+    * Refactor: extract `enrich_image_list` function from `/project/{project_id}/status/images/` endpoint (\#2585).
+
 # 2.14.7
 
 * Runner:
