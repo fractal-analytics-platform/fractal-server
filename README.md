@@ -39,7 +39,7 @@
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_task\_lifecycle.py          |       69 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_tasks.py                    |      114 |        0 |       40 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/dataset.py                                    |      110 |        4 |       14 |        0 |     97% |   252-262 |
-| fractal\_server/app/routes/api/v2/history.py                                    |      180 |        3 |       32 |        3 |     97% |175, 307, 445 |
+| fractal\_server/app/routes/api/v2/history.py                                    |      166 |        3 |       30 |        3 |     97% |174, 304, 405 |
 | fractal\_server/app/routes/api/v2/images.py                                     |      103 |        1 |       26 |        1 |     98% |       138 |
 | fractal\_server/app/routes/api/v2/job.py                                        |       91 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/pre\_submission\_checks.py                    |       57 |        0 |       12 |        0 |    100% |           |
@@ -131,6 +131,7 @@
 | fractal\_server/app/user\_settings.py                                           |       12 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config.py                                                       |      274 |        6 |       76 |        6 |     96% |674-675, 680, 689, 694, 701, 706->exit |
 | fractal\_server/images/\_\_init\_\_.py                                          |        3 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/images/image\_status.py                                         |       31 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                                |       21 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/tools.py                                                 |       46 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/logger.py                                                       |       44 |        3 |       14 |        4 |     88% |96->99, 115, 164, 168 |
@@ -165,7 +166,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       41 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8434** |  **270** | **1638** |  **104** | **96%** |           |
+|                                                                       **TOTAL** | **8451** |  **270** | **1636** |  **104** | **96%** |           |
 
 
 ## Setup coverage badge
