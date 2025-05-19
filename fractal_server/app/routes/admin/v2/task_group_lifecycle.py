@@ -30,6 +30,7 @@ from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import reactivate_local
@@ -120,19 +121,17 @@ async def deactivate_task_group(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
         # User appropriate FractalSSH object
-        ssh_credentials = dict(
+        ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
             deactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
     else:
@@ -238,19 +237,17 @@ async def reactivate_task_group(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
         # Use appropriate FractalSSH object
-        ssh_credentials = dict(
+        ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_credentials)
 
         background_tasks.add_task(
             reactivate_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
         )
     else:

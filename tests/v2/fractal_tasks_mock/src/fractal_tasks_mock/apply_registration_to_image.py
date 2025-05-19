@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 from pydantic import validate_call
 
@@ -9,7 +10,7 @@ def apply_registration_to_image(
     *,
     zarr_url: str,
     overwrite_input: bool = True,
-) -> dict | None:
+) -> Optional[dict]:
     """
     Dummy task description.
 

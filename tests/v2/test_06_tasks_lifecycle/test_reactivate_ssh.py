@@ -8,6 +8,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 
 
@@ -16,7 +17,9 @@ async def test_reactivate_ssh_venv_exists(
     tmp777_path,
     db,
     first_user,
+    ssh_alive,
     fractal_ssh: FractalSSH,
+    ssh_config_dict: dict,
 ):
     path = tmp777_path / "package"
     task_group = TaskGroupV2(
@@ -50,7 +53,7 @@ async def test_reactivate_ssh_venv_exists(
     reactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        fractal_ssh=fractal_ssh,
+        ssh_config=SSHConfig(**ssh_config_dict),
         tasks_base_dir=tmp777_path.as_posix(),
     )
 
@@ -72,6 +75,7 @@ async def test_reactivate_ssh_fail(
     monkeypatch,
     make_rmtree_fail: bool,
     fractal_ssh: FractalSSH,
+    ssh_config_dict: dict,
     override_settings_factory,
     current_py_version,
 ):
@@ -88,7 +92,7 @@ async def test_reactivate_ssh_fail(
     override_settings_factory(**{key: value})
 
     if make_rmtree_fail:
-        import fractal_server.tasks.v2.ssh.reactivate
+        import fractal_server.tasks.v2.ssh._utils
 
         FAILED_RMTREE_MESSAGE = "Broken rm"
 
@@ -96,7 +100,7 @@ async def test_reactivate_ssh_fail(
             raise RuntimeError(FAILED_RMTREE_MESSAGE)
 
         monkeypatch.setattr(
-            fractal_server.tasks.v2.ssh.reactivate.FractalSSH,
+            fractal_server.tasks.v2.ssh._utils.FractalSSH,
             "remove_folder",
             patched_rmtree,
         )
@@ -138,7 +142,7 @@ async def test_reactivate_ssh_fail(
         reactivate_ssh(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            fractal_ssh=fractal_ssh,
+            ssh_config=SSHConfig(**ssh_config_dict),
             tasks_base_dir=tmp777_path.as_posix(),
         )
     except RuntimeError as e:
@@ -152,8 +156,8 @@ async def test_reactivate_ssh_fail(
     debug(activity.status)
     debug(activity.log)
     assert activity.status == "failed"
-    return
-    MSG = "Could not find a version that satisfies the requirement something==99.99.99"  # noqa
+
+    MSG = "No matching distribution found for something==99.99.99"
     assert MSG in activity.log
     assert Path(task_group.path).exists()
 

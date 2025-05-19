@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from fractal_tasks_mock.input_models import InitArgsIllumination
 from pydantic import validate_call
@@ -10,7 +11,7 @@ def illumination_correction_compute(
     zarr_url: str,
     init_args: InitArgsIllumination,
     another_argument: str,
-) -> dict | None:
+) -> Optional[dict]:
     """
     Dummy task description.
 

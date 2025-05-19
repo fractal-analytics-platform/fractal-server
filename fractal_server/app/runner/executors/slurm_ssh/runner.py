@@ -30,6 +30,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         user_cache_dir: str | None = None,
         poll_interval: int | None = None,
         # Specific
+        slurm_account: str | None = None,
         fractal_ssh: FractalSSH,
     ) -> None:
         """
@@ -49,6 +50,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
             python_worker_interpreter=settings.FRACTAL_SLURM_WORKER_PYTHON,
+            slurm_account=slurm_account,
         )
 
     def _mkdir_local_folder(self, folder: str) -> None:
