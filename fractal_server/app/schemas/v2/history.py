@@ -22,7 +22,7 @@ class HistoryUnitStatus(StrEnum):
     FAILED = "failed"
 
 
-class HistoryUnitStatusQuery(StrEnum):
+class HistoryUnitStatusWithUnset(StrEnum):
     """
     Available status for history queries
 
@@ -35,7 +35,6 @@ class HistoryUnitStatusQuery(StrEnum):
     SUBMITTED = "submitted"
     DONE = "done"
     FAILED = "failed"
-
     UNSET = "unset"
 
 

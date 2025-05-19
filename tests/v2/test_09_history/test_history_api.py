@@ -9,8 +9,9 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import HistoryUnitStatusQuery
+from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.images import SingleImage
+from fractal_server.images.image_status import IMAGE_STATUS_KEY
 
 
 async def test_status_api(
@@ -118,7 +119,7 @@ async def test_status_api(
         debug(res.json())
         assert res.json() == {
             str(wftask1.id): {
-                "status": "submitted",
+                IMAGE_STATUS_KEY: "submitted",
                 "num_available_images": 3,
                 "num_done_images": 1,
                 "num_submitted_images": 1,
@@ -139,7 +140,7 @@ async def test_status_api(
         assert res.status_code == 200
         assert res.json() == {
             "1": {
-                "status": "submitted",
+                IMAGE_STATUS_KEY: "submitted",
                 "num_available_images": None,
                 "num_submitted_images": 1,
                 "num_done_images": 1,
@@ -625,31 +626,31 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B", "status": "unset"},
+                "attributes": {"well": "0B", IMAGE_STATUS_KEY: "unset"},
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B", "status": "done"},
+                "attributes": {"well": "1B", IMAGE_STATUS_KEY: "done"},
             },
             {
                 "zarr_url": "/b2",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "2B", "status": "unset"},
+                "attributes": {"well": "2B", IMAGE_STATUS_KEY: "unset"},
             },
             {
                 "zarr_url": "/b3",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "3B", "status": "unset"},
+                "attributes": {"well": "3B", IMAGE_STATUS_KEY: "unset"},
             },
             {
                 "zarr_url": "/b4",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "4B", "status": "unset"},
+                "attributes": {"well": "4B", IMAGE_STATUS_KEY: "unset"},
             },
         ]
         # CASE 2: status=unset filter, no type/attribute filters
@@ -663,7 +664,10 @@ async def test_get_history_images(
         debug(res.json())
         assert res.json()["total_count"] == 4
         for img in res.json()["items"]:
-            assert img["attributes"]["status"] == HistoryUnitStatusQuery.UNSET
+            assert (
+                img["attributes"][IMAGE_STATUS_KEY]
+                == HistoryUnitStatusWithUnset.UNSET
+            )
 
         # CASE 3: status=done filter, no type/attribute filters
         res = await client.post(
@@ -675,7 +679,7 @@ async def test_get_history_images(
         assert res.status_code == 200
         debug(res.json())
         assert res.json()["total_count"] == 1
-        assert res.json()["items"][0]["attributes"]["status"] == "done"
+        assert res.json()["items"][0]["attributes"][IMAGE_STATUS_KEY] == "done"
 
         # CASE 4: no status filter, some attribute filters
         res = await client.post(
@@ -689,13 +693,13 @@ async def test_get_history_images(
                 "zarr_url": "/b0",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "0B", "status": "unset"},
+                "attributes": {"well": "0B", IMAGE_STATUS_KEY: "unset"},
             },
             {
                 "zarr_url": "/b1",
                 "origin": None,
                 "types": {"x": True, "y": True, "z": True},
-                "attributes": {"well": "1B", "status": "done"},
+                "attributes": {"well": "1B", IMAGE_STATUS_KEY: "done"},
             },
         ]
 

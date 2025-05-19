@@ -31,10 +31,11 @@ from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import HistoryUnitStatusQuery
+from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.images import SingleImage
-from fractal_server.images.image_status import image_list_status_task
+from fractal_server.images.image_status import enrich_image_list
+from fractal_server.images.image_status import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -268,7 +269,7 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
-    unit_status: HistoryUnitStatusQuery | None = None,
+    unit_status: HistoryUnitStatusWithUnset | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -320,12 +321,15 @@ async def get_history_images(
         type_filters=inferred_dataset_type_filters,
     )
 
-    full_images_list = await image_list_status_task(
+    full_images_list = await enrich_image_list(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
-        prefiltered_dataset_images=pre_filtered_dataset_images,
+        images=pre_filtered_dataset_images,
         db=db,
     )
+
+    if unit_status is not None:
+        request_body.attribute_filters[IMAGE_STATUS_KEY] = unit_status
 
     filtered_dataset_images = filter_image_list(
         full_images_list,
@@ -335,29 +339,16 @@ async def get_history_images(
     logger.debug(f"{prefix} {len(dataset.images)=}")
     logger.debug(f"{prefix} {len(filtered_dataset_images)=}")
 
-    if unit_status == HistoryUnitStatusQuery.UNSET:
-        image_list = [
-            image
-            for image in filtered_dataset_images
-            if image["attributes"]["status"] == HistoryUnitStatusQuery.UNSET
-        ]
-    elif unit_status is None:
-        image_list = filtered_dataset_images
-    else:
-        image_list = [
-            image
-            for image in filtered_dataset_images
-            if image["attributes"]["status"] != HistoryUnitStatusQuery.UNSET
-        ]
     attributes = aggregate_attributes(pre_filtered_dataset_images)
     types = aggregate_types(pre_filtered_dataset_images)
 
     # Final list of objects
 
-    total_count = len(image_list)
+    total_count = len(filtered_dataset_images)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
-        image_list, key=lambda image: image["zarr_url"]
+        filtered_dataset_images,
+        key=lambda image: image["zarr_url"],
     )
     paginated_images_list = sorted_images_list[
         (pagination.page - 1) * page_size : pagination.page * page_size
