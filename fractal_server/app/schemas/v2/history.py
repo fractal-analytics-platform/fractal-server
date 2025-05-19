@@ -21,6 +21,18 @@ class HistoryUnitStatus(StrEnum):
     DONE = "done"
     FAILED = "failed"
 
+
+class HistoryUnitStatusQuery(StrEnum):
+    """
+    Available status for history queries
+
+    Attributes:
+        SUBMITTED:
+        DONE:
+        FAILED:
+    """
+
+    SUBMITTED = "submitted"
     DONE = "done"
     FAILED = "failed"
 

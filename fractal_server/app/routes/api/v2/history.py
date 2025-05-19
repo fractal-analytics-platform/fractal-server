@@ -320,7 +320,7 @@ async def get_history_images(
         type_filters=inferred_dataset_type_filters,
     )
 
-    sorted_images_list = await image_list_status_task(
+    full_images_list = await image_list_status_task(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         prefiltered_dataset_images=pre_filtered_dataset_images,
@@ -328,7 +328,7 @@ async def get_history_images(
     )
 
     filtered_dataset_images = filter_image_list(
-        sorted_images_list,
+        full_images_list,
         type_filters=request_body.type_filters,
         attribute_filters=request_body.attribute_filters,
     )
@@ -338,15 +338,15 @@ async def get_history_images(
     if unit_status == HistoryUnitStatusQuery.UNSET:
         image_list = [
             image
-            for image in sorted_images_list
+            for image in filtered_dataset_images
             if image["attributes"]["status"] == HistoryUnitStatusQuery.UNSET
         ]
     elif unit_status is None:
-        image_list = sorted_images_list
+        image_list = filtered_dataset_images
     else:
         image_list = [
             image
-            for image in sorted_images_list
+            for image in filtered_dataset_images
             if image["attributes"]["status"] != HistoryUnitStatusQuery.UNSET
         ]
     attributes = aggregate_attributes(pre_filtered_dataset_images)
@@ -354,7 +354,7 @@ async def get_history_images(
 
     # Final list of objects
 
-    total_count = len(sorted_images_list)
+    total_count = len(filtered_dataset_images)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
         image_list, key=lambda image: image["zarr_url"]
