@@ -6,8 +6,6 @@ from pydantic import AwareDatetime
 from pydantic import BaseModel
 from pydantic import field_serializer
 
-from ....images import SingleImage
-
 
 class HistoryUnitStatus(StrEnum):
     """
@@ -23,10 +21,6 @@ class HistoryUnitStatus(StrEnum):
     DONE = "done"
     FAILED = "failed"
 
-
-class HistoryUnitStatusQuery(StrEnum):
-
-    SUBMITTED = "submitted"
     DONE = "done"
     FAILED = "failed"
 
@@ -73,7 +67,3 @@ class ImageLogsRequest(BaseModel):
     workflowtask_id: int
     dataset_id: int
     zarr_url: str
-
-
-class SingleImageWithStatus(SingleImage):
-    status: HistoryUnitStatus | None = None
