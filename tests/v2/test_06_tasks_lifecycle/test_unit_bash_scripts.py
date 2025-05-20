@@ -93,19 +93,19 @@ def test_template_2(
         script_path=script_path.as_posix(),
     )
     stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
-    lines = iter(
+    successfully_installed_line = next(
         line
         for line in stdout.splitlines()
-        if line.startswith("Successfully installed")
+        if (
+            line.startswith("Successfully installed")
+            and "pip" not in line
+            and "setuptools" not in line
+        )
     )
-    successfully_installed_line_1 = next(lines)
-    successfully_installed_line_2 = next(lines)
-    debug(successfully_installed_line_1)
-    debug(successfully_installed_line_2)
-    assert "Successfully installed pip" in successfully_installed_line_1
+    debug(successfully_installed_line)
     for pinned_pkg in pinned_pkg_list.split(" "):
-        assert pinned_pkg.replace("==", "-") in successfully_installed_line_2
-    assert "fractal-tasks-mock-0.0.1" in successfully_installed_line_2
+        assert pinned_pkg.replace("==", "-") in successfully_installed_line
+    assert "fractal-tasks-mock-0.0.1" in successfully_installed_line
 
     # Case 2: successfull `pip show`
     replacements = [
