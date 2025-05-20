@@ -32,9 +32,11 @@ from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.images import SingleImage
 from fractal_server.images.image_status import enrich_image_list
+from fractal_server.images.image_status import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -364,6 +366,12 @@ async def get_history_images(
     logger.debug(f"{prefix} {len(filtered_dataset_images)=}")
 
     attributes = aggregate_attributes(pre_filtered_dataset_images)
+    attributes[IMAGE_STATUS_KEY] = [
+        HistoryUnitStatusWithUnset.DONE,
+        HistoryUnitStatusWithUnset.SUBMITTED,
+        HistoryUnitStatusWithUnset.FAILED,
+        HistoryUnitStatusWithUnset.UNSET,
+    ]
     types = aggregate_types(pre_filtered_dataset_images)
 
     # Final list of objects
