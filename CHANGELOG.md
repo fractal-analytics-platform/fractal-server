@@ -1,9 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.14.11
 
 * API:
     * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it as a query parameters of `request_body.attributes_filters`
+* Development:
+    * Improve `mypy` configuration in `pyproject.toml` (\#2595).
 
 # 2.14.10
 
