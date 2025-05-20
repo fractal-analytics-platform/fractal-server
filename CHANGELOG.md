@@ -3,7 +3,7 @@
 # 2.14.11
 
 * API:
-    * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it as a query parameters of `request_body.attributes_filters`
+    * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it into `request_body.attributes_filters` (\#2588).
 * Development:
     * Improve `mypy` configuration in `pyproject.toml` (\#2595).
 
