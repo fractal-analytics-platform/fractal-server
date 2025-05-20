@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.12
+
+* API:
+    * Group response of `GET /api/v2/task-group/` by `pkg_name` (\#2596).
+
 # 2.14.11
 
 * Task-group lifecycle:
