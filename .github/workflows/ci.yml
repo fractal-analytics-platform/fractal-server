@@ -19,8 +19,8 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-        # exclude:
-        #   - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+        exclude:
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -68,8 +68,8 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-        # exclude:
-        #   - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+        exclude:
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
 
     steps:
       - uses: actions/checkout@v4
