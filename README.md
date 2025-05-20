@@ -151,7 +151,7 @@
 | fractal\_server/tasks/v2/local/reactivate.py                                    |       73 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/tasks/v2/ssh/\_\_init\_\_.py                                    |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v2/ssh/\_utils.py                                         |       31 |        8 |        2 |        0 |     76% |     78-87 |
-| fractal\_server/tasks/v2/ssh/collect.py                                         |      132 |        1 |       12 |        0 |     99% |       316 |
+| fractal\_server/tasks/v2/ssh/collect.py                                         |      132 |        1 |       12 |        0 |     99% |       317 |
 | fractal\_server/tasks/v2/ssh/deactivate.py                                      |      102 |       11 |       22 |        1 |     89% |   207-244 |
 | fractal\_server/tasks/v2/ssh/reactivate.py                                      |       86 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_background.py                                   |       49 |        0 |       12 |        0 |    100% |           |

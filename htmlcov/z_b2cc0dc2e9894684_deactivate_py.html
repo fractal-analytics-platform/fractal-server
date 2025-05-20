@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_b2cc0dc2e9894684_reactivate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-20 06:32 +0000
+            created at 2025-05-20 06:43 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -178,21 +178,21 @@
     <p class="pln"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">                    <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">                <span class="com"># Check that the (local) task_group venv_path does exist</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">                <span class="key">if</span> <span class="key">not</span> <span class="nam">fractal_ssh</span><span class="op">.</span><span class="nam">remote_exists</span><span class="op">(</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">venv_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">                    <span class="nam">error_msg</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">venv_path</span><span class="op">}</span><span class="fst"> does not exist.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">                    <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="nam">error_msg</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">                    <span class="nam">fail_and_cleanup</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">                        <span class="nam">task_group</span><span class="op">=</span><span class="nam">task_group</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">                        <span class="nam">task_group_activity</span><span class="op">=</span><span class="nam">activity</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">                        <span class="nam">logger_name</span><span class="op">=</span><span class="nam">LOGGER_NAME</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">                        <span class="nam">log_file_path</span><span class="op">=</span><span class="nam">log_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">                        <span class="nam">exception</span><span class="op">=</span><span class="nam">FileNotFoundError</span><span class="op">(</span><span class="nam">error_msg</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">                        <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">                    <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">                <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">                <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">                    <span class="com"># Check that the (local) task_group venv_path does exist</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">                    <span class="key">if</span> <span class="key">not</span> <span class="nam">fractal_ssh</span><span class="op">.</span><span class="nam">remote_exists</span><span class="op">(</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">venv_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">                        <span class="nam">error_msg</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">venv_path</span><span class="op">}</span><span class="fst"> does not exist.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">                        <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="nam">error_msg</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">                        <span class="nam">fail_and_cleanup</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">                            <span class="nam">task_group</span><span class="op">=</span><span class="nam">task_group</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">                            <span class="nam">task_group_activity</span><span class="op">=</span><span class="nam">activity</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">                            <span class="nam">logger_name</span><span class="op">=</span><span class="nam">LOGGER_NAME</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">                            <span class="nam">log_file_path</span><span class="op">=</span><span class="nam">log_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">                            <span class="nam">exception</span><span class="op">=</span><span class="nam">FileNotFoundError</span><span class="op">(</span><span class="nam">error_msg</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">                            <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">                        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">                        <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">                    <span class="nam">activity</span><span class="op">.</span><span class="nam">status</span> <span class="op">=</span> <span class="nam">TaskGroupActivityStatusV2</span><span class="op">.</span><span class="nam">ONGOING</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">                    <span class="nam">activity</span> <span class="op">=</span> <span class="nam">add_commit_refresh</span><span class="op">(</span><span class="nam">obj</span><span class="op">=</span><span class="nam">activity</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -381,7 +381,7 @@
             <a class="nav" href="z_b2cc0dc2e9894684_reactivate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-20 06:32 +0000
+            created at 2025-05-20 06:43 +0000
         </p>
     </div>
 </footer>
