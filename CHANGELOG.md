@@ -1,9 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.11
+# 2.14.2
 
 * API:
     * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it into `request_body.attributes_filters` (\#2588).
+
+# 2.14.11
+
 * Task-group lifecycle:
     * Support version-pinning for two dependencies in task collection (\#2590, \#2599).
     * Support version-pinning for previously-missing dependencies in task collection (\#2590, \#2599).
