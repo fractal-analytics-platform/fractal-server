@@ -1,4 +1,3 @@
-from functools import total_ordering
 from itertools import groupby
 from operator import attrgetter
 
@@ -138,25 +137,17 @@ async def get_task_group_list(
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
-    @total_ordering
-    class OrderedVersion:
-        def __init__(self, version: str):
-            self.version = parse(version)
-
-        def __eq__(self, other):
-            return self.version == other.version
-
-        def __lt__(self, other):
-            return self.version > other.version
-
     def version_sort_key(task_group):
         try:
-            return (0, OrderedVersion(task_group.version))
+            return (2, parse(task_group.version))
         except InvalidVersion:
-            return (1, task_group.version)
+            if task_group.version is not None:
+                return (1, task_group.version)
+            else:
+                return (0, None)
 
     grouped_result = [
-        (pkg_name, sorted(list(groups), key=version_sort_key))
+        (pkg_name, sorted(list(groups), key=version_sort_key, reverse=True))
         for pkg_name, groups in groupby(
             task_groups, key=attrgetter("pkg_name")
         )

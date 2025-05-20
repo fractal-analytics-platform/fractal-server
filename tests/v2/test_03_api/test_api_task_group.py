@@ -106,8 +106,8 @@ async def test_get_task_group_list(
         assert [group["version"] for group in result[1][1]] == [
             "1.0.1",
             "1.0.0",
-            "abc",
             "xxx",
+            "abc",
         ]
 
         assert any(
