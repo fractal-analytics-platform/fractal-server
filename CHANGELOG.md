@@ -1,16 +1,34 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-
-# 2.14.8
+# 2.14.10
 
 > This version requires a data-migration script (`fractalctl update-db-data`).
 
+* Database:
+    * Improve data-migration script that is necessary for 2.14.8 (\#2594).
+
+# 2.14.9
+
+> WARNING: Do not release this version, but go directly to 2.14.10.
+
+* Task-group lifecycle:
+    * Improve handling of SSH-related errors (\#2589).
+* Database:
+    * Rename data-migration script that is necessary for 2.14.8 (\#2592).
+
+# 2.14.8
+
+> WARNING: Do not release this version, but go directly to 2.14.10.
+
 * API:
     * Update `POST /project/{project_id}/workflow/{workflow_id}/wftask/replace-task/` so that it re-uses existing workflow task (\#2565).
+* Database:
+    * Add `HistoryRun.task_id` colum (\#2565).
 * Internal:
     * Refactor: extract `enrich_image_list` function from `/project/{project_id}/status/images/` endpoint (\#2585).
 
 # 2.14.7
+
 
 * Runner:
     * Re-include SLURM accounts for both sudo-slurm and ssh-slurm runners (\#2580)
