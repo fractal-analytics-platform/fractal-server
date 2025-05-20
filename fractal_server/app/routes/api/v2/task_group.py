@@ -1,5 +1,4 @@
 from itertools import groupby
-from operator import attrgetter
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -161,7 +160,7 @@ async def get_task_group_list(
     grouped_result = [
         (pkg_name, sorted(list(groups), key=_version_sort_key, reverse=True))
         for pkg_name, groups in groupby(
-            task_groups, key=attrgetter("pkg_name")
+            task_groups, key=lambda tg: tg.pkg_name
         )
     ]
     return grouped_result
