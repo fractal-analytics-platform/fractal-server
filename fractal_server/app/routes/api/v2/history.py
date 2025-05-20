@@ -355,9 +355,6 @@ async def get_history_images(
         db=db,
     )
 
-    # if unit_status is not None:
-    #     request_body.attribute_filters[IMAGE_STATUS_KEY] = unit_status
-
     filtered_dataset_images = filter_image_list(
         full_images_list,
         type_filters=request_body.type_filters,
