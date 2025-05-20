@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.9
+
+* Task-group lifecycle:
+    * Improve handling of SSH-related errors (\#2589).
 
 # 2.14.8
 
