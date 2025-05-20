@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.11
+
+* Task-group lifecycle:
+    * Support version-pinning for two dependencies in task collection (\#2590).
+    * Support version-pinning for previously-missing dependencies in task collection (\#2590).
+
 # 2.14.10
 
 > This version requires a data-migration script (`fractalctl update-db-data`).
