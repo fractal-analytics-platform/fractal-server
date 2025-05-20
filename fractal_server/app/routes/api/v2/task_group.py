@@ -8,6 +8,7 @@ from fastapi import Response
 from fastapi import status
 from packaging.version import InvalidVersion
 from packaging.version import parse
+from packaging.version import Version
 from pydantic.types import AwareDatetime
 from sqlmodel import or_
 from sqlmodel import select
@@ -36,6 +37,17 @@ from fractal_server.logger import set_logger
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+
+def version_sort_key(
+    task_group: TaskGroupV2 | None,
+) -> tuple[int, Version | str | None]:
+    if task_group.version is None:
+        return (0, task_group.version)
+    try:
+        return (2, parse(task_group.version))
+    except InvalidVersion:
+        return (1, task_group.version)
 
 
 @router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
@@ -136,14 +148,6 @@ async def get_task_group_list(
             for task in taskgroup.task_list:
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
-
-    def version_sort_key(task_group):
-        try:
-            return (2, parse(task_group.version))
-        except InvalidVersion:
-            return (1, task_group.version)
-        except TypeError:
-            return (0, None)
 
     grouped_result = [
         (pkg_name, sorted(list(groups), key=version_sort_key, reverse=True))
