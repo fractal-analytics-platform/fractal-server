@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.12
+
+* Task-group lifecycle:
+    * Split `pip install` command into two steps (\#2600).
+
 # 2.14.11
 
 * Task-group lifecycle:
