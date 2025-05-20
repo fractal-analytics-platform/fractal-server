@@ -6,6 +6,8 @@
 
 * Task-group lifecycle:
     * Improve handling of SSH-related errors (\#2589).
+* Database:
+    * Rename data-migration script that is necessary for 2.14.8 (\#2592).
 
 # 2.14.8
 
