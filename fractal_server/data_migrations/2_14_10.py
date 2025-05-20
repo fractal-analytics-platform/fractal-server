@@ -21,7 +21,8 @@ def fix_db():
 
         for hr in history_runs:
             logger.info(f"HistoryRun[{hr.id}] START")
-
+            if hr.workflowtask_id is None:
+                continue
             wft = db.get(WorkflowTaskV2, hr.workflowtask_id)
             if wft is None:
                 logger.warning(
