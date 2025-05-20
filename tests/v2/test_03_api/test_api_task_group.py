@@ -60,29 +60,75 @@ async def test_get_task_group_list(
             source="source1",
             args_schema_non_parallel={"foo": 0, "bar": 1},
             args_schema_parallel={"xxx": 2, "yyy": 3},
+            task_group_kwargs=dict(pkg_name="bbb", version="1.0.0"),
         )
         await task_factory_v2(
             user_id=user1.id,
             source="source2",
-            task_group_kwargs=dict(active=False),
+            task_group_kwargs=dict(
+                active=False, pkg_name="aaa", version="6.6.6"
+            ),
             args_schema_non_parallel={"foo": 4, "bar": 5},
             args_schema_parallel={"xxx": 6, "yyy": 7},
+        )
+        await task_factory_v2(
+            user_id=user1.id,
+            source="source3",
+            task_group_kwargs=dict(
+                active=False, pkg_name="bbb", version="xxx"
+            ),
+        )
+        await task_factory_v2(
+            user_id=user1.id,
+            source="source4",
+            task_group_kwargs=dict(
+                active=False, pkg_name="bbb", version="abc"
+            ),
+        )
+        await task_factory_v2(
+            user_id=user1.id,
+            source="source5",
+            task_group_kwargs=dict(
+                active=False, pkg_name="bbb", version="1.0.1"
+            ),
         )
 
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
-        assert len(res.json()) == 2
-        for group in res.json():
-            for task in group["task_list"]:
-                assert task["args_schema_non_parallel"] is not None
-                assert task["args_schema_parallel"] is not None
+        result = res.json()
+        assert len(result) == 2
+
+        assert result[0][0] == "aaa"
+        assert len(result[0][1]) == 1
+
+        assert result[1][0] == "bbb"
+        assert len(result[1][1]) == 4
+        assert [group["version"] for group in result[1][1]] == [
+            "1.0.1",
+            "1.0.0",
+            "abc",
+            "xxx",
+        ]
+
+        assert any(
+            any(
+                task["args_schema_non_parallel"] is not None
+                and task["args_schema_parallel"] is not None
+                for task in group["task_list"]
+            )
+            for group in result[1][1]
+        )
+
         res = await client.get(f"{PREFIX}/?args_schema=false")
         assert res.status_code == 200
-        assert len(res.json()) == 2
-        for group in res.json():
-            for task in group["task_list"]:
-                assert task["args_schema_non_parallel"] is None
-                assert task["args_schema_parallel"] is None
+        assert not any(
+            any(
+                task["args_schema_non_parallel"] is not None
+                and task["args_schema_parallel"] is not None
+                for task in group["task_list"]
+            )
+            for group in res.json()[1][1]
+        )
 
     async with MockCurrentUser() as user2:
 
@@ -260,7 +306,7 @@ async def test_get_single_task_group_activity(client, MockCurrentUser, db):
         res = await client.get(f"{PREFIX}/activity/{activity.id}/")
         assert res.status_code == 200
 
-        res = await client.get(f"{PREFIX}/activity/{activity.id+1}/")
+        res = await client.get(f"{PREFIX}/activity/{activity.id + 1}/")
         assert res.status_code == 404
 
     async with MockCurrentUser():

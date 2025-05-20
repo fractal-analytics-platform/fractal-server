@@ -1,8 +1,14 @@
+from functools import total_ordering
+from itertools import groupby
+from operator import attrgetter
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from packaging.version import InvalidVersion
+from packaging.version import parse
 from pydantic.types import AwareDatetime
 from sqlmodel import or_
 from sqlmodel import select
@@ -97,14 +103,14 @@ async def get_task_group_activity(
     return activity
 
 
-@router.get("/", response_model=list[TaskGroupReadV2])
+@router.get("/", response_model=list[tuple[str, list[TaskGroupReadV2]]])
 async def get_task_group_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
     args_schema: bool = True,
-) -> list[TaskGroupReadV2]:
+) -> list[tuple[str, list[TaskGroupReadV2]]]:
     """
     Get all accessible TaskGroups
     """
@@ -119,7 +125,7 @@ async def get_task_group_list(
                 )
             ),
         )
-    stm = select(TaskGroupV2).where(condition)
+    stm = select(TaskGroupV2).where(condition).order_by(TaskGroupV2.pkg_name)
     if only_active:
         stm = stm.where(TaskGroupV2.active)
 
@@ -132,7 +138,30 @@ async def get_task_group_list(
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
-    return task_groups
+    @total_ordering
+    class OrderedVersion:
+        def __init__(self, version: str):
+            self.version = parse(version)
+
+        def __eq__(self, other):
+            return self.version == other.version
+
+        def __lt__(self, other):
+            return self.version > other.version
+
+    def version_sort_key(task_group):
+        try:
+            return (0, OrderedVersion(task_group.version))
+        except InvalidVersion:
+            return (1, task_group.version)
+
+    grouped_result = [
+        (pkg_name, sorted(list(groups), key=version_sort_key))
+        for pkg_name, groups in groupby(
+            task_groups, key=attrgetter("pkg_name")
+        )
+    ]
+    return grouped_result
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
