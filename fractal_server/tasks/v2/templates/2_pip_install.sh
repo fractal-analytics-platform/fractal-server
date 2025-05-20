@@ -30,10 +30,14 @@ write_log "END   install with INSTALL_STRING=${INSTALL_STRING}"
 echo
 
 # Install pinned packages (note: do not quote $PINNED_PACKAGE_LIST since it could be e.g. "numpy==1.2.3 torch=3.2.1")
-write_log "START install with PINNED_PACKAGE_LIST=${PINNED_PACKAGE_LIST}"
-"$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} $PINNED_PACKAGE_LIST
-write_log "END install with PINNED_PACKAGE_LIST=${PINNED_PACKAGE_LIST}"
-echo
+if [ "$PINNED_PACKAGE_LIST" != "" ]; then
+    write_log "START install with PINNED_PACKAGE_LIST=${PINNED_PACKAGE_LIST}"
+    "$VENVPYTHON" -m pip install ${FRACTAL_PIP_CACHE_DIR_ARG} $PINNED_PACKAGE_LIST
+    write_log "END install with PINNED_PACKAGE_LIST=${PINNED_PACKAGE_LIST}"
+    echo
+else
+    write_log "SKIP installing pinned versions $PINNED_PACKAGE_LIST (empty list)"
+fi
 
 # End
 TIME_END=$(date +%s)
