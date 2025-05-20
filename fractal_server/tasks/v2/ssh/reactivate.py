@@ -95,21 +95,22 @@ def reactivate_ssh(
                     )
                     return
 
-                # Check that the (remote) task_group venv_path does not exist
-                if fractal_ssh.remote_exists(task_group.venv_path):
-                    error_msg = f"{task_group.venv_path} already exists."
-                    logger.error(error_msg)
-                    fail_and_cleanup(
-                        task_group=task_group,
-                        task_group_activity=activity,
-                        logger_name=LOGGER_NAME,
-                        log_file_path=log_file_path,
-                        exception=FileExistsError(error_msg),
-                        db=db,
-                    )
-                    return
-
                 try:
+                    # Check that the (remote) task_group venv_path does not
+                    # exist
+                    if fractal_ssh.remote_exists(task_group.venv_path):
+                        error_msg = f"{task_group.venv_path} already exists."
+                        logger.error(error_msg)
+                        fail_and_cleanup(
+                            task_group=task_group,
+                            task_group_activity=activity,
+                            logger_name=LOGGER_NAME,
+                            log_file_path=log_file_path,
+                            exception=FileExistsError(error_msg),
+                            db=db,
+                        )
+                        return
+
                     activity.status = TaskGroupActivityStatusV2.ONGOING
                     activity = add_commit_refresh(obj=activity, db=db)
 
