@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.11
+
+* Development:
+    * Improve `mypy` configuration in `pyproject.toml` (\#2595).
+
 # 2.14.10
 
 > This version requires a data-migration script (`fractalctl update-db-data`).
