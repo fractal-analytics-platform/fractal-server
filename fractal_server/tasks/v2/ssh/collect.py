@@ -108,21 +108,22 @@ def collect_ssh(
                     )
                     return
 
-                # Check that the (remote) task_group path does not exist
-                if fractal_ssh.remote_exists(task_group.path):
-                    error_msg = f"{task_group.path} already exists."
-                    logger.error(error_msg)
-                    fail_and_cleanup(
-                        task_group=task_group,
-                        task_group_activity=activity,
-                        logger_name=LOGGER_NAME,
-                        log_file_path=log_file_path,
-                        exception=FileExistsError(error_msg),
-                        db=db,
-                    )
-                    return
-
                 try:
+
+                    # Check that the (remote) task_group path does not exist
+                    if fractal_ssh.remote_exists(task_group.path):
+                        error_msg = f"{task_group.path} already exists."
+                        logger.error(error_msg)
+                        fail_and_cleanup(
+                            task_group=task_group,
+                            task_group_activity=activity,
+                            logger_name=LOGGER_NAME,
+                            log_file_path=log_file_path,
+                            exception=FileExistsError(error_msg),
+                            db=db,
+                        )
+                        return
+
                     # Create remote `task_group.path` and `script_dir_remote`
                     # folders (note that because of `parents=True` we  are in
                     # the `no error if existing, make parent directories as
