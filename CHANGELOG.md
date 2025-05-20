@@ -1,8 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.9
+# 2.14.10
 
 > This version requires a data-migration script (`fractalctl update-db-data`).
+
+* Database:
+    * Improve data-migration script that is necessary for 2.14.8 (\#2594).
+
+# 2.14.9
+
+> WARNING: Do not release this version, but go directly to 2.14.10.
 
 * Task-group lifecycle:
     * Improve handling of SSH-related errors (\#2589).
@@ -11,7 +18,7 @@
 
 # 2.14.8
 
-> WARNING: Do not release this version, but go directly to 2.14.9.
+> WARNING: Do not release this version, but go directly to 2.14.10.
 
 * API:
     * Update `POST /project/{project_id}/workflow/{workflow_id}/wftask/replace-task/` so that it re-uses existing workflow task (\#2565).
