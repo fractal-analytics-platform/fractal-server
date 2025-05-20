@@ -141,10 +141,9 @@ async def get_task_group_list(
         try:
             return (2, parse(task_group.version))
         except InvalidVersion:
-            if task_group.version is not None:
-                return (1, task_group.version)
-            else:
-                return (0, None)
+            return (1, task_group.version)
+        except TypeError:
+            return (0, None)
 
     grouped_result = [
         (pkg_name, sorted(list(groups), key=version_sort_key, reverse=True))
