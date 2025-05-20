@@ -39,9 +39,18 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-def version_sort_key(
-    task_group: TaskGroupV2 | None,
+def _version_sort_key(
+    task_group: TaskGroupV2,
 ) -> tuple[int, Version | str | None]:
+    """
+    Return a tuple used as (reverse) ordering key for TaskGroups in
+    `get_task_group_list`.
+    The TaskGroups with a parsable versions are the first in order,
+    sorted according to the sorting rules of packaging.version.Version.
+    Next in order we have the TaskGroups with non-null non-parsable versions,
+    sorted alphabetically.
+    Last we have the TaskGroups with null version.
+    """
     if task_group.version is None:
         return (0, task_group.version)
     try:
@@ -150,7 +159,7 @@ async def get_task_group_list(
                 setattr(task, "args_schema_parallel", None)
 
     grouped_result = [
-        (pkg_name, sorted(list(groups), key=version_sort_key, reverse=True))
+        (pkg_name, sorted(list(groups), key=_version_sort_key, reverse=True))
         for pkg_name, groups in groupby(
             task_groups, key=attrgetter("pkg_name")
         )
