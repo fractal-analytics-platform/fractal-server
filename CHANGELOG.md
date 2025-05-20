@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it as a query parameters of `request_body.attributes_filters`
+
 # 2.14.10
 
 > This version requires a data-migration script (`fractalctl update-db-data`).
@@ -23,7 +28,7 @@
 * API:
     * Update `POST /project/{project_id}/workflow/{workflow_id}/wftask/replace-task/` so that it re-uses existing workflow task (\#2565).
 * Database:
-    * Add `HistoryRun.task_id` colum (\#2565).
+    * Add `HistoryRun.task_id` column (\#2565).
 * Internal:
     * Refactor: extract `enrich_image_list` function from `/project/{project_id}/status/images/` endpoint (\#2585).
 
