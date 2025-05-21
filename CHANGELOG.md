@@ -3,7 +3,8 @@
 # 2.14.2
 
 * API:
-    * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it into `request_body.attributes_filters` (\#2588).
+    * Remove `unit_status` query parameter from `/project/{project_id}/status/images/` (\#2588).
+    * Remove default type filters from `/project/{project_id}/status/images/` (\#2588).
 * Task-group lifecycle:
     * Split `pip install` command into two steps (\#2600).
 
