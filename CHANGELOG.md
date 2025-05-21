@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.2
+# 2.14.12
 
 * API:
     * Remove `unit_status` query parameter from `/project/{project_id}/status/images/` (\#2588).
