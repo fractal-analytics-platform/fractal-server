@@ -12,6 +12,7 @@ def execute_tasks_v2_mod(
     workflow_dir_local: Path,
     user_id: int,
     job_id: int,
+    job_attribute_filters: dict[str, bool] | None = None,
     job_type_filters: dict[str, bool] | None = None,
     **kwargs,
 ) -> None:
@@ -21,7 +22,7 @@ def execute_tasks_v2_mod(
     execute_tasks_v2(
         wf_task_list=wf_task_list,
         workflow_dir_local=workflow_dir_local,
-        job_attribute_filters={},
+        job_attribute_filters=(job_attribute_filters or {}),
         job_type_filters=(job_type_filters or {}),
         job_id=job_id,
         user_id=user_id,
