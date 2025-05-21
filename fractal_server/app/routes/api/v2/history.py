@@ -35,8 +35,8 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.app.schemas.v2 import SingleImageWithStatus
-from fractal_server.images.image_status import enrich_image_list
-from fractal_server.images.image_status import IMAGE_STATUS_KEY
+from fractal_server.images.status_tools import enrich_images_async
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -351,7 +351,7 @@ async def get_history_images(
         type_filters=inferred_dataset_type_filters,
     )
 
-    full_images_list = await enrich_image_list(
+    full_images_list = await enrich_images_async(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         images=pre_filtered_dataset_images,

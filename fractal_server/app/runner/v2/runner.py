@@ -8,7 +8,6 @@ from typing import Literal
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
-from sqlmodel import select
 from sqlmodel import update
 
 from ....images import SingleImage
@@ -32,14 +31,22 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
-from fractal_server.images.image_status import _enriched_image
-from fractal_server.images.image_status import enrich_image_list
-from fractal_server.images.image_status import IMAGE_STATUS_KEY
+from fractal_server.images.status_tools import enrich_images_sync
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.types import AttributeFilters
+
+
+def _remove_status_from_attributes(
+    images: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Drop attribute `IMAGE_STATUS_KEY` from all images.
+    """
+    [img["attributes"].pop(IMAGE_STATUS_KEY) for img in images]
+    return images
 
 
 def drop_none_attributes(attributes: dict[str, Any]) -> dict[str, Any]:
@@ -108,40 +115,14 @@ def execute_tasks_v2(
 
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
-    copy_images = deepcopy(dataset.images)
+    tmp_images = deepcopy(dataset.images)
     current_dataset_type_filters = copy(job_type_filters)
 
-    if IMAGE_STATUS_KEY in job_attribute_filters.keys():
-        list_zarr_urls = [img["zarr_url"] for img in copy_images]
-        with next(get_sync_db()) as db:
-            stm = (
-                select(HistoryImageCache.zarr_url, HistoryUnit.status)
-                .join(HistoryUnit)
-                .where(HistoryImageCache.dataset_id == dataset.id)
-                .where(HistoryImageCache.workflowtask_id == wf_task_list[0].id)
-                .where(
-                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id
-                )
-                .where(HistoryImageCache.zarr_url.in_(list_zarr_urls))
-                .order_by(HistoryImageCache.zarr_url)
-            )
-            res = db.execute(stm)
-            list_url_status = res.all()
-            url_status_map = {
-                url_status[0]: url_status[1] for url_status in list_url_status
-            }
+    ENRICH_IMAGES_WITH_STATUS: bool = (
+        IMAGE_STATUS_KEY in job_attribute_filters.keys()
+    )
 
-            for img in copy_images:
-                if img["zarr_url"] in url_status_map.keys():
-                    img["attributes"][IMAGE_STATUS_KEY] = url_status_map[
-                        img["zarr_url"]
-                    ]
-
-        tmp_images = copy_images
-    else:
-        tmp_images = copy_images
-
-    for wftask in wf_task_list:
+    for ind_wftask, wftask in enumerate(wf_task_list):
         task = wftask.task
         task_name = task.name
         logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
@@ -157,12 +138,22 @@ def execute_tasks_v2(
                 wftask_type_filters=wftask.type_filters,
             )
             type_filters.update(type_filters_patch)
+
+            if ind_wftask == 0 and ENRICH_IMAGES_WITH_STATUS:
+                # FIXME: Could this be done on `type_filtered_images`?
+                tmp_images = enrich_images_sync(
+                    images=tmp_images,
+                    dataset_id=dataset.id,
+                    workflowtask_id=wftask.id,
+                )
+
             type_filtered_images = filter_image_list(
                 images=tmp_images,
                 type_filters=type_filters,
                 attribute_filters=None,
             )
             num_available_images = len(type_filtered_images)
+
             filtered_images = filter_image_list(
                 images=type_filtered_images,
                 type_filters=None,
@@ -198,13 +189,7 @@ def execute_tasks_v2(
             db.commit()
             db.refresh(history_run)
             history_run_id = history_run.id
-            tmp_images = [
-                _enriched_image(
-                    img=img,
-                    status=HistoryUnitStatusWithUnset.SUBMITTED,
-                )
-                for img in tmp_images
-            ]
+
         # TASK EXECUTION (V2)
         try:
             if task.type in ["non_parallel", "converter_non_parallel"]:
@@ -409,30 +394,25 @@ def execute_tasks_v2(
                 f"Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
-                # FIXME use `update_status_of_history_run`
                 db.execute(
                     update(HistoryUnit)
                     .where(HistoryUnit.history_run_id == history_run_id)
                     .values(status=HistoryUnitStatus.FAILED)
                 )
                 db.commit()
-
-                tmp_images = [
-                    _enriched_image(
-                        img=img,
-                        status=HistoryUnitStatusWithUnset.FAILED,
-                    )
-                    for img in tmp_images
-                ]
-                # Write current dataset images into the database.
-                db_dataset = db.get(DatasetV2, dataset.id)
-                db_dataset.images = tmp_images
-                flag_modified(db_dataset, "images")
-                db.merge(db_dataset)
-                db.commit()
             raise e
 
         with next(get_sync_db()) as db:
+            # Write current dataset images into the database.
+            db_dataset = db.get(DatasetV2, dataset.id)
+            if ENRICH_IMAGES_WITH_STATUS:
+
+                db_dataset.images = _remove_status_from_attributes(tmp_images)
+            else:
+                db_dataset.images = tmp_images
+            flag_modified(db_dataset, "images")
+            db.merge(db_dataset)
+
             db.execute(
                 delete(HistoryImageCache)
                 .where(HistoryImageCache.dataset_id == dataset.id)
@@ -447,6 +427,7 @@ def execute_tasks_v2(
             db.commit()
             db.close()  # NOTE: this is needed, but the reason is unclear
 
+            # Create accounting record
             record = AccountingRecord(
                 user_id=user_id,
                 num_tasks=num_tasks,
@@ -468,22 +449,6 @@ def execute_tasks_v2(
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-
-                tmp_images = [
-                    _enriched_image(
-                        img=img,
-                        status=HistoryUnitStatusWithUnset.FAILED,
-                    )
-                    for img in tmp_images
-                ]
-
-                with next(get_sync_db()) as db:
-                    # Write current dataset images into the database.
-                    db_dataset = db.get(DatasetV2, dataset.id)
-                    db_dataset.images = tmp_images
-                    flag_modified(db_dataset, "images")
-                    db.merge(db_dataset)
-
                 logger.warning(
                     f'END    {wftask.order}-th task (name="{task_name}") - '
                     "ERROR."
@@ -502,25 +467,7 @@ def execute_tasks_v2(
                     status=HistoryUnitStatus.DONE,
                     db_sync=db,
                 )
-                tmp_images = [
-                    _enriched_image(
-                        img=img,
-                        status=HistoryUnitStatusWithUnset.DONE,
-                    )
-                    for img in tmp_images
-                ]
-
-                with next(get_sync_db()) as db:
-                    # Write current dataset images into the database.
-                    db_dataset = db.get(DatasetV2, dataset.id)
-                    db_dataset.images = tmp_images
-                    flag_modified(db_dataset, "images")
-                    db.merge(db_dataset)
-
                 db.commit()
-                from devtools import debug
-
-                debug(tmp_images)
                 logger.debug(
                     f'END    {wftask.order}-th task (name="{task_name}")'
                 )
