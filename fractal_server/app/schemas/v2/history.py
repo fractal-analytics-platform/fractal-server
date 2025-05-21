@@ -6,8 +6,6 @@ from pydantic import AwareDatetime
 from pydantic import BaseModel
 from pydantic import field_serializer
 
-from ....images import SingleImage
-
 
 class HistoryUnitStatus(StrEnum):
     """
@@ -83,8 +81,3 @@ class ImageLogsRequest(BaseModel):
     workflowtask_id: int
     dataset_id: int
     zarr_url: str
-
-
-# FIXME: remove this when we update the webclient
-class SingleImageWithStatus(SingleImage):
-    status: HistoryUnitStatus | None = None

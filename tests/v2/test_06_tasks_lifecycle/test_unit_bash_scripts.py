@@ -1,4 +1,5 @@
 import pytest
+from devtools import debug
 
 from fractal_server.config import Settings
 from fractal_server.tasks.v2.local.collect import _customize_and_run_template
@@ -67,12 +68,14 @@ def test_template_2(
         ).model_dump(exclude_unset=True)
     )
     path = tmp_path / "unit_templates"
+
+    # Case 1: successful `pip install`, with pinned packages
     venv_path = path / "venv"
     install_string = testdata_path.parent / (
         "v2/fractal_tasks_valid/valid_tasks/dist/"
         "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    pinned_pkg_list = "fractal-tasks-mock==0.0.1"
+    pinned_pkg_list = "pydantic==2.8.2 devtools==0.12.2"
     execute_command_sync(
         command=f"python{current_py_version} -m venv {venv_path}"
     )
@@ -90,8 +93,23 @@ def test_template_2(
         script_path=script_path.as_posix(),
     )
     stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
-    assert "installing pinned versions fractal-tasks-mock==0.0.1" in stdout
+    success_lines = iter(
+        line
+        for line in stdout.splitlines()
+        if (
+            line.startswith("Successfully installed")
+            and "pip" not in line
+            and "setuptools" not in line
+        )
+    )
+    success_line_1 = next(success_lines)
+    assert success_line_1 == "Successfully installed fractal-tasks-mock-0.0.1"
+    success_line_2 = next(success_lines)
+    debug(success_line_2)
+    for pinned_pkg in pinned_pkg_list.split(" "):
+        assert pinned_pkg.replace("==", "-") in success_line_2
 
+    # Case 2: successfull `pip show`
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__PACKAGE_NAME__", "fractal-tasks-mock"),
@@ -105,10 +123,9 @@ def test_template_2(
     stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
     assert "OK: manifest path exists" in stdout
 
-    # create a wrong pinned_pkg_list
+    # Case 3: Failed `pip install`, due to invalid `pinned_pkg_list`
     venv_path_bad = path / "bad_venv"
-    pinned_pkg_list = "pkgA==0.1.0 "
-
+    pinned_pkg_list = "non_existing_package==1.2.3"
     execute_command_sync(
         command=f"python{current_py_version} -m venv {venv_path_bad}"
     )
@@ -125,10 +142,15 @@ def test_template_2(
         replacements=replacements,
         script_path=script_path.as_posix(),
     )
-    with pytest.raises(RuntimeError) as expinfo:
+    with pytest.raises(RuntimeError) as e_info:
         execute_command_sync(command=f"bash {script_path.as_posix()}")
-    assert "Package(s) not found: pkgA" in str(expinfo.value)
+    ERROR_MSG = (
+        "Could not find a version that satisfies the requirement "
+        f"{pinned_pkg_list}"
+    )
+    assert ERROR_MSG in str(e_info.value)
 
+    # Case 4: Failed `pip install`, due to invalid wheel name
     venv_path = path / "bad_wheel"
     install_string = testdata_path.parent / (
         "v2/fractal_tasks_valid/valid_tasks/dist/"
@@ -141,6 +163,7 @@ def test_template_2(
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__FRACTAL_MAX_PIP_VERSION__", "99"),
+        ("__PINNED_PACKAGE_LIST__", ""),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_bad_whl.sh"
@@ -149,18 +172,18 @@ def test_template_2(
         replacements=replacements,
         script_path=script_path.as_posix(),
     )
-    with pytest.raises(RuntimeError) as expinfo:
+    with pytest.raises(RuntimeError) as e_info:
         execute_command_sync(command=f"bash {script_path.as_posix()}")
     # We make the assertion flexible, since the error message changed with
     # pip 25.1
     condition_1 = (
         "ERROR: fractal_tasks_mock-0.0.1-py3-none-any (2).whl"
         " is not a valid wheel filename"
-    ) in str(expinfo.value)
+    ) in str(e_info.value)
     condition_2 = (
         "ERROR: fractal_tasks_mock-0.0.1-py3-none-any (2).whl"
         " is not a supported wheel on this platform"
-    ) in str(expinfo.value)
+    ) in str(e_info.value)
     assert condition_1 or condition_2
 
 

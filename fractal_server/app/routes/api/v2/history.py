@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -16,6 +15,7 @@ from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import get_wftask_check_owner
 from ._aux_functions_history import read_log_file
+from .images import ImagePage
 from .images import ImageQuery
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -34,13 +34,11 @@ from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.app.schemas.v2 import SingleImageWithStatus
 from fractal_server.images.status_tools import enrich_images_async
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
-from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 
 
@@ -60,11 +58,6 @@ def check_historyrun_related_to_dataset_and_wftask(
                 f"not related to {dataset_id=} and {workflowtask_id=}."
             ),
         )
-
-
-class ImageWithStatusPage(PaginationResponse[SingleImageWithStatus]):
-    attributes: dict[str, list[Any]]
-    types: list[str]
 
 
 router = APIRouter()
@@ -299,11 +292,11 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
-    unit_status: HistoryUnitStatusWithUnset | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> ImageWithStatusPage:
+) -> ImagePage:
+
     # Access control and object retrieval
     wftask = await get_wftask_check_owner(
         project_id=project_id,
@@ -320,80 +313,52 @@ async def get_history_images(
         db=db,
     )
     dataset = res["dataset"]
-    workflow = res["workflow"]
 
     # Setup prefix for logging
-    prefix = f"[DS{dataset.id}-WFT{wftask.id}-images]"
+    prefix = f"[DS{dataset.id}-WFT{workflowtask_id}-images]"
 
-    # (1) Get the type-filtered list of dataset images
-
-    # (1A) Reconstruct dataset type filters by starting from {} and making
-    # incremental updates with `output_types` of all previous tasks
-    inferred_dataset_type_filters = {}
-    for current_wftask in workflow.task_list[0 : wftask.order]:
-        inferred_dataset_type_filters.update(current_wftask.task.output_types)
-    logger.debug(f"{prefix} {inferred_dataset_type_filters=}")
-    # (1B) Compute type filters for the current wftask
-    type_filters_patch = merge_type_filters(
-        task_input_types=wftask.task.input_types,
-        wftask_type_filters=wftask.type_filters,
-    )
-    logger.debug(f"{prefix} {type_filters_patch=}")
-    # (1C) Combine dataset type filters (lower priority) and current-wftask
-    # filters (higher priority)
-    actual_filters = inferred_dataset_type_filters
-    actual_filters.update(type_filters_patch)
-    logger.debug(f"{prefix} {actual_filters=}")
-    # (1D) Get all matching images from the dataset
-
-    pre_filtered_dataset_images = filter_image_list(
+    # (1) Apply type filters
+    type_filtered_images = filter_image_list(
         images=dataset.images,
-        type_filters=inferred_dataset_type_filters,
+        type_filters=request_body.type_filters,
     )
 
-    full_images_list = await enrich_images_async(
+    # (2) Extract valid values for attributes and types
+    attributes = aggregate_attributes(type_filtered_images)
+    attributes[IMAGE_STATUS_KEY] = [
+        HistoryUnitStatusWithUnset.DONE,
+        HistoryUnitStatusWithUnset.SUBMITTED,
+        HistoryUnitStatusWithUnset.FAILED,
+        HistoryUnitStatusWithUnset.UNSET,
+    ]
+    types = aggregate_types(type_filtered_images)
+
+    # (3) Enrich images with status attribute
+    type_filtered_images_with_status = await enrich_images_async(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
-        images=pre_filtered_dataset_images,
+        images=type_filtered_images,
         db=db,
     )
 
-    if unit_status is not None:
-        request_body.attribute_filters[IMAGE_STATUS_KEY] = unit_status
-
-    filtered_dataset_images = filter_image_list(
-        full_images_list,
-        type_filters=request_body.type_filters,
+    # (4) Apply attribute filters
+    final_images_with_status = filter_image_list(
+        type_filtered_images_with_status,
         attribute_filters=request_body.attribute_filters,
     )
+
     logger.debug(f"{prefix} {len(dataset.images)=}")
-    logger.debug(f"{prefix} {len(filtered_dataset_images)=}")
+    logger.debug(f"{prefix} {len(final_images_with_status)=}")
 
-    attributes = aggregate_attributes(pre_filtered_dataset_images)
-    types = aggregate_types(pre_filtered_dataset_images)
-
-    # Final list of objects
-
-    total_count = len(filtered_dataset_images)
+    # (5) Apply pagination logic
+    total_count = len(final_images_with_status)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
-        filtered_dataset_images,
+        final_images_with_status,
         key=lambda image: image["zarr_url"],
     )
     paginated_images_list = sorted_images_list[
         (pagination.page - 1) * page_size : pagination.page * page_size
-    ]
-
-    # FIXME: This is only for backwards-compatibility. To remove when we
-    # update the webclient
-    paginated_images_list = [
-        {
-            **img,
-            "status": (
-                lambda x: None if x == HistoryUnitStatusWithUnset.UNSET else x
-            )(img["attributes"].pop(IMAGE_STATUS_KEY)),
-        }
-        for img in paginated_images_list
     ]
 
     return dict(
