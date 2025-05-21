@@ -2,6 +2,8 @@
 
 # 2.14.12
 
+* Runner:
+    * Enable status-based selection of images to process (\#2588).
 * API:
     * Remove `unit_status` query parameter from `/project/{project_id}/status/images/` (\#2588).
     * Remove default type filters from `/project/{project_id}/status/images/` (\#2588).
