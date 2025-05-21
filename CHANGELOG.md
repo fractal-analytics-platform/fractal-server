@@ -4,6 +4,8 @@
 
 * API:
     * Group response of `GET /api/v2/task-group/` by `pkg_name` (\#2596).
+* Task-group lifecycle:
+    * Split `pip install` command into two steps (\#2600).
 
 # 2.14.11
 
