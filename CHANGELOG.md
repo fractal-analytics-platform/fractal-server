@@ -4,6 +4,8 @@
 
 * API:
     * Update `/project/{project_id}/status/images/`, removing `unit_status` and moving it into `request_body.attributes_filters` (\#2588).
+* Task-group lifecycle:
+    * Split `pip install` command into two steps (\#2600).
 
 # 2.14.11
 
