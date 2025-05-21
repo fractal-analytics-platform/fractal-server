@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -16,6 +15,7 @@ from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import get_wftask_check_owner
 from ._aux_functions_history import read_log_file
+from .images import ImagePage
 from .images import ImageQuery
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -34,7 +34,6 @@ from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.images import SingleImage
 from fractal_server.images.image_status import enrich_image_list
 from fractal_server.images.image_status import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
@@ -60,11 +59,6 @@ def check_historyrun_related_to_dataset_and_wftask(
                 f"not related to {dataset_id=} and {workflowtask_id=}."
             ),
         )
-
-
-class ImageWithStatusPage(PaginationResponse[SingleImage]):
-    attributes: dict[str, list[Any]]
-    types: list[str]
 
 
 router = APIRouter()
@@ -302,7 +296,7 @@ async def get_history_images(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> ImageWithStatusPage:
+) -> ImagePage:
     # Access control and object retrieval
     wftask = await get_wftask_check_owner(
         project_id=project_id,
