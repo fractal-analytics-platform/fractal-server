@@ -37,6 +37,14 @@ class ImagePage(PaginationResponse[SingleImage]):
 
 
 class ImageQuery(BaseModel):
+    """
+    Query for a list of images.
+
+    Attributes:
+        type_filters:
+        attribute_filters:
+    """
+
     type_filters: TypeFilters = Field(default_factory=dict)
     attribute_filters: AttributeFilters = Field(default_factory=dict)
 
