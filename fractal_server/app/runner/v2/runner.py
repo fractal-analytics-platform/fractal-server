@@ -45,8 +45,9 @@ def _remove_status_from_attributes(
     """
     Drop attribute `IMAGE_STATUS_KEY` from all images.
     """
-    [img["attributes"].pop(IMAGE_STATUS_KEY) for img in images]
-    return images
+    images_copy = deepcopy(images)
+    [img["attributes"].pop(IMAGE_STATUS_KEY) for img in images_copy]
+    return images_copy
 
 
 def drop_none_attributes(attributes: dict[str, Any]) -> dict[str, Any]:
@@ -146,17 +147,14 @@ def execute_tasks_v2(
                     dataset_id=dataset.id,
                     workflowtask_id=wftask.id,
                 )
-
             type_filtered_images = filter_image_list(
                 images=tmp_images,
                 type_filters=type_filters,
-                attribute_filters=None,
             )
             num_available_images = len(type_filtered_images)
 
             filtered_images = filter_image_list(
                 images=type_filtered_images,
-                type_filters=None,
                 attribute_filters=job_attribute_filters,
             )
         else:

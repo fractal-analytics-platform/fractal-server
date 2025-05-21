@@ -132,7 +132,6 @@ def enrich_images_sync(
     )
 
     zarr_url_to_image = {img["zarr_url"]: deepcopy(img) for img in images}
-
     with next(get_sync_db()) as db:
         res = db.execute(
             _prepare_query(
