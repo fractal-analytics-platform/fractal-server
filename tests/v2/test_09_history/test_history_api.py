@@ -579,15 +579,21 @@ async def test_get_history_images(
             SingleImage(
                 zarr_url=f"/a{i}",
                 types={"x": True},
-                attributes={"well": f"{i}A"},
+                attributes={
+                    "well": f"well-{i}",
+                    "a_or_b": "a",
+                },
             ).model_dump()
             for i in range(5)
         ]
         images_x_and_y = [
             SingleImage(
                 zarr_url=f"/b{i}",
-                types={"x": True, "y": True, "z": True},
-                attributes={"well": f"{i}B"},
+                types={"x": True, "is_b": True},
+                attributes={
+                    "well": f"well-{i}",
+                    "a_or_b": "b",
+                },
             ).model_dump()
             for i in range(5)
         ]
@@ -660,58 +666,10 @@ async def test_get_history_images(
         assert res.status_code == 200
         res = res.json()
         assert res["current_page"] == 1
-        assert res["page_size"] == 5
-        assert res["total_count"] == 5
-        assert len(res["attributes"]) == 2
-        assert set(res["attributes"]["well"]) == {f"{i}B" for i in range(5)}
-        assert set(res["types"]) == {"y", "x", "z"}
-        assert res["items"] == [
-            {
-                "zarr_url": "/b0",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "0B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
-                },
-            },
-            {
-                "zarr_url": "/b1",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "1B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.DONE,
-                },
-            },
-            {
-                "zarr_url": "/b2",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "2B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
-                },
-            },
-            {
-                "zarr_url": "/b3",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "3B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
-                },
-            },
-            {
-                "zarr_url": "/b4",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "4B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
-                },
-            },
-        ]
+        assert res["page_size"] == 10
+        assert res["total_count"] == 10
+        assert set(res["types"]) == {"x", "is_b"}
+        assert set(res["attributes"]) == {"well", "a_or_b", IMAGE_STATUS_KEY}
 
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(
@@ -723,9 +681,8 @@ async def test_get_history_images(
                 }
             ),
         )
-        debug(res.json())
         assert res.status_code == 200
-        assert res.json()["total_count"] == 4
+        assert res.json()["total_count"] == 8
         for img in res.json()["items"]:
             assert (
                 img["attributes"][IMAGE_STATUS_KEY]
@@ -743,51 +700,67 @@ async def test_get_history_images(
             ),
         )
         assert res.status_code == 200
-        debug(res.json())
-        assert res.json()["total_count"] == 1
-        assert (
-            res.json()["items"][0]["attributes"][IMAGE_STATUS_KEY]
-            == HistoryUnitStatusWithUnset.DONE
-        )
+        assert res.json()["total_count"] == 2
+        assert res.json()["attributes"] == {
+            IMAGE_STATUS_KEY: [
+                "done",
+                "submitted",
+                "failed",
+                "unset",
+            ],
+            "a_or_b": ["a", "b"],
+            "well": [f"well-{i}" for i in range(5)],
+        }
+        for img in res.json()["items"]:
+            assert (
+                img["attributes"][IMAGE_STATUS_KEY]
+                == HistoryUnitStatusWithUnset.DONE
+            )
 
         # CASE 4: no status filter, some attribute filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
             f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
-            json=dict(attribute_filters={"well": ["0B", "1B"]}),
+            json=dict(attribute_filters={"well": ["well-1"]}),
         )
         assert res.status_code == 200
-        assert res.json()["items"] == [
-            {
-                "zarr_url": "/b0",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "0B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
-                },
-            },
-            {
-                "zarr_url": "/b1",
-                "origin": None,
-                "types": {"x": True, "y": True, "z": True},
-                "attributes": {
-                    "well": "1B",
-                    IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.DONE,
-                },
-            },
-        ]
+        assert res.json()["total_count"] == 2
+        assert res.json()["attributes"] == {
+            IMAGE_STATUS_KEY: [
+                "done",
+                "submitted",
+                "failed",
+                "unset",
+            ],
+            "a_or_b": ["a", "b"],
+            "well": [f"well-{i}" for i in range(5)],
+        }
+        for img in res.json()["items"]:
+            assert img["attributes"]["well"] == "well-1"
+            assert (
+                img["attributes"][IMAGE_STATUS_KEY]
+                == HistoryUnitStatusWithUnset.DONE
+            )
 
         # CASE 5: no status filter, some type filters
         res = await client.post(
             f"/api/v2/project/{project.id}/status/images/"
             f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}",
-            json=dict(type_filters={"z": False}),
+            json=dict(type_filters={"is_b": True}),
         )
         assert res.status_code == 200
-        assert res.json()["items"] == []
-        assert res.json()["total_count"] == 0
-        assert set(res.json()["types"]) == {"y", "x", "z"}
+        assert res.json()["attributes"] == {
+            IMAGE_STATUS_KEY: [
+                "done",
+                "submitted",
+                "failed",
+                "unset",
+            ],
+            "a_or_b": ["b"],
+            "well": [f"well-{i}" for i in range(5)],
+        }
+        assert set(res.json()["types"]) == {"x", "is_b"}
+        assert res.json()["total_count"] == 5
 
 
 async def test_get_logs(
