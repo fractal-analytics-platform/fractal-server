@@ -840,9 +840,7 @@ async def test_status_based_submission(
     fractal_tasks_mock_db,
 ):
     """
-    Test a workflow with 3 tasks where:
-    - 2 out of 4 images are successfully processed.
-    - The workflow is restarted from the first task to process the remaining 2 images.
+    Test processing of images based on status.
     """
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
