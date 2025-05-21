@@ -11,7 +11,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.images import SingleImage
-from fractal_server.images.image_status import IMAGE_STATUS_KEY
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 
 
 async def test_status_api(
