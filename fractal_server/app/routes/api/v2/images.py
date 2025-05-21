@@ -1,5 +1,3 @@
-from typing import Any
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -26,6 +24,7 @@ from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 from fractal_server.types import AttributeFilters
+from fractal_server.types import ImageAttributeValue
 from fractal_server.types import TypeFilters
 
 router = APIRouter()
@@ -33,7 +32,7 @@ router = APIRouter()
 
 class ImagePage(PaginationResponse[SingleImage]):
 
-    attributes: dict[str, list[Any]]
+    attributes: dict[str, list[ImageAttributeValue]]
     types: list[str]
 
 
