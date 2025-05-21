@@ -5,6 +5,7 @@
 * API:
     * Remove `unit_status` query parameter from `/project/{project_id}/status/images/` (\#2588).
     * Remove default type filters from `/project/{project_id}/status/images/` (\#2588).
+    * Sort lists of existing attribute values in `aggregate_attributes` (\#2588).
 * Task-group lifecycle:
     * Split `pip install` command into two steps (\#2600).
 
