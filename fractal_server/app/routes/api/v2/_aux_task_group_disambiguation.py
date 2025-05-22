@@ -126,7 +126,7 @@ async def remove_duplicate_task_groups(
     new_task_groups = [
         (
             await _disambiguate_task_groups_not_none(
-                task_groups=list(groups),
+                matching_task_groups=list(groups),
                 user_id=user_id,
                 db=db,
             )
