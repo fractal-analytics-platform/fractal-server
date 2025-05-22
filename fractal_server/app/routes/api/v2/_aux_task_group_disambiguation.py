@@ -18,7 +18,16 @@ async def _disambiguate_task_groups(
     db: AsyncSession,
 ) -> TaskGroupV2 | None:
     """
-    Disambiguate task groups based on ownership information.
+    Find high-priority task group in a list, if any, based on ownership.
+
+    Args:
+        matching_task_groups:
+        user_id:
+        default_group_id:
+        db:
+
+    Returns:
+        The task group or `None`.
     """
     list_user_ids = [tg.user_id for tg in matching_task_groups]
     list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
@@ -90,6 +99,18 @@ async def _disambiguate_task_groups_not_none(
     default_group_id: int,
     db: AsyncSession,
 ) -> TaskGroupV2:
+    """
+    Find high-priority task group in a list, based on ownership.
+
+    Args:
+        matching_task_groups:
+        user_id:
+        default_group_id:
+        db:
+
+    Returns:
+        The task group or `None`.
+    """
     task_group = await _disambiguate_task_groups(
         matching_task_groups=matching_task_groups,
         user_id=user_id,
@@ -98,7 +119,7 @@ async def _disambiguate_task_groups_not_none(
     )
     if task_group is None:
         raise UnreachableBranchError(
-            f"Could not find a task group with {user_id=}."
+            f"Could not find a task group ({user_id=}, {default_group_id=})."
         )
     else:
         return task_group
