@@ -4,18 +4,18 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _extract_single_task_group,
-)
-from fractal_server.app.routes.api.v2.workflow_import import logger
+from fractal_server.logger import set_logger
+
+
+logger = set_logger(__name__)
 
 
 async def _disambiguate_task_groups(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    db: AsyncSession,
     default_group_id: int,
+    db: AsyncSession,
 ) -> TaskV2 | None:
     """
     Disambiguate task groups based on ownership information.
@@ -87,6 +87,7 @@ def remove_duplicate_task_groups(
     *,
     task_groups: list[TaskGroupV2],
     user_id: int,
+    db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
     Remove duplicate task groups from a list
@@ -102,9 +103,10 @@ def remove_duplicate_task_groups(
     from itertools import groupby
 
     new_task_groups = [
-        _extract_single_task_group(
+        _disambiguate_task_groups(
             task_groups=list(groups),
             user_id=user_id,
+            db=db,
         )
         for version, groups in groupby(task_groups, key=lambda tg: tg.version)
     ]

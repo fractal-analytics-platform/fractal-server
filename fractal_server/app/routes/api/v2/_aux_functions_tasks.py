@@ -21,7 +21,6 @@ from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 
@@ -372,30 +371,3 @@ def _check_type_filters_compatibility(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Incompatible type filters.\nOriginal error: {str(e)}",
         )
-
-
-def _extract_single_task_group(
-    *,
-    task_groups: list[TaskGroupV2],
-    user_id: int,
-) -> TaskGroupV2:
-    """
-    Extract the user-owned task group for a given `(pkg_name, version)`
-
-    Args:
-        task_groups:
-        user_id:
-
-    Returns:
-        The task group associated to the current `user_id`.
-    """
-
-    if len(task_groups) == 1:
-        return task_groups[0]
-    else:
-        try:
-            return next(tg for tg in task_groups if tg.user_id == user_id)
-        except StopIteration:
-            raise UnreachableBranchError(
-                f"Could not find a task group with {user_id=}."
-            )
