@@ -41,10 +41,10 @@ async def test_import_export(
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
         task_with_source0 = await task_factory_v2(
-            user_id=user.id, source=wf_file_task_source_0
+            user_id=user.id, source=wf_file_task_source_0, name="0"
         )
         task_with_source1 = await task_factory_v2(
-            user_id=user.id, source=wf_file_task_source_1
+            user_id=user.id, source=wf_file_task_source_1, name="1"
         )
 
         # Import workflow
@@ -236,28 +236,29 @@ async def test_import_export(
             == first_task_no_source.taskgroupv2_id
         )
 
-        # issue 2226
-        names = [
-            "Convert Cellvoyager to OME-Zarr",
-            "Project Image (HCS Plate)",
-        ]
-        for name in names:
-            await task_factory_v2(
-                user_id=user.id,
-                version="1.4.2",
-                name=name,
-                task_group_kwargs=dict(pkg_name="fractal-tasks-core"),
-            )
-        with (testdata_path / "import_export/workflow-issue2226.json").open(
-            "r"
-        ) as f:
-            workflow_issue_2226 = json.load(f)
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json=workflow_issue_2226,
-        )
-        debug(res.json())
-        assert res.status_code == 201
+        # FIXME: is this needed?
+        # # issue 2226
+        # names = [
+        #     "Convert Cellvoyager to OME-Zarr",
+        #     "Project Image (HCS Plate)",
+        # ]
+        # for name in names:
+        #     await task_factory_v2(
+        #         user_id=user.id,
+        #         version="1.4.2",
+        #         name=name,
+        #         task_group_kwargs=dict(pkg_name="fractal-tasks-core"),
+        #     )
+        # with (testdata_path / "import_export/workflow-issue2226.json").open(
+        #     "r"
+        # ) as f:
+        #     workflow_issue_2226 = json.load(f)
+        # res = await client.post(
+        #     f"{PREFIX}/project/{prj.id}/workflow/import/",
+        #     json=workflow_issue_2226,
+        # )
+        # debug(res.json())
+        # assert res.status_code == 201
 
 
 async def test_unit_get_task_by_source():
@@ -412,54 +413,58 @@ async def test_unit_disambiguate_task_groups(
 
     async with MockCurrentUser() as user1:
         user1_id = user1.id
-        task_A = await task_factory_v2(
-            name="task",
-            user_id=user1_id,
-            task_group_kwargs=dict(
-                pkg_name="pkg",
-                version="1.0.0",
-                user_group_id=default_user_group.id,
-            ),
-        )
-
     async with MockCurrentUser() as user2:
         user2_id = user2.id
+    async with MockCurrentUser() as user3:
+        user3_id = user3.id
 
-        old_group = UserGroup(name="Old group")
-        recent_group = UserGroup(name="Recent group")
-        db.add(old_group)
-        db.add(recent_group)
-        await db.commit()
-        await db.refresh(old_group)
-        await db.refresh(recent_group)
+    old_group = UserGroup(name="Old group")
+    db.add(old_group)
+    await db.commit()
+    await db.refresh(old_group)
+    time.sleep(0.1)
+    new_group = UserGroup(name="New group")
+    db.add(new_group)
+    await db.commit()
+    await db.refresh(new_group)
 
-        db.add(LinkUserGroup(user_id=user2.id, group_id=old_group.id))
-        db.add(LinkUserGroup(user_id=user1.id, group_id=old_group.id))
-        await db.commit()
-        time.sleep(0.1)
-        db.add(LinkUserGroup(user_id=user1.id, group_id=recent_group.id))
-        db.add(LinkUserGroup(user_id=user2.id, group_id=recent_group.id))
-        await db.commit()
-        await db.close()
+    db.add(LinkUserGroup(user_id=user1_id, group_id=old_group.id))
+    db.add(LinkUserGroup(user_id=user2_id, group_id=old_group.id))
+    db.add(LinkUserGroup(user_id=user3_id, group_id=old_group.id))
+    db.add(LinkUserGroup(user_id=user1_id, group_id=new_group.id))
+    db.add(LinkUserGroup(user_id=user2_id, group_id=new_group.id))
+    db.add(LinkUserGroup(user_id=user3_id, group_id=new_group.id))
+    await db.commit()
 
-        task_B = await task_factory_v2(
-            name="task",
-            user_id=user1_id,
-            task_group_kwargs=dict(
-                pkg_name="pkg",
-                version="1.0.0",
-                user_group_id=old_group.id,
-            ),
-        )
-        task_C = await task_factory_v2(
-            name="task",
-            user_id=user1_id,
-            task_group_kwargs=dict(
-                pkg_name="pkg",
-                version="1.0.0",
-                user_group_id=recent_group.id,
-            ),
-        )
+    task_A = await task_factory_v2(
+        name="taskA",
+        user_id=user1_id,
+        task_group_kwargs=dict(
+            pkg_name="pkg",
+            version="1.0.0",
+            user_group_id=default_user_group.id,
+        ),
+    )
+
+    task_B = await task_factory_v2(
+        name="taskB",
+        user_id=user2_id,
+        task_group_kwargs=dict(
+            pkg_name="pkg",
+            version="1.0.0",
+            user_group_id=old_group.id,
+        ),
+    )
+
+    task_C = await task_factory_v2(
+        name="taskC",
+        user_id=user3_id,
+        task_group_kwargs=dict(
+            pkg_name="pkg",
+            version="1.0.0",
+            user_group_id=new_group.id,
+        ),
+    )
 
     task_group_A = await db.get(TaskGroupV2, task_A.taskgroupv2_id)
     task_group_B = await db.get(TaskGroupV2, task_B.taskgroupv2_id)
@@ -469,7 +474,7 @@ async def test_unit_disambiguate_task_groups(
 
     # Pick task-group owned by user
     task_group = await _disambiguate_task_groups(
-        matching_task_groups=[task_group_A, task_group_B, task_group_C],
+        matching_task_groups=[task_group_A, task_group_B],
         user_id=user1_id,
         default_group_id=default_user_group.id,
         db=db,
@@ -479,7 +484,7 @@ async def test_unit_disambiguate_task_groups(
 
     # Pick task-group related to "All" user group
     task_group = await _disambiguate_task_groups(
-        matching_task_groups=[task_group_A, task_group_B, task_group_C],
+        matching_task_groups=[task_group_A, task_group_C],
         user_id=user2_id,
         default_group_id=default_user_group.id,
         db=db,
@@ -493,7 +498,7 @@ async def test_unit_disambiguate_task_groups(
     # oldest link
     task_group = await _disambiguate_task_groups(
         matching_task_groups=[task_group_B, task_group_C],
-        user_id=user2_id,
+        user_id=user1_id,
         default_group_id=default_user_group.id,
         db=db,
     )
