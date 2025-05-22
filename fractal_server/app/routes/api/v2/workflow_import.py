@@ -95,33 +95,39 @@ async def _disambiguate_task_groups(
     """
     Disambiguate task groups based on ownership information.
     """
+    list_user_ids = [tg.user_id for tg in matching_task_groups]
+    list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
+
     # Highest priority: task groups created by user
-    for task_group in matching_task_groups:
-        if task_group.user_id == user_id:
-            logger.info(
-                "[_disambiguate_task_groups] "
-                f"Found task group {task_group.id} with {user_id=}, return."
-            )
-            return task_group
-    logger.info(
-        "[_disambiguate_task_groups] "
-        f"No task group found with {user_id=}, continue."
-    )
+    try:
+        ind_user_id = list_user_ids.index(user_id)
+        task_group = matching_task_groups[ind_user_id]
+        logger.info(
+            "[_disambiguate_task_groups] "
+            f"Found task group {task_group.id} with {user_id=}, return."
+        )
+        return task_group
+    except ValueError:
+        logger.info(
+            "[_disambiguate_task_groups] "
+            f"No task group found with {user_id=}, continue."
+        )
 
     # Medium priority: task groups owned by default user group
-    for task_group in matching_task_groups:
-        if task_group.user_group_id == default_group_id:
-            logger.info(
-                "[_disambiguate_task_groups] "
-                f"Found task group {task_group.id} with user_group_id="
-                f"{default_group_id}, return."
-            )
-            return task_group
-    logger.info(
-        "[_disambiguate_task_groups] "
-        "No task group found with user_group_id="
-        f"{default_group_id}, continue."
-    )
+    try:
+        ind_user_group_id = list_user_group_ids.index(default_group_id)
+        task_group = matching_task_groups[ind_user_group_id]
+        logger.info(
+            "[_disambiguate_task_groups] "
+            f"Found task group {task_group.id} with {user_id=}, return."
+        )
+        return task_group
+    except ValueError:
+        logger.info(
+            "[_disambiguate_task_groups] "
+            "No task group found with user_group_id="
+            f"{default_group_id}, continue."
+        )
 
     # Lowest priority: task groups owned by other groups, sorted
     # according to age of the user/usergroup link
@@ -129,13 +135,10 @@ async def _disambiguate_task_groups(
         "[_disambiguate_task_groups] "
         "Now sorting remaining task groups by oldest-user-link."
     )
-    user_group_ids = [
-        task_group.user_group_id for task_group in matching_task_groups
-    ]
     stm = (
         select(LinkUserGroup.group_id)
         .where(LinkUserGroup.user_id == user_id)
-        .where(LinkUserGroup.group_id.in_(user_group_ids))
+        .where(LinkUserGroup.group_id.in_(list_user_group_ids))
         .order_by(LinkUserGroup.timestamp_created.asc())
     )
     res = await db.execute(stm)
