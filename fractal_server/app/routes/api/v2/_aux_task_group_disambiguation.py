@@ -20,7 +20,7 @@ async def _disambiguate_task_groups(
     db: AsyncSession,
 ) -> TaskGroupV2 | None:
     """
-    Find top-priority task group in a list, if any, based on ownership.
+    Find ownership-based top-priority task group, if any.
 
     Args:
         matching_task_groups:
@@ -102,7 +102,7 @@ async def _disambiguate_task_groups_not_none(
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
-    Find top-priority task group in a list, based on ownership.
+    Find ownership-based top-priority task group, and fail otherwise.
 
     Args:
         matching_task_groups:
@@ -111,7 +111,7 @@ async def _disambiguate_task_groups_not_none(
         db:
 
     Returns:
-        The task group or `None`.
+        The top-priority task group.
     """
     task_group = await _disambiguate_task_groups(
         matching_task_groups=matching_task_groups,
