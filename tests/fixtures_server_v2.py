@@ -239,13 +239,14 @@ async def task_factory_v2(db: AsyncSession):
         if task_group_kwargs is None:
             task_group_kwargs = dict()
 
-        user_group_id = task_group_kwargs.get("user_group_id")
-        if user_group_id is None:
+        if "user_group_id" not in task_group_kwargs.keys():
             user_group_id = await _get_default_usergroup_id(db=db)
         else:
-            await _verify_user_belongs_to_group(
-                user_id=user_id, user_group_id=user_group_id, db=db
-            )
+            user_group_id = task_group_kwargs["user_group_id"]
+            if user_group_id is not None:
+                await _verify_user_belongs_to_group(
+                    user_id=user_id, user_group_id=user_group_id, db=db
+                )
 
         pkg_name = task_group_kwargs.get("pkg_name", task.name)
         version = task_group_kwargs.get("version", task.version)
