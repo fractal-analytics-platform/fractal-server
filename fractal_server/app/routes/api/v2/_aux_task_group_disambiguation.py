@@ -108,6 +108,7 @@ async def remove_duplicate_task_groups(
     *,
     task_groups: list[TaskGroupV2],
     user_id: int,
+    default_group_id: int,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
@@ -128,6 +129,7 @@ async def remove_duplicate_task_groups(
             await _disambiguate_task_groups_not_none(
                 matching_task_groups=list(groups),
                 user_id=user_id,
+                default_group_id=default_group_id,
                 db=db,
             )
         )

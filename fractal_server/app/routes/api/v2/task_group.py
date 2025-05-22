@@ -24,6 +24,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -158,6 +159,8 @@ async def get_task_group_list(
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
+    default_group_id = await _get_default_usergroup_id(db)
+
     grouped_result = [
         (
             pkg_name,
@@ -166,6 +169,7 @@ async def get_task_group_list(
                     await remove_duplicate_task_groups(
                         task_groups=list(groups),
                         user_id=user.id,
+                        default_group_id=default_group_id,
                         db=db,
                     )
                 ),
