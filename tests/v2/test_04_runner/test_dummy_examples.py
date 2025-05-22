@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug  # noqa: F401
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
 from sqlmodel import select
 
@@ -14,7 +15,20 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.urls import normalize_url
+
+
+async def _find_last_history_unit(db: AsyncSession) -> HistoryUnit:
+    res = await db.execute(
+        select(HistoryUnit)
+        .join(HistoryRun)
+        .where(HistoryRun.id == HistoryUnit.history_run_id)
+        .order_by(HistoryRun.timestamp_started.desc())
+    )
+    last_history_unit = res.scalars().first()
+    return last_history_unit
 
 
 async def add_history_image_cache(
@@ -811,3 +825,265 @@ async def test_dummy_invalid_output_parallel(
     )
     hu = res.scalar_one_or_none()
     assert hu.status == HistoryUnitStatus.FAILED
+
+
+async def test_status_based_submission(
+    db,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+    job_factory_v2,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+):
+    """
+    Test processing of images based on status.
+    """
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["generic_task"].id
+
+    IMAGES = [
+        dict(
+            zarr_url=Path(zarr_dir, f"plate.zarr/B0{ind}").as_posix(),
+            attributes={"plate": "plate.zarr", "well": f"B0{ind}"},
+            types={"is_3D": True},
+        )
+        for ind in range(1, 5)
+    ]
+
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory_v2(user)
+
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftask_failing = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_non_parallel=dict(raise_error=True),
+    )
+    wftask_ok = await workflowtask_factory_v2(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+    )
+
+    # Case 1: Run and fail for B00 and B01 (by requiring the UNSET ones)
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+    )
+    with pytest.raises(JobExecutionError):
+        execute_tasks_v2_mod(
+            wf_task_list=[wftask_failing],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / "job0",
+            job_id=job.id,
+            runner=local_runner,
+            user_id=user_id,
+            job_attribute_filters={
+                "well": ["B01", "B02"],
+                IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.UNSET],
+            },
+        )
+
+    # Check that `HistoryImageCache`/`HistoryUnit` data were stored correctly
+    for ind in [1, 2]:
+        zarr_url = Path(zarr_dir, f"plate.zarr/B0{ind}").as_posix()
+        res = await db.execute(
+            select(HistoryImageCache).where(
+                HistoryImageCache.zarr_url == zarr_url
+            )
+        )
+        history_image_cache = res.scalar_one()
+        debug(history_image_cache)
+        history_unit = await db.get(
+            HistoryUnit,
+            history_image_cache.latest_history_unit_id,
+        )
+        debug(history_unit)
+        assert history_unit.status == HistoryUnitStatusWithUnset.FAILED
+
+    # Case 1: Run and fail for no images (by requiring the DONE ones)
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask_ok],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job1",
+        job_id=job.id,
+        runner=local_runner,
+        user_id=user_id,
+        job_attribute_filters={
+            IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
+        },
+    )
+
+    # Validate latest `HistoryUnit` object
+    last_history_unit = await _find_last_history_unit(db)
+    assert last_history_unit.zarr_urls == []
+    assert last_history_unit.status == HistoryUnitStatusWithUnset.DONE
+
+    return
+
+    # Case 1: Run and succeed for no images (by requiring the DONE ones)
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask_ok],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job1",
+        job_id=job.id,
+        runner=local_runner,
+        user_id=user_id,
+        job_attribute_filters={
+            IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
+        },
+    )
+
+    res = await db.execute(
+        select(HistoryImageCache).order_by(HistoryImageCache.zarr_url)
+    )
+    debug(res.scalars().all())
+    res = await db.execute(select(HistoryUnit).order_by(HistoryUnit.id))
+    debug(res.scalars().all())
+
+    return
+
+    # Case 2: Run successfully on all images
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+    )
+    execute_tasks_v2_mod(
+        wf_task_list=[wftask_ok],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job1",
+        job_id=job.id,
+        runner=local_runner,
+        user_id=user_id,
+    )
+
+    ##
+    return
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
+
+    async with MockCurrentUser() as user:
+        execute_tasks_v2_args = dict(
+            runner=local_runner,
+            user_id=user.id,
+            job_attribute_filters={
+                IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET
+            },
+        )
+        project = await project_factory_v2(user)
+
+    IMAGES = [
+        dict(
+            zarr_url=Path(zarr_dir, f"plate.zarr/B0{i}").as_posix(),
+            attributes={
+                "well": f"B0{i}",
+                IMAGE_STATUS_KEY: HistoryUnitStatusWithUnset.UNSET,
+            },
+            types={"is_3D": True},
+        )
+        for i in range(1, 5)
+    ]
+    dataset = await dataset_factory_v2(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
+
+    # Create workflow with 3 tasks
+    workflow = await workflow_factory_v2(project_id=project.id)
+    wftasks = [
+        await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task_id,
+            order=i,
+            args_non_parallel={
+                "full_new_image": dict(
+                    zarr_url=Path(zarr_dir, f"plate.zarr/B0{i+1}").as_posix(),
+                    types={"is_3D": True, f"task_{i}_processed": True},
+                )
+            }
+            if i == 0
+            else {},  # First task adds a new image, others process
+        )
+        for i in range(3)
+    ]
+
+    job = await job_factory_v2(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir=(tmp_path / "working_dir").as_posix(),
+        status="done",
+    )
+
+    # Case 1: Process 2 out of 4 images successfully
+    # Simulate partial processing by updating IMAGE_KEY_STATUS for 2 images
+    dataset.images[0]["attributes"][
+        IMAGE_STATUS_KEY
+    ] = HistoryUnitStatusWithUnset.DONE
+    dataset.images[1]["attributes"][
+        IMAGE_STATUS_KEY
+    ] = HistoryUnitStatusWithUnset.DONE
+    await db.merge(dataset)
+    await db.commit()
+
+    # Run the workflow for the remaining images (B03, B04)
+    execute_tasks_v2_mod(
+        wf_task_list=wftasks,
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job1",
+        job_id=job.id,
+        **execute_tasks_v2_args,
+    )
+
+    db.expunge_all()
+    dataset = await db.get(DatasetV2, dataset.id)
+
+    for img in dataset.images:
+        assert IMAGE_STATUS_KEY in img["attributes"]
+        if img["attributes"]["well"] in ["B01", "B02"]:
+            # These were already completed
+            assert (
+                img["attributes"][IMAGE_STATUS_KEY]
+                == HistoryUnitStatusWithUnset.DONE
+            )
+        else:
+            # These were processed in the restart
+            assert (
+                img["attributes"][IMAGE_STATUS_KEY]
+                == HistoryUnitStatusWithUnset.DONE
+            )

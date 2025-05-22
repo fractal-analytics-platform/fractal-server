@@ -125,7 +125,7 @@ def merge_type_filters(
 def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
     """
     Given a list of images, this function returns a dictionary of all image
-    attributes, each mapped to a list of present values.
+    attributes, each mapped to a sorted list of existing values.
     """
     attributes = {}
     for image in images:
@@ -133,7 +133,10 @@ def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
             attributes.setdefault(k, []).append(v)
         for k, v in attributes.items():
             attributes[k] = list(set(v))
-    return attributes
+    sorted_attributes = {
+        key: sorted(value) for key, value in attributes.items()
+    }
+    return sorted_attributes
 
 
 def aggregate_types(images: list[dict[str, Any]]) -> list[str]:

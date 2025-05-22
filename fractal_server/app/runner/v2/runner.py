@@ -33,8 +33,21 @@ from fractal_server.app.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
+from fractal_server.images.status_tools import enrich_images_sync
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.types import AttributeFilters
+
+
+def _remove_status_from_attributes(
+    images: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Drop attribute `IMAGE_STATUS_KEY` from all images.
+    """
+    images_copy = deepcopy(images)
+    [img["attributes"].pop(IMAGE_STATUS_KEY) for img in images_copy]
+    return images_copy
 
 
 def drop_none_attributes(attributes: dict[str, Any]) -> dict[str, Any]:
@@ -106,7 +119,11 @@ def execute_tasks_v2(
     tmp_images = deepcopy(dataset.images)
     current_dataset_type_filters = copy(job_type_filters)
 
-    for wftask in wf_task_list:
+    ENRICH_IMAGES_WITH_STATUS: bool = (
+        IMAGE_STATUS_KEY in job_attribute_filters.keys()
+    )
+
+    for ind_wftask, wftask in enumerate(wf_task_list):
         task = wftask.task
         task_name = task.name
         logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
@@ -122,15 +139,22 @@ def execute_tasks_v2(
                 wftask_type_filters=wftask.type_filters,
             )
             type_filters.update(type_filters_patch)
+
+            if ind_wftask == 0 and ENRICH_IMAGES_WITH_STATUS:
+                # FIXME: Could this be done on `type_filtered_images`?
+                tmp_images = enrich_images_sync(
+                    images=tmp_images,
+                    dataset_id=dataset.id,
+                    workflowtask_id=wftask.id,
+                )
             type_filtered_images = filter_image_list(
                 images=tmp_images,
                 type_filters=type_filters,
-                attribute_filters=None,
             )
             num_available_images = len(type_filtered_images)
+
             filtered_images = filter_image_list(
                 images=type_filtered_images,
-                type_filters=None,
                 attribute_filters=job_attribute_filters,
             )
         else:
@@ -379,7 +403,11 @@ def execute_tasks_v2(
         with next(get_sync_db()) as db:
             # Write current dataset images into the database.
             db_dataset = db.get(DatasetV2, dataset.id)
-            db_dataset.images = tmp_images
+            if ENRICH_IMAGES_WITH_STATUS:
+
+                db_dataset.images = _remove_status_from_attributes(tmp_images)
+            else:
+                db_dataset.images = tmp_images
             flag_modified(db_dataset, "images")
             db.merge(db_dataset)
 
