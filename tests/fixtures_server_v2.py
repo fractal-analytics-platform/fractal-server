@@ -13,6 +13,12 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_group_constraint,
+)  # noqa
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_user_constraint,
+)  # noqa
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -241,13 +247,29 @@ async def task_factory_v2(db: AsyncSession):
                 user_id=user_id, user_group_id=user_group_id, db=db
             )
 
+        pkg_name = task_group_kwargs.get("pkg_name", task.name)
+        version = task_group_kwargs.get("version", task.version)
+
+        await _verify_non_duplication_user_constraint(
+            db=db,
+            user_id=user_id,
+            pkg_name=pkg_name,
+            version=version,
+        )
+        await _verify_non_duplication_group_constraint(
+            db=db,
+            user_group_id=user_group_id,
+            pkg_name=pkg_name,
+            version=version,
+        )
+
         task_group = TaskGroupV2(
             user_id=user_id,
             user_group_id=user_group_id,
             active=task_group_kwargs.get("active", True),
-            version=task_group_kwargs.get("version", task.version),
+            version=version,
             origin=task_group_kwargs.get("origin", "other"),
-            pkg_name=task_group_kwargs.get("pkg_name", task.name),
+            pkg_name=pkg_name,
             path=task_group_kwargs.get("path", None),
             venv_path=task_group_kwargs.get("venv_path", None),
             python_version=task_group_kwargs.get("python_version", None),
