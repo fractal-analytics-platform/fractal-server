@@ -15,7 +15,7 @@ from sqlmodel import select
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_functions_tasks import disambiguate_task_group_list
+from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -162,7 +162,7 @@ async def get_task_group_list(
         (
             pkg_name,
             sorted(
-                disambiguate_task_group_list(
+                remove_duplicate_task_groups(
                     task_groups=list(groups),
                     user_id=user.id,
                 ),

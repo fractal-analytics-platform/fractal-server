@@ -399,31 +399,3 @@ def _extract_single_task_group(
             raise UnreachableBranchError(
                 f"Could not find a task group with {user_id=}."
             )
-
-
-def disambiguate_task_group_list(
-    *,
-    task_groups: list[TaskGroupV2],
-    user_id: int,
-) -> list[TaskGroupV2]:
-    """
-    Remove duplicate task groups from a list
-
-    Args:
-        task_groups: A list of task groups with identical `pkg_name`
-        user_id: User ID
-
-    Returns:
-        New list of task groups with no duplicate `(pkg_name,version)` entries
-    """
-
-    from itertools import groupby
-
-    new_task_groups = [
-        _extract_single_task_group(
-            task_groups=list(groups),
-            user_id=user_id,
-        )
-        for version, groups in groupby(task_groups, key=lambda tg: tg.version)
-    ]
-    return new_task_groups
