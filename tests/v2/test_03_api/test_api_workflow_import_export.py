@@ -407,7 +407,7 @@ async def test_unit_disambiguate_task_groups(
     default_user_group,
 ):
     import time
-    from fractal_server.app.routes.api.v2.workflow_import import (
+    from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (  # noqa
         _disambiguate_task_groups,
     )
 
