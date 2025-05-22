@@ -31,10 +31,9 @@ async def _disambiguate_task_groups(
     Returns:
         The task group or `None`.
     """
-    list_user_ids = [tg.user_id for tg in matching_task_groups]
-    list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
 
     # Highest priority: task groups created by user
+    list_user_ids = [tg.user_id for tg in matching_task_groups]
     try:
         ind_user_id = list_user_ids.index(user_id)
         task_group = matching_task_groups[ind_user_id]
@@ -46,10 +45,11 @@ async def _disambiguate_task_groups(
     except ValueError:
         logger.debug(
             "[_disambiguate_task_groups] "
-            f"No task group found with {user_id=}, continue."
+            f"No task group with {user_id=}, continue."
         )
 
     # Medium priority: task groups owned by default user group
+    list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
     try:
         ind_user_group_id = list_user_group_ids.index(default_group_id)
         task_group = matching_task_groups[ind_user_group_id]
@@ -61,7 +61,7 @@ async def _disambiguate_task_groups(
     except ValueError:
         logger.debug(
             "[_disambiguate_task_groups] "
-            "No task group found with user_group_id="
+            "No task group with user_group_id="
             f"{default_group_id}, continue."
         )
 
@@ -69,7 +69,7 @@ async def _disambiguate_task_groups(
     # according to age of the user/usergroup link
     logger.debug(
         "[_disambiguate_task_groups] "
-        "Now sorting remaining task groups by oldest-user-link."
+        "Sort remaining task groups by oldest-user-link."
     )
     stm = (
         select(LinkUserGroup.group_id)
@@ -80,8 +80,7 @@ async def _disambiguate_task_groups(
     res = await db.execute(stm)
     oldest_user_group_id = res.scalars().first()
     logger.debug(
-        "[_disambiguate_task_groups] "
-        f"Result of sorting: {oldest_user_group_id=}."
+        "[_disambiguate_task_groups] " f"Result: {oldest_user_group_id=}."
     )
     task_group = next(
         iter(
@@ -138,7 +137,7 @@ async def remove_duplicate_task_groups(
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
-    Remove duplicate task groups from a list.
+    Extract a single task group for each `version`.
 
     Args:
         task_groups: A list of task groups with identical `pkg_name`
