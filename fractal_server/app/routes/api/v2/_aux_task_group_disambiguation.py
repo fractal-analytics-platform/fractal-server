@@ -90,7 +90,7 @@ async def _disambiguate_task_groups_not_none(
     default_group_id: int,
     db: AsyncSession,
 ) -> TaskGroupV2:
-    task_group = _disambiguate_task_groups(
+    task_group = await _disambiguate_task_groups(
         matching_task_groups=matching_task_groups,
         user_id=user_id,
         default_group_id=default_group_id,
