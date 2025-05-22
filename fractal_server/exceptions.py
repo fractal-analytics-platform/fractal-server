@@ -1,0 +1,2 @@
+class UnreachableBranchError(RuntimeError):
+    pass

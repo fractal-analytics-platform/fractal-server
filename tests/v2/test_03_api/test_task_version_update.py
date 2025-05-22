@@ -74,7 +74,7 @@ async def test_get_workflow_version_update_candidates(
         # Task with non-compatible type
         task7 = await task_factory_v2(
             user_id=user.id,
-            version="6",
+            version="7",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "6"},
             type="parallel",
             name="my_task",
@@ -84,10 +84,10 @@ async def test_get_workflow_version_update_candidates(
         # Non-active task
         task6 = await task_factory_v2(
             user_id=user.id,
-            version="6",
+            version="8",
             task_group_kwargs={
                 "pkg_name": "my_pkg",
-                "version": "6",
+                "version": "8",
                 "active": False,
             },
             name="my_task",

@@ -21,6 +21,9 @@ from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
+    _disambiguate_task_groups,
+)
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.schemas.v2 import TaskImportV2
@@ -83,76 +86,6 @@ async def _get_task_by_source(
         None,
     )
     return task_id
-
-
-async def _disambiguate_task_groups(
-    *,
-    matching_task_groups: list[TaskGroupV2],
-    user_id: int,
-    db: AsyncSession,
-    default_group_id: int,
-) -> TaskV2 | None:
-    """
-    Disambiguate task groups based on ownership information.
-    """
-    # Highest priority: task groups created by user
-    for task_group in matching_task_groups:
-        if task_group.user_id == user_id:
-            logger.info(
-                "[_disambiguate_task_groups] "
-                f"Found task group {task_group.id} with {user_id=}, return."
-            )
-            return task_group
-    logger.info(
-        "[_disambiguate_task_groups] "
-        f"No task group found with {user_id=}, continue."
-    )
-
-    # Medium priority: task groups owned by default user group
-    for task_group in matching_task_groups:
-        if task_group.user_group_id == default_group_id:
-            logger.info(
-                "[_disambiguate_task_groups] "
-                f"Found task group {task_group.id} with user_group_id="
-                f"{default_group_id}, return."
-            )
-            return task_group
-    logger.info(
-        "[_disambiguate_task_groups] "
-        "No task group found with user_group_id="
-        f"{default_group_id}, continue."
-    )
-
-    # Lowest priority: task groups owned by other groups, sorted
-    # according to age of the user/usergroup link
-    logger.info(
-        "[_disambiguate_task_groups] "
-        "Now sorting remaining task groups by oldest-user-link."
-    )
-    user_group_ids = [
-        task_group.user_group_id for task_group in matching_task_groups
-    ]
-    stm = (
-        select(LinkUserGroup.group_id)
-        .where(LinkUserGroup.user_id == user_id)
-        .where(LinkUserGroup.group_id.in_(user_group_ids))
-        .order_by(LinkUserGroup.timestamp_created.asc())
-    )
-    res = await db.execute(stm)
-    oldest_user_group_id = res.scalars().first()
-    logger.info(
-        "[_disambiguate_task_groups] "
-        f"Result of sorting: {oldest_user_group_id=}."
-    )
-    task_group = next(
-        iter(
-            task_group
-            for task_group in matching_task_groups
-            if task_group.user_group_id == oldest_user_group_id
-        ),
-        None,
-    )
-    return task_group
 
 
 async def _get_task_by_taskimport(

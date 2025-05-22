@@ -114,7 +114,7 @@ async def test_delete_workflow(
 
         # Create a task
         task = await task_factory_v2(
-            user_id=user.id, name="task", source="dummy"
+            user_id=user.id, name="task1", source="dummy"
         )
 
         # Add a dummy task to workflow
@@ -155,7 +155,7 @@ async def test_delete_workflow(
         wf_deletable_2 = await workflow_factory_v2(project_id=project.id)
         wf_not_deletable_1 = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(
-            user_id=user.id, name="task", source="source"
+            user_id=user.id, name="task2", source="source"
         )
         await _workflow_insert_task(
             workflow_id=wf_deletable_1.id, task_id=task.id, db=db
@@ -225,10 +225,10 @@ async def test_get_workflow(
     # Create several kinds of tasks
     async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
-        t1 = await task_factory_v2(user_id=user_A_id, source="1")
-        t2 = await task_factory_v2(user_id=user_A_id, source="2")
+        t1 = await task_factory_v2(user_id=user_A_id, source="1", name="1")
+        t2 = await task_factory_v2(user_id=user_A_id, source="2", name="2")
     async with MockCurrentUser() as user_B:
-        t3 = await task_factory_v2(user_id=user_B.id, source="3")
+        t3 = await task_factory_v2(user_id=user_B.id, source="3", name="3")
     tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
     tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
     tg3.user_group_id = None
@@ -353,10 +353,10 @@ async def test_patch_workflow(
     # Create several kinds of tasks
     async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
-        t1 = await task_factory_v2(user_id=user_A_id, source="1")
-        t2 = await task_factory_v2(user_id=user_A_id, source="2")
+        t1 = await task_factory_v2(user_id=user_A_id, source="1", name="1")
+        t2 = await task_factory_v2(user_id=user_A_id, source="2", name="2")
     async with MockCurrentUser() as user_B:
-        t3 = await task_factory_v2(user_id=user_B.id, source="3")
+        t3 = await task_factory_v2(user_id=user_B.id, source="3", name="3")
     tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
     tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
     tg3.user_group_id = None
@@ -486,10 +486,13 @@ async def test_workflow_type_filters_flow(
         assert "Workflow has no tasks" in str(res.json())
 
         # Add a workflow task
-        task_converter = await task_factory_v2(user_id=user.id)
-        task_cellpose = await task_factory_v2(user_id=user.id)
+        task_converter = await task_factory_v2(
+            user_id=user.id, name="converter"
+        )
+        task_cellpose = await task_factory_v2(user_id=user.id, name="cellpose")
         task_MIP = await task_factory_v2(
             user_id=user.id,
+            name="mip",
             input_types={"is_3D": True},
             output_types={"is_3D": False},
         )
