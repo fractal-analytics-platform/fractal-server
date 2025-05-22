@@ -27,13 +27,13 @@ async def _disambiguate_task_groups(
     try:
         ind_user_id = list_user_ids.index(user_id)
         task_group = matching_task_groups[ind_user_id]
-        logger.info(
+        logger.debug(
             "[_disambiguate_task_groups] "
             f"Found task group {task_group.id} with {user_id=}, return."
         )
         return task_group
     except ValueError:
-        logger.info(
+        logger.debug(
             "[_disambiguate_task_groups] "
             f"No task group found with {user_id=}, continue."
         )
@@ -42,13 +42,13 @@ async def _disambiguate_task_groups(
     try:
         ind_user_group_id = list_user_group_ids.index(default_group_id)
         task_group = matching_task_groups[ind_user_group_id]
-        logger.info(
+        logger.debug(
             "[_disambiguate_task_groups] "
             f"Found task group {task_group.id} with {user_id=}, return."
         )
         return task_group
     except ValueError:
-        logger.info(
+        logger.debug(
             "[_disambiguate_task_groups] "
             "No task group found with user_group_id="
             f"{default_group_id}, continue."
@@ -56,7 +56,7 @@ async def _disambiguate_task_groups(
 
     # Lowest priority: task groups owned by other groups, sorted
     # according to age of the user/usergroup link
-    logger.info(
+    logger.debug(
         "[_disambiguate_task_groups] "
         "Now sorting remaining task groups by oldest-user-link."
     )
@@ -68,7 +68,7 @@ async def _disambiguate_task_groups(
     )
     res = await db.execute(stm)
     oldest_user_group_id = res.scalars().first()
-    logger.info(
+    logger.debug(
         "[_disambiguate_task_groups] "
         f"Result of sorting: {oldest_user_group_id=}."
     )
