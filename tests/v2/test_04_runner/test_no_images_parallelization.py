@@ -39,7 +39,7 @@ async def test_parallelize_on_no_images(
         workflow = await workflow_factory_v2(project_id=project.id)
 
         task = await task_factory_v2(
-            name="name",
+            name="name-1",
             type="parallel",
             command_parallel="echo",
             user_id=user.id,
@@ -66,7 +66,7 @@ async def test_parallelize_on_no_images(
         )
 
         task = await task_factory_v2(
-            name="name",
+            name="name-2",
             type="compound",
             command_non_parallel="echo",
             command_parallel="echo",
