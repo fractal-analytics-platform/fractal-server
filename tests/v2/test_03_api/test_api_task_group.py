@@ -1,5 +1,7 @@
 from urllib.parse import quote
 
+from devtools import debug
+
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -52,18 +54,38 @@ async def test_get_task_group_list(
     client,
     MockCurrentUser,
     task_factory_v2,
+    default_user_group,
     db,
 ):
+
+    # Create a task-group that belongs to user1. This task group won't be part
+    # of the `GET /api/v2/task-group/` response, because it has lower priority
+    # than the same task group belonging to user2
     async with MockCurrentUser() as user1:
-        await task_factory_v2(
+        task_by_user3 = await task_factory_v2(
             user_id=user1.id,
+            task_group_kwargs=dict(
+                pkg_name="bbb",
+                version="1.0.0",
+                user_group_id=default_user_group.id,
+            ),
+        )
+
+    async with MockCurrentUser() as user2:
+        debug(user2.id)
+        await task_factory_v2(
+            user_id=user2.id,
             source="source1",
             args_schema_non_parallel={"foo": 0, "bar": 1},
             args_schema_parallel={"xxx": 2, "yyy": 3},
-            task_group_kwargs=dict(pkg_name="bbb", version="1.0.0"),
+            task_group_kwargs=dict(
+                pkg_name="bbb",
+                version="1.0.0",
+                user_group_id=None,
+            ),
         )
         await task_factory_v2(
-            user_id=user1.id,
+            user_id=user2.id,
             source="source2",
             task_group_kwargs=dict(
                 active=False, pkg_name="aaa", version="1.2.3"
@@ -72,21 +94,21 @@ async def test_get_task_group_list(
             args_schema_parallel={"xxx": 6, "yyy": 7},
         )
         await task_factory_v2(
-            user_id=user1.id,
+            user_id=user2.id,
             source="source3",
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="xxx"
             ),
         )
         await task_factory_v2(
-            user_id=user1.id,
+            user_id=user2.id,
             source="source4",
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="abc"
             ),
         )
         await task_factory_v2(
-            user_id=user1.id,
+            user_id=user2.id,
             source="source5",
             task_group_kwargs=dict(
                 pkg_name="bbb",
@@ -94,46 +116,54 @@ async def test_get_task_group_list(
             ),
         )
         await task_factory_v2(
-            user_id=user1.id,
+            user_id=user2.id,
             source="source6",
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="1.0.1"
             ),
         )
 
+        # Verify that the task-group by user1 is accessible
+        res = await client.get(f"{PREFIX}/{task_by_user3.taskgroupv2_id}/")
+        assert res.status_code == 200
+        taskgroup_by_user3 = res.json()
+
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         result = res.json()
-        assert len(result) == 2
-
+        assert len(result) == 2  # number of unique `pkg_name`s
         assert result[0][0] == "aaa"
-        assert len(result[0][1]) == 1
-
         assert result[1][0] == "bbb"
-        assert len(result[1][1]) == 5
-        assert [group["version"] for group in result[1][1]] == [
+        task_groups_aaa = result[0][1]
+        task_groups_bbb = result[1][1]
+        # Verify that the task-group by user1 was not included
+        task_groups_bbb_ids = [tg["id"] for tg in task_groups_bbb]
+        assert taskgroup_by_user3["id"] not in task_groups_bbb_ids
+        # Validate the number of elements
+        assert len(task_groups_aaa) == 1
+        assert len(task_groups_bbb) == 5
+        # Verify that versions are sorted
+        assert [tg["version"] for tg in task_groups_bbb] == [
             "1.0.1",
             "1.0.0",
             "xxx",
             "abc",
             None,
         ]
+        for key in ["args_schema_non_parallel", "args_schema_parallel"]:
+            assert task_groups_aaa[0]["task_list"][0][key] is not None
 
-        group_aaa = result[0][1]
-        assert (
-            group_aaa[0]["task_list"][0]["args_schema_non_parallel"]
-            is not None
-        )
-        assert group_aaa[0]["task_list"][0]["args_schema_parallel"] is not None
-
+        # Test query parameter `args_schema=false`
         res = await client.get(f"{PREFIX}/?args_schema=false")
         assert res.status_code == 200
-        group_aaa = res.json()[0][1]
-        assert group_aaa[0]["task_list"][0]["args_schema_non_parallel"] is None
-        assert group_aaa[0]["task_list"][0]["args_schema_parallel"] is None
+        task_groups_aaa = res.json()[0][1]
+        for key in ["args_schema_non_parallel", "args_schema_parallel"]:
+            assert task_groups_aaa[0]["task_list"][0][key] is None
 
-    async with MockCurrentUser() as user2:
+    async with MockCurrentUser() as user3:
+        debug(user3.id)
 
+        debug("---------------------------------------")
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -143,13 +173,13 @@ async def test_get_task_group_list(
         db.add(new_group)
         await db.commit()
         await db.refresh(new_group)
-        link = LinkUserGroup(user_id=user2.id, group_id=new_group.id)
+        link = LinkUserGroup(user_id=user3.id, group_id=new_group.id)
         db.add(link)
         await db.commit()
         await db.close()
 
         await task_factory_v2(
-            user_id=user2.id,
+            user_id=user3.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
             source="source3",
         )
@@ -166,7 +196,7 @@ async def test_get_task_group_list(
         assert res.status_code == 200
         assert len(res.json()) == 2
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_kwargs={"id": user2.id}):
 
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
