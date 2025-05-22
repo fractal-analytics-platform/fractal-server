@@ -3,7 +3,7 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.models.v2 import TaskV2
+from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
 
 
@@ -16,7 +16,7 @@ async def _disambiguate_task_groups(
     user_id: int,
     default_group_id: int,
     db: AsyncSession,
-) -> TaskV2 | None:
+) -> TaskGroupV2 | None:
     """
     Disambiguate task groups based on ownership information.
     """
@@ -83,7 +83,28 @@ async def _disambiguate_task_groups(
     return task_group
 
 
-def remove_duplicate_task_groups(
+async def _disambiguate_task_groups_not_none(
+    *,
+    matching_task_groups: list[TaskGroupV2],
+    user_id: int,
+    default_group_id: int,
+    db: AsyncSession,
+) -> TaskGroupV2:
+    task_group = _disambiguate_task_groups(
+        matching_task_groups=matching_task_groups,
+        user_id=user_id,
+        default_group_id=default_group_id,
+        db=db,
+    )
+    if task_group is None:
+        raise UnreachableBranchError(
+            f"Could not find a task group with {user_id=}."
+        )
+    else:
+        return task_group
+
+
+async def remove_duplicate_task_groups(
     *,
     task_groups: list[TaskGroupV2],
     user_id: int,
@@ -103,10 +124,12 @@ def remove_duplicate_task_groups(
     from itertools import groupby
 
     new_task_groups = [
-        _disambiguate_task_groups(
-            task_groups=list(groups),
-            user_id=user_id,
-            db=db,
+        (
+            await _disambiguate_task_groups_not_none(
+                task_groups=list(groups),
+                user_id=user_id,
+                db=db,
+            )
         )
         for version, groups in groupby(task_groups, key=lambda tg: tg.version)
     ]
