@@ -1,7 +1,5 @@
 from urllib.parse import quote
 
-from devtools import debug
-
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -72,7 +70,6 @@ async def test_get_task_group_list(
         )
 
     async with MockCurrentUser() as user2:
-        debug(user2.id)
         await task_factory_v2(
             user_id=user2.id,
             source="source1",
@@ -161,9 +158,6 @@ async def test_get_task_group_list(
             assert task_groups_aaa[0]["task_list"][0][key] is None
 
     async with MockCurrentUser() as user3:
-        debug(user3.id)
-
-        debug("---------------------------------------")
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 2
