@@ -375,22 +375,30 @@ def _check_type_filters_compatibility(
 
 
 def _extract_single_task_group(
-    *, groups: list[TaskGroupV2], user_id: int
+    *,
+    task_groups: list[TaskGroupV2],
+    user_id: int,
 ) -> TaskGroupV2:
-    if len(groups) == 1:
-        return groups[0]
-    elif len(groups) == 2:
+    """
+    Extract the user-owned task group for a given `(pkg_name, version)`
+
+    Args:
+        task_groups:
+        user_id:
+
+    Returns:
+        The task group associated to the current `user_id`.
+    """
+
+    if len(task_groups) == 1:
+        return task_groups[0]
+    else:
         try:
-            return next(group for group in groups if group.user_id == user_id)
+            return next(tg for tg in task_groups if tg.user_id == user_id)
         except StopIteration:
             raise UnreachableBranchError(
                 f"Could not find a task group with {user_id=}."
             )
-    else:
-        raise UnreachableBranchError(
-            "Invalid number of task groups with "
-            f"version={groups[0].version} ({len(groups)})."
-        )
 
 
 def disambiguate_task_group_list(
@@ -413,7 +421,7 @@ def disambiguate_task_group_list(
 
     new_task_groups = [
         _extract_single_task_group(
-            groups=list(groups),
+            task_groups=list(groups),
             user_id=user_id,
         )
         for version, groups in groupby(task_groups, key=lambda tg: tg.version)

@@ -21,7 +21,7 @@ from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.api.v2._disambiguate_task_groups import (
+from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     _disambiguate_task_groups,
 )
 from fractal_server.app.routes.auth import current_active_user
