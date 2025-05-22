@@ -15,6 +15,7 @@ from sqlmodel import select
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import disambiguate_task_group_list
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -158,7 +159,17 @@ async def get_task_group_list(
                 setattr(task, "args_schema_parallel", None)
 
     grouped_result = [
-        (pkg_name, sorted(list(groups), key=_version_sort_key, reverse=True))
+        (
+            pkg_name,
+            sorted(
+                disambiguate_task_group_list(
+                    task_groups=list(groups),
+                    user_id=user.id,
+                ),
+                key=_version_sort_key,
+                reverse=True,
+            ),
+        )
         for pkg_name, groups in groupby(
             task_groups, key=lambda tg: tg.pkg_name
         )

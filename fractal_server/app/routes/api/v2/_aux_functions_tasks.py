@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 
@@ -371,3 +372,50 @@ def _check_type_filters_compatibility(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Incompatible type filters.\nOriginal error: {str(e)}",
         )
+
+
+def _extract_single_task_group(
+    *, groups: list[TaskGroupV2], user_id: int
+) -> TaskGroupV2:
+    if len(groups) == 1:
+        return groups[0]
+    elif len(groups) == 2:
+        try:
+            return next(group for group in groups if group.user_id == user_id)
+        except StopIteration:
+            raise UnreachableBranchError(
+                f"Could not find a task group with {user_id=}."
+            )
+    else:
+        raise UnreachableBranchError(
+            "Invalid number of task groups with "
+            f"version={groups[0].version} ({len(groups)})."
+        )
+
+
+def disambiguate_task_group_list(
+    *,
+    task_groups: list[TaskGroupV2],
+    user_id: int,
+) -> list[TaskGroupV2]:
+    """
+    Remove duplicate task groups from a list
+
+    Args:
+        task_groups: A list of task groups with identical `pkg_name`
+        user_id: User ID
+
+    Returns:
+        New list of task groups with no duplicate `(pkg_name,version)` entries
+    """
+
+    from itertools import groupby
+
+    new_task_groups = [
+        _extract_single_task_group(
+            groups=list(groups),
+            user_id=user_id,
+        )
+        for version, groups in groupby(task_groups, key=lambda tg: tg.version)
+    ]
+    return new_task_groups
