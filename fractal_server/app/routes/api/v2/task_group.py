@@ -1,4 +1,4 @@
-from itertools import groupby
+import itertools
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -160,7 +160,6 @@ async def get_task_group_list(
                 setattr(task, "args_schema_parallel", None)
 
     default_group_id = await _get_default_usergroup_id(db)
-
     grouped_result = [
         (
             pkg_name,
@@ -177,7 +176,7 @@ async def get_task_group_list(
                 reverse=True,
             ),
         )
-        for pkg_name, groups in groupby(
+        for pkg_name, groups in itertools.groupby(
             task_groups, key=lambda tg: tg.pkg_name
         )
     ]
