@@ -13,12 +13,10 @@
 This module provides general purpose utilities that are not specific to any
 subsystem.
 """
-import asyncio
 import shlex
 import subprocess  # nosec
 from datetime import datetime
 from datetime import timezone
-from pathlib import Path
 
 from .logger import get_logger
 from .string_tools import validate_cmd
@@ -29,53 +27,6 @@ def get_timestamp() -> datetime:
     Get timezone aware timestamp.
     """
     return datetime.now(tz=timezone.utc)
-
-
-async def execute_command_async(
-    *,
-    command: str,
-    cwd: Path | None = None,
-    logger_name: str | None = None,
-) -> str:
-    """
-    Execute arbitrary command
-
-    If the command returns a return code different from zero, a RuntimeError
-    containing the stderr is raised.
-
-    Args:
-        cwd:
-            The working directory for the command execution.
-        command:
-            The command to execute.
-
-    Returns:
-        stdout:
-            The stdout from the command execution.
-
-    Raises:
-        RuntimeError: if the process exited with non-zero status. The error
-            string is set to the `stderr` of the process.
-    """
-    command_split = shlex.split(command)
-    cmd, *args = command_split
-
-    logger = get_logger(logger_name)
-    cwd_kwarg = dict() if cwd is None else dict(cwd=cwd)
-    proc = await asyncio.create_subprocess_exec(
-        cmd,
-        *args,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-        **cwd_kwarg,
-    )
-    stdout, stderr = await proc.communicate()
-    logger.debug(f"Subprocess call to: {command}")
-    logger.debug(stdout.decode("utf-8"))
-    logger.debug(stderr.decode("utf-8"))
-    if proc.returncode != 0:
-        raise RuntimeError(stderr.decode("utf-8"))
-    return stdout.decode("utf-8")
 
 
 def execute_command_sync(
