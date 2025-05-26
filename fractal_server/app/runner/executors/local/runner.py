@@ -3,19 +3,21 @@ from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
-from typing import Literal
 
 from ..call_command_wrapper import call_command_wrapper
 from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.executors.base_runner import MultisubmitTaskType
+from fractal_server.app.runner.executors.base_runner import SubmitTaskType
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
 )
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -87,12 +89,7 @@ class LocalRunner(BaseRunner):
         history_unit_id: int,
         task_files: TaskFiles,
         config: LocalBackendConfig,
-        task_type: Literal[
-            "non_parallel",
-            "converter_non_parallel",
-            "compound",
-            "converter_compound",
-        ],
+        task_type: SubmitTaskType,
         user_id: int,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
@@ -129,7 +126,10 @@ class LocalRunner(BaseRunner):
             try:
                 result = future.result()
                 logger.debug("[submit] END with result")
-                if task_type not in ["compound", "converter_compound"]:
+                if task_type not in [
+                    TaskType.COMPOUND,
+                    TaskType.CONVERTER_COMPOUND,
+                ]:
                     update_status_of_history_unit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.DONE,
@@ -154,7 +154,7 @@ class LocalRunner(BaseRunner):
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: Literal["parallel", "compound", "converter_compound"],
+        task_type: MultisubmitTaskType,
         config: LocalBackendConfig,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:

@@ -31,6 +31,7 @@ from fractal_server.app.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
 
 __all__ = [
@@ -135,14 +136,17 @@ def run_v2_task_non_parallel(
     ],
     dataset_id: int,
     history_run_id: int,
-    task_type: Literal["non_parallel", "converter_non_parallel"],
+    task_type: Literal[TaskType.NON_PARALLEL, TaskType.CONVERTER_NON_PARALLEL],
     user_id: int,
 ) -> tuple[dict[int, SubmissionOutcome], int]:
     """
     This runs server-side (see `executor` argument)
     """
 
-    if task_type not in ["non_parallel", "converter_non_parallel"]:
+    if task_type not in [
+        TaskType.NON_PARALLEL,
+        TaskType.CONVERTER_NON_PARALLEL,
+    ]:
         raise ValueError(
             f"Invalid {task_type=} for `run_v2_task_non_parallel`."
         )
@@ -173,7 +177,7 @@ def run_v2_task_non_parallel(
     with next(get_sync_db()) as db:
         if task_type == "non_parallel":
             zarr_urls = function_kwargs["zarr_urls"]
-        elif task_type == "converter_non_parallel":
+        elif task_type == TaskType.CONVERTER_NON_PARALLEL:
             zarr_urls = []
 
         history_unit = HistoryUnit(
@@ -388,7 +392,7 @@ def run_v2_task_compound(
     ],
     dataset_id: int,
     history_run_id: int,
-    task_type: Literal["compound", "converter_compound"],
+    task_type: Literal[TaskType.COMPOUND, TaskType.CONVERTER_COMPOUND],
     user_id: int,
 ) -> tuple[dict[int, SubmissionOutcome], int]:
     # Get TaskFiles object
@@ -410,10 +414,10 @@ def run_v2_task_compound(
         "zarr_dir": zarr_dir,
         **(wftask.args_non_parallel or {}),
     }
-    if task_type == "compound":
+    if task_type == TaskType.COMPOUND:
         function_kwargs["zarr_urls"] = [img["zarr_url"] for img in images]
         input_image_zarr_urls = function_kwargs["zarr_urls"]
-    elif task_type == "converter_compound":
+    elif task_type == TaskType.CONVERTER_COMPOUND:
         input_image_zarr_urls = []
 
     # Create database History entries

@@ -1,5 +1,5 @@
+from enum import StrEnum
 from typing import Any
-from typing import Literal
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -14,16 +14,20 @@ from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
-TaskTypeType = Literal[
-    "compound",
-    "converter_compound",
-    "non_parallel",
-    "converter_non_parallel",
-    "parallel",
-]
-
 
 logger = set_logger(__name__)
+
+
+class TaskType(StrEnum):
+    """
+    Define the available task types.
+    """
+
+    COMPOUND = "compound"
+    CONVERTER_COMPOUND = "converter_compound"
+    NON_PARALLEL = "non_parallel"
+    CONVERTER_NON_PARALLEL = "converter_non_parallel"
+    PARALLEL = "parallel"
 
 
 class TaskCreateV2(BaseModel):
@@ -51,7 +55,7 @@ class TaskCreateV2(BaseModel):
     tags: ListUniqueNonEmptyString = Field(default_factory=list)
     authors: NonEmptyStr | None = None
 
-    type: TaskTypeType | None = None
+    type: TaskType | None = None
 
     @model_validator(mode="after")
     def validate_commands(self):
@@ -78,11 +82,11 @@ class TaskCreateV2(BaseModel):
                 "Please move to `fractal-task-tools`."
             )
             if self.command_non_parallel is None:
-                self.type = "parallel"
+                self.type = TaskType.PARALLEL
             elif self.command_parallel is None:
-                self.type = "non_parallel"
+                self.type = TaskType.NON_PARALLEL
             else:
-                self.type = "compound"
+                self.type = TaskType.COMPOUND
 
         return self
 
@@ -90,7 +94,7 @@ class TaskCreateV2(BaseModel):
 class TaskReadV2(BaseModel):
     id: int
     name: str
-    type: TaskTypeType
+    type: TaskType
     source: str | None = None
     version: str | None = None
 

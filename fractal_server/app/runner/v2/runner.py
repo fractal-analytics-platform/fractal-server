@@ -10,10 +10,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
 from sqlmodel import update
 
-from ....images import SingleImage
-from ....images.tools import filter_image_list
-from ....images.tools import find_image_by_zarr_url
-from ..exceptions import JobExecutionError
 from .merge_outputs import merge_outputs
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
@@ -28,13 +24,18 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
+from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.images import SingleImage
 from fractal_server.images.status_tools import enrich_images_sync
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
+from fractal_server.images.tools import filter_image_list
+from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.types import AttributeFilters
 
@@ -131,7 +132,11 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Filter images by types and attributes (in two steps)
-        if wftask.task_type in ["compound", "parallel", "non_parallel"]:
+        if wftask.task_type in [
+            TaskType.COMPOUND,
+            TaskType.PARALLEL,
+            TaskType.NON_PARALLEL,
+        ]:
             # Non-converter task
             type_filters = copy(current_dataset_type_filters)
             type_filters_patch = merge_type_filters(
@@ -190,7 +195,10 @@ def execute_tasks_v2(
 
         # TASK EXECUTION (V2)
         try:
-            if task.type in ["non_parallel", "converter_non_parallel"]:
+            if task.type in [
+                TaskType.NON_PARALLEL,
+                TaskType.CONVERTER_NON_PARALLEL,
+            ]:
                 outcomes_dict, num_tasks = run_v2_task_non_parallel(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
@@ -205,7 +213,7 @@ def execute_tasks_v2(
                     user_id=user_id,
                     task_type=task.type,
                 )
-            elif task.type == "parallel":
+            elif task.type == TaskType.PARALLEL:
                 outcomes_dict, num_tasks = run_v2_task_parallel(
                     images=filtered_images,
                     wftask=wftask,
@@ -218,7 +226,10 @@ def execute_tasks_v2(
                     dataset_id=dataset.id,
                     user_id=user_id,
                 )
-            elif task.type in ["compound", "converter_compound"]:
+            elif task.type in [
+                TaskType.COMPOUND,
+                TaskType.CONVERTER_COMPOUND,
+            ]:
                 outcomes_dict, num_tasks = run_v2_task_compound(
                     images=filtered_images,
                     zarr_dir=zarr_dir,

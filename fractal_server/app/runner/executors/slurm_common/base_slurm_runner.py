@@ -19,6 +19,8 @@ from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.app.runner.executors.base_runner import MultisubmitTaskType
+from fractal_server.app.runner.executors.base_runner import SubmitTaskType
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
@@ -26,6 +28,7 @@ from fractal_server.app.runner.v2.db_tools import (
 )
 from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
@@ -501,12 +504,7 @@ class BaseSlurmRunner(BaseRunner):
         history_unit_id: int,
         task_files: TaskFiles,
         config: SlurmConfig,
-        task_type: Literal[
-            "non_parallel",
-            "converter_non_parallel",
-            "compound",
-            "converter_compound",
-        ],
+        task_type: SubmitTaskType,
         user_id: int,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
@@ -604,8 +602,8 @@ class BaseSlurmRunner(BaseRunner):
                             )
                         else:
                             if task_type not in [
-                                "compound",
-                                "converter_compound",
+                                TaskType.COMPOUND,
+                                TaskType.CONVERTER_COMPOUND,
                             ]:
                                 update_status_of_history_unit(
                                     history_unit_id=history_unit_id,
@@ -641,7 +639,7 @@ class BaseSlurmRunner(BaseRunner):
         list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: Literal["parallel", "compound", "converter_compound"],
+        task_type: MultisubmitTaskType,
         config: SlurmConfig,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
