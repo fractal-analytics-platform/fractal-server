@@ -304,8 +304,12 @@ async def test_project_apply_workflow_subset(
 
         workflow = await workflow_factory_v2(project_id=project.id)
 
-        task12 = await task_factory_v2(user_id=user.id, source="admin:1to2")
-        task23 = await task_factory_v2(user_id=user.id, source="admin:2to3")
+        task12 = await task_factory_v2(
+            user_id=user.id, source="admin:1to2", name="1to2"
+        )
+        task23 = await task_factory_v2(
+            user_id=user.id, source="admin:2to3", name="2to3"
+        )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task12.id, db=db
         )
@@ -468,6 +472,7 @@ async def test_project_apply_slurm_account(
             output_type="type2",
             source="source2",
             command="ls",
+            name="ls",
         )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
