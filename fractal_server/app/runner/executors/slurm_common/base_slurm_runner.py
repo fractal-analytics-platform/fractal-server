@@ -652,7 +652,7 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
             if self.is_shutdown():
-                if task_type == "parallel":
+                if task_type == TaskType.PARALLEL:
                     with next(get_sync_db()) as db:
                         bulk_update_status_of_history_unit(
                             history_unit_ids=history_unit_ids,
@@ -678,7 +678,7 @@ class BaseSlurmRunner(BaseRunner):
             workdir_remote = list_task_files[0].wftask_subfolder_remote
 
             # Create local&remote task subfolders
-            if task_type == "parallel":
+            if task_type == TaskType.PARALLEL:
                 self._mkdir_local_folder(workdir_local.as_posix())
                 self._mkdir_remote_folder(folder=workdir_remote.as_posix())
 
@@ -756,7 +756,7 @@ class BaseSlurmRunner(BaseRunner):
                 f" Original error {str(e)}"
             )
             self.scancel_jobs()
-            if task_type == "parallel":
+            if task_type == TaskType.PARALLEL:
                 with next(get_sync_db()) as db:
                     bulk_update_status_of_history_unit(
                         history_unit_ids=history_unit_ids,
@@ -822,7 +822,7 @@ class BaseSlurmRunner(BaseRunner):
                         # `result is None` is not relevant for this purpose.
                         if exception is not None:
                             exceptions[task.index] = exception
-                            if task_type == "parallel":
+                            if task_type == TaskType.PARALLEL:
                                 update_status_of_history_unit(
                                     history_unit_id=history_unit_ids[
                                         task.index
@@ -832,7 +832,7 @@ class BaseSlurmRunner(BaseRunner):
                                 )
                         else:
                             results[task.index] = result
-                            if task_type == "parallel":
+                            if task_type == TaskType.PARALLEL:
                                 update_status_of_history_unit(
                                     history_unit_id=history_unit_ids[
                                         task.index

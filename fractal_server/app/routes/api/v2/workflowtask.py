@@ -144,7 +144,7 @@ async def update_workflowtask(
             wftask_type_filters=workflow_task_update.type_filters,
         )
 
-    if db_wf_task.task_type == "parallel" and (
+    if db_wf_task.task_type == TaskType.PARALLEL and (
         workflow_task_update.args_non_parallel is not None
         or workflow_task_update.meta_non_parallel is not None
     ):

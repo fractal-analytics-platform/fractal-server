@@ -184,7 +184,7 @@ class BaseRunner:
                 raise ValueError(
                     f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
                 )
-        if task_type == "parallel":
+        if task_type == TaskType.PARALLEL:
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
                 raise ValueError("Non-unique zarr_urls")

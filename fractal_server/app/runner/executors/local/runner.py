@@ -197,7 +197,7 @@ class LocalRunner(BaseRunner):
             exceptions = {
                 ind: exception for ind in range(len(list_parameters))
             }
-            if task_type == "parallel":
+            if task_type == TaskType.PARALLEL:
                 with next(get_sync_db()) as db:
                     bulk_update_status_of_history_unit(
                         history_unit_ids=history_unit_ids,
@@ -233,7 +233,7 @@ class LocalRunner(BaseRunner):
                         positional_index
                     ]
                     exceptions[positional_index] = TaskExecutionError(str(e))
-                    if task_type == "parallel":
+                    if task_type == TaskType.PARALLEL:
                         with next(get_sync_db()) as db:
                             update_status_of_history_unit(
                                 history_unit_id=current_history_unit_id,
@@ -252,14 +252,14 @@ class LocalRunner(BaseRunner):
                 with next(get_sync_db()) as db:
                     for positional_index, fut in finished_futures:
                         active_futures.pop(positional_index)
-                        if task_type == "parallel":
+                        if task_type == TaskType.PARALLEL:
                             current_history_unit_id = history_unit_ids[
                                 positional_index
                             ]
 
                         try:
                             results[positional_index] = fut.result()
-                            if task_type == "parallel":
+                            if task_type == TaskType.PARALLEL:
                                 update_status_of_history_unit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.DONE,
@@ -275,7 +275,7 @@ class LocalRunner(BaseRunner):
                             exceptions[positional_index] = TaskExecutionError(
                                 str(e)
                             )
-                            if task_type == "parallel":
+                            if task_type == TaskType.PARALLEL:
                                 update_status_of_history_unit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.FAILED,

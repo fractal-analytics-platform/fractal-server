@@ -170,12 +170,12 @@ def run_v2_task_non_parallel(
         "zarr_dir": zarr_dir,
         **(wftask.args_non_parallel or {}),
     }
-    if task_type == "non_parallel":
+    if task_type == TaskType.NON_PARALLEL:
         function_kwargs["zarr_urls"] = [img["zarr_url"] for img in images]
 
     # Database History operations
     with next(get_sync_db()) as db:
-        if task_type == "non_parallel":
+        if task_type == TaskType.NON_PARALLEL:
             zarr_urls = function_kwargs["zarr_urls"]
         elif task_type == TaskType.CONVERTER_NON_PARALLEL:
             zarr_urls = []
