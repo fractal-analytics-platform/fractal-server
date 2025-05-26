@@ -9,7 +9,7 @@ from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
 from .task import TaskReadV2
-from .task import TaskTypeType
+from .task import TaskType
 from fractal_server.types import DictStrAny
 from fractal_server.types import TypeFilters
 from fractal_server.types import WorkflowTaskArgument
@@ -45,7 +45,7 @@ class WorkflowTaskReadV2(BaseModel):
 
     type_filters: dict[str, bool]
 
-    task_type: TaskTypeType
+    task_type: TaskType
     task_id: int
     task: TaskReadV2
 

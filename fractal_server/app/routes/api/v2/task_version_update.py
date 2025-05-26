@@ -24,21 +24,23 @@ from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
-
 
 router = APIRouter()
 
 
 VALID_TYPE_UPDATES = {
-    ("non_parallel", "converter_non_parallel"),
-    ("compound", "converter_compound"),
-    ("converter_non_parallel", "converter_non_parallel"),
-    ("converter_compound", "converter_compound"),
-    ("non_parallel", "non_parallel"),
-    ("compound", "compound"),
-    ("parallel", "parallel"),
+    # Transform into converter
+    (TaskType.NON_PARALLEL, TaskType.CONVERTER_NON_PARALLEL),
+    (TaskType.COMPOUND, TaskType.CONVERTER_COMPOUND),
+    # Keep the same
+    (TaskType.CONVERTER_NON_PARALLEL, TaskType.CONVERTER_NON_PARALLEL),
+    (TaskType.CONVERTER_COMPOUND, TaskType.CONVERTER_COMPOUND),
+    (TaskType.NON_PARALLEL, TaskType.NON_PARALLEL),
+    (TaskType.COMPOUND, TaskType.COMPOUND),
+    (TaskType.PARALLEL, TaskType.PARALLEL),
 }
 
 
@@ -208,12 +210,18 @@ async def replace_workflowtask(
             ),
         )
 
-    if replace.args_non_parallel is not None and new_task.type == "parallel":
+    if (
+        replace.args_non_parallel is not None
+        and new_task.type == TaskType.PARALLEL
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Cannot set 'args_non_parallel' for parallel task.",
         )
-    if replace.args_parallel is not None and new_task.type == "non_parallel":
+    if (
+        replace.args_parallel is not None
+        and new_task.type == TaskType.NON_PARALLEL
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Cannot set 'args_parallel' for non-parallel task.",

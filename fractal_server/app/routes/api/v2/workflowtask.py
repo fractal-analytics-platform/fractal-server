@@ -15,6 +15,7 @@ from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
@@ -47,7 +48,7 @@ async def create_workflowtask(
         task_id=task_id, user_id=user.id, db=db, require_active=True
     )
 
-    if task.type == "parallel":
+    if task.type == TaskType.PARALLEL:
         if (
             wftask.meta_non_parallel is not None
             or wftask.args_non_parallel is not None
@@ -60,7 +61,7 @@ async def create_workflowtask(
                     "is `parallel`."
                 ),
             )
-    elif task.type == "non_parallel":
+    elif task.type == TaskType.NON_PARALLEL:
         if (
             wftask.meta_parallel is not None
             or wftask.args_parallel is not None
@@ -143,7 +144,7 @@ async def update_workflowtask(
             wftask_type_filters=workflow_task_update.type_filters,
         )
 
-    if db_wf_task.task_type == "parallel" and (
+    if db_wf_task.task_type == TaskType.PARALLEL and (
         workflow_task_update.args_non_parallel is not None
         or workflow_task_update.meta_non_parallel is not None
     ):
@@ -156,8 +157,8 @@ async def update_workflowtask(
             ),
         )
     elif db_wf_task.task_type in [
-        "non_parallel",
-        "converter_non_parallel",
+        TaskType.NON_PARALLEL,
+        TaskType.CONVERTER_NON_PARALLEL,
     ] and (
         workflow_task_update.args_parallel is not None
         or workflow_task_update.meta_parallel is not None

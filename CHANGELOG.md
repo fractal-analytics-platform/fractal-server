@@ -4,6 +4,7 @@
 
 * Internal:
     * Drop `execute_command_async` function (\#2611).
+    * Introduce `TaskType` enum (\#2612).
 
 # 2.14.13
 
