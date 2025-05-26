@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.4 (unreleased)
+
+* Internal:
+    * Drop `execute_command_async` function (\#2611).
+
 # 2.14.13
 
 * API:
