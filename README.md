@@ -167,9 +167,9 @@
 | fractal\_server/types/validators/\_filter\_validators.py                        |       11 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/types/validators/\_workflow\_task\_arguments\_validators.py     |        7 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/utils.py                                                        |       41 |        0 |        4 |        0 |    100% |           |
+| fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8519** |  **272** | **1634** |  **104** | **96%** |           |
+|                                                                       **TOTAL** | **8504** |  **272** | **1632** |  **104** | **96%** |           |
 
 
 ## Setup coverage badge
