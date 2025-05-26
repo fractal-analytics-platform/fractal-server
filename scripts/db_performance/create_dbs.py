@@ -1,11 +1,13 @@
 from datetime import datetime
 
+from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
 from benchmarks.populate_db.populate_db_script import _create_user_client
 from benchmarks.populate_db.populate_db_script import create_image_list
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import HistoryRun
+from fractal_server.app.models import HistoryUnit
 from fractal_server.app.models import JobV2
 from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import JobReadV2
@@ -72,6 +74,38 @@ def insert_history_runs(
 
     db.add_all(history_runs)
     db.commit()
+    for history_run in history_runs:
+        db.refresh(history_run)
+    inserted_ids = [history_run.id for history_run in history_runs]
+    return inserted_ids
+
+
+def bulk_insert_history_units(
+    hr_run_ids: list[int],
+    db: Session,
+    num_total_records: int = 10000,
+) -> None:
+    records_per_run = num_total_records // len(hr_run_ids)
+
+    history_units = []
+    for run_id in hr_run_ids:
+        for i in range(records_per_run):
+            history_units.append(
+                {
+                    "history_run_id": run_id,
+                    "logfile": f"logfile_{run_id}_{i}.txt",
+                    "status": HistoryUnitStatus.DONE
+                    if i % 3 == 0
+                    else HistoryUnitStatus.FAILED,
+                    "zarr_urls": [f"zarr://run_{run_id}/file_{i}.zarr"],
+                }
+            )
+
+        db.execute(
+            insert(HistoryUnit),
+            history_units,
+        )
+        db.commit()
 
 
 if __name__ == "__main__":
@@ -97,10 +131,11 @@ if __name__ == "__main__":
         job = insert_job(
             project_id=proj.id, workflow_id=wf.id, dataset_id=ds.id, db=db
         )
-        insert_history_runs(
+        hr_run_ids = insert_history_runs(
             dataset_id=ds.id,
             workflowtask_id=wftask.id,
             task_id=working_task.id,
             job_id=job.id,
             db=db,
         )
+        bulk_insert_history_units(hr_run_ids=hr_run_ids, db=db)
