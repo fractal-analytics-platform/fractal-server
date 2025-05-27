@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.4 (unreleased)
+# 2.14.14
 
 * API:
     * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#XXX).
