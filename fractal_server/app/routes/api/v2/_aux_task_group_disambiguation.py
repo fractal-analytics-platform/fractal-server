@@ -137,7 +137,7 @@ async def remove_duplicate_task_groups(
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
-    Extract a single task group for each `version`.
+    Extract an item for each `version` from a *sorted* task-group list.
 
     Args:
         task_groups: A list of task groups with identical `pkg_name`
