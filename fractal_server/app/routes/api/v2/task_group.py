@@ -163,17 +163,17 @@ async def get_task_group_list(
     grouped_result = [
         (
             pkg_name,
-            sorted(
-                (
-                    await remove_duplicate_task_groups(
-                        task_groups=list(groups),
-                        user_id=user.id,
-                        default_group_id=default_group_id,
-                        db=db,
-                    )
-                ),
-                key=_version_sort_key,
-                reverse=True,
+            (
+                await remove_duplicate_task_groups(
+                    task_groups=sorted(
+                        list(groups),
+                        key=_version_sort_key,
+                        reverse=True,
+                    ),
+                    user_id=user.id,
+                    default_group_id=default_group_id,
+                    db=db,
+                )
             ),
         )
         for pkg_name, groups in itertools.groupby(
