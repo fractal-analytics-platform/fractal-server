@@ -25,6 +25,7 @@ from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 from fractal_server.logger import set_logger
 
@@ -109,12 +110,12 @@ async def patch_task(
     update = task_update.model_dump(exclude_unset=True)
 
     # Forbid changes that set a previously unset command
-    if db_task.type == "non_parallel" and "command_parallel" in update:
+    if db_task.type == TaskType.NON_PARALLEL and "command_parallel" in update:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Cannot set an unset `command_parallel`.",
         )
-    if db_task.type == "parallel" and "command_non_parallel" in update:
+    if db_task.type == TaskType.PARALLEL and "command_non_parallel" in update:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Cannot set an unset `command_non_parallel`.",
@@ -151,7 +152,7 @@ async def create_task(
         db=db,
     )
 
-    if task.type == "parallel" and (
+    if task.type == TaskType.PARALLEL and (
         task.args_schema_non_parallel is not None
         or task.meta_non_parallel is not None
     ):
@@ -162,7 +163,7 @@ async def create_task(
                 "`TaskV2.args_schema_non_parallel` if TaskV2 is parallel"
             ),
         )
-    elif task.type == "non_parallel" and (
+    elif task.type == TaskType.NON_PARALLEL and (
         task.args_schema_parallel is not None or task.meta_parallel is not None
     ):
         raise HTTPException(

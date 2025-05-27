@@ -6,6 +6,7 @@
     * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#XXX).
 * Internal:
     * Drop `execute_command_async` function (\#2611).
+    * Introduce `TaskType` enum (\#2612).
 
 # 2.14.13
 
