@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_task_group_lifecycle_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-26 12:57 +0000
+            created at 2025-05-27 06:31 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -247,17 +247,17 @@
     <p class="run"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">    <span class="nam">grouped_result</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">        <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t">            <span class="nam">pkg_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">            <span class="nam">sorted</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">                <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">                    <span class="key">await</span> <span class="nam">remove_duplicate_task_groups</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">                        <span class="nam">task_groups</span><span class="op">=</span><span class="nam">list</span><span class="op">(</span><span class="nam">groups</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">                        <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">                        <span class="nam">default_group_id</span><span class="op">=</span><span class="nam">default_group_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">                        <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">                <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">                <span class="nam">key</span><span class="op">=</span><span class="nam">_version_sort_key</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">                <span class="nam">reverse</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">            <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">                <span class="key">await</span> <span class="nam">remove_duplicate_task_groups</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">                    <span class="nam">task_groups</span><span class="op">=</span><span class="nam">sorted</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">                        <span class="nam">list</span><span class="op">(</span><span class="nam">groups</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">                        <span class="nam">key</span><span class="op">=</span><span class="nam">_version_sort_key</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">                        <span class="nam">reverse</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">                    <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">                    <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">                    <span class="nam">default_group_id</span><span class="op">=</span><span class="nam">default_group_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">                    <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">            <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">        <span class="key">for</span> <span class="nam">pkg_name</span><span class="op">,</span> <span class="nam">groups</span> <span class="key">in</span> <span class="nam">itertools</span><span class="op">.</span><span class="nam">groupby</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -362,7 +362,7 @@
             <a class="nav" href="z_09e701d32150411b_task_group_lifecycle_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-26 12:57 +0000
+            created at 2025-05-27 06:31 +0000
         </p>
     </div>
 </footer>
