@@ -17,6 +17,8 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.images.status_tools import enrich_images_async
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 from fractal_server.types import AttributeFilters
@@ -31,6 +33,7 @@ router = APIRouter()
 async def verify_unique_types(
     project_id: int,
     dataset_id: int,
+    workflowtask_id: int,
     query: ImageQuery | None = None,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -45,8 +48,17 @@ async def verify_unique_types(
     if query is None:
         filtered_images = dataset.images
     else:
+        if IMAGE_STATUS_KEY in query.attribute_filters.keys():
+            images = await enrich_images_async(
+                dataset_id=dataset_id,
+                workflowtask_id=workflowtask_id,
+                images=dataset.images,
+                db=db,
+            )
+        else:
+            images = dataset.images
         filtered_images = filter_image_list(
-            images=dataset.images,
+            images=images,
             attribute_filters=query.attribute_filters,
             type_filters=query.type_filters,
         )
