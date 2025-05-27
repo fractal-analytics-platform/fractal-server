@@ -1,5 +1,5 @@
 PACKAGE_ENV_DIR="__PACKAGE_ENV_DIR__"
-PACKAGE_NAME=__PACKAGE_NAME__
+PACKAGE_NAME="__PACKAGE_NAME__"
 
 pixi run --manifest-path ${PACKAGE_ENV_DIR}/pyproject.toml \
     python \
