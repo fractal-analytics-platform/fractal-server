@@ -47,7 +47,7 @@ def insert_history_runs(
     task_id: int,
     job_id: int,
     db: Session,
-) -> None:
+) -> list[int]:
     sample_workflowtask_dump = {
         "task_type": "sample_workflow",
         "config": {"param1": "value1", "param2": 42},
@@ -86,7 +86,7 @@ def bulk_insert_history_units(
     hr_run_ids: list[int],
     db: Session,
     num_total_rows: int = 10_000,
-) -> None:
+) -> list[int]:
     records_per_run = num_total_rows // len(hr_run_ids)
 
     for run_id in hr_run_ids:
