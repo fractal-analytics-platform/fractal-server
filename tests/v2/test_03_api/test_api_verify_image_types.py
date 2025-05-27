@@ -65,9 +65,10 @@ async def test_verify_image_types(
         project_id=project.id, zarr_dir=ZARR_DIR, images=images
     )
 
+    FAKE_WFTASK_ID = 123
     url = (
         f"api/v2/project/{project.id}/dataset/{dataset.id}/"
-        "images/verify-unique-types/"
+        f"images/verify-unique-types/?workflowtask_id={FAKE_WFTASK_ID}"
     )
 
     # No filters
