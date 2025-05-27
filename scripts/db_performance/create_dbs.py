@@ -1,11 +1,13 @@
 from datetime import datetime
 
 from sqlalchemy import insert
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from benchmarks.populate_db.populate_db_script import _create_user_client
 from benchmarks.populate_db.populate_db_script import create_image_list
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import HistoryRun
 from fractal_server.app.models import HistoryUnit
 from fractal_server.app.models import JobV2
@@ -83,12 +85,12 @@ def insert_history_runs(
 def bulk_insert_history_units(
     hr_run_ids: list[int],
     db: Session,
-    num_total_records: int = 10000,
+    num_total_rows: int = 10_000,
 ) -> None:
-    records_per_run = num_total_records // len(hr_run_ids)
+    records_per_run = num_total_rows // len(hr_run_ids)
 
-    history_units = []
     for run_id in hr_run_ids:
+        history_units = []
         for i in range(records_per_run):
             history_units.append(
                 {
@@ -106,6 +108,54 @@ def bulk_insert_history_units(
             history_units,
         )
         db.commit()
+    inserted_ids = [
+        hu_id[0] for hu_id in db.execute(select(HistoryUnit.id)).all()
+    ]
+    return inserted_ids
+
+
+def bulk_insert_history_image_cache(
+    db: Session,
+    dataset_id: int,
+    workflowtask_id: int,
+    history_unit_ids: list[int],
+    num_total_records: int = 10_000,
+) -> list[int]:
+    history_image_caches = []
+    i = 0
+    for hu_id in history_unit_ids:
+        zarr_url = (
+            f"zarr://dataset_{dataset_id}/"
+            f"workflowtask_{workflowtask_id}/file_{hu_id}.zarr"
+        )
+        history_image_caches.append(
+            {
+                "zarr_url": zarr_url,
+                "dataset_id": dataset_id,
+                "workflowtask_id": workflowtask_id,
+                "latest_history_unit_id": hu_id,
+            }
+        )
+        i += 1
+        if i % 1000 == 0:
+            db.execute(
+                insert(HistoryImageCache),
+                history_image_caches,
+            )
+            db.commit()
+            history_image_caches = []
+            i = 0
+
+    res = db.execute(
+        select(
+            HistoryImageCache.zarr_url,
+            HistoryImageCache.dataset_id,
+            HistoryImageCache.workflowtask_id,
+        )
+    )
+    inserted_hic = [hic_id[0] for hic_id in res.all()]
+
+    return inserted_hic
 
 
 if __name__ == "__main__":
@@ -138,4 +188,10 @@ if __name__ == "__main__":
             job_id=job.id,
             db=db,
         )
-        bulk_insert_history_units(hr_run_ids=hr_run_ids, db=db)
+        hu_ids = bulk_insert_history_units(hr_run_ids=hr_run_ids, db=db)
+        hic_ids = bulk_insert_history_image_cache(
+            dataset_id=ds.id,
+            workflowtask_id=wftask.id,
+            history_unit_ids=hu_ids,
+            db=db,
+        )
