@@ -30,7 +30,7 @@ class TaskGroupV2(SQLModel, table=True):
     version: str | None = None
     python_version: str | None = None
     path: str | None = None
-    wheel_path: str | None = None
+    wheel_path: str | None = None  # TODO wheel -> targz
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
@@ -40,7 +40,7 @@ class TaskGroupV2(SQLModel, table=True):
             nullable=True,
         ),
     )
-    pip_freeze: str | None = None
+    pip_freeze: str | None = None  # TODO -> pixi_lock
     venv_path: str | None = None
     venv_size_in_kB: int | None = None
     venv_file_number: int | None = None
