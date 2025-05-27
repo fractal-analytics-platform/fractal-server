@@ -4,7 +4,6 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydantic import Field
-from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
@@ -12,8 +11,6 @@ from .images import ImageQuery
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import HistoryImageCache
-from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
@@ -90,7 +87,7 @@ class NonProcessedImagesPayload(BaseModel):
     "/project/{project_id}/dataset/{dataset_id}/images/non-processed/",
     status_code=status.HTTP_200_OK,
 )
-async def check_workflowtask(
+async def check_non_processed_images(
     project_id: int,
     dataset_id: int,
     workflow_id: int,
@@ -137,21 +134,16 @@ async def check_workflowtask(
         attribute_filters=filters.attribute_filters,
     )
 
-    # FIXME: Replace following logic with `enrich_images_async` call?
-
-    filtered_zarr_urls = [image["zarr_url"] for image in filtered_images]
-
-    res = await db.execute(
-        select(HistoryImageCache.zarr_url)
-        .join(HistoryUnit)
-        .where(HistoryImageCache.zarr_url.in_(filtered_zarr_urls))
-        .where(HistoryImageCache.dataset_id == dataset_id)
-        .where(HistoryImageCache.workflowtask_id == previous_wft.id)
-        .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        .where(HistoryUnit.status == HistoryUnitStatus.DONE)
+    filtered_images_with_status = await enrich_images_async(
+        dataset_id=dataset_id,
+        workflowtask_id=previous_wft.id,
+        images=filtered_images,
+        db=db,
     )
-    done_zarr_urls = res.scalars().all()
-
-    missing_zarr_urls = list(set(filtered_zarr_urls) - set(done_zarr_urls))
+    missing_zarr_urls = [
+        img["zarr_url"]
+        for img in filtered_images_with_status
+        if img["attributes"][IMAGE_STATUS_KEY] != HistoryUnitStatus.DONE
+    ]
 
     return JSONResponse(status_code=200, content=missing_zarr_urls)
