@@ -2,6 +2,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.images import SingleImage
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from tests.v2.test_03_api.test_api_workflow_task import PREFIX
 
 
@@ -119,6 +120,11 @@ async def test_check_non_processed_images(
     tmp_path,
     db,
 ):
+    """
+    Test both the non-processed and verify-unique-types, with data which
+    have non-trivial history.
+    """
+
     async with MockCurrentUser() as user:
         task1 = await task_factory_v2(
             user_id=user.id,
@@ -166,7 +172,7 @@ async def test_check_non_processed_images(
             images=[
                 SingleImage(
                     zarr_url=f"/zarr_dir/{i}",
-                    types={"type": bool(i % 2)},
+                    types={"my_type": bool(i % 2)},
                 ).model_dump()
                 for i in range(n)
             ]
@@ -279,9 +285,31 @@ async def test_check_non_processed_images(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
             "images/non-processed/"
             f"?workflow_id={workflow.id}&workflowtask_id={wft2.id}",
-            json={"type_filters": {"type": True}},
+            json={"type_filters": {"my_type": True}},
         )
         assert res.status_code == 200
         assert set(res.json()) == {
             f"/zarr_dir/{i}" for i in range(1, n) if i % 2
         }
+
+    # Test verify-unique-types endpoint
+    url = (
+        f"api/v2/project/{project.id}/dataset/{dataset.id}/"
+        f"images/verify-unique-types/?workflowtask_id={wft1.id}"
+    )
+    # Enter the branch where images are status-enriched
+    res = await client.post(
+        url,
+        json=dict(
+            attribute_filters={
+                IMAGE_STATUS_KEY: [
+                    "done",
+                    "failed",
+                    "submitted",
+                    "unset",
+                ]
+            }
+        ),
+    )
+    assert res.status_code == 200
+    assert res.json() == ["my_type"]
