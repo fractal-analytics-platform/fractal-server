@@ -2,6 +2,8 @@
 
 # 2.14.4 (unreleased)
 
+* API:
+    * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#XXX).
 * Internal:
     * Drop `execute_command_async` function (\#2611).
 
