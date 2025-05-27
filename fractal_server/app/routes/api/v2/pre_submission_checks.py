@@ -16,6 +16,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 from fractal_server.types import AttributeFilters
@@ -105,8 +106,8 @@ async def check_workflowtask(
         # Skip check if previous task has non-trivial `output_types`
         return JSONResponse(status_code=200, content=[])
     elif previous_wft.task.type in [
-        "converter_compound",
-        "converter_non_parallel",
+        TaskType.CONVERTER_COMPOUND,
+        TaskType.CONVERTER_NON_PARALLEL,
     ]:
         # Skip check if previous task is converter
         return JSONResponse(status_code=200, content=[])

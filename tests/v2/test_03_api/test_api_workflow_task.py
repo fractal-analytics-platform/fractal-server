@@ -137,9 +137,14 @@ async def test_post_worfkflow_task_failures(
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
         user_A_id = user_A.id
-        task_A_active = await task_factory_v2(name="a", user_id=user_A_id)
+        task_A_active = await task_factory_v2(
+            name="a-active",
+            user_id=user_A_id,
+        )
         task_A_non_active = await task_factory_v2(
-            name="a", user_id=user_A_id, task_group_kwargs=dict(active=False)
+            name="a-non-active",
+            user_id=user_A_id,
+            task_group_kwargs=dict(active=False),
         )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_B:
         # Create a new UserGroup with user_B
@@ -808,10 +813,14 @@ async def test_replace_task_in_workflowtask(
         workflow = await workflow_factory_v2(project_id=project.id)
         assert workflow.task_list == []
 
-        task1 = await task_factory_v2(user_id=user.id)
-        task2 = await task_factory_v2(user_id=user.id, type="parallel")
-        task3 = await task_factory_v2(user_id=user.id)
-        task4 = await task_factory_v2(user_id=user.id, type="non_parallel")
+        task1 = await task_factory_v2(name="1", user_id=user.id)
+        task2 = await task_factory_v2(
+            name="2", user_id=user.id, type="parallel"
+        )
+        task3 = await task_factory_v2(name="3", user_id=user.id)
+        task4 = await task_factory_v2(
+            name="4", user_id=user.id, type="non_parallel"
+        )
 
         wft1 = await workflowtask_factory_v2(
             workflow_id=workflow.id,
@@ -846,6 +855,7 @@ async def test_replace_task_in_workflowtask(
         ]
 
         task5 = await task_factory_v2(
+            name="5",
             user_id=user.id,
             type="compound",
             meta_parallel={"a": 1},
@@ -957,7 +967,11 @@ async def test_replace_task_in_workflowtask(
         task6 = await task_factory_v2(
             user_id=user.id, input_types={"a": False}
         )
-        task7 = await task_factory_v2(user_id=user.id, input_types={"a": True})
+        task7 = await task_factory_v2(
+            user_id=user.id,
+            input_types={"a": True},
+            name="7",
+        )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft1.id}&task_id={task6.id}",
@@ -986,12 +1000,17 @@ async def test_check_workflowtask(
     db,
 ):
     async with MockCurrentUser() as user:
-
-        task1 = await task_factory_v2(user_id=user.id)
+        task1 = await task_factory_v2(
+            user_id=user.id,
+            name="a",
+        )
         task2 = await task_factory_v2(
-            user_id=user.id, output_types={"x": True}
+            user_id=user.id,
+            output_types={"x": True},
+            name="b",
         )
         task3 = await task_factory_v2(
+            name="c",
             user_id=user.id,
             type="converter_non_parallel",
         )

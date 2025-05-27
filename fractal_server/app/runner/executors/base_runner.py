@@ -1,19 +1,34 @@
+from enum import StrEnum
 from typing import Any
 
 from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.schemas.v2.task import TaskTypeType
+from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.logger import set_logger
 
-TASK_TYPES_SUBMIT: list[TaskTypeType] = [
-    "compound",
-    "converter_compound",
-    "non_parallel",
-    "converter_non_parallel",
+
+class SubmitTaskType(StrEnum):
+    COMPOUND = TaskType.COMPOUND
+    NON_PARALLEL = TaskType.NON_PARALLEL
+    CONVERTER_NON_PARALLEL = TaskType.CONVERTER_NON_PARALLEL
+    CONVERTER_COMPOUND = TaskType.CONVERTER_COMPOUND
+
+
+class MultisubmitTaskType(StrEnum):
+    PARALLEL = TaskType.PARALLEL
+    COMPOUND = TaskType.COMPOUND
+    CONVERTER_COMPOUND = TaskType.CONVERTER_COMPOUND
+
+
+TASK_TYPES_SUBMIT: list[TaskType] = [
+    TaskType.COMPOUND,
+    TaskType.CONVERTER_COMPOUND,
+    TaskType.NON_PARALLEL,
+    TaskType.CONVERTER_NON_PARALLEL,
 ]
-TASK_TYPES_MULTISUBMIT: list[TaskTypeType] = [
-    "compound",
-    "converter_compound",
-    "parallel",
+TASK_TYPES_MULTISUBMIT: list[TaskType] = [
+    TaskType.COMPOUND,
+    TaskType.CONVERTER_COMPOUND,
+    TaskType.PARALLEL,
 ]
 
 logger = set_logger(__name__)
@@ -32,7 +47,7 @@ class BaseRunner:
         task_name: str,
         parameters: dict[str, Any],
         history_unit_id: int,
-        task_type: TaskTypeType,
+        task_type: TaskType,
         task_files: TaskFiles,
         config: Any,
         user_id: int,
@@ -64,7 +79,7 @@ class BaseRunner:
         list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: TaskTypeType,
+        task_type: TaskType,
         config: Any,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
@@ -90,7 +105,7 @@ class BaseRunner:
     def validate_submit_parameters(
         self,
         parameters: dict[str, Any],
-        task_type: TaskTypeType,
+        task_type: TaskType,
     ) -> None:
         """
         Validate parameters for `submit` method
@@ -104,12 +119,18 @@ class BaseRunner:
             raise ValueError(f"Invalid {task_type=} for `submit`.")
         if not isinstance(parameters, dict):
             raise ValueError("`parameters` must be a dictionary.")
-        if task_type in ["non_parallel", "compound"]:
+        if task_type in [
+            TaskType.NON_PARALLEL,
+            TaskType.COMPOUND,
+        ]:
             if "zarr_urls" not in parameters.keys():
                 raise ValueError(
                     f"No 'zarr_urls' key in in {list(parameters.keys())}"
                 )
-        elif task_type in ["converter_non_parallel", "converter_compound"]:
+        elif task_type in [
+            TaskType.CONVERTER_NON_PARALLEL,
+            TaskType.CONVERTER_COMPOUND,
+        ]:
             if "zarr_urls" in parameters.keys():
                 raise ValueError(
                     f"Forbidden 'zarr_urls' key in {list(parameters.keys())}"
@@ -119,7 +140,7 @@ class BaseRunner:
     def validate_multisubmit_parameters(
         self,
         *,
-        task_type: TaskTypeType,
+        task_type: TaskType,
         list_parameters: list[dict[str, Any]],
         list_task_files: list[TaskFiles],
         history_unit_ids: list[int],
@@ -163,7 +184,7 @@ class BaseRunner:
                 raise ValueError(
                     f"No 'zarr_url' key in in {list(single_kwargs.keys())}"
                 )
-        if task_type == "parallel":
+        if task_type == TaskType.PARALLEL:
             zarr_urls = [kwargs["zarr_url"] for kwargs in list_parameters]
             if len(zarr_urls) != len(set(zarr_urls)):
                 raise ValueError("Non-unique zarr_urls")

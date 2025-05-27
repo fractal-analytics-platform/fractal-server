@@ -68,17 +68,19 @@ async def test_deactivate_task_group_api(
     async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
-            user_id=user.id, name="task", task_group_kwargs=dict(active=False)
+            user_id=user.id,
+            name="task1",
+            task_group_kwargs=dict(active=False),
         )
         task_other = await task_factory_v2(
             user_id=user.id,
             version=None,
-            name="task",
+            name="task2",
             task_group_kwargs=dict(origin="other"),
         )
         task_pypi = await task_factory_v2(
             user_id=user.id,
-            name="task",
+            name="task3",
             version="1.2.3",
             task_group_kwargs=dict(
                 origin="pypi", venv_path="/invalid/so/it/fails"
@@ -157,7 +159,7 @@ async def test_reactivate_task_group_api(
 
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
-            user_id=different_user.id, name="task"
+            user_id=different_user.id, name="task1"
         )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
@@ -173,16 +175,16 @@ async def test_reactivate_task_group_api(
         user_settings_dict = {}
     async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
         # Create mock task groups
-        active_task = await task_factory_v2(user_id=user.id, name="task")
+        active_task = await task_factory_v2(user_id=user.id, name="task2")
         task_other = await task_factory_v2(
             user_id=user.id,
             version=None,
-            name="task",
+            name="task3",
             task_group_kwargs=dict(active=False),
         )
         task_pypi = await task_factory_v2(
             user_id=user.id,
-            name="task",
+            name="task4",
             version="1.2.3",
             task_group_kwargs=dict(
                 origin="pypi",

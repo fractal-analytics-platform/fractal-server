@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 
-from .task import TaskTypeType
+from .task import TaskType
 from .task_group import TaskGroupV2OriginEnum
 
 
@@ -25,7 +25,7 @@ class ProjectDumpV2(BaseModel):
 class TaskDumpV2(BaseModel):
     id: int
     name: str
-    type: TaskTypeType
+    type: TaskType
 
     command_non_parallel: str | None = None
     command_parallel: str | None = None

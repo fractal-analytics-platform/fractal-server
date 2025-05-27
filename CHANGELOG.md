@@ -1,5 +1,23 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.14
+
+* API:
+    * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#2614).
+* Internal:
+    * Drop `execute_command_async` function (\#2611).
+    * Introduce `TaskType` enum (\#2612).
+
+# 2.14.13
+
+* API:
+    * Group response items of `GET /api/v2/task-group/` by `pkg_name` (\#2596).
+    * Disambiguate response items of `GET /api/v2/task-group/` (\#2596).
+* Internal:
+    * Introduce `UnreachableBranchError` (\#2596).
+* Testing:
+    * Enforce task-group non-duplication constraints in `task_factory_v2` fixture (\#2596).
+
 # 2.14.12
 
 * Runner:
