@@ -3,7 +3,7 @@
 # 2.14.15
 
 * API:
-    * Add `workflowtask_id` query parameter to `verify-unique-types` endpoint (\#2619).
+    * Add required `workflowtask_id` query parameter to `verify-unique-types` endpoint (\#2619).
     * Enrich images with status within `verify-unique-types` endpoint, when necessary (\#2619).
 
 # 2.14.14
