@@ -3,7 +3,7 @@
 # 2.14.14
 
 * API:
-    * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#XXX).
+    * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#2614).
 * Internal:
     * Drop `execute_command_async` function (\#2611).
     * Introduce `TaskType` enum (\#2612).
