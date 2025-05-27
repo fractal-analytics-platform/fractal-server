@@ -137,6 +137,8 @@ async def check_workflowtask(
         attribute_filters=filters.attribute_filters,
     )
 
+    # FIXME: Replace following logic with `enrich_images_async` call?
+
     filtered_zarr_urls = [image["zarr_url"] for image in filtered_images]
 
     res = await db.execute(
