@@ -45,11 +45,11 @@ async def post_new_pixi_version(
     return version
 
 
-@router.get("/", response_model=list[PixiVersion])
+@router.get("/", response_model=list[PixiVersionRead])
 async def get_pixi_version_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[PixiVersion]:
+) -> list[PixiVersionRead]:
     """
     Get the list of available Pixi versions
     """
@@ -59,12 +59,12 @@ async def get_pixi_version_list(
     return version_list
 
 
-@router.get("/{version}/", response_model=PixiVersion)
+@router.get("/{version}/", response_model=PixiVersionRead)
 async def get_pixi_version(
     version: str,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> PixiVersion:
+) -> PixiVersionRead:
     """
     Get single Pixi version
     """
