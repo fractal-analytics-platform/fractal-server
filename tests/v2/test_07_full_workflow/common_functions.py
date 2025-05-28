@@ -430,7 +430,9 @@ async def non_executable_task_command(
             name="invalid-task-command",
             source="some_source",
             type="non_parallel",
-            command_non_parallel=str(testdata_path / "non_executable_task.sh"),
+            command_non_parallel=str(
+                testdata_path / "tasks" / "non_executable_task.sh"
+            ),
         )
         debug(task)
 
@@ -623,7 +625,7 @@ async def workflow_with_non_python_task(
         script_name = "non_python_task_issue1377.sh"
         script_path = tmp777_path / script_name
         shutil.copy(
-            testdata_path / script_name,
+            testdata_path / "tasks" / script_name,
             script_path,
         )
 

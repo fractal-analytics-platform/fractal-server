@@ -141,7 +141,7 @@ async def test_failing_workflow_UnknownError_local(
 # Tested with 'local' backends only.
 # With 'slurm' backend we get:
 #   TaskExecutionError: bash: /home/runner/work/fractal-server/fractal-server/
-#       tests/data/non_python_task_issue1377.sh: No such file or directory
+#     tests/data/tasks/non_python_task_issue1377.sh: No such file or directory
 async def test_non_python_task_local(
     client,
     MockCurrentUser,
