@@ -12,6 +12,7 @@ from .validators import val_http_url
 from .validators import val_unique_list
 from .validators import valdict_keys
 from .validators import validate_attribute_filters
+from .validators import validate_semantic_versioning
 from .validators import validate_wft_args
 
 NonEmptyStr = Annotated[
@@ -83,4 +84,8 @@ TypeFilters = Annotated[
 ImageTypes = Annotated[
     dict[str, bool],
     AfterValidator(valdict_keys),
+]
+
+SemanticVersioning = Annotated[
+    NonEmptyStr, AfterValidator(validate_semantic_versioning)
 ]

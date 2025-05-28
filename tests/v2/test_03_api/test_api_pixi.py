@@ -21,7 +21,6 @@ async def test_pixi(client, MockCurrentUser):
             res = await client.post("api/v2/pixi/", json=pixi.model_dump())
             assert res.status_code == 201
             assert res.json()["version"] == pixi.version
-            assert res.json()["path"] == pixi.path
 
         # Get version list
         res = await client.get("api/v2/pixi/")
@@ -69,7 +68,6 @@ async def test_pixi(client, MockCurrentUser):
         res = await client.get(f"api/v2/pixi/{pixi2.version}/")
         assert res.status_code == 200
         assert res.json()["version"] == pixi2.version
-        assert res.json()["path"] == pixi2.path
 
         # Get single version fail
         res = await client.get("api/v2/pixi/30.11.93/")

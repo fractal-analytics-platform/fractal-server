@@ -1,6 +1,8 @@
 import os
 from typing import Any
 
+from packaging.version import InvalidVersion
+from packaging.version import parse
 from pydantic import HttpUrl
 
 
@@ -39,4 +41,12 @@ def val_unique_list(must_be_unique: list) -> list:
 
 def val_http_url(value: str) -> str:
     HttpUrl(value)
+    return value
+
+
+def validate_semantic_versioning(value: str) -> str:
+    try:
+        parse(value)
+    except InvalidVersion:
+        raise ValueError(f"Invalid version: '{value}'.")
     return value
