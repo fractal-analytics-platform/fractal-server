@@ -513,6 +513,16 @@ class Settings(BaseSettings):
     FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders".
     """
 
+    FRACTAL_PIXI_HOME: str | None = None
+    """
+    TBD
+    """
+
+    @property
+    def pixi_executable(self) -> str | None:
+        if self.FRACTAL_PIXI_HOME:
+            return f"{self.FRACTAL_PIXI_HOME}/bin/pixi"
+
     ###########################################################################
     # SMTP SERVICE
     ###########################################################################
