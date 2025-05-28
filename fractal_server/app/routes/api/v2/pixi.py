@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import delete
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -16,11 +18,7 @@ from fractal_server.app.schemas.v2 import PixiVersionRead
 router = APIRouter()
 
 
-@router.post(
-    "/",
-    response_model=PixiVersionRead,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/", response_model=PixiVersionRead, status_code=201)
 async def post_new_pixi_version(
     pixi_version: PixiVersionCreate,
     user: UserOAuth = Depends(current_active_user),
@@ -79,3 +77,17 @@ async def get_pixi_version(
             detail=f"PixiVersion '{version}' not found",
         )
     return version
+
+
+@router.delete("/{version}/", status_code=204)
+async def delete_pixi_version(
+    version: str,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Delete Pixi version
+    """
+    await db.execute(delete(PixiVersion).where(PixiVersion.version == version))
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
