@@ -37,7 +37,7 @@ from fractal_server.tasks.v2.utils_background import get_current_log
 # from fractal_server.utils import get_timestamp
 
 
-def collect_local(
+def collect_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
