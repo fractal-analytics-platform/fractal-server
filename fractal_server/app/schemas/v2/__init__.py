@@ -22,6 +22,8 @@ from .job import JobStatusTypeV2  # noqa F401
 from .job import JobUpdateV2  # noqa F401
 from .manifest import ManifestV2  # noqa F401
 from .manifest import TaskManifestV2  # noqa F401
+from .pixi import PixiVersionCreate  # noqa F401
+from .pixi import PixiVersionRead  # noqa F401
 from .project import ProjectCreateV2  # noqa F401
 from .project import ProjectReadV2  # noqa F401
 from .project import ProjectUpdateV2  # noqa F401

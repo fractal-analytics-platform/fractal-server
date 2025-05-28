@@ -9,6 +9,7 @@ from .history import HistoryImageCache
 from .history import HistoryRun
 from .history import HistoryUnit
 from .job import JobV2
+from .pixi import PixiVersion
 from .project import ProjectV2
 from .task import TaskV2
 from .task_group import TaskGroupActivityV2
@@ -22,6 +23,7 @@ __all__ = [
     "LinkUserProjectV2",
     "DatasetV2",
     "JobV2",
+    "PixiVersion",
     "ProjectV2",
     "TaskGroupV2",
     "TaskGroupActivityV2",

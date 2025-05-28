@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from sqlalchemy.orm import Session as DBSyncSession
+from sqlmodel import select
+
+from fractal_server.app.models.v2 import PixiVersion
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.logger import get_logger
 from fractal_server.tasks.v2.utils_templates import customize_template
@@ -68,3 +72,9 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
                     f"Task `{_task.name}` has `command_parallel` "
                     f"pointing to missing file `{_task_path}`."
                 )
+
+
+def pixi_versions(db: DBSyncSession) -> dict[str, str]:
+    res = db.execute(select(PixiVersion))
+    pixis = res.scalars.all()
+    return {pixi["version"]: pixi["path"] for pixi in pixis}

@@ -7,6 +7,7 @@ from .dataset import router as dataset_router_v2
 from .history import router as history_router_v2
 from .images import router as images_routes_v2
 from .job import router as job_router_v2
+from .pixi import router as pixi_router
 from .pre_submission_checks import router as pre_submission_checks_router
 from .project import router as project_router_v2
 from .status_legacy import router as status_legacy_router_v2
@@ -65,3 +66,5 @@ router_api_v2.include_router(
     workflow_import_router_v2, tags=["V2 Workflow Import"]
 )
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])
+
+router_api_v2.include_router(pixi_router, tags=["Pixi"], prefix="/pixi")
