@@ -1,0 +1,57 @@
+2025-05-29 15:14:50,340 - fractal_server.app.security - INFO - New-user registration completed (user.id=2, user.email='user1@example.org').
+2025-05-29 15:14:50,353 - fractal_server.app.security - INFO - Added user1@example.org user to group default_group.id=1.
+2025-05-29 15:14:50,359 - fractal_server.app.security - INFO - Associated empty settings (id=2) to 'user1@example.org'.
+2025-05-29 15:14:50,600 - fractal_server.app.schemas.v2.task - WARNING - Task type is not set for task 'Echo Task', which will be deprecated in a future version. Please move to `fractal-task-tools`.
+{'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZhc3RhcGktdXNlcnM6YXV0aCJdLCJleHAiOjE3NDg2MDkwOTB9.x-JyVMgcZNFJIMNs-5Gr5nX9aLHbVOS5eFWYCmCGin4', 'token_type': 'bearer'}
+{'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiYXVkIjpbImZhc3RhcGktdXNlcnM6YXV0aCJdLCJleHAiOjE3NDg2MDkwOTB9._p4HuQ37VD_3bTN5q0jktmsPFqO1UYy5CFNSJH2dhb0', 'token_type': 'bearer'}
+id=2 email='user1@example.org' is_active=True is_superuser=False is_verified=True username=None group_ids_names=None oauth_accounts=[]
+Cluster 0 out of 50 - cluster size: 1000 - elapsed: 0.0721 s - units: 0.0297 - image caches: 0.0383
+Cluster 1 out of 50 - cluster size: 1000 - elapsed: 0.0755 s - units: 0.0318 - image caches: 0.0420
+Cluster 2 out of 50 - cluster size: 1000 - elapsed: 0.0683 s - units: 0.0284 - image caches: 0.0384
+Cluster 3 out of 50 - cluster size: 1000 - elapsed: 0.0623 s - units: 0.0268 - image caches: 0.0341
+Cluster 4 out of 50 - cluster size: 1000 - elapsed: 0.0640 s - units: 0.0277 - image caches: 0.0349
+Cluster 5 out of 50 - cluster size: 1000 - elapsed: 0.0653 s - units: 0.0282 - image caches: 0.0357
+Cluster 6 out of 50 - cluster size: 1000 - elapsed: 0.0648 s - units: 0.0276 - image caches: 0.0361
+Cluster 7 out of 50 - cluster size: 1000 - elapsed: 0.0643 s - units: 0.0276 - image caches: 0.0355
+Cluster 8 out of 50 - cluster size: 1000 - elapsed: 0.1101 s - units: 0.0273 - image caches: 0.0816
+Cluster 9 out of 50 - cluster size: 1000 - elapsed: 0.0772 s - units: 0.0320 - image caches: 0.0437
+Cluster 10 out of 50 - cluster size: 1000 - elapsed: 0.0747 s - units: 0.0308 - image caches: 0.0427
+Cluster 11 out of 50 - cluster size: 1000 - elapsed: 0.0760 s - units: 0.0320 - image caches: 0.0428
+Cluster 12 out of 50 - cluster size: 1000 - elapsed: 0.0703 s - units: 0.0321 - image caches: 0.0371
+Cluster 13 out of 50 - cluster size: 1000 - elapsed: 0.0661 s - units: 0.0277 - image caches: 0.0371
+Cluster 14 out of 50 - cluster size: 1000 - elapsed: 0.1206 s - units: 0.0770 - image caches: 0.0423
+Cluster 15 out of 50 - cluster size: 1000 - elapsed: 0.0776 s - units: 0.0319 - image caches: 0.0445
+Cluster 16 out of 50 - cluster size: 1000 - elapsed: 0.0654 s - units: 0.0288 - image caches: 0.0355
+Cluster 17 out of 50 - cluster size: 1000 - elapsed: 0.0658 s - units: 0.0292 - image caches: 0.0352
+Cluster 18 out of 50 - cluster size: 1000 - elapsed: 0.0671 s - units: 0.0311 - image caches: 0.0347
+Cluster 19 out of 50 - cluster size: 1000 - elapsed: 0.0647 s - units: 0.0285 - image caches: 0.0350
+Cluster 20 out of 50 - cluster size: 1000 - elapsed: 0.1172 s - units: 0.0805 - image caches: 0.0353
+Cluster 21 out of 50 - cluster size: 1000 - elapsed: 0.0656 s - units: 0.0291 - image caches: 0.0352
+Cluster 22 out of 50 - cluster size: 1000 - elapsed: 0.0682 s - units: 0.0305 - image caches: 0.0361
+Cluster 23 out of 50 - cluster size: 1000 - elapsed: 0.0642 s - units: 0.0283 - image caches: 0.0348
+Cluster 24 out of 50 - cluster size: 1000 - elapsed: 0.0650 s - units: 0.0286 - image caches: 0.0351
+Cluster 25 out of 50 - cluster size: 1000 - elapsed: 0.0671 s - units: 0.0315 - image caches: 0.0344
+Cluster 26 out of 50 - cluster size: 1000 - elapsed: 0.1117 s - units: 0.0301 - image caches: 0.0803
+Cluster 27 out of 50 - cluster size: 1000 - elapsed: 0.0661 s - units: 0.0293 - image caches: 0.0355
+Cluster 28 out of 50 - cluster size: 1000 - elapsed: 0.0677 s - units: 0.0310 - image caches: 0.0352
+Cluster 29 out of 50 - cluster size: 1000 - elapsed: 0.0661 s - units: 0.0305 - image caches: 0.0342
+Cluster 30 out of 50 - cluster size: 1000 - elapsed: 0.0665 s - units: 0.0305 - image caches: 0.0346
+Cluster 31 out of 50 - cluster size: 1000 - elapsed: 0.0658 s - units: 0.0306 - image caches: 0.0341
+Cluster 32 out of 50 - cluster size: 1000 - elapsed: 0.0648 s - units: 0.0280 - image caches: 0.0353
+Cluster 33 out of 50 - cluster size: 1000 - elapsed: 0.0670 s - units: 0.0278 - image caches: 0.0378
+Cluster 34 out of 50 - cluster size: 1000 - elapsed: 0.0667 s - units: 0.0303 - image caches: 0.0352
+Cluster 35 out of 50 - cluster size: 1000 - elapsed: 0.0640 s - units: 0.0281 - image caches: 0.0348
+Cluster 36 out of 50 - cluster size: 1000 - elapsed: 0.0653 s - units: 0.0290 - image caches: 0.0348
+Cluster 37 out of 50 - cluster size: 1000 - elapsed: 0.0654 s - units: 0.0289 - image caches: 0.0349
+Cluster 38 out of 50 - cluster size: 1000 - elapsed: 0.1127 s - units: 0.0292 - image caches: 0.0821
+Cluster 39 out of 50 - cluster size: 1000 - elapsed: 0.0697 s - units: 0.0294 - image caches: 0.0392
+Cluster 40 out of 50 - cluster size: 1000 - elapsed: 0.0788 s - units: 0.0337 - image caches: 0.0439
+Cluster 41 out of 50 - cluster size: 1000 - elapsed: 0.0671 s - units: 0.0299 - image caches: 0.0359
+Cluster 42 out of 50 - cluster size: 1000 - elapsed: 0.0668 s - units: 0.0287 - image caches: 0.0368
+Cluster 43 out of 50 - cluster size: 1000 - elapsed: 0.0653 s - units: 0.0288 - image caches: 0.0354
+Cluster 44 out of 50 - cluster size: 1000 - elapsed: 0.1250 s - units: 0.0315 - image caches: 0.0920
+Cluster 45 out of 50 - cluster size: 1000 - elapsed: 0.0818 s - units: 0.0348 - image caches: 0.0458
+Cluster 46 out of 50 - cluster size: 1000 - elapsed: 0.0787 s - units: 0.0335 - image caches: 0.0441
+Cluster 47 out of 50 - cluster size: 1000 - elapsed: 0.0732 s - units: 0.0309 - image caches: 0.0412
+Cluster 48 out of 50 - cluster size: 1000 - elapsed: 0.0809 s - units: 0.0345 - image caches: 0.0452
+Cluster 49 out of 50 - cluster size: 1000 - elapsed: 0.0823 s - units: 0.0341 - image caches: 0.0471

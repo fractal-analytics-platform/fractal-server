@@ -1,0 +1,12 @@
+2025-05-29 15:19:31,023 - fractal_server.app.security - INFO - New-user registration completed (user.id=2, user.email='user1@example.org').
+2025-05-29 15:19:31,038 - fractal_server.app.security - INFO - Added user1@example.org user to group default_group.id=1.
+2025-05-29 15:19:31,044 - fractal_server.app.security - INFO - Associated empty settings (id=2) to 'user1@example.org'.
+2025-05-29 15:19:31,297 - fractal_server.app.schemas.v2.task - WARNING - Task type is not set for task 'Echo Task', which will be deprecated in a future version. Please move to `fractal-task-tools`.
+{'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZhc3RhcGktdXNlcnM6YXV0aCJdLCJleHAiOjE3NDg2MDkzNzB9.5LoerLPa7l3UXmCdc0pT76l_rJR6S3VDQjJb0jMkBN8', 'token_type': 'bearer'}
+{'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiYXVkIjpbImZhc3RhcGktdXNlcnM6YXV0aCJdLCJleHAiOjE3NDg2MDkzNzF9.5lGZCqKZsCaRFy-2AXdeIWkpUl6tfvAoOA1p18f-Usc', 'token_type': 'bearer'}
+id=2 email='user1@example.org' is_active=True is_superuser=False is_verified=True username=None group_ids_names=None oauth_accounts=[]
+Cluster 0 out of 5 - cluster size: 40000 - elapsed: 3.0496 s - units: 1.4585 - image caches: 1.5880
+Cluster 1 out of 5 - cluster size: 40000 - elapsed: 3.0715 s - units: 1.4345 - image caches: 1.6357
+Cluster 2 out of 5 - cluster size: 40000 - elapsed: 3.0433 s - units: 1.4889 - image caches: 1.5529
+Cluster 3 out of 5 - cluster size: 40000 - elapsed: 3.2461 s - units: 1.5765 - image caches: 1.6683
+Cluster 4 out of 5 - cluster size: 40000 - elapsed: 3.1423 s - units: 1.4746 - image caches: 1.6664
