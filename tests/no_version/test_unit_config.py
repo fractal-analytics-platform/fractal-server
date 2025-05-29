@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -550,3 +551,73 @@ def test_python_interpreters():
         with pytest.raises(FractalConfigurationError) as e:
             settings = Settings(**attrs)
         assert f"Non-absolute value {key}=" in str(e.value)
+
+
+def test_pixi_config(tmp_path):
+
+    # Without Pixi config
+    settings = Settings()
+    assert settings.FRACTAL_PIXI_CONFIG_FILE is None
+    assert settings.pixi_settings is None
+
+    # Valid Pixi config
+    pixi_config = {
+        "default_version": "0.41.0",
+        "versions": {
+            "0.40.0": "/common/path/pixi/0.40.0/",
+            "0.41.0": "/common/path/pixi/0.41.0/",
+            "0.43.0": "/common/path/pixi/0.43.0/",
+        },
+    }
+    pixi_config_file = tmp_path / "pixi_config.json"
+    with pixi_config_file.open("w") as f:
+        json.dump(pixi_config, f)
+
+    settings = Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
+    assert settings.FRACTAL_PIXI_CONFIG_FILE == pixi_config_file
+    assert settings.pixi_settings.model_dump() == pixi_config
+
+    # Invalid Pixi config 1
+    pixi_config = {
+        "default_version": "0.41.0",
+        "versions": {
+            "0.40.0": "/common/path/pixi/x.y.z/",
+            "0.41.0": "/common/path/pixi/0.41.0/",
+            "0.43.0": "/common/path/pixi/0.43.0/",
+        },
+    }
+    pixi_config_file = tmp_path / "pixi_config.json"
+    with pixi_config_file.open("w") as f:
+        json.dump(pixi_config, f)
+    with pytest.raises(ValidationError):
+        Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
+
+    # Invalid Pixi config 2
+    pixi_config = {
+        "default_version": "0.41.0",
+        "versions": {
+            "0.40.0": "/common/path/pixi/0.40.0/",
+            "0.41.0": "/common/path/pixi/0.41.0/",
+            "0.43.0": "/different/path/pixi/0.43.0/",
+        },
+    }
+    pixi_config_file = tmp_path / "pixi_config.json"
+    with pixi_config_file.open("w") as f:
+        json.dump(pixi_config, f)
+    with pytest.raises(ValidationError):
+        Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
+
+    # Invalid Pixi config 3
+    pixi_config = {
+        "default_version": "0.41.0",
+        "versions": {
+            "0.40.0": "/common/path/pixi/0.40.0/",
+            "0.41.0": "/common/path/pixi/0.41.0/",
+            "0.43.0": "/common/path/pixi/0.43.1/",
+        },
+    }
+    pixi_config_file = tmp_path / "pixi_config.json"
+    with pixi_config_file.open("w") as f:
+        json.dump(pixi_config, f)
+    with pytest.raises(ValidationError):
+        Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
