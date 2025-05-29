@@ -17,8 +17,7 @@ num_cluster num_units
 200 5_000
 
 # Scaling with number of units per cluster
-  8 5_000
-  8 10_000
-  8 20_000
-  8 40_000
-  8 80_000
+5  10_000
+5  20_000
+5 100_000
+5 200_000
