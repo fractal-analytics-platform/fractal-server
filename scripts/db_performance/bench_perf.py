@@ -1,4 +1,5 @@
 import time
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import HistoryImageCache
 from fractal_server.images.status_tools import _prepare_query
+from fractal_server.images.status_tools import enrich_images_sync
 
 
 def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
@@ -31,6 +33,17 @@ def measure_query_time(
     url_status = res.all()
     end = time.perf_counter()
     print(len(url_status))
+    print(end - start)
+
+
+def measure_enrich_image_time(
+    images: list[dict[str, Any]], dataset_id: int, wftask_id: int
+):
+    start = time.perf_counter()
+    _ = enrich_images_sync(
+        images=images, dataset_id=dataset_id, workflowtask_id=wftask_id
+    )
+    end = time.perf_counter()
     print(end - start)
 
 
