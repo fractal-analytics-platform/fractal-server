@@ -11,6 +11,7 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import json
 import logging
 import shutil
 import sys
@@ -22,6 +23,8 @@ from typing import TypeVar
 
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+from packaging.version import InvalidVersion
+from packaging.version import parse
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
@@ -34,6 +37,7 @@ from sqlalchemy.engine import URL
 
 import fractal_server
 from fractal_server.types import AbsolutePathStr
+from fractal_server.types import DictStrStr
 
 
 class MailSettings(BaseModel):
@@ -60,6 +64,35 @@ class MailSettings(BaseModel):
     instance_name: str
     use_starttls: bool
     use_login: bool
+
+
+class PixiSettings(BaseModel):
+    default_version: str
+    versions: DictStrStr
+
+    @model_validator(mode="after")
+    def check_pixi_settings(self):
+
+        if self.default_version not in self.versions:
+            raise ValueError("...")
+
+        pixi_base_dir = Path(self.versions[self.default_version]).parent
+
+        for key, value in self.versions.items():
+
+            try:
+                parse(key)
+            except InvalidVersion:
+                raise ValueError("...")
+
+            pixi_path = Path(value)
+
+            if pixi_path.parent != pixi_base_dir:
+                raise ValueError("...")
+            if pixi_path.name != key:
+                raise ValueError("...")
+
+        return self
 
 
 class FractalConfigurationError(RuntimeError):
@@ -512,6 +545,17 @@ class Settings(BaseSettings):
     This variable is required and used only when
     FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders".
     """
+
+    FRACTAL_PIXI_CONFIG_FILE: Path | None = None
+
+    pixi_settings: PixiSettings | None = None
+
+    @model_validator(mode="after")
+    def populate_pixi_settings(self):
+        if self.FRACTAL_PIXI_CONFIG_FILE is not None:
+            with self.FRACTAL_PIXI_CONFIG_FILE.open("r") as f:
+                self.pixi_settings = PixiSettings(**json.load(f))
+        return self
 
     ###########################################################################
     # SMTP SERVICE
