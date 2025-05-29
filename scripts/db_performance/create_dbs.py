@@ -79,8 +79,13 @@ def bulk_insert_history_units(
     num_units: int,
     db: Session,
 ) -> list[int]:
-    BATCH_SIZE = 500
-    history_units = [
+    BATCH_SIZE = 1_000
+    if (num_units % BATCH_SIZE) != 0:
+        raise ValueError(num_units, BATCH_SIZE)
+    num_batches = num_units // num_units
+
+    for ind_batch in range(num_batches):
+        history_units = [
             {
                 "history_run_id": hr_run_id,
                 "logfile": f"logfile_{hr_run_id}_{i}.txt",
@@ -89,10 +94,12 @@ def bulk_insert_history_units(
                 else HistoryUnitStatus.FAILED,
                 "zarr_urls": [f"zarr://run_{hr_run_id}/file_{i}.zarr"],
             }
-        for i in range(num_units)
-    ]
-    db.execute(insert(HistoryUnit),history_units)
-    db.commit()
+            for i in range(
+                ind_batch * BATCH_SIZE, (ind_batch + 1) * BATCH_SIZE
+            )
+        ]
+        db.execute(insert(HistoryUnit), history_units)
+        db.commit()
     inserted_ids = [
         hu_id[0]
         for hu_id in db.execute(
@@ -119,30 +126,34 @@ def bulk_insert_history_image_cache(
     history_unit_ids: list[int],
     zarr_urls: list[str],
 ) -> list[int]:
-    BATCH_SIZE = 500
-    history_image_caches = []
-    for i, hu_id in enumerate(history_unit_ids):
-        history_image_caches.append(
+
+    BATCH_SIZE = 1_000
+    num_units = len(history_unit_ids)
+    if (num_units % BATCH_SIZE) != 0:
+        raise ValueError(num_units, BATCH_SIZE)
+    num_batches = num_units // num_units
+
+    for ind_batch in range(num_batches):
+        history_image_caches = [
             {
-                "zarr_url": zarr_urls[i],
+                "zarr_url": zarr_urls[ind_batch * BATCH_SIZE + ind_internal],
                 "dataset_id": dataset_id,
                 "workflowtask_id": workflowtask_id,
                 "latest_history_unit_id": hu_id,
             }
-        )
-        if (i + 1) % BATCH_SIZE == 0:
-            db.execute(
-                insert(HistoryImageCache),
-                history_image_caches,
+            for ind_internal, hu_id in enumerate(
+                history_unit_ids[
+                    ind_batch * BATCH_SIZE : (ind_batch + 1) * BATCH_SIZE
+                ]
             )
-            db.commit()
-            history_image_caches = []
-
-    res = db.execute(
-        select(
-            HistoryImageCache.zarr_url,
+        ]
+        db.execute(
+            insert(HistoryImageCache),
+            history_image_caches,
         )
-    )
+        db.commit()
+
+    res = db.execute(select(HistoryImageCache.zarr_url))
     inserted_hic = [hic_zarr_url[0] for hic_zarr_url in res.all()]
 
     return inserted_hic
