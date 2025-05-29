@@ -12,7 +12,7 @@ from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
-class WheelFile(BaseModel):
+class UploadedFile(BaseModel):
     """
     Model for data sent from the endpoint to the background task.
     """

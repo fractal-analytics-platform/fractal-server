@@ -12,7 +12,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import WheelFile
+from fractal_server.app.schemas.v2 import UploadedFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -38,7 +38,7 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_file: WheelFile | None = None,
+    wheel_file: UploadedFile | None = None,
 ) -> None:
     """
     Collect a task package.
