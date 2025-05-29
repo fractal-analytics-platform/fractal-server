@@ -23,8 +23,6 @@ from typing import TypeVar
 
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
-from packaging.version import InvalidVersion
-from packaging.version import parse
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
@@ -74,23 +72,23 @@ class PixiSettings(BaseModel):
     def check_pixi_settings(self):
 
         if self.default_version not in self.versions:
-            raise ValueError("...")
+            raise ValueError(
+                f"Default version '{self.default_version}' not in "
+                f"available version {list(self.versions.keys())}."
+            )
 
         pixi_base_dir = Path(self.versions[self.default_version]).parent
 
         for key, value in self.versions.items():
 
-            try:
-                parse(key)
-            except InvalidVersion:
-                raise ValueError("...")
-
             pixi_path = Path(value)
 
             if pixi_path.parent != pixi_base_dir:
-                raise ValueError("...")
+                raise ValueError(
+                    f"{pixi_path=} is not located within the {pixi_base_dir=}."
+                )
             if pixi_path.name != key:
-                raise ValueError("...")
+                raise ValueError(f"{pixi_path.name=} is not equal to {key=}")
 
         return self
 
