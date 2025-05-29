@@ -27,6 +27,7 @@ def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
 
 
 def create_fake_images_from_urls(zarr_urls: list[str]) -> list[dict]:
+    zarr_urls_unset = [f"{zarr_url}-unset" for zarr_url in zarr_urls]
     return [
         {
             "zarr_url": zarr_url,
@@ -34,7 +35,7 @@ def create_fake_images_from_urls(zarr_urls: list[str]) -> list[dict]:
             "types": {},
             "origin": None,
         }
-        for zarr_url in zarr_urls
+        for zarr_url in (zarr_urls + zarr_urls_unset)
     ]
 
 
