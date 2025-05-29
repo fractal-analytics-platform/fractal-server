@@ -1,5 +1,4 @@
 import time
-from copy import deepcopy
 from typing import Any
 
 from sqlalchemy import Select
@@ -66,7 +65,7 @@ async def enrich_images_async(
         f"[enrich_images_async] START, {dataset_id=}, {workflowtask_id=}"
     )
 
-    zarr_url_to_image = {img["zarr_url"]: deepcopy(img) for img in images}
+    zarr_url_to_image = {img["zarr_url"]: img for img in images}
 
     res = await db.execute(
         _prepare_query(
@@ -131,7 +130,8 @@ def enrich_images_sync(
         f"[enrich_images_async] START, {dataset_id=}, {workflowtask_id=}"
     )
 
-    zarr_url_to_image = {img["zarr_url"]: deepcopy(img) for img in images}
+    zarr_url_to_image = {img["zarr_url"]: img for img in images}
+
     t_1 = time.perf_counter()
     logger.debug(f"[enrich_images_async] deep-copy, elapsed={t_1 - t_0:.4f} s")
 
