@@ -26,8 +26,13 @@ def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
     return zarr_urls[size // 4 : size // 2]
 
 
-def create_fake_images_from_urls(zarr_urls: list[str]) -> list[dict]:
-    zarr_urls_unset = [f"{zarr_url}-unset" for zarr_url in zarr_urls]
+def create_fake_images_from_urls() -> list[dict]:
+    zarr_urls_processed = get_zarr_urls(
+        db=db,
+        dataset_id=DATASET_ID,
+        wftask_id=WORKFLOWTASK_ID,
+    )
+    zarr_urls_unset = [f"{zarr_url}-unset" for zarr_url in zarr_urls_processed]
     return [
         {
             "zarr_url": zarr_url,
@@ -35,7 +40,7 @@ def create_fake_images_from_urls(zarr_urls: list[str]) -> list[dict]:
             "types": {},
             "origin": None,
         }
-        for zarr_url in (zarr_urls + zarr_urls_unset)
+        for zarr_url in (zarr_urls_processed + zarr_urls_unset)
     ]
 
 
@@ -79,12 +84,9 @@ if __name__ == "__main__":
     with next(get_sync_db()) as db:
         DATASET_ID = 2
         WORKFLOWTASK_ID = 2
-        zarr_urls = get_zarr_urls(
-            db=db,
-            dataset_id=DATASET_ID,
-            wftask_id=WORKFLOWTASK_ID,
-        )
-        images = create_fake_images_from_urls(zarr_urls=zarr_urls)
+
+        images = create_fake_images_from_urls()
+        zarr_urls = [img["zarr_url"] for img in images]
         query_time = measure_query_time(
             dataset_id=DATASET_ID,
             wftask_id=WORKFLOWTASK_ID,
