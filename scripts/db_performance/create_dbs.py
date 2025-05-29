@@ -82,7 +82,7 @@ def bulk_insert_history_units(
     db: Session,
 ) -> list[int]:
 
-    BATCH_SIZE = 10_000
+    BATCH_SIZE = 2_000
     if BATCH_SIZE > num_units or (num_units % BATCH_SIZE) != 0:
         BATCH_SIZE = num_units
     num_batches = num_units // BATCH_SIZE
@@ -128,7 +128,7 @@ def bulk_insert_history_image_cache(
 ) -> None:
 
     num_units = len(history_unit_ids)
-    BATCH_SIZE = 10_000
+    BATCH_SIZE = 2_000
     if BATCH_SIZE > num_units or (num_units % BATCH_SIZE) != 0:
         BATCH_SIZE = num_units
     num_batches = num_units // BATCH_SIZE

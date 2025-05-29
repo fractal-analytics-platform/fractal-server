@@ -10,6 +10,8 @@ from fractal_server.app.models import HistoryImageCache
 from fractal_server.images.status_tools import _prepare_query
 from fractal_server.images.status_tools import enrich_images_sync
 
+REPETITIONS = 8
+
 
 def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
     res = db.execute(
@@ -24,12 +26,13 @@ def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
     return zarr_urls[size // 4 : size // 2]
 
 
-def create_fake_images_from_urls() -> list[dict]:
-    zarr_urls_processed = get_zarr_urls(
-        db=db,
-        dataset_id=DATASET_ID,
-        wftask_id=WORKFLOWTASK_ID,
-    )
+def create_images() -> list[dict]:
+    with next(get_sync_db()) as db:
+        zarr_urls_processed = get_zarr_urls(
+            db=db,
+            dataset_id=DATASET_ID,
+            wftask_id=WORKFLOWTASK_ID,
+        )
     zarr_urls_unset = [f"{zarr_url}-unset" for zarr_url in zarr_urls_processed]
     return [
         {
@@ -46,17 +49,21 @@ def measure_query_time(
     dataset_id: int,
     wftask_id: int,
     zarr_urls: list[int],
-    db: Session,
 ) -> float:
-    start = time.perf_counter()
-    stm = _prepare_query(
-        dataset_id=dataset_id,
-        workflowtask_id=wftask_id,
-        zarr_urls=zarr_urls,
-    )
-    db.execute(stm)
-    end = time.perf_counter()
-    avg_elapsed = end - start
+    tot = 0.0
+    for rep in range(REPETITIONS):
+        with next(get_sync_db()) as db:
+            start = time.perf_counter()
+            stm = _prepare_query(
+                dataset_id=dataset_id,
+                workflowtask_id=wftask_id,
+                zarr_urls=zarr_urls,
+            )
+            res = db.execute(stm)
+            res.scalars().all()
+            end = time.perf_counter()
+        tot += end - start
+    avg_elapsed = tot / REPETITIONS
     return avg_elapsed
 
 
@@ -66,38 +73,38 @@ def measure_enrich_image_time(
     wftask_id: int,
 ) -> float:
     start = time.perf_counter()
-    enrich_images_sync(
-        images=images,
-        dataset_id=dataset_id,
-        workflowtask_id=wftask_id,
-    )
+    for rep in range(REPETITIONS):
+        enrich_images_sync(
+            images=images,
+            dataset_id=dataset_id,
+            workflowtask_id=wftask_id,
+        )
     end = time.perf_counter()
-    avg_elapsed = end - start
+    avg_elapsed = (end - start) / REPETITIONS
     return avg_elapsed
 
 
 if __name__ == "__main__":
-
     num_clusters = int(sys.argv[1])
     num_units = int(sys.argv[2])
 
-    with next(get_sync_db()) as db:
-        DATASET_ID = 2
-        WORKFLOWTASK_ID = 2
+    DATASET_ID = 2
+    WORKFLOWTASK_ID = 2
 
-        images = create_fake_images_from_urls()
-        zarr_urls = [img["zarr_url"] for img in images]
-        query_time = measure_query_time(
-            dataset_id=DATASET_ID,
-            wftask_id=WORKFLOWTASK_ID,
-            zarr_urls=zarr_urls,
-            db=db,
-        )
-        enrich_time = measure_enrich_image_time(
-            images=images,
-            dataset_id=DATASET_ID,
-            wftask_id=WORKFLOWTASK_ID,
-        )
+    images = create_images()
+    zarr_urls = [img["zarr_url"] for img in images]
+
+    query_time = measure_query_time(
+        dataset_id=DATASET_ID,
+        wftask_id=WORKFLOWTASK_ID,
+        zarr_urls=zarr_urls,
+    )
+
+    enrich_time = measure_enrich_image_time(
+        images=images,
+        dataset_id=DATASET_ID,
+        wftask_id=WORKFLOWTASK_ID,
+    )
 
     print(f"{query_time=:.6f}, {enrich_time=:.6f}")
 

@@ -34,8 +34,8 @@ for idx in "${!LIST_NUM_CLUSTER[@]}"; do
     OUT_BENCH="out.bench_perf.${NUM_CLUSTER}.${NUM_UNITS}.txt"
 
     poetry run fractalctl set-db > /dev/null 2>&1
-    poetry run python create_dbs.py "$NUM_CLUSTER" "$NUM_UNITS" > "$OUT_CREATEDB" 2>&1
-    poetry run python bench_perf.py "$NUM_CLUSTER" "$NUM_UNITS" > "$OUT_BENCH" 2>&1
+    poetry run python ../create_dbs.py "$NUM_CLUSTER" "$NUM_UNITS" > "$OUT_CREATEDB" 2>&1
+    poetry run python ../bench_perf.py "$NUM_CLUSTER" "$NUM_UNITS" > "$OUT_BENCH" 2>&1
 
     date
     echo "END CASE $NUM_CLUSTER, $NUM_UNITS"
