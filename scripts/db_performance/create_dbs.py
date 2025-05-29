@@ -1,3 +1,4 @@
+import sys
 import time
 from datetime import datetime
 
@@ -157,8 +158,8 @@ def bulk_insert_history_image_cache(
 
 
 if __name__ == "__main__":
-    num_clusters = 5
-    num_units = 10_000
+    num_clusters = int(sys.argv[1])
+    num_units = int(sys.argv[2])
 
     admin = FractalClient()
     user = _create_user_client(admin, user_identifier="user1")

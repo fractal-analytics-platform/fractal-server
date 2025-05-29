@@ -77,7 +77,7 @@ async def enrich_images_async(
     )
     list_processed_url_status = res.all()
     t_1 = time.perf_counter()
-    logger.debug(f"[enrich_images_async] db-query, elapsed={t_1 - t_0:.3f} s")
+    logger.debug(f"[enrich_images_async] db-query, elapsed={t_1 - t_0:.4f} s")
 
     set_processed_urls = set(item[0] for item in list_processed_url_status)
     processed_images_with_status = [
@@ -89,7 +89,7 @@ async def enrich_images_async(
     ]
     t_2 = time.perf_counter()
     logger.debug(
-        "[enrich_images_async] processed-images, " f"elapsed={t_2 - t_1:.3f} s"
+        "[enrich_images_async] processed-images, " f"elapsed={t_2 - t_1:.4f} s"
     )
 
     non_processed_urls = zarr_url_to_image.keys() - set_processed_urls
@@ -103,7 +103,7 @@ async def enrich_images_async(
     t_3 = time.perf_counter()
     logger.debug(
         "[enrich_images_async] non-processed-images, "
-        f"elapsed={t_3 - t_2:.3f} s"
+        f"elapsed={t_3 - t_2:.4f} s"
     )
 
     return processed_images_with_status + non_processed_images_with_status
@@ -132,6 +132,9 @@ def enrich_images_sync(
     )
 
     zarr_url_to_image = {img["zarr_url"]: deepcopy(img) for img in images}
+    t_1 = time.perf_counter()
+    logger.debug(f"[enrich_images_async] deep-copy, elapsed={t_1 - t_0:.4f} s")
+
     with next(get_sync_db()) as db:
         res = db.execute(
             _prepare_query(
@@ -141,8 +144,8 @@ def enrich_images_sync(
             )
         )
     list_processed_url_status = res.all()
-    t_1 = time.perf_counter()
-    logger.debug(f"[enrich_images_async] db-query, elapsed={t_1 - t_0:.3f} s")
+    t_2 = time.perf_counter()
+    logger.debug(f"[enrich_images_async] db-query, elapsed={t_2 - t_1:.4f} s")
 
     set_processed_urls = set(item[0] for item in list_processed_url_status)
     processed_images_with_status = [
@@ -152,9 +155,9 @@ def enrich_images_sync(
         )
         for item in list_processed_url_status
     ]
-    t_2 = time.perf_counter()
+    t_3 = time.perf_counter()
     logger.debug(
-        "[enrich_images_async] processed-images, " f"elapsed={t_2 - t_1:.3f} s"
+        "[enrich_images_async] processed-images, " f"elapsed={t_3 - t_2:.4f} s"
     )
 
     non_processed_urls = zarr_url_to_image.keys() - set_processed_urls
@@ -165,10 +168,10 @@ def enrich_images_sync(
         )
         for zarr_url in non_processed_urls
     ]
-    t_3 = time.perf_counter()
+    t_4 = time.perf_counter()
     logger.debug(
         "[enrich_images_async] non-processed-images, "
-        f"elapsed={t_3 - t_2:.3f} s"
+        f"elapsed={t_4 - t_3:.4f} s"
     )
 
     return processed_images_with_status + non_processed_images_with_status

@@ -1,3 +1,4 @@
+import sys
 import time
 from typing import Any
 
@@ -10,7 +11,7 @@ from fractal_server.images.status_tools import _prepare_query
 from fractal_server.images.status_tools import enrich_images_sync
 
 
-REPETITIONS = 4
+REPETITIONS = 8
 
 
 def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
@@ -81,6 +82,10 @@ def measure_enrich_image_time(
 
 
 if __name__ == "__main__":
+
+    num_clusters = int(sys.argv[1])
+    num_units = int(sys.argv[2])
+
     with next(get_sync_db()) as db:
         DATASET_ID = 2
         WORKFLOWTASK_ID = 2
@@ -100,3 +105,8 @@ if __name__ == "__main__":
         )
 
     print(f"{query_time=:.6f}, {enrich_time=:.6f}")
+
+    with open("out.csv", "a") as f:
+        f.write(
+            f"{num_clusters},{num_units},{query_time:.7f},{enrich_time:.7f}\n"
+        )

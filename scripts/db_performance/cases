@@ -1,12 +1,3 @@
-num_cluster num_units
-
-
-# Scaling with number of clusters / small datasets
-  10 1_000
- 100 1_000
- 200 1_000
- 500 1_000
-1000 1_000
 
 
 # Scaling with number of clusters / mid case
