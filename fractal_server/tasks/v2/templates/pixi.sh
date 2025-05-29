@@ -8,12 +8,11 @@ write_log(){
 # Absolute paths
 PIXI_HOME="__PIXI_HOME__"
 PACKAGE_DIR="__PACKAGE_DIR__"
+TAR_GZ_PATH="__TAR_GZ_PATH__"
 # Names
-TAR_GZ_FILE_NAME="__TAR_GZ_FILE_NAME__"
 PACKAGE_NAME="__PACKAGE_NAME__"
 
 PIXI_EXECUTABLE="${PIXI_HOME}/bin/pixi"
-TAR_FILE="${PACKAGE_DIR}/${TAR_GZ_FILE_NAME}"
 SOURCE_DIR="${PACKAGE_DIR}/source_dir"
 PYPROJECT_TOML="${SOURCE_DIR}/pyproject.toml"
 
@@ -21,7 +20,7 @@ export PIXI_HOME=${PIXI_HOME}
 export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
-tar -xzfv ${TAR_FILE} -C ${SOURCE_DIR}
+tar -xzfv ${TAR_GZ_PATH} -C ${SOURCE_DIR}
 ${PIXI_EXECUTABLE} install --manifest-path ${PYPROJECT_TOML}
 
 TASK_DIR=$(
