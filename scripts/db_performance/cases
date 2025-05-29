@@ -1,0 +1,24 @@
+num_cluster num_units
+
+
+# Scaling with number of clusters / small datasets
+  10 1_000
+ 100 1_000
+ 200 1_000
+ 500 1_000
+1000 1_000
+
+
+# Scaling with number of clusters / mid case
+ 10 5_000
+ 20 5_000
+ 50 5_000
+100 5_000
+200 5_000
+
+# Scaling with number of units per cluster
+  8 5_000
+  8 10_000
+  8 20_000
+  8 40_000
+  8 80_000
