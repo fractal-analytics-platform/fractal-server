@@ -174,18 +174,19 @@ def deactivate_ssh(
                             f"Handle specific cases for {task_group.origin=}."
                         )
 
-                        # Blocking situation: `wheel_path` is not set or points
-                        # to a missing path
+                        # Blocking situation: `archive_path` is not set or
+                        # points to a missing path
                         if (
-                            task_group.wheel_path is None
+                            task_group.archive_path is None
                             or not fractal_ssh.remote_exists(
-                                task_group.wheel_path
+                                task_group.archive_path
                             )
                         ):
                             error_msg = (
                                 "Invalid wheel path for task group with "
-                                f"{task_group_id=}. {task_group.wheel_path=} "
-                                "is unset or does not exist."
+                                f"{task_group_id=}. "
+                                f"{task_group.archive_path=}  is unset or "
+                                "does not exist."
                             )
                             logger.error(error_msg)
                             fail_and_cleanup(
@@ -198,51 +199,51 @@ def deactivate_ssh(
                             )
                             return
 
-                        # Recoverable situation: `wheel_path` was not yet
+                        # Recoverable situation: `archive_path` was not yet
                         # copied over to the correct server-side folder
-                        wheel_path_parent_dir = Path(
-                            task_group.wheel_path
+                        archive_path_parent_dir = Path(
+                            task_group.archive_path
                         ).parent
-                        if wheel_path_parent_dir != Path(task_group.path):
+                        if archive_path_parent_dir != Path(task_group.path):
                             logger.warning(
-                                f"{wheel_path_parent_dir.as_posix()} differs "
-                                f"from {task_group.path}. NOTE: this should "
-                                "only happen for task groups created before "
-                                "2.9.0."
+                                f"{archive_path_parent_dir.as_posix()} "
+                                f"differs from {task_group.path}. "
+                                "NOTE: this should only happen for task "
+                                "groups created before 2.9.0."
                             )
 
                             if (
-                                task_group.wheel_path
+                                task_group.archive_path
                                 not in task_group.pip_freeze
                             ):
                                 raise ValueError(
-                                    f"Cannot find {task_group.wheel_path=} in "
-                                    "pip-freeze data. Exit."
+                                    f"Cannot find {task_group.archive_path=} "
+                                    "in pip-freeze data. Exit."
                                 )
 
                             logger.info(
                                 f"Now copy wheel file into {task_group.path}."
                             )
-                            new_wheel_path = _copy_wheel_file_ssh(
+                            new_archive_path = _copy_wheel_file_ssh(
                                 task_group=task_group,
                                 fractal_ssh=fractal_ssh,
                                 logger_name=LOGGER_NAME,
                             )
                             logger.info(
-                                f"Copied wheel file to {new_wheel_path}."
+                                f"Copied wheel file to {new_archive_path}."
                             )
 
-                            task_group.wheel_path = new_wheel_path
+                            task_group.archive_path = new_archive_path
                             new_pip_freeze = task_group.pip_freeze.replace(
-                                task_group.wheel_path,
-                                new_wheel_path,
+                                task_group.archive_path,
+                                new_archive_path,
                             )
                             task_group.pip_freeze = new_pip_freeze
                             task_group = add_commit_refresh(
                                 obj=task_group, db=db
                             )
                             logger.info(
-                                "Updated `wheel_path` and `pip_freeze` "
+                                "Updated `archive_path` and `pip_freeze` "
                                 "task-group attributes."
                             )
 

@@ -103,16 +103,18 @@ def collect_local(
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
 
-                # Write wheel file and set task_group.wheel_path
+                # Write wheel file and set task_group.archive_path
                 if wheel_file is not None:
 
-                    wheel_path = (
+                    archive_path = (
                         Path(task_group.path) / wheel_file.filename
                     ).as_posix()
-                    logger.info(f"Write wheel-file contents into {wheel_path}")
-                    with open(wheel_path, "wb") as f:
+                    logger.info(
+                        f"Write wheel-file contents into {archive_path}"
+                    )
+                    with open(archive_path, "wb") as f:
                         f.write(wheel_file.contents)
-                    task_group.wheel_path = wheel_path
+                    task_group.archive_path = archive_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates

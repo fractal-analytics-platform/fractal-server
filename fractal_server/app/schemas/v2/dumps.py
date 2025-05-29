@@ -86,4 +86,4 @@ class TaskGroupDumpV2(BaseModel):
 
     path: str | None = None
     venv_path: str | None = None
-    wheel_path: str | None = None
+    archive_path: str | None = None

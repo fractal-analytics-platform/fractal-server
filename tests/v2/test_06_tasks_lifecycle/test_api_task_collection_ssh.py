@@ -245,7 +245,7 @@ async def test_task_collection_ssh_failure(
     )
 
     # Prepare payload that leads to a failed collection
-    local_wheel_path = (
+    local_archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
@@ -253,9 +253,13 @@ async def test_task_collection_ssh_failure(
     payload = dict(
         python_version=current_py_version,
     )
-    with open(local_wheel_path, "rb") as f:
+    with open(local_archive_path, "rb") as f:
         files = {
-            "file": (Path(local_wheel_path).name, f.read(), "application/zip")
+            "file": (
+                Path(local_archive_path).name,
+                f.read(),
+                "application/zip",
+            )
         }
 
     async with MockCurrentUser(

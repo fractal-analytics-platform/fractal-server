@@ -131,15 +131,15 @@ def deactivate_local(
                         f"Handle specific cases for {task_group.origin=}."
                     )
 
-                    # Blocking situation: `wheel_path` is not set or points
+                    # Blocking situation: `archive_path` is not set or points
                     # to a missing path
                     if (
-                        task_group.wheel_path is None
-                        or not Path(task_group.wheel_path).exists()
+                        task_group.archive_path is None
+                        or not Path(task_group.archive_path).exists()
                     ):
                         error_msg = (
                             "Invalid wheel path for task group with "
-                            f"{task_group_id=}. {task_group.wheel_path=} is "
+                            f"{task_group_id=}. {task_group.archive_path=} is "
                             "unset or does not exist."
                         )
                         logger.error(error_msg)
@@ -153,41 +153,48 @@ def deactivate_local(
                         )
                         return
 
-                    # Recoverable situation: `wheel_path` was not yet copied
+                    # Recoverable situation: `archive_path` was not yet copied
                     # over to the correct server-side folder
-                    wheel_path_parent_dir = Path(task_group.wheel_path).parent
-                    if wheel_path_parent_dir != Path(task_group.path):
+                    archive_path_parent_dir = Path(
+                        task_group.archive_path
+                    ).parent
+                    if archive_path_parent_dir != Path(task_group.path):
                         logger.warning(
-                            f"{wheel_path_parent_dir.as_posix()} differs from "
-                            f"{task_group.path}. NOTE: this should only "
+                            f"{archive_path_parent_dir.as_posix()} differs "
+                            f"from {task_group.path}. NOTE: this should only "
                             "happen for task groups created before 2.9.0."
                         )
 
-                        if task_group.wheel_path not in task_group.pip_freeze:
+                        if (
+                            task_group.archive_path
+                            not in task_group.pip_freeze
+                        ):
                             raise ValueError(
-                                f"Cannot find {task_group.wheel_path=} in "
+                                f"Cannot find {task_group.archive_path=} in "
                                 "pip-freeze data. Exit."
                             )
 
                         logger.info(
                             f"Now copy wheel file into {task_group.path}."
                         )
-                        new_wheel_path = (
+                        new_archive_path = (
                             Path(task_group.path)
-                            / Path(task_group.wheel_path).name
+                            / Path(task_group.archive_path).name
                         ).as_posix()
-                        shutil.copy(task_group.wheel_path, new_wheel_path)
-                        logger.info(f"Copied wheel file to {new_wheel_path}.")
+                        shutil.copy(task_group.archive_path, new_archive_path)
+                        logger.info(
+                            f"Copied wheel file to {new_archive_path}."
+                        )
 
-                        task_group.wheel_path = new_wheel_path
+                        task_group.archive_path = new_archive_path
                         new_pip_freeze = task_group.pip_freeze.replace(
-                            task_group.wheel_path,
-                            new_wheel_path,
+                            task_group.archive_path,
+                            new_archive_path,
                         )
                         task_group.pip_freeze = new_pip_freeze
                         task_group = add_commit_refresh(obj=task_group, db=db)
                         logger.info(
-                            "Updated `wheel_path` and `pip_freeze` "
+                            "Updated `archive_path` and `pip_freeze` "
                             "task-group attributes."
                         )
 

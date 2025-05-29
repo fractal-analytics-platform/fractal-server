@@ -79,7 +79,7 @@ async def test_collect_pip_local_fail_rmtree(
         pkg_name="fractal-tasks-mock",
         version="0.0.1",
         origin="local",
-        wheel_path=(
+        archive_path=(
             testdata_path.parent
             / (
                 "v2/fractal_tasks_fail/invalid_manifest/dist/"
@@ -110,18 +110,18 @@ async def test_collect_pip_local_fail_rmtree(
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
     # Run background task
-    wheel_path = testdata_path.parent / (
+    archive_path = testdata_path.parent / (
         "v2/fractal_tasks_fail/invalid_manifest/dist/"
         "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    with open(wheel_path, "rb") as whl:
+    with open(archive_path, "rb") as whl:
         try:
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
                 wheel_file=WheelFile(
                     contents=whl.read(),
-                    filename=wheel_path.name,
+                    filename=archive_path.name,
                 ),
             )
         except RuntimeError as e:
@@ -165,7 +165,7 @@ async def test_bad_wheel_file_arguments(
         pkg_name="fractal-tasks-mock",
         version="0.0.1",
         origin="local",
-        wheel_path=(
+        archive_path=(
             testdata_path.parent
             / (
                 "v2/fractal_tasks_fail/invalid_manifest/dist/"
@@ -196,18 +196,18 @@ async def test_bad_wheel_file_arguments(
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
     # Run background task
-    wheel_path = testdata_path.parent / (
+    archive_path = testdata_path.parent / (
         "v2/fractal_tasks_fail/invalid_manifest/dist/"
         "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    with open(wheel_path, "rb") as whl:
+    with open(archive_path, "rb") as whl:
         try:
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
                 wheel_file=WheelFile(
                     contents=whl.read(),
-                    filename=wheel_path.name,
+                    filename=archive_path.name,
                 ),
             )
         except RuntimeError as e:
@@ -249,7 +249,7 @@ async def test_invalid_wheel(
     ]
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         for name, log in pkgnames_logs:
-            wheel_path = (
+            archive_path = (
                 testdata_path.parent
                 / f"v2/fractal_tasks_fail/{name}"
                 / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
@@ -259,7 +259,7 @@ async def test_invalid_wheel(
                 pkg_name="fractal-tasks-mock",
                 version="0.0.1",
                 origin="local",
-                wheel_path=wheel_path.as_posix(),
+                archive_path=archive_path.as_posix(),
                 python_version=current_py_version,
                 path=(tmp_path / name).as_posix(),
                 venv_path=(tmp_path / name / "venv").as_posix(),
@@ -284,13 +284,13 @@ async def test_invalid_wheel(
             await db.refresh(task_group_activity)
             db.expunge(task_group_activity)
 
-            with open(wheel_path, "rb") as whl:
+            with open(archive_path, "rb") as whl:
                 collect_local(
                     task_group_id=task_group.id,
                     task_group_activity_id=task_group_activity.id,
                     wheel_file=WheelFile(
                         contents=whl.read(),
-                        filename=wheel_path.name,
+                        filename=archive_path.name,
                     ),
                 )
 

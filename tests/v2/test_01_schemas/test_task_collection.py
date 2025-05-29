@@ -134,7 +134,7 @@ def test_TaskGroupCreateV2Strict():
         version="/c",
         python_version="/d",
         origin=TaskGroupV2OriginEnum.WHEELFILE,
-        wheel_path="/a",
+        archive_path="/a",
         pkg_name="x",
         user_id=1,
     )
@@ -156,7 +156,7 @@ def test_TaskGroupCreateV2Strict():
             version="c",
             python_version="d",
             origin=TaskGroupV2OriginEnum.WHEELFILE,
-            wheel_path="/a",
+            archive_path="/a",
             pkg_name="x",
             user_id=1,
         )
@@ -167,7 +167,7 @@ def test_TaskGroupCreateV2Strict():
             version="c",
             python_version="d",
             origin=TaskGroupV2OriginEnum.WHEELFILE,
-            wheel_path="/a",
+            archive_path="/a",
             pkg_name="x",
             user_id=1,
         )
@@ -178,7 +178,7 @@ def test_TaskGroupCreateV2Strict():
             venv_path="/b",
             python_version="d",
             origin=TaskGroupV2OriginEnum.WHEELFILE,
-            wheel_path="/a",
+            archive_path="/a",
             pkg_name="x",
             user_id=1,
         )
@@ -189,7 +189,7 @@ def test_TaskGroupCreateV2Strict():
             venv_path="/b",
             version="c",
             origin=TaskGroupV2OriginEnum.WHEELFILE,
-            wheel_path="/a",
+            archive_path="/a",
             pkg_name="x",
             user_id=1,
         )

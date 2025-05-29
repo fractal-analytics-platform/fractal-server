@@ -135,25 +135,26 @@ def collect_ssh(
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
                     # Write wheel file locally and send it to remote path,
-                    # and set task_group.wheel_path
+                    # and set task_group.archive_path
                     if wheel_file is not None:
                         wheel_filename = wheel_file.filename
-                        wheel_path = (
+                        archive_path = (
                             Path(task_group.path) / wheel_filename
                         ).as_posix()
-                        tmp_wheel_path = (
+                        tmp_archive_path = (
                             Path(tmpdir) / wheel_filename
                         ).as_posix()
                         logger.info(
-                            f"Write wheel-file contents into {tmp_wheel_path}"
+                            "Write wheel-file contents into "
+                            f"{tmp_archive_path}"
                         )
-                        with open(tmp_wheel_path, "wb") as f:
+                        with open(tmp_archive_path, "wb") as f:
                             f.write(wheel_file.contents)
                         fractal_ssh.send_file(
-                            local=tmp_wheel_path,
-                            remote=wheel_path,
+                            local=tmp_archive_path,
+                            remote=archive_path,
                         )
-                        task_group.wheel_path = wheel_path
+                        task_group.archive_path = archive_path
                         task_group = add_commit_refresh(obj=task_group, db=db)
 
                     replacements = get_collection_replacements(

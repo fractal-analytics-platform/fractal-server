@@ -297,15 +297,15 @@ async def test_lifecycle(
 
     # Absolute path to wheel file (use a path in tmp77_path, so that it is
     # also accessible on the SSH remote host)
-    old_wheel_path = (
+    old_archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    wheel_path = tmp777_path / old_wheel_path.name
-    shutil.copy(old_wheel_path, wheel_path)
-    with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f.read(), "application/zip")}
+    archive_path = tmp777_path / old_archive_path.name
+    shutil.copy(old_archive_path, archive_path)
+    with open(archive_path, "rb") as f:
+        files = {"file": (archive_path.name, f.read(), "application/zip")}
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
@@ -339,9 +339,9 @@ async def test_lifecycle(
         assert res.status_code == 200
         task_group = res.json()
         pip_freeze = task_group["pip_freeze"]
-        task_group_wheel_path = task_group["wheel_path"]
+        task_group_archive_path = task_group["archive_path"]
         assert (
-            f"fractal-tasks-mock @ file://{task_group_wheel_path}"
+            f"fractal-tasks-mock @ file://{task_group_archive_path}"
             in pip_freeze
         )
         pip_version = next(
@@ -351,8 +351,8 @@ async def test_lifecycle(
             settings.FRACTAL_MAX_PIP_VERSION
         )
         assert (
-            Path(task_group["path"]) / Path(wheel_path).name
-        ).as_posix() == (Path(task_group_wheel_path).as_posix())
+            Path(task_group["path"]) / Path(archive_path).name
+        ).as_posix() == (Path(task_group_archive_path).as_posix())
 
         # STEP 2: Deactivate task group
         res = await client.post(
@@ -370,7 +370,7 @@ async def test_lifecycle(
         assert task_group.active is False
         assert Path(task_group.path).exists()
         assert not Path(task_group.venv_path).exists()
-        assert Path(task_group.wheel_path).exists()
+        assert Path(task_group.archive_path).exists()
 
         # STEP 3: Reactivate task group
         res = await client.post(
@@ -388,7 +388,7 @@ async def test_lifecycle(
         assert task_group.active is True
         assert Path(task_group.path).exists()
         assert Path(task_group.venv_path).exists()
-        assert Path(task_group.wheel_path).exists()
+        assert Path(task_group.archive_path).exists()
 
         # STEP 4: Deactivate a task group created before 2.9.0,
         # which has no pip-freeze information
@@ -413,7 +413,7 @@ async def test_lifecycle(
         assert task_group.pip_freeze is not None
         assert Path(task_group.path).exists()
         assert not Path(task_group.venv_path).exists()
-        assert Path(task_group.wheel_path).exists()
+        assert Path(task_group.archive_path).exists()
 
 
 async def test_fail_due_to_ongoing_activities(

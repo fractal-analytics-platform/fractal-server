@@ -208,7 +208,7 @@ async def collect_tasks_pip(
     # Initialize wheel_file_content as None
     wheel_file = None
 
-    # Set pkg_name, version, origin and wheel_path
+    # Set pkg_name, version, origin and archive_path
     if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
         try:
             wheel_filename = request_data.file.filename
