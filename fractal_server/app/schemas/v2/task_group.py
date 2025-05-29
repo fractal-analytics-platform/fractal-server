@@ -16,6 +16,7 @@ from fractal_server.types import NonEmptyStr
 class TaskGroupV2OriginEnum(StrEnum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
+    PIXI = "pixi"
     OTHER = "other"
 
 
