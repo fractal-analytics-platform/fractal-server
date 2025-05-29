@@ -92,20 +92,28 @@ def bulk_insert_history_units(
                 "zarr_urls": [f"zarr://run_{hr_run_id}/file_{i}.zarr"],
             }
         )
-        i += 1
-        if i % BATCH_SIZE == 0:
+        if (i + 1) % BATCH_SIZE == 0:
             db.execute(
                 insert(HistoryUnit),
                 history_units,
             )
             db.commit()
             history_units = []
-            i = 0
     inserted_ids = [
-        hu_id[0] for hu_id in db.execute(select(HistoryUnit.id)).all()
+        hu_id[0]
+        for hu_id in db.execute(
+            select(HistoryUnit.id).where(
+                HistoryUnit.history_run_id == hr_run_id
+            )
+        ).all()
     ]
     zarr_urls = [
-        hu_id[0] for hu_id in db.execute(select(HistoryUnit.zarr_urls)).all()
+        hu_id[0]
+        for hu_id in db.execute(
+            select(HistoryUnit.zarr_urls).where(
+                HistoryUnit.history_run_id == hr_run_id
+            )
+        ).all()
     ]
     return dict(h_units=inserted_ids, zarr_urls=zarr_urls)
 
@@ -116,11 +124,9 @@ def bulk_insert_history_image_cache(
     workflowtask_id: int,
     history_unit_ids: list[int],
     zarr_urls: list[str],
-    num_units: int,
 ) -> list[int]:
     BATCH_SIZE = 500
     history_image_caches = []
-    i = 0
     for i, hu_id in enumerate(history_unit_ids):
         history_image_caches.append(
             {
@@ -130,22 +136,20 @@ def bulk_insert_history_image_cache(
                 "latest_history_unit_id": hu_id,
             }
         )
-        i += 1
-        if i % BATCH_SIZE == 0:
+        if (i + 1) % BATCH_SIZE == 0:
             db.execute(
                 insert(HistoryImageCache),
                 history_image_caches,
             )
             db.commit()
             history_image_caches = []
-            i = 0
 
     res = db.execute(
         select(
             HistoryImageCache.zarr_url,
         )
     )
-    inserted_hic = [hic_id[0] for hic_id in res.all()]
+    inserted_hic = [hic_zarr_url[0] for hic_zarr_url in res.all()]
 
     return inserted_hic
 
@@ -187,10 +191,10 @@ if __name__ == "__main__":
             dict_units = bulk_insert_history_units(
                 hr_run_id=hr_run_id, num_units=num_units, db=db
             )
+            print(len(dict_units["h_units"]))
             hic_ids = bulk_insert_history_image_cache(
                 dataset_id=ds.id,
                 workflowtask_id=wftask.id,
-                num_units=num_units,
                 history_unit_ids=dict_units["h_units"],
                 zarr_urls=dict_units["zarr_urls"],
                 db=db,
