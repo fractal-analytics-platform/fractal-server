@@ -11,6 +11,9 @@ sleep 1
 echo "Creating fractal_test database..."
 docker exec -it postgres-main createdb -Upostgres fractal_test
 
+echo
 poetry run fractalctl set-db
+echo
 poetry run python create_dbs.py
+echo
 poetry run python bench_perf.py
