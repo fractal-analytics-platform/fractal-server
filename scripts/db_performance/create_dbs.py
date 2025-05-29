@@ -160,7 +160,7 @@ def bulk_insert_history_image_cache(
 
 
 if __name__ == "__main__":
-    num_clusters = 4
+    num_clusters = 1000
     num_units = 1000
 
     admin = FractalClient()
