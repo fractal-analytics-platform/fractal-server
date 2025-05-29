@@ -373,3 +373,20 @@ async def collect_tasks_pip(
     reset_logger_handlers(logger)
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
+
+
+@router.post(
+    "/collect/pixi/",
+    response_model=TaskGroupActivityV2Read,
+)
+async def collect_task_pixi(
+    request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    request_data: CollectionRequestData = Depends(parse_request_data),
+    private: bool = False,
+    user_group_id: int | None = None,
+    user: UserOAuth = Depends(current_active_verified_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupActivityV2Read:
+    pass
