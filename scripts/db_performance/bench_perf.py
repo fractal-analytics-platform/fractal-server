@@ -32,8 +32,7 @@ def measure_query_time(
     res = db.execute(stm)
     url_status = res.all()
     end = time.perf_counter()
-    print(len(url_status))
-    print(end - start)
+    print(f"Number of units: {len(url_status)} - elapsed: {end-start:.6f}")
 
 
 def measure_enrich_image_time(

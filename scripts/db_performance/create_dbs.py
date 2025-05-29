@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from sqlalchemy import insert
@@ -40,7 +41,7 @@ def insert_job(
     return job
 
 
-def insert_history_runs(
+def insert_history_run(
     dataset_id: int,
     workflowtask_id: int,
     task_id: int,
@@ -79,89 +80,85 @@ def bulk_insert_history_units(
     num_units: int,
     db: Session,
 ) -> list[int]:
-    BATCH_SIZE = 1_000
-    if (num_units % BATCH_SIZE) != 0:
-        raise ValueError(num_units, BATCH_SIZE)
-    num_batches = num_units // num_units
+
+    BATCH_SIZE = 10_000
+    if BATCH_SIZE > num_units or (num_units % BATCH_SIZE) != 0:
+        BATCH_SIZE = num_units
+    num_batches = num_units // BATCH_SIZE
 
     for ind_batch in range(num_batches):
-        history_units = [
-            {
-                "history_run_id": hr_run_id,
-                "logfile": f"logfile_{hr_run_id}_{i}.txt",
-                "status": HistoryUnitStatus.DONE
-                if i % 2 == 0
-                else HistoryUnitStatus.FAILED,
-                "zarr_urls": [f"zarr://run_{hr_run_id}/file_{i}.zarr"],
-            }
-            for i in range(
-                ind_batch * BATCH_SIZE, (ind_batch + 1) * BATCH_SIZE
-            )
-        ]
-        db.execute(insert(HistoryUnit), history_units)
+        db.execute(
+            insert(HistoryUnit),
+            [
+                {
+                    "history_run_id": hr_run_id,
+                    "logfile": "fake",
+                    "status": HistoryUnitStatus.DONE
+                    if i % 2 == 0
+                    else HistoryUnitStatus.FAILED,
+                    "zarr_urls": [],
+                }
+                for i in range(
+                    ind_batch * BATCH_SIZE, (ind_batch + 1) * BATCH_SIZE
+                )
+            ],
+        )
         db.commit()
-    inserted_ids = [
-        hu_id[0]
-        for hu_id in db.execute(
+
+    inserted_ids = (
+        db.execute(
             select(HistoryUnit.id).where(
                 HistoryUnit.history_run_id == hr_run_id
             )
-        ).all()
-    ]
-    zarr_urls = [
-        hu_id[0]
-        for hu_id in db.execute(
-            select(HistoryUnit.zarr_urls).where(
-                HistoryUnit.history_run_id == hr_run_id
-            )
-        ).all()
-    ]
-    return dict(h_units=inserted_ids, zarr_urls=zarr_urls)
+        )
+        .scalars()
+        .all()
+    )
+
+    return inserted_ids
 
 
 def bulk_insert_history_image_cache(
     db: Session,
     dataset_id: int,
     workflowtask_id: int,
+    history_run_id: int,
     history_unit_ids: list[int],
-    zarr_urls: list[str],
-) -> list[int]:
+) -> None:
 
-    BATCH_SIZE = 1_000
     num_units = len(history_unit_ids)
-    if (num_units % BATCH_SIZE) != 0:
-        raise ValueError(num_units, BATCH_SIZE)
-    num_batches = num_units // num_units
+    BATCH_SIZE = 10_000
+    if BATCH_SIZE > num_units or (num_units % BATCH_SIZE) != 0:
+        BATCH_SIZE = num_units
+    num_batches = num_units // BATCH_SIZE
 
     for ind_batch in range(num_batches):
-        history_image_caches = [
-            {
-                "zarr_url": zarr_urls[ind_batch * BATCH_SIZE + ind_internal],
-                "dataset_id": dataset_id,
-                "workflowtask_id": workflowtask_id,
-                "latest_history_unit_id": hu_id,
-            }
-            for ind_internal, hu_id in enumerate(
-                history_unit_ids[
-                    ind_batch * BATCH_SIZE : (ind_batch + 1) * BATCH_SIZE
-                ]
-            )
-        ]
         db.execute(
             insert(HistoryImageCache),
-            history_image_caches,
+            [
+                {
+                    "zarr_url": (
+                        f"zarr://run_{history_run_id}/"
+                        f"file_{ind_batch * BATCH_SIZE + ind_internal}.zarr",
+                    ),
+                    "dataset_id": dataset_id,
+                    "workflowtask_id": workflowtask_id,
+                    "latest_history_unit_id": hu_id,
+                }
+                for ind_internal, hu_id in enumerate(
+                    history_unit_ids[
+                        ind_batch * BATCH_SIZE : (ind_batch + 1) * BATCH_SIZE
+                    ]
+                )
+            ],
         )
         db.commit()
-
-    res = db.execute(select(HistoryImageCache.zarr_url))
-    inserted_hic = [hic_zarr_url[0] for hic_zarr_url in res.all()]
-
-    return inserted_hic
+    return
 
 
 if __name__ == "__main__":
-    num_clusters = 1000
-    num_units = 1000
+    num_clusters = 10
+    num_units = 10_000
 
     admin = FractalClient()
     user = _create_user_client(admin, user_identifier="user1")
@@ -186,21 +183,34 @@ if __name__ == "__main__":
             job = insert_job(
                 project_id=proj.id, workflow_id=wf.id, dataset_id=ds.id, db=db
             )
-            hr_run_id = insert_history_runs(
+
+            t_start = time.perf_counter()
+            hr_run_id = insert_history_run(
                 dataset_id=ds.id,
                 workflowtask_id=wftask.id,
                 task_id=working_task.id,
                 job_id=job.id,
                 db=db,
             )
-            dict_units = bulk_insert_history_units(
-                hr_run_id=hr_run_id, num_units=num_units, db=db
+            t1 = time.perf_counter()
+            unit_ids = bulk_insert_history_units(
+                hr_run_id=hr_run_id,
+                num_units=num_units,
+                db=db,
             )
-            print(len(dict_units["h_units"]))
-            hic_ids = bulk_insert_history_image_cache(
+            t2 = time.perf_counter()
+            bulk_insert_history_image_cache(
                 dataset_id=ds.id,
                 workflowtask_id=wftask.id,
-                history_unit_ids=dict_units["h_units"],
-                zarr_urls=dict_units["zarr_urls"],
+                history_run_id=hr_run_id,
+                history_unit_ids=unit_ids,
                 db=db,
+            )
+            t3 = time.perf_counter()
+            t_end = time.perf_counter()
+            print(
+                f"Cluster {cluster} out of {num_clusters} "
+                f"- cluster size: {len(unit_ids)} "
+                f"- elapsed: {t_end - t_start:.4f} s "
+                f"- units: {t2-t1:.4f} - image caches: {t3-t2:.4f}"
             )
