@@ -80,9 +80,7 @@ def bulk_insert_history_units(
     db: Session,
 ) -> list[int]:
     BATCH_SIZE = 500
-    history_units = []
-    for i in range(num_units):
-        history_units.append(
+    history_units = [
             {
                 "history_run_id": hr_run_id,
                 "logfile": f"logfile_{hr_run_id}_{i}.txt",
@@ -91,14 +89,10 @@ def bulk_insert_history_units(
                 else HistoryUnitStatus.FAILED,
                 "zarr_urls": [f"zarr://run_{hr_run_id}/file_{i}.zarr"],
             }
-        )
-        if (i + 1) % BATCH_SIZE == 0:
-            db.execute(
-                insert(HistoryUnit),
-                history_units,
-            )
-            db.commit()
-            history_units = []
+        for i in range(num_units)
+    ]
+    db.execute(insert(HistoryUnit),history_units)
+    db.commit()
     inserted_ids = [
         hu_id[0]
         for hu_id in db.execute(
