@@ -1,5 +1,7 @@
+import random
 import sys
 import time
+from copy import deepcopy
 from datetime import datetime
 
 from sqlalchemy import insert
@@ -19,6 +21,8 @@ from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2.history import HistoryUnitStatus
 from scripts.client import FractalClient
+
+random.seed(123112311)
 
 
 def insert_job(
@@ -133,24 +137,23 @@ def bulk_insert_history_image_cache(
         BATCH_SIZE = num_units
     num_batches = num_units // BATCH_SIZE
 
+    history_unit_ids = deepcopy(history_unit_ids)
+    random.shuffle(history_unit_ids)
+    print(history_unit_ids)
+
     for ind_batch in range(num_batches):
         db.execute(
             insert(HistoryImageCache),
             [
                 {
-                    "zarr_url": (
-                        f"zarr://run_{history_run_id}/"
-                        f"file_{ind_batch * BATCH_SIZE + ind_internal}.zarr",
-                    ),
+                    "zarr_url": f"/run_{history_run_id}/unit_{hu_id}.zarr",
                     "dataset_id": dataset_id,
                     "workflowtask_id": workflowtask_id,
                     "latest_history_unit_id": hu_id,
                 }
-                for ind_internal, hu_id in enumerate(
-                    history_unit_ids[
-                        ind_batch * BATCH_SIZE : (ind_batch + 1) * BATCH_SIZE
-                    ]
-                )
+                for hu_id in history_unit_ids[
+                    ind_batch * BATCH_SIZE : (ind_batch + 1) * BATCH_SIZE
+                ]
             ],
         )
         db.commit()

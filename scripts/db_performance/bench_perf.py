@@ -10,7 +10,7 @@ from fractal_server.app.models import HistoryImageCache
 from fractal_server.images.status_tools import _prepare_query
 from fractal_server.images.status_tools import enrich_images_sync
 
-REPETITIONS = 8
+REPETITIONS = 20
 
 
 def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
@@ -57,10 +57,9 @@ def measure_query_time(
             stm = _prepare_query(
                 dataset_id=dataset_id,
                 workflowtask_id=wftask_id,
-                zarr_urls=zarr_urls,
             )
             res = db.execute(stm)
-            res.scalars().all()
+            res.all()
             end = time.perf_counter()
         tot += end - start
     avg_elapsed = tot / REPETITIONS
@@ -79,6 +78,29 @@ def measure_enrich_image_time(
             dataset_id=dataset_id,
             workflowtask_id=wftask_id,
         )
+
+    end = time.perf_counter()
+    avg_elapsed = (end - start) / REPETITIONS
+    return avg_elapsed
+
+
+def measure_enrich_image_time_sorted(
+    images: list[dict[str, Any]],
+    dataset_id: int,
+    wftask_id: int,
+) -> float:
+    start = time.perf_counter()
+    for rep in range(REPETITIONS):
+        output_images = enrich_images_sync(
+            images=images,
+            dataset_id=dataset_id,
+            workflowtask_id=wftask_id,
+        )
+        output_images = sorted(
+            output_images,
+            key=lambda img: img["zarr_url"],
+        )
+
     end = time.perf_counter()
     avg_elapsed = (end - start) / REPETITIONS
     return avg_elapsed
@@ -106,9 +128,16 @@ if __name__ == "__main__":
         wftask_id=WORKFLOWTASK_ID,
     )
 
+    enrich_time_with_sorted = measure_enrich_image_time_sorted(
+        images=images,
+        dataset_id=DATASET_ID,
+        wftask_id=WORKFLOWTASK_ID,
+    )
+
     print(f"{query_time=:.6f}, {enrich_time=:.6f}")
 
     with open("out.csv", "a") as f:
         f.write(
-            f"{num_clusters},{num_units},{query_time:.7f},{enrich_time:.7f}\n"
+            f"{num_clusters},{num_units},{query_time:.7f},{enrich_time:.7f},"
+            f"{enrich_time-query_time:.7f},{enrich_time_with_sorted:.7f}\n"
         )

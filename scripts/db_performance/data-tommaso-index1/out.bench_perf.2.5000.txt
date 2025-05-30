@@ -1,0 +1,93 @@
+2025-05-30 11:26:55,864 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,864 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0003 s
+2025-05-30 11:26:55,874 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0094 s
+2025-05-30 11:26:55,874 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0005 s
+2025-05-30 11:26:55,875 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0007 s
+2025-05-30 11:26:55,875 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,875 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0002 s
+2025-05-30 11:26:55,885 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0094 s
+2025-05-30 11:26:55,885 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0006 s
+2025-05-30 11:26:55,886 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0010 s
+2025-05-30 11:26:55,887 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,887 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0002 s
+2025-05-30 11:26:55,896 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0093 s
+2025-05-30 11:26:55,897 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0005 s
+2025-05-30 11:26:55,897 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0007 s
+2025-05-30 11:26:55,897 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,898 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0001 s
+2025-05-30 11:26:55,937 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0390 s
+2025-05-30 11:26:55,937 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0007 s
+2025-05-30 11:26:55,938 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0008 s
+2025-05-30 11:26:55,938 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,939 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0002 s
+2025-05-30 11:26:55,948 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0095 s
+2025-05-30 11:26:55,949 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0005 s
+2025-05-30 11:26:55,950 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0010 s
+2025-05-30 11:26:55,950 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,950 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0002 s
+2025-05-30 11:26:55,960 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0102 s
+2025-05-30 11:26:55,961 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0006 s
+2025-05-30 11:26:55,962 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0007 s
+2025-05-30 11:26:55,962 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,962 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0001 s
+2025-05-30 11:26:55,971 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0094 s
+2025-05-30 11:26:55,972 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0007 s
+2025-05-30 11:26:55,973 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0008 s
+2025-05-30 11:26:55,973 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:55,973 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0002 s
+2025-05-30 11:26:56,011 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0382 s
+2025-05-30 11:26:56,012 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0005 s
+2025-05-30 11:26:56,013 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0009 s
+2025-05-30 11:26:56,013 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:56,013 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0001 s
+2025-05-30 11:26:56,023 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0099 s
+2025-05-30 11:26:56,024 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0005 s
+2025-05-30 11:26:56,024 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0007 s
+2025-05-30 11:26:56,024 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:56,025 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0001 s
+2025-05-30 11:26:56,035 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] db-query, elapsed=0.0103 s
+2025-05-30 11:26:56,036 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] processed-images, elapsed=0.0007 s
+2025-05-30 11:26:56,036 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] non-processed-images, elapsed=0.0008 s
+2025-05-30 11:26:56,037 - fractal_server.images.status_tools - INFO - [enrich_images_async] START, dataset_id=2, workflowtask_id=2
+2025-05-30 11:26:56,037 - fractal_server.images.status_tools - DEBUG - [enrich_images_async] deep-copy, elapsed=0.0001 s
+Traceback (most recent call last):
+  File "/home/tommaso/Fractal/fractal-server/scripts/db_performance/data-tommaso-index1/../bench_perf.py", line 125, in <module>
+    enrich_time = measure_enrich_image_time(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommaso/Fractal/fractal-server/scripts/db_performance/data-tommaso-index1/../bench_perf.py", line 75, in measure_enrich_image_time
+    enrich_images_sync(
+  File "/home/tommaso/Fractal/fractal-server/fractal_server/images/status_tools.py", line 133, in enrich_images_sync
+    res = db.execute(
+          ^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+           ^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/tommaso/.cache/pypoetry/virtualenvs/fractal-server-cyevISt_-py3.11/lib/python3.11/site-packages/psycopg/cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+KeyboardInterrupt
