@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import HistoryImageCache
 from fractal_server.images.status_tools import _prepare_query
-from fractal_server.images.status_tools import enrich_images_sync
+from fractal_server.images.status_tools import enrich_images_unsorted_sync
 
 REPETITIONS = 20
 
@@ -73,7 +73,7 @@ def measure_enrich_image_time(
 ) -> float:
     start = time.perf_counter()
     for rep in range(REPETITIONS):
-        enrich_images_sync(
+        enrich_images_unsorted_sync(
             images=images,
             dataset_id=dataset_id,
             workflowtask_id=wftask_id,
@@ -91,7 +91,7 @@ def measure_enrich_image_time_sorted(
 ) -> float:
     start = time.perf_counter()
     for rep in range(REPETITIONS):
-        output_images = enrich_images_sync(
+        output_images = enrich_images_unsorted_sync(
             images=images,
             dataset_id=dataset_id,
             workflowtask_id=wftask_id,
@@ -138,6 +138,8 @@ if __name__ == "__main__":
 
     with open("out.csv", "a") as f:
         f.write(
-            f"{num_clusters},{num_units},{query_time:.7f},{enrich_time:.7f},"
-            f"{enrich_time-query_time:.7f},{enrich_time_with_sorted:.7f}\n"
+            f"{num_clusters},{num_units},"
+            f"{query_time:.7f},"
+            f"{enrich_time:.7f},"
+            f"{enrich_time_with_sorted:.7f}\n"
         )
