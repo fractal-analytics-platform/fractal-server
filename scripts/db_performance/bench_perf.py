@@ -11,6 +11,8 @@ from fractal_server.images.status_tools import _prepare_query
 from fractal_server.images.status_tools import enrich_images_unsorted_sync
 
 REPETITIONS = 20
+DATASET_ID = 2
+WORKFLOWTASK_ID = 2
 
 
 def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
@@ -57,6 +59,7 @@ def measure_query_time(
             stm = _prepare_query(
                 dataset_id=dataset_id,
                 workflowtask_id=wftask_id,
+                # zarr_urls=zarr_urls,
             )
             res = db.execute(stm)
             res.all()
@@ -78,7 +81,6 @@ def measure_enrich_image_time(
             dataset_id=dataset_id,
             workflowtask_id=wftask_id,
         )
-
     end = time.perf_counter()
     avg_elapsed = (end - start) / REPETITIONS
     return avg_elapsed
@@ -100,7 +102,6 @@ def measure_enrich_image_time_sorted(
             output_images,
             key=lambda img: img["zarr_url"],
         )
-
     end = time.perf_counter()
     avg_elapsed = (end - start) / REPETITIONS
     return avg_elapsed
@@ -109,9 +110,6 @@ def measure_enrich_image_time_sorted(
 if __name__ == "__main__":
     num_clusters = int(sys.argv[1])
     num_units = int(sys.argv[2])
-
-    DATASET_ID = 2
-    WORKFLOWTASK_ID = 2
 
     images = create_images()
     zarr_urls = [img["zarr_url"] for img in images]

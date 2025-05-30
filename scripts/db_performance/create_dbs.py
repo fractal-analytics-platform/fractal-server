@@ -139,7 +139,6 @@ def bulk_insert_history_image_cache(
 
     history_unit_ids = deepcopy(history_unit_ids)
     random.shuffle(history_unit_ids)
-    print(history_unit_ids)
 
     for ind_batch in range(num_batches):
         db.execute(

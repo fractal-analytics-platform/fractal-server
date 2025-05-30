@@ -3,12 +3,13 @@
 set -e
 
 LIST_NUM_CLUSTER=( \
-  5 5 5 5 5 5 \
-  100 5000 \
+  100 200 300 400 \
+  5 5 5 5 5 \
+  # 100 2000 \
   )
 LIST_NUM_UNITS=( \
-  20000 40000 60000 80000 120000 160000 \
-  1000 1000 \
+  1000 1000 1000 1000 \
+  20000 40000 60000 80000 100000 \
 )
 
 if [ "$(docker ps -a -q -f name=postgres-main)" ]; then
@@ -30,8 +31,8 @@ for idx in "${!LIST_NUM_CLUSTER[@]}"; do
     echo "Creating fractal_test database..."
     docker exec -it postgres-main createdb -Upostgres fractal-test
 
-    OUT_CREATEDB="out.createdb.${NUM_CLUSTER}.${NUM_UNITS}.txt"
-    OUT_BENCH="out.bench_perf.${NUM_CLUSTER}.${NUM_UNITS}.txt"
+    OUT_CREATEDB="log.createdb.${NUM_CLUSTER}.${NUM_UNITS}.txt"
+    OUT_BENCH="log.bench_perf.${NUM_CLUSTER}.${NUM_UNITS}.txt"
 
     poetry run fractalctl set-db > /dev/null 2>&1
     poetry run python ../create_dbs.py "$NUM_CLUSTER" "$NUM_UNITS" > "$OUT_CREATEDB" 2>&1
