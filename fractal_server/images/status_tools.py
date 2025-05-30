@@ -19,15 +19,15 @@ IMAGE_STATUS_KEY = "__wftask_dataset_image_status__"
 
 
 def _enriched_image(*, img: dict[str, Any], status: str) -> dict[str, Any]:
-    img["attributes"][IMAGE_STATUS_KEY] = status
-    return img
+    return img | {
+        "attributes": (img["attributes"] | {IMAGE_STATUS_KEY: status})
+    }
 
 
 def _prepare_query(
     *,
     dataset_id: int,
     workflowtask_id: int,
-    zarr_urls: list[str],
 ) -> Select:
     stm = (
         select(HistoryImageCache.zarr_url, HistoryUnit.status)
@@ -35,8 +35,6 @@ def _prepare_query(
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
         .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
-        .where(HistoryImageCache.zarr_url.in_(zarr_urls))
-        .order_by(HistoryImageCache.zarr_url)
     )
     return stm
 
@@ -71,10 +69,12 @@ async def enrich_images_async(
         _prepare_query(
             dataset_id=dataset_id,
             workflowtask_id=workflowtask_id,
-            zarr_urls=zarr_url_to_image.keys(),
         )
     )
-    list_processed_url_status = res.all()
+    zarr_urls = zarr_url_to_image.keys()
+    list_processed_url_status = [
+        item for item in res.all() if item[0] in zarr_urls
+    ]
     t_1 = time.perf_counter()
     logger.debug(f"[enrich_images_async] db-query, elapsed={t_1 - t_0:.4f} s")
 
@@ -140,10 +140,12 @@ def enrich_images_sync(
             _prepare_query(
                 dataset_id=dataset_id,
                 workflowtask_id=workflowtask_id,
-                zarr_urls=zarr_url_to_image.keys(),
             )
         )
-    list_processed_url_status = res.all()
+    zarr_urls = zarr_url_to_image.keys()
+    list_processed_url_status = [
+        item for item in res.all() if item[0] in zarr_urls
+    ]
     t_2 = time.perf_counter()
     logger.debug(f"[enrich_images_async] db-query, elapsed={t_2 - t_1:.4f} s")
 
