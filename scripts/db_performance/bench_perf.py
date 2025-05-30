@@ -7,12 +7,14 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import HistoryImageCache
+from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.images.status_tools import _prepare_query
 from fractal_server.images.status_tools import enrich_images_unsorted_sync
 
 REPETITIONS = 20
 DATASET_ID = 2
 WORKFLOWTASK_ID = 2
+HISTORY_UNIT_ID = 2
 
 
 def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
@@ -26,6 +28,18 @@ def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
     zarr_urls = res.scalars().all()
     size = len(zarr_urls)
     return zarr_urls[size // 4 : size // 2]
+
+
+def get_all_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
+    res = db.execute(
+        select(
+            HistoryImageCache.zarr_url,
+        )
+        .where(HistoryImageCache.dataset_id == dataset_id)
+        .where(HistoryImageCache.workflowtask_id == wftask_id)
+    )
+    zarr_urls = res.scalars().all()
+    return zarr_urls
 
 
 def create_images() -> list[dict]:
@@ -107,6 +121,28 @@ def measure_enrich_image_time_sorted(
     return avg_elapsed
 
 
+def measure_bulk_upsert():
+    with next(get_sync_db()) as db:
+        zarr_urls = get_all_zarr_urls(
+            db=db, dataset_id=DATASET_ID, wftask_id=WORKFLOWTASK_ID
+        )
+        list_upsert_objects = [
+            dict(
+                workflowtask_id=WORKFLOWTASK_ID,
+                dataset_id=DATASET_ID,
+                zarr_url=zarr_url,
+                latest_history_unit_id=HISTORY_UNIT_ID,
+            )
+            for zarr_url in zarr_urls
+        ]
+        print(len(zarr_urls))
+        start_1 = time.perf_counter()
+        bulk_upsert_image_cache_fast(
+            list_upsert_objects=list_upsert_objects, db=db
+        )
+        print(f"INSERT: {time.perf_counter() - start_1}")
+
+
 if __name__ == "__main__":
     num_clusters = int(sys.argv[1])
     num_units = int(sys.argv[2])
@@ -131,9 +167,8 @@ if __name__ == "__main__":
         dataset_id=DATASET_ID,
         wftask_id=WORKFLOWTASK_ID,
     )
-
+    measure_bulk_upsert()
     print(f"{query_time=:.6f}, {enrich_time=:.6f}")
-
     with open("out.csv", "a") as f:
         f.write(
             f"{num_clusters},{num_units},"
