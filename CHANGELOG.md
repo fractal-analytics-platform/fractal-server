@@ -1,5 +1,19 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.15
+
+* API:
+    * Add required `workflowtask_id` query parameter to `verify-unique-types` endpoint (\#2619).
+    * Enrich images with status within `verify-unique-types` endpoint, when necessary (\#2619).
+
+# 2.14.14
+
+* API:
+    * Fix `GET /api/v2/task-group/` by adding missing sorting before `itertools.groupby` (\#2614).
+* Internal:
+    * Drop `execute_command_async` function (\#2611).
+    * Introduce `TaskType` enum (\#2612).
+
 # 2.14.13
 
 * API:
