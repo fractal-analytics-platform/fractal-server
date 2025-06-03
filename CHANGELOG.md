@@ -9,7 +9,7 @@
 * Testing:
     * Introduce benchmarks for database operations (\#2620).
 * Dependencies:
-    * Update `cryptography` and `packaging` dependencies (\#2630).
+    * Update `cryptography`, `packaging` and `python-dotenv` dependencies (\#2630).
 
 # 2.14.15
 

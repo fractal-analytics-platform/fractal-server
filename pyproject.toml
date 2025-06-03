@@ -12,7 +12,7 @@ readme = "README.md"
 license = "BSD-3-Clause"
 requires-python = ">=3.11,<3.13"
 dependencies = [
-    "python-dotenv >=1.0.0,<1.1.0",
+    "python-dotenv >=1.1.0,<1.2.0",
     "fastapi >= 0.115.0, <0.116.0",
     "sqlmodel == 0.0.24",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
