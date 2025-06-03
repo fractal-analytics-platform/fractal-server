@@ -34,7 +34,7 @@ from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.images.status_tools import enrich_images_async
+from fractal_server.images.status_tools import enrich_images_unsorted_async
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
@@ -334,7 +334,7 @@ async def get_history_images(
     types = aggregate_types(type_filtered_images)
 
     # (3) Enrich images with status attribute
-    type_filtered_images_with_status = await enrich_images_async(
+    type_filtered_images_with_status = await enrich_images_unsorted_async(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         images=type_filtered_images,

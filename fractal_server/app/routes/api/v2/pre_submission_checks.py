@@ -14,7 +14,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.images.status_tools import enrich_images_async
+from fractal_server.images.status_tools import enrich_images_unsorted_async
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -46,7 +46,7 @@ async def verify_unique_types(
         filtered_images = dataset.images
     else:
         if IMAGE_STATUS_KEY in query.attribute_filters.keys():
-            images = await enrich_images_async(
+            images = await enrich_images_unsorted_async(
                 dataset_id=dataset_id,
                 workflowtask_id=workflowtask_id,
                 images=dataset.images,
@@ -134,7 +134,7 @@ async def check_non_processed_images(
         attribute_filters=filters.attribute_filters,
     )
 
-    filtered_images_with_status = await enrich_images_async(
+    filtered_images_with_status = await enrich_images_unsorted_async(
         dataset_id=dataset_id,
         workflowtask_id=previous_wft.id,
         images=filtered_images,

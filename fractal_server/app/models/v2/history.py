@@ -65,11 +65,13 @@ class HistoryImageCache(SQLModel, table=True):
         primary_key=True,
         foreign_key="datasetv2.id",
         ondelete="CASCADE",
+        index=True,
     )
     workflowtask_id: int = Field(
         primary_key=True,
         foreign_key="workflowtaskv2.id",
         ondelete="CASCADE",
+        index=True,
     )
 
     latest_history_unit_id: int = Field(

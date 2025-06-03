@@ -32,7 +32,7 @@ from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.images import SingleImage
-from fractal_server.images.status_tools import enrich_images_sync
+from fractal_server.images.status_tools import enrich_images_unsorted_sync
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -147,7 +147,7 @@ def execute_tasks_v2(
 
             if ind_wftask == 0 and ENRICH_IMAGES_WITH_STATUS:
                 # FIXME: Could this be done on `type_filtered_images`?
-                tmp_images = enrich_images_sync(
+                tmp_images = enrich_images_unsorted_sync(
                     images=tmp_images,
                     dataset_id=dataset.id,
                     workflowtask_id=wftask.id,
