@@ -10,9 +10,9 @@ from ..utils_database import create_db_tasks_and_update_task_group_sync
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import UploadedFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -38,7 +38,7 @@ def collect_ssh(
     task_group_activity_id: int,
     ssh_config: SSHConfig,
     tasks_base_dir: str,
-    wheel_file: UploadedFile | None = None,
+    wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
     Collect a task package over SSH

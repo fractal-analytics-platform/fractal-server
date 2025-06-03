@@ -10,9 +10,9 @@ from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import UploadedFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -38,7 +38,7 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_file: UploadedFile | None = None,
+    wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
     Collect a task package.

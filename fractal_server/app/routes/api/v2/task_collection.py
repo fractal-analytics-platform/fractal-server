@@ -23,11 +23,11 @@ from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import TaskGroupV2
+from ....schemas.v2 import FractalUploadedFile
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
-from ....schemas.v2 import UploadedFile
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -214,7 +214,7 @@ async def collect_tasks_pip(
             wheel_filename = request_data.file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
             wheel_file_content = await request_data.file.read()
-            wheel_file = UploadedFile(
+            wheel_file = FractalUploadedFile(
                 filename=wheel_filename,
                 contents=wheel_file_content,
             )

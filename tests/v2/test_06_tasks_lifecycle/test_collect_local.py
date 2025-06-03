@@ -4,8 +4,8 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import UploadedFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import collect_local
 
@@ -119,7 +119,7 @@ async def test_collect_pip_local_fail_rmtree(
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
-                wheel_file=UploadedFile(
+                wheel_file=FractalUploadedFile(
                     contents=whl.read(),
                     filename=archive_path.name,
                 ),
@@ -205,7 +205,7 @@ async def test_bad_wheel_file_arguments(
             collect_local(
                 task_group_id=task_group.id,
                 task_group_activity_id=task_group_activity.id,
-                wheel_file=UploadedFile(
+                wheel_file=FractalUploadedFile(
                     contents=whl.read(),
                     filename=archive_path.name,
                 ),
@@ -288,7 +288,7 @@ async def test_invalid_wheel(
                 collect_local(
                     task_group_id=task_group.id,
                     task_group_activity_id=task_group_activity.id,
-                    wheel_file=UploadedFile(
+                    wheel_file=FractalUploadedFile(
                         contents=whl.read(),
                         filename=archive_path.name,
                     ),
