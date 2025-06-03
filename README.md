@@ -135,7 +135,7 @@
 | fractal\_server/exceptions.py                                                   |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/\_\_init\_\_.py                                          |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                                |       21 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/images/status\_tools.py                                         |       55 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/images/status\_tools.py                                         |       48 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/tools.py                                                 |       47 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/logger.py                                                       |       44 |        3 |       14 |        4 |     88% |96->99, 115, 164, 168 |
 | fractal\_server/main.py                                                         |       66 |        1 |       10 |        1 |     97% |       132 |
@@ -169,7 +169,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **8532** |  **272** | **1634** |  **104** | **96%** |           |
+|                                                                       **TOTAL** | **8525** |  **272** | **1634** |  **104** | **96%** |           |
 
 
 ## Setup coverage badge

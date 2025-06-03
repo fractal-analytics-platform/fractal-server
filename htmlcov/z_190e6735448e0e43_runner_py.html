@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_190e6735448e0e43_runner_functions_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-27 13:39 +0000
+            created at 2025-06-03 07:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -116,7 +116,7 @@
     <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskGroupDumpV2</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskType</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span> <span class="key">import</span> <span class="nam">SingleImage</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">enrich_images_sync</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">enrich_images_unsorted_sync</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">IMAGE_STATUS_KEY</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">tools</span> <span class="key">import</span> <span class="nam">filter_image_list</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">tools</span> <span class="key">import</span> <span class="nam">find_image_by_zarr_url</span>&nbsp;</span><span class="r"></span></p>
@@ -231,7 +231,7 @@
     <p class="pln"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">            <span class="key">if</span> <span class="nam">ind_wftask</span> <span class="op">==</span> <span class="num">0</span> <span class="key">and</span> <span class="nam">ENRICH_IMAGES_WITH_STATUS</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">                <span class="com"># FIXME: Could this be done on `type_filtered_images`?</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">                <span class="nam">tmp_images</span> <span class="op">=</span> <span class="nam">enrich_images_sync</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">                <span class="nam">tmp_images</span> <span class="op">=</span> <span class="nam">enrich_images_unsorted_sync</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t151" href="#t151">151</a></span><span class="t">                    <span class="nam">images</span><span class="op">=</span><span class="nam">tmp_images</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t">                    <span class="nam">dataset_id</span><span class="op">=</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t153" href="#t153">153</a></span><span class="t">                    <span class="nam">workflowtask_id</span><span class="op">=</span><span class="nam">wftask</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -573,7 +573,7 @@
             <a class="nav" href="z_190e6735448e0e43_runner_functions_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-27 13:39 +0000
+            created at 2025-06-03 07:59 +0000
         </p>
     </div>
 </footer>

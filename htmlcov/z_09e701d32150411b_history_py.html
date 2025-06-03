@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_images_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-27 13:39 +0000
+            created at 2025-06-03 07:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -118,7 +118,7 @@
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">HistoryUnitStatus</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">HistoryUnitStatusWithUnset</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">ImageLogsRequest</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">enrich_images_async</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">enrich_images_unsorted_async</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">IMAGE_STATUS_KEY</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">tools</span> <span class="key">import</span> <span class="nam">aggregate_attributes</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">tools</span> <span class="key">import</span> <span class="nam">aggregate_types</span>&nbsp;</span><span class="r"></span></p>
@@ -418,7 +418,7 @@
     <p class="run"><span class="n"><a id="t334" href="#t334">334</a></span><span class="t">    <span class="nam">types</span> <span class="op">=</span> <span class="nam">aggregate_types</span><span class="op">(</span><span class="nam">type_filtered_images</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t335" href="#t335">335</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t336" href="#t336">336</a></span><span class="t">    <span class="com"># (3) Enrich images with status attribute</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t337" href="#t337">337</a></span><span class="t">    <span class="nam">type_filtered_images_with_status</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t337" href="#t337">337</a></span><span class="t">    <span class="nam">type_filtered_images_with_status</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_unsorted_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t338" href="#t338">338</a></span><span class="t">        <span class="nam">dataset_id</span><span class="op">=</span><span class="nam">dataset_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t339" href="#t339">339</a></span><span class="t">        <span class="nam">workflowtask_id</span><span class="op">=</span><span class="nam">workflowtask_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t340" href="#t340">340</a></span><span class="t">        <span class="nam">images</span><span class="op">=</span><span class="nam">type_filtered_images</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -587,7 +587,7 @@
             <a class="nav" href="z_09e701d32150411b_images_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-27 13:39 +0000
+            created at 2025-06-03 07:59 +0000
         </p>
     </div>
 </footer>

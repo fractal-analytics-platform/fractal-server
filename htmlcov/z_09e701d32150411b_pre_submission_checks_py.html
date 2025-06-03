@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_project_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-27 13:39 +0000
+            created at 2025-06-03 07:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -98,7 +98,7 @@
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">routes</span><span class="op">.</span><span class="nam">auth</span> <span class="key">import</span> <span class="nam">current_active_user</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">HistoryUnitStatus</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskType</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">enrich_images_async</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">enrich_images_unsorted_async</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">status_tools</span> <span class="key">import</span> <span class="nam">IMAGE_STATUS_KEY</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">tools</span> <span class="key">import</span> <span class="nam">aggregate_types</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">images</span><span class="op">.</span><span class="nam">tools</span> <span class="key">import</span> <span class="nam">filter_image_list</span>&nbsp;</span><span class="r"></span></p>
@@ -130,7 +130,7 @@
     <p class="run"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">        <span class="nam">filtered_images</span> <span class="op">=</span> <span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">        <span class="key">if</span> <span class="nam">IMAGE_STATUS_KEY</span> <span class="key">in</span> <span class="nam">query</span><span class="op">.</span><span class="nam">attribute_filters</span><span class="op">.</span><span class="nam">keys</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">            <span class="nam">images</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">            <span class="nam">images</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_unsorted_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">                <span class="nam">dataset_id</span><span class="op">=</span><span class="nam">dataset_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">                <span class="nam">workflowtask_id</span><span class="op">=</span><span class="nam">workflowtask_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">                <span class="nam">images</span><span class="op">=</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -218,7 +218,7 @@
     <p class="pln"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">        <span class="nam">attribute_filters</span><span class="op">=</span><span class="nam">filters</span><span class="op">.</span><span class="nam">attribute_filters</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">    <span class="nam">filtered_images_with_status</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">    <span class="nam">filtered_images_with_status</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_unsorted_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">        <span class="nam">dataset_id</span><span class="op">=</span><span class="nam">dataset_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">        <span class="nam">workflowtask_id</span><span class="op">=</span><span class="nam">previous_wft</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">        <span class="nam">images</span><span class="op">=</span><span class="nam">filtered_images</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -240,7 +240,7 @@
             <a class="nav" href="z_09e701d32150411b_project_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-27 13:39 +0000
+            created at 2025-06-03 07:59 +0000
         </p>
     </div>
 </footer>
