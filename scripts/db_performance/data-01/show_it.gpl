@@ -1,0 +1,27 @@
+set terminal png
+set datafile separator ','
+
+set grid
+
+unset key
+set xrange [0:180000]
+set yrange [0:1.2]
+
+set xlabel "N processed images"
+set ylabel "Enrich+sort time (s)"
+
+set output "plot-scaling-with-num-processed-images.png"
+plot 'out.csv' u 2:($1==5?$5:1/0) w lp pt 7 ps 2
+
+
+set xlabel "N clusters"
+set ylabel "Enrich+sort time (s)"
+set xrange [0:1000]
+set yrange [0:0.05]
+set key top left
+
+set output "plot-scaling-with-num-clusters.png"
+plot \
+ 'out.csv' u 1:($2==1000?$3:1/0) w lp pt 7 ps 2 title 'db (s)', \
+ 'out.csv' u 1:($2==1000?$4:1/0) w lp pt 7 ps 2 title 'enrich (s)', \
+ 'out.csv' u 1:($2==1000?$5:1/0) w lp pt 7 ps 2 title 'enrich+sort (s)' \
