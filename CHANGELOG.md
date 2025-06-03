@@ -8,6 +8,8 @@
     * Add indices to `HistoryImageCache` table (\#2620).
 * Testing:
     * Introduce benchmarks for database operations (\#2620).
+* Dependencies:
+    * Update `cryptography` and `packaging` dependencies (\#2630).
 
 # 2.14.15
 
