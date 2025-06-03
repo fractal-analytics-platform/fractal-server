@@ -558,7 +558,7 @@ def test_pixi_config(tmp_path):
     # Without Pixi config
     settings = Settings()
     assert settings.FRACTAL_PIXI_CONFIG_FILE is None
-    assert settings.pixi_settings is None
+    assert settings.pixi is None
 
     # Valid Pixi config
     pixi_config = {
@@ -574,7 +574,7 @@ def test_pixi_config(tmp_path):
         json.dump(pixi_config, f)
     settings = Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
     assert settings.FRACTAL_PIXI_CONFIG_FILE == pixi_config_file
-    assert settings.pixi_settings.model_dump() == pixi_config
+    assert settings.pixi.model_dump() == pixi_config
 
     # Invalid Pixi config 1
     pixi_config = {
