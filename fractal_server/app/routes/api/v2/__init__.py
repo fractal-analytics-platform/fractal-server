@@ -14,6 +14,7 @@ from .submit import router as submit_job_router_v2
 from .task import router as task_router_v2
 from .task_collection import router as task_collection_router_v2
 from .task_collection_custom import router as task_collection_router_v2_custom
+from .task_collection_pixi import router as task_collection_pixi_router_v2
 from .task_group import router as task_group_router_v2
 from .task_group_lifecycle import router as task_group_lifecycle_router_v2
 from .task_version_update import router as task_version_update_router_v2
@@ -46,6 +47,11 @@ router_api_v2.include_router(
 )
 router_api_v2.include_router(
     task_collection_router_v2_custom,
+    prefix="/task",
+    tags=["V2 Task Lifecycle"],
+)
+router_api_v2.include_router(
+    task_collection_pixi_router_v2,
     prefix="/task",
     tags=["V2 Task Lifecycle"],
 )
