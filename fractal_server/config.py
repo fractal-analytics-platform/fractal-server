@@ -546,13 +546,13 @@ class Settings(BaseSettings):
 
     FRACTAL_PIXI_CONFIG_FILE: Path | None = None
 
-    pixi_settings: PixiSettings | None = None
+    pixi: PixiSettings | None = None
 
     @model_validator(mode="after")
     def populate_pixi_settings(self):
         if self.FRACTAL_PIXI_CONFIG_FILE is not None:
             with self.FRACTAL_PIXI_CONFIG_FILE.open("r") as f:
-                self.pixi_settings = PixiSettings(**json.load(f))
+                self.pixi = PixiSettings(**json.load(f))
         return self
 
     ###########################################################################
