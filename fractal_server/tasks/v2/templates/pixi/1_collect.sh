@@ -16,15 +16,15 @@ PIXI_EXECUTABLE="${PIXI_HOME}/bin/pixi"
 SOURCE_DIR="${PACKAGE_DIR}/source_dir"
 PYPROJECT_TOML="${SOURCE_DIR}/pyproject.toml"
 
-export PIXI_HOME=${PIXI_HOME}
+export PIXI_HOME="${PIXI_HOME}"
 export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
-tar -xzfv ${TAR_GZ_PATH} -C ${SOURCE_DIR}
-${PIXI_EXECUTABLE} install --manifest-path ${PYPROJECT_TOML}
+tar -xzfv "${TAR_GZ_PATH}" -C "${SOURCE_DIR}"
+${PIXI_EXECUTABLE} install --manifest-path "${PYPROJECT_TOML}"
 
 TASK_DIR=$(
-    ${PIXI_EXECUTABLE} run --manifest-path ${PYPROJECT_TOML} python \
+    ${PIXI_EXECUTABLE} run --manifest-path "${PYPROJECT_TOML}" python \
     -c "import ${PACKAGE_NAME} as p, os; print(os.path.dirname(p.__file__))"
 )
 ENV_DISK_USAGE=$(du -sk "${PACKAGE_DIR}" | cut -f1)
