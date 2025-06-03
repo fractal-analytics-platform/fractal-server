@@ -17,7 +17,7 @@ WORKFLOWTASK_ID = 2
 HISTORY_UNIT_ID = 2
 
 
-def get_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
+def get_some_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
     res = db.execute(
         select(
             HistoryImageCache.zarr_url,
@@ -44,7 +44,7 @@ def get_all_zarr_urls(db: Session, dataset_id: int, wftask_id: int):
 
 def create_images() -> list[dict]:
     with next(get_sync_db()) as db:
-        zarr_urls_processed = get_zarr_urls(
+        zarr_urls_processed = get_some_zarr_urls(
             db=db,
             dataset_id=DATASET_ID,
             wftask_id=WORKFLOWTASK_ID,
@@ -121,7 +121,7 @@ def measure_enrich_image_time_sorted(
     return avg_elapsed
 
 
-def measure_bulk_upsert():
+def measure_bulk_upsert() -> float:
     with next(get_sync_db()) as db:
         zarr_urls = get_all_zarr_urls(
             db=db, dataset_id=DATASET_ID, wftask_id=WORKFLOWTASK_ID
@@ -135,12 +135,13 @@ def measure_bulk_upsert():
             )
             for zarr_url in zarr_urls
         ]
-        print(len(zarr_urls))
-        start_1 = time.perf_counter()
+        t_start = time.perf_counter()
         bulk_upsert_image_cache_fast(
-            list_upsert_objects=list_upsert_objects, db=db
+            list_upsert_objects=list_upsert_objects,
+            db=db,
         )
-        print(f"INSERT: {time.perf_counter() - start_1}")
+        elapsed = time.perf_counter() - t_start
+        return elapsed
 
 
 if __name__ == "__main__":
@@ -167,12 +168,12 @@ if __name__ == "__main__":
         dataset_id=DATASET_ID,
         wftask_id=WORKFLOWTASK_ID,
     )
-    measure_bulk_upsert()
-    print(f"{query_time=:.6f}, {enrich_time=:.6f}")
+    upsert_time = measure_bulk_upsert()
     with open("out.csv", "a") as f:
         f.write(
             f"{num_clusters},{num_units},"
             f"{query_time:.7f},"
             f"{enrich_time:.7f},"
-            f"{enrich_time_with_sorted:.7f}\n"
+            f"{enrich_time_with_sorted:.7f},"
+            f"{upsert_time:.7f}\n"
         )
