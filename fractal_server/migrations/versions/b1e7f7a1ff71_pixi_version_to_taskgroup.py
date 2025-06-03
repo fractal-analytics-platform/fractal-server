@@ -1,7 +1,7 @@
 """Pixi version to TaskGroup
 
 Revision ID: b1e7f7a1ff71
-Revises: 969d84257cac
+Revises: 791ce783d3d8
 Create Date: 2025-05-29 16:31:17.565973
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "b1e7f7a1ff71"
-down_revision = "969d84257cac"
+down_revision = "791ce783d3d8"
 branch_labels = None
 depends_on = None
 
