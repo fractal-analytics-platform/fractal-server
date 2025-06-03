@@ -8,8 +8,6 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
-from packaging.version import InvalidVersion
-from packaging.version import parse
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -26,9 +24,29 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
+def get_pkgname_and_version(filename: str) -> tuple[str, str]:
+    if not filename.endswith(".tar.gz"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{filename=} does not end with '.tar.gz'.",
+        )
+    filename_splitted = filename.split("-")
+    if len(filename_splitted) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"{filename=} does not contain a '-' to separate "
+                "'pkg_name' from 'version'."
+            ),
+        )
+    pkg_name = filename_splitted[0]
+    version = filename.removeprefix(f"{pkg_name}-").removesuffix(".tar.gz")
+    return pkg_name, version
+
+
 @router.post(
     "/collect/pixi/",
-    status_code=201,
+    status_code=202,
     # response_model=TaskGroupActivityV2Read,
 )
 async def collect_task_pixi(
@@ -42,20 +60,4 @@ async def collect_task_pixi(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ):  # -> TaskGroupActivityV2Read:
-    filename = file.filename
-    if not filename.endswith(".tar.gz"):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"{filename=} does not end with '.tar.gz'.",
-        )
-    pkg_name = filename.split("-")[0]
-    version = filename.removeprefix(f"{pkg_name}-").removesuffix(".tar.gz")
-    try:
-        parse(version)
-    except InvalidVersion:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Detected {pkg_name=} and {version=}, but version is invalid."
-            ),
-        )
+    pkg_name, version = get_pkgname_and_version(file.filename)
