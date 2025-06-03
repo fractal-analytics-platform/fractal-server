@@ -77,5 +77,4 @@ class HistoryImageCache(SQLModel, table=True):
     latest_history_unit_id: int = Field(
         foreign_key="historyunit.id",
         ondelete="CASCADE",
-        index=True,
     )
