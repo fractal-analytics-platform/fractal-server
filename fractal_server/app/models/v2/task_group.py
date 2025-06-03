@@ -67,6 +67,11 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
+        if self.origin == "pixi":
+            raise ValueError(
+                f"Cannot call 'pip_install_string' if {self.origin=}."
+            )
+
         extras = f"[{self.pip_extras}]" if self.pip_extras is not None else ""
 
         if self.archive_path is not None:
@@ -84,6 +89,12 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
+        if self.origin == "pixi":
+            raise ValueError(
+                "Cannot call 'pinned_package_versions_string' if "
+                f"{self.origin=}."
+            )
+
         if self.pinned_package_versions is None:
             return ""
         output = " ".join(
