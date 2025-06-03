@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.14.16 (unreleased)
+
+* Internal:
+    * Refactor and optimize enrich-image functions (\#2620).
+* Database:
+    * Add indices to `HistoryImageCache` table (\#2620).
+* Testing:
+    * Introduce benchmarks for database operations (\#2620).
+
 # 2.14.15
 
 * API:
