@@ -22,12 +22,12 @@ async def test_get_package_version_from_pypi():
     # Success: Provide incomplete version
     version = await get_package_version_from_pypi(PKG, version="1.2")
     debug(version)
-    assert version == "1.2.1"
+    assert version == "1.2.2"
 
     # Success: Provide weird incomplete version
     version = await get_package_version_from_pypi(PKG, version="1.2.")
     debug(version)
-    assert version == "1.2.1"
+    assert version == "1.2.2"
 
     # Success: Check that fractal-tasks-core version is something like `a.b.c`
     actual_latest_version = await get_package_version_from_pypi(PKG)
