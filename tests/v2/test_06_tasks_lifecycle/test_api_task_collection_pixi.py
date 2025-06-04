@@ -28,16 +28,7 @@ async def test_pixi_collection_api_arguments(
             data={"pixi_version": "1.2.3"},
             files=empty_tar_gz("mypackage-0.1.2-a345"),
         )
-        assert res.status_code == 202
-
-        res = await client.post(
-            "api/v2/task/collect/pixi/",
-            data={"pixi_version": "1.2.3"},
-            files=empty_tar_gz("my-package-0.1.2-a345"),
-        )
-        # pkg_name == my
-        # version == package-0.1.2-a345
-        assert res.status_code == 202
+        assert res.status_code == 422
 
         res = await client.post(
             "api/v2/task/collect/pixi/",
@@ -45,3 +36,10 @@ async def test_pixi_collection_api_arguments(
             files=empty_tar_gz("mypackage0.1.2a345"),
         )
         assert res.status_code == 422
+
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={"pixi_version": "1.2.3"},
+            files=empty_tar_gz("mypackage-0.1.2a345"),
+        )
+        assert res.status_code == 202

@@ -31,12 +31,14 @@ def get_pkgname_and_version(filename: str) -> tuple[str, str]:
             detail=f"{filename=} does not end with '.tar.gz'.",
         )
     filename_splitted = filename.split("-")
-    if len(filename_splitted) < 2:
+    if len(filename_splitted) != 2:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"{filename=} does not contain a '-' to separate "
-                "'pkg_name' from 'version'."
+                f"Invalid filename format: '{filename}' contains "
+                f"{len(filename_splitted) - 1} hyphen(s), but exactly one is "
+                "required to separate the package name from the version "
+                "(expected format: 'pkg_name-version')."
             ),
         )
     pkg_name = filename_splitted[0]
