@@ -231,7 +231,7 @@ async def collect_task_pixi(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            wheetar_gz_filel_file=tar_gz_file,
+            tar_gz_file=tar_gz_file,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "
