@@ -41,22 +41,14 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
+from fractal_server.tasks.v2.local import collect_local_pixi
+from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.types import NonEmptyStr
 
 
 router = APIRouter()
 
 logger = set_logger(__name__)
-
-
-def collect_ssh():
-    # TODO
-    raise NotImplementedError
-
-
-def collect_local():
-    # TODO
-    raise NotImplementedError
 
 
 def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
@@ -219,7 +211,7 @@ async def collect_task_pixi(
         )
 
         background_tasks.add_task(
-            collect_ssh,
+            collect_ssh_pixi,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,
@@ -228,7 +220,7 @@ async def collect_task_pixi(
         )
     else:
         background_tasks.add_task(
-            collect_local,
+            collect_local_pixi,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             tar_gz_file=tar_gz_file,
