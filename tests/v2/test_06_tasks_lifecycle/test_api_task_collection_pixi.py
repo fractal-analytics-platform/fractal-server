@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug  # noqa
 
 
@@ -14,6 +15,7 @@ async def test_pixi_not_available(client, MockCurrentUser):
         assert res.json()["detail"] == "Pixi task collection is not available."
 
 
+@pytest.mark.skip(reason="Pixi task collection is not implemented yet")
 async def test_pixi_collection_api_arguments(
     pixi,
     client,

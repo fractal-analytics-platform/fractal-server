@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
@@ -8,17 +10,38 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
+from pydantic import ValidationError
+from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_valid_user_group_id,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_group_constraint,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_user_constraint,
+)
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.aux.validate_user_settings import (
+    validate_user_settings,
+)
+from fractal_server.app.schemas.v2 import FractalUploadedFile
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
 from fractal_server.config import get_settings
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.types import NonEmptyStr
-
-# from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 
 
 router = APIRouter()
@@ -26,7 +49,17 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-def get_pkgname_and_version(filename: str) -> tuple[str, str]:
+def collect_ssh():
+    # TODO
+    raise NotImplementedError
+
+
+def collect_local():
+    # TODO
+    raise NotImplementedError
+
+
+def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
     if not filename.endswith(".tar.gz"):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -51,7 +84,7 @@ def get_pkgname_and_version(filename: str) -> tuple[str, str]:
 @router.post(
     "/collect/pixi/",
     status_code=202,
-    # response_model=TaskGroupActivityV2Read,
+    response_model=TaskGroupActivityV2Read,
 )
 async def collect_task_pixi(
     request: Request,
@@ -63,7 +96,7 @@ async def collect_task_pixi(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-):  # -> TaskGroupActivityV2Read:
+) -> TaskGroupActivityV2Read:
 
     settings = Inject(get_settings)
     # Check if Pixi is available
@@ -85,4 +118,125 @@ async def collect_task_pixi(
                 ),
             )
 
-    pkg_name, version = get_pkgname_and_version(file.filename)
+    pkg_name, version = validate_pkgname_and_version(file.filename)
+    tar_gz_content = await file.read()
+    tar_gz_file = FractalUploadedFile(
+        filename=file.filename,
+        contents=tar_gz_content,
+    )
+
+    user_group_id = await _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
+
+    user_settings = await validate_user_settings(
+        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+    )
+
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        base_tasks_path = user_settings.ssh_tasks_dir
+    else:
+        base_tasks_path = settings.FRACTAL_TASKS_DIR.as_posix()
+    task_group_path = (
+        Path(base_tasks_path) / str(user.id) / pkg_name / version
+    ).as_posix()
+
+    task_group_attrs = dict(
+        user_id=user.id,
+        user_group_id=user_group_id,
+        origin="pixi",
+        pixi_version=pixi_version,
+        pkg_name=pkg_name,
+        version=version,
+        path=task_group_path,
+    )
+    try:
+        TaskGroupCreateV2Strict(**task_group_attrs)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid task-group object. Original error: {e}",
+        )
+
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+        db=db,
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group_attrs["user_group_id"],
+        pkg_name=task_group_attrs["pkg_name"],
+        version=task_group_attrs["version"],
+        db=db,
+    )
+
+    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
+    res = await db.execute(stm)
+    for conflicting_task_group in res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Another task-group already has path={task_group_path}.\n"
+                f"{conflicting_task_group=}"
+            ),
+        )
+
+    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+        if Path(task_group_path).exists():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"{task_group_path} already exists.",
+            )
+
+    task_group = TaskGroupV2(**task_group_attrs)
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.COLLECT,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+    )
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+    logger = set_logger(logger_name="collect_tasks_pixi")
+
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        ssh_config = SSHConfig(
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
+        )
+
+        background_tasks.add_task(
+            collect_ssh,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            ssh_config=ssh_config,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
+            tar_gz_file=tar_gz_file,
+        )
+    else:
+        background_tasks.add_task(
+            collect_local,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            wheetar_gz_filel_file=tar_gz_file,
+        )
+    logger.debug(
+        "Task-collection endpoint: start background collection "
+        "and return task_group_activity"
+    )
+    reset_logger_handlers(logger)
+    response.status_code = status.HTTP_202_ACCEPTED
+    return task_group_activity
