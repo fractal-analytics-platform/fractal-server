@@ -13,7 +13,9 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 from fractal_server.types import NonEmptyStr
 
 # from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -62,4 +64,25 @@ async def collect_task_pixi(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ):  # -> TaskGroupActivityV2Read:
+
+    settings = Inject(get_settings)
+    # Check Pixi is available
+    if settings.pixi is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Pixi task collection is not available.",
+        )
+    # Check provided Pixi version is available. Use default if not provided
+    if pixi_version is None:
+        pixi_version = settings.pixi.default_version
+    else:
+        if pixi_version not in settings.pixi.versions:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Pixi version {pixi_version} is not available. Available"
+                    f"versions: {list(settings.pixi.versions.keys())}"
+                ),
+            )
+
     pkg_name, version = get_pkgname_and_version(file.filename)

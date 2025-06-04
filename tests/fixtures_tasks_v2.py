@@ -141,3 +141,19 @@ def relink_python_interpreter_v2(
         f"Restored link from "
         f"{task_python.as_posix()} to {os.readlink(task_python)}"
     )
+
+
+@pytest.fixture(scope="function")
+def pixi(override_settings_factory):
+    from fractal_server.config import PixiSettings
+
+    override_settings_factory(
+        FRACTAL_PIXI_CONFIG_FILE="/tmp/pixi/pixi.json",
+        pixi=PixiSettings(
+            default_version="1.0.0",
+            versions={
+                "1.0.0": "/tmp/pixi/1.0.0",
+                "1.0.1": "/tmp/pixi/1.0.1",
+            },
+        ),
+    )
