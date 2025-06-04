@@ -642,10 +642,9 @@ class FractalSSHList:
                 connect_kwargs={
                     "key_filename": key_path,
                     "look_for_keys": False,
-                    "banner_timeout": 30,  # wait for the SSH banner
-                    "auth_timeout": 30,  # wait for an auth res, default
-                    "channel_timeout": 60
-                    * 60,  # wait for a channel open res, default
+                    "banner_timeout": 30,
+                    "auth_timeout": 30,  # default value
+                    "channel_timeout": 60 * 60,  # default value
                 },
             )
             with _acquire_lock_with_timeout(
