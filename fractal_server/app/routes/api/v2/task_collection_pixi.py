@@ -69,7 +69,7 @@ async def collect_task_pixi(
     # Check if Pixi is available
     if settings.pixi is None:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Pixi task collection is not available.",
         )
     # Check if provided Pixi version is available. Use default if not provided

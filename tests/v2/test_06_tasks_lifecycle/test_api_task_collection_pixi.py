@@ -10,7 +10,8 @@ async def test_pixi_not_available(client, MockCurrentUser):
             data={"pixi_version": "9.9.9"},
             files={"file": ("name", b"", "application/tar+gzip")},
         )
-        assert res.status_code == 503
+        assert res.status_code == 422
+        assert res.json()["detail"] == "Pixi task collection is not available."
 
 
 async def test_pixi_collection_api_arguments(
