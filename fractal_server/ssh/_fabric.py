@@ -643,8 +643,9 @@ class FractalSSHList:
                     "key_filename": key_path,
                     "look_for_keys": False,
                     "banner_timeout": 30,  # wait for the SSH banner
-                    "auth_timeout": None,  # wait for an auth res
-                    "channel_timeout": None,  # wait for a channel open res
+                    "auth_timeout": 30,  # wait for an auth res, default
+                    "channel_timeout": 60
+                    * 60,  # wait for a channel open res, default
                 },
             )
             with _acquire_lock_with_timeout(
