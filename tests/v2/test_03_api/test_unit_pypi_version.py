@@ -50,7 +50,7 @@ async def test_get_package_version_from_pypi_failures(monkeypatch):
 
     # Failure 2: invalid incomplete version
     with pytest.raises(HTTPException, match="No version starting"):
-        await get_package_version_from_pypi(PKG, version="1.2.2")
+        await get_package_version_from_pypi(PKG, version="1.2.3")
 
     # Failure 3: KeyError due to unexpected response (200, with wrong data)
     async def _patched_get_1(*args, **kwargs):
