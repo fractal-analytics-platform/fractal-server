@@ -23,13 +23,21 @@ export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
 TIME_START=$(date +%s)
 
-ls -l "$TAR_GZ_PATH"
+ls -lh "$TAR_GZ_PATH"
 write_log "START extract $TAR_GZ_PATH"
 
 
 TAR_GZ_BASENAME=$(basename "$TAR_GZ_PATH" ".tar.gz")
 tar -xz -v -f "${TAR_GZ_PATH}" "$TAR_GZ_BASENAME"
+ls -lh "$PACKAGE_DIR"
+echo
+ls -lh "$PACKAGE_DIR/*"
+echo
 mv "${PACKAGE_DIR}/${TAR_GZ_BASENAME}" "$SOURCE_DIR"  # FIXME: improve concatenation
+ls -lh "$PACKAGE_DIR"
+echo
+ls -lh "$PACKAGE_DIR/*"
+echo
 write_log "END extract $TAR_GZ_PATH"
 TIME_END_TAR=$(date +%s)
 write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
