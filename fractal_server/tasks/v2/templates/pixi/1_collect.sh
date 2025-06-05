@@ -21,9 +21,9 @@ export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
 
-
 TIME_START=$(date +%s)
 
+ls -l "$TAR_GZ_PATH"
 write_log "START extract $TAR_GZ_PATH"
 tar -xzfv "${TAR_GZ_PATH}" -C "${SOURCE_DIR}"
 write_log "END extract $TAR_GZ_PATH"
