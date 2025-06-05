@@ -96,7 +96,8 @@ def _prepare_tasks_metadata(
             else:
                 cmd_non_parallel = (
                     f"{pixi_bin} run --manifest-path {pixi_manifest_path} "
-                    f"--no-lockfile-update {non_parallel_path.as_posix()}"
+                    "--no-lockfile-update python "
+                    f"{non_parallel_path.as_posix()}"
                 )
             task_attributes["command_non_parallel"] = cmd_non_parallel
         if _task.executable_parallel is not None:
@@ -108,7 +109,7 @@ def _prepare_tasks_metadata(
             else:
                 cmd_parallel = (
                     f"{pixi_bin} run --manifest-path {pixi_manifest_path} "
-                    f"--no-lockfile-update {parallel_path.as_posix()}"
+                    f"--no-lockfile-update python {parallel_path.as_posix()}"
                 )
             task_attributes["command_parallel"] = cmd_parallel
         # Create object
