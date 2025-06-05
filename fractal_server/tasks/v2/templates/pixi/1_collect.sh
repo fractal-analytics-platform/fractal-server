@@ -25,8 +25,11 @@ TIME_START=$(date +%s)
 
 ls -l "$TAR_GZ_PATH"
 write_log "START extract $TAR_GZ_PATH"
-mkdir -p "$SOURCE_DIR"
-tar -xz -v -f "${TAR_GZ_PATH}" -C "${SOURCE_DIR}"
+
+
+TAR_GZ_BASENAME=$(basename "$TAR_GZ_PATH" ".tar.gz")
+tar -xz -v -f "${TAR_GZ_PATH}" "$TAR_GZ_BASENAME"
+mv "${PACKAGE_DIR}/${TAR_GZ_BASENAME}" "$SOURCE_DIR"  # FIXME: improve concatenation
 write_log "END extract $TAR_GZ_PATH"
 TIME_END_TAR=$(date +%s)
 write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
