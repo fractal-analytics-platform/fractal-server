@@ -43,6 +43,7 @@ from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.types import NonEmptyStr
 
 
@@ -68,9 +69,11 @@ def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
                 "(expected format: 'pkg_name-version')."
             ),
         )
+
     pkg_name = filename_splitted[0]
     version = filename.removeprefix(f"{pkg_name}-").removesuffix(".tar.gz")
-    return pkg_name, version
+
+    return normalize_package_name(pkg_name), version
 
 
 @router.post(
