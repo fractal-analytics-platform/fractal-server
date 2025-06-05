@@ -5,21 +5,27 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ...utils_database import create_db_tasks_and_update_task_group_sync
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import _customize_and_run_template
+from fractal_server.tasks.v2.local._utils import check_task_files_exist
+from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.utils import get_timestamp
 
 
 def collect_local_pixi(
@@ -106,11 +112,80 @@ def collect_local_pixi(
                     ),
                     logger_name=LOGGER_NAME,
                 )
+                stdout  # FIXME: only here for precommit, drop it later
+
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
-                collect_output = json.loads(stdout)
-                for key, value in collect_output.items():
-                    logger.debug(f"Parsed from pixi collection: {key}={value}")
+                # Parse stdout, similar to parse_script_pip_show_stdout
+                # `next(line for line in lines if _something_)`
+                # since stdout will also contain additional logs
+                package_root = "fake"  # FIXME
+                venv_size = "fake"  # FIXME
+                venv_file_number = "fake"  # FIXME
+
+                # TODO: check that this is the right path:
+                # TODO (later): expose more flexibility (or maybe not)
+                manifest_path = f"{package_root}/__FRACTAL_MANIFEST__.json"
+                if not Path(manifest_path).exists():
+                    raise ValueError(f"Manifest not found at {manifest_path}")
+                with open(manifest_path) as json_data:
+                    pkg_manifest_dict = json.load(json_data)
+                logger.info(f"loaded {manifest_path=}")
+                logger.info("now validating manifest content")
+                pkg_manifest = ManifestV2(**pkg_manifest_dict)
+                logger.info("validated manifest content")
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                logger.info("_prepare_tasks_metadata - start")
+                # FIXME: we will need to replace `/some/python /abc/task.py`
+                # with `/some/pixi /abc/task.py`. We can either make
+                # `_prepare_tasks_metadata` more flexible (preferred)
+                # or introduce a new function
+                task_list = _prepare_tasks_metadata(
+                    package_manifest=pkg_manifest,
+                    package_version=task_group.version,
+                    package_root=Path(package_root),
+                    # python_bin=Path(python_bin),
+                )
+                check_task_files_exist(task_list=task_list)
+                logger.info("_prepare_tasks_metadata - end")
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                logger.info("create_db_tasks_and_update_task_group - start")
+                create_db_tasks_and_update_task_group_sync(
+                    task_list=task_list,
+                    task_group_id=task_group.id,
+                    db=db,
+                )
+                logger.info("create_db_tasks_and_update_task_group - end")
+
+                # Update task_group data
+                logger.info(
+                    "Add pip_freeze, venv_size and venv_file_number "
+                    "to TaskGroupV2 - start"
+                )
+                # FIXME: rename `pip_freeze` into `env_info`
+                pixi_lock_contents = None  # FIXME: read it from disk
+                task_group.pip_freeze = pixi_lock_contents
+                task_group.venv_size_in_kB = int(venv_size)
+                task_group.venv_file_number = int(venv_file_number)
+                task_group = add_commit_refresh(obj=task_group, db=db)
+                logger.info(
+                    "Add pip_freeze, venv_size and venv_file_number "
+                    "to TaskGroupV2 - end"
+                )
+
+                # Finalize (write metadata to DB)
+                logger.info("finalising - START")
+                activity.status = TaskGroupActivityStatusV2.OK
+                activity.timestamp_ended = get_timestamp()
+                activity = add_commit_refresh(obj=activity, db=db)
+                logger.info("finalising - END")
+                logger.info("END")
+
+                reset_logger_handlers(logger)
 
             except Exception as collection_e:
                 # Delete corrupted package dir
