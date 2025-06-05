@@ -84,11 +84,10 @@ def collect_local_pixi(
                     (
                         "__PIXI_HOME__",
                         settings.pixi.versions[task_group.pixi_version],
-                    )("__PACKAGE_DIR__", task_group.path)(
-                        "__TAR_GZ_PATH__", archive_path
-                    )(
-                        "__PACKAGE_NAME__", task_group.pkg_name
-                    )
+                    ),
+                    ("__PACKAGE_DIR__", task_group.path),
+                    ("__TAR_GZ_PATH__", archive_path),
+                    ("__PACKAGE_NAME__", task_group.pkg_name),
                 }
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
