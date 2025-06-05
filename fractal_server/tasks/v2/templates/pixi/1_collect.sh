@@ -29,6 +29,7 @@ write_log "START extract $TAR_GZ_PATH"
 
 TAR_GZ_BASENAME=$(basename "$TAR_GZ_PATH" ".tar.gz")
 echo "TAR_GZ_BASENAME: $TAR_GZ_BASENAME"
+cd $PACKAGE_DIR
 tar xvz -f "$TAR_GZ_PATH" "$TAR_GZ_BASENAME"
 ls -lh "$PACKAGE_DIR"
 echo
