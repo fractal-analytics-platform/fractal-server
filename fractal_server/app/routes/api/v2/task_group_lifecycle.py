@@ -74,7 +74,10 @@ async def deactivate_task_group(
         )
 
     # Shortcut for task-group with origin="other"
-    if task_group.origin == TaskGroupV2OriginEnum.OTHER:
+    if task_group.origin in [
+        TaskGroupV2OriginEnum.OTHER,
+        TaskGroupV2OriginEnum.PIXI,
+    ]:
         task_group.active = False
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
