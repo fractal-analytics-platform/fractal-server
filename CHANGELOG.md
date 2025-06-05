@@ -12,6 +12,7 @@
     * Update `cryptography`, `packaging` and `python-dotenv` dependencies (\#2630).
 * SSH:
     * Increase Paramiko `banner_timeout` from the default 15 seconds to 30 seconds (\#2632).
+    * Re-include `check_connection` upon `SlurmSSHRunner` startup (\#2636).
 
 # 2.14.15
 
