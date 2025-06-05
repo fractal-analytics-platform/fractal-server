@@ -112,9 +112,9 @@ def collect_local_pixi(
                     ("__PACKAGE_DIR__", task_group.path),
                     ("__TAR_GZ_PATH__", archive_path),
                     (
-                        "__PACKAGE_NAME__",
+                        "__IMPORT_PACKAGE_NAME__",
                         task_group.pkg_name.replace("-", "_"),
-                    ),  # FIXME: explain
+                    ),
                 }
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
@@ -142,8 +142,9 @@ def collect_local_pixi(
                 venv_size = parsed_output["venv_size"]
                 venv_file_number = parsed_output["venv_file_number"]
 
-                # TODO: check that this is the right path:
-                # TODO (later): expose more flexibility (or maybe not)
+                # Read and validate manifest
+                # NOTE: we are only supporting the manifest path being relative
+                # to the top-level folder
                 manifest_path = f"{package_root}/__FRACTAL_MANIFEST__.json"
                 if not Path(manifest_path).exists():
                     raise ValueError(f"Manifest not found at {manifest_path}")
@@ -184,6 +185,7 @@ def collect_local_pixi(
                 # FIXME: rename `pip_freeze` into `env_info`
                 with Path(task_group.path, "source_dir/pixi.lock").open() as f:
                     pixi_lock_contents = f.read()
+                # FIXME: how large are these locks???
                 task_group.pip_freeze = pixi_lock_contents
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)

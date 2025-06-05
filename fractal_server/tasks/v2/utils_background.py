@@ -54,6 +54,7 @@ def _prepare_tasks_metadata(
     package_root: Path,
     python_bin: Path | None = None,
     pixi_bin: str | None = None,
+    # pixi_manifest_path: str | None = None,
     package_version: str | None = None,
 ) -> list[TaskCreateV2]:
     """
@@ -70,6 +71,10 @@ def _prepare_tasks_metadata(
         raise UnreachableBranchError(
             f"Either {pixi_bin} or {python_bin} must be set."
         )
+
+    # FIXME: we want pixi commands to look like
+    # {pixi_bin} run --manifest-path {path} --no-lockfile-update {task_path}
+    # thus we need manifest_path as an input
 
     task_list = []
     for _task in package_manifest.task_list:
@@ -89,6 +94,7 @@ def _prepare_tasks_metadata(
                     f"{python_bin.as_posix()} {non_parallel_path.as_posix()}"
                 )
             else:
+
                 cmd_non_parallel = (
                     f"{pixi_bin} run {non_parallel_path.as_posix()}"
                 )
