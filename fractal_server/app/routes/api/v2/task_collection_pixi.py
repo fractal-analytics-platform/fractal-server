@@ -37,7 +37,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
 from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
-from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
@@ -203,7 +202,6 @@ async def collect_task_pixi(
     db.add(task_group_activity)
     await db.commit()
     await db.refresh(task_group_activity)
-    logger = set_logger(logger_name="collect_tasks_pixi")
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         ssh_config = SSHConfig(
@@ -231,6 +229,5 @@ async def collect_task_pixi(
         "Task-collection endpoint: start background collection "
         "and return task_group_activity"
     )
-    reset_logger_handlers(logger)
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
