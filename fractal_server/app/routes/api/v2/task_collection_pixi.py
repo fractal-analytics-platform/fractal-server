@@ -167,6 +167,7 @@ async def collect_task_pixi(
         db=db,
     )
 
+    # FIXME: to be removed with issue #2634
     stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
     res = await db.execute(stm)
     for conflicting_task_group in res.scalars().all():
