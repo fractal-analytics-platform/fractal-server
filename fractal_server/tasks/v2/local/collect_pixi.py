@@ -163,6 +163,11 @@ def collect_local_pixi(
                     package_version=task_group.version,
                     package_root=Path(package_root),
                     pixi_bin=pixi_bin,
+                    pixi_manifest_path=(
+                        Path(
+                            task_group.path, "source_dir/pyproject.toml"
+                        ).as_posix()
+                    ),
                 )
                 check_task_files_exist(task_list=task_list)
                 logger.info("_prepare_tasks_metadata - end")

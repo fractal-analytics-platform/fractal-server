@@ -54,7 +54,7 @@ def _prepare_tasks_metadata(
     package_root: Path,
     python_bin: Path | None = None,
     pixi_bin: str | None = None,
-    # pixi_manifest_path: str | None = None,
+    pixi_manifest_path: str | None = None,
     package_version: str | None = None,
 ) -> list[TaskCreateV2]:
     """
@@ -71,10 +71,10 @@ def _prepare_tasks_metadata(
         raise UnreachableBranchError(
             f"Either {pixi_bin} or {python_bin} must be set."
         )
-
-    # FIXME: we want pixi commands to look like
-    # {pixi_bin} run --manifest-path {path} --no-lockfile-update {task_path}
-    # thus we need manifest_path as an input
+    if pixi_bin is not None and pixi_manifest_path is None:
+        raise UnreachableBranchError(
+            f"If {pixi_bin} is set, pixi_manifest_path must be set."
+        )
 
     task_list = []
     for _task in package_manifest.task_list:
@@ -94,9 +94,9 @@ def _prepare_tasks_metadata(
                     f"{python_bin.as_posix()} {non_parallel_path.as_posix()}"
                 )
             else:
-
                 cmd_non_parallel = (
-                    f"{pixi_bin} run {non_parallel_path.as_posix()}"
+                    f"{pixi_bin} run --manifest-path {pixi_manifest_path} "
+                    f"--no-lockfile-update {non_parallel_path.as_posix()}"
                 )
             task_attributes["command_non_parallel"] = cmd_non_parallel
         if _task.executable_parallel is not None:
@@ -106,7 +106,10 @@ def _prepare_tasks_metadata(
                     f"{python_bin.as_posix()} {parallel_path.as_posix()}"
                 )
             else:
-                cmd_parallel = f"{pixi_bin} run {parallel_path.as_posix()}"
+                cmd_parallel = (
+                    f"{pixi_bin} run --manifest-path {pixi_manifest_path} "
+                    f"--no-lockfile-update {parallel_path.as_posix()}"
+                )
             task_attributes["command_parallel"] = cmd_parallel
         # Create object
         task_obj = TaskCreateV2(
