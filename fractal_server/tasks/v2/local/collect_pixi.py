@@ -108,7 +108,7 @@ def collect_local_pixi(
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
                 replacements = {
-                    ("__PIXI_HOME__", pixi_bin),
+                    ("__PIXI_HOME__", pixi_home),
                     ("__PACKAGE_DIR__", task_group.path),
                     ("__TAR_GZ_PATH__", archive_path),
                     ("__PACKAGE_NAME__", task_group.pkg_name),
