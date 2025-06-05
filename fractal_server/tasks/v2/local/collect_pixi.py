@@ -111,7 +111,10 @@ def collect_local_pixi(
                     ("__PIXI_HOME__", pixi_home),
                     ("__PACKAGE_DIR__", task_group.path),
                     ("__TAR_GZ_PATH__", archive_path),
-                    ("__PACKAGE_NAME__", task_group.pkg_name),
+                    (
+                        "__PACKAGE_NAME__",
+                        task_group.pkg_name.replace("-", "_"),
+                    ),  # FIXME: explain
                 }
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
