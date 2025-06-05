@@ -25,6 +25,7 @@ TIME_START=$(date +%s)
 
 ls -l "$TAR_GZ_PATH"
 write_log "START extract $TAR_GZ_PATH"
+mkdir -p "$SOURCE_DIR"
 tar -xz -v -f "${TAR_GZ_PATH}" -C "${SOURCE_DIR}"
 write_log "END extract $TAR_GZ_PATH"
 TIME_END_TAR=$(date +%s)
