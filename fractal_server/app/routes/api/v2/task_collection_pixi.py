@@ -3,7 +3,6 @@ from pathlib import Path
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
-from fastapi import File
 from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Request
@@ -82,7 +81,7 @@ async def collect_task_pixi(
     request: Request,
     response: Response,
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
+    file: UploadFile,
     pixi_version: NonEmptyStr | None = Form(None),
     private: bool = False,
     user_group_id: int | None = None,
