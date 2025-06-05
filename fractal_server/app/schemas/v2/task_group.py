@@ -56,9 +56,9 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
     """
 
     path: AbsolutePathStr
-    venv_path: AbsolutePathStr | None  # FIXME: drop this later
     version: NonEmptyStr
-    python_version: NonEmptyStr | None  # FIXME: drop this later
+    venv_path: AbsolutePathStr | None = None  # FIXME: drop this later
+    python_version: NonEmptyStr | None = None  # FIXME: drop this later
 
 
 class TaskGroupReadV2(BaseModel):
