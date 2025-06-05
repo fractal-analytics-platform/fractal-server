@@ -32,12 +32,12 @@ echo "TAR_GZ_BASENAME: $TAR_GZ_BASENAME"
 tar xvz -f "$TAR_GZ_PATH" "$TAR_GZ_BASENAME"
 ls -lh "$PACKAGE_DIR"
 echo
-ls -lh "$PACKAGE_DIR/*"
+ls -lh "$PACKAGE_DIR"/*
 echo
 mv "${PACKAGE_DIR}/${TAR_GZ_BASENAME}" "$SOURCE_DIR"  # FIXME: improve concatenation
 ls -lh "$PACKAGE_DIR"
 echo
-ls -lh "$PACKAGE_DIR/*"
+ls -lh "$PACKAGE_DIR"/*
 echo
 write_log "END extract $TAR_GZ_PATH"
 TIME_END_TAR=$(date +%s)
