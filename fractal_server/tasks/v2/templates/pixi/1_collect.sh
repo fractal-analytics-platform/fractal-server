@@ -36,11 +36,11 @@ ${PIXI_EXECUTABLE} install --manifest-path "$PYPROJECT_TOML"
 write_log "END $PIXI_EXECUTABLE install --manifest-path $PYPROJECT_TOML"
 echo
 
-PACKAGE_PARENT_FOLDER=$(
+PACKAGE_FOLDER=$(
     ${PIXI_EXECUTABLE} run --manifest-path "${PYPROJECT_TOML}" python \
     -c "import ${PACKAGE_NAME} as p, os; print(os.path.dirname(p.__file__))"
 )
-write_log "Package parent folder: $PACKAGE_PARENT_FOLDER"
+write_log "Package folder: $PACKAGE_FOLDER"
 echo
 
 ENV_DISK_USAGE=$(du -sk "${PACKAGE_DIR}" | cut -f1)

@@ -5,7 +5,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ...utils_database import create_db_tasks_and_update_task_group_sync
+from ..utils_database import create_db_tasks_and_update_task_group_sync
+from ..utils_pixi import parse_collect_stdout
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -73,6 +74,21 @@ def collect_local_pixi(
                 )
                 return
 
+            # Set `pixi_bin` and check that it exists
+            pixi_bin = settings.pixi.versions[task_group.pixi_version]
+            if not Path(pixi_bin).exists():
+                error_msg = f"{pixi_bin} does not exist."
+                logger.error(error_msg)
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileNotFoundError(error_msg),
+                    db=db,
+                )
+                return
+
             try:
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
@@ -80,17 +96,14 @@ def collect_local_pixi(
                 archive_path = Path(
                     task_group.path, tar_gz_file.filename
                 ).as_posix()
-                logger.info(f"Write targz-file contents into {archive_path}")
+                logger.info(f"Write tar.gz-file contents into {archive_path}.")
                 with open(archive_path, "wb") as f:
                     f.write(tar_gz_file.contents)
                 task_group.archive_path = archive_path
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
                 replacements = {
-                    (
-                        "__PIXI_HOME__",
-                        settings.pixi.versions[task_group.pixi_version],
-                    ),
+                    ("__PIXI_HOME__", pixi_bin),
                     ("__PACKAGE_DIR__", task_group.path),
                     ("__TAR_GZ_PATH__", archive_path),
                     ("__PACKAGE_NAME__", task_group.pkg_name),
@@ -112,16 +125,14 @@ def collect_local_pixi(
                     ),
                     logger_name=LOGGER_NAME,
                 )
-                stdout  # FIXME: only here for precommit, drop it later
-
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
-                # Parse stdout, similar to parse_script_pip_show_stdout
-                # `next(line for line in lines if _something_)`
-                # since stdout will also contain additional logs
-                package_root = "fake"  # FIXME
-                venv_size = "fake"  # FIXME
-                venv_file_number = "fake"  # FIXME
+
+                # Parse stdout
+                parsed_output = parse_collect_stdout(stdout)
+                package_root = parsed_output["package_root"]
+                venv_size = parsed_output["venv_size"]
+                venv_file_number = parsed_output["venv_file_number"]
 
                 # TODO: check that this is the right path:
                 # TODO (later): expose more flexibility (or maybe not)
@@ -138,15 +149,11 @@ def collect_local_pixi(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 logger.info("_prepare_tasks_metadata - start")
-                # FIXME: we will need to replace `/some/python /abc/task.py`
-                # with `/some/pixi /abc/task.py`. We can either make
-                # `_prepare_tasks_metadata` more flexible (preferred)
-                # or introduce a new function
                 task_list = _prepare_tasks_metadata(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
                     package_root=Path(package_root),
-                    # python_bin=Path(python_bin),
+                    pixi_bin=pixi_bin,
                 )
                 check_task_files_exist(task_list=task_list)
                 logger.info("_prepare_tasks_metadata - end")
@@ -167,7 +174,8 @@ def collect_local_pixi(
                     "to TaskGroupV2 - start"
                 )
                 # FIXME: rename `pip_freeze` into `env_info`
-                pixi_lock_contents = None  # FIXME: read it from disk
+                with Path(task_group.path, "source_dir/pixi.lock").open() as f:
+                    pixi_lock_contents = f.read()
                 task_group.pip_freeze = pixi_lock_contents
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)
