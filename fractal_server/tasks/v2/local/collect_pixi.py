@@ -75,7 +75,8 @@ def collect_local_pixi(
                 return
 
             # Set `pixi_bin` and check that it exists
-            pixi_bin = settings.pixi.versions[task_group.pixi_version]
+            pixi_home = settings.pixi.versions[task_group.pixi_version]
+            pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
             if not Path(pixi_bin).exists():
                 error_msg = f"{pixi_bin} does not exist."
                 logger.error(error_msg)
