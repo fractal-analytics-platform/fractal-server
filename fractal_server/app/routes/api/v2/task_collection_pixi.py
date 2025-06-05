@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -225,9 +226,10 @@ async def collect_task_pixi(
             task_group_activity_id=task_group_activity.id,
             tar_gz_file=tar_gz_file,
         )
-    logger.debug(
+    logger.info(
         "Task-collection endpoint: start background collection "
-        "and return task_group_activity"
+        "and return task_group_activity. "
+        f"Current pid is {os.getpid()}. "
     )
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
