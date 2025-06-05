@@ -35,6 +35,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
+from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -138,7 +139,7 @@ async def collect_task_pixi(
     task_group_attrs = dict(
         user_id=user.id,
         user_group_id=user_group_id,
-        origin="pixi",
+        origin=TaskGroupV2OriginEnum.PIXI,
         pixi_version=pixi_version,
         pkg_name=pkg_name,
         version=version,
