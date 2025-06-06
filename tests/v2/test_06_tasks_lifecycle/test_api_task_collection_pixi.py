@@ -86,7 +86,6 @@ async def test_pixi_collection(
     MockCurrentUser,
     pixi: PixiSettings,
     pixi_pkg_targz: Path,
-    tmp_path: Path,
 ):
     override_settings_factory(
         FRACTAL_PIXI_CONFIG_FILE="/fake/file",
