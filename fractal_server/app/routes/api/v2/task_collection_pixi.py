@@ -35,7 +35,7 @@ from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2StrictPixi
 from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -150,7 +150,7 @@ async def collect_task_pixi(
         venv_path=None,
     )
     try:
-        TaskGroupCreateV2Strict(**task_group_attrs)
+        TaskGroupCreateV2StrictPixi(**task_group_attrs)
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

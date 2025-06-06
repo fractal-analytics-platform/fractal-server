@@ -42,6 +42,7 @@ class TaskGroupCreateV2(BaseModel):
     pkg_name: str
     version: str | None = None
     python_version: NonEmptyStr = None
+    pixi_version: NonEmptyStr = None
     path: AbsolutePathStr = None
     venv_path: AbsolutePathStr = None
     archive_path: AbsolutePathStr = None
@@ -57,8 +58,17 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
 
     path: AbsolutePathStr
     version: NonEmptyStr
-    venv_path: AbsolutePathStr | None = None  # FIXME: drop this later
-    python_version: NonEmptyStr | None = None  # FIXME: drop this later
+    venv_path: AbsolutePathStr
+    python_version: NonEmptyStr
+
+
+class TaskGroupCreateV2StrictPixi(TaskGroupCreateV2):
+    """
+    A strict version of TaskGroupCreateV2, to be used for pixi task collection.
+    """
+
+    path: AbsolutePathStr
+    pixi_version: NonEmptyStr
 
 
 class TaskGroupReadV2(BaseModel):
