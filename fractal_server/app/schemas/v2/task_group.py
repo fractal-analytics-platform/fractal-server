@@ -34,7 +34,7 @@ class TaskGroupActivityActionV2(StrEnum):
 
 
 class TaskGroupCreateV2(BaseModel):
-    # model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
     user_id: int
     user_group_id: int | None = None
     active: bool = True

@@ -147,7 +147,6 @@ async def collect_task_pixi(
         pkg_name=pkg_name,
         version=version,
         path=task_group_path,
-        venv_path=None,
     )
     try:
         TaskGroupCreateV2StrictPixi(**task_group_attrs)
