@@ -82,10 +82,10 @@ class TaskGroupReadV2(BaseModel):
     pkg_name: str
     version: str | None = None
     python_version: str | None = None
+    pixi_version: str | None = None
     path: str | None = None
     venv_path: str | None = None
     archive_path: str | None = None
-    env_info: str | None = None
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 
