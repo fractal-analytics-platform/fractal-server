@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.16 (unreleased)
+# 2.14.16
 
 * Internal:
     * Refactor and optimize enrich-image functions (\#2620).
