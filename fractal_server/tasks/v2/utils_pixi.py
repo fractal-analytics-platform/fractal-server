@@ -1,5 +1,7 @@
 from typing import TypedDict
 
+SOURCE_DIR_NAME = "source_dir"
+
 
 class ParsedOutput(TypedDict):
     package_root: str

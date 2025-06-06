@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ..utils_pixi import parse_collect_stdout
+from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -115,6 +116,7 @@ def collect_local_pixi(
                         "__IMPORT_PACKAGE_NAME__",
                         task_group.pkg_name.replace("-", "_"),
                     ),
+                    ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
                 }
 
                 activity.status = TaskGroupActivityStatusV2.ONGOING
@@ -165,7 +167,7 @@ def collect_local_pixi(
                     pixi_bin=pixi_bin,
                     pixi_manifest_path=(
                         Path(
-                            task_group.path, "source_dir/pyproject.toml"
+                            task_group.path, SOURCE_DIR_NAME, "pyproject.toml"
                         ).as_posix()
                     ),
                 )
@@ -187,9 +189,13 @@ def collect_local_pixi(
                     "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - start"
                 )
-                with Path(task_group.path, "source_dir/pixi.lock").open() as f:
+                with Path(
+                    task_group.path, SOURCE_DIR_NAME, "pixi.lock"
+                ).open() as f:
                     pixi_lock_contents = f.read()
-                # FIXME: how large are these locks???
+
+                # NOTE: see issue 2626 about whether to keep `pixi.lock` files
+                # in the database
                 task_group.env_info = pixi_lock_contents
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)
