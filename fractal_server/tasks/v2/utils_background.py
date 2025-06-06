@@ -48,7 +48,7 @@ def fail_and_cleanup(
     reset_logger_handlers(logger)
 
 
-def _prepare_tasks_metadata(
+def prepare_tasks_metadata(
     *,
     package_manifest: ManifestV2,
     package_root: Path,

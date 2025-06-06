@@ -22,10 +22,10 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
-from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_current_log
+from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
@@ -160,7 +160,7 @@ def collect_local_pixi(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 logger.info("_prepare_tasks_metadata - start")
-                task_list = _prepare_tasks_metadata(
+                task_list = prepare_tasks_metadata(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
                     package_root=Path(package_root),

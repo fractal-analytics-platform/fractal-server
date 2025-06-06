@@ -4,8 +4,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ....ssh._fabric import SingleUseFractalSSH
-from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
+from ..utils_background import prepare_tasks_metadata
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -264,7 +264,7 @@ def collect_ssh(
                     logger.info("Manifest is a valid ManifestV2")
 
                     logger.info("_prepare_tasks_metadata - start")
-                    task_list = _prepare_tasks_metadata(
+                    task_list = prepare_tasks_metadata(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
