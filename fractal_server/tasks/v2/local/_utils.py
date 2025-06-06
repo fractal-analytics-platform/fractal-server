@@ -50,7 +50,9 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
     """
     Check that the modules listed in task commands point to existing files.
 
-    FIXME: describe why `-1` is correct both for pip/pixi-installed tasks
+    Note: commands may be like `/one/python /another/task.py` or
+    `/one/pixi [...] /another/task.py`, and in both cases `split()[-1]`
+    returns `/another/task.py`.
 
     Args:
         task_list:
