@@ -95,7 +95,7 @@ def reactivate_local(
                     ),
                 )
                 with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
-                    f.write(task_group.pip_freeze)
+                    f.write(task_group.env_info)
                 replacements.append(
                     ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
                 )

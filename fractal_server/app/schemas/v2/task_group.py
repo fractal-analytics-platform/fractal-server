@@ -47,7 +47,7 @@ class TaskGroupCreateV2(BaseModel):
     venv_path: AbsolutePathStr = None
     archive_path: AbsolutePathStr = None
     pip_extras: NonEmptyStr = None
-    pip_freeze: str | None = None
+    env_info: str | None = None
     pinned_package_versions: DictStrStr = Field(default_factory=dict)
 
 
@@ -85,7 +85,7 @@ class TaskGroupReadV2(BaseModel):
     path: str | None = None
     venv_path: str | None = None
     archive_path: str | None = None
-    pip_freeze: str | None = None
+    env_info: str | None = None
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 

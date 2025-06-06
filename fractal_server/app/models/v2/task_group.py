@@ -41,7 +41,7 @@ class TaskGroupV2(SQLModel, table=True):
             nullable=True,
         ),
     )
-    pip_freeze: str | None = None
+    env_info: str | None = None
     venv_path: str | None = None
     venv_size_in_kB: int | None = None
     venv_file_number: int | None = None

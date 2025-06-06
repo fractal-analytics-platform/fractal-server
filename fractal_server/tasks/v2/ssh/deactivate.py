@@ -113,10 +113,10 @@ def deactivate_ssh(
                     activity.status = TaskGroupActivityStatusV2.ONGOING
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    if task_group.pip_freeze is None:
+                    if task_group.env_info is None:
                         logger.warning(
                             "Recreate pip-freeze information, since "
-                            f"{task_group.pip_freeze=}. NOTE: this should "
+                            f"{task_group.env_info=}. NOTE: this should "
                             "only happen for task groups created before 2.9.0."
                         )
 
@@ -161,7 +161,7 @@ def deactivate_ssh(
                         )
                         activity.log = get_current_log(log_file_path)
                         activity = add_commit_refresh(obj=activity, db=db)
-                        task_group.pip_freeze = pip_freeze_stdout
+                        task_group.env_info = pip_freeze_stdout
                         task_group = add_commit_refresh(obj=task_group, db=db)
                         logger.info(
                             "Add pip freeze stdout to TaskGroupV2 - end"
@@ -214,7 +214,7 @@ def deactivate_ssh(
 
                             if (
                                 task_group.archive_path
-                                not in task_group.pip_freeze
+                                not in task_group.env_info
                             ):
                                 raise ValueError(
                                     f"Cannot find {task_group.archive_path=} "
@@ -234,23 +234,23 @@ def deactivate_ssh(
                             )
 
                             task_group.archive_path = new_archive_path
-                            new_pip_freeze = task_group.pip_freeze.replace(
+                            new_pip_freeze = task_group.env_info.replace(
                                 task_group.archive_path,
                                 new_archive_path,
                             )
-                            task_group.pip_freeze = new_pip_freeze
+                            task_group.env_info = new_pip_freeze
                             task_group = add_commit_refresh(
                                 obj=task_group, db=db
                             )
                             logger.info(
-                                "Updated `archive_path` and `pip_freeze` "
+                                "Updated `archive_path` and `env_info` "
                                 "task-group attributes."
                             )
 
-                    # Fail if `pip_freeze` includes "github", see
+                    # Fail if `env_info` includes "github", see
                     # https://github.com/fractal-analytics-platform/fractal-server/issues/2142
                     for forbidden_string in FORBIDDEN_DEPENDENCY_STRINGS:
-                        if forbidden_string in task_group.pip_freeze:
+                        if forbidden_string in task_group.env_info:
                             raise ValueError(
                                 "Deactivation and reactivation of task "
                                 f"packages with direct {forbidden_string} "

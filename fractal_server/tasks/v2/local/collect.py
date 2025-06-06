@@ -243,15 +243,15 @@ def collect_local(
 
                 # Update task_group data
                 logger.info(
-                    "Add pip_freeze, venv_size and venv_file_number "
+                    "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - start"
                 )
-                task_group.pip_freeze = pip_freeze_stdout
+                task_group.env_info = pip_freeze_stdout
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.info(
-                    "Add pip_freeze, venv_size and venv_file_number "
+                    "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - end"
                 )
 

@@ -128,7 +128,7 @@ def reactivate_ssh(
                         Path(task_group.path) / "_tmp_pip_freeze.txt"
                     ).as_posix()
                     with open(pip_freeze_file_local, "w") as f:
-                        f.write(task_group.pip_freeze)
+                        f.write(task_group.env_info)
                     fractal_ssh.send_file(
                         local=pip_freeze_file_local,
                         remote=pip_freeze_file_remote,

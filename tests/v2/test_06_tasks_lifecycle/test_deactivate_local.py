@@ -124,7 +124,7 @@ async def test_deactivate_wheel_no_archive_path(tmp_path, db, first_user):
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
-        pip_freeze="pip",
+        env_info="pip",
     )
     db.add(task_group)
     await db.commit()
@@ -185,7 +185,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
-        pip_freeze="pip",
+        env_info="pip",
         python_version=current_py_version,
     )
     db.add(task_group)
@@ -215,7 +215,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     # STEP 2: make it look like a pre-2.9.0 package, both in the db and
     # in the virtual environment
     task_group = await db.get(TaskGroupV2, task_group.id)
-    task_group.pip_freeze = None
+    task_group.env_info = None
     task_group.archive_path = archive_path
     db.add(task_group)
     await db.commit()
@@ -271,7 +271,7 @@ async def test_deactivate_local_github_dependency(
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
-        pip_freeze=(
+        env_info=(
             "BaSiCPy @ "
             "git+https://github.com/"
             "peng-lab/BaSiCPy.git"

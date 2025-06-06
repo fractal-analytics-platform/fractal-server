@@ -221,16 +221,16 @@ async def test_reactivate_task_group_api(
         task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
         assert task_group_other.active is True
 
-        # API success with `origin="pypi"`, but no `pip_freeze`
+        # API success with `origin="pypi"`, but no `env_info`
         res = await client.post(
             f"api/v2/task-group/{task_pypi.taskgroupv2_id}/reactivate/"
         )
         assert res.status_code == 422
-        assert "task_group.pip_freeze=None" in res.json()["detail"]
+        assert "task_group.env_info=None" in res.json()["detail"]
 
-        # Set pip_freeze
+        # Set env_info
         task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
-        task_group_pypi.pip_freeze = "devtools==0.12.0"
+        task_group_pypi.env_info = "devtools==0.12.0"
         db.add(task_group_pypi)
         await db.commit()
         await db.refresh(task_group_pypi)
@@ -334,18 +334,18 @@ async def test_lifecycle(
         assert log.count("\\n") == 0
 
         task_groupv2_id = task_group_activity["taskgroupv2_id"]
-        # Check pip_freeze attribute in TaskGroupV2
+        # Check env_info attribute in TaskGroupV2
         res = await client.get(f"/api/v2/task-group/{task_groupv2_id}/")
         assert res.status_code == 200
         task_group = res.json()
-        pip_freeze = task_group["pip_freeze"]
+        env_info = task_group["env_info"]
         task_group_archive_path = task_group["archive_path"]
         assert (
             f"fractal-tasks-mock @ file://{task_group_archive_path}"
-            in pip_freeze
+            in env_info
         )
         pip_version = next(
-            line for line in pip_freeze.split("\n") if line.startswith("pip")
+            line for line in env_info.split("\n") if line.startswith("pip")
         ).split("==")[1]
         assert Version(pip_version) <= Version(
             settings.FRACTAL_MAX_PIP_VERSION
@@ -392,7 +392,7 @@ async def test_lifecycle(
 
         # STEP 4: Deactivate a task group created before 2.9.0,
         # which has no pip-freeze information
-        task_group.pip_freeze = None
+        task_group.env_info = None
         db.add(task_group)
         await db.commit()
         await db.refresh(task_group)
@@ -410,7 +410,7 @@ async def test_lifecycle(
         db.expunge(task_group)
         task_group = await db.get(TaskGroupV2, task_group_id)
         assert task_group.active is False
-        assert task_group.pip_freeze is not None
+        assert task_group.env_info is not None
         assert Path(task_group.path).exists()
         assert not Path(task_group.venv_path).exists()
         assert Path(task_group.archive_path).exists()

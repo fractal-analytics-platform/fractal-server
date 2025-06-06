@@ -184,19 +184,18 @@ def collect_local_pixi(
 
                 # Update task_group data
                 logger.info(
-                    "Add pip_freeze, venv_size and venv_file_number "
+                    "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - start"
                 )
-                # FIXME: rename `pip_freeze` into `env_info`
                 with Path(task_group.path, "source_dir/pixi.lock").open() as f:
                     pixi_lock_contents = f.read()
                 # FIXME: how large are these locks???
-                task_group.pip_freeze = pixi_lock_contents
+                task_group.env_info = pixi_lock_contents
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.info(
-                    "Add pip_freeze, venv_size and venv_file_number "
+                    "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - end"
                 )
 
