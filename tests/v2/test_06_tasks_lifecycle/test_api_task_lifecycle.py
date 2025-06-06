@@ -335,7 +335,7 @@ async def test_lifecycle(
 
         task_groupv2_id = task_group_activity["taskgroupv2_id"]
         # Check env_info attribute in TaskGroupV2
-        await db.expunge_all()
+        db.expunge_all()
         task_group = db.get(TaskGroupV2, task_groupv2_id)
         env_info = task_group.env_info
         task_group_archive_path = task_group.archive_path
