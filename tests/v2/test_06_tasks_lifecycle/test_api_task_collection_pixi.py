@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from devtools import debug  # noqa
+from devtools import debug
 
 from fractal_server.config import PixiSettings
 
@@ -39,7 +39,11 @@ async def test_api_failures(
         with open(valid_tar_gz, "rb") as f:
             tar_gz_content = f.read()
         return {
-            "file": (valid_tar_gz.name, tar_gz_content, "application/tar+gzip")
+            "file": (
+                valid_tar_gz.name,
+                tar_gz_content,
+                "application/tar+gzip",
+            )
         }
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
@@ -74,3 +78,50 @@ async def test_api_failures(
             files=empty_tar_gz("mypackage-0.1.2a345"),
         )
         assert res.status_code == 422
+
+
+async def test_pixi_collection(
+    override_settings_factory,
+    client,
+    MockCurrentUser,
+    pixi: PixiSettings,
+    pixi_pkg_targz: Path,
+    tmp_path: Path,
+):
+    override_settings_factory(
+        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
+        pixi=pixi,
+    )
+
+    with pixi_pkg_targz.open("rb") as f:
+        files = {
+            "file": (
+                pixi_pkg_targz.name,
+                f.read(),
+                "application/tar+gzip",
+            )
+        }
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+
+        # Trigger task collection
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+
+        # Check outcome
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        assert task_group_activity["timestamp_ended"] is not None
+        log = task_group_activity["log"]
+        assert log is not None
+        assert task_group_activity["status"] == "OK"
+        debug(task_group_activity)
