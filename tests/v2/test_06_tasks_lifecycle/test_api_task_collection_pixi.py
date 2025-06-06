@@ -10,7 +10,7 @@ async def test_pixi_not_available(client, MockCurrentUser):
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={"pixi_version": "9.9.9"},
-            files={"file": ("name", b"", "application/tar+gzip")},
+            files={"file": ("name", b"", "application/gzip")},
         )
         assert res.status_code == 422
         assert res.json()["detail"] == "Pixi task collection is not available."
@@ -42,7 +42,7 @@ async def test_api_failures(
             "file": (
                 valid_tar_gz.name,
                 tar_gz_content,
-                "application/tar+gzip",
+                "application/gzip",
             )
         }
 
@@ -97,7 +97,7 @@ async def test_pixi_collection(
             "file": (
                 pixi_pkg_targz.name,
                 f.read(),
-                "application/tar+gzip",
+                "application/gzip",
             )
         }
 
