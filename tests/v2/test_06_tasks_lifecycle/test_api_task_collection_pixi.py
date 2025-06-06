@@ -1,7 +1,8 @@
 from pathlib import Path
 
-import pytest
 from devtools import debug  # noqa
+
+from fractal_server.config import PixiSettings
 
 
 async def test_pixi_not_available(client, MockCurrentUser):
@@ -15,13 +16,23 @@ async def test_pixi_not_available(client, MockCurrentUser):
         assert res.json()["detail"] == "Pixi task collection is not available."
 
 
-@pytest.mark.skip(reason="Pixi task collection is not implemented yet")
-async def test_pixi_collection_api_arguments(
-    pixi,
+async def test_api_failures(
+    override_settings_factory,
     client,
     MockCurrentUser,
     tmp_path: Path,
 ):
+    override_settings_factory(
+        FRACTAL_PIXI_CONFIG_FILE="/fake/pixi/pixi.json",
+        pixi=PixiSettings(
+            default_version="1.0.0",
+            versions={
+                "1.0.0": "/fake/pixi/1.0.0",
+                "1.0.1": "/fake/pixi/1.0.1",
+            },
+        ),
+    )
+
     def empty_tar_gz(filename) -> dict:
         valid_tar_gz = tmp_path / f"{filename}.tar.gz"
         valid_tar_gz.touch()
@@ -40,7 +51,7 @@ async def test_pixi_collection_api_arguments(
         )
         assert res.status_code == 422
 
-        # too much hyphens
+        # too many hyphens
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={"pixi_version": "1.2.3"},
@@ -63,11 +74,3 @@ async def test_pixi_collection_api_arguments(
             files=empty_tar_gz("mypackage-0.1.2a345"),
         )
         assert res.status_code == 422
-
-        # OK
-        res = await client.post(
-            "api/v2/task/collect/pixi/",
-            data={"pixi_version": "1.0.1"},
-            files=empty_tar_gz("mypackage-0.1.2a345"),
-        )
-        assert res.status_code == 202
