@@ -52,3 +52,4 @@ runinfo
 mypy-scan
 
 .coverage*
+mock*.tar.gz
