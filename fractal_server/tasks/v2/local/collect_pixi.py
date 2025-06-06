@@ -124,10 +124,10 @@ def collect_local_pixi(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 stdout = _customize_and_run_template(
-                    template_filename="pixi/1_collect.sh",
+                    template_filename="pixi_1_collect.sh",
                     replacements=replacements,
-                    script_dir=(
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    script_dir=Path(
+                        task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
