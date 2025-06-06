@@ -350,7 +350,7 @@ async def test_lifecycle(
             settings.FRACTAL_MAX_PIP_VERSION
         )
         assert (
-            Path(task_group["path"]) / Path(archive_path).name
+            Path(task_group.path) / Path(archive_path).name
         ).as_posix() == (Path(task_group_archive_path).as_posix())
 
         # STEP 2: Deactivate task group
@@ -365,6 +365,7 @@ async def test_lifecycle(
         assert res.json()["status"] == "OK"
 
         # Assertions
+        db.expunge_all()
         task_group = await db.get(TaskGroupV2, task_group_id)
         assert task_group.active is False
         assert Path(task_group.path).exists()
