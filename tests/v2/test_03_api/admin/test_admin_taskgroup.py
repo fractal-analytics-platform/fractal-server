@@ -522,16 +522,16 @@ async def test_reactivate_task_group_api(
         task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
         assert task_group_other.active is True
 
-        # API success with `origin="pypi"`, but no `pip_freeze`
+        # API success with `origin="pypi"`, but no `env_info`
         res = await client.post(
             f"{PREFIX}/task-group/{task_pypi.taskgroupv2_id}/reactivate/"
         )
         assert res.status_code == 422
-        assert "task_group.pip_freeze=None" in res.json()["detail"]
+        assert "task_group.env_info=None" in res.json()["detail"]
 
-        # Set pip_freeze
+        # Set env_info
         task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
-        task_group_pypi.pip_freeze = "devtools==0.12.0"
+        task_group_pypi.env_info = "devtools==0.12.0"
         db.add(task_group_pypi)
         await db.commit()
         await db.refresh(task_group_pypi)

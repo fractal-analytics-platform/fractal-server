@@ -4,15 +4,15 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ....ssh._fabric import SingleUseFractalSSH
-from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
+from ..utils_background import prepare_tasks_metadata
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -38,7 +38,7 @@ def collect_ssh(
     task_group_activity_id: int,
     ssh_config: SSHConfig,
     tasks_base_dir: str,
-    wheel_file: WheelFile | None = None,
+    wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
     Collect a task package over SSH
@@ -135,25 +135,26 @@ def collect_ssh(
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
                     # Write wheel file locally and send it to remote path,
-                    # and set task_group.wheel_path
+                    # and set task_group.archive_path
                     if wheel_file is not None:
                         wheel_filename = wheel_file.filename
-                        wheel_path = (
+                        archive_path = (
                             Path(task_group.path) / wheel_filename
                         ).as_posix()
-                        tmp_wheel_path = (
+                        tmp_archive_path = (
                             Path(tmpdir) / wheel_filename
                         ).as_posix()
                         logger.info(
-                            f"Write wheel-file contents into {tmp_wheel_path}"
+                            "Write wheel-file contents into "
+                            f"{tmp_archive_path}"
                         )
-                        with open(tmp_wheel_path, "wb") as f:
+                        with open(tmp_archive_path, "wb") as f:
                             f.write(wheel_file.contents)
                         fractal_ssh.send_file(
-                            local=tmp_wheel_path,
-                            remote=wheel_path,
+                            local=tmp_archive_path,
+                            remote=archive_path,
                         )
-                        task_group.wheel_path = wheel_path
+                        task_group.archive_path = archive_path
                         task_group = add_commit_refresh(obj=task_group, db=db)
 
                     replacements = get_collection_replacements(
@@ -263,7 +264,7 @@ def collect_ssh(
                     logger.info("Manifest is a valid ManifestV2")
 
                     logger.info("_prepare_tasks_metadata - start")
-                    task_list = _prepare_tasks_metadata(
+                    task_list = prepare_tasks_metadata(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
@@ -283,15 +284,15 @@ def collect_ssh(
 
                     # Update task_group data
                     logger.info(
-                        "Add pip_freeze, venv_size and venv_file_number "
+                        "Add env_info, venv_size and venv_file_number "
                         "to TaskGroupV2 - start"
                     )
-                    task_group.pip_freeze = pip_freeze_stdout
+                    task_group.env_info = pip_freeze_stdout
                     task_group.venv_size_in_kB = int(venv_size)
                     task_group.venv_file_number = int(venv_file_number)
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info(
-                        "Add pip_freeze, venv_size and venv_file_number "
+                        "Add env_info, venv_size and venv_file_number "
                         "to TaskGroupV2 - end"
                     )
 

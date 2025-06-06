@@ -9,6 +9,7 @@ from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.utils import get_timestamp
@@ -47,11 +48,13 @@ def fail_and_cleanup(
     reset_logger_handlers(logger)
 
 
-def _prepare_tasks_metadata(
+def prepare_tasks_metadata(
     *,
     package_manifest: ManifestV2,
-    python_bin: Path,
     package_root: Path,
+    python_bin: Path | None = None,
+    pixi_bin: str | None = None,
+    pixi_manifest_path: str | None = None,
     package_version: str | None = None,
 ) -> list[TaskCreateV2]:
     """
@@ -59,10 +62,20 @@ def _prepare_tasks_metadata(
 
     Args:
         package_manifest:
-        python_bin:
         package_root:
         package_version:
+        python_bin:
+        pixi_bin:
     """
+    if bool(pixi_bin is None) == bool(python_bin is None):
+        raise UnreachableBranchError(
+            f"Either {pixi_bin} or {python_bin} must be set."
+        )
+    if pixi_bin is not None and pixi_manifest_path is None:
+        raise UnreachableBranchError(
+            f"If {pixi_bin} is set, pixi_manifest_path must be set."
+        )
+
     task_list = []
     for _task in package_manifest.task_list:
         # Set non-command attributes
@@ -76,14 +89,29 @@ def _prepare_tasks_metadata(
         # Set command attributes
         if _task.executable_non_parallel is not None:
             non_parallel_path = package_root / _task.executable_non_parallel
-            task_attributes["command_non_parallel"] = (
-                f"{python_bin.as_posix()} " f"{non_parallel_path.as_posix()}"
-            )
+            if python_bin is not None:
+                cmd_non_parallel = (
+                    f"{python_bin.as_posix()} {non_parallel_path.as_posix()}"
+                )
+            else:
+                cmd_non_parallel = (
+                    f"{pixi_bin} run --manifest-path {pixi_manifest_path} "
+                    "--no-lockfile-update python "
+                    f"{non_parallel_path.as_posix()}"
+                )
+            task_attributes["command_non_parallel"] = cmd_non_parallel
         if _task.executable_parallel is not None:
             parallel_path = package_root / _task.executable_parallel
-            task_attributes[
-                "command_parallel"
-            ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
+            if python_bin is not None:
+                cmd_parallel = (
+                    f"{python_bin.as_posix()} {parallel_path.as_posix()}"
+                )
+            else:
+                cmd_parallel = (
+                    f"{pixi_bin} run --manifest-path {pixi_manifest_path} "
+                    f"--no-lockfile-update python {parallel_path.as_posix()}"
+                )
+            task_attributes["command_parallel"] = cmd_parallel
         # Create object
         task_obj = TaskCreateV2(
             **_task.model_dump(

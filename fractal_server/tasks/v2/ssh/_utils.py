@@ -69,16 +69,16 @@ def _copy_wheel_file_ssh(
     *, task_group: TaskGroupV2, fractal_ssh: FractalSSH, logger_name: str
 ) -> str:
     """
-    Handle the situation where `task_group.wheel_path` is not part of
-    `task_group.path`, by copying `wheel_path` into `path`.
+    Handle the situation where `task_group.archive_path` is not part of
+    `task_group.path`, by copying `archive_path` into `path`.
 
     Returns:
-        The new `wheel_path`.
+        The new `archive_path`.
     """
     logger = get_logger(logger_name=logger_name)
-    source = task_group.wheel_path
+    source = task_group.archive_path
     dest = (
-        Path(task_group.path) / Path(task_group.wheel_path).name
+        Path(task_group.path) / Path(task_group.archive_path).name
     ).as_posix()
     cmd = f"cp {source} {dest}"
     logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")

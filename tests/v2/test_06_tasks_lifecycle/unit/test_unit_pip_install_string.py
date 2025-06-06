@@ -19,19 +19,21 @@ def test_pip_install_string():
         tg.pip_install_string
 
     # Wheel path is set
-    tg = TaskGroupV2(wheel_path="/tmp/x.whl", pkg_name="pkg", version="1.2.3")
+    tg = TaskGroupV2(
+        archive_path="/tmp/x.whl", pkg_name="pkg", version="1.2.3"
+    )
     assert tg.pip_install_string == "/tmp/x.whl"
-    tg = TaskGroupV2(wheel_path="/tmp/x.whl", pkg_name="pkg")
+    tg = TaskGroupV2(archive_path="/tmp/x.whl", pkg_name="pkg")
     assert tg.pip_install_string == "/tmp/x.whl"
     tg = TaskGroupV2(
-        wheel_path="/tmp/x.whl",
+        archive_path="/tmp/x.whl",
         pkg_name="pkg",
         version="1.2.3",
         pip_extras="extra1",
     )
     assert tg.pip_install_string == "/tmp/x.whl[extra1]"
     tg = TaskGroupV2(
-        wheel_path="/tmp/x.whl", pkg_name="pkg", pip_extras="extra1"
+        archive_path="/tmp/x.whl", pkg_name="pkg", pip_extras="extra1"
     )
     assert tg.pip_install_string == "/tmp/x.whl[extra1]"
 
@@ -51,3 +53,15 @@ def test_pinned_package_versions_string():
         pinned_package_versions=dict(pkgA="1.2.3a", pkgB="3.2.1b"),
     )
     assert tg.pinned_package_versions_string == "pkgA==1.2.3a pkgB==3.2.1b"
+
+
+def test_properties_for_pixi_task_group():
+    tg = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        origin="pixi",
+    )
+    with pytest.raises(ValueError):
+        assert tg.pip_install_string
+    with pytest.raises(ValueError):
+        assert tg.pinned_package_versions_string

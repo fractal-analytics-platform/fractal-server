@@ -1,0 +1,182 @@
+from pathlib import Path
+
+from devtools import debug
+
+from fractal_server.config import get_settings
+from fractal_server.config import PixiSettings
+from fractal_server.syringe import Inject
+
+
+async def test_pixi_not_available(client, MockCurrentUser):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={"pixi_version": "9.9.9"},
+            files={"file": ("name", b"", "application/gzip")},
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == "Pixi task collection is not available."
+
+
+async def test_api_failures(
+    override_settings_factory,
+    client,
+    MockCurrentUser,
+    tmp_path: Path,
+):
+    override_settings_factory(
+        FRACTAL_PIXI_CONFIG_FILE="/fake/pixi/pixi.json",
+        pixi=PixiSettings(
+            default_version="1.0.0",
+            versions={
+                "1.0.0": "/fake/pixi/1.0.0",
+                "1.0.1": "/fake/pixi/1.0.1",
+            },
+        ),
+    )
+
+    def empty_tar_gz(filename) -> dict:
+        valid_tar_gz = tmp_path / f"{filename}.tar.gz"
+        valid_tar_gz.touch()
+        with open(valid_tar_gz, "rb") as f:
+            tar_gz_content = f.read()
+        return {
+            "file": (
+                valid_tar_gz.name,
+                tar_gz_content,
+                "application/gzip",
+            )
+        }
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # no data nor files
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={},
+            files={},
+        )
+        assert res.status_code == 422
+
+        # too many hyphens
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={"pixi_version": "1.2.3"},
+            files=empty_tar_gz("mypackage-0.1.2-a345"),
+        )
+        assert res.status_code == 422
+
+        # no hyphen
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={"pixi_version": "1.2.3"},
+            files=empty_tar_gz("mypackage0.1.2a345"),
+        )
+        assert res.status_code == 422
+
+        # pixi version not available
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={"pixi_version": "1.2.3"},
+            files=empty_tar_gz("mypackage-0.1.2a345"),
+        )
+        assert res.status_code == 422
+
+
+async def test_pixi_collection_path_already_exists(
+    override_settings_factory,
+    client,
+    MockCurrentUser,
+    pixi: PixiSettings,
+    pixi_pkg_targz: Path,
+    tmp_path: Path,
+):
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=tmp_path,
+        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
+        pixi=pixi,
+    )
+
+    with pixi_pkg_targz.open("rb") as f:
+        files = {
+            "file": (
+                pixi_pkg_targz.name,
+                f.read(),
+                "application/gzip",
+            )
+        }
+
+    settings = Inject(get_settings)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        task_group_path = (
+            Path(settings.FRACTAL_TASKS_DIR.as_posix())
+            / str(user.id)
+            / "mock-pixi-tasks"
+            / "0.2.1"
+        )
+        task_group_path.mkdir(parents=True)
+        debug(task_group_path)
+
+        # Trigger task collection
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "already exists" in res.json()["detail"]
+
+
+async def test_pixi_collection(
+    override_settings_factory,
+    client,
+    MockCurrentUser,
+    pixi: PixiSettings,
+    pixi_pkg_targz: Path,
+    tmp_path: Path,
+):
+    override_settings_factory(
+        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
+        FRACTAL_TASKS_DIR=tmp_path,
+        pixi=pixi,
+    )
+
+    with pixi_pkg_targz.open("rb") as f:
+        files = {
+            "file": (
+                pixi_pkg_targz.name,
+                f.read(),
+                "application/gzip",
+            )
+        }
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger task collection
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        task_group_activity_id = res.json()["id"]
+
+        # Check outcome
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        assert task_group_activity["timestamp_ended"] is not None
+        log = task_group_activity["log"]
+        assert log is not None
+        assert task_group_activity["status"] == "OK"
+        task_group_id = task_group_activity["taskgroupv2_id"]
+
+        res = await client.get(f"/api/v2/task-group/{task_group_id}/")
+        assert res.status_code == 200
+        task = res.json()["task_list"][0]
+        module_path = task["command_non_parallel"].split()[-1]
+        debug(task["command_non_parallel"])
+        debug(module_path)
+        assert Path(module_path).is_file()

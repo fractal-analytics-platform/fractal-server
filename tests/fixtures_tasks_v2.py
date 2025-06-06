@@ -18,7 +18,7 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.tasks.v2.utils_background import (
-    _prepare_tasks_metadata,
+    prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.utils_database import (
     create_db_tasks_and_update_task_group_sync,
@@ -70,7 +70,7 @@ def fractal_tasks_mock_collection(
         manifest_dict = json.load(f)
 
     manifest = ManifestV2(**manifest_dict)
-    task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
+    task_list: list[TaskCreateV2] = prepare_tasks_metadata(
         package_manifest=manifest,
         python_bin=venv_python,
         package_root=package_root,

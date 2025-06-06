@@ -74,7 +74,10 @@ async def deactivate_task_group(
         )
 
     # Shortcut for task-group with origin="other"
-    if task_group.origin == TaskGroupV2OriginEnum.OTHER:
+    if task_group.origin in [
+        TaskGroupV2OriginEnum.OTHER,
+        TaskGroupV2OriginEnum.PIXI,
+    ]:
         task_group.active = False
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
@@ -210,12 +213,12 @@ async def reactivate_task_group(
         response.status_code = status.HTTP_202_ACCEPTED
         return task_group_activity
 
-    if task_group.pip_freeze is None:
+    if task_group.env_info is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Cannot reactivate a task group with "
-                f"{task_group.pip_freeze=}."
+                f"{task_group.env_info=}."
             ),
         )
 

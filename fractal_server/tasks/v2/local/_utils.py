@@ -50,19 +50,24 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
     """
     Check that the modules listed in task commands point to existing files.
 
+    Note: commands may be like `/one/python /another/task.py` or
+    `/one/pixi [...] /another/task.py`, and in both cases `split()[-1]`
+    returns `/another/task.py`.
+
     Args:
         task_list:
     """
+
     for _task in task_list:
         if _task.command_non_parallel is not None:
-            _task_path = _task.command_non_parallel.split()[1]
+            _task_path = _task.command_non_parallel.split()[-1]
             if not Path(_task_path).exists():
                 raise FileNotFoundError(
                     f"Task `{_task.name}` has `command_non_parallel` "
                     f"pointing to missing file `{_task_path}`."
                 )
         if _task.command_parallel is not None:
-            _task_path = _task.command_parallel.split()[1]
+            _task_path = _task.command_parallel.split()[-1]
             if not Path(_task_path).exists():
                 raise FileNotFoundError(
                     f"Task `{_task.name}` has `command_parallel` "

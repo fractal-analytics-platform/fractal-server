@@ -26,7 +26,7 @@ from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_background import (
-    _prepare_tasks_metadata,
+    prepare_tasks_metadata,
 )
 from fractal_server.tasks.v2.utils_database import (
     create_db_tasks_and_update_task_group_async,
@@ -138,7 +138,7 @@ async def collect_task_custom(
     else:
         package_root = Path(task_collect.package_root)
 
-    task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
+    task_list: list[TaskCreateV2] = prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
         python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,

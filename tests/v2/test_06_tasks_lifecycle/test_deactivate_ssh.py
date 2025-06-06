@@ -5,9 +5,9 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import collect_ssh
@@ -124,7 +124,7 @@ async def test_deactivate_ssh_fail(
 
 
 @pytest.mark.container
-async def test_deactivate_wheel_no_wheel_path(
+async def test_deactivate_wheel_no_archive_path(
     tmp777_path,
     db,
     first_user,
@@ -137,11 +137,11 @@ async def test_deactivate_wheel_no_wheel_path(
         pkg_name="pkg",
         version="1.2.3",
         origin=TaskGroupV2OriginEnum.WHEELFILE,
-        wheel_path="/invalid",
+        archive_path="/invalid",
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
-        pip_freeze="pip",
+        env_info="pip",
     )
     db.add(task_group)
     await db.commit()
@@ -200,27 +200,27 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     # STEP 1: collect a package
     path = tmp777_path / "fractal-tasks-mock-path"
     venv_path = path / "venv"
-    local_wheel_path = (
+    local_archive_path = (
         testdata_path.parent
         / (
             "v2/fractal_tasks_mock/dist/"
             "fractal_tasks_mock-0.0.1-py3-none-any.whl"
         )
     ).as_posix()
-    wheel_path = (
+    archive_path = (
         path / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
-    with open(local_wheel_path, "rb") as wheel_file:
+    with open(local_archive_path, "rb") as wheel_file:
         wheel_buffer = wheel_file.read()
     task_group = TaskGroupV2(
         pkg_name="fractal_tasks_mock",
         version="0.0.1",
         origin=TaskGroupV2OriginEnum.WHEELFILE,
-        wheel_path=wheel_path,
+        archive_path=archive_path,
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
-        pip_freeze="pip",
+        env_info="pip",
         python_version=current_py_version,
     )
     db.add(task_group)
@@ -244,9 +244,9 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         task_group_activity_id=activity_collect.id,
         ssh_config=SSHConfig(**ssh_config_dict),
         tasks_base_dir=tmp777_path.as_posix(),
-        wheel_file=WheelFile(
+        wheel_file=FractalUploadedFile(
             contents=wheel_buffer,
-            filename=Path(wheel_path).name,
+            filename=Path(archive_path).name,
         ),
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
@@ -255,15 +255,15 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     # STEP 2: make it look like a pre-2.9.0 package, both in the db and
     # in the virtual environment
     task_group = await db.get(TaskGroupV2, task_group.id)
-    task_group.pip_freeze = None
-    task_group.wheel_path = wheel_path
+    task_group.env_info = None
+    task_group.archive_path = archive_path
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
     python_bin = (venv_path / "bin/python").as_posix()
     pip_install_new_wheel = (
-        f"{python_bin} -m pip install {wheel_path} --force-reinstall"
+        f"{python_bin} -m pip install {archive_path} --force-reinstall"
     )
     fractal_ssh.run_command(cmd=pip_install_new_wheel)
 
@@ -316,7 +316,7 @@ async def test_deactivate_ssh_github_dependency(
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
-        pip_freeze=(
+        env_info=(
             "BaSiCPy @ "
             "git+https://github.com/"
             "peng-lab/BaSiCPy.git"

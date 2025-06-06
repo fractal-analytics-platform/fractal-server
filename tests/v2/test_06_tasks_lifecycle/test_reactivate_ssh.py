@@ -115,7 +115,7 @@ async def test_reactivate_ssh_fail(
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
-        pip_freeze="something==99.99.99",
+        env_info="something==99.99.99",
     )
     debug(task_group)
     db.add(task_group)

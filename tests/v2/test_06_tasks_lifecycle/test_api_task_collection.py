@@ -42,13 +42,13 @@ async def test_task_collection_from_wheel_non_canonical(
     )
 
     # Prepare absolute path to wheel file
-    wheel_path = (
+    archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_non_canonical/dist"
         / "FrAcTaL_TaSkS_NoN_CaNoNiCaL-0.0.1-py3-none-any.whl"
     )
-    with open(wheel_path, "rb") as f:
-        files = {"file": (wheel_path.name, f.read(), "application/zip")}
+    with open(archive_path, "rb") as f:
+        files = {"file": (archive_path.name, f.read(), "application/zip")}
 
     # Prepare and validate payload
     payload = dict(package_extras="my_extra")

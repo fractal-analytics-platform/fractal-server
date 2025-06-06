@@ -33,14 +33,15 @@ from .task import TaskImportV2Legacy  # noqa F401
 from .task import TaskReadV2  # noqa F401
 from .task import TaskType  # noqa F401
 from .task import TaskUpdateV2  # noqa F401
+from .task_collection import FractalUploadedFile  # noqa F401
 from .task_collection import TaskCollectCustomV2  # noqa F401
 from .task_collection import TaskCollectPipV2  # noqa F401
-from .task_collection import WheelFile  # noqa F401
 from .task_group import TaskGroupActivityActionV2  # noqa F401
 from .task_group import TaskGroupActivityStatusV2  # noqa F401
 from .task_group import TaskGroupActivityV2Read  # noqa F401
 from .task_group import TaskGroupCreateV2  # noqa F401
 from .task_group import TaskGroupCreateV2Strict  # noqa F401
+from .task_group import TaskGroupCreateV2StrictPixi  # noqa F401
 from .task_group import TaskGroupReadV2  # noqa F401
 from .task_group import TaskGroupUpdateV2  # noqa F401
 from .task_group import TaskGroupV2OriginEnum  # noqa F401

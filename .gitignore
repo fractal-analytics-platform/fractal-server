@@ -52,3 +52,5 @@ runinfo
 mypy-scan
 
 .coverage*
+mock*.tar.gz
+pixi_collection_test.sh

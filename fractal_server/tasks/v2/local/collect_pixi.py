@@ -6,7 +6,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_database import create_db_tasks_and_update_task_group_sync
-from ._utils import _customize_and_run_template
+from ..utils_pixi import parse_collect_stdout
+from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -14,48 +15,28 @@ from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
+from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
-from fractal_server.tasks.v2.utils_package_names import compare_package_names
-from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
-)
-from fractal_server.tasks.v2.utils_templates import get_collection_replacements
-from fractal_server.tasks.v2.utils_templates import (
-    parse_script_pip_show_stdout,
-)
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
 
-def collect_local(
+def collect_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_file: FractalUploadedFile | None = None,
+    tar_gz_file: FractalUploadedFile,
 ) -> None:
-    """
-    Collect a task package.
-
-    This function runs as a background task, therefore exceptions must be
-    handled.
-
-    NOTE:  since this function is sync, it runs within a thread - due to
-    starlette/fastapi handling of background tasks (see
-    https://github.com/encode/starlette/blob/master/starlette/background.py).
-
-
-    Arguments:
-        task_group_id:
-        task_group_activity_id:
-        wheel_file:
-    """
+    settings = Inject(get_settings)
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
@@ -67,11 +48,9 @@ def collect_local(
         )
 
         with next(get_sync_db()) as db:
-            # Get main objects from db
             activity = db.get(TaskGroupActivityV2, task_group_activity_id)
             task_group = db.get(TaskGroupV2, task_group_id)
             if activity is None or task_group is None:
-                # Use `logging` directly
                 logging.error(
                     "Cannot find database rows with "
                     f"{task_group_id=} and {task_group_activity_id=}:\n"
@@ -79,12 +58,10 @@ def collect_local(
                 )
                 return
 
-            # Log some info
             logger.info("START")
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            # Check that the (local) task_group path does exist
             if Path(task_group.path).exists():
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
@@ -98,38 +75,54 @@ def collect_local(
                 )
                 return
 
+            # Set `pixi_bin` and check that it exists
+            pixi_home = settings.pixi.versions[task_group.pixi_version]
+            pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
+            if not Path(pixi_bin).exists():
+                error_msg = f"{pixi_bin} does not exist."
+                logger.error(error_msg)
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileNotFoundError(error_msg),
+                    db=db,
+                )
+                return
+
             try:
-                # Create task_group.path folder
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
+                archive_path = Path(
+                    task_group.path, tar_gz_file.filename
+                ).as_posix()
+                logger.info(f"Write tar.gz-file contents into {archive_path}.")
+                with open(archive_path, "wb") as f:
+                    f.write(tar_gz_file.contents)
+                task_group.archive_path = archive_path
+                task_group = add_commit_refresh(obj=task_group, db=db)
 
-                # Write wheel file and set task_group.archive_path
-                if wheel_file is not None:
-
-                    archive_path = (
-                        Path(task_group.path) / wheel_file.filename
-                    ).as_posix()
-                    logger.info(
-                        f"Write wheel-file contents into {archive_path}"
-                    )
-                    with open(archive_path, "wb") as f:
-                        f.write(wheel_file.contents)
-                    task_group.archive_path = archive_path
-                    task_group = add_commit_refresh(obj=task_group, db=db)
-
-                # Prepare replacements for templates
-                replacements = get_collection_replacements(
-                    task_group=task_group,
-                    python_bin=get_python_interpreter_v2(
-                        python_version=task_group.python_version
+                replacements = {
+                    ("__PIXI_HOME__", pixi_home),
+                    ("__PACKAGE_DIR__", task_group.path),
+                    ("__TAR_GZ_PATH__", archive_path),
+                    (
+                        "__IMPORT_PACKAGE_NAME__",
+                        task_group.pkg_name.replace("-", "_"),
                     ),
-                )
+                    ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
+                }
 
-                # Prepare common arguments for `_customize_and_run_template``
-                common_args = dict(
+                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                stdout = _customize_and_run_template(
+                    template_filename="pixi_1_collect.sh",
                     replacements=replacements,
-                    script_dir=(
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    script_dir=Path(
+                        task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
@@ -137,81 +130,21 @@ def collect_local(
                     ),
                     logger_name=LOGGER_NAME,
                 )
-
-                # Set status to ONGOING and refresh logs
-                activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 1
-                stdout = _customize_and_run_template(
-                    template_filename="1_create_venv.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
+                # Parse stdout
+                parsed_output = parse_collect_stdout(stdout)
+                package_root = parsed_output["package_root"]
+                venv_size = parsed_output["venv_size"]
+                venv_file_number = parsed_output["venv_file_number"]
 
-                # Run script 2
-                stdout = _customize_and_run_template(
-                    template_filename="2_pip_install.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                # Run script 3
-                pip_freeze_stdout = _customize_and_run_template(
-                    template_filename="3_pip_freeze.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                # Run script 4
-                stdout = _customize_and_run_template(
-                    template_filename="4_pip_show.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                # Run script 5
-                venv_info = _customize_and_run_template(
-                    template_filename="5_get_venv_size_and_file_number.sh",
-                    **common_args,
-                )
-                venv_size, venv_file_number = venv_info.split()
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                pkg_attrs = parse_script_pip_show_stdout(stdout)
-                for key, value in pkg_attrs.items():
-                    logger.debug(f"Parsed from pip-show: {key}={value}")
-                # Check package_name match between pip show and task-group
-                task_group = db.get(TaskGroupV2, task_group_id)
-                package_name_pip_show = pkg_attrs.get("package_name")
-                package_name_task_group = task_group.pkg_name
-                compare_package_names(
-                    pkg_name_pip_show=package_name_pip_show,
-                    pkg_name_task_group=package_name_task_group,
-                    logger_name=LOGGER_NAME,
-                )
-                # Extract/drop parsed attributes
-                package_name = package_name_task_group
-                python_bin = pkg_attrs.pop("python_bin")
-                package_root_parent = pkg_attrs.pop("package_root_parent")
-
-                # TODO : Use more robust logic to determine `package_root`.
-                # Examples: use `importlib.util.find_spec`, or parse the
-                # output of `pip show --files {package_name}`.
-                package_name_underscore = package_name.replace("-", "_")
-                package_root = (
-                    Path(package_root_parent) / package_name_underscore
-                ).as_posix()
-
-                # Read and validate manifest file
-                manifest_path = pkg_attrs.pop("manifest_path")
-                logger.info(f"now loading {manifest_path=}")
+                # Read and validate manifest
+                # NOTE: we are only supporting the manifest path being relative
+                # to the top-level folder
+                manifest_path = f"{package_root}/__FRACTAL_MANIFEST__.json"
+                if not Path(manifest_path).exists():
+                    raise ValueError(f"Manifest not found at {manifest_path}")
                 with open(manifest_path) as json_data:
                     pkg_manifest_dict = json.load(json_data)
                 logger.info(f"loaded {manifest_path=}")
@@ -226,14 +159,19 @@ def collect_local(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
                     package_root=Path(package_root),
-                    python_bin=Path(python_bin),
+                    pixi_bin=pixi_bin,
+                    pixi_manifest_path=(
+                        Path(
+                            task_group.path, SOURCE_DIR_NAME, "pyproject.toml"
+                        ).as_posix()
+                    ),
                 )
                 check_task_files_exist(task_list=task_list)
                 logger.info("_prepare_tasks_metadata - end")
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.info("create_db_tasks_and_update_task_group - " "start")
+                logger.info("create_db_tasks_and_update_task_group - start")
                 create_db_tasks_and_update_task_group_sync(
                     task_list=task_list,
                     task_group_id=task_group.id,
@@ -246,7 +184,14 @@ def collect_local(
                     "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - start"
                 )
-                task_group.env_info = pip_freeze_stdout
+                with Path(
+                    task_group.path, SOURCE_DIR_NAME, "pixi.lock"
+                ).open() as f:
+                    pixi_lock_contents = f.read()
+
+                # NOTE: see issue 2626 about whether to keep `pixi.lock` files
+                # in the database
+                task_group.env_info = pixi_lock_contents
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
@@ -285,4 +230,3 @@ def collect_local(
                     exception=collection_e,
                     db=db,
                 )
-        return
