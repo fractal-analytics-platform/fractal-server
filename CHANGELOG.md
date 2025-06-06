@@ -1,17 +1,18 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.14.16 (unreleased)
+# 2.14.16
 
 * Internal:
     * Refactor and optimize enrich-image functions (\#2620).
 * Database:
     * Add indices to `HistoryImageCache` table (\#2620).
+* SSH:
+    * Increase Paramiko `banner_timeout` from the default 15 seconds to 30 seconds (\#2632).
+    * Re-include `check_connection` upon `SlurmSSHRunner` startup (\#2636).
 * Testing:
     * Introduce benchmarks for database operations (\#2620).
 * Dependencies:
     * Update `cryptography`, `packaging` and `python-dotenv` dependencies (\#2630).
-* SSH:
-    * Increase Paramiko `banner_timeout` from the default 15 seconds to 30 seconds (\#2632).
 
 # 2.14.15
 

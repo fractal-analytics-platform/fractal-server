@@ -40,8 +40,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
         self.fractal_ssh = fractal_ssh
         logger.warning(self.fractal_ssh)
 
-        settings = Inject(get_settings)
+        # Check SSH connection and try to recover from a closed-socket error
+        self.fractal_ssh.check_connection()
 
+        settings = Inject(get_settings)
         super().__init__(
             slurm_runner_type="ssh",
             root_dir_local=root_dir_local,
