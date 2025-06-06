@@ -63,9 +63,8 @@ def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Invalid filename format: '{filename}' contains "
-                f"{len(filename_splitted) - 1} hyphen(s), but exactly one is "
-                "required to separate the package name from the version "
+                f"Invalid filename: '{filename}' must contain a single `-` "
+                "character, separating the package name from the version "
                 "(expected format: 'pkg_name-version')."
             ),
         )
