@@ -95,9 +95,9 @@ def collect_local_pixi(
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
 
-                # FIXME: move to the correct place
-                Path(task_group.path, SCRIPTS_SUBFOLDER).mkdir(parents=True)
-                logger.info(f"Created {task_group.path}/{SCRIPTS_SUBFOLDER}")
+                # FIXME: review whether this is needed
+                # Path(task_group.path, SCRIPTS_SUBFOLDER).mkdir(parents=True)
+                # logger.info(f"Created {task_group.path}/{SCRIPTS_SUBFOLDER}")
 
                 archive_path = Path(
                     task_group.path, tar_gz_file.filename
