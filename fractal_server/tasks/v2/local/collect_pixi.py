@@ -78,18 +78,6 @@ def collect_local_pixi(
             # Set `pixi_bin` and check that it exists
             pixi_home = settings.pixi.versions[task_group.pixi_version]
             pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
-            if not Path(pixi_bin).exists():
-                error_msg = f"{pixi_bin} does not exist."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
-                    db=db,
-                )
-                return
 
             try:
                 Path(task_group.path).mkdir(parents=True)
@@ -143,8 +131,6 @@ def collect_local_pixi(
                 # NOTE: we are only supporting the manifest path being relative
                 # to the top-level folder
                 manifest_path = f"{package_root}/__FRACTAL_MANIFEST__.json"
-                if not Path(manifest_path).exists():
-                    raise ValueError(f"Manifest not found at {manifest_path}")
                 with open(manifest_path) as json_data:
                     pkg_manifest_dict = json.load(json_data)
                 logger.info(f"loaded {manifest_path=}")
