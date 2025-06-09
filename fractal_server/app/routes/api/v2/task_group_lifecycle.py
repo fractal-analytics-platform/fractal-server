@@ -25,6 +25,7 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
+from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
@@ -74,10 +75,7 @@ async def deactivate_task_group(
         )
 
     # Shortcut for task-group with origin="other"
-    if task_group.origin in [
-        TaskGroupV2OriginEnum.OTHER,
-        TaskGroupV2OriginEnum.PIXI,
-    ]:
+    if task_group.origin == TaskGroupV2OriginEnum.OTHER:
         task_group.active = False
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
@@ -138,8 +136,12 @@ async def deactivate_task_group(
         )
 
     else:
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            deactivate_function = deactivate_local_pixi
+        else:
+            deactivate_function = deactivate_local
         background_tasks.add_task(
-            deactivate_local,
+            deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )
