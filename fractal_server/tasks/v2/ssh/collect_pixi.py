@@ -177,13 +177,15 @@ def collect_ssh_pixi(
                     stdout = _customize_and_run_template(
                         template_filename="pixi_1_collect.sh",
                         replacements=replacements,
-                        script_dir=Path(
-                            task_group.path, SCRIPTS_SUBFOLDER
+                        script_dir_local=(
+                            Path(tmpdir) / SCRIPTS_SUBFOLDER
                         ).as_posix(),
+                        script_dir_remote=script_dir_remote,
                         prefix=(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityActionV2.COLLECT}_"
                         ),
+                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                     )
                     activity.log = get_current_log(log_file_path)
