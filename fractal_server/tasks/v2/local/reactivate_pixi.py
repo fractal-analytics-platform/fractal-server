@@ -1,30 +1,27 @@
 import logging
+import shlex
 import shutil
-import time
+import subprocess  # nosec
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
-from ..utils_templates import get_collection_replacements
-from ._utils import _customize_and_run_template
+from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
-from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
-)
-from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
 
-def reactivate_local(
+def reactivate_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
@@ -48,7 +45,6 @@ def reactivate_local(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-
         with next(get_sync_db()) as db:
 
             # Get main objects from db
@@ -69,64 +65,50 @@ def reactivate_local(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            # Check that the (local) task_group venv_path does not exist
-            if Path(task_group.venv_path).exists():
-                error_msg = f"{task_group.venv_path} already exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileExistsError(error_msg),
-                    db=db,
-                )
-                return
+            Path(task_group.path).mkdir()
+
+            subprocess.run(  # nosec
+                shlex.split(
+                    f"tar xz -f {task_group.archive_path} "
+                    f"{Path(task_group.archive_path).name}"
+                ),
+                encoding="utf-8",
+                cwd=task_group.path,
+            )
+
+            SOURCE_DIR = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+            subprocess.run(  # nosec
+                shlex.split(
+                    f"mv {Path(task_group.archive_path).name} {SOURCE_DIR}"
+                ),
+                encoding="utf-8",
+                cwd=task_group.path,
+            )
 
             try:
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Prepare replacements for templates
-                replacements = get_collection_replacements(
-                    task_group=task_group,
-                    python_bin=get_python_interpreter_v2(
-                        python_version=task_group.python_version
-                    ),
-                )
-                with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
+                logger.debug("start - writing pixi lock")
+                with open(f"{task_group.path}/pixi.lock", "w") as f:
                     f.write(task_group.env_info)
-                replacements.append(
-                    ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
-                )
-                # Prepare common arguments for `_customize_and_run_template`
-                common_args = dict(
-                    replacements=replacements,
-                    script_dir=(
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
-                    ).as_posix(),
-                    prefix=(
-                        f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.REACTIVATE}_"
+                logger.debug("end - writing pixi lock")
+
+                settings = Inject(get_settings)
+                pixi_home = settings.pixi.versions[task_group.pixi_version]
+                pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
+
+                logger.debug("start - pixi install")
+                subprocess.run(  # nosec
+                    shlex.split(
+                        f"{pixi_bin} install "
+                        f"--manifest-path {SOURCE_DIR}/pyproject.toml --frozen"
                     ),
-                    logger_name=LOGGER_NAME,
+                    encoding="utf-8",
+                    cwd=task_group.path,
                 )
+                logger.debug("end - pixi install")
 
-                logger.debug("start - create venv")
-                _customize_and_run_template(
-                    template_filename="1_create_venv.sh",
-                    **common_args,
-                )
-                logger.debug("end - create venv")
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                logger.debug("start - install from pip freeze")
-                _customize_and_run_template(
-                    template_filename="6_pip_install_from_freeze.sh",
-                    **common_args,
-                )
-                logger.debug("end - install from pip freeze")
                 activity.log = get_current_log(log_file_path)
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.timestamp_ended = get_timestamp()
@@ -138,11 +120,11 @@ def reactivate_local(
                 reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
-                # Delete corrupted venv_path
+                # Delete corrupted task_group.path
                 try:
-                    logger.info(f"Now delete folder {task_group.venv_path}")
-                    shutil.rmtree(task_group.venv_path)
-                    logger.info(f"Deleted folder {task_group.venv_path}")
+                    logger.info(f"Now delete folder {task_group.path}")
+                    shutil.rmtree(task_group.path)
+                    logger.info(f"Deleted folder {task_group.path}")
                 except Exception as rm_e:
                     logger.error(
                         "Removing folder failed.\n"

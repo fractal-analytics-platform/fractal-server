@@ -27,6 +27,7 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import reactivate_local
+from fractal_server.tasks.v2.local import reactivate_local_pixi
 from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.utils import get_timestamp
@@ -261,8 +262,12 @@ async def reactivate_task_group(
         )
 
     else:
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            reactivate_function = reactivate_local_pixi
+        else:
+            reactivate_function = reactivate_local
         background_tasks.add_task(
-            reactivate_local,
+            reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )
