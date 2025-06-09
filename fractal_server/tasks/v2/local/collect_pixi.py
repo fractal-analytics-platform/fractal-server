@@ -162,7 +162,9 @@ def collect_local_pixi(
                     pixi_bin=pixi_bin,
                     pixi_manifest_path=(
                         Path(
-                            task_group.path, SOURCE_DIR_NAME, "pyproject.toml"
+                            task_group.path,
+                            SOURCE_DIR_NAME,
+                            "pyproject.toml",
                         ).as_posix()
                     ),
                 )
@@ -185,7 +187,9 @@ def collect_local_pixi(
                     "to TaskGroupV2 - start"
                 )
                 with Path(
-                    task_group.path, SOURCE_DIR_NAME, "pixi.lock"
+                    task_group.path,
+                    SOURCE_DIR_NAME,
+                    "pixi.lock",
                 ).open() as f:
                     pixi_lock_contents = f.read()
 
