@@ -140,7 +140,7 @@ def collect_ssh_pixi(
                         Path(tmpdir) / tar_gz_filename
                     ).as_posix()
                     logger.info(
-                        "Write wheel-file contents into " f"{tmp_archive_path}"
+                        f"Write tar.gz-file contents into {tmp_archive_path}"
                     )
                     with open(tmp_archive_path, "wb") as f:
                         f.write(tar_gz_file.contents)
