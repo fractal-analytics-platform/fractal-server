@@ -134,7 +134,7 @@ async def test_collect_local_pixi_missing_pixi(
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
 
-    # Run background task\
+    # Run background task
     collect_local_pixi(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
