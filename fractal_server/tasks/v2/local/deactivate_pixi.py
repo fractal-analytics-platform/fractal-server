@@ -56,7 +56,7 @@ def deactivate_local_pixi(
                 logger.debug(f"task_group.{key}: {value}")
 
             source_dir = Path(task_group.path, SOURCE_DIR_NAME)
-            # Check that the (local) task_group venv_path does exist
+            # Check that the (local) task_group source_dir does exist
             if not source_dir.exists():
                 error_msg = f"'{source_dir.as_posix()}' does not exist."
                 logger.error(error_msg)
