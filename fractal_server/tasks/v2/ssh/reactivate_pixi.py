@@ -104,6 +104,7 @@ def reactivate_ssh_pixi(
                             task_group.pkg_name.replace("-", "_"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
+                        ("__FROZEN_OPTION__", "true"),
                     }
 
                     logger.info("installing - START")
@@ -137,6 +138,20 @@ def reactivate_ssh_pixi(
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
+
+                    pixi_lock_local = Path(tmpdir, "pixi.lock").as_posix()
+                    pixi_lock_remote = Path(
+                        task_group.path, SOURCE_DIR_NAME, "pixi.lock"
+                    ).as_posix()
+                    logger.info(
+                        f"Write `env_info` contents into {pixi_lock_local}"
+                    )
+                    with open(pixi_lock_local, "w") as f:
+                        f.write(task_group.env_info)
+                    fractal_ssh.send_file(
+                        local=pixi_lock_local,
+                        remote=pixi_lock_remote,
+                    )
 
                     _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
