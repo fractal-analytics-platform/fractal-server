@@ -75,9 +75,8 @@ def collect_local_pixi(
                 )
                 return
 
-            # Set `pixi_bin` and check that it exists
+            # Set `pixi_home`
             pixi_home = settings.pixi.versions[task_group.pixi_version]
-            pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
 
             try:
                 Path(task_group.path).mkdir(parents=True)
@@ -126,6 +125,9 @@ def collect_local_pixi(
                 package_root = parsed_output["package_root"]
                 venv_size = parsed_output["venv_size"]
                 venv_file_number = parsed_output["venv_file_number"]
+                project_python_wrapper = parsed_output[
+                    "project_python_wrapper"
+                ]
 
                 # Read and validate manifest
                 # NOTE: we are only supporting the manifest path being relative
@@ -145,14 +147,7 @@ def collect_local_pixi(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
                     package_root=Path(package_root),
-                    pixi_bin=pixi_bin,
-                    pixi_manifest_path=(
-                        Path(
-                            task_group.path,
-                            SOURCE_DIR_NAME,
-                            "pyproject.toml",
-                        ).as_posix()
-                    ),
+                    project_python_wrapper=Path(project_python_wrapper),
                 )
                 check_task_files_exist(task_list=task_list)
                 logger.info("_prepare_tasks_metadata - end")

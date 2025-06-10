@@ -61,6 +61,10 @@ async def test_task_collection_ssh_pixi(
         ),
     )
 
+    import time
+
+    time.sleep(1000)
+
     user_settings_dict = dict(
         ssh_host=slurmlogin_ip,
         ssh_username=SLURM_USER,
