@@ -130,7 +130,7 @@ def reactivate_ssh_pixi(
                         fractal_ssh=fractal_ssh,
                     )
 
-                    # Run the three pixi-related scripts
+                    # Run script 1 - extract tar.gz into `source_dir`
                     _customize_and_run_template(
                         template_filename="pixi_1_extract.sh",
                         replacements=replacements,
@@ -139,6 +139,7 @@ def reactivate_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
+                    # Write pixi.lock into `source_dir`
                     pixi_lock_local = Path(tmpdir, "pixi.lock").as_posix()
                     pixi_lock_remote = Path(
                         task_group.path, SOURCE_DIR_NAME, "pixi.lock"
@@ -153,6 +154,7 @@ def reactivate_ssh_pixi(
                         remote=pixi_lock_remote,
                     )
 
+                    # Run script 2 - run pixi-install command
                     _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
@@ -161,6 +163,7 @@ def reactivate_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
+                    # Run script 3 - post-install
                     _customize_and_run_template(
                         template_filename="pixi_3_post_install.sh",
                         replacements=replacements,
@@ -170,12 +173,13 @@ def reactivate_ssh_pixi(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Finalize (write metadata to DB)
-                    logger.info("finalising - START")
                     activity.status = TaskGroupActivityStatusV2.OK
                     activity.timestamp_ended = get_timestamp()
                     activity = add_commit_refresh(obj=activity, db=db)
-                    logger.info("finalising - END")
+                    task_group.active = True
+                    task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info("END")
+
                     reset_logger_handlers(logger)
 
                 except Exception as reactivate_e:

@@ -128,7 +128,7 @@ def reactivate_local_pixi(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 3
+                # Run script 3 - post-install
                 _customize_and_run_template(
                     template_filename="pixi_3_post_install.sh",
                     **common_args,
