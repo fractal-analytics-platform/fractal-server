@@ -73,9 +73,6 @@ def collect_local_pixi(
                 )
                 return
 
-            # Set `pixi_home`
-            pixi_home = settings.pixi.versions[task_group.pixi_version]
-
             try:
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
@@ -90,7 +87,10 @@ def collect_local_pixi(
 
                 common_args = dict(
                     replacements={
-                        ("__PIXI_HOME__", pixi_home),
+                        (
+                            "__PIXI_HOME__",
+                            settings.pixi.versions[task_group.pixi_version],
+                        ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", archive_path),
                         (

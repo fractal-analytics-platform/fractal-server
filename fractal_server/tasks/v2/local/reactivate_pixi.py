@@ -1,6 +1,5 @@
-import shlex
 import shutil
-import subprocess  # nosec
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -9,13 +8,16 @@ from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import get_current_log
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
 
@@ -76,42 +78,52 @@ def reactivate_local_pixi(
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.debug("start - writing pixi lock")
-                with open(f"{task_group.path}/pixi.lock", "w") as f:
+                logger.debug(f"start - writing {source_dir}/pixi.lock")
+                with Path(source_dir, "pixi.lock").open() as f:
                     f.write(task_group.env_info)
-                logger.debug("end - writing pixi lock")
-
-                subprocess.run(  # nosec
-                    shlex.split(
-                        f"tar xz -f {task_group.archive_path} "
-                        f"{Path(task_group.archive_path).name}"
-                    ),
-                    encoding="utf-8",
-                    cwd=task_group.path,
-                )
-
-                subprocess.run(  # nosec
-                    shlex.split(
-                        f"mv {Path(task_group.archive_path).name} {source_dir}"
-                    ),
-                    encoding="utf-8",
-                    cwd=task_group.path,
-                )
+                logger.debug(f"end - writing {source_dir}/pixi.lock")
 
                 settings = Inject(get_settings)
-                pixi_home = settings.pixi.versions[task_group.pixi_version]
-                pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
-
-                logger.debug("start - pixi install")
-                subprocess.run(  # nosec
-                    shlex.split(
-                        f"{pixi_bin} install "
-                        f"--manifest-path {source_dir}/pyproject.toml --frozen"
+                common_args = dict(
+                    replacements={
+                        (
+                            "__PIXI_HOME__",
+                            settings.pixi.versions[task_group.pixi_version],
+                        ),
+                        ("__PACKAGE_DIR__", task_group.path),
+                        ("__TAR_GZ_PATH__", task_group.archive_path),
+                        (
+                            "__IMPORT_PACKAGE_NAME__",
+                            task_group.pkg_name.replace("-", "_"),
+                        ),
+                        ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
+                        ("__FROZEN_OPTION__", "true"),
+                    },
+                    script_dir=Path(
+                        task_group.path, SCRIPTS_SUBFOLDER
+                    ).as_posix(),
+                    prefix=(
+                        f"{int(time.time())}_"
+                        f"{TaskGroupActivityActionV2.REACTIVATE}_"
                     ),
-                    encoding="utf-8",
-                    cwd=task_group.path,
+                    logger_name=LOGGER_NAME,
                 )
-                logger.debug("end - pixi install")
+
+                # Run script 1
+                _customize_and_run_template(
+                    template_filename="pixi_1_extract.sh",
+                    **common_args,
+                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                # Run script 2
+                _customize_and_run_template(
+                    template_filename="pixi_2_install.sh",
+                    **common_args,
+                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
 
                 activity.log = get_current_log(log_file_path)
                 activity.status = TaskGroupActivityStatusV2.OK
