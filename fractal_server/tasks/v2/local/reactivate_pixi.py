@@ -79,7 +79,7 @@ def reactivate_local_pixi(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 logger.debug(f"start - writing {source_dir}/pixi.lock")
-                with Path(source_dir, "pixi.lock").open() as f:
+                with Path(source_dir, "pixi.lock").open("w") as f:
                     f.write(task_group.env_info)
                 logger.debug(f"end - writing {source_dir}/pixi.lock")
 
