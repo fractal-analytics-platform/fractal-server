@@ -231,14 +231,14 @@ def collect_ssh_pixi(
 
                     # NOTE: see issue 2626 about whether to keep `pixi.lock`
                     # files in the database
-                    # FIXME: Read remote file
-                    pixi_lock_contents = ""
-                    # with Path(
-                    #     task_group.path,
-                    #     SOURCE_DIR_NAME,
-                    #     "pixi.lock",
-                    # ).open() as f:
-                    #     pixi_lock_contents = f.read()
+                    remote_pixi_lock_file = Path(
+                        task_group.path,
+                        SOURCE_DIR_NAME,
+                        "pixi.lock",
+                    ).as_posix()
+                    pixi_lock_contents = fractal_ssh.read_remote_text_file(
+                        remote_pixi_lock_file
+                    )
 
                     # Update task_group data
                     logger.info(
