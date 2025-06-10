@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import TypeVar
 
@@ -22,6 +23,24 @@ def add_commit_refresh(*, obj: T, db: DBSyncSession) -> T:
     db.commit()
     db.refresh(obj)
     return obj
+
+
+def get_activity_and_task_group(
+    *,
+    task_group_activity_id: int,
+    task_group_id: int,
+    db: DBSyncSession,
+) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2]:
+    task_group = db.get(TaskGroupV2, task_group_id)
+    activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+    if activity is None or task_group is None:
+        logging.error(
+            "Cannot find database rows with "
+            f"{task_group_id=} and {task_group_activity_id=}:\n"
+            f"{task_group=}\n{activity=}. Exit."
+        )
+        return False, None, None
+    return True, task_group, activity
 
 
 def fail_and_cleanup(

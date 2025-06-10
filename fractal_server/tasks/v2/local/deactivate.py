@@ -1,4 +1,3 @@
-import logging
 import shutil
 import time
 from pathlib import Path
@@ -6,11 +5,10 @@ from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
+from ..utils_background import get_activity_and_task_group
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
@@ -49,17 +47,12 @@ def deactivate_local(
         )
 
         with next(get_sync_db()) as db:
-
-            # Get main objects from db
-            activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-            task_group = db.get(TaskGroupV2, task_group_id)
-            if activity is None or task_group is None:
-                # Use `logging` directly
-                logging.error(
-                    "Cannot find database rows with "
-                    f"{task_group_id=} and {task_group_activity_id=}:\n"
-                    f"{task_group=}\n{activity=}. Exit."
-                )
+            success, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+            )
+            if not success:
                 return
 
             # Log some info
