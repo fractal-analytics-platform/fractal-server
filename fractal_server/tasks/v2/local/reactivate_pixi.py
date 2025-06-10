@@ -104,7 +104,7 @@ def reactivate_local_pixi(
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.REACTIVATE}_"
+                        f"{TaskGroupActivityActionV2.REACTIVATE}"
                     ),
                     logger_name=LOGGER_NAME,
                 )
