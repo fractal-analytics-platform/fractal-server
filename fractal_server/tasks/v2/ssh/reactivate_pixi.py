@@ -1,14 +1,25 @@
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
+from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
+from fractal_server.tasks.v2.utils_background import add_commit_refresh
+from fractal_server.tasks.v2.utils_background import get_current_log
+from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.utils import get_timestamp
 
 
 def reactivate_ssh_pixi(
@@ -79,8 +90,77 @@ def reactivate_ssh_pixi(
                     return
 
                 try:
-                    raise NotImplementedError("pixi-task reactivation FIXME")
 
+                    settings = Inject(get_settings)
+                    replacements = {
+                        (
+                            "__PIXI_HOME__",
+                            settings.pixi.versions[task_group.pixi_version],
+                        ),
+                        ("__PACKAGE_DIR__", task_group.path),
+                        ("__TAR_GZ_PATH__", task_group.archive_path),
+                        (
+                            "__IMPORT_PACKAGE_NAME__",
+                            task_group.pkg_name.replace("-", "_"),
+                        ),
+                        ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
+                    }
+
+                    logger.info("installing - START")
+
+                    # Set status to ONGOING and refresh logs
+                    activity.status = TaskGroupActivityStatusV2.ONGOING
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    script_dir_remote = Path(
+                        task_group.path, SCRIPTS_SUBFOLDER
+                    ).as_posix()
+                    common_args = dict(
+                        script_dir_local=(
+                            Path(tmpdir) / SCRIPTS_SUBFOLDER
+                        ).as_posix(),
+                        script_dir_remote=script_dir_remote,
+                        prefix=(
+                            f"{int(time.time())}_"
+                            f"{TaskGroupActivityActionV2.REACTIVATE}"
+                        ),
+                        logger_name=LOGGER_NAME,
+                        fractal_ssh=fractal_ssh,
+                    )
+
+                    # Run the three pixi-related scripts
+                    _customize_and_run_template(
+                        template_filename="pixi_1_extract.sh",
+                        replacements=replacements,
+                        **common_args,
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    _customize_and_run_template(
+                        template_filename="pixi_2_install.sh",
+                        replacements=replacements,
+                        **common_args,
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    _customize_and_run_template(
+                        template_filename="pixi_3_post_install.sh",
+                        replacements=replacements,
+                        **common_args,
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    # Finalize (write metadata to DB)
+                    logger.info("finalising - START")
+                    activity.status = TaskGroupActivityStatusV2.OK
+                    activity.timestamp_ended = get_timestamp()
+                    activity = add_commit_refresh(obj=activity, db=db)
+                    logger.info("finalising - END")
+                    logger.info("END")
                     reset_logger_handlers(logger)
 
                 except Exception as reactivate_e:

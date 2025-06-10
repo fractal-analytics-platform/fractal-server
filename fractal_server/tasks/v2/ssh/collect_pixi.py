@@ -120,8 +120,8 @@ def collect_ssh_pixi(
                     # folders (note that because of `parents=True` we  are in
                     # the `no error if existing, make parent directories as
                     # needed` scenario for `mkdir`)
-                    script_dir_remote = (
-                        Path(task_group.path) / SCRIPTS_SUBFOLDER
+                    script_dir_remote = Path(
+                        task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix()
                     fractal_ssh.mkdir(folder=task_group.path, parents=True)
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
@@ -145,12 +145,12 @@ def collect_ssh_pixi(
                     task_group.archive_path = archive_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
-                    # Set `pixi_bin`
                     settings = Inject(get_settings)
-                    pixi_home = settings.pixi.versions[task_group.pixi_version]
-
                     replacements = {
-                        ("__PIXI_HOME__", pixi_home),
+                        (
+                            "__PIXI_HOME__",
+                            settings.pixi.versions[task_group.pixi_version],
+                        ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", archive_path),
                         (
