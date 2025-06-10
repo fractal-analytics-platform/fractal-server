@@ -154,7 +154,6 @@ def collect_ssh_pixi(
                     # Set `pixi_bin`
                     settings = Inject(get_settings)
                     pixi_home = settings.pixi.versions[task_group.pixi_version]
-                    pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
 
                     replacements = {
                         ("__PIXI_HOME__", pixi_home),
@@ -196,6 +195,9 @@ def collect_ssh_pixi(
                     package_root_remote = parsed_output["package_root"]
                     venv_size = parsed_output["venv_size"]
                     venv_file_number = parsed_output["venv_file_number"]
+                    project_python_wrapper = parsed_output[
+                        "project_python_wrapper"
+                    ]
 
                     # Read and validate remote manifest file
                     manifest_path_remote = (
@@ -213,14 +215,7 @@ def collect_ssh_pixi(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
-                        pixi_bin=pixi_bin,
-                        pixi_manifest_path=(
-                            Path(
-                                task_group.path,
-                                SOURCE_DIR_NAME,
-                                "pyproject.toml",
-                            ).as_posix()
-                        ),
+                        project_python_wrapper=Path(project_python_wrapper),
                     )
                     logger.info("_prepare_tasks_metadata - end")
 
@@ -237,7 +232,7 @@ def collect_ssh_pixi(
                     # NOTE: see issue 2626 about whether to keep `pixi.lock`
                     # files in the database
                     # FIXME: Read remote file
-                    pixi_lock_contents = "FIXME\n"
+                    pixi_lock_contents = ""
                     # with Path(
                     #     task_group.path,
                     #     SOURCE_DIR_NAME,
