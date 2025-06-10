@@ -8,8 +8,6 @@ write_log(){
 # Replacements
 PIXI_HOME="__PIXI_HOME__"
 PACKAGE_DIR="__PACKAGE_DIR__"
-TAR_GZ_PATH="__TAR_GZ_PATH__"
-IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 FROZEN_OPTION="__FROZEN_OPTION__"
 
@@ -21,9 +19,6 @@ PACKAGE_DIR=${PACKAGE_DIR%/}
 PIXI_EXECUTABLE="${PIXI_HOME}/bin/pixi"
 SOURCE_DIR="${PACKAGE_DIR}/${SOURCE_DIR_NAME}"
 PYPROJECT_TOML="${SOURCE_DIR}/pyproject.toml"
-ACTIVATION_FILE="${SOURCE_DIR}/activate_project.sh"
-PROJECT_PYTHON_WRAPPER="${SOURCE_DIR}/project_python.sh"
-TAR_GZ_BASENAME=$(basename "${TAR_GZ_PATH}" ".tar.gz")
 
 # Pixi env variable
 export PIXI_HOME="${PIXI_HOME}"
@@ -44,7 +39,11 @@ if [[ "${FROZEN_OPTION}" == "true" ]]; then
   FROZEN_FLAG="--frozen"
 fi
 
-write_log "START '${PIXI_EXECUTABLE} install ${FROZEN_OPTION} --manifest-path ${PYPROJECT_TOML}'"
-${PIXI_EXECUTABLE} install --manifest-path "${PYPROJECT_TOML}" ${FROZEN_FLAG}
-write_log "END   '${PIXI_EXECUTABLE} install ${FROZEN_OPTION} --manifest-path ${PYPROJECT_TOML}'"
+write_log "START '${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path ${PYPROJECT_TOML}'"
+${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path "${PYPROJECT_TOML}"
+write_log "END   '${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path ${PYPROJECT_TOML}'"
+echo
+
+write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
+write_log "All ok, exit."
 echo
