@@ -66,5 +66,9 @@ ENV_FILE_NUMBER=$(find "${PACKAGE_DIR}" -type f | wc -l)
 write_log "Disk usage: $ENV_DISK_USAGE"
 write_log "Number of files: $ENV_FILE_NUMBER"
 
+write_log "START chmod 755 $SOURCE_DIR -R"
+chmod 755 "$SOURCE_DIR" -R
+write_log "END chmod 755 $SOURCE_DIR -R"
+
 write_log "All ok, exit."
 echo
