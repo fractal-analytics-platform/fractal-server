@@ -80,11 +80,6 @@ def reactivate_local_pixi(
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.debug(f"start - writing {source_dir}/pixi.lock")
-                with Path(source_dir, "pixi.lock").open("w") as f:
-                    f.write(task_group.env_info)
-                logger.debug(f"end - writing {source_dir}/pixi.lock")
-
                 settings = Inject(get_settings)
                 common_args = dict(
                     replacements={
@@ -111,7 +106,7 @@ def reactivate_local_pixi(
                     logger_name=LOGGER_NAME,
                 )
 
-                # Run script 1
+                # Run script 1 - extract tar.gz into `source_dir`
                 _customize_and_run_template(
                     template_filename="pixi_1_extract.sh",
                     **common_args,
@@ -119,7 +114,13 @@ def reactivate_local_pixi(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 2
+                # Write pixi.lock into `source_dir`
+                logger.debug(f"start - writing {source_dir}/pixi.lock")
+                with Path(source_dir, "pixi.lock").open("w") as f:
+                    f.write(task_group.env_info)
+                logger.debug(f"end - writing {source_dir}/pixi.lock")
+
+                # Run script 2 - run pixi-install command
                 _customize_and_run_template(
                     template_filename="pixi_2_install.sh",
                     **common_args,
