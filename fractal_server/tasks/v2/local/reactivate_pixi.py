@@ -58,9 +58,9 @@ def reactivate_local_pixi(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            SOURCE_DIR = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
-            if Path(SOURCE_DIR).exists():
-                error_msg = f"{SOURCE_DIR} already exists."
+            source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+            if Path(source_dir).exists():
+                error_msg = f"{source_dir} already exists."
                 logger.error(error_msg)
                 fail_and_cleanup(
                     task_group=task_group,
@@ -72,23 +72,6 @@ def reactivate_local_pixi(
                 )
                 return
 
-            subprocess.run(  # nosec
-                shlex.split(
-                    f"tar xz -f {task_group.archive_path} "
-                    f"{Path(task_group.archive_path).name}"
-                ),
-                encoding="utf-8",
-                cwd=task_group.path,
-            )
-
-            subprocess.run(  # nosec
-                shlex.split(
-                    f"mv {Path(task_group.archive_path).name} {SOURCE_DIR}"
-                ),
-                encoding="utf-8",
-                cwd=task_group.path,
-            )
-
             try:
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
@@ -98,6 +81,23 @@ def reactivate_local_pixi(
                     f.write(task_group.env_info)
                 logger.debug("end - writing pixi lock")
 
+                subprocess.run(  # nosec
+                    shlex.split(
+                        f"tar xz -f {task_group.archive_path} "
+                        f"{Path(task_group.archive_path).name}"
+                    ),
+                    encoding="utf-8",
+                    cwd=task_group.path,
+                )
+
+                subprocess.run(  # nosec
+                    shlex.split(
+                        f"mv {Path(task_group.archive_path).name} {source_dir}"
+                    ),
+                    encoding="utf-8",
+                    cwd=task_group.path,
+                )
+
                 settings = Inject(get_settings)
                 pixi_home = settings.pixi.versions[task_group.pixi_version]
                 pixi_bin = Path(pixi_home, "bin/pixi").as_posix()
@@ -106,7 +106,7 @@ def reactivate_local_pixi(
                 subprocess.run(  # nosec
                     shlex.split(
                         f"{pixi_bin} install "
-                        f"--manifest-path {SOURCE_DIR}/pyproject.toml --frozen"
+                        f"--manifest-path {source_dir}/pyproject.toml --frozen"
                     ),
                     encoding="utf-8",
                     cwd=task_group.path,
@@ -124,11 +124,11 @@ def reactivate_local_pixi(
                 reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
-                # Delete corrupted task_group.path
+                # Delete corrupted source_dir
                 try:
-                    logger.info(f"Now delete folder {task_group.path}")
-                    shutil.rmtree(SOURCE_DIR)
-                    logger.info(f"Deleted folder {task_group.path}")
+                    logger.info(f"Now delete folder {source_dir}")
+                    shutil.rmtree(source_dir)
+                    logger.info(f"Deleted folder {source_dir}")
                 except Exception as rm_e:
                     logger.error(
                         "Removing folder failed.\n"

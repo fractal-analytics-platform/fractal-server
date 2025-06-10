@@ -55,9 +55,9 @@ def deactivate_local_pixi(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            SOURCE_DIR = Path(task_group.path, SOURCE_DIR_NAME)
-            if not SOURCE_DIR.exists():
-                error_msg = f"'{SOURCE_DIR.as_posix()}' does not exist."
+            source_dir = Path(task_group.path, SOURCE_DIR_NAME)
+            if not source_dir.exists():
+                error_msg = f"'{source_dir.as_posix()}' does not exist."
                 logger.error(error_msg)
                 fail_and_cleanup(
                     task_group=task_group,
@@ -80,9 +80,9 @@ def deactivate_local_pixi(
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Proceed with deactivation
-                logger.info(f"Now removing '{SOURCE_DIR.as_posix()}'.")
-                shutil.rmtree(SOURCE_DIR)
-                logger.info(f"All good, '{SOURCE_DIR.as_posix()}' removed.")
+                logger.info(f"Now removing '{source_dir.as_posix()}'.")
+                shutil.rmtree(source_dir)
+                logger.info(f"All good, '{source_dir.as_posix()}' removed.")
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.log = get_current_log(log_file_path)
                 activity.timestamp_ended = get_timestamp()
