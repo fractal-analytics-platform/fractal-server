@@ -36,6 +36,10 @@ cd "$PACKAGE_DIR"
 write_log "Changed working directory to $PACKAGE_DIR"
 
 
+### UP TO HERE IT IS COMMON TO BOTH SCRIPTS
+
+
+
 write_log "START 'tar xz -f $TAR_GZ_PATH $TAR_GZ_BASENAME'"
 tar xz -f "$TAR_GZ_PATH" "$TAR_GZ_BASENAME"
 write_log "END   'tar xz -f $TAR_GZ_PATH $TAR_GZ_BASENAME'"
@@ -50,10 +54,24 @@ TIME_END_TAR=$(date +%s)
 write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
 echo
 
-write_log "START '$PIXI_EXECUTABLE install --manifest-path $PYPROJECT_TOML'"
-${PIXI_EXECUTABLE} install --manifest-path "$PYPROJECT_TOML"
-write_log "END   '$PIXI_EXECUTABLE install --manifest-path $PYPROJECT_TOML'"
+
+### END OF pixi_1_extract_tar_gz.sh
+
+
+## START of pixi_2_install.sh
+
+#(with additional replacement `FROZEN_OPTION="__FROZEN_OPTION__"` set to "" or "--frozen")
+
+write_log "START '$PIXI_EXECUTABLE install $FROZEN_OPTION --manifest-path $PYPROJECT_TOML'"
+${PIXI_EXECUTABLE} install "$FROZEN_OPTION" --manifest-path "$PYPROJECT_TOML"
+write_log "END   '$PIXI_EXECUTABLE install $FROZEN_OPTION --manifest-path $PYPROJECT_TOML'"
 echo
+
+
+### END OF  pixi_2_install.sh
+
+
+## START OF pixi_3_post_pixi_install.sh
 
 write_log "START '$PIXI_EXECUTABLE shell-hook --manifest-path $PYPROJECT_TOML'"
 ${PIXI_EXECUTABLE} shell-hook --manifest-path "$PYPROJECT_TOML" > "$ACTIVATION_FILE"
