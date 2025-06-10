@@ -80,7 +80,9 @@ def collect_ssh_pixi(
 
                 # Log some info
                 logger.info("START")
-                for key, value in task_group.model_dump().items():
+                for key, value in task_group.model_dump(
+                    exclude={"env_info"}
+                ).items():
                     logger.debug(f"task_group.{key}: {value}")
 
                 # Check that SSH connection works
@@ -130,9 +132,7 @@ def collect_ssh_pixi(
                     archive_path = (
                         Path(task_group.path) / tar_gz_filename
                     ).as_posix()
-                    tmp_archive_path = (
-                        Path(tmpdir) / tar_gz_filename
-                    ).as_posix()
+                    tmp_archive_path = Path(tmpdir, tar_gz_filename).as_posix()
                     logger.info(
                         f"Write tar.gz-file contents into {tmp_archive_path}"
                     )
@@ -176,8 +176,8 @@ def collect_ssh_pixi(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityActionV2.COLLECT}"
                         ),
-                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
+                        fractal_ssh=fractal_ssh,
                     )
 
                     # Run the three pixi-related scripts

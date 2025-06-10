@@ -57,7 +57,9 @@ def reactivate_local_pixi(
             # Log some info
             logger.debug("START")
 
-            for key, value in task_group.model_dump().items():
+            for key, value in task_group.model_dump(
+                exclude={"env_info"}
+            ).items():
                 logger.debug(f"task_group.{key}: {value}")
 
             source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()

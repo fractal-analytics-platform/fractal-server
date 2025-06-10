@@ -57,7 +57,9 @@ def collect_local_pixi(
                 return
 
             logger.info("START")
-            for key, value in task_group.model_dump().items():
+            for key, value in task_group.model_dump(
+                exclude={"env_info"}
+            ).items():
                 logger.debug(f"task_group.{key}: {value}")
 
             if Path(task_group.path).exists():
