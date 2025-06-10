@@ -14,8 +14,6 @@ from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 from tests.fixtures_slurm import SLURM_USER
 
-PREFIX = "api/v2/task"
-
 
 def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
     """
@@ -62,7 +60,7 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
 
 @pytest.mark.container
 @pytest.mark.ssh
-async def test_task_group_lifecycle_ssh_pixi(
+async def test_task_group_lifecycle_pixi_ssh(
     db,
     app,
     client,
@@ -119,7 +117,7 @@ async def test_task_group_lifecycle_ssh_pixi(
     ):
         # Successful collection
         res = await client.post(
-            f"{PREFIX}/collect/pixi/",
+            "api/v2/task/collect/pixi/",
             data={},
             files=files,
         )
@@ -132,19 +130,24 @@ async def test_task_group_lifecycle_ssh_pixi(
         )
         assert res.status_code == 200
         task_group_activity = res.json()
+        assert task_group_activity["log"] is not None
+        assert task_group_activity["timestamp_ended"] is not None
         assert task_group_activity["status"] == "OK"
-        task_groupv2_id = task_group_activity["taskgroupv2_id"]
-        # Check env_info attribute in TaskGroupV2
+        task_group_id = task_group_activity["taskgroupv2_id"]
+        res = await client.get(f"/api/v2/task-group/{task_group_id}/")
+
+        # Check `TaskGroupV2.env_info` (note: it is not part of the
+        # API response)
         db.expunge_all()
-        task_group = await db.get(TaskGroupV2, task_groupv2_id)
+        task_group = await db.get(TaskGroupV2, task_group_id)
         assert len(task_group.task_list) == 1
-        # Check venv_size and venv_file_number in TaskGroupV2
         assert task_group.venv_size_in_kB is not None
         assert task_group.venv_file_number is not None
+        assert task_group.env_info is not None
 
         # Failed collection - due to non-duplication constraint
         res = await client.post(
-            f"{PREFIX}/collect/pixi/",
+            "api/v2/task/collect/pixi/",
             data={},
             files=files,
         )
@@ -153,7 +156,7 @@ async def test_task_group_lifecycle_ssh_pixi(
 
         # Successful deactivation
         res = await client.post(
-            f"/api/v2/task-group/{task_groupv2_id}/deactivate/",
+            f"/api/v2/task-group/{task_group_id}/deactivate/",
             data={},
         )
         assert res.status_code == 202
@@ -171,7 +174,7 @@ async def test_task_group_lifecycle_ssh_pixi(
         fake_remote_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
         fractal_ssh.mkdir(folder=fake_remote_dir)  # Create fake folder
         res = await client.post(
-            f"/api/v2/task-group/{task_groupv2_id}/reactivate/",
+            f"/api/v2/task-group/{task_group_id}/reactivate/",
             data={},
         )
         assert res.status_code == 202
@@ -190,7 +193,7 @@ async def test_task_group_lifecycle_ssh_pixi(
 
         # Successful reactivation
         res = await client.post(
-            f"/api/v2/task-group/{task_groupv2_id}/reactivate/",
+            f"/api/v2/task-group/{task_group_id}/reactivate/",
             data={},
         )
         assert res.status_code == 202

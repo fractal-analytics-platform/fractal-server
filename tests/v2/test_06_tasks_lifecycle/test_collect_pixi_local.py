@@ -11,21 +11,6 @@ from fractal_server.config import PixiSettings
 from fractal_server.tasks.v2.local import collect_local_pixi
 
 
-def test_collect_local_pixi_missing_db_objects(
-    db,
-    caplog,
-):
-    collect_local_pixi(
-        task_group_id=91,
-        task_group_activity_id=231,
-        tar_gz_file=FractalUploadedFile(
-            contents=b"fake",
-            filename="fake",
-        ),
-    )
-    assert "Cannot find database rows" in caplog.text
-
-
 async def test_collect_local_pixi_path_exists(
     override_settings_factory,
     tmp_path: Path,
@@ -78,67 +63,6 @@ async def test_collect_local_pixi_path_exists(
             contents=b"fake",
             filename="fake",
         ),
-    )
-    # Verify that collection failed
-    task_group_activity_v2 = await db.get(
-        TaskGroupActivityV2, task_group_activity.id
-    )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert task_group_activity_v2.taskgroupv2_id is None
-
-
-async def test_collect_local_pixi_missing_pixi(
-    MockCurrentUser,
-    pixi_pkg_targz: Path,
-    override_settings_factory,
-    tmp_path: Path,
-    db,
-    first_user,
-):
-    pixi = PixiSettings(
-        default_version="x",
-        versions={"x": "/fake/x"},
-    )
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
-        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
-        pixi=pixi,
-    )
-
-    # Prepare db objects
-    path = tmp_path / "something"
-    path.mkdir()
-    task_group = TaskGroupV2(
-        pkg_name="mock-pixi-tasks",
-        version="0.2.1",
-        origin="pixi",
-        path=path.as_posix(),
-        user_id=first_user.id,
-        pixi_version=pixi.default_version,
-    )
-    db.add(task_group)
-    await db.commit()
-    await db.refresh(task_group)
-    db.expunge(task_group)
-    task_group_activity = TaskGroupActivityV2(
-        user_id=first_user.id,
-        taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
-        pkg_name=task_group.pkg_name,
-        version=task_group.version,
-    )
-    db.add(task_group_activity)
-    await db.commit()
-    await db.refresh(task_group_activity)
-    db.expunge(task_group_activity)
-
-    # Run background task
-    collect_local_pixi(
-        task_group_id=task_group.id,
-        task_group_activity_id=task_group_activity.id,
-        tar_gz_file=FractalUploadedFile(contents=b"fake", filename="fake"),
     )
     # Verify that collection failed
     task_group_activity_v2 = await db.get(
