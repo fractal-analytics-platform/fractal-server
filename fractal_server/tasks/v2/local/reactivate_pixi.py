@@ -124,11 +124,11 @@ def reactivate_local_pixi(
                 reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
-                # Delete corrupted task_group.path
+                # Delete corrupted source_dir
                 try:
-                    logger.info(f"Now delete folder {task_group.path}")
+                    logger.info(f"Now delete folder {source_dir}")
                     shutil.rmtree(source_dir)
-                    logger.info(f"Deleted folder {task_group.path}")
+                    logger.info(f"Deleted folder {source_dir}")
                 except Exception as rm_e:
                     logger.error(
                         "Removing folder failed.\n"
