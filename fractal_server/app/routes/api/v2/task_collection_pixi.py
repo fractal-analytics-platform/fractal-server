@@ -107,7 +107,7 @@ async def collect_task_pixi(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Pixi version {pixi_version} is not available. Available"
+                    f"Pixi version {pixi_version} is not available. Available "
                     f"versions: {list(settings.pixi.versions.keys())}"
                 ),
             )
