@@ -100,7 +100,7 @@ def deactivate_local(
                         ).as_posix(),
                         prefix=(
                             f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.DEACTIVATE}_"
+                            f"{TaskGroupActivityActionV2.DEACTIVATE}"
                         ),
                         logger_name=LOGGER_NAME,
                     )

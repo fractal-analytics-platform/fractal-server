@@ -31,7 +31,7 @@ def _customize_and_run_template(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
 
-    script_filename = f"{prefix}{template_filename}"
+    script_filename = f"{prefix}_{template_filename}"
     script_path_local = Path(script_dir) / script_filename
     # Read template
     customize_template(
