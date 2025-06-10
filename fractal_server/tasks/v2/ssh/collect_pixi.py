@@ -294,7 +294,7 @@ def collect_ssh_pixi(
                     except Exception as e_rm:
                         logger.error(
                             "Removing folder failed. "
-                            f"Original error:\n{str(e_rm)}"
+                            f"Original error: {str(e_rm)}"
                         )
                     fail_and_cleanup(
                         task_group=task_group,

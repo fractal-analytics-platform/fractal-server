@@ -215,17 +215,14 @@ def collect_local_pixi(
                 reset_logger_handlers(logger)
 
             except Exception as collection_e:
-                # Delete corrupted package dir
                 try:
                     logger.info(f"Now delete folder {task_group.path}")
                     shutil.rmtree(task_group.path)
                     logger.info(f"Deleted folder {task_group.path}")
                 except Exception as rm_e:
                     logger.error(
-                        "Removing folder failed.\n"
-                        f"Original error:\n{str(rm_e)}"
+                        f"Removing folder failed. Original error: {str(rm_e)}"
                     )
-
                 fail_and_cleanup(
                     task_group=task_group,
                     task_group_activity=activity,
