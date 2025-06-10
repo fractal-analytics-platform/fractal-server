@@ -63,7 +63,7 @@ echo
 #(with additional replacement `FROZEN_OPTION="__FROZEN_OPTION__"` set to "" or "--frozen")
 
 write_log "START '$PIXI_EXECUTABLE install $FROZEN_OPTION --manifest-path $PYPROJECT_TOML'"
-${PIXI_EXECUTABLE} install "$FROZEN_OPTION" --manifest-path "$PYPROJECT_TOML"
+${PIXI_EXECUTABLE} install --manifest-path "$PYPROJECT_TOML"
 write_log "END   '$PIXI_EXECUTABLE install $FROZEN_OPTION --manifest-path $PYPROJECT_TOML'"
 echo
 
