@@ -8,8 +8,8 @@ write_log(){
 # Replacements
 PIXI_HOME="__PIXI_HOME__"
 PACKAGE_DIR="__PACKAGE_DIR__"
-IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
+IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
 
 # Strip trailing `/` from `PACKAGE_DIR`
 PIXI_HOME=${PIXI_HOME%/}
@@ -32,7 +32,6 @@ TIME_START=$(date +%s)
 
 cd "${PACKAGE_DIR}"
 write_log "Changed working directory to ${PACKAGE_DIR}"
-
 
 # -----------------------------------------------------------------------------
 
@@ -75,6 +74,7 @@ write_log "START chmod 755 ${SOURCE_DIR} -R"
 chmod 755 "${SOURCE_DIR}" -R
 write_log "END chmod 755 ${SOURCE_DIR} -R"
 
-write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
+TIME_END=$(date +%s)
+write_log "Elapsed: $((TIME_END - TIME_START)) seconds"
 write_log "All ok, exit."
 echo

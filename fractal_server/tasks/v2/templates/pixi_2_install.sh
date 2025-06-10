@@ -25,12 +25,10 @@ export PIXI_HOME="${PIXI_HOME}"
 export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
-
 TIME_START=$(date +%s)
 
 cd "${PACKAGE_DIR}"
 write_log "Changed working directory to ${PACKAGE_DIR}"
-
 
 # -----------------------------------------------------------------------------
 
@@ -44,6 +42,7 @@ ${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path "${PYPROJECT_TOML}"
 write_log "END   '${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path ${PYPROJECT_TOML}'"
 echo
 
-write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
+TIME_END=$(date +%s)
+write_log "Elapsed: $((TIME_END - TIME_START)) seconds"
 write_log "All ok, exit."
 echo
