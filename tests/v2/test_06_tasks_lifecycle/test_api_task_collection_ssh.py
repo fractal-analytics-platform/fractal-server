@@ -277,13 +277,13 @@ async def test_task_collection_ssh_failure(
 
         monkeypatch.setattr(
             fractal_server.tasks.v2.ssh._utils.FractalSSH,
-            "remove_folder",
-            patched_remove_folder,
+            "send_file",
+            patched_send_file,
         )
         monkeypatch.setattr(
             fractal_server.tasks.v2.ssh._utils.FractalSSH,
-            "send_file",
-            patched_send_file,
+            "remove_folder",
+            patched_remove_folder,
         )
         res = await client.post(
             f"{PREFIX}/collect/pip/", data=payload, files=files
