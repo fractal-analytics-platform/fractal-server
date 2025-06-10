@@ -485,3 +485,20 @@ def test_closed_socket(
     assert fractal_ssh.remote_exists(remote_file_2)
 
     fractal_ssh.close()
+
+
+def test_read_remote_text_file(
+    fractal_ssh: FractalSSH,
+    tmp777_path: Path,
+):
+    filepath = (tmp777_path / "file").as_posix()
+    CONTENTS = "somethin\nelse"
+
+    # Failure
+    with pytest.raises(FileNotFoundError):
+        fractal_ssh.read_remote_text_file(filepath)
+
+    # Success
+    with open(filepath, "w") as f:
+        f.write(CONTENTS)
+    assert fractal_ssh.read_remote_text_file(filepath) == CONTENTS
