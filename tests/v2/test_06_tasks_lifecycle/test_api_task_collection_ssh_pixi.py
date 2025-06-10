@@ -11,6 +11,7 @@ from fractal_server.app.models import TaskGroupV2
 from fractal_server.config import PixiSettings
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
+from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
@@ -87,6 +88,7 @@ async def test_task_group_lifecycle_ssh_pixi(
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
+    fractal_ssh = fractal_ssh_list.get(**credentials)
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
@@ -115,7 +117,7 @@ async def test_task_group_lifecycle_ssh_pixi(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
     ):
-        # SUCCESSFUL COLLECTION
+        # Successful collection
         res = await client.post(
             f"{PREFIX}/collect/pixi/",
             data={},
@@ -139,7 +141,8 @@ async def test_task_group_lifecycle_ssh_pixi(
         # Check venv_size and venv_file_number in TaskGroupV2
         assert task_group.venv_size_in_kB is not None
         assert task_group.venv_file_number is not None
-        # API FAILURE 1, due to non-duplication constraint
+
+        # Failed collection - due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pixi/",
             data={},
@@ -147,3 +150,55 @@ async def test_task_group_lifecycle_ssh_pixi(
         )
         assert res.status_code == 422
         assert "already owns a task group" in str(res.json()["detail"])
+
+        # Successful deactivation
+        res = await client.post(
+            f"/api/v2/task-group/{task_groupv2_id}/deactivate/",
+            data={},
+        )
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        assert task_group_activity["status"] == "OK"
+        assert Path(task_group.archive_path).exists()
+        assert not Path(task_group.path, SOURCE_DIR_NAME).exists()
+
+        # Failed reactivation - (fake) folder already exists
+        fake_remote_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+        fractal_ssh.mkdir(folder=fake_remote_dir)  # Create fake folder
+        res = await client.post(
+            f"/api/v2/task-group/{task_groupv2_id}/reactivate/",
+            data={},
+        )
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        debug(task_group_activity)
+        assert task_group_activity["status"] == "failed"
+        fractal_ssh.remove_folder(  # Remove fake folder
+            folder=fake_remote_dir,
+            safe_root=task_group.path,
+        )
+
+        # Successful reactivation
+        res = await client.post(
+            f"/api/v2/task-group/{task_groupv2_id}/reactivate/",
+            data={},
+        )
+        assert res.status_code == 202
+        task_group_activity_id = res.json()["id"]
+        res = await client.get(
+            f"/api/v2/task-group/activity/{task_group_activity_id}/"
+        )
+        assert res.status_code == 200
+        task_group_activity = res.json()
+        debug(task_group_activity)
+        assert task_group_activity["status"] == "OK"
