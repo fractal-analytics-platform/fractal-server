@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ..utils_pixi import SOURCE_DIR_NAME
+from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -53,43 +54,51 @@ def reactivate_ssh_pixi(
             log_file_path=log_file_path,
         )
 
-        with SingleUseFractalSSH(
-            ssh_config=ssh_config,
-            logger_name=LOGGER_NAME,
-        ) as fractal_ssh:
+        logger.info("START")
+        with next(get_sync_db()) as db:
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+                logger_name=LOGGER_NAME,
+            )
+            if not db_objects_ok:
+                return
 
-            with next(get_sync_db()) as db:
-                success, task_group, activity = get_activity_and_task_group(
-                    task_group_activity_id=task_group_activity_id,
-                    task_group_id=task_group_id,
-                    db=db,
-                )
-                if not success:
-                    return
-
-                # Log some info
-                logger.info("START")
-                for key, value in task_group.model_dump(
-                    exclude={"env_info"}
-                ).items():
-                    logger.debug(f"task_group.{key}: {value}")
-
-                # Check that SSH connection works
+            with SingleUseFractalSSH(
+                ssh_config=ssh_config,
+                logger_name=LOGGER_NAME,
+            ) as fractal_ssh:
                 try:
-                    fractal_ssh.check_connection()
-                except Exception as e:
-                    logger.error("Cannot establish SSH connection.")
-                    fail_and_cleanup(
+                    # Check SSH connection
+                    ssh_ok = check_ssh_or_fail_and_cleanup(
+                        fractal_ssh=fractal_ssh,
                         task_group=task_group,
                         task_group_activity=activity,
                         logger_name=LOGGER_NAME,
                         log_file_path=log_file_path,
-                        exception=e,
                         db=db,
                     )
-                    return
+                    if not ssh_ok:
+                        return
 
-                try:
+                    # Check that the (remote) task_group source_dir does not
+                    # exist
+                    source_dir = Path(
+                        task_group.path, SOURCE_DIR_NAME
+                    ).as_posix()
+                    if fractal_ssh.remote_exists(source_dir):
+                        error_msg = f"{source_dir} already exists."
+                        logger.error(error_msg)
+                        fail_and_cleanup(
+                            task_group=task_group,
+                            task_group_activity=activity,
+                            logger_name=LOGGER_NAME,
+                            log_file_path=log_file_path,
+                            exception=FileExistsError(error_msg),
+                            db=db,
+                        )
+                        return
 
                     settings = Inject(get_settings)
                     replacements = {
@@ -195,8 +204,8 @@ def reactivate_ssh_pixi(
                         logger.info(f"Deleted folder {task_group.venv_path}")
                     except Exception as rm_e:
                         logger.error(
-                            "Removing folder failed.\n"
-                            f"Original error:\n{str(rm_e)}"
+                            "Removing folder failed. "
+                            f"Original error: {str(rm_e)}"
                         )
 
                     fail_and_cleanup(

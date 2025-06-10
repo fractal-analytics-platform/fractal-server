@@ -40,22 +40,16 @@ def deactivate_local_pixi(
             log_file_path=log_file_path,
         )
 
+        logger.debug("START")
         with next(get_sync_db()) as db:
-            success, task_group, activity = get_activity_and_task_group(
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
                 task_group_id=task_group_id,
                 db=db,
+                logger_name=LOGGER_NAME,
             )
-            if not success:
+            if not db_objects_ok:
                 return
-
-            # Log some info
-            logger.debug("START")
-
-            for key, value in task_group.model_dump(
-                exclude={"env_info"}
-            ).items():
-                logger.debug(f"task_group.{key}: {value}")
 
             source_dir = Path(task_group.path, SOURCE_DIR_NAME)
             if not source_dir.exists():

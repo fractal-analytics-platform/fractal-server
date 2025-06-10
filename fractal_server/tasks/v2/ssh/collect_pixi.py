@@ -2,13 +2,13 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ....ssh._fabric import SingleUseFractalSSH
 from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ..utils_background import prepare_tasks_metadata
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ..utils_pixi import parse_collect_stdout
 from ..utils_pixi import SOURCE_DIR_NAME
+from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -17,6 +17,7 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
@@ -64,43 +65,34 @@ def collect_ssh_pixi(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-        with SingleUseFractalSSH(
-            ssh_config=ssh_config,
-            logger_name=LOGGER_NAME,
-        ) as fractal_ssh:
+        logger.info("START")
+        with next(get_sync_db()) as db:
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+                logger_name=LOGGER_NAME,
+            )
+            if not db_objects_ok:
+                return
 
-            with next(get_sync_db()) as db:
-                success, task_group, activity = get_activity_and_task_group(
-                    task_group_activity_id=task_group_activity_id,
-                    task_group_id=task_group_id,
-                    db=db,
-                )
-                if not success:
-                    return
+            with SingleUseFractalSSH(
+                ssh_config=ssh_config,
+                logger_name=LOGGER_NAME,
+            ) as fractal_ssh:
 
-                # Log some info
-                logger.info("START")
-                for key, value in task_group.model_dump(
-                    exclude={"env_info"}
-                ).items():
-                    logger.debug(f"task_group.{key}: {value}")
-
-                # Check that SSH connection works
                 try:
-                    fractal_ssh.check_connection()
-                except Exception as e:
-                    logger.error("Cannot establish SSH connection.")
-                    fail_and_cleanup(
+                    # Check SSH connection
+                    ssh_ok = check_ssh_or_fail_and_cleanup(
+                        fractal_ssh=fractal_ssh,
                         task_group=task_group,
                         task_group_activity=activity,
                         logger_name=LOGGER_NAME,
                         log_file_path=log_file_path,
-                        exception=e,
                         db=db,
                     )
-                    return
-
-                try:
+                    if not ssh_ok:
+                        return
 
                     # Check that the (remote) task_group path does not exist
                     if fractal_ssh.remote_exists(task_group.path):
@@ -117,9 +109,7 @@ def collect_ssh_pixi(
                         return
 
                     # Create remote `task_group.path` and `script_dir_remote`
-                    # folders (note that because of `parents=True` we  are in
-                    # the `no error if existing, make parent directories as
-                    # needed` scenario for `mkdir`)
+                    # folders
                     script_dir_remote = Path(
                         task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix()
@@ -133,9 +123,7 @@ def collect_ssh_pixi(
                         Path(task_group.path) / tar_gz_filename
                     ).as_posix()
                     tmp_archive_path = Path(tmpdir, tar_gz_filename).as_posix()
-                    logger.info(
-                        f"Write tar.gz-file contents into {tmp_archive_path}"
-                    )
+                    logger.info(f"Write tar.gz file into {tmp_archive_path}")
                     with open(tmp_archive_path, "wb") as f:
                         f.write(tar_gz_file.contents)
                     fractal_ssh.send_file(
@@ -152,7 +140,7 @@ def collect_ssh_pixi(
                             settings.pixi.versions[task_group.pixi_version],
                         ),
                         ("__PACKAGE_DIR__", task_group.path),
-                        ("__TAR_GZ_PATH__", archive_path),
+                        ("__TAR_GZ_PATH__", task_group.archive_path),
                         (
                             "__IMPORT_PACKAGE_NAME__",
                             task_group.pkg_name.replace("-", "_"),
@@ -169,7 +157,7 @@ def collect_ssh_pixi(
 
                     common_args = dict(
                         script_dir_local=(
-                            Path(tmpdir) / SCRIPTS_SUBFOLDER
+                            Path(tmpdir, SCRIPTS_SUBFOLDER)
                         ).as_posix(),
                         script_dir_remote=script_dir_remote,
                         prefix=(

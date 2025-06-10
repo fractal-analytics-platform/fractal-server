@@ -1,6 +1,10 @@
 import os
 from pathlib import Path
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..utils_background import fail_and_cleanup
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -85,3 +89,37 @@ def _copy_wheel_file_ssh(
     fractal_ssh.run_command(cmd=cmd)
     logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
     return dest
+
+
+def check_ssh_or_fail_and_cleanup(
+    *,
+    fractal_ssh: FractalSSH,
+    task_group: TaskGroupV2,
+    task_group_activity: TaskGroupActivityV2,
+    logger_name: str,
+    log_file_path: Path,
+    db: AsyncSession,
+) -> bool:
+    """
+    Check SSH connection.
+
+    Returns:
+        Whether SSH connection is OK.
+    """
+    try:
+        fractal_ssh.check_connection()
+        return True
+    except Exception as e:
+        logger = get_logger(logger_name=logger_name)
+        logger.error(
+            "Cannot establish SSH connection. " f"Original error: {str(e)}"
+        )
+        fail_and_cleanup(
+            task_group=task_group,
+            task_group_activity=task_group_activity,
+            logger_name=logger_name,
+            log_file_path=log_file_path,
+            exception=e,
+            db=db,
+        )
+        return False

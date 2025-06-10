@@ -67,19 +67,16 @@ def collect_local(
             log_file_path=log_file_path,
         )
 
+        logger.info("START")
         with next(get_sync_db()) as db:
-            success, task_group, activity = get_activity_and_task_group(
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
                 task_group_id=task_group_id,
                 db=db,
+                logger_name=LOGGER_NAME,
             )
-            if not success:
+            if not db_objects_ok:
                 return
-
-            # Log some info
-            logger.info("START")
-            for key, value in task_group.model_dump().items():
-                logger.debug(f"task_group.{key}: {value}")
 
             # Check that the (local) task_group path does exist
             if Path(task_group.path).exists():
