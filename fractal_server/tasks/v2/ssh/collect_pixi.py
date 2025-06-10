@@ -191,10 +191,7 @@ def collect_ssh_pixi(
 
                     _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
-                        replacements={
-                            *replacements,
-                            ("__FROZEN_OPTION__", "false"),
-                        },
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
