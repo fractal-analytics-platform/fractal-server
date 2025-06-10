@@ -2,7 +2,7 @@ set -e
 
 write_log(){
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    echo "[collect-task-pixi, $TIMESTAMP] $1"
+    echo "[collect-task-pixi, ${TIMESTAMP}] ${1}"
 }
 
 # Replacements
@@ -22,18 +22,18 @@ SOURCE_DIR="${PACKAGE_DIR}/${SOURCE_DIR_NAME}"
 PYPROJECT_TOML="${SOURCE_DIR}/pyproject.toml"
 ACTIVATION_FILE="${SOURCE_DIR}/activate_project.sh"
 PROJECT_PYTHON_WRAPPER="${SOURCE_DIR}/project_python.sh"
-TAR_GZ_BASENAME=$(basename "$TAR_GZ_PATH" ".tar.gz")
+TAR_GZ_BASENAME=$(basename "${TAR_GZ_PATH}" ".tar.gz")
 
 # Pixi env variable
-export PIXI_HOME="$PIXI_HOME"
+export PIXI_HOME="${PIXI_HOME}"
 export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
 
 TIME_START=$(date +%s)
 
-cd "$PACKAGE_DIR"
-write_log "Changed working directory to $PACKAGE_DIR"
+cd "${PACKAGE_DIR}"
+write_log "Changed working directory to ${PACKAGE_DIR}"
 
 
 ### UP TO HERE IT IS COMMON TO BOTH SCRIPTS
