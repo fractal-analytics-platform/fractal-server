@@ -219,8 +219,7 @@ class FractalSSH:
         ):
             try:
                 with self._sftp_unsafe().open(filepath, "r") as f:
-                    data = f.read()
-                    return data.decode()
+                    data = f.read().decode()
             except Exception as e:
                 self.log_and_raise(
                     e=e,
