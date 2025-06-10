@@ -29,7 +29,9 @@ from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.local import reactivate_local_pixi
 from fractal_server.tasks.v2.ssh import deactivate_ssh
+from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()
@@ -127,9 +129,12 @@ async def deactivate_task_group(
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            deactivate_function = deactivate_ssh_pixi
+        else:
+            deactivate_function = deactivate_ssh
         background_tasks.add_task(
-            deactivate_ssh,
+            deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,
@@ -253,8 +258,12 @@ async def reactivate_task_group(
             key_path=user_settings.ssh_private_key_path,
         )
 
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            reactivate_function = reactivate_ssh_pixi
+        else:
+            reactivate_function = reactivate_ssh
         background_tasks.add_task(
-            reactivate_ssh,
+            reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,

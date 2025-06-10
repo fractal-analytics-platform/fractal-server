@@ -11,7 +11,7 @@ from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.utils import get_log_path
 
 
-def reactivate_ssh(
+def reactivate_ssh_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
