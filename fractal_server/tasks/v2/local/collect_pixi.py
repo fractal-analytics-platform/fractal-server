@@ -88,24 +88,17 @@ def collect_local_pixi(
                 task_group.archive_path = archive_path
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
-                replacements = {
-                    ("__PIXI_HOME__", pixi_home),
-                    ("__PACKAGE_DIR__", task_group.path),
-                    ("__TAR_GZ_PATH__", archive_path),
-                    (
-                        "__IMPORT_PACKAGE_NAME__",
-                        task_group.pkg_name.replace("-", "_"),
-                    ),
-                    ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                }
-
-                activity.status = TaskGroupActivityStatusV2.ONGOING
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                stdout = _customize_and_run_template(
-                    template_filename="pixi_1_collect.sh",
-                    replacements=replacements,
+                common_args = dict(
+                    replacements={
+                        ("__PIXI_HOME__", pixi_home),
+                        ("__PACKAGE_DIR__", task_group.path),
+                        ("__TAR_GZ_PATH__", archive_path),
+                        (
+                            "__IMPORT_PACKAGE_NAME__",
+                            task_group.pkg_name.replace("-", "_"),
+                        ),
+                        ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
+                    },
                     script_dir=Path(
                         task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix(),
@@ -114,6 +107,32 @@ def collect_local_pixi(
                         f"{TaskGroupActivityActionV2.COLLECT}_"
                     ),
                     logger_name=LOGGER_NAME,
+                )
+
+                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                # Run script 1
+                _customize_and_run_template(
+                    template_filename="pixi_1_extract.sh",
+                    **common_args,
+                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                # Run script 2
+                _customize_and_run_template(
+                    template_filename="pixi_2_install.sh",
+                    **common_args,
+                )
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                # Run script 3
+                stdout = _customize_and_run_template(
+                    template_filename="pixi_3_post_install.sh",
+                    **common_args,
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
