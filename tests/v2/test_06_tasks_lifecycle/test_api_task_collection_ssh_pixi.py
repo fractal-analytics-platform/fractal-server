@@ -1,4 +1,7 @@
 import logging
+import os
+import shlex
+import subprocess  # nosec
 from pathlib import Path
 
 import pytest
@@ -22,6 +25,40 @@ def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
     fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
+@pytest.fixture(scope="function")
+def pixi_ssh(tmp777_path: Path) -> PixiSettings:
+    """
+    Similar to the `pixi` fixture, but it uses a 777 pixi folder, which
+    is also writeable from within SSH remote-host container.
+    """
+    pixi_common = tmp777_path / "pixi"
+    original_umask = os.umask(0)
+    pixi_common.mkdir(mode=0o777)
+    os.umask(original_umask)
+    pixi_home = pixi_common / "0.47.0"
+    script_contents = (
+        "export PIXI_NO_PATH_UPDATE=1\n"
+        "export PIXI_VERSION=0.47.0\n"
+        f"export PIXI_HOME={pixi_home.as_posix()}\n"
+        "curl -fsSL https://pixi.sh/install.sh | sh\n"
+        f"chmod 777 {pixi_home.as_posix()} -R\n"
+    )
+    script_path = pixi_common / "install_pixi.sh"
+    with script_path.open("w") as f:
+        f.write(script_contents)
+    cmd = f"bash {script_path.as_posix()}"
+    logging.info(f"START running {cmd=}")
+    subprocess.run(  # nosec
+        shlex.split(cmd), capture_output=True, encoding="utf8", check=True
+    )
+    logging.info(f"END   running {cmd=}")
+
+    return PixiSettings(
+        default_version="0.47.0",
+        versions={"0.47.0": pixi_home.as_posix()},
+    )
+
+
 @pytest.mark.container
 @pytest.mark.ssh
 async def test_task_collection_ssh_pixi(
@@ -34,6 +71,7 @@ async def test_task_collection_ssh_pixi(
     fractal_ssh_list: FractalSSHList,
     slurmlogin_ip,
     ssh_keys,
+    pixi_ssh: PixiSettings,
     pixi_pkg_targz: Path,
 ):
     credentials = dict(
@@ -53,17 +91,8 @@ async def test_task_collection_ssh_pixi(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_PIXI_CONFIG_FILE="fake",
-        pixi=PixiSettings(
-            default_version="0.47.0",
-            versions={
-                "0.47.0": "/pixi/0.47.0",
-            },
-        ),
+        pixi=pixi_ssh,
     )
-
-    import time
-
-    time.sleep(1000)
 
     user_settings_dict = dict(
         ssh_host=slurmlogin_ip,
