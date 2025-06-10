@@ -487,6 +487,7 @@ def test_closed_socket(
     fractal_ssh.close()
 
 
+@pytest.mark.container
 def test_read_remote_text_file(
     fractal_ssh: FractalSSH,
     tmp777_path: Path,
