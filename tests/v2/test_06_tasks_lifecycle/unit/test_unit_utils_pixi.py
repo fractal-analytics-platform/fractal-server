@@ -16,11 +16,13 @@ def test_parse_collect_stdout():
         "Disk usage: 123\n"
         "whatever\n"
         "Number of files: 2\n"
-        "Last line"
+        "Last line\n"
+        "Project Python wrapper: whatever"
     )
     output = parse_collect_stdout(text)
     assert output == dict(
         package_root="abc",
         venv_size="123",
         venv_file_number="2",
+        project_python_wrapper="whatever",
     )
