@@ -61,7 +61,7 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
 
 @pytest.mark.container
 @pytest.mark.ssh
-async def test_task_collection_ssh_pixi(
+async def test_task_group_lifecycle_ssh_pixi(
     db,
     app,
     client,
