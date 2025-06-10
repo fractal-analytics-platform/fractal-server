@@ -6,24 +6,16 @@ write_log(){
 }
 
 # Replacements
-PIXI_HOME="__PIXI_HOME__"
 PACKAGE_DIR="__PACKAGE_DIR__"
 TAR_GZ_PATH="__TAR_GZ_PATH__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 
 # Strip trailing `/` from `PACKAGE_DIR`
-PIXI_HOME=${PIXI_HOME%/}
 PACKAGE_DIR=${PACKAGE_DIR%/}
 
 # Known paths
 SOURCE_DIR="${PACKAGE_DIR}/${SOURCE_DIR_NAME}"
 TAR_GZ_BASENAME=$(basename "${TAR_GZ_PATH}" ".tar.gz")
-
-# Pixi env variable
-export PIXI_HOME="${PIXI_HOME}"
-export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
-export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
-
 
 TIME_START=$(date +%s)
 
