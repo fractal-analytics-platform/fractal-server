@@ -58,7 +58,19 @@ def reactivate_local_pixi(
             for key, value in task_group.model_dump().items():
                 logger.debug(f"task_group.{key}: {value}")
 
-            Path(task_group.path).mkdir()
+            SOURCE_DIR = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+            if Path(SOURCE_DIR).exists():
+                error_msg = f"{SOURCE_DIR} already exists."
+                logger.error(error_msg)
+                fail_and_cleanup(
+                    task_group=task_group,
+                    task_group_activity=activity,
+                    logger_name=LOGGER_NAME,
+                    log_file_path=log_file_path,
+                    exception=FileExistsError(error_msg),
+                    db=db,
+                )
+                return
 
             subprocess.run(  # nosec
                 shlex.split(
@@ -69,7 +81,6 @@ def reactivate_local_pixi(
                 cwd=task_group.path,
             )
 
-            SOURCE_DIR = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
             subprocess.run(  # nosec
                 shlex.split(
                     f"mv {Path(task_group.archive_path).name} {SOURCE_DIR}"
@@ -116,7 +127,7 @@ def reactivate_local_pixi(
                 # Delete corrupted task_group.path
                 try:
                     logger.info(f"Now delete folder {task_group.path}")
-                    shutil.rmtree(task_group.path)
+                    shutil.rmtree(SOURCE_DIR)
                     logger.info(f"Deleted folder {task_group.path}")
                 except Exception as rm_e:
                     logger.error(
