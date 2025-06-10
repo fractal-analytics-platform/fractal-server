@@ -9,7 +9,6 @@ write_log(){
 PIXI_HOME="__PIXI_HOME__"
 PACKAGE_DIR="__PACKAGE_DIR__"
 TAR_GZ_PATH="__TAR_GZ_PATH__"
-IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 
 # Strip trailing `/` from `PACKAGE_DIR`
@@ -17,11 +16,7 @@ PIXI_HOME=${PIXI_HOME%/}
 PACKAGE_DIR=${PACKAGE_DIR%/}
 
 # Known paths
-PIXI_EXECUTABLE="${PIXI_HOME}/bin/pixi"
 SOURCE_DIR="${PACKAGE_DIR}/${SOURCE_DIR_NAME}"
-PYPROJECT_TOML="${SOURCE_DIR}/pyproject.toml"
-ACTIVATION_FILE="${SOURCE_DIR}/activate_project.sh"
-PROJECT_PYTHON_WRAPPER="${SOURCE_DIR}/project_python.sh"
 TAR_GZ_BASENAME=$(basename "${TAR_GZ_PATH}" ".tar.gz")
 
 # Pixi env variable
@@ -46,7 +41,8 @@ write_log "START 'mv ${PACKAGE_DIR}/${TAR_GZ_BASENAME} ${SOURCE_DIR}'"
 mv "${PACKAGE_DIR}/${TAR_GZ_BASENAME}" "${SOURCE_DIR}"
 write_log "END   'mv ${PACKAGE_DIR}/${TAR_GZ_BASENAME} ${SOURCE_DIR}'"
 echo
-write_log "END extract ${TAR_GZ_PATH}"
-TIME_END_TAR=$(date +%s)
-write_log "Elapsed: $((TIME_END_TAR - TIME_START)) seconds"
+
+TIME_END=$(date +%s)
+write_log "Elapsed: $((TIME_END - TIME_START)) seconds"
+write_log "All ok, exit."
 echo

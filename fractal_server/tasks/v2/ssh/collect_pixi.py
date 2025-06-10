@@ -167,19 +167,43 @@ def collect_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    stdout = _customize_and_run_template(
-                        template_filename="pixi_1_collect.sh",
-                        replacements=replacements,
+                    common_args = dict(
                         script_dir_local=(
                             Path(tmpdir) / SCRIPTS_SUBFOLDER
                         ).as_posix(),
                         script_dir_remote=script_dir_remote,
                         prefix=(
                             f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.COLLECT}_"
+                            f"{TaskGroupActivityActionV2.COLLECT}"
                         ),
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
+                    )
+
+                    # Run the three pixi-related scripts
+                    _customize_and_run_template(
+                        template_filename="pixi_1_extract.sh",
+                        replacements=replacements,
+                        **common_args,
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    _customize_and_run_template(
+                        template_filename="pixi_2_install.sh",
+                        replacements={
+                            *replacements,
+                            ("__FROZEN_OPTION__", "false"),
+                        },
+                        **common_args,
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    stdout = _customize_and_run_template(
+                        template_filename="pixi_3_post_install.sh",
+                        replacements=replacements,
+                        **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
