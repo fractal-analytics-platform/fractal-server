@@ -124,16 +124,14 @@ async def test_task_group_lifecycle_pixi_ssh(
         debug(res.json())
         assert res.status_code == 202
         assert res.json()["status"] == "pending"
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["log"] is not None
-        assert task_group_activity["timestamp_ended"] is not None
-        assert task_group_activity["status"] == "OK"
-        task_group_id = task_group_activity["taskgroupv2_id"]
+        activity = res.json()
+        assert activity["log"] is not None
+        assert activity["timestamp_ended"] is not None
+        assert activity["status"] == "OK"
+        task_group_id = activity["taskgroupv2_id"]
         res = await client.get(f"/api/v2/task-group/{task_group_id}/")
 
         # Check `TaskGroupV2.env_info` (note: it is not part of the
@@ -160,15 +158,33 @@ async def test_task_group_lifecycle_pixi_ssh(
             data={},
         )
         assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "OK"
+        activity = res.json()
+        assert activity["status"] == "OK"
         assert Path(task_group.archive_path).exists()
         assert not Path(task_group.path, SOURCE_DIR_NAME).exists()
+
+        # Failed deactivation (folder does not exist)
+        db.expunge_all()
+        task_group.active = True  # mock an active task group
+        await db.merge(task_group)
+        await db.commit()
+        res = await client.post(
+            f"/api/v2/task-group/{task_group_id}/deactivate/",
+            data={},
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        assert res.status_code == 200
+        activity = res.json()
+        assert activity["status"] == "failed"
+        db.expunge_all()
+        task_group.active = False  # restore `active=False`
+        await db.merge(task_group)
+        await db.commit()
 
         # Failed reactivation - (fake) folder already exists
         fake_remote_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
@@ -178,14 +194,12 @@ async def test_task_group_lifecycle_pixi_ssh(
             data={},
         )
         assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
-        task_group_activity = res.json()
-        debug(task_group_activity)
-        assert task_group_activity["status"] == "failed"
+        activity = res.json()
+        debug(activity)
+        assert activity["status"] == "failed"
         fractal_ssh.remove_folder(  # Remove fake folder
             folder=fake_remote_dir,
             safe_root=task_group.path,
@@ -197,11 +211,9 @@ async def test_task_group_lifecycle_pixi_ssh(
             data={},
         )
         assert res.status_code == 202
-        task_group_activity_id = res.json()["id"]
-        res = await client.get(
-            f"/api/v2/task-group/activity/{task_group_activity_id}/"
-        )
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
-        task_group_activity = res.json()
-        debug(task_group_activity)
-        assert task_group_activity["status"] == "OK"
+        activity = res.json()
+        debug(activity)
+        assert activity["status"] == "OK"
